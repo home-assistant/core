@@ -7,8 +7,6 @@ from unittest.mock import AsyncMock, patch
 
 from pysmartthings import (
     DeviceHealth,
-    DeviceResponse,
-    DeviceStatus,
     LocationResponse,
     RoomResponse,
     SceneResponse,
@@ -32,6 +30,8 @@ from homeassistant.components.smartthings.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from . import DEVICE_FIXTURES, get_device_response, get_device_status, get_fixture_name
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -99,107 +99,33 @@ def mock_smartthings() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(
-    params=[
-        "aq_sensor_3_ikea",
-        "aeotec_ms6",
-        "da_ac_airsensor_01001",
-        "da_ac_rac_000001",
-        "da_ac_rac_000003",
-        "da_ac_rac_100001",
-        "da_ac_rac_01001",
-        "da_ac_cac_01001",
-        "multipurpose_sensor",
-        "contact_sensor",
-        "base_electric_meter",
-        "smart_plug",
-        "vd_stv_2017_k",
-        "c2c_arlo_pro_3_switch",
-        "yale_push_button_deadbolt_lock",
-        "ge_in_wall_smart_dimmer",
-        "centralite",
-        "da_ref_normal_000001",
-        "da_ref_normal_01011",
-        "da_ref_normal_01011_onedoor",
-        "da_ref_normal_01001",
-        "vd_network_audio_002s",
-        "vd_network_audio_003s",
-        "vd_sensor_light_2023",
-        "iphone",
-        "da_sac_ehs_000001_sub",
-        "da_sac_ehs_000001_sub_1",
-        "da_sac_ehs_000002_sub",
-        "da_ac_ehs_01001",
-        "da_wm_dw_000001",
-        "da_wm_wd_01011",
-        "da_wm_wd_000001",
-        "da_wm_wd_000001_1",
-        "da_wm_wm_01011",
-        "da_wm_wm_100001",
-        "da_wm_wm_100002",
-        "da_wm_wm_000001",
-        "da_wm_wm_000001_1",
-        "da_wm_sc_000001",
-        "da_wm_dw_01011",
-        "da_rvc_normal_000001",
-        "da_rvc_map_01011",
-        "da_ks_microwave_0101x",
-        "da_ks_cooktop_000001",
-        "da_ks_cooktop_31001",
-        "da_ks_range_0101x",
-        "da_ks_oven_01061",
-        "da_ks_oven_0107x",
-        "da_ks_walloven_0107x",
-        "da_ks_hood_01001",
-        "hue_color_temperature_bulb",
-        "hue_rgbw_color_bulb",
-        "c2c_shade",
-        "sonos_player",
-        "aeotec_home_energy_meter_gen5",
-        "virtual_water_sensor",
-        "virtual_thermostat",
-        "virtual_valve",
-        "sensibo_airconditioner_1",
-        "ecobee_sensor",
-        "ecobee_thermostat",
-        "ecobee_thermostat_offline",
-        "sensi_thermostat",
-        "siemens_washer",
-        "fake_fan",
-        "generic_fan_3_speed",
-        "heatit_ztrm3_thermostat",
-        "heatit_zpushwall",
-        "generic_ef00_v1",
-        "gas_detector",
-        "bosch_radiator_thermostat_ii",
-        "im_speaker_ai_0001",
-        "im_smarttag2_ble_uwb",
-        "abl_light_b_001",
-        "tplink_p110",
-        "ikea_kadrilj",
-        "aux_ac",
-        "hw_q80r_soundbar",
-        "gas_meter",
-        "lumi",
-        "tesla_powerwall",
-    ]
-)
-def device_fixture(
-    mock_smartthings: AsyncMock, request: pytest.FixtureRequest
-) -> Generator[str]:
+@pytest.fixture
+def device_fixture() -> str | None:
     """Return every device."""
-    return request.param
+    return None
 
 
 @pytest.fixture
-def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[AsyncMock]:
+def devices(mock_smartthings: AsyncMock, device_fixture: str | None) -> AsyncMock:
     """Return a specific device."""
-    mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
-        load_fixture(f"devices/{device_fixture}.json", DOMAIN)
-    ).items
-    mock_smartthings.get_device_status.return_value = DeviceStatus.from_json(
-        load_fixture(f"device_status/{device_fixture}.json", DOMAIN)
-    ).components
+    if device_fixture is not None:
+        mock_smartthings.get_devices.return_value = get_device_response(
+            device_fixture
+        ).items
+        mock_smartthings.get_device_status.return_value = get_device_status(
+            device_fixture
+        ).components
+    else:
+        devices = []
+        for device_name in DEVICE_FIXTURES:
+            devices.extend(get_device_response(device_name).items)
+        mock_smartthings.get_devices.return_value = devices
+
+        async def _get_device_status(device_id: str):
+            return get_device_status(get_fixture_name(device_id)).components
+
+        mock_smartthings.get_device_status.side_effect = _get_device_status
+
     return mock_smartthings
 
 

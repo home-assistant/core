@@ -1,7 +1,5 @@
 """Calendar platform for a Local Calendar."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import date, datetime, timedelta
 import logging
@@ -197,6 +195,12 @@ def _parse_event(event: dict[str, Any]) -> Event:
             and value.tzinfo is not None
         ):
             event[key] = dt_util.as_local(value).replace(tzinfo=None)
+    # UNTIL in the rrule must be floating (timezone-naive) to match the
+    # floating dtstart used by the ical library. Strip tzinfo from UNTIL
+    # if present, converting to local time first.
+    if (rrule_obj := event.get(EVENT_RRULE)) and isinstance(rrule_obj, Recur):
+        if isinstance(rrule_obj.until, datetime) and rrule_obj.until.tzinfo is not None:
+            rrule_obj.until = dt_util.as_local(rrule_obj.until).replace(tzinfo=None)
 
     try:
         return Event(**event)

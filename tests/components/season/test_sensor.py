@@ -1,6 +1,7 @@
 """The tests for the Season integration."""
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
@@ -20,6 +21,8 @@ from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_TYPE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util.dt import UTC
 
 from tests.common import MockConfigEntry
 
@@ -44,25 +47,25 @@ HEMISPHERE_EMPTY = {
 }
 
 NORTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_SPRING),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0, tzinfo=UTC), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0, tzinfo=UTC), STATE_SPRING),
 ]
 
 SOUTHERN_PARAMETERS = [
-    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_SUMMER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_SUMMER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_AUTUMN),
-    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_AUTUMN),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_WINTER),
-    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_WINTER),
-    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_SPRING),
-    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_SPRING),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0, tzinfo=UTC), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0, tzinfo=UTC), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0, tzinfo=UTC), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0, tzinfo=UTC), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0, tzinfo=UTC), STATE_SPRING),
 ]
 
 
@@ -154,7 +157,7 @@ async def test_season_equator(
     hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
     mock_config_entry.add_to_hass(hass)
 
-    with freeze_time(datetime(2017, 9, 3, 0, 0)):
+    with freeze_time(datetime(2017, 9, 3, 0, 0, tzinfo=UTC)):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -165,3 +168,43 @@ async def test_season_equator(
     entry = entity_registry.async_get("sensor.season")
     assert entry
     assert entry.unique_id == mock_config_entry.entry_id
+
+
+async def test_season_local_midnight(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that season changes at local midnight, not UTC."""
+    await hass.config.async_set_time_zone("Australia/Sydney")
+    hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        unique_id=TYPE_METEOROLOGICAL,
+        data={CONF_TYPE: TYPE_METEOROLOGICAL},
+    )
+
+    sydney_tz = ZoneInfo("Australia/Sydney")
+
+    # The day before autumn starts, at 23:59:59 local time (summer)
+    day_before = datetime(2017, 2, 28, 23, 59, 59, tzinfo=sydney_tz)
+
+    with freeze_time(day_before):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state == STATE_SUMMER
+
+    # Exactly midnight local time (autumn)
+    midnight = datetime(2017, 3, 1, 0, 0, 0, tzinfo=sydney_tz)
+
+    with freeze_time(midnight):
+        await async_update_entity(hass, "sensor.season")
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state == STATE_AUTUMN

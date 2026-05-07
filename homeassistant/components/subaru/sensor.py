@@ -1,7 +1,5 @@
 """Support for Subaru sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -18,10 +16,7 @@ from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -29,14 +24,12 @@ from . import get_device_info
 from .const import (
     API_GEN_2,
     API_GEN_3,
-    DOMAIN,
-    ENTRY_COORDINATOR,
-    ENTRY_VEHICLES,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_STATUS,
     VEHICLE_VIN,
 )
+from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,13 +133,12 @@ EV_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru sensors by config_entry."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = entry[ENTRY_COORDINATOR]
-    vehicle_info = entry[ENTRY_VEHICLES]
+    coordinator = config_entry.runtime_data.coordinator
+    vehicle_info = config_entry.runtime_data.vehicles
     entities = []
     await _async_migrate_entries(hass, config_entry)
     for info in vehicle_info.values():
@@ -155,7 +147,7 @@ async def async_setup_entry(
 
 
 def create_vehicle_sensors(
-    vehicle_info, coordinator: DataUpdateCoordinator
+    vehicle_info, coordinator: SubaruDataUpdateCoordinator
 ) -> list[SubaruSensor]:
     """Instantiate all available sensors for the vehicle."""
     sensor_descriptions_to_add = []
@@ -180,9 +172,7 @@ def create_vehicle_sensors(
     ]
 
 
-class SubaruSensor(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]], SensorEntity
-):
+class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity):
     """Class for Subaru sensors."""
 
     _attr_has_entity_name = True
@@ -190,7 +180,7 @@ class SubaruSensor(
     def __init__(
         self,
         vehicle_info: dict,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SubaruDataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

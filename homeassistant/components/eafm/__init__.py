@@ -25,7 +25,7 @@ def _fix_device_registry_identifiers(
         if old_identifier not in device_entry.identifiers:  # type: ignore[comparison-overlap]
             continue
         new_identifiers = device_entry.identifiers.copy()
-        new_identifiers.discard(old_identifier)  # type: ignore[arg-type]
+        new_identifiers.discard(old_identifier)
         new_identifiers.add((DOMAIN, entry.data["station"]))
         device_registry.async_update_device(
             device_entry.id, new_identifiers=new_identifiers

@@ -139,7 +139,7 @@ async def test_dishwasher_washing_option_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+        {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -180,6 +180,39 @@ async def test_custom_commands(
         Capability.SAMSUNG_CE_POWER_COOL,
         command,
         MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, "on"),
+        (SERVICE_TURN_OFF, "off"),
+    ],
+)
+async def test_ac_purify_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test Samsung OCF AC purify switch."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.ac_office_granit_purify"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.CUSTOM_SPI_MODE,
+        Command.SET_SPI_MODE,
+        MAIN,
+        argument,
     )
 
 
@@ -530,7 +563,7 @@ async def test_turn_on_without_remote_control(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -564,7 +597,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -598,7 +631,7 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

@@ -1,7 +1,5 @@
 """Hass.io Add-on ingress service."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
@@ -45,6 +43,7 @@ RESPONSE_HEADERS_FILTER = {
 }
 
 MIN_COMPRESSED_SIZE = 128
+MAX_WEBSOCKET_MESSAGE_SIZE = 16 * 1024 * 1024  # 16 MiB
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
 DISABLED_TIMEOUT = ClientTimeout(total=None)
@@ -126,7 +125,10 @@ class HassIOIngress(HomeAssistantView):
             req_protocols = ()
 
         ws_server = web.WebSocketResponse(
-            protocols=req_protocols, autoclose=False, autoping=False
+            protocols=req_protocols,
+            autoclose=False,
+            autoping=False,
+            max_msg_size=MAX_WEBSOCKET_MESSAGE_SIZE,
         )
         await ws_server.prepare(request)
 
@@ -149,6 +151,7 @@ class HassIOIngress(HomeAssistantView):
                 protocols=req_protocols,
                 autoclose=False,
                 autoping=False,
+                max_msg_size=MAX_WEBSOCKET_MESSAGE_SIZE,
             ) as ws_client:
                 # Proxy requests
                 await asyncio.wait(

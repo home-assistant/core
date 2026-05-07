@@ -1,11 +1,9 @@
 """Coordinator for Satel Integra."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra import AlarmState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +11,6 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .client import SatelClient
-from .const import ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +48,17 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name=f"{entry.entry_id} {self.__class__.__name__}",
         )
 
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        self.client.controller.add_connection_status_callback(
+            self._async_handle_connection_state_update
+        )
+
+    @callback
+    def _async_handle_connection_state_update(self) -> None:
+        """Notify listeners on connection state changes from the client."""
+        self.async_update_listeners()
+
 
 class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
     """DataUpdateCoordinator to handle zone updates."""
@@ -64,11 +72,11 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]])
         self.data = {}
 
     @callback
-    def zones_update_callback(self, status: dict[str, dict[int, int]]) -> None:
+    def zones_update_callback(self, status: dict[int, int]) -> None:
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
 
-        update_data = {zone: value == 1 for zone, value in status[ZONES].items()}
+        update_data = {zone: value == 1 for zone, value in status.items()}
 
         self.async_set_updated_data(update_data)
 
@@ -85,13 +93,11 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
         self.data = {}
 
     @callback
-    def outputs_update_callback(self, status: dict[str, dict[int, int]]) -> None:
+    def outputs_update_callback(self, status: dict[int, int]) -> None:
         """Update output objects as per notification from the alarm."""
         _LOGGER.debug("Outputs callback, status: %s", status)
 
-        update_data = {
-            output: value == 1 for output, value in status["outputs"].items()
-        }
+        update_data = {output: value == 1 for output, value in status.items()}
 
         self.async_set_updated_data(update_data)
 

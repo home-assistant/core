@@ -1,7 +1,5 @@
 """Fully Kiosk Browser button."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -27,6 +25,7 @@ class FullyButtonEntityDescription(ButtonEntityDescription):
     """Fully Kiosk Browser button description."""
 
     press_action: Callable[[FullyKiosk], Any]
+    refresh_after_press: bool = True
 
 
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
@@ -68,6 +67,13 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.clearCache(),
     ),
+    FullyButtonEntityDescription(
+        key="triggerMotion",
+        translation_key="trigger_motion",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda fully: fully.triggerMotion(),
+        refresh_after_press=False,
+    ),
 )
 
 
@@ -102,4 +108,5 @@ class FullyButtonEntity(FullyKioskEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Set the value of the entity."""
         await self.entity_description.press_action(self.coordinator.fully)
-        await self.coordinator.async_refresh()
+        if self.entity_description.refresh_after_press:
+            await self.coordinator.async_refresh()

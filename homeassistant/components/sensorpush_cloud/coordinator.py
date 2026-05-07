@@ -1,7 +1,5 @@
 """Coordinator for the SensorPush Cloud integration."""
 
-from __future__ import annotations
-
 from sensorpush_ha import (
     SensorPushCloudApi,
     SensorPushCloudData,

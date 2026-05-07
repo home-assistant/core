@@ -1,7 +1,5 @@
 """Sensor platform for Brottsplatskartan information."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from datetime import timedelta
 from typing import Literal

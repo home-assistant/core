@@ -1,7 +1,5 @@
 """Test fixtures for Wake on Lan."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch

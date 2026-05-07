@@ -1,7 +1,5 @@
 """Provides a switch for switchable NUT outlets."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -13,7 +11,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NutConfigEntry
+from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

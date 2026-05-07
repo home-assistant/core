@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from aiorussound.rio import Controller, ZoneControlSurface
+from aiorussound.rio.client import Controller, ZoneControlSurface
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory

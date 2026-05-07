@@ -1,7 +1,5 @@
 """Entity for PG LAB Electronics."""
 
-from __future__ import annotations
-
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.entity import Entity as PyPGLabEntity
 

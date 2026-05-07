@@ -1,7 +1,5 @@
 """The tests for the Command line sensor platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from typing import Any
@@ -17,9 +15,10 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
@@ -27,7 +26,9 @@ from . import mock_asyncio_subprocess_run
 from tests.common import async_fire_time_changed
 
 
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+async def test_setup_platform_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setting up the platform with platform yaml."""
     await setup.async_setup_component(
         hass,
@@ -43,6 +44,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"platform": SENSOR_DOMAIN}
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,5 @@
 """Support for exposing a templated binary sensor."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -176,6 +174,7 @@ class AbstractTemplateBinarySensor(
     """Representation of a template binary sensor features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -189,7 +188,6 @@ class AbstractTemplateBinarySensor(
         self._delay_cancel: CALLBACK_TYPE | None = None
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_is_on",
             on_update=self._update_state,
         )
@@ -280,6 +278,9 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
+
+    # delay on and delay off are validated when the state is validated.
+    skip_rendered_result = (CONF_DELAY_ON, CONF_DELAY_OFF)
 
     def __init__(
         self,

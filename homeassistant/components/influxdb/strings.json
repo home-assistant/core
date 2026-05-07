@@ -3,6 +3,9 @@
     "ssl_ca_cert": "SSL CA certificate (Optional)"
   },
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -45,6 +48,39 @@
       },
       "import": {
         "title": "Import configuration"
+      },
+      "reconfigure_v1": {
+        "data": {
+          "database": "[%key:component::influxdb::config::step::configure_v1::data::database%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "database": "[%key:component::influxdb::config::step::configure_v1::data_description::database%]",
+          "ssl_ca_cert": "[%key:component::influxdb::config::step::configure_v1::data_description::ssl_ca_cert%]"
+        },
+        "description": "Update the connection settings for your InfluxDB v1.x server.",
+        "title": "[%key:component::influxdb::config::step::configure_v1::title%]"
+      },
+      "reconfigure_v2": {
+        "data": {
+          "bucket": "[%key:component::influxdb::config::step::configure_v2::data::bucket%]",
+          "organization": "[%key:component::influxdb::config::step::configure_v2::data::organization%]",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "bucket": "[%key:component::influxdb::config::step::configure_v2::data_description::bucket%]",
+          "organization": "[%key:component::influxdb::config::step::configure_v2::data_description::organization%]",
+          "ssl_ca_cert": "[%key:component::influxdb::config::step::configure_v2::data_description::ssl_ca_cert%]"
+        },
+        "description": "Update the connection settings for your InfluxDB v2.x / v3 server.",
+        "title": "[%key:component::influxdb::config::step::configure_v2::title%]"
       },
       "user": {
         "menu_options": {

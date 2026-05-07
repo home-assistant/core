@@ -7,13 +7,14 @@ from typing import Any, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
-from fitbit_web_api import ApiClient, Configuration, DevicesApi
+from fitbit_web_api import ApiClient, Configuration, DevicesApi, UserApi
 from fitbit_web_api.exceptions import (
     ApiException,
     OpenApiException,
     UnauthorizedException,
 )
 from fitbit_web_api.models.device import Device
+from fitbit_web_api.models.user import User
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -24,7 +25,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import FitbitUnitSystem
 from .exceptions import FitbitApiException, FitbitAuthException
-from .model import FitbitProfile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class FitbitApi(ABC):
     ) -> None:
         """Initialize Fitbit auth."""
         self._hass = hass
-        self._profile: FitbitProfile | None = None
+        self._profile: User | None = None
         self._unit_system = unit_system
 
     @abstractmethod
@@ -74,18 +74,16 @@ class FitbitApi(ABC):
         configuration.access_token = token[CONF_ACCESS_TOKEN]
         return await self._hass.async_add_executor_job(ApiClient, configuration)
 
-    async def async_get_user_profile(self) -> FitbitProfile:
+    async def async_get_user_profile(self) -> User:
         """Return the user profile from the API."""
         if self._profile is None:
-            client = await self._async_get_client()
-            response: dict[str, Any] = await self._run(client.user_profile_get)
-            _LOGGER.debug("user_profile_get=%s", response)
-            profile = response["user"]
-            self._profile = FitbitProfile(
-                encoded_id=profile["encodedId"],
-                display_name=profile["displayName"],
-                locale=profile.get("locale"),
-            )
+            client = await self._async_get_fitbit_web_api()
+            api = UserApi(client)
+            api_response = await self._run_async(api.get_profile)
+            if not api_response.user:
+                raise FitbitApiException("No user profile returned from fitbit API")
+            _LOGGER.debug("user_profile_get=%s", api_response.to_dict())
+            self._profile = api_response.user
         return self._profile
 
     async def async_get_unit_system(self) -> FitbitUnitSystem:
