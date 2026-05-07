@@ -55,11 +55,17 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: The water heater entity does not provide a device class.
   entity-disabled-by-default: todo
-  entity-translations: done
+  entity-translations:
+    status: exempt
+    comment: The only entity uses the device name.
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: There are no entities that require icons.
   reconfiguration-flow:
     status: exempt
     comment: The integration does not have anything to reconfigure that is not covered by the reauthentication flow.
