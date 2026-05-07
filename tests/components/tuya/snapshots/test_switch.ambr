@@ -1820,6 +1820,56 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[switch.c9_auto_trigger_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.c9_auto_trigger_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto trigger siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto trigger siren',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_siren',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsipc_auto_siren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.c9_auto_trigger_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'C9 Auto trigger siren',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.c9_auto_trigger_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[switch.c9_flip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2068,56 +2118,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.c9_trigger_siren-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.c9_trigger_siren',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Trigger siren',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Trigger siren',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trigger_siren',
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsipc_auto_siren',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.c9_trigger_siren-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Trigger siren',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.c9_trigger_siren',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.c9_video_recording-entry]
@@ -4539,56 +4539,6 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.garage_camera_activity_area-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.garage_camera_activity_area',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Activity area',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Activity area',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'activity_area',
-    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_area_switch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.garage_camera_activity_area-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Camera Activity area',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.garage_camera_activity_area',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_platform_setup_and_discovery[switch.garage_camera_flip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4687,6 +4637,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.garage_camera_motion_detection_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.garage_camera_motion_detection_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion detection zone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection zone',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_detection_zone',
+    'unique_id': 'tuya.53fnjncm3jywuaznpsmotion_area_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.garage_camera_motion_detection_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garage Camera Motion detection zone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.garage_camera_motion_detection_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.garage_camera_motion_recording-entry]
@@ -9225,7 +9225,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.security_camera_activity_area-entry]
+# name: test_platform_setup_and_discovery[switch.security_camera_auto_trigger_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9239,7 +9239,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.security_camera_activity_area',
+    'entity_id': 'switch.security_camera_auto_trigger_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9247,28 +9247,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Activity area',
+    'object_id_base': 'Auto trigger siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Activity area',
+    'original_name': 'Auto trigger siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'activity_area',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsmotion_area_switch',
+    'translation_key': 'auto_siren',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_auto_siren',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.security_camera_activity_area-state]
+# name: test_platform_setup_and_discovery[switch.security_camera_auto_trigger_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Activity area',
+      'friendly_name': 'Security Camera Auto trigger siren',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.security_camera_activity_area',
+    'entity_id': 'switch.security_camera_auto_trigger_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9373,6 +9373,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.security_camera_motion_detection_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.security_camera_motion_detection_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion detection zone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection zone',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_detection_zone',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsmotion_area_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.security_camera_motion_detection_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Motion detection zone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.security_camera_motion_detection_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.security_camera_motion_recording-entry]
@@ -9573,56 +9623,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.security_camera_trigger_siren-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.security_camera_trigger_siren',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Trigger siren',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Trigger siren',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trigger_siren',
-    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_auto_siren',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.security_camera_trigger_siren-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Trigger siren',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.security_camera_trigger_siren',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[switch.security_camera_video_recording-entry]

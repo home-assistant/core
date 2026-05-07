@@ -719,12 +719,12 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.MOTION_AREA_SWITCH,
-            translation_key="activity_area",
+            translation_key="motion_detection_zone",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.IPC_AUTO_SIREN,
-            translation_key="trigger_siren",
+            translation_key="auto_siren",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

@@ -77,9 +77,6 @@
       }
     },
     "button": {
-      "device_restart": {
-        "name": "Device restart"
-      },
       "factory_reset": {
         "name": "Factory reset"
       },
@@ -930,9 +927,6 @@
       }
     },
     "switch": {
-      "activity_area": {
-        "name": "Activity area"
-      },
       "anion": {
         "name": "Anion"
       },
@@ -941,6 +935,9 @@
       },
       "auto_clean": {
         "name": "Auto clean"
+      },
+      "auto_siren": {
+        "name": "Auto trigger siren"
       },
       "battery_lock": {
         "name": "Battery lock"
@@ -995,6 +992,9 @@
       },
       "motion_alarm": {
         "name": "Motion alarm"
+      },
+      "motion_detection_zone": {
+        "name": "Motion detection zone"
       },
       "motion_recording": {
         "name": "Motion recording"
@@ -1082,9 +1082,6 @@
       },
       "time_watermark": {
         "name": "Time watermark"
-      },
-      "trigger_siren": {
-        "name": "Trigger siren"
       },
       "uv_sterilization": {
         "name": "UV sterilization"

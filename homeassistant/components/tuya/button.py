@@ -6,7 +6,11 @@ from tuya_device_handlers.definition.button import (
 )
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -66,7 +70,7 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     DeviceCategory.SP: (
         ButtonEntityDescription(
             key=DPCode.DEVICE_RESTART,
-            translation_key="device_restart",
+            device_class=ButtonDeviceClass.RESTART,
             entity_category=EntityCategory.CONFIG,
         ),
     ),

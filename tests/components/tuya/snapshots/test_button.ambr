@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[button.c9_device_restart-entry]
+# name: test_platform_setup_and_discovery[button.c9_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.c9_device_restart',
+    'entity_id': 'button.c9_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,35 +21,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Device restart',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Device restart',
+    'original_name': 'Restart',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_restart',
+    'translation_key': None,
     'unique_id': 'tuya.fjdyw5ld2f5f5ddspsdevice_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.c9_device_restart-state]
+# name: test_platform_setup_and_discovery[button.c9_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Device restart',
+      'device_class': 'restart',
+      'friendly_name': 'C9 Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.c9_device_restart',
+    'entity_id': 'button.c9_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.intercom_device_restart-entry]
+# name: test_platform_setup_and_discovery[button.intercom_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +64,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.intercom_device_restart',
+    'entity_id': 'button.intercom_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,28 +72,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Device restart',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Device restart',
+    'original_name': 'Restart',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_restart',
+    'translation_key': None,
     'unique_id': 'tuya.qt0o5jlatiqf2rscpsdevice_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.intercom_device_restart-state]
+# name: test_platform_setup_and_discovery[button.intercom_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Intercom Device restart',
+      'device_class': 'restart',
+      'friendly_name': 'Intercom Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.intercom_device_restart',
+    'entity_id': 'button.intercom_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -299,7 +301,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.security_camera_device_restart-entry]
+# name: test_platform_setup_and_discovery[button.security_camera_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +315,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.security_camera_device_restart',
+    'entity_id': 'button.security_camera_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -321,28 +323,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Device restart',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Device restart',
+    'original_name': 'Restart',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_restart',
+    'translation_key': None,
     'unique_id': 'tuya.xihygtyd0d1faknkpsdevice_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.security_camera_device_restart-state]
+# name: test_platform_setup_and_discovery[button.security_camera_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Device restart',
+      'device_class': 'restart',
+      'friendly_name': 'Security Camera Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.security_camera_device_restart',
+    'entity_id': 'button.security_camera_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
