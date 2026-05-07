@@ -530,12 +530,19 @@ class AssistAPI(API):
                 "When controlling a device, prefer passing just name and domain. "
                 "When controlling an area, prefer passing just area name and domain."
             ),
-            (
+        ]
+
+        if llm_context.device_id:
+            prompt.append(
                 "When a request names a generic device without an area, "
                 "treat it as the user's current area and call "
                 "`GetCurrentLocation` to resolve it before targeting."
-            ),
-        ]
+            )
+        else:
+            prompt.append(
+                "When a request names a generic device without an area, "
+                "ask the user to specify which area they mean before targeting."
+            )
 
         if not llm_context.device_id or not async_device_supports_timers(
             self.hass, llm_context.device_id
