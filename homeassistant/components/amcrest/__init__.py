@@ -573,7 +573,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AmcrestConfigEntryData(TypedDict):
     """Runtime data for an Amcrest config entry."""
 
-    device: AmcrestDevice
+    device: "AmcrestDevice"
     stop_event: NotRequired[threading.Event]
 
 
