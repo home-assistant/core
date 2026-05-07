@@ -1,0 +1,13 @@
+{
+  "domain": "cloudflare_ai",
+  "name": "Cloudflare Workers AI",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@bjesus"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/cloudflare_ai",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["cloudflare==4.3.1"]
+}

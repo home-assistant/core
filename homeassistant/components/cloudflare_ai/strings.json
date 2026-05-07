@@ -1,0 +1,103 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Cloudflare account is already configured.",
+      "reauth_successful": "Re-authentication successful.",
+      "reconfigure_successful": "Reconfiguration successful."
+    },
+    "error": {
+      "already_configured": "This Cloudflare account is already configured.",
+      "cannot_connect": "Unable to connect to Cloudflare API.",
+      "invalid_auth": "Invalid API token or insufficient permissions.",
+      "missing_gateway_id": "AI Gateway ID is required when AI Gateway is enabled.",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "API Token"
+        },
+        "data_description": {
+          "api_token": "An API token with Workers AI Read permission."
+        },
+        "description": "Please enter a valid API token.",
+        "title": "Re-authenticate"
+      },
+      "reconfigure": {
+        "data": {
+          "account_id": "Account ID",
+          "api_token": "API Token",
+          "gateway_api_token": "AI Gateway API Token (if different)",
+          "gateway_id": "AI Gateway ID",
+          "use_ai_gateway": "Use AI Gateway"
+        },
+        "data_description": {
+          "account_id": "Your Cloudflare Account ID, found in the dashboard sidebar.",
+          "api_token": "An API token with Workers AI Read permission.",
+          "gateway_api_token": "A separate API token for AI Gateway authentication. Leave empty to use the same API token.",
+          "gateway_id": "The name or ID of your AI Gateway.",
+          "use_ai_gateway": "Route requests through Cloudflare AI Gateway for analytics, caching, and rate limiting."
+        },
+        "description": "Update your Cloudflare API credentials and gateway settings.",
+        "title": "Reconfigure Cloudflare Workers AI"
+      },
+      "user": {
+        "data": {
+          "account_id": "Account ID",
+          "api_token": "API Token",
+          "gateway_api_token": "AI Gateway API Token (if different)",
+          "gateway_id": "AI Gateway ID",
+          "use_ai_gateway": "Use AI Gateway"
+        },
+        "data_description": {
+          "account_id": "Your Cloudflare Account ID, found in the dashboard sidebar.",
+          "api_token": "An API token with Workers AI Read permission.",
+          "gateway_api_token": "A separate API token for AI Gateway authentication. Leave empty to use the same API token.",
+          "gateway_id": "The name or ID of your AI Gateway.",
+          "use_ai_gateway": "Route requests through Cloudflare AI Gateway for analytics, caching, and rate limiting."
+        },
+        "description": "Enter your Cloudflare API credentials. You need an API token with Workers AI Read permission."
+      }
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "Model",
+            "enable_thinking": "Enable reasoning",
+            "llm_hass_api": "Control Home Assistant",
+            "max_tokens": "Max output tokens",
+            "name": "Name",
+            "prompt": "System prompt",
+            "temperature": "Temperature"
+          },
+          "data_description": {
+            "chat_model": "The Workers AI model to use for conversation. Models with function calling support can control Home Assistant.",
+            "enable_thinking": "When enabled, the model reasons step-by-step before answering. Improves accuracy but increases response time. Supported by Kimi K2.5, QwQ, and other reasoning models.",
+            "llm_hass_api": "Select which Home Assistant APIs the model can use to control your home.",
+            "max_tokens": "Maximum number of tokens in the response.",
+            "prompt": "Instructions for the AI on how to behave and respond.",
+            "temperature": "Controls randomness. Lower values are more focused, higher values more creative."
+          },
+          "description": "Configure the Cloudflare Workers AI conversation agent.",
+          "title": "Conversation Agent"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with Cloudflare Workers AI: {error}"
+    },
+    "auth_failed": {
+      "message": "Authentication with Cloudflare failed. Please check your API token."
+    }
+  }
+}

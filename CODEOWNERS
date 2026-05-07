@@ -303,6 +303,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
+/homeassistant/components/cloudflare_ai/ @bjesus
+/tests/components/cloudflare_ai/ @bjesus
 /homeassistant/components/cloudflare_r2/ @corrreia
 /tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
