@@ -966,5 +966,3 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_command.await_count == 0
-
-
