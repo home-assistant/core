@@ -12,7 +12,14 @@ from pyfirefly import (
     FireflyConnectionError,
     FireflyTimeoutError,
 )
-from pyfirefly.models import Account, Bill, Budget, Category, Currency
+from pyfirefly.models import (
+    Account,
+    Bill,
+    Budget,
+    BudgetLimitAttributes,
+    Category,
+    Currency,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -38,7 +45,8 @@ class FireflyCoordinatorData:
     categories: list[Category]
     category_details: dict[str, Category]
     budgets: dict[str, Budget]
-    bills: list[Bill]
+    budget_limits: dict[str, list[BudgetLimitAttributes]]
+    bills: dict[str, Bill]
     primary_currency: Currency
 
 
@@ -120,6 +128,17 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                     for category in categories
                 )
             )
+
+            budget_limits_list = await asyncio.gather(
+                *(
+                    self.firefly.get_budget_limits(
+                        budget_id=int(budget.id),
+                        start=start_date,
+                        end=end_date,
+                    )
+                    for budget in budgets
+                )
+            )
         except FireflyAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -144,6 +163,10 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             categories=categories,
             category_details={category.id: category for category in category_details},
             budgets={budget.id: budget for budget in budgets},
-            bills=bills,
+            budget_limits={
+                budget.id: limits
+                for budget, limits in zip(budgets, budget_limits_list, strict=True)
+            },
+            bills={bill.id: bill for bill in bills},
             primary_currency=primary_currency,
         )

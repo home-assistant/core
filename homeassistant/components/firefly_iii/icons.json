@@ -13,6 +13,21 @@
       "budget": {
         "default": "mdi:chart-pie"
       },
+      "budget_limit": {
+        "default": "mdi:cash-lock"
+      },
+      "budget_remaining": {
+        "default": "mdi:cash-check"
+      },
+      "subscription_amount": {
+        "default": "mdi:receipt-text"
+      },
+      "subscription_next_expected": {
+        "default": "mdi:calendar-clock"
+      },
+      "subscription_last_paid": {
+        "default": "mdi:calendar-check"
+      },
       "category": {
         "default": "mdi:label"
       }

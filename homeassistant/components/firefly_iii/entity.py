@@ -1,6 +1,6 @@
 """Base entity for Firefly III integration."""
 
-from pyfirefly.models import Account, Budget, Category
+from pyfirefly.models import Account, Bill, Budget, Category
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -119,3 +119,33 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
     @property
     def _budget(self) -> Budget:
         return self.coordinator.data.budgets[self._budget_id]
+
+
+class FireflyBillBaseEntity(FireflyBaseEntity):
+    """Base class for Firefly III subscription (bill) entity."""
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        bill: Bill,
+        key: str,
+    ) -> None:
+        """Initialize a Firefly subscription entity."""
+        super().__init__(coordinator)
+        self._bill_id = bill.id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            name=bill.attributes.name,
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions/show/{bill.id}",
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_bill_{bill.id}")
+            },
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_bill_{bill.id}_{key}"
+        )
+
+    @property
+    def _bill(self) -> Bill:
+        return self.coordinator.data.bills[self._bill_id]

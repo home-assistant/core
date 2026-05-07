@@ -82,6 +82,21 @@
       "budget": {
         "name": "Budget"
       },
+      "budget_limit": {
+        "name": "Budget limit"
+      },
+      "budget_remaining": {
+        "name": "Budget remaining"
+      },
+      "subscription_amount": {
+        "name": "Expected amount"
+      },
+      "subscription_next_expected": {
+        "name": "Next expected"
+      },
+      "subscription_last_paid": {
+        "name": "Last paid"
+      },
       "category": {
         "name": "Earned/Spent"
       }
