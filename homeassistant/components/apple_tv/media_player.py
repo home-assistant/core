@@ -43,6 +43,7 @@ from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .const import DOMAIN
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,15 +146,12 @@ class AppleTvMediaPlayer(
             if feature_info and feature_info.state != FeatureState.Unsupported:
                 self._attr_supported_features |= support_flag
 
-        stream_info = all_features.get(FeatureName.StreamFile)
-        self._stream_file_supported = (
-            stream_info is not None and stream_info.state != FeatureState.Unsupported
-        )
-        play_url_info = all_features.get(FeatureName.PlayUrl)
-        self._play_url_supported = (
-            play_url_info is not None
-            and play_url_info.state != FeatureState.Unsupported
-        )
+        def _supported(feature: FeatureName) -> bool:
+            info = all_features.get(feature)
+            return info is not None and info.state != FeatureState.Unsupported
+
+        self._stream_file_supported = _supported(FeatureName.StreamFile)
+        self._play_url_supported = _supported(FeatureName.PlayUrl)
 
         # No need to schedule state update here as that will happen when the first
         # metadata update arrives (sometime very soon after this callback returns)
@@ -369,10 +367,6 @@ class AppleTvMediaPlayer(
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         )
 
-        if not use_stream_file and not self._play_url_supported:
-            _LOGGER.error("Media streaming is not possible with current configuration")
-            return
-
         try:
             if use_stream_file:
                 _LOGGER.debug("Streaming %s via RAOP", media_id)
@@ -381,14 +375,20 @@ class AppleTvMediaPlayer(
                 _LOGGER.debug("Playing %s via AirPlay", media_id)
                 await self.atv.stream.play_url(media_id)
         except exceptions.NotSupportedError as ex:
-            raise HomeAssistantError("Streaming not supported") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="streaming_not_supported",
+            ) from ex
         except (
             exceptions.BlockedStateError,
             exceptions.ConnectionLostError,
             exceptions.PlaybackError,
             exceptions.ProtocolError,
         ) as ex:
-            raise HomeAssistantError(f"Failed to stream media: {ex}") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_failed",
+            ) from ex
 
     @property
     def media_image_hash(self) -> str | None:
