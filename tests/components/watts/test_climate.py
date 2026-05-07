@@ -95,7 +95,7 @@ async def test_fast_polling(
     await hass.async_block_till_done()
 
     assert mock_watts_client.get_device.called
-    mock_watts_client.get_device.assert_called_with("thermostat_123", refresh=True)
+    mock_watts_client.get_device.assert_called_with("thermostat_123")
 
     # Should still be in fast polling after 55s
     mock_watts_client.get_device.reset_mock()
