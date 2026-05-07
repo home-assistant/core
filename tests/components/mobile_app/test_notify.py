@@ -11,7 +11,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
-from homeassistant.util import dt as dt_util
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -24,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, MockUser, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
