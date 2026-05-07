@@ -1,7 +1,5 @@
 """The UniFi Access integration."""
 
-from __future__ import annotations
-
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform

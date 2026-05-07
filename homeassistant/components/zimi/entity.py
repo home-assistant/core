@@ -1,7 +1,5 @@
 """Base entity for zimi integrations."""
 
-from __future__ import annotations
-
 import logging
 
 from zcc import ControlPoint

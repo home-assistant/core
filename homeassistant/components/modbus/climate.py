@@ -1,7 +1,5 @@
 """Support for Generic Modbus Thermostats."""
 
-from __future__ import annotations
-
 import struct
 from typing import Any, cast
 

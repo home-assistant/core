@@ -3,8 +3,6 @@
 These APIs are the only documented way to interact with the bluetooth integration.
 """
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
@@ -205,6 +203,19 @@ def async_clear_address_from_match_history(hass: HomeAssistant, address: str) ->
     discovery with the current advertisement in history.
     """
     _get_manager(hass).async_clear_address_from_match_history(address)
+
+
+@hass_callback
+def async_clear_advertisement_history(hass: HomeAssistant, address: str) -> None:
+    """Clear cached advertisement history for a device.
+
+    Causes the next advertisement from this address to be treated as new
+    data, bypassing the change-detection guard in the Bluetooth manager.
+    Intended for devices that emit static advertisements as a wake-up
+    signal, for example, devices that require an active GATT connection
+    to read sensor data and whose advertisement payload never changes.
+    """
+    _get_manager(hass).async_clear_advertisement_history(address)
 
 
 @hass_callback

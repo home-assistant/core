@@ -1233,6 +1233,46 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
+        (
+            {"mode": "trigger"},
+            ("first", "last", "any"),
+            ("all", "invalid", None),
+        ),
+        (
+            {"mode": "condition"},
+            ("all", "any"),
+            ("first", "last", "invalid", None),
+        ),
+        (
+            {"mode": "trigger", "translation_key": "trigger_behavior"},
+            ("first", "last", "any"),
+            ("all", "invalid", None),
+        ),
+    ],
+)
+def test_automation_behavior_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test automation behavior selector."""
+    _test_selector("automation_behavior", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {},
+        {"mode": "invalid_mode"},
+    ],
+)
+def test_automation_behavior_selector_schema_error(schema) -> None:
+    """Test automation behavior selector config schema errors."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"automation_behavior": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
         ({}, ("abc123", None, {"key": "value"}), ()),
         ({"multiple": False}, ("abc123", None, {"key": "value"}), ()),
         (

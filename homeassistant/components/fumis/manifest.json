@@ -12,6 +12,6 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["fumis"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["fumis==0.4.0"]
 }

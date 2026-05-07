@@ -1,7 +1,5 @@
 """Support for the Autarco diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant
