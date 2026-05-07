@@ -72,6 +72,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
