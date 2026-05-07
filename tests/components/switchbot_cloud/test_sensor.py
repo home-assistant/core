@@ -89,9 +89,18 @@ async def test_coordinator_data(
     assert entry.state is ConfigEntryState.LOADED
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     unique_id_list = [entity.unique_id for entity in entities]
-    assert len(entities) == len(SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model])
-    for target in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model]:
-        assert f"test-device-id-1_{target.key}" in unique_id_list
+
+    if device_model == "Relay Switch 2PM":
+        assert (
+            len(entities) == len(SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model]) * 2
+        )
+        for target in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model]:
+            assert f"test-device-id-1-{target.key}-1" in unique_id_list
+            assert f"test-device-id-1-{target.key}-2" in unique_id_list
+    else:
+        assert len(entities) == len(SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model])
+        for target in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device_model]:
+            assert f"test-device-id-1_{target.key}" in unique_id_list
 
 
 async def test_unsupported_device_type(
