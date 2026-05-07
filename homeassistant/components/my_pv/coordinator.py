@@ -54,10 +54,8 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         }
         connections = set()
 
-        if device.mac_address is not None:
-            mac_address = format_mac(device.mac_address)
-            identifiers.add((DOMAIN, mac_address))
-            connections.add((CONNECTION_NETWORK_MAC, mac_address))
+        if device.mac_address:
+            connections.add((CONNECTION_NETWORK_MAC, format_mac(device.mac_address)))
 
         name = f"my-PV {device.model}"
 
