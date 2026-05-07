@@ -195,7 +195,7 @@ async def test_cover_service_actions(
     service: str,
     command_name: str,
     parameters: list[Any],
-    expected_state: CoverState,
+    expected_state: CoverState | str,
 ) -> None:
     """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
