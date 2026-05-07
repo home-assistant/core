@@ -183,7 +183,11 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "GetDateTime",
+        "GetLiveContext",
+        "GetCurrentLocation",
+    ]
 
     # Match all
     intent_handler.platforms = None
@@ -193,13 +197,14 @@ async def test_assist_api(
         "test_intent",
         "GetDateTime",
         "GetLiveContext",
+        "GetCurrentLocation",
     ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 3
+    assert len(api.tools) == 4
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -676,9 +681,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     no_timer_prompt = "This device is not able to start timers."
 
-    area_prompt = (
-        "When a user asks to turn on all devices of a specific type, "
-        "ask the user to specify an area, unless there is only one device of that type."
+    location_prompt = (
+        "When a request names a generic device without an area, "
+        "treat it as the user's current area and call "
+        "`GetCurrentLocation` to resolve it before targeting."
     )
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
@@ -709,6 +715,8 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
+{location_prompt}
+{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
@@ -725,37 +733,48 @@ Static Context: An overview of the areas and the devices in this smart home:
         "result": exposed_entities_prompt,
     }
 
-    # Fake that request is made from a specific device ID with an area
+    # Fake that request is made from a specific device ID with an area.
+    # The prompt no longer changes — area/floor are now exposed via the
+    # GetCurrentLocation tool to keep the prompt cacheable across speakers.
     llm_context.device_id = device.id
-    area_prompt = (
-        "You are in area Test Area and all generic commands like 'turn on the lights' "
-        "should target this area."
-    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
+{location_prompt}
+{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
 {no_timer_prompt}"""
     )
 
-    # Add floor
+    # GetCurrentLocation returns the device's area
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetCurrentLocation", tool_args={})
+    )
+    assert result == {"success": True, "result": {"area": "Test Area"}}
+
+    # Add floor — surfaces only via the tool, not the prompt
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
-    area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands"
-        " like 'turn on the lights' "
-        "should target this area."
-    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
+{location_prompt}
+{no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
 {no_timer_prompt}"""
     )
+
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetCurrentLocation", tool_args={})
+    )
+    assert result == {
+        "success": True,
+        "result": {"area": "Test Area", "floor": "2"},
+    }
 
     # Register device for timers
     async_register_timer_handler(hass, device.id, lambda *args: None)
@@ -764,6 +783,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
+{location_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}"""
@@ -1834,6 +1854,79 @@ async def test_get_date_time_tool(hass: HomeAssistant) -> None:
                 "weekday": "Monday",
             },
         }
+
+
+async def test_get_current_location_tool(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the GetCurrentLocation tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Need an exposed entity for the tool to be added to the API
+    entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "mock-id",
+        original_name="Test",
+        suggested_object_id="test",
+    ).write_unavailable_state(hass)
+    async_expose_entity(hass, "conversation", "light.test", True)
+
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    # No device_id
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next(
+        (tool for tool in api.tools if tool.name == "GetCurrentLocation"), None
+    )
+    assert tool is not None
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {"success": False, "error": "No area set for this device"}
+
+    # Device with no area
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "abc")},
+    )
+    llm_context.device_id = device.id
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {"success": False, "error": "No area set for this device"}
+
+    # Device in an area without a floor
+    area = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(device.id, area_id=area.id)
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {"success": True, "result": {"area": "Kitchen"}}
+
+    # Device in an area with a floor
+    floor = floor_registry.async_create("Ground")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetCurrentLocation", {}), llm_context
+    )
+    assert result == {
+        "success": True,
+        "result": {"area": "Kitchen", "floor": "Ground"},
+    }
 
 
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
