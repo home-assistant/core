@@ -36,7 +36,13 @@ class CastRuntimeData:
     )
     added_cast_devices: set[UUID] = field(default_factory=set)
     browser: CastBrowser | None = None
-    multizone_manager: MultizoneManager | None = None
+    _multizone_manager: MultizoneManager | None = None
+
+    def get_or_create_multizone_manager(self) -> MultizoneManager:
+        """Get or create multi-zone manager."""
+        if self._multizone_manager is None:
+            self._multizone_manager = MultizoneManager()
+        return self._multizone_manager
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:

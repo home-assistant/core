@@ -241,11 +241,7 @@ class CastDevice:
         )
         self._chromecast = chromecast
 
-        runtime_data = self._config_entry.runtime_data
-        if runtime_data.multizone_manager is None:
-            runtime_data.multizone_manager = MultizoneManager()
-
-        self.mz_mgr = runtime_data.multizone_manager
+        self.mz_mgr = self._config_entry.runtime_data.get_or_create_multizone_manager()
 
         self._status_listener = CastStatusListener(
             self, chromecast, self.mz_mgr, self._mz_only
