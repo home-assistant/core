@@ -27,7 +27,12 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -134,28 +139,58 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("device", "service", "command_name", "expected_state"),
+    ("device", "service", "command_name", "parameters", "expected_state"),
     [
-        (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
-        (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
-        (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
+        (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
+        (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [15, 1, 0],
+            CoverState.OPENING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [15, 1, 0],
+            CoverState.CLOSING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-venetian-blind-rts",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-venetian-blind-rts",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-venetian-blind-rts",
+        "open-tilt-venetian-blind-rts",
+        "close-tilt-venetian-blind-rts",
+        "stop-tilt-venetian-blind-rts",
     ],
 )
 async def test_cover_service_actions(
@@ -165,7 +200,8 @@ async def test_cover_service_actions(
     device: FixtureDevice,
     service: str,
     command_name: str,
-    expected_state: CoverState,
+    parameters: list[Any] | None,
+    expected_state: CoverState | str,
 ) -> None:
     """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
@@ -184,6 +220,7 @@ async def test_cover_service_actions(
         mock_client,
         device_url=device.device_url,
         command_name=command_name,
+        parameters=parameters,
     )
 
 
@@ -923,48 +960,3 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_command.await_count == 0
-
-
-@pytest.mark.parametrize(
-    ("service", "command_name", "parameters"),
-    [
-        (SERVICE_OPEN_COVER, "open", [0]),
-        (SERVICE_CLOSE_COVER, "close", [0]),
-        (SERVICE_STOP_COVER, "stop", [0]),
-        (SERVICE_OPEN_COVER_TILT, "tiltPositive", [15, 1, 0]),
-        (SERVICE_CLOSE_COVER_TILT, "tiltNegative", [15, 1, 0]),
-        (SERVICE_STOP_COVER_TILT, "stop", [0]),
-    ],
-    ids=[
-        "open",
-        "close",
-        "stop",
-        "open-tilt",
-        "close-tilt",
-        "stop-tilt",
-    ],
-)
-async def test_up_down_venetian_blind_commands(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    service: str,
-    command_name: str,
-    parameters: list[Any],
-) -> None:
-    """Test UpDownVenetianBlind cover and tilt commands."""
-    await setup_overkiz_integration(fixture=UP_DOWN_VENETIAN_BLIND.fixture)
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: UP_DOWN_VENETIAN_BLIND.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=UP_DOWN_VENETIAN_BLIND.device_url,
-        command_name=command_name,
-        parameters=parameters,
-    )
