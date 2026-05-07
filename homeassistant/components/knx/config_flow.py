@@ -1,8 +1,8 @@
 """Config flow for KNX."""
 
 from collections.abc import AsyncGenerator
-from pathlib import Path
 from typing import Any, Final, Literal
+from urllib.parse import urlparse, urlunparse
 
 import voluptuous as vol
 from xknx import XKNX
@@ -17,7 +17,6 @@ from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -28,7 +27,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, VolDictType
 
 from .const import (
@@ -51,11 +49,9 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_BACKEND,
-    CONF_KNX_TELEGRAM_DB_PATH,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DSN,
-    CONF_KNX_TELEGRAM_LOAD_MINUTES,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TELEGRAM_LOAD_HOURS,
     CONF_KNX_TELEGRAM_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
@@ -68,9 +64,7 @@ from .const import (
     TELEGRAM_BACKEND_POSTGRES,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_DB_PATH_DEFAULT,
-    TELEGRAM_LOAD_MINUTES_DEFAULT,
-    TELEGRAM_LOG_DEFAULT,
-    TELEGRAM_LOG_MAX,
+    TELEGRAM_LOAD_HOURS_DEFAULT,
     TELEGRAM_RETENTION_DEFAULT,
     KNXConfigEntryData,
 )
@@ -89,9 +83,8 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     route_back=False,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     telegram_backend=TELEGRAM_BACKEND_SQLITE,
-    telegram_db_path=TELEGRAM_DB_PATH_DEFAULT,
     telegram_retention_days=TELEGRAM_RETENTION_DEFAULT,
-    telegram_load_minutes=TELEGRAM_LOAD_MINUTES_DEFAULT,
+    telegram_load_hours=TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
@@ -933,19 +926,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             self.new_entry_data.update(entry_data)
         new_data = self.initial_data | self.new_entry_data
 
-        if new_data.get(CONF_KNX_TELEGRAM_BACKEND) != self.initial_data.get(
-            CONF_KNX_TELEGRAM_BACKEND
-        ):
-            persistent_notification.async_create(
-                self.hass,
-                title="KNX Telegram Storage",
-                message=(
-                    "The telegram storage backend has been changed. "
-                    "Home Assistant will reload the KNX integration to apply the changes."
-                ),
-                notification_id="knx_telegram_backend_changed",
-            )
-
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data,
@@ -967,13 +947,13 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 KNXConfigEntryData(
                     state_updater=user_input[CONF_KNX_STATE_UPDATER],
                     rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                    telegram_backend=user_input[CONF_KNX_TELEGRAM_BACKEND],
-                    telegram_load_minutes=user_input[CONF_KNX_TELEGRAM_LOAD_MINUTES],
+                    telegram_backend=user_input[CONF_KNX_TELEGRAM_DB_BACKEND],
+                    telegram_load_hours=user_input[CONF_KNX_TELEGRAM_LOAD_HOURS],
                 )
             )
-            backend = user_input[CONF_KNX_TELEGRAM_BACKEND]
+            backend = user_input[CONF_KNX_TELEGRAM_DB_BACKEND]
             if backend == TELEGRAM_BACKEND_MEMORY:
-                return await self.async_step_telegram_store_memory()
+                return self.finish_flow()
             if backend == TELEGRAM_BACKEND_SQLITE:
                 return await self.async_step_telegram_store_sqlite()
             if backend == TELEGRAM_BACKEND_POSTGRES:
@@ -1002,9 +982,9 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 vol.Coerce(int),
             ),
             vol.Required(
-                CONF_KNX_TELEGRAM_BACKEND,
+                CONF_KNX_TELEGRAM_DB_BACKEND,
                 default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_BACKEND, TELEGRAM_BACKEND_SQLITE
+                    CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_SQLITE
                 ),
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -1018,16 +998,16 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 )
             ),
             vol.Required(
-                CONF_KNX_TELEGRAM_LOAD_MINUTES,
+                CONF_KNX_TELEGRAM_LOAD_HOURS,
                 default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_LOAD_MINUTES, TELEGRAM_LOAD_MINUTES_DEFAULT
+                    CONF_KNX_TELEGRAM_LOAD_HOURS, TELEGRAM_LOAD_HOURS_DEFAULT
                 ),
             ): vol.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0,
                         mode=selector.NumberSelectorMode.BOX,
-                        unit_of_measurement="min",
+                        unit_of_measurement="h",
                     ),
                 ),
                 vol.Coerce(int),
@@ -1039,79 +1019,25 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             last_step=False,
         )
 
-    async def async_step_telegram_store_memory(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage memory telegram store settings."""
-        if user_input is not None:
-            return self.finish_flow(
-                KNXConfigEntryData(
-                    telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
-                )
-            )
-
-        data_schema = {
-            vol.Required(
-                CONF_KNX_TELEGRAM_LOG_SIZE,
-                default=self.initial_data.get(
-                    CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
-                ),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=TELEGRAM_LOG_MAX,
-                        mode=selector.NumberSelectorMode.BOX,
-                    ),
-                ),
-                vol.Coerce(int),
-            ),
-        }
-        return self.async_show_form(
-            step_id="telegram_store_memory",
-            data_schema=vol.Schema(data_schema),
-            last_step=True,
-            description_placeholders={
-                "telegram_log_size_max": f"{TELEGRAM_LOG_MAX}",
-            },
-        )
-
     async def async_step_telegram_store_sqlite(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage SQLite telegram store settings."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            db_path = user_input[CONF_KNX_TELEGRAM_DB_PATH]
-            full_path = Path(self.hass.config.path(STORAGE_DIR, str(db_path)))
-            if not self.hass.config.is_allowed_path(str(full_path)):
-                errors[CONF_KNX_TELEGRAM_DB_PATH] = "invalid_path"
-            else:
-                return self.finish_flow(
-                    KNXConfigEntryData(
-                        telegram_retention_days=user_input[
-                            CONF_KNX_TELEGRAM_RETENTION_DAYS
-                        ],
-                        telegram_db_path=db_path,
-                    )
+            return self.finish_flow(
+                KNXConfigEntryData(
+                    telegram_retention_days=user_input[
+                        CONF_KNX_TELEGRAM_RETENTION_DAYS
+                    ],
+                    telegram_db_path=TELEGRAM_DB_PATH_DEFAULT,
                 )
-
-        db_path = (
-            user_input.get(CONF_KNX_TELEGRAM_DB_PATH)
-            if user_input
-            else self.initial_data.get(
-                CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT
             )
-        )
-        full_path = Path(self.hass.config.path(STORAGE_DIR, str(db_path)))
-        db_exists_info = "File exists" if full_path.exists() else "File does not exist"
 
         data_schema = {
             vol.Required(
                 CONF_KNX_TELEGRAM_RETENTION_DAYS,
-                default=user_input.get(CONF_KNX_TELEGRAM_RETENTION_DAYS)
-                if user_input
-                else self.initial_data.get(
+                default=self.initial_data.get(
                     CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
                 ),
             ): vol.All(
@@ -1124,19 +1050,12 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required(
-                CONF_KNX_TELEGRAM_DB_PATH,
-                default=db_path,
-            ): selector.TextSelector(),
         }
         return self.async_show_form(
             step_id="telegram_store_sqlite",
             data_schema=vol.Schema(data_schema),
             errors=errors,
             last_step=True,
-            description_placeholders={
-                "db_exists_info": db_exists_info,
-            },
         )
 
     async def async_step_telegram_store_postgres(
@@ -1219,39 +1138,31 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         """Build DSN from params."""
         user = params.get("user", "")
         password = params.get("password", "")
-        if mask_password and password:
-            password = "********"
         host = params.get("host", "localhost")
         port = int(params.get("port", 5432))
         database = params.get("database", "knx_telegrams")
         tls = params.get("tls", False)
 
-        dsn = f"postgresql://{user}:{password}@{host}:{port}/{database}"
-        if tls:
-            dsn += "?sslmode=require"
-        return dsn
+        netloc = f"{user}:{password}@{host}:{port}"
+        if mask_password and password:
+            netloc = f"{user}:********@{host}:{port}"
+
+        query = "sslmode=require" if tls else ""
+        return urlunparse(("postgresql", netloc, f"/{database}", "", query, ""))
 
     def _parse_dsn(self, dsn: str) -> dict[str, Any]:
         """Parse DSN into params."""
         if not dsn:
             return {}
         try:
-            # Simple parsing for our expected format
-            # postgresql://user:password@host:port/database?sslmode=require
-            scheme_rem = dsn.split("://", 1)[1]
-            auth_rem = scheme_rem.split("@", 1)
-            user_pass = auth_rem[0].split(":", 1)
-            host_port_db = auth_rem[1].split("/", 1)
-            host_port = host_port_db[0].split(":", 1)
-            db_query = host_port_db[1].split("?", 1)
-        except IndexError, ValueError:
-            return {}
-        else:
+            url = urlparse(dsn)
             return {
-                "user": user_pass[0],
-                "password": user_pass[1] if len(user_pass) > 1 else "",
-                "host": host_port[0],
-                "port": int(float(host_port[1])) if len(host_port) > 1 else 5432,
-                "database": db_query[0],
-                "tls": "sslmode=require" in db_query[1] if len(db_query) > 1 else False,
+                "user": url.username or "",
+                "password": url.password or "",
+                "host": url.hostname or "localhost",
+                "port": url.port or 5432,
+                "database": url.path.lstrip("/"),
+                "tls": "sslmode=require" in url.query,
             }
+        except ValueError, AttributeError:
+            return {}

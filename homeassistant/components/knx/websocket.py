@@ -1,7 +1,5 @@
 """KNX Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
 from datetime import timedelta
@@ -27,7 +25,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
 from .const import (
-    CONF_KNX_TELEGRAM_LOAD_MINUTES,
+    CONF_KNX_TELEGRAM_LOAD_HOURS,
     DOMAIN,
     KNX_MODULE_KEY,
     SUPPORTED_PLATFORMS_UI,
@@ -313,8 +311,8 @@ async def ws_group_monitor_info(
 ) -> None:
     """Handle get info command of group monitor."""
     start_time = None
-    if load_minutes := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_MINUTES):
-        start_time = dt_util.now() - timedelta(minutes=load_minutes)
+    if (load_hours := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_HOURS)) is not None:
+        start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=False)
     result = await knx.telegrams.store.query(query)
@@ -362,10 +360,10 @@ def ws_group_telegrams(
         vol.Optional("dpt_mains"): [vol.Coerce(int)],
         vol.Optional("start_time"): vol.Datetime(),
         vol.Optional("end_time"): vol.Datetime(),
-        vol.Optional("delta_before_ms"): vol.Coerce(int),
-        vol.Optional("delta_after_ms"): vol.Coerce(int),
-        vol.Optional("limit"): vol.Coerce(int),
-        vol.Optional("offset"): vol.Coerce(int),
+        vol.Optional("delta_before_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("delta_after_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("limit"): vol.All(vol.Coerce(int), vol.Range(min=1, max=250_000)),
+        vol.Optional("offset"): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional("order_descending"): bool,
     }
 )
@@ -379,10 +377,11 @@ async def ws_query_telegrams(
 ) -> None:
     """Handle query telegrams command."""
     start_time = msg.get("start_time")
-    if start_time is None and (
-        load_minutes := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_MINUTES)
+    if (
+        start_time is None
+        and (load_hours := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_HOURS)) is not None
     ):
-        start_time = dt_util.now() - timedelta(minutes=load_minutes)
+        start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(
         sources=msg.get("sources", []),

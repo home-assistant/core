@@ -40,10 +40,8 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_BACKEND,
-    CONF_KNX_TELEGRAM_DB_PATH,
-    CONF_KNX_TELEGRAM_LOAD_MINUTES,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_LOAD_HOURS,
     CONF_KNX_TELEGRAM_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
@@ -52,8 +50,7 @@ from homeassistant.components.knx.const import (
     DOMAIN,
     TELEGRAM_BACKEND_MEMORY,
     TELEGRAM_BACKEND_SQLITE,
-    TELEGRAM_DB_PATH_DEFAULT,
-    TELEGRAM_LOAD_MINUTES_DEFAULT,
+    TELEGRAM_LOAD_HOURS_DEFAULT,
     TELEGRAM_RETENTION_DEFAULT,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -1053,10 +1050,9 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_SQLITE,
-        CONF_KNX_TELEGRAM_DB_PATH: TELEGRAM_DB_PATH_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_SQLITE,
         CONF_KNX_TELEGRAM_RETENTION_DAYS: TELEGRAM_RETENTION_DEFAULT,
-        CONF_KNX_TELEGRAM_LOAD_MINUTES: TELEGRAM_LOAD_MINUTES_DEFAULT,
+        CONF_KNX_TELEGRAM_LOAD_HOURS: TELEGRAM_LOAD_HOURS_DEFAULT,
     }
     knx_setup.assert_called_once()
 
@@ -1656,7 +1652,7 @@ async def test_options_communication_settings(
         user_input={
             CONF_KNX_STATE_UPDATER: False,
             CONF_KNX_RATE_LIMIT: 40,
-            CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_MEMORY,
+            CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_MEMORY,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -1664,9 +1660,7 @@ async def test_options_communication_settings(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_KNX_TELEGRAM_LOG_SIZE: 3000,
-        },
+        user_input={},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result.get("data")
@@ -1675,8 +1669,7 @@ async def test_options_communication_settings(
         **initial_data,
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
-        CONF_KNX_TELEGRAM_BACKEND: TELEGRAM_BACKEND_MEMORY,
-        CONF_KNX_TELEGRAM_LOG_SIZE: 3000,
-        CONF_KNX_TELEGRAM_LOAD_MINUTES: TELEGRAM_LOAD_MINUTES_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_MEMORY,
+        CONF_KNX_TELEGRAM_LOAD_HOURS: TELEGRAM_LOAD_HOURS_DEFAULT,
     }
     knx_setup.assert_called_once()

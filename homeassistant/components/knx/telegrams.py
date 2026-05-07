@@ -1,12 +1,12 @@
 """KNX Telegram handler."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import Callable, Mapping
 from datetime import datetime
+import json
 import logging
+import os
 import re
 from typing import Any, TypedDict
 
@@ -21,7 +21,6 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -31,10 +30,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
 from .const import (
-    CONF_KNX_TELEGRAM_BACKEND,
-    CONF_KNX_TELEGRAM_DB_PATH,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DSN,
-    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TELEGRAM_RETENTION_DAYS,
     DOMAIN,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
@@ -42,7 +39,6 @@ from .const import (
     TELEGRAM_BACKEND_POSTGRES,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_DB_PATH_DEFAULT,
-    TELEGRAM_LOG_DEFAULT,
     TELEGRAM_RETENTION_DEFAULT,
 )
 from .project import KNXProject
@@ -96,7 +92,7 @@ class Telegrams:
         self.project = project
         self.config = config
 
-        backend = config.get(CONF_KNX_TELEGRAM_BACKEND, TELEGRAM_BACKEND_MEMORY)
+        backend = config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
         self.store: TelegramStore
 
         if backend == TELEGRAM_BACKEND_POSTGRES:
@@ -109,21 +105,13 @@ class Telegrams:
             )
             self.store = PostgresStore(dsn, retention_days=retention)  # type: ignore[call-arg]
         elif backend == TELEGRAM_BACKEND_SQLITE:
-            db_path = str(
-                config.get(CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT)
-            )
-            full_path = (
-                db_path
-                if db_path == ":memory:"
-                else hass.config.path(STORAGE_DIR, db_path)
-            )
+            full_path = hass.config.path(STORAGE_DIR, TELEGRAM_DB_PATH_DEFAULT)
             retention = config.get(
                 CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
             )
             self.store = SqliteStore(full_path, retention_days=retention)  # type: ignore[call-arg]
         else:  # Memory
-            log_size = config.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT)
-            self.store = MemoryStore(max_telegrams=log_size)
+            self.store = MemoryStore()
 
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
@@ -136,16 +124,14 @@ class Telegrams:
                 self._xknx_data_secure_group_key_issue_cb,
             )
         )
-        self.recent_telegrams: deque[TelegramDict] = deque(
-            maxlen=config.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT)
-        )
+        self.recent_telegrams: deque[TelegramDict] = deque(maxlen=200)
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
         self._async_remove_listener: Callable[[], None] | None = None
         self._pending_tasks: set[asyncio.Task[Any]] = set()
 
     async def load_history(self) -> None:
         """Load history from store."""
-        backend = self.config.get(CONF_KNX_TELEGRAM_BACKEND, TELEGRAM_BACKEND_MEMORY)
+        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
         info = self._get_backend_info()
         try:
             _LOGGER.debug(
@@ -170,27 +156,23 @@ class Telegrams:
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="telegram_storage_error",
-            )
-            # Detailed persistent notification for immediate feedback
-            persistent_notification.async_create(
-                self.hass,
-                title="KNX Telegram Storage Error",
-                message=(
-                    f"The configured KNX telegram storage backend '{backend}' failed to initialize. "
-                    "Home Assistant has fallen back to memory-only storage. "
-                    "Telegram history will be lost on restart until the issue is resolved.\n\n"
-                    f"**Configuration**: `{info}`\n"
-                    f"**Error**: {err!r}"
-                ),
-                notification_id="knx_telegram_backend_error",
+                translation_placeholders={
+                    "backend": backend,
+                    "info": info,
+                    "error": str(err),
+                },
             )
             # Fallback to MemoryStore to allow integration to start
             if not isinstance(self.store, MemoryStore):
-                log_size = self.config.get(
-                    CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
-                )
-                self.store = MemoryStore(max_telegrams=log_size)
+                self.store = MemoryStore()
                 await self.store.initialize()
+        else:
+            ir.async_delete_issue(
+                self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR
+            )
+
+        # Migrate legacy JSON storage if it exists
+        await self.migrate_telegrams()
 
         # Initial eviction for SQL backends
         await self.store.evict_expired()  # type: ignore[attr-defined]
@@ -224,7 +206,10 @@ class Telegrams:
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
 
         # Store in history store asynchronously
-        if self.recent_telegrams.maxlen != 0:
+        if self.store is not None:
+            if len(self._pending_tasks) > 100:
+                _LOGGER.warning("Too many pending telegram storage tasks, skipping")
+                return
             task = self.hass.async_create_task(
                 self.store.store(self.dict_to_model(telegram_dict))
             )
@@ -239,7 +224,10 @@ class Telegrams:
         self.recent_telegrams.append(telegram_dict)
 
         # Store in history store asynchronously
-        if self.recent_telegrams.maxlen != 0:
+        if self.store is not None:
+            if len(self._pending_tasks) > 100:
+                _LOGGER.warning("Too many pending telegram storage tasks, skipping")
+                return
             task = self.hass.async_create_task(
                 self.store.store(self.dict_to_model(telegram_dict))
             )
@@ -298,6 +286,11 @@ class Telegrams:
 
     def dict_to_model(self, t: TelegramDict) -> StoredTelegram:
         """Convert a TelegramDict to a StoredTelegram model."""
+        value = t["value"]
+        value_numeric: float | None = None
+        if isinstance(value, (int, float)):
+            value_numeric = float(value)
+
         return StoredTelegram(
             timestamp=dt_util.parse_datetime(t["timestamp"]) or dt_util.now(),
             source=t["source"],
@@ -305,7 +298,8 @@ class Telegrams:
             direction=t["direction"],
             telegramtype=t["telegramtype"],
             payload=t["payload"],
-            value=t["value"] if isinstance(t["value"], (int, float, bool)) else None,
+            value=value if isinstance(value, (int, float, bool, str, dict)) else None,
+            value_numeric=value_numeric,
             dpt_main=t["dpt_main"],
             dpt_sub=t["dpt_sub"],
             unit=t["unit"],
@@ -313,6 +307,40 @@ class Telegrams:
             destination_name=t["destination_name"],
             data_secure=t["data_secure"],
         )
+
+    async def migrate_telegrams(self) -> None:
+        """Migrate telegrams from JSON storage to the current store."""
+        if isinstance(self.store, MemoryStore):
+            return
+
+        path = self.hass.config.path(STORAGE_DIR, "knx/telegrams_history.json")
+        if not await self.hass.async_add_executor_job(os.path.exists, path):
+            return
+
+        _LOGGER.info(
+            "Migrating KNX telegram history from JSON to %s",
+            self.store.__class__.__name__,
+        )
+        try:
+
+            def _load_json() -> dict[str, Any]:
+                with open(path, encoding="utf-8") as f:
+                    return json.load(f)  # type: ignore[no-any-return]
+
+            json_data = await self.hass.async_add_executor_job(_load_json)
+            telegrams_data = json_data.get("data", [])
+
+            stored_telegrams = [self.dict_to_model(t) for t in telegrams_data]
+
+            if stored_telegrams:
+                await self.store.store_many(stored_telegrams)
+                _LOGGER.info(
+                    "Successfully migrated %d telegrams", len(stored_telegrams)
+                )
+
+            await self.hass.async_add_executor_job(os.remove, path)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Error migrating KNX telegram history: %s", err)
 
     def model_to_dict(self, m: StoredTelegram) -> TelegramDict:
         """Convert a StoredTelegram model to a TelegramDict."""
@@ -335,7 +363,7 @@ class Telegrams:
 
     def _get_backend_info(self) -> str:
         """Get meaningful information about the current backend."""
-        backend = self.config.get(CONF_KNX_TELEGRAM_BACKEND, TELEGRAM_BACKEND_MEMORY)
+        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
         if backend == TELEGRAM_BACKEND_POSTGRES:
             dsn = self.config.get(CONF_KNX_TELEGRAM_DSN, "")
             # Mask password
@@ -343,9 +371,7 @@ class Telegrams:
             # Fix potential float port (e.g. :5432.0/)
             return re.sub(r":(\d+)\.0($|[/?])", r":\1\2", dsn)
         if backend == TELEGRAM_BACKEND_SQLITE:
-            return str(
-                self.config.get(CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT)
-            )
+            return TELEGRAM_DB_PATH_DEFAULT
         return "Memory"
 
 
