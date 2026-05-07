@@ -72,7 +72,7 @@ async def async_migrate_entry(
         data = dict(config_entry.data)
         title = config_entry.title
         if name := data.pop(CONF_NAME, None):
-            title = name
+            title = title or name
 
         hass.config_entries.async_update_entry(
             config_entry,
