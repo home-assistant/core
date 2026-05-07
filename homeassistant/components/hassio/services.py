@@ -51,6 +51,7 @@ from .const import (
     SupervisorEntityModel,
 )
 from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
+from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
@@ -103,7 +104,13 @@ def valid_addon(value: Any) -> str:
     value = VALID_ADDON_SLUG(value)
     hass = async_get_hass_or_none()
 
-    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
+    if not hass:
+        return value
+    try:
+        addons = get_addons_info(hass)
+    except HassioNotReadyError:
+        return value
+    if value not in addons:
         raise vol.Invalid("Not a valid app slug")
     return value
 

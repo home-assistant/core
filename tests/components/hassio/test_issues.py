@@ -27,7 +27,6 @@ from aiohasupervisor.models import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.hassio.const import DATA_HOST_INFO
 from homeassistant.components.hassio.issues import SupervisorIssues
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -1099,61 +1098,6 @@ async def test_supervisor_issues_free_space(
             "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
             "storage_url": "/config/storage",
             "free_space": "1.6",
-        },
-    )
-
-
-@pytest.mark.usefixtures("all_setup_requests")
-async def test_supervisor_issues_free_space_host_info_fail(
-    hass: HomeAssistant,
-    supervisor_client: AsyncMock,
-    hass_supervisor_ws_client: WebSocketGenerator,
-    host_info: AsyncMock,
-) -> None:
-    """Test supervisor issue for too little free space remaining without host info."""
-    mock_resolution_info(supervisor_client)
-
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
-
-    # Simulate host info being unavailable after setup (e.g., cached data cleared)
-    hass.data.pop(DATA_HOST_INFO, None)
-
-    client = await hass_supervisor_ws_client()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "supervisor/event",
-            "data": {
-                "event": "issue_changed",
-                "data": {
-                    "uuid": (issue_uuid := uuid4().hex),
-                    "type": "free_space",
-                    "context": "system",
-                    "reference": None,
-                },
-            },
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    await client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    assert_issue_repair_in_list(
-        msg["result"]["issues"],
-        uuid=issue_uuid,
-        context="system",
-        type_="free_space",
-        fixable=False,
-        placeholders={
-            "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
-            "storage_url": "/config/storage",
-            "free_space": "<2",
         },
     )
 

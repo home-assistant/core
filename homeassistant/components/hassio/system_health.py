@@ -30,11 +30,11 @@ def async_register(
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     ip_address = os.environ["SUPERVISOR"]
-    info = get_info(hass) or {}
-    host_info = get_host_info(hass) or {}
+    info = get_info(hass)
+    host_info = get_host_info(hass)
     supervisor_info = get_supervisor_info(hass)
-    network_info = get_network_info(hass) or {}
-    addons_list = get_addons_list(hass) or []
+    network_info = get_network_info(hass)
+    addons_list = get_addons_list(hass)
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
@@ -81,7 +81,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     }
 
     if info.get("hassos") is not None:
-        os_info = get_os_info(hass) or {}
+        os_info = get_os_info(hass)
         information["board"] = os_info.get("board")
 
     # Not using aiohasupervisor for ping call below intentionally. Given system health

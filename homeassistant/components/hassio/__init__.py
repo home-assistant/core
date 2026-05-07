@@ -2,7 +2,6 @@
 
 import asyncio
 from dataclasses import replace
-from datetime import datetime
 import logging
 import os
 import struct
@@ -33,7 +32,7 @@ from homeassistant.const import (
     SERVER_PORT,
     Platform,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -42,7 +41,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
@@ -74,7 +72,6 @@ from .const import (
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
-    HASSIO_MAIN_UPDATE_INTERVAL,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
 )
@@ -96,6 +93,7 @@ from .coordinator import (
     get_supervisor_stats,
 )
 from .discovery import async_setup_discovery_view
+from .exceptions import HassioNotReadyError
 from .handler import HassIO, async_update_diagnostics, get_supervisor_client
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -112,6 +110,7 @@ __all__ = [
     "AddonManager",
     "AddonState",
     "GreenOptions",
+    "HassioNotReadyError",
     "SupervisorError",
     "YellowOptions",
     "async_update_diagnostics",
@@ -181,8 +180,6 @@ def _check_deprecated_setup(hass: HomeAssistant) -> None:
     """Create issues for deprecated installation types and architectures."""
     os_info = get_os_info(hass)
     info = get_info(hass)
-    if os_info is None or info is None:
-        return
     is_haos = info.get("hassos") is not None
     board = os_info.get("board")
     arch = info.get("arch", "unknown")
@@ -416,36 +413,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Setup hardware integration for the detected board type
-    @callback
-    def _async_setup_hardware_integration(_: datetime | None = None) -> None:
-        """Set up hardware integration for the detected board type."""
-        if (os_info := get_os_info(hass)) is None:
-            # os info not yet fetched from supervisor, retry later
-            async_call_later(
-                hass,
-                HASSIO_MAIN_UPDATE_INTERVAL,
-                async_setup_hardware_integration_job,
-            )
-            return
-        if (board := os_info.get("board")) is None:
-            return
-        if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
-            return
+    # This is done after the initial data refresh to ensure that the board info is available.
+    os_info = get_os_info(hass)
+    if (board := os_info.get("board")) is not None and (
+        hw_integration := HARDWARE_INTEGRATIONS.get(board)
+    ) is not None:
         discovery_flow.async_create_flow(
             hass, hw_integration, context={"source": SOURCE_SYSTEM}, data={}
         )
 
-    async_setup_hardware_integration_job = HassJob(
-        _async_setup_hardware_integration, cancel_on_shutdown=True
-    )
-
-    _async_setup_hardware_integration()
-
-    def deprecated_setup_issue() -> None:
-        _check_deprecated_setup(hass)
-        listener()
-
-    listener = coordinator.async_add_listener(deprecated_setup_issue)
+    # Check for deprecated setup and create issues if needed.
+    # This is done after the initial data refresh to ensure that the info needed is available.
+    _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
