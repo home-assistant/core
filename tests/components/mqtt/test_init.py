@@ -488,7 +488,7 @@ async def test_publish_action_with_message_retention_interval(
     assert not mqtt_mock.async_publish.call_args[0][3]
     assert mqtt_mock.async_publish.call_args[1]["message_expiry_interval"] == interval
 
-    
+
 @pytest.mark.parametrize(("qos", "retain"), [(None, None), (0, None), (None, False)])
 async def test_publish_api_with_falback_to_none(
     hass: HomeAssistant,
@@ -1738,7 +1738,7 @@ async def test_unload_config_entry(
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
     new_mqtt_config_entry = mqtt_config_entry
-    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
+    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False, ANY)
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.services.has_service(mqtt.DOMAIN, "dump")

@@ -6,7 +6,7 @@ import socket
 import ssl
 import time
 from typing import Any
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import certifi
 import paho.mqtt.client as paho_mqtt
@@ -129,6 +129,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
             "some-payload",
             0,
             False,
+            ANY,
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -153,12 +154,7 @@ async def test_publish(
     await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
     assert publish_mock.called
-    assert publish_mock.call_args[0] == (
-        "test-topic",
-        "test-payload",
-        0,
-        False,
-    )
+    assert publish_mock.call_args[0] == ("test-topic", "test-payload", 0, False, ANY)
     publish_mock.reset_mock()
 
     await mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
@@ -169,6 +165,7 @@ async def test_publish(
         "test-payload",
         2,
         True,
+        ANY,
     )
     publish_mock.reset_mock()
 
@@ -180,28 +177,18 @@ async def test_publish(
         "test-payload2",
         0,
         False,
+        ANY,
     )
     publish_mock.reset_mock()
 
     mqtt.publish(hass, "test-topic2", "test-payload2", 2, True)
     await hass.async_block_till_done()
     assert publish_mock.called
-    assert publish_mock.call_args[0] == (
-        "test-topic2",
-        "test-payload2",
-        2,
-        True,
-    )
+    assert publish_mock.call_args[0] == ("test-topic2", "test-payload2", 2, True, ANY)
     publish_mock.reset_mock()
 
     # test binary pass-through
-    mqtt.publish(
-        hass,
-        "test-topic3",
-        b"\xde\xad\xbe\xef",
-        0,
-        False,
-    )
+    mqtt.publish(hass, "test-topic3", b"\xde\xad\xbe\xef", 0, False)
     await hass.async_block_till_done()
     assert publish_mock.called
     assert publish_mock.call_args[0] == (
@@ -209,25 +196,15 @@ async def test_publish(
         b"\xde\xad\xbe\xef",
         0,
         False,
+        ANY,
     )
     publish_mock.reset_mock()
 
     # test null payload
-    mqtt.publish(
-        hass,
-        "test-topic3",
-        None,
-        0,
-        False,
-    )
+    mqtt.publish(hass, "test-topic3", None, 0, False)
     await hass.async_block_till_done()
     assert publish_mock.called
-    assert publish_mock.call_args[0] == (
-        "test-topic3",
-        None,
-        0,
-        False,
-    )
+    assert publish_mock.call_args[0] == ("test-topic3", None, 0, False, ANY)
 
     publish_mock.reset_mock()
 
@@ -281,6 +258,7 @@ async def test_message_expiry_interval_fails_for_legacy_protocols(
         "test-payload",
         0,
         False,
+        ANY,
     )
     publish_mock.reset_mock()
 
@@ -1762,7 +1740,7 @@ async def test_custom_birth_message(
     await mock_debouncer.wait()
     # Wait for publish call to finish
     await hass.async_block_till_done(wait_background_tasks=True)
-    mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
+    mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False, ANY)
 
 
 @pytest.mark.parametrize(
@@ -1776,7 +1754,7 @@ async def test_default_birth_message(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     await hass.async_block_till_done(wait_background_tasks=True)
     mqtt_client_mock.publish.assert_called_with(
-        "homeassistant/status", "online", 0, False
+        "homeassistant/status", "online", 0, False, ANY
     )
 
 
@@ -1861,7 +1839,7 @@ async def test_delayed_birth_message(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await birth.wait()
     mqtt_client_mock.publish.assert_called_with(
-        "homeassistant/status", "online", 0, False
+        "homeassistant/status", "online", 0, False, ANY
     )
 
 
@@ -1879,7 +1857,7 @@ async def test_subscription_done_when_birth_message_is_sent(
         assert (f"homeassistant/{component}/+/config", 0) in subscribe_calls
         assert (f"homeassistant/{component}/+/+/config", 0) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
-        "homeassistant/status", "online", 0, False
+        "homeassistant/status", "online", 0, False, ANY
     )
 
 
