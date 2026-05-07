@@ -83,13 +83,13 @@ class QubeSwitch(QubeEntity, SwitchEntity):
         """Return if entity is available."""
         return (
             super().available
-            and self.entity_description.register_key in self.coordinator.switches
+            and self.entity_description.register_key in self.coordinator.data.switches
         )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        return self.coordinator.switches.get(self.entity_description.register_key)
+        return self.coordinator.data.switches.get(self.entity_description.register_key)
 
     async def _async_write_switch(self, value: bool) -> None:
         """Write switch value to the device."""
@@ -106,7 +106,7 @@ class QubeSwitch(QubeEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",
             )
-        self.coordinator.switches[register_key] = value
+        self.coordinator.data.switches[register_key] = value
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
