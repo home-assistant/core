@@ -64,6 +64,56 @@ def mock_qube_client() -> Generator[MagicMock]:
         state.setpoint_room_cool_night = 23.0
         state.status_code = 1
 
+        # Binary sensors - Outputs
+        state.dout_srcpmp_val = True
+        state.dout_usrpmp_val = True
+        state.dout_fourwayvlv_val = False
+        state.dout_cooling_val = False
+        state.dout_threewayvlv_val = False
+        state.dout_bufferpmp_val = False
+        state.dout_heaterstep1_val = False
+        state.dout_heaterstep2_val = False
+        state.dout_heaterstep3_val = False
+
+        # Binary sensors - System status
+        state.keybonoff = True
+        state.daynightmode = True
+
+        # Binary sensors - Alarms
+        state.al_maxtime_antileg_active = False
+        state.al_maxtime_dhw_active = False
+        state.al_dewpoint_active = False
+        state.al_underfloorsafety_active = False
+        state.alrm_flw = False
+        state.usralrms = False
+        state.coolingalrms = False
+        state.heatingalrms = False
+        state.alarmmng_al_workinghour = False
+        state.srsalrm = False
+        state.glbal = False
+        state.alarmmng_al_pwrplus = False
+
+        # Binary sensors - Sensor/controller status
+        state.roomprb_en = True
+        state.plantprb_en = False
+        state.bufferprb_en = False
+        state.en_dhwpid = True
+
+        # Binary sensors - Demand signals
+        state.plantdemand = False
+        state.id_demand = False
+        state.thermostatdemand = True
+
+        # Binary sensors - Digital inputs
+        state.id_summerwinter = False
+        state.dewpoint = False
+        state.boostersecurity = False
+        state.srcflw = True
+        state.req_antileg_1 = False
+
+        # Binary sensors - Energy
+        state.surplus_pv = False
+
         client.get_all_data = AsyncMock(return_value=state)
         yield client
 

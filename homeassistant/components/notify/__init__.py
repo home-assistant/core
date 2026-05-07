@@ -1,7 +1,5 @@
 """Provides functionality to notify people."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial

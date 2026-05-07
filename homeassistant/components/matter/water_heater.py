@@ -1,7 +1,5 @@
 """Matter water heater platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -19,7 +17,6 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_WHOLE,
@@ -31,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 TEMPERATURE_SCALING_FACTOR = 100
@@ -48,11 +45,11 @@ DEFAULT_BOOST_DURATION = 3600  # 1 hour
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter WaterHeater platform from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
 
 

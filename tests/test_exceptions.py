@@ -1,7 +1,5 @@
 """Test to verify that Home Assistant exceptions work."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 

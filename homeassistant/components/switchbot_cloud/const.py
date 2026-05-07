@@ -66,6 +66,28 @@ class Humidifier2Mode(Enum):
         return [mode.name.lower() for mode in cls]
 
 
+class SwitchbotCloudDeviceLockState(Enum):
+    """Lock State."""
+
+    LOCKED = "locked"
+    UNLOCKED = "unlocked"
+    LOCKING = "locking"
+    UNLOCKING = "unlocking"
+    JAMMED = "jammed"
+    LATCH_BOLT_LOCKED = "latchBoltLocked"
+    HALF_LOCKED = "halfLocked"
+
+    @classmethod
+    def get_states(cls) -> list[SwitchbotCloudDeviceLockState]:
+        """Get lock states."""
+        return list(cls)
+
+    @classmethod
+    def get_values(cls) -> list[str]:
+        """Get lock value."""
+        return [mode.value for mode in cls]
+      
+      
 @dataclass(frozen=True)
 class SwitchbotCloudDeviceConfig:
     """Switchbot Cloud Device Config."""

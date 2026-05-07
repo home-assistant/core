@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
