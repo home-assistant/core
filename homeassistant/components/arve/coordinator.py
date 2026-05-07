@@ -1,7 +1,5 @@
 """Coordinator for the Arve integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from asyncarve import (

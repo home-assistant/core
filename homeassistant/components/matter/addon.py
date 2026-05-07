@@ -1,7 +1,5 @@
 """Provide add-on management."""
 
-from __future__ import annotations
-
 from homeassistant.components.hassio import AddonManager
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton

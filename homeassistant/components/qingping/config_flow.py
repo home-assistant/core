@@ -1,7 +1,5 @@
 """Config flow for Qingping integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from qingping_ble import QingpingBluetoothDeviceData as DeviceData

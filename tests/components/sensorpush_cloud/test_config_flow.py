@@ -1,7 +1,5 @@
 """Test the SensorPush Cloud config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

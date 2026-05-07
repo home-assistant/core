@@ -272,6 +272,11 @@
         }
       }
     },
+    "number": {
+      "display_time_offset": {
+        "name": "Display time offset"
+      }
+    },
     "select": {
       "time_format": {
         "name": "Time format",
@@ -289,6 +294,15 @@
           "good": "Good",
           "moderate": "Moderate",
           "unhealthy": "Unhealthy"
+        }
+      },
+      "battery_range": {
+        "name": "Battery range",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "bluetooth_signal": {

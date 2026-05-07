@@ -123,7 +123,7 @@
           "key": "link_audio_delay",
           "name": "Link Audio Delay",
           "type": "string",
-          "translation_key": "player_options.link_audio_delay",
+          "translation_key": "link_audio_delay",
           "translation_params": null,
           "value": "lip_sync",
           "read_only": false,
@@ -135,19 +135,85 @@
               "key": "audio_sync",
               "name": "audio_sync",
               "type": "string",
-              "value": "audio_sync"
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
             },
             {
               "key": "balanced",
               "name": "balanced",
               "type": "string",
-              "value": "balanced"
+              "value": "balanced",
+              "translation_key": "balanced_translation"
             },
             {
               "key": "lip_sync",
               "name": "lip_sync",
               "type": "string",
-              "value": "lip_sync"
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "link_audio_delay_ro",
+          "name": "Link Audio Delay",
+          "type": "string",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": "lip_sync",
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "audio_sync",
+              "name": "audio_sync",
+              "type": "string",
+              "value": "audio_sync",
+              "translation_key": "audio_sync_translation"
+            },
+            {
+              "key": "balanced",
+              "name": "balanced",
+              "type": "string",
+              "value": "balanced",
+              "translation_key": "balanced_translation"
+            },
+            {
+              "key": "lip_sync",
+              "name": "lip_sync",
+              "type": "string",
+              "value": "lip_sync",
+              "translation_key": "lip_sync_translation"
+            }
+          ]
+        },
+        {
+          "key": "boolean_with_options",
+          "name": "Boolean with options",
+          "type": "boolean",
+          "translation_key": "link_audio_delay",
+          "translation_params": null,
+          "value": true,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "option_a",
+              "name": "Option A",
+              "type": "boolean",
+              "value": false,
+              "translation_key": "option_a"
+            },
+            {
+              "key": "option_b",
+              "name": "Option B",
+              "type": "boolean",
+              "value": true,
+              "translation_key": "option_b"
             }
           ]
         }

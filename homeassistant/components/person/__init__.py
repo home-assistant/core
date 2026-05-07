@@ -1,7 +1,5 @@
 """Support for tracking people."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, Self
@@ -52,7 +50,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 
 from .const import DOMAIN
 
@@ -93,7 +90,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 async def async_create_person(
     hass: HomeAssistant,
     name: str,
@@ -111,7 +107,6 @@ async def async_create_person(
     )
 
 
-@bind_hass
 async def async_add_user_device_tracker(
     hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
 ) -> None:

@@ -1,7 +1,5 @@
 """Support for 1-Wire entities."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

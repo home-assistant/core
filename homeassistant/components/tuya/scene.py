@@ -1,7 +1,5 @@
 """Support for Tuya scenes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_sharing import Manager, SharingScene
@@ -11,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import DOMAIN
+from .coordinator import TuyaConfigEntry
 
 
 async def async_setup_entry(

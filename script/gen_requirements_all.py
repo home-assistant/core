@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
 
-from __future__ import annotations
-
 import difflib
 import importlib
 from operator import itemgetter
@@ -41,11 +39,6 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {
-        "exclude": set(),
-        "include": set(),
-        "markers": {},
-    },
     "wheels_aarch64": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
@@ -124,7 +117,7 @@ backoff>=2.0
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.0
+pydantic==2.13.2
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

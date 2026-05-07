@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
 
@@ -28,9 +28,7 @@ class CoverTriggerBase(EntityTriggerBase):
         return self._get_value(state) == domain_spec.target_value
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the transition is valid for a cover state change."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
+        """Check that the relevant cover value changed."""
         if (from_value := self._get_value(from_state)) is None:
             return False
         return from_value != self._get_value(to_state)

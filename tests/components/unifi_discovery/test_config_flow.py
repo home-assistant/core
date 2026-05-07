@@ -1,7 +1,5 @@
 """Test the UniFi Discovery config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest

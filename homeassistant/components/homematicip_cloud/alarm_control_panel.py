@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud alarm control panel."""
 
-from __future__ import annotations
-
 import logging
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
@@ -42,6 +40,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = False
+    _feature_id = "alarm"
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
@@ -127,4 +126,4 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self.__class__.__name__}_{self._home.id}"
+        return f"{self._home.id}_{self._feature_id}"
