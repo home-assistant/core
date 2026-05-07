@@ -187,11 +187,12 @@ async def async_publish(
     # Check for fallback to `None` values can be removed with HA Core 2027.6
     if qos is None or retain is None:
         report_usage(  # type: ignore[unreachable]
-            "received a call to the MQTT publish API from a custom integration "
-            "with a `None` value  for qos or retain argument. The `qos` argument should "
-            "be of type `int`, and the `retain` argument of type `bool`.",
+            "that calls the MQTT publish API with `None` for qos or retain. "
+            "The `qos` argument must be an `int`, "
+            "and the `retain` argument must be a `bool`",
             breaks_in_ha_version="2027.6.0",
             core_behavior=ReportBehavior.LOG,
+            exclude_integrations={DOMAIN},
         )
         qos = qos or 0
         retain = retain or False

@@ -461,10 +461,9 @@ async def test_publish_api_with_falback_to_none(
     mqtt_mock = await mqtt_mock_entry()
     await mqtt.async_publish(hass, "some-topic", "test-payload", qos=qos, retain=retain)
     assert (
-        "Detected that integration 'mqtt' received a call to the MQTT publish API from "
-        "a custom integration with a `None` value  for qos or retain argument. The "
-        "`qos` argument should be of type `int`, and the `retain` argument of type "
-        "`bool`." in caplog.text
+        "Detected code that that calls the MQTT publish API with `None` for "
+        "qos or retain. The `qos` argument must be an `int`, and the `retain` "
+        "argument must be a `bool`." in caplog.text
     )
     async_publish_mock: MagicMock = mqtt_mock.async_publish
     assert len(async_publish_mock.mock_calls) == 1
