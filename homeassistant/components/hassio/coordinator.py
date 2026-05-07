@@ -941,8 +941,8 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
 
-    @callback
-    def unload(self) -> None:
-        """Clean up when config entry unloaded."""
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
         self._dispatcher_disconnect()
         self.jobs.unload()

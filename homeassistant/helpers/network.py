@@ -194,7 +194,7 @@ def get_url(
                     [host_info["hostname"], f"{host_info['hostname']}.local"]
                 )
             except HassioNotReadyError:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Could not retrieve Supervisor host information, list of known URLs will be incomplete"
                 )
 
