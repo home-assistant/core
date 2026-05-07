@@ -1,4 +1,4 @@
-"""KNX Telegram handler."""
+"""KNX Telegrams history and storage."""
 
 import asyncio
 from collections.abc import Callable, Mapping
@@ -296,13 +296,17 @@ class Telegrams:
         is_supported_type = isinstance(value, (int, float, bool, str, dict))
         store_value = value if is_supported_type else None
 
+        payload: Any = t["payload"]
+        if isinstance(payload, list):
+            payload = tuple(payload)
+
         return StoredTelegram(
             timestamp=dt_util.parse_datetime(t["timestamp"]) or dt_util.now(),
             source=t["source"],
             destination=t["destination"],
             direction=t["direction"],
             telegramtype=t["telegramtype"],
-            payload=t["payload"],
+            payload=payload,
             value=store_value,
             value_numeric=value_numeric,
             dpt_main=t["dpt_main"],
