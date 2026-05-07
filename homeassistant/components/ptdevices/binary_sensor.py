@@ -30,7 +30,7 @@ class PTDevicesBinarySensors(StrEnum):
 class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description for PTDevices binary sensor entities."""
 
-    is_on_fn: Callable[[dict[str, StateType]], bool]
+    is_on_fn: Callable[[dict[str, StateType]], bool | None]
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] = (
@@ -41,6 +41,8 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda data: (
             data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS) == "low"
+            if data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS)
+            else None
         ),
     ),
 )
@@ -54,28 +56,26 @@ async def async_setup_entry(
     """Setup PTDevices binary sensors based on config entry."""
     coordinator = config_entry.runtime_data
 
-    known_sensors: set[tuple[str, str]] = set()
+    def _async_add_new_sensor(
+        sensors: list[tuple[str, str]],
+    ) -> None:
+        """Add new sensors."""
+        async_add_entity(
+            PTDevicesBinarySensorEntity(config_entry.runtime_data, sensor, device_id)
+            for device_id, sensor_key in sensors
+            for sensor in BINARY_SENSOR_DESCRIPTIONS
+            if sensor_key == sensor.key
+        )
 
-    def _check_device() -> None:
-        for device_id in sorted(coordinator.data):
-            device = coordinator.data[device_id]
-            new_sensors = [
-                sensor
-                for sensor in BINARY_SENSOR_DESCRIPTIONS
-                if sensor.key in device and (device_id, sensor.key) not in known_sensors
-            ]
-            if not new_sensors:
-                continue
-            known_sensors.update((device_id, sensor.key) for sensor in new_sensors)
-            async_add_entity(
-                PTDevicesBinarySensorEntity(
-                    config_entry.runtime_data, sensor, device_id
-                )
-                for sensor in new_sensors
-            )
-
-    _check_device()
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    coordinator.new_sensor_callbacks.append(_async_add_new_sensor)
+    _async_add_new_sensor(
+        [
+            (device_id, sensor_key)
+            for device_id, sensors in coordinator.data.items()
+            for sensor_key in sensors
+            if (device_id, sensor_key) in coordinator.known_sensors
+        ]
+    )
 
 
 class PTDevicesBinarySensorEntity(PTDevicesEntity, BinarySensorEntity):
@@ -99,6 +99,6 @@ class PTDevicesBinarySensorEntity(PTDevicesEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.device)
