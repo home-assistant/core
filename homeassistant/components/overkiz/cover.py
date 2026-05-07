@@ -125,7 +125,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override since PositionableGarageDoor reports core:OpenClosedUnknownState
-    # instead of core:OpenClosedState used by the default GarageDoor UIClass
+    # uiClass is GarageDoor
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_GARAGE_DOOR,
         device_class=CoverDeviceClass.GARAGE,
@@ -208,6 +208,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.GARAGE_DOOR,
         device_class=CoverDeviceClass.GARAGE,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
