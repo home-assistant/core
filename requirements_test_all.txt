@@ -1405,7 +1405,7 @@ mutagen==1.47.0
 mutesync==0.0.1
 
 # homeassistant.components.my_pv
-my-PV==0.0.1.dev4
+my-PV==0.0.1.dev5
 
 # homeassistant.components.permobil
 mypermobil==0.1.8
