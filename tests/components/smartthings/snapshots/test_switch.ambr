@@ -2399,3 +2399,54 @@
     'state': 'off',
   })
 # ---
+# name: test_execute_workaround_switch_enabled_snapshot[da_ac_ehs_01001][da_ac_ehs_01001][switch.heat_pump_display_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.heat_pump_display_lighting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Display lighting',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display lighting',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_lighting',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.airConditionerLighting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_execute_workaround_switch_enabled_snapshot[da_ac_ehs_01001][da_ac_ehs_01001][switch.heat_pump_display_lighting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'Heat pump Display lighting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.heat_pump_display_lighting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -643,6 +643,28 @@ _EHS_LIGHTING_UNIQUE_ID = (
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+async def test_execute_workaround_switch_enabled_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Snapshot the execute workaround switch as it appears once enabled by the user."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SWITCH)
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
 async def test_execute_workaround_switch_disabled_by_default(
     hass: HomeAssistant,
     devices: AsyncMock,
