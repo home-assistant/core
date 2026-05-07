@@ -47,12 +47,16 @@ async def test_light_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_BRIGHTNESS_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("light.is_off", {}, True, True),
         ("light.is_on", {}, True, True),
+        ("light.is_brightness", _BRIGHTNESS_THRESHOLD, True, True),
     ],
 )
 async def test_light_condition_options_validation(
