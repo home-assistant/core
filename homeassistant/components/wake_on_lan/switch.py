@@ -127,11 +127,11 @@ class WolSwitch(SwitchEntity):
         """Clean up script when removing from Home Assistant."""
         if self._off_script is None:
             return
-        await self._off_script.async_stop()
         if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
             # Entity ID change, do not unload the script as it will be reused.
+            await self._off_script.async_stop()
             return
-        self._off_script.async_unload()
+        await self._off_script.async_unload()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
