@@ -58,7 +58,7 @@ async def async_setup_entry(
             MyPVWaterHeater(
                 coordinator,
                 entity_description,
-                config_entry.entry_id,
+                coordinator.device.serial_number,
             )
         )
 
@@ -93,13 +93,13 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         self,
         coordinator: MyPVCoordinator,
         entity_description: MyPVWaterHeaterEntityDescription,
-        config_entry_id: str,
+        serial_number: str,
     ) -> None:
         """Initialize the water_heater."""
         super().__init__(coordinator, entity_description.key)
 
         self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{config_entry_id}-{entity_description.key}"
+        self._attr_unique_id = f"{serial_number}-{entity_description.key}"
 
         self.entity_description = entity_description
 
