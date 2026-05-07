@@ -72,11 +72,8 @@ rules:
     comment: |
       There are no entities that would be considered less popular or noisy. All entities are enabled by default.
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: |
-      Will be added later
-  icon-translations: done
+  exception-translations: todo
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: done
   stale-devices: done
