@@ -6,7 +6,10 @@ from tuya_device_handlers.definition.sensor import (
     SensorDefinition,
     get_default_definition,
 )
-from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
     ElectricityCurrentJsonWrapper,
@@ -1694,6 +1697,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 definition.sensor_wrapper.suggested_unit
             )
         if (
+            description.device_class is None
+            # For enum type DPs, we can assume it's a ENUM sensor
+            and isinstance(definition.sensor_wrapper, DPCodeEnumWrapper)
+        ):
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = definition.sensor_wrapper.options
+        if (
             description.state_class is None
             # For integer type DPs with "sum" report type, we can assume it's a total
             # increasing sensor
@@ -1710,6 +1720,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # match Home Assistants requirements.
         if (
             self.device_class is not None
+            and self.device_class != SensorDeviceClass.ENUM
             and not self.device_class.startswith(DOMAIN)
             and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
