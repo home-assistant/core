@@ -1,0 +1,45 @@
+[
+  {
+    "deviceId": "FFFFFFFFFFF",
+    "deviceType": "Bot",
+    "power": "ON",
+    "version": "V6.3",
+    "deviceMode": "pressMode",
+    "hubDeviceId": "BBBBBBBBBB"
+  },
+  {
+    "deviceId": "FFFFFFFFFFF",
+    "deviceType": "Battery Circulator Fan",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "mode": "direct",
+    "version": "V6.3",
+    "battery": 22,
+    "power": "on",
+    "nightStatus": "off",
+    "oscillation": "on",
+    "verticalOscillation": "on",
+    "chargingStatus": "charging",
+    "fanSpeed": 3
+  },
+  {
+    "deviceId": "FFFFFFFFFFF",
+    "deviceType": "Standing Fan",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "mode": "direct",
+    "version": "V6.3",
+    "power": "on",
+    "nightStatus": "off",
+    "oscillation": "on",
+    "verticalOscillation": "on",
+    "fanSpeed": 3
+  },
+  {
+    "deviceId": "FFFFFFFFFFF",
+    "deviceType": "Meter",
+    "hubDeviceId": "BBBBBBBBBB",
+    "temperature": 20,
+    "battery": 100,
+    "version": "V6.3",
+    "humidity": 30
+  }
+]
