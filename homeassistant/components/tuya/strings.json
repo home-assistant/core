@@ -77,6 +77,9 @@
       }
     },
     "button": {
+      "device_restart": {
+        "name": "Device restart"
+      },
       "factory_reset": {
         "name": "Factory reset"
       },
@@ -169,8 +172,14 @@
       "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
+      "brightness": {
+        "name": "Brightness"
+      },
       "cloud_recipe": {
         "name": "Cloud recipe"
+      },
+      "contrast": {
+        "name": "Contrast"
       },
       "cook_temperature": {
         "name": "Cooking temperature"
@@ -237,6 +246,9 @@
       },
       "sensitivity": {
         "name": "Sensitivity"
+      },
+      "sharpness": {
+        "name": "Sharpness"
       },
       "siren_duration": {
         "name": "Siren duration"
@@ -918,6 +930,9 @@
       }
     },
     "switch": {
+      "activity_area": {
+        "name": "Activity area"
+      },
       "anion": {
         "name": "Anion"
       },
@@ -1067,6 +1082,9 @@
       },
       "time_watermark": {
         "name": "Time watermark"
+      },
+      "trigger_siren": {
+        "name": "Trigger siren"
       },
       "uv_sterilization": {
         "name": "UV sterilization"
