@@ -33,39 +33,40 @@ _VALIDATE_SERIAL_NUMBER = cv.matches_regex(r"^[0-9]{16}$")
 _VALIDATE_CLOUD_API_TOKEN = cv.matches_regex(r"^my.{46}PV$")
 
 
+LOCAL_HOST_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+    }
+)
+LOCAL_AUTH_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+CLOUD_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_SERIAL_NUMBER): TextSelector(),
+        vol.Required(CONF_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+CLOUD_REAUTH_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
+
 class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for my-PV."""
 
     _host: str
     _device_model: str
-
-    LOCAL_HOST_SCHEMA: Final = vol.Schema(
-        {
-            vol.Required(CONF_HOST): TextSelector(),
-        }
-    )
-    LOCAL_AUTH_SCHEMA: Final = vol.Schema(
-        {
-            vol.Required(CONF_PASSWORD): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
-            ),
-        }
-    )
-    CLOUD_SCHEMA: Final = vol.Schema(
-        {
-            vol.Required(CONF_SERIAL_NUMBER): TextSelector(),
-            vol.Required(CONF_TOKEN): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
-            ),
-        }
-    )
-    CLOUD_REAUTH_SCHEMA: Final = vol.Schema(
-        {
-            vol.Required(CONF_TOKEN): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
-            ),
-        }
-    )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -159,7 +160,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if password_needed:
             return self.async_show_form(
                 step_id="discovery_confirm",
-                data_schema=self.LOCAL_AUTH_SCHEMA,
+                data_schema=LOCAL_AUTH_SCHEMA,
                 errors=errors,
                 description_placeholders=self.context["title_placeholders"],
             )
@@ -191,7 +192,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="setup_local",
-                data_schema=self.LOCAL_HOST_SCHEMA,
+                data_schema=LOCAL_HOST_SCHEMA,
             )
 
         errors: dict[str, str] = {}
@@ -212,7 +213,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             # Combine user input with schema.
             data_schema = self.add_suggested_values_to_schema(
-                self.LOCAL_HOST_SCHEMA, user_input
+                LOCAL_HOST_SCHEMA, user_input
             )
             return self.async_show_form(
                 step_id="setup_local",
@@ -250,7 +251,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="local_auth",
-                data_schema=self.LOCAL_AUTH_SCHEMA,
+                data_schema=LOCAL_AUTH_SCHEMA,
                 description_placeholders=self.context["title_placeholders"],
             )
 
@@ -272,7 +273,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             # Combine user input with schema.
             data_schema = self.add_suggested_values_to_schema(
-                self.LOCAL_AUTH_SCHEMA, user_input
+                LOCAL_AUTH_SCHEMA, user_input
             )
             return self.async_show_form(
                 step_id="local_auth",
@@ -300,7 +301,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="setup_cloud",
-                data_schema=self.CLOUD_SCHEMA,
+                data_schema=CLOUD_SCHEMA,
                 description_placeholders=description_placeholders,
             )
 
@@ -335,9 +336,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if errors:
             # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(
-                self.CLOUD_SCHEMA, user_input
-            )
+            data_schema = self.add_suggested_values_to_schema(CLOUD_SCHEMA, user_input)
             return self.async_show_form(
                 step_id="setup_cloud",
                 data_schema=data_schema,
