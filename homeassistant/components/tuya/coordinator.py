@@ -3,8 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
-from tuya_device_handlers.devices import register_tuya_quirks
+from tuya_device_handlers.devices import TUYA_QUIRKS_REGISTRY, register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
