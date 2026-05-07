@@ -1,0 +1,15 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEMS": [
+    {
+      "CNAME": "version",
+      "TYPE": "T_VALUE_V1",
+      "NAME": "Version",
+      "VALUE": "3.720.9.1-1",
+      "HASHVAL": 2518844691
+    }
+  ]
+}

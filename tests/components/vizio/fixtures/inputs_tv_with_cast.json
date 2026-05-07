@@ -1,0 +1,76 @@
+{
+  "CNAME": "name_input",
+  "GROUP": "G_DEVICES",
+  "HASHLIST": [207577484, 1392727323, 1620755520],
+  "ITEMS": [
+    {
+      "CNAME": "cast",
+      "ENABLED": "FALSE",
+      "HASHVAL": 1541296275,
+      "NAME": "CAST",
+      "READONLY": "TRUE",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "SMARTCAST"
+      }
+    },
+    {
+      "CNAME": "hdmi1",
+      "ENABLED": "FALSE",
+      "HASHVAL": 1118785733,
+      "NAME": "HDMI-1",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "HDMI-1"
+      }
+    },
+    {
+      "CNAME": "hdmi2",
+      "ENABLED": "FALSE",
+      "HASHVAL": 478241065,
+      "NAME": "HDMI-2",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "HDMI-2"
+      }
+    },
+    {
+      "CNAME": "comp",
+      "ENABLED": "FALSE",
+      "HASHVAL": 3372802964,
+      "NAME": "COMP",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "COMP"
+      }
+    },
+    {
+      "CNAME": "tuner",
+      "ENABLED": "FALSE",
+      "HASHVAL": 3845225872,
+      "NAME": "TV",
+      "READONLY": "TRUE",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "TV"
+      }
+    }
+  ],
+  "NAME": "Name Input",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/tv_settings/devices/name_input"
+}

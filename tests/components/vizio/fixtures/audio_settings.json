@@ -1,0 +1,234 @@
+{
+  "CNAME": "audio",
+  "GROUP": "G_AUDIO",
+  "HASHLIST": [1264646194, 1620755520],
+  "ITEMS": [
+    {
+      "CNAME": "soundbar_settings",
+      "ENABLED": "FALSE",
+      "HIDDEN": "TRUE",
+      "NAME": "Sound Bar Settings",
+      "READONLY": "TRUE",
+      "STATUS": {
+        "DETAIL": "Failure",
+        "RESULT": "FAILURE"
+      },
+      "TYPE": "T_STRING_V1"
+    },
+    {
+      "CNAME": "soundbar_eq_mode",
+      "ELEMENTS": [],
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "EQ",
+      "TYPE": "T_LIST_X_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_bass",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Bass",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_treble",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Treble",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_dialogue",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Dialogue",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_subwoofer",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Subwoofer",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_night_mode",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Night Mode",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_height",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Height Speakers",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_virtual_x",
+      "ENABLED": "FALSE",
+      "HASHVAL": null,
+      "HIDDEN": "TRUE",
+      "NAME": "Virtual X",
+      "TYPE": "T_LIST_V1",
+      "VALUE": null
+    },
+    {
+      "CNAME": "soundbar_speaker_test",
+      "ENABLED": "FALSE",
+      "HASHVAL": 679411624,
+      "HIDDEN": "TRUE",
+      "NAME": "Speaker Test",
+      "TYPE": "T_ACTION_V1",
+      "VALUE": "T_ACTION_V1"
+    },
+    {
+      "CNAME": "soundbar_info",
+      "ENABLED": "FALSE",
+      "HASHVAL": 1227494634,
+      "HIDDEN": "TRUE",
+      "NAME": "Info",
+      "TYPE": "T_ACTION_V1",
+      "VALUE": "T_ACTION_V1"
+    },
+    {
+      "CNAME": "tv_audio_settings",
+      "ENABLED": "FALSE",
+      "NAME": "TV Audio Settings",
+      "READONLY": "TRUE",
+      "STATUS": {
+        "DETAIL": "Failure",
+        "RESULT": "FAILURE"
+      },
+      "TYPE": "T_STRING_V1"
+    },
+    {
+      "CNAME": "tv_speakers",
+      "ELEMENTS": ["TV speakers", "Optical/Analog Audio Out"],
+      "HASHVAL": 1870563195,
+      "NAME": "Audio Out",
+      "TYPE": "T_LIST_X_V1",
+      "VALUE": "TV speakers"
+    },
+    {
+      "CNAME": "surround_sound",
+      "HASHVAL": 3073862060,
+      "INDEX": 0,
+      "NAME": "Surround Sound",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Virtual:X"
+    },
+    {
+      "CNAME": "volume_leveling",
+      "HASHVAL": 1952348291,
+      "INDEX": 0,
+      "NAME": "Volume Leveling",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Off"
+    },
+    {
+      "CNAME": "balance",
+      "HASHVAL": 4048164689,
+      "NAME": "Balance",
+      "TYPE": "T_VALUE_ABS_V1",
+      "VALUE": 0
+    },
+    {
+      "CNAME": "bass",
+      "HASHVAL": 2636064362,
+      "NAME": "Bass",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 0
+    },
+    {
+      "CNAME": "treble",
+      "HASHVAL": 2027669657,
+      "NAME": "Treble",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 0
+    },
+    {
+      "CNAME": "lip_sync",
+      "HASHVAL": 83475440,
+      "NAME": "Lip Sync",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 0
+    },
+    {
+      "CNAME": "digital_audio_out",
+      "HASHVAL": 2870599450,
+      "INDEX": 0,
+      "NAME": "Digital Audio Out",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Auto"
+    },
+    {
+      "CNAME": "analog_audio_out",
+      "HASHVAL": 1924764227,
+      "INDEX": 0,
+      "NAME": "Analog Audio Out",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Fixed"
+    },
+    {
+      "CNAME": "dialogue_enhancer",
+      "HASHVAL": 4284435521,
+      "INDEX": 0,
+      "NAME": "ClearDialog",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Off"
+    },
+    {
+      "CNAME": "volume",
+      "ENABLED": "FALSE",
+      "HASHVAL": 3662031975,
+      "NAME": "Volume",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": 50
+    },
+    {
+      "CNAME": "mute",
+      "ENABLED": "FALSE",
+      "HASHVAL": 2210383572,
+      "INDEX": 0,
+      "NAME": "Mute",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Off"
+    },
+    {
+      "CNAME": "eq",
+      "HASHVAL": 1234567890,
+      "INDEX": 0,
+      "NAME": "EQ",
+      "TYPE": "T_LIST_V1",
+      "VALUE": "Music"
+    }
+  ],
+  "NAME": "Audio",
+  "PARAMETERS": {
+    "FLAT": "TRUE",
+    "HASHONLY": "FALSE",
+    "HELPTEXT": "FALSE"
+  },
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/tv_settings/audio"
+}

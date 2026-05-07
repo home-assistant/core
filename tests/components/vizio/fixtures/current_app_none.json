@@ -1,0 +1,11 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "TYPE": "T_APP_V1",
+    "VALUE": null
+  },
+  "URI": "/app/current"
+}

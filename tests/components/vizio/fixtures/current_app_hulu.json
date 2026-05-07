@@ -1,0 +1,15 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "TYPE": "T_APP_V1",
+    "VALUE": {
+      "APP_ID": "3",
+      "MESSAGE": null,
+      "NAME_SPACE": 4
+    }
+  },
+  "URI": "/app/current"
+}

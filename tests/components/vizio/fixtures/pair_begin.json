@@ -1,0 +1,10 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "CHALLENGE_TYPE": 1,
+    "PAIRING_REQ_TOKEN": 1234
+  }
+}

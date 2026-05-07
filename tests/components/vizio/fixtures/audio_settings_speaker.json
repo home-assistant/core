@@ -1,0 +1,34 @@
+{
+  "CNAME": "audio",
+  "GROUP": "G_AUDIO",
+  "ITEMS": [
+    {
+      "CNAME": "volume",
+      "TYPE": "T_VALUE_V1",
+      "NAME": "Volume",
+      "VALUE": 15,
+      "HASHVAL": 3662031975
+    },
+    {
+      "CNAME": "mute",
+      "TYPE": "T_LIST_V1",
+      "NAME": "Mute",
+      "VALUE": "Off",
+      "HASHVAL": 2210383572
+    },
+    {
+      "CNAME": "eq",
+      "TYPE": "T_LIST_V1",
+      "NAME": "EQ",
+      "VALUE": "Music",
+      "HASHVAL": 1234567890
+    }
+  ],
+  "NAME": "Audio",
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/audio_settings/audio"
+}

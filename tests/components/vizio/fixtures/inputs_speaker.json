@@ -1,0 +1,60 @@
+{
+  "CNAME": "input",
+  "GROUP": "G_DEVICES",
+  "ITEMS": [
+    {
+      "CNAME": "hdmi1",
+      "HASHVAL": 1118785733,
+      "NAME": "HDMI-1",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "HDMI-1"
+      }
+    },
+    {
+      "CNAME": "hdmi2",
+      "HASHVAL": 478241065,
+      "NAME": "HDMI-2",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "HDMI-2"
+      }
+    },
+    {
+      "CNAME": "comp",
+      "HASHVAL": 3372802964,
+      "NAME": "COMP",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "COMP"
+      }
+    },
+    {
+      "CNAME": "tuner",
+      "HASHVAL": 3845225872,
+      "NAME": "TV",
+      "TYPE": "T_DEVICE_V1",
+      "VALUE": {
+        "METADATA": "",
+        "NAME": "TV"
+      }
+    },
+    {
+      "CNAME": "current_input",
+      "HASHVAL": 0,
+      "NAME": "Current Input",
+      "TYPE": "T_VALUE_V1",
+      "VALUE": "HDMI-1"
+    }
+  ],
+  "NAME": "Input",
+  "STATUS": {
+    "DETAIL": "Success",
+    "RESULT": "SUCCESS"
+  },
+  "TYPE": "T_MENU_V1",
+  "URI": "/menu_native/dynamic/audio_settings/input"
+}
