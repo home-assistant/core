@@ -76,15 +76,18 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=category.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/categories/show/{category.id}",
+            name="Categories",
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/categories",
             identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_category_{category.id}")
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_categories")
             },
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
         )
+        self._attr_translation_placeholders = {
+            "name": category.attributes.name or ""
+        }
 
     @property
     def _category(self) -> Category:
@@ -106,15 +109,16 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=budget.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/budgets/show/{budget.id}",
+            name="Budgets",
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/budgets",
             identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_budget_{budget.id}")
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_budgets")
             },
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
         )
+        self._attr_translation_placeholders = {"name": budget.attributes.name or ""}
 
     @property
     def _budget(self) -> Budget:
@@ -136,15 +140,16 @@ class FireflyBillBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=bill.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions/show/{bill.id}",
+            name="Subscriptions",
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions",
             identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_bill_{bill.id}")
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_bill_{bill.id}_{key}"
         )
+        self._attr_translation_placeholders = {"name": bill.attributes.name or ""}
 
     @property
     def _bill(self) -> Bill:

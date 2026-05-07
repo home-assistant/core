@@ -80,25 +80,25 @@
         }
       },
       "budget": {
-        "name": "Budget"
+        "name": "{name} spent"
       },
       "budget_limit": {
-        "name": "Budget limit"
+        "name": "{name} limit"
       },
       "budget_remaining": {
-        "name": "Budget remaining"
+        "name": "{name} remaining"
       },
       "subscription_amount": {
-        "name": "Expected amount"
+        "name": "{name} expected amount"
       },
       "subscription_next_expected": {
-        "name": "Next expected"
+        "name": "{name} next expected"
       },
       "subscription_last_paid": {
-        "name": "Last paid"
+        "name": "{name} last paid"
       },
       "category": {
-        "name": "Earned/Spent"
+        "name": "{name} earned/spent"
       }
     }
   },

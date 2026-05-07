@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import parse_datetime
 
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import (
@@ -348,7 +347,7 @@ class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity)
         value = self._bill.attributes.next_expected_match
         if value is None:
             return None
-        return parse_datetime(value)
+        return datetime.fromisoformat(value)
 
 
 class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
@@ -362,5 +361,5 @@ class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
         """Return the last paid date."""
         paid_dates = self._bill.attributes.paid_dates
         if paid_dates and paid_dates[-1].date:
-            return parse_datetime(paid_dates[-1].date)
+            return datetime.fromisoformat(paid_dates[-1].date)
         return None

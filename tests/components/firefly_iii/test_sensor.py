@@ -88,7 +88,7 @@ async def test_budget_sensor_updates_after_refresh(
     """Test budget sensor tracks refreshed coordinator budget objects."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.bills_budget")
+    state = hass.states.get("sensor.budgets_bills_spent")
     assert state is not None
     assert state.state == "123.45"
 
@@ -103,6 +103,6 @@ async def test_budget_sensor_updates_after_refresh(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    updated_state = hass.states.get("sensor.bills_budget")
+    updated_state = hass.states.get("sensor.budgets_bills_spent")
     assert updated_state is not None
     assert updated_state.state == "999.99"
