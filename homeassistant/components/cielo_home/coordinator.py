@@ -1,7 +1,5 @@
 """Coordinator for Cielo integration."""
 
-from __future__ import annotations
-
 from copy import copy
 from dataclasses import dataclass
 from datetime import timedelta

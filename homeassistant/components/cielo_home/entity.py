@@ -1,7 +1,5 @@
 """Base entity for Cielo integration."""
 
-from __future__ import annotations
-
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
