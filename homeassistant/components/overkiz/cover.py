@@ -124,7 +124,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override since PositionableGarageDoor reports core:OpenClosedUnknownState
+    # Needs override since PositionableGarageDoor reports
+    # core:OpenClosedUnknownState instead of core:OpenClosedState
     # uiClass is GarageDoor
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_GARAGE_DOOR,
@@ -138,6 +139,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ),
     # Needs override since PositionableGarageDoorWithPartialPosition reports
     # core:OpenClosedPartialState instead of core:OpenClosedState
+    # uiClass is GarageDoor
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_GARAGE_DOOR_WITH_PARTIAL_POSITION,
         device_class=CoverDeviceClass.GARAGE,
