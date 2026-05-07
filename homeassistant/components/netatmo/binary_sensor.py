@@ -69,8 +69,6 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str | None, BinarySensorDeviceClass
 def get_opening_category(netatmo_device: NetatmoDevice) -> str:
     """Helper function to get opening category for doortag."""
 
-    # From pyatmo v9.4.0, category is available as an attribute on the device object
-    # direct getting of the attribute with default to "other" if not present
     return (
         getattr(netatmo_device.device, "doortag_category", None)
         or DOORTAG_CATEGORY_OTHER
