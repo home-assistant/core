@@ -461,8 +461,10 @@ async def test_publish_api_with_falback_to_none(
     mqtt_mock = await mqtt_mock_entry()
     await mqtt.async_publish(hass, "some-topic", "test-payload", qos=qos, retain=retain)
     assert (
-        "Using `None` values for qos or retain on "
-        "the MQTT async_publish API is deprecated." in caplog.text
+        "Detected that integration 'mqtt' received a call to the MQTT publish API from "
+        "a custom integration with a `None` value  for qos or retain argument. The "
+        "`qos` argument should be of type `int`, and the `retain` argument of type "
+        "`bool`." in caplog.text
     )
     async_publish_mock: MagicMock = mqtt_mock.async_publish
     assert len(async_publish_mock.mock_calls) == 1

@@ -40,6 +40,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -185,13 +186,12 @@ async def async_publish(
     # Custom integrations should update there code.
     # Check for fallback to `None` values can be removed with HA Core 2027.6
     if qos is None or retain is None:
-        _LOGGER.warning(  # type: ignore[unreachable]
-            "Using `None` values for qos or retain on the MQTT async_publish API is "
-            "deprecated. The `qos` arg should be of type `int`, and the `retain` arg "
-            "of type `bool`. This will stop working with HA Core 2027.6. "
-            "Got qos=%s, retain=%s",
-            qos,
-            retain,
+        report_usage(  # type: ignore[unreachable]
+            "received a call to the MQTT publish API from a custom integration "
+            "with a `None` value  for qos or retain argument. The `qos` argument should "
+            "be of type `int`, and the `retain` argument of type `bool`.",
+            breaks_in_ha_version="2027.6.0",
+            core_behavior=ReportBehavior.LOG,
         )
         qos = qos or 0
         retain = retain or False
