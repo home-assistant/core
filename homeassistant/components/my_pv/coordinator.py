@@ -148,9 +148,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         await self.async_disconnect()
         self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
-    async def _async_setup(self):
-        """Set up the coordinator."""
-
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         if not self._device.connected and not await self._device.connect():
