@@ -111,6 +111,28 @@ async def test_cover_unavailable_when_offline(
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
 
 
+async def test_cover_state_preserved_on_transient_status_error(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Last-known openCloseStatus is preserved when a per-device status fetch fails."""
+    mock_api_client.async_get_device_status.side_effect = _status_side_effect(
+        {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
+    )
+    await _setup_cover_only(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
+
+    mock_api_client.async_get_device_status.side_effect = FlussApiClientError("boom")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=31))
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data[DEVICE_ID_1]["openCloseStatus"] == "Closed"
+    assert entity_registry.async_get(ENTITY_ID_1) is not None
+
+
 @pytest.mark.parametrize(
     ("service", "method"),
     [
@@ -248,9 +270,9 @@ async def test_orphan_button_removed_on_setup(
 ) -> None:
     """A pre-existing button registry entry is removed if its device is now a cover."""
     mock_config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
+    button_entity_id = entity_registry.async_get_or_create(
         "button", DOMAIN, DEVICE_ID_1, config_entry=mock_config_entry
-    )
+    ).entity_id
     assert (
         entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is not None
     )
@@ -262,4 +284,5 @@ async def test_orphan_button_removed_on_setup(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is None
+    assert hass.states.get(button_entity_id) is None
     assert entity_registry.async_get("cover.device_1") is not None

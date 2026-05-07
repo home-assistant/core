@@ -1,4 +1,4 @@
-"""Cover platform for Fluss+ devices with a position sensor."""
+"""Cover platform for Fluss+ devices that report an open/closed status."""
 
 from datetime import datetime
 from typing import Any
@@ -26,7 +26,7 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Fluss covers for devices that report a position sensor."""
+    """Set up Fluss covers for devices that report an open/closed status."""
     coordinator = entry.runtime_data
     entity_registry = er.async_get(hass)
 
