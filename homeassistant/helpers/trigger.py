@@ -353,7 +353,7 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
-    # States filtered from the to_state pre-filter (and `_should_count`).
+    # States filtered from the to_state pre-filter (and `_should_include`).
     _excluded_states: Final[frozenset[str]] = frozenset(
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
