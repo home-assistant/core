@@ -9,6 +9,10 @@ DOMAIN = "mobile_app"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+LIVE_ACTIVITY_TOKENS_STORAGE_KEY = f"{DOMAIN}.live_activity_tokens"
+LIVE_ACTIVITY_TOKENS_STORAGE_VERSION = 1
+LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
+
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_REMOTE_UI_URL = "remote_ui_url"
 CONF_SECRET = "secret"
@@ -18,6 +22,7 @@ DATA_CONFIG_ENTRIES = "config_entries"
 DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 DATA_STORE = "store"
+DATA_LIVE_ACTIVITY_STORE = "live_activity_store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
 DATA_PENDING_UPDATES = "pending_updates"

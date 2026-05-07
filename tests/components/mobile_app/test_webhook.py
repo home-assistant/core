@@ -1335,9 +1335,10 @@ async def test_webhook_update_live_activity_token(
     # Verify token was stored in hass.data
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     assert webhook_id in tokens
-    assert tokens[webhook_id]["washer_cycle"]["push_token"] == (
+    assert tokens[webhook_id]["washer_cycle"]["token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     )
+    assert "stored_at" in tokens[webhook_id]["washer_cycle"]
 
 
 async def test_webhook_update_live_activity_token_stores_only_push_token(
@@ -1362,9 +1363,10 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
 
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     stored = tokens[webhook_id]["ev_charge"]
-    assert stored == {
-        "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-    }
+    assert stored["token"] == (
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    )
+    assert "stored_at" in stored
 
 
 async def test_webhook_live_activity_dismissed(

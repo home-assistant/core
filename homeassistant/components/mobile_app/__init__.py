@@ -21,6 +21,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 # Pre-import the platforms so they get loaded when the integration
 # is imported as they are almost always going to be loaded and its
@@ -42,11 +43,15 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_STORE,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
     DATA_STORE,
     DOMAIN,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
+    LIVE_ACTIVITY_TOKENS_STORAGE_KEY,
+    LIVE_ACTIVITY_TOKENS_STORAGE_VERSION,
     SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -67,6 +72,13 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+def _parse_stored_at(value: str | None) -> float:
+    """Return UTC timestamp from an ISO stored_at string, or 0 if unparseable."""
+    if value and (parsed := dt_util.parse_datetime(value)):
+        return parsed.timestamp()
+    return 0
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -78,11 +90,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DATA_DELETED_IDS: [],
         }
 
+    live_activity_store = Store[dict[str, Any]](
+        hass, LIVE_ACTIVITY_TOKENS_STORAGE_VERSION, LIVE_ACTIVITY_TOKENS_STORAGE_KEY
+    )
+    raw_tokens: dict[str, Any] = await live_activity_store.async_load() or {}
+    cutoff = dt_util.utcnow().timestamp() - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+    live_activity_tokens: dict[str, Any] = {
+        wh_id: {
+            tag: entry
+            for tag, entry in tags.items()
+            if _parse_stored_at(entry.get("stored_at")) > cutoff
+        }
+        for wh_id, tags in raw_tokens.items()
+        if any(
+            _parse_stored_at(entry.get("stored_at")) > cutoff
+            for entry in tags.values()
+        )
+    }
+
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
-        DATA_LIVE_ACTIVITY_TOKENS: {},
+        DATA_LIVE_ACTIVITY_TOKENS: live_activity_tokens,
+        DATA_LIVE_ACTIVITY_STORE: live_activity_store,
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
@@ -233,7 +264,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook_unregister(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    if live_activity_tokens.pop(webhook_id, None) is not None:
+        await hass.data[DOMAIN][DATA_LIVE_ACTIVITY_STORE].async_save(
+            live_activity_tokens
+        )
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True

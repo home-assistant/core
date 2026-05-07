@@ -49,10 +49,12 @@ from .const import (
     ATTR_PUSH_URL,
     ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
+    DATA_LIVE_ACTIVITY_STORE,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
 )
 from .helpers import device_info
 from .push_notification import PushChannel
@@ -216,7 +218,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
             )
 
-    def _get_live_activity_token(
+    async def _get_live_activity_token(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> str | None:
         """Return the Live Activity APNs token for this notification, or None."""
@@ -232,8 +234,20 @@ class MobileAppNotificationService(BaseNotificationService):
         webhook_id = entry.data[ATTR_WEBHOOK_ID]
         live_activity_tokens = self.hass.data[DOMAIN].get(DATA_LIVE_ACTIVITY_TOKENS, {})
         device_tokens = live_activity_tokens.get(webhook_id, {})
-        if tag in device_tokens:
-            return device_tokens[tag][ATTR_PUSH_TOKEN]
+        if stored := device_tokens.get(tag):
+            stored_at = dt_util.parse_datetime(stored.get("stored_at", ""))
+            if stored_at and (
+                dt_util.utcnow().timestamp() - stored_at.timestamp()
+                < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+            ):
+                return stored["token"]
+            # Token expired — remove it lazily.
+            device_tokens.pop(tag, None)
+            if not device_tokens:
+                live_activity_tokens.pop(webhook_id, None)
+            await self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_STORE].async_save(
+                live_activity_tokens
+            )
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]
@@ -248,7 +262,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 async_get_clientsession(self.hass),
                 entry,
                 data,
-                live_activity_token=self._get_live_activity_token(entry, data),
+                live_activity_token=await self._get_live_activity_token(entry, data),
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
