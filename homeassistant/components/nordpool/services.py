@@ -90,14 +90,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         client = entry.runtime_data.client
         asked_date: date = call.data[ATTR_DATE]
 
-        entry_area = call.data.get(ATTR_AREAS)
-        areas: list[str] = entry_area or entry.data[ATTR_AREAS]
+        areas = call.data.get(ATTR_AREAS)
+        areas = areas or entry.data[ATTR_AREAS]
 
-        entry_curr = call.data.get(ATTR_CURRENCY)
-        currency: str = entry_curr or entry.data[ATTR_CURRENCY]
+        currency = call.data.get(ATTR_CURRENCY)
+        currency = currency or entry.data[ATTR_CURRENCY]
 
-        entry_resolution = call.data.get(ATTR_RESOLUTION)
-        resolution: int = entry_resolution or 60
+        resolution = call.data.get(ATTR_RESOLUTION)
+        resolution = resolution or 60
 
         return (client, asked_date, currency, areas, resolution)
 
