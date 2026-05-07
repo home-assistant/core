@@ -6,7 +6,7 @@ from aioesphomeapi import (
     InfraredCapability,
     InfraredInfo,
 )
-from infrared_protocols import NECCommand
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components import infrared
