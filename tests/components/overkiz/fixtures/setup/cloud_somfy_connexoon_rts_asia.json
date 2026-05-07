@@ -362,13 +362,8 @@
             "nparams": 0
           }
         ],
-        "states": [
-          {
-            "type": "DiscreteState",
-            "qualifiedName": "core:OpenClosedState",
-            "values": ["open", "closed"]
-          }
-        ],
+        "states": [],
+        "attributes": [],
         "dataProperties": [],
         "widgetName": "TiltOnlyVenetianBlind",
         "uiProfiles": ["OpenClose"],
@@ -377,18 +372,10 @@
         "type": "ACTUATOR"
       },
       "states": [
-        {
-          "name": "core:OpenClosedState",
-          "type": 3,
-          "value": "closed"
-        }
+
       ],
       "attributes": [
-        {
-          "name": "rts:diy",
-          "type": 6,
-          "value": false
-        }
+
       ],
       "available": true,
       "enabled": true,
