@@ -6,7 +6,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -31,7 +31,6 @@ from .const import (
     BINARY_SENSOR_SCAN_INTERVAL_SECS,
     DATA_AMCREST,
     DEVICES,
-    DOMAIN,
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
@@ -159,7 +158,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors for an Amcrest config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
     name = device.name
     serial = device.serial_number or config_entry.entry_id
 

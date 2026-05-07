@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -38,7 +38,6 @@ from .const import (
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
-    DOMAIN,
     MOV,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
@@ -69,7 +68,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an Amcrest camera from a config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
     serial = device.serial_number or config_entry.entry_id
     unique_id = f"{serial}-{device.resolution}-{device.channel}"
     entity = AmcrestCam(

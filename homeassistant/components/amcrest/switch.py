@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from amcrest import AmcrestError
 
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_AMCREST, DEVICES, DOMAIN
+from .const import DATA_AMCREST, DEVICES
 from .helpers import log_update_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +44,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for an Amcrest config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
     name = device.name
     serial = device.serial_number or config_entry.entry_id
 

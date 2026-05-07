@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from amcrest import AmcrestError
 
@@ -19,13 +19,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    DATA_AMCREST,
-    DEVICES,
-    DOMAIN,
-    SENSOR_SCAN_INTERVAL_SECS,
-    SERVICE_UPDATE,
-)
+from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
@@ -63,7 +57,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for an Amcrest config entry."""
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
     name = device.name
     serial = device.serial_number or config_entry.entry_id
 

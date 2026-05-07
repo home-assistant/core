@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, NotRequired, TypedDict, cast
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -478,7 +478,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
-    hass.data.setdefault(DOMAIN, {})
 
     config_data = dict(entry.data)
     config_data.update(entry.options)
@@ -552,29 +551,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     # Platforms expect this to exist during async_setup_entry.
-    hass.data[DOMAIN][entry.entry_id] = {"device": device}
+    entry.runtime_data = {"device": device}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     stop_event = threading.Event()
     _start_event_monitor(hass, name, api, event_codes, stop_event)
 
-    hass.data[DOMAIN][entry.entry_id]["stop_event"] = stop_event
+    runtime_data = cast(AmcrestConfigEntryData, entry.runtime_data)
+    runtime_data["stop_event"] = stop_event
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry_data := hass.data.get(DOMAIN, {}).get(entry.entry_id):
-        if stop_event := entry_data.get("stop_event"):
+    if runtime_data := cast(AmcrestConfigEntryData | None, entry.runtime_data):
+        if stop_event := runtime_data.get("stop_event"):
             stop_event.set()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    return unload_ok
+class AmcrestConfigEntryData(TypedDict):
+    """Runtime data for an Amcrest config entry."""
+
+    device: AmcrestDevice
+    stop_event: NotRequired[threading.Event]
 
 
 @dataclass
