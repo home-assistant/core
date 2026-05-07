@@ -46,7 +46,7 @@ def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceI
 
     return DeviceInfo(
         identifiers={(DOMAIN, device.id)},
-        manufacturer="Tuya / Whitelabel",
+        manufacturer="Unspecified Tuya",
         name=device.name,
         model=model,
         model_id=device.product_id,
