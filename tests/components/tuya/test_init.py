@@ -151,7 +151,7 @@ async def test_device_registry(
         (
             "mal_gyitctrjj1kefxp2",
             [],
-            "Tuya / Whitelabel",
+            "Tuya",
             "Multifunction alarm (unsupported)",
             "gyitctrjj1kefxp2",
             {},
@@ -161,7 +161,7 @@ async def test_device_registry(
         (
             "mal_gyitctrjj1kefxp2",
             [Platform.ALARM_CONTROL_PANEL],
-            "Tuya / Whitelabel",
+            "Tuya",
             "Multifunction alarm",
             "gyitctrjj1kefxp2",
             {},
@@ -204,7 +204,7 @@ async def test_device_registry(
         (
             "mal_gyitctrjj1kefxp2",
             [],
-            "Tuya / Whitelabel",
+            "Tuya",
             "Multifunction alarm (unsupported)",
             "gyitctrjj1kefxp2",
             {
