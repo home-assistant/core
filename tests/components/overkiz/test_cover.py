@@ -157,14 +157,14 @@ async def test_cover_entities_snapshot(
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [15, 1, 0],
+            [15, 1],
             CoverState.OPENING,
         ),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [15, 1, 0],
+            [15, 1],
             CoverState.CLOSING,
         ),
         (
