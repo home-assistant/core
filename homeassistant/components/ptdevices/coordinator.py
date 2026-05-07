@@ -1,6 +1,5 @@
 """Coordinator for PTDevices integration."""
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import Final
@@ -55,11 +54,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
 
         self.interface = ptdevices_interface
 
-        # Holds device_id and sensor.key in the tuple
-        self.known_sensors: set[tuple[str, str]] = set()
-
-        self.new_sensor_callbacks: list[Callable[[list[tuple[str, str]]], None]] = []
-
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()
@@ -76,18 +70,11 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-        self._async_add_remove_entities(data["body"])
-        return data["body"]
-
-    def _async_add_remove_entities(
-        self,
-        new_data: PTDevicesResponseData,
-    ) -> None:
         # Purge stale devices
         device_reg = dr.async_get(self.hass)
         identifiers = {
             (DOMAIN, f"{device_data['user_id']}_{device_id}")
-            for device_id, device_data in new_data.items()
+            for device_id, device_data in data["body"].items()
         }
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -98,16 +85,4 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
 
-        # Sensor management
-        new_sensors = {
-            (device_id, sensor)
-            for device_id in new_data
-            for sensor in new_data[device_id]
-            if (device_id, sensor) not in self.known_sensors
-        }
-        if new_sensors:
-            _LOGGER.debug("New sensors found: %s", new_sensors)
-            self.known_sensors.update(new_sensors)
-            new_sensor_data = list(new_sensors)
-            for new_sensor_callback in self.new_sensor_callbacks:
-                new_sensor_callback(new_sensor_data)
+        return data["body"]

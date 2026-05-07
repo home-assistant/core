@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 from .entity import PTDevicesEntity
@@ -50,7 +49,7 @@ class PTDevicesSensors(StrEnum):
 class PTDevicesSensorEntityDescription(SensorEntityDescription):
     """Description for PTDevices sensor entities."""
 
-    value_fn: Callable[[dict[str, StateType]], StateType]
+    value_fn: Callable[[dict[str, str | int | float | None]], str | int | float | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[PTDevicesSensorEntityDescription, ...] = (
@@ -156,26 +155,26 @@ async def async_setup_entry(
     """Set up PTDevices sensors from config entries."""
     coordinator = config_entry.runtime_data
 
-    def _async_add_new_sensor(
-        sensors: list[tuple[str, str]],
-    ) -> None:
-        """Add new sensors."""
-        async_add_entity(
-            PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
-            for device_id, sensor_key in sensors
-            for sensor in SENSOR_DESCRIPTIONS
-            if sensor_key == sensor.key
-        )
+    known_sensors: set[tuple[str, str]] = set()
 
-    coordinator.new_sensor_callbacks.append(_async_add_new_sensor)
-    _async_add_new_sensor(
-        [
-            (device_id, sensor_key)
-            for device_id, sensors in coordinator.data.items()
-            for sensor_key in sensors
-            if (device_id, sensor_key) in coordinator.known_sensors
-        ]
-    )
+    def _check_device() -> None:
+        for device_id in sorted(coordinator.data):
+            device = coordinator.data[device_id]
+            new_sensors = [
+                sensor
+                for sensor in SENSOR_DESCRIPTIONS
+                if sensor.key in device and (device_id, sensor.key) not in known_sensors
+            ]
+            if not new_sensors:
+                continue
+            known_sensors.update((device_id, sensor.key) for sensor in new_sensors)
+            async_add_entity(
+                PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
+                for sensor in new_sensors
+            )
+
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class PTDevicesSensorEntity(PTDevicesEntity, SensorEntity):
