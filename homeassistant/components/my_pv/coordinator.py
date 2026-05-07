@@ -64,10 +64,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             identifiers.add((DOMAIN, mac_address))
             connections.add((CONNECTION_NETWORK_MAC, mac_address))
 
-        model = device.model
-        if device.hardware_version:
-            model = f"{device.model} {device.hardware_version}"
-
         name = f"my-PV {device.model}"
 
         self._device_info = DeviceInfo(
@@ -75,10 +71,11 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             connections=connections,
             identifiers=identifiers,
             manufacturer="my-PV",
-            model=model,
+            model=device.model,
             name=name,
             serial_number=device.serial_number,
             sw_version=device.firmware_version,
+            hw_version=device.hardware_version,
             translation_key="my_pv",
             translation_placeholders={
                 "device_name": name,
