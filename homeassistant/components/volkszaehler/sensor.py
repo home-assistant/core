@@ -151,10 +151,12 @@ async def async_setup_entry(
 
     session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
+
     await vz_api.async_update()
 
     if vz_api.api.data is None:
         raise PlatformNotReady
+
     entities = [
         VolkszaehlerSensor(vz_api, title, description)
         for description in SENSOR_TYPES
