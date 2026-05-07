@@ -216,55 +216,59 @@ async def test_migrate_telegrams_json_to_sqlite(
         },
     )
 
-    await knx.setup_integration(add_entry_to_hass=False)
-    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    try:
+        await knx.setup_integration(add_entry_to_hass=False)
+        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    # Verify migration
-    result = await telegrams_module.store.query(TelegramQuery(order_descending=False))
-    assert len(result.telegrams) == 10
+        # Verify migration
+        result = await telegrams_module.store.query(
+            TelegramQuery(order_descending=False)
+        )
+        assert len(result.telegrams) == 10
 
-    # Check normalization: [0] -> (0,)
-    # Note: Backend might return list even if stored as tuple due to JSON serialization
-    assert result.telegrams[0].destination == "3/2/100"
-    assert tuple(result.telegrams[0].payload) == (0,)
+        # Check normalization: [0] -> (0,)
+        # Note: Backend might return list even if stored as tuple due to JSON serialization
+        assert result.telegrams[0].destination == "3/2/100"
+        assert tuple(result.telegrams[0].payload) == (0,)
 
-    # Check normalization: [7, 158] -> (7, 158)
-    assert result.telegrams[2].destination == "1/2/11"
-    assert tuple(result.telegrams[2].payload) == (7, 158)
+        # Check normalization: [7, 158] -> (7, 158)
+        assert result.telegrams[2].destination == "1/2/11"
+        assert tuple(result.telegrams[2].payload) == (7, 158)
 
-    # Check None payload stays None
-    assert result.telegrams[3].destination == "3/7/62"
-    assert result.telegrams[3].payload is None
+        # Check None payload stays None
+        assert result.telegrams[3].destination == "3/7/62"
+        assert result.telegrams[3].payload is None
 
-    # Check int payload stays int
-    assert result.telegrams[4].destination == "1/4/100"
-    assert result.telegrams[4].payload == 1
+        # Check int payload stays int
+        assert result.telegrams[4].destination == "1/4/100"
+        assert result.telegrams[4].payload == 1
 
-    # Check long string payload
-    assert result.telegrams[6].destination == "0/6/0"
-    assert tuple(result.telegrams[6].payload) == (
-        77,
-        53,
-        32,
-        83,
-        48,
-        32,
-        65,
-        51,
-        51,
-        53,
-        32,
-        69,
-        48,
-        48,
-    )
+        # Check long string payload
+        assert result.telegrams[6].destination == "0/6/0"
+        assert tuple(result.telegrams[6].payload) == (
+            77,
+            53,
+            32,
+            83,
+            48,
+            32,
+            65,
+            51,
+            51,
+            53,
+            32,
+            69,
+            48,
+            48,
+        )
 
-    # Verify legacy file removal
-    assert not os.path.exists(legacy_path)
+        # Verify legacy file removal
+        assert not os.path.exists(legacy_path)
 
-    # Cleanup DB file
-    db_path = hass.config.path(db_name)
-    if os.path.exists(db_path):
-        os.remove(db_path)
+    finally:
+        # Cleanup DB file
+        db_path = hass.config.path(db_name)
+        if os.path.exists(db_path):
+            await hass.async_add_executor_job(os.remove, db_path)

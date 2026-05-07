@@ -383,7 +383,9 @@ class Telegrams:
             # Fix potential float port (e.g. :5432.0/)
             return re.sub(r":(\d+)\.0($|[/?])", r":\1\2", dsn)
         if backend == TELEGRAM_BACKEND_SQLITE:
-            return TELEGRAM_DB_PATH_DEFAULT
+            return str(
+                self.config.get(CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT)
+            )
         return "Unknown"
 
     def _resolve_dpt_name(self, main: int | None, sub: int | None) -> str | None:
