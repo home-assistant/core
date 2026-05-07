@@ -13,6 +13,7 @@ from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
+    PortainerDockerDiskSpaceCoordinator,
     PortainerStackData,
     PortainerVolumeData,
 )
@@ -20,6 +21,14 @@ from .coordinator import (
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
     """Base class for Portainer entities."""
+
+    _attr_has_entity_name = True
+
+
+class PortainerDockerDiskSpaceCoordinatorEntity(
+    CoordinatorEntity[PortainerDockerDiskSpaceCoordinator]
+):
+    """Base class for Portainer entities using the Docker disk space coordinator."""
 
     _attr_has_entity_name = True
 
@@ -175,6 +184,45 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
     def stack_data(self) -> PortainerStackData:
         """Return the coordinator data for this stack."""
         return self.coordinator.data[self.endpoint_id].stacks[self.device_name]
+
+
+class PortainerDockerSystemDiskSpaceEndpointEntity(
+    PortainerDockerDiskSpaceCoordinatorEntity
+):
+    """Base class for endpoint entities backed by the docker system disk space coordinator."""
+
+    def __init__(
+        self,
+        coordinator: PortainerDockerDiskSpaceCoordinator,
+        entity_description: EntityDescription,
+        device_info: PortainerCoordinatorData,
+    ) -> None:
+        """Initialize a Portainer docker system disk space endpoint entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self.endpoint_id = device_info.endpoint.id
+        self._device_info = device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}")
+            },
+            configuration_url=URL(
+                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/dashboard"
+            ),
+            manufacturer=DEFAULT_NAME,
+            model="Endpoint",
+            name=device_info.endpoint.name,
+        )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.endpoint.id}_{entity_description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.endpoint_id in self.coordinator.data
+        )
 
 
 class PortainerVolumeEntity(PortainerCoordinatorEntity):
