@@ -53,6 +53,9 @@
       "preconditioning_duration": {
         "name": "Preconditioning duration"
       },
+      "state_of_charge_input": {
+        "name": "State of charge input"
+      },
       "target_percentage": {
         "name": "Target percentage"
       }

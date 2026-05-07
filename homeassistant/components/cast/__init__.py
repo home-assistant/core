@@ -1,7 +1,5 @@
 """Component to embed Google Cast."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Protocol
 from uuid import UUID

@@ -1,7 +1,5 @@
 """Media player platform for the Denon RS232 integration."""
 
-from __future__ import annotations
-
 from typing import Literal, cast
 
 from denon_rs232 import (

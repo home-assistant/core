@@ -1,7 +1,5 @@
 """Passive update coordinator for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback

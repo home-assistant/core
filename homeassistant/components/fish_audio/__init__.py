@@ -1,7 +1,5 @@
 """The Fish Audio integration."""
 
-from __future__ import annotations
-
 import logging
 
 from fishaudio import AsyncFishAudio

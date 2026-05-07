@@ -1,7 +1,5 @@
 """Local backup support for Core and Container installations."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from pathlib import Path

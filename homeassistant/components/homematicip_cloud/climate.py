@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import AbsenceType
@@ -83,7 +81,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="climate")
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = self._first_radiator_thermostat

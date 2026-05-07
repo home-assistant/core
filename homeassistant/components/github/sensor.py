@@ -1,7 +1,5 @@
 """Sensor platform for the GitHub integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -150,13 +148,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
     repositories = entry.runtime_data
-    async_add_entities(
-        (
-            GitHubSensorEntity(coordinator, description)
-            for description in SENSOR_DESCRIPTIONS
-            for coordinator in repositories.values()
-        ),
-    )
+    for subentry_id, coordinator in repositories.items():
+        async_add_entities(
+            (
+                GitHubSensorEntity(coordinator, description)
+                for description in SENSOR_DESCRIPTIONS
+            ),
+            config_subentry_id=subentry_id,
+        )
 
 
 class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorEntity):

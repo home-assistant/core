@@ -1,33 +1,11 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, DPCode
-
-
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
-) -> str | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
-
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
-    return None
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):
@@ -54,3 +32,22 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
                 "available": str(sorted(device.function.keys())),
             },
         )
+
+
+def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
+    """Get device info."""
+    model = device.product_name
+
+    if initial:
+        # Note: the model is overridden via entity.device_info property
+        # when the entity is created. If no entities are generated, it will
+        # stay as unsupported
+        model = f"{device.product_name} (unsupported)"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        manufacturer="Tuya",
+        name=device.name,
+        model=model,
+        model_id=device.product_id,
+    )

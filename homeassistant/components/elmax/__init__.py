@@ -1,7 +1,5 @@
 """The elmax-cloud integration."""
 
-from __future__ import annotations
-
 from elmax_api.exceptions import ElmaxBadLoginError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry

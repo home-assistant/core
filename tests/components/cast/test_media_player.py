@@ -1,7 +1,5 @@
 """The tests for the Cast Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import json
