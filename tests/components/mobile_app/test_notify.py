@@ -865,7 +865,7 @@ async def test_notify_live_activity_uses_stored_token(
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": {
             "token": "LIVE_ACTIVITY_TOKEN_HEX",
-            "stored_at": dt_util.utcnow().isoformat(),
+            "stored_at": dt_util.utcnow().timestamp(),
         }
     }
 
@@ -989,7 +989,7 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "some_tag": {
             "token": "SHOULD_NOT_USE_THIS",
-            "stored_at": dt_util.utcnow().isoformat(),
+            "stored_at": dt_util.utcnow().timestamp(),
         }
     }
 

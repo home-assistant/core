@@ -1338,7 +1338,7 @@ async def test_webhook_update_live_activity_token(
     assert tokens[webhook_id]["washer_cycle"]["token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     )
-    assert "stored_at" in tokens[webhook_id]["washer_cycle"]
+    assert isinstance(tokens[webhook_id]["washer_cycle"]["stored_at"], float)
 
 
 async def test_webhook_update_live_activity_token_stores_only_push_token(
@@ -1366,7 +1366,7 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
     assert stored["token"] == (
         "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
     )
-    assert "stored_at" in stored
+    assert isinstance(stored["stored_at"], float)
 
 
 async def test_webhook_live_activity_dismissed(

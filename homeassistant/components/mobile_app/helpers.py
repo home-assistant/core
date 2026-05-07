@@ -29,6 +29,7 @@ from .const import (
     CONF_SECRET,
     CONF_USER_ID,
     DATA_DELETED_IDS,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
 )
 
@@ -167,10 +168,10 @@ def safe_registration(registration: dict) -> dict:
 
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
+    # pylint: disable-next=hass-use-runtime-data
     return {
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
+        DATA_LIVE_ACTIVITY_TOKENS: hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS],
     }
 
 

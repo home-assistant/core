@@ -90,9 +90,9 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_LIVE_ACTIVITY_STORE,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
+    DATA_STORE,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
@@ -112,6 +112,7 @@ from .helpers import (
     error_response,
     registration_context,
     safe_registration,
+    savable_state,
     webhook_response,
 )
 
@@ -795,9 +796,9 @@ async def webhook_update_live_activity_token(
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         "token": data[ATTR_PUSH_TOKEN],
-        "stored_at": dt_util.utcnow().isoformat(),
+        "stored_at": dt_util.utcnow().timestamp(),
     }
-    await hass.data[DOMAIN][DATA_LIVE_ACTIVITY_STORE].async_save(live_activity_tokens)
+    await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
 
     return empty_okay_response()
 
@@ -821,8 +822,6 @@ async def webhook_live_activity_dismissed(
         # Clean up the device key if no activities remain.
         if not live_activity_tokens[webhook_id]:
             del live_activity_tokens[webhook_id]
-        await hass.data[DOMAIN][DATA_LIVE_ACTIVITY_STORE].async_save(
-            live_activity_tokens
-        )
+        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
 
     return empty_okay_response()

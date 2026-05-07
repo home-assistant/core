@@ -51,15 +51,15 @@ from .const import (
     ATTR_PUSH_URL,
     ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
-    DATA_LIVE_ACTIVITY_STORE,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
+    DATA_STORE,
     DOMAIN,
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SIGNAL_RECORD_NOTIFICATION,
 )
-from .helpers import device_info
+from .helpers import device_info, savable_state
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -255,9 +255,8 @@ class MobileAppNotificationService(BaseNotificationService):
         live_activity_tokens = self.hass.data[DOMAIN].get(DATA_LIVE_ACTIVITY_TOKENS, {})
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if stored := device_tokens.get(tag):
-            stored_at = dt_util.parse_datetime(stored.get("stored_at", ""))
-            if stored_at and (
-                dt_util.utcnow().timestamp() - stored_at.timestamp()
+            if (
+                dt_util.utcnow().timestamp() - stored.get("stored_at", 0)
                 < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
             ):
                 return stored["token"]
@@ -265,8 +264,8 @@ class MobileAppNotificationService(BaseNotificationService):
             device_tokens.pop(tag, None)
             if not device_tokens:
                 live_activity_tokens.pop(webhook_id, None)
-            await self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_STORE].async_save(
-                live_activity_tokens
+            await self.hass.data[DOMAIN][DATA_STORE].async_save(
+                savable_state(self.hass)
             )
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
