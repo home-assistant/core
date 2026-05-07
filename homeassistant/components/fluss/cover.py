@@ -9,7 +9,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -26,24 +25,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fluss covers for devices that report an open/closed status."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
-
-    cover_devices = [
-        (device_id, device)
-        for device_id, device in coordinator.data.items()
-        if "openCloseStatus" in device
-    ]
-
-    # Drop any prior button registry entry for a device that's now a cover.
-    for device_id, _ in cover_devices:
-        if button_entity_id := entity_registry.async_get_entity_id(
-            "button", DOMAIN, device_id
-        ):
-            entity_registry.async_remove(button_entity_id)
 
     async_add_entities(
         FlussCover(coordinator, device_id, device)
-        for device_id, device in cover_devices
+        for device_id, device in coordinator.data.items()
+        if "openCloseStatus" in device
     )
 
 

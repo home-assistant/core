@@ -255,32 +255,3 @@ async def test_mixed_device_dispatch(
     assert entity_registry.async_get("button.device_1") is None
     assert entity_registry.async_get("button.device_2") is not None
     assert entity_registry.async_get("cover.device_2") is None
-
-
-async def test_orphan_button_removed_on_setup(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """A pre-existing button registry entry is removed if its device is now a cover."""
-    mock_config_entry.add_to_hass(hass)
-    button_entity_id = entity_registry.async_get_or_create(
-        "button", DOMAIN, DEVICE_ID_1, config_entry=mock_config_entry
-    ).entity_id
-    assert (
-        entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is not None
-    )
-
-    async def _status(device_id: str) -> dict[str, Any]:
-        if device_id == DEVICE_ID_1:
-            return {"status": {"internetConnected": True, "openCloseStatus": "Closed"}}
-        return {"status": {"internetConnected": True}}
-
-    mock_api_client.async_get_device_status.side_effect = _status
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get_entity_id("button", DOMAIN, DEVICE_ID_1) is None
-    assert hass.states.get(button_entity_id) is None
-    assert entity_registry.async_get("cover.device_1") is not None
