@@ -406,5 +406,12 @@
     "calibrate": true,
     "position": 0,
     "isStuck": true
+  },
+  {
+    "deviceId": "FF14858256Ff",
+    "deviceType": "Garage Door Opener",
+    "doorState": 1,
+    "online": true,
+    "version": "V3.1-6.3"
   }
 ]
