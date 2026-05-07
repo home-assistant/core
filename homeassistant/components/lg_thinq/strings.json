@@ -1165,7 +1165,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity.\n\nClick **Submit** to disable the number entity and fix this issue.",
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity.\n\nAfter updating, click **Submit** to disable the number entity and fix this issue.",
             "title": "Fan speed number entity deprecated"
           }
         }
@@ -1176,7 +1176,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity.\n\nClick **Submit** to disable the number entity and fix this issue.",
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity.\n\nAfter updating, click **Submit** to disable the number entity and fix this issue.",
             "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
           }
         }
