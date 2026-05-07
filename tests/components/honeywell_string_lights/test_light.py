@@ -1,7 +1,5 @@
 """Tests for the Honeywell String Lights light platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.honeywell_string_lights.light import COMMANDS
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
@@ -19,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.radio_frequency.conftest import MockRadioFrequencyEntity
+from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.honeywell_string_lights"
 

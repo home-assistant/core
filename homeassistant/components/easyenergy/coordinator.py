@@ -1,7 +1,5 @@
 """The Coordinator for easyEnergy."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import NamedTuple
 

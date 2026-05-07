@@ -7,9 +7,9 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from .const import UNIQUE_ID
 
-UNIQUE_ID_PREFIX = "aa:bb:cc:dd:ee:ff"
+from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.parametrize(
     "init_integration", [Platform.SENSOR], indirect=True
@@ -31,11 +31,11 @@ async def test_sensors(
 @pytest.mark.parametrize(
     "unique_id",
     [
-        f"{UNIQUE_ID_PREFIX}_fan_1_speed",
-        f"{UNIQUE_ID_PREFIX}_fan_2_speed",
-        f"{UNIQUE_ID_PREFIX}_module_temperature",
-        f"{UNIQUE_ID_PREFIX}_pressure",
-        f"{UNIQUE_ID_PREFIX}_wifi_rssi",
+        f"{UNIQUE_ID}_fan_1_speed",
+        f"{UNIQUE_ID}_fan_2_speed",
+        f"{UNIQUE_ID}_module_temperature",
+        f"{UNIQUE_ID}_pressure",
+        f"{UNIQUE_ID}_wifi_rssi",
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -59,11 +59,38 @@ async def test_sensors_unknown_status(
     """Test sensor returns unknown when stove status is unmapped."""
     for key in ("stove_status", "detailed_stove_status"):
         entry = entity_registry.async_get_entity_id(
-            "sensor", "fumis", f"{UNIQUE_ID_PREFIX}_{key}"
+            "sensor", "fumis", f"{UNIQUE_ID}_{key}"
         )
         assert entry is not None
         assert (state := hass.states.get(entry))
         assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("device_fixture", ["info_error_alert"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensors_active_error_and_alert(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test error and alert sensors with active codes."""
+    error_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "fumis", f"{UNIQUE_ID}_error"
+    )
+    assert error_entity_id is not None
+    assert (state := hass.states.get(error_entity_id))
+    assert state == snapshot
+    assert state.state == "ignition_failed"
+    assert state.attributes["code"] == "E101"
+
+    alert_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "fumis", f"{UNIQUE_ID}_alert"
+    )
+    assert alert_entity_id is not None
+    assert (state := hass.states.get(alert_entity_id))
+    assert state == snapshot
+    assert state.state == "low_fuel"
+    assert state.attributes["code"] == "A001"
 
 
 @pytest.mark.parametrize("device_fixture", ["info_minimal"])
@@ -89,14 +116,16 @@ async def test_sensors_conditional_creation(
         "temperature",
         "time_to_service",
     ):
-        assert f"{UNIQUE_ID_PREFIX}_{key}" not in unique_ids, key
+        assert f"{UNIQUE_ID}_{key}" not in unique_ids, key
 
     # These should still exist
     for key in (
+        "alert",
         "detailed_stove_status",
+        "error",
         "power_output",
         "stove_status",
         "wifi_rssi",
         "wifi_signal_strength",
     ):
-        assert f"{UNIQUE_ID_PREFIX}_{key}" in unique_ids, key
+        assert f"{UNIQUE_ID}_{key}" in unique_ids, key

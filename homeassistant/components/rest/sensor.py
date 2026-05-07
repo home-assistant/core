@@ -1,7 +1,5 @@
 """Support for RESTful API sensors."""
 
-from __future__ import annotations
-
 import logging
 import ssl
 from typing import Any

@@ -1,7 +1,5 @@
 """Support for RuuviTag sensors."""
 
-from __future__ import annotations
-
 from sensor_state_data import (
     DeviceKey,
     SensorDeviceClass as SSDSensorDeviceClass,

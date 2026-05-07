@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
