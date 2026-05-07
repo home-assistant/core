@@ -2969,10 +2969,6 @@ async def test_make_entity_target_state_trigger(
     # Value did not change — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
-    # From unavailable — not valid
-    unavailable = State("light.bed", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
-
     # Value not in to_states — not valid
     assert not trig.is_valid_state(wrong_value_state)
 
@@ -3042,10 +3038,6 @@ async def test_make_entity_transition_trigger(
 
     # No change in tracked value — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
-
-    # From unavailable — not valid
-    unavailable = State("climate.living", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
 
 
 @pytest.mark.parametrize(

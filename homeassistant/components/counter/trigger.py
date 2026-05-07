@@ -1,11 +1,6 @@
 """Provides triggers for counters."""
 
-from homeassistant.const import (
-    CONF_MAXIMUM,
-    CONF_MINIMUM,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -41,9 +36,7 @@ class CounterDecrementedTrigger(CounterBaseIntegerTrigger):
     """Trigger for when a counter is decremented."""
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
+        """Check that the counter value decreased."""
         return int(from_state.state) > int(to_state.state)
 
 
@@ -51,9 +44,7 @@ class CounterIncrementedTrigger(CounterBaseIntegerTrigger):
     """Trigger for when a counter is incremented."""
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
+        """Check that the counter value increased."""
         return int(from_state.state) < int(to_state.state)
 
 
@@ -61,12 +52,6 @@ class CounterValueBaseTrigger(EntityTriggerBase):
     """Base trigger for counter value changes."""
 
     _domain_specs = {DOMAIN: DomainSpec()}
-
-    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-        return from_state.state != to_state.state
 
 
 class CounterMaxReachedTrigger(CounterValueBaseTrigger):
