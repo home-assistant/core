@@ -1,7 +1,5 @@
 """Support for Azure Storage backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json

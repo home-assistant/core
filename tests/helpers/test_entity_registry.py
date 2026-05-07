@@ -571,6 +571,94 @@ def test_get_available_entity_id_considers_existing_entities(
     )
 
 
+@pytest.mark.parametrize(
+    (
+        "device_name",
+        "object_id_base",
+        "suggested_object_id",
+        "user_name",
+        "expected_entity_id",
+    ),
+    [
+        (
+            None,
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            None,
+            None,
+            "sensor.living_room_temperature",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            "custom_id",
+            "Humidity",
+            "sensor.living_room_humidity",
+        ),
+        (
+            "Living Room",
+            "Temperature",
+            None,
+            "Living Room Sensor",
+            "sensor.living_room_sensor",
+        ),
+    ],
+)
+def test_regenerate_entity_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_name: str | None,
+    object_id_base: str | None,
+    suggested_object_id: str | None,
+    user_name: str | None,
+    expected_entity_id: str,
+) -> None:
+    """Test regenerating entity IDs."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    device_id: str | None = None
+    if device_name is not None:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name=device_name,
+        )
+        device_id = device_entry.id
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_id,
+        has_entity_name=True,
+        object_id_base=object_id_base,
+        original_name=object_id_base,
+        suggested_object_id=suggested_object_id,
+    )
+
+    if user_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=user_name)
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == expected_entity_id
+
+
 def test_is_registered(entity_registry: er.EntityRegistry) -> None:
     """Test that is_registered works."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")

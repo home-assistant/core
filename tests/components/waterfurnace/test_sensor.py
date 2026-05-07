@@ -9,27 +9,31 @@ from syrupy.assertion import SnapshotAssertion
 from waterfurnace.waterfurnace import WFException
 
 from homeassistant.components.waterfurnace.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
+
+
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_sensors(
     hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we create the expected sensors."""
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_sensor(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -50,7 +54,7 @@ async def test_sensor(
     assert state.state == "2000"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 @pytest.mark.parametrize(
     "side_effect",
     [

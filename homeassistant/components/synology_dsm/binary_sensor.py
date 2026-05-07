@@ -1,7 +1,5 @@
 """Support for Synology DSM binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 

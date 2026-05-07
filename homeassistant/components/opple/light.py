@@ -1,7 +1,5 @@
 """Support for the Opple light."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,13 +1,11 @@
 """Support for the Tuya lights."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.definition.light import (
     FallbackColorDataMode,
-    TuyaLightDefinition,
+    LightDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -28,8 +26,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 
@@ -426,7 +424,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaLightEntityDescription,
-        definition: TuyaLightDefinition,
+        definition: LightDefinition,
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager, description)

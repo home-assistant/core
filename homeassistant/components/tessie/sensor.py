@@ -1,7 +1,5 @@
 """Sensor platform for Tessie integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -46,6 +44,7 @@ from .entity import (
     TessieEntity,
     TessieWallConnectorEntity,
 )
+from .helpers import charge_state_to_option
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -71,7 +70,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         options=list(TessieChargeStates.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda value: TessieChargeStates[cast(str, value)],
+        value_fn=charge_state_to_option,
     ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
@@ -637,4 +636,4 @@ class TessieEnergyHistorySensorEntity(TessieEnergyHistoryEntity, SensorEntity):
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_native_value = self._value
-        self._attr_last_reset = self.coordinator.data["_period_start"]
+        self._attr_last_reset = self.coordinator.data.get("_period_start")

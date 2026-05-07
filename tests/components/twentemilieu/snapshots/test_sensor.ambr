@@ -46,7 +46,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'christmas_tree_pickup',
-    'unique_id': 'twentemilieu_12345_tree',
+    'unique_id': '12345_tree',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'non_recyclable_waste_pickup',
-    'unique_id': 'twentemilieu_12345_Non-recyclable',
+    'unique_id': '12345_non_recyclable',
     'unit_of_measurement': None,
   })
 # ---
@@ -210,7 +210,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'organic_waste_pickup',
-    'unique_id': 'twentemilieu_12345_Organic',
+    'unique_id': '12345_organic',
     'unit_of_measurement': None,
   })
 # ---
@@ -292,7 +292,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'packages_waste_pickup',
-    'unique_id': 'twentemilieu_12345_Plastic',
+    'unique_id': '12345_packages',
     'unit_of_measurement': None,
   })
 # ---
@@ -374,7 +374,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'paper_waste_pickup',
-    'unique_id': 'twentemilieu_12345_Paper',
+    'unique_id': '12345_paper',
     'unit_of_measurement': None,
   })
 # ---

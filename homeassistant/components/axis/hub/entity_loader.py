@@ -3,8 +3,6 @@
 Central point to load entities for the different platforms.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from axis.models.event import Event, EventOperation, EventTopic

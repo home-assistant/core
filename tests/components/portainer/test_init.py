@@ -247,7 +247,8 @@ async def test_device_registry(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_entries == snapshot
+    # Sort by identifier to ensure consistent order in snapshot
+    assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
 
 async def test_container_stack_device_links(
@@ -361,6 +362,21 @@ async def test_new_container_callback(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) > len(entities)
+
+
+async def test_swarm_stacks_fetched_by_swarm_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that on a Swarm manager get_stacks is called with both endpoint_id and swarm_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    calls = mock_portainer_client.get_stacks.call_args_list
+    # Expect exactly two calls: one by endpoint_id, one by swarm_id
+    assert len(calls) == 2
+    assert calls[0].kwargs == {"endpoint_id": 1}
+    assert calls[1].kwargs == {"endpoint_id": 1, "swarm_id": "swarm-cluster-id"}
 
 
 async def test_new_stack_callback(

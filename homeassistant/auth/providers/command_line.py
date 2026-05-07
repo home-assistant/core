@@ -1,7 +1,5 @@
 """Auth provider that validates credentials via an external command."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging

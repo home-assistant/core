@@ -1,7 +1,5 @@
 """Notify platform for the Habitica integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from enum import StrEnum
 from typing import TYPE_CHECKING

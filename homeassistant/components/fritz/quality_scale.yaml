@@ -56,9 +56,7 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: automate the current cleanup process and deprecate the corresponding button
+  stale-devices: done
 
   # Platinum
   async-dependency:
