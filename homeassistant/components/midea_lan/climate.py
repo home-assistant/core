@@ -38,6 +38,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_SENSORS,
     PRECISION_HALVES,
     PRECISION_WHOLE,
     UnitOfTemperature,
@@ -330,8 +331,8 @@ class MideaACClimate(MideaClimate):
         # Indoor humidity is only enabled when explicitly configured by the user
         # because some devices report invalid values (0 or 0xFF) for this sensor.
         self._indoor_humidity_enabled = (
-            "sensors" in config_entry.options
-            and "indoor_humidity" in config_entry.options["sensors"]
+            CONF_SENSORS in config_entry.options
+            and "indoor_humidity" in config_entry.options[CONF_SENSORS]
         )
 
     @property

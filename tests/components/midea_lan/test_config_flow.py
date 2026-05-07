@@ -1,4 +1,4 @@
-"""Tests for the Midea LAN config mock_config_flow."""
+"""Tests for the Midea LAN config flow."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,7 +10,6 @@ import pytest
 
 from homeassistant.components.midea_lan.config_flow import (
     DEFAULT_CLOUD,
-    INVALID_SERVER_ID,
     MideaLanConfigFlow,
     MideaLanOptionsFlowHandler,
 )
@@ -95,7 +94,7 @@ def _manual_user_input() -> dict:
 
 
 async def test_manual_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful manual configuration mock_config_flow."""
+    """Test a successful manual configuration flow."""
     with (
         patch(
             "homeassistant.components.midea_lan.config_flow.discover",
@@ -118,12 +117,12 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"action": "manually"},
+            user_input={"next_step_id": "manually"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "manually"
@@ -157,7 +156,7 @@ async def test_manual_flow_invalid_token(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"action": "manually"},
+        user_input={"next_step_id": "manually"},
     )
 
     invalid_input = _manual_user_input()
@@ -208,7 +207,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"action": "manually"},
+            user_input={"next_step_id": "manually"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -257,7 +256,12 @@ def test_check_storage_device() -> None:
 
 
 async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test step_user routes actions to the expected next steps."""
+    """Test step_user exposes menu options and routes legacy action payloads."""
+    result = await mock_config_flow.async_step_user()
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert result["menu_options"] == ["discovery", "manually", "list", "cache"]
+
     with (
         patch.object(
             mock_config_flow,
@@ -286,10 +290,6 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
             "step": 3
         }
         assert await mock_config_flow.async_step_user({"action": "list"}) == {"step": 4}
-
-    result = await mock_config_flow.async_step_user()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 async def test_step_cache(mock_config_flow: MideaLanConfigFlow) -> None:
@@ -534,7 +534,11 @@ async def test_step_login_branches(mock_config_flow: MideaLanConfigFlow) -> None
         ),
     ):
         result = await mock_config_flow.async_step_login(
-            {CONF_SERVER: INVALID_SERVER_ID, CONF_ACCOUNT: "a", CONF_PASSWORD: "p"}
+            {
+                CONF_SERVER: "skip_login_option",
+                CONF_ACCOUNT: "account",
+                CONF_PASSWORD: "password",
+            }
         )
     assert result == {"auto": True}
     assert mock_config_flow.hass.data[DOMAIN]["login_mode"] == "preset"
@@ -715,6 +719,31 @@ async def test_step_auto_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     ):
         result = await mock_config_flow.async_step_auto({CONF_DEVICE: TEST_DEVICE_ID})
     assert result == {"login": True}
+
+
+async def test_step_auto_device_not_in_devices(
+    mock_config_flow: MideaLanConfigFlow,
+) -> None:
+    """Test auto step error when selected device is not in devices."""
+    # Set up available devices but then clear self.devices
+    # to simulate a race condition or stale data
+    mock_config_flow.available_device = {TEST_DEVICE_ID: "Device"}
+    mock_config_flow.devices = {}
+
+    with patch.object(
+        mock_config_flow,
+        "async_step_auto",
+        wraps=mock_config_flow.async_step_auto,
+    ):
+        result = await mock_config_flow.async_step_auto(
+            {CONF_DEVICE: TEST_DEVICE_ID},
+            error=None,
+        )
+
+    # Should return to async_step_auto with error
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auto"
+    assert result["errors"] == {"base": "no_devices"}
 
 
 async def test_manual_step_validations(mock_config_flow: MideaLanConfigFlow) -> None:
