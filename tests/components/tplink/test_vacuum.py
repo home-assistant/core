@@ -1,7 +1,5 @@
 """Tests for vacuum platform."""
 
-from __future__ import annotations
-
 from kasa import Device, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion

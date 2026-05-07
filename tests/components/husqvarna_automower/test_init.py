@@ -14,7 +14,13 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
+from aioautomower.model import (
+    Calendar,
+    MowerAttributes,
+    MowerStates,
+    WorkArea,
+    WorkAreaType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -463,6 +469,8 @@ async def test_add_and_remove_work_area(
                 last_time_completed=datetime(
                     2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
                 ),
+                type=WorkAreaType.RANDOM,
+                use_global_cutting_height=False,
             )
         }
     )
@@ -516,27 +524,12 @@ async def test_add_and_remove_work_area(
     )
 
 
-@pytest.mark.parametrize(
-    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
-    [
-        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
-        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
-        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
-    ],
-)
 async def test_dynamic_polling(
     hass: HomeAssistant,
     mock_automower_client,
     mock_config_entry,
     freezer: FrozenDateTimeFactory,
     values: dict[str, MowerAttributes],
-    mower1_connected: bool,
-    mower1_state: MowerStates,
-    mower2_connected: bool,
-    mower2_state: MowerStates,
 ) -> None:
     """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
 
@@ -579,10 +572,8 @@ async def test_dynamic_polling(
     assert mock_automower_client.get_status.call_count == 2
 
     # websocket is still active, but mowers are inactive -> no polling required
-    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
-    poll_values[TEST_MOWER_ID].mower.state = mower1_state
-    poll_values["1234"].metadata.connected = mower2_connected
-    poll_values["1234"].mower.state = mower2_state
+    poll_values[TEST_MOWER_ID].mower.state = MowerStates.OFF
+    poll_values["1234"].mower.state = MowerStates.OFF
 
     mock_automower_client.get_status.return_value = poll_values
     freezer.tick(SCAN_INTERVAL)
@@ -608,9 +599,7 @@ async def test_dynamic_polling(
     # websocket is still active, and mowers are active -> polling required
     mock_automower_client.get_status.reset_mock()
     assert mock_automower_client.get_status.call_count == 0
-    poll_values[TEST_MOWER_ID].metadata.connected = True
     poll_values[TEST_MOWER_ID].mower.state = MowerStates.PAUSED
-    poll_values["1234"].metadata.connected = False
     poll_values["1234"].mower.state = MowerStates.OFF
     websocket_values = deepcopy(poll_values)
     callback_holder["data_cb"](websocket_values)
@@ -623,17 +612,6 @@ async def test_dynamic_polling(
     assert mock_automower_client.get_status.call_count == 2
 
 
-@pytest.mark.parametrize(
-    ("mower1_connected", "mower1_state", "mower2_connected", "mower2_state"),
-    [
-        (True, MowerStates.OFF, False, MowerStates.OFF),  # False
-        (False, MowerStates.PAUSED, False, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, True, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, False, MowerStates.PAUSED),  # False
-        (True, MowerStates.OFF, True, MowerStates.OFF),  # False
-        (False, MowerStates.OFF, False, MowerStates.OFF),  # False
-    ],
-)
 async def test_websocket_watchdog(
     hass: HomeAssistant,
     mock_automower_client,
@@ -641,10 +619,6 @@ async def test_websocket_watchdog(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
-    mower1_connected: bool,
-    mower1_state: MowerStates,
-    mower2_connected: bool,
-    mower2_state: MowerStates,
 ) -> None:
     """Test that the ws_ready_callback triggers an attempt to start the Watchdog task.
 
@@ -686,10 +660,8 @@ async def test_websocket_watchdog(
     assert mock_automower_client.get_status.call_count == 2
 
     # websocket is still active, but mowers are inactive -> no polling required
-    poll_values[TEST_MOWER_ID].metadata.connected = mower1_connected
-    poll_values[TEST_MOWER_ID].mower.state = mower1_state
-    poll_values["1234"].metadata.connected = mower2_connected
-    poll_values["1234"].mower.state = mower2_state
+    poll_values[TEST_MOWER_ID].mower.state = MowerStates.OFF
+    poll_values["1234"].mower.state = MowerStates.OFF
 
     mock_automower_client.get_status.return_value = poll_values
     freezer.tick(SCAN_INTERVAL)

@@ -1,7 +1,5 @@
 """Config flow for Fluss+ integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from fluss_api import (

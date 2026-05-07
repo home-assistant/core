@@ -1,7 +1,5 @@
 """Support for LG soundbars."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import temescal
@@ -41,7 +39,7 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
-    _attr_state = MediaPlayerState.OFF
+    _attr_state = MediaPlayerState.ON  # Default to ON to ensure compatibility with models that don't send a powerstatus message
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE

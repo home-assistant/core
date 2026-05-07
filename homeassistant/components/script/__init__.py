@@ -1,7 +1,5 @@
 """Support for scripts."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
@@ -65,7 +63,6 @@ from homeassistant.helpers.script import (
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
@@ -91,7 +88,6 @@ SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -770,10 +766,13 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
-        await self.script.async_stop()
-
-        # remove service
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
+
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script as it will be reused.
+            await self.script.async_stop()
+            return
+        await self.script.async_unload()
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})

@@ -1,7 +1,5 @@
 """Config flow to configure the Elgato Light integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elgato import Elgato, ElgatoError
@@ -12,6 +10,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -23,7 +23,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
-    port: int
     serial_number: str
     mac: str | None = None
 
@@ -69,6 +68,69 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing Elgato device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            elgato = Elgato(
+                host=user_input[CONF_HOST],
+                session=async_get_clientsession(self.hass),
+            )
+
+            try:
+                info = await elgato.info()
+            except ElgatoError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(info.serial_number)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=self._get_reconfigure_entry().data[CONF_HOST],
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of a known Elgato device.
+
+        Only devices already configured (matched via ``registered_devices``)
+        reach this step. It is used to keep the stored host in sync with the
+        current IP address of the device.
+        """
+        mac = format_mac(discovery_info.macaddress)
+
+        for entry in self._async_current_entries():
+            if (entry_mac := entry.data.get(CONF_MAC)) is None or format_mac(
+                entry_mac
+            ) != mac:
+                continue
+            if entry.data[CONF_HOST] != discovery_info.ip:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_HOST: discovery_info.ip},
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="no_devices_found")
 
     @callback
     def _async_show_setup_form(

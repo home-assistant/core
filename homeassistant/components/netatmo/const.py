@@ -39,14 +39,15 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "write_mhs1",
 ]
 
-NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
+NETATMO_CREATE_CLIMATE_BATTERY_SENSOR = "netatmo_create_climate_battery_sensor"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR = "netatmo_create_connectivity_binary_sensor"
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
+NETATMO_CREATE_LEGACY_SENSOR = "netatmo_create_legacy_sensor"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
 NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
@@ -215,5 +216,15 @@ WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
 WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
+WEBHOOK_NDB_CONNECTION = "NDB-connection"
 WEBHOOK_PUSH_TYPE = "push_type"
-CAMERA_CONNECTION_WEBHOOKS = [WEBHOOK_NACAMERA_CONNECTION, WEBHOOK_NOCAMERA_CONNECTION]
+CAMERA_CONNECTION_WEBHOOKS = [
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
+    WEBHOOK_NDB_CONNECTION,
+]
+
+# Alimentation status (alim_status) for cameras and door bells (NDB).
+# For NDB there is no monitoring attribute in status but only alim_status.
+# 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
+NETATMO_ALIM_STATUS_ONLINE = 2

@@ -165,3 +165,72 @@ async def test_custom_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "https://custom.autoskope.server"
     assert result["result"].unique_id == "test_user@https://custom.autoskope.server"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_autoskope_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth flow updates password and reloads entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "new_password",
+        CONF_HOST: DEFAULT_HOST,
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (InvalidAuth("Invalid credentials"), "invalid_auth"),
+        (CannotConnect("Connection failed"), "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_autoskope_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauth flow error handling with recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_autoskope_client.__aenter__.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "wrong_password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Recovery: clear the error and retry
+    mock_autoskope_client.__aenter__.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

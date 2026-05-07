@@ -1,7 +1,5 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
@@ -162,7 +160,10 @@ def async_event_to_row(event: Event) -> EventAsRow:
     # that are missing new_state or old_state
     # since the logbook does not show these
     new_state: State = event.data["new_state"]
-    context = new_state.context
+    # Use the event's context rather than the state's context because
+    # State.expire() replaces the context with a copy that loses
+    # origin_event, which is needed for context augmentation.
+    context = event.context
     return EventAsRow(
         row_id=hash(event),
         event_type=None,

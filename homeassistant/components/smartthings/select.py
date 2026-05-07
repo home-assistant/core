@@ -1,7 +1,5 @@
 """Support for select entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import cast
 

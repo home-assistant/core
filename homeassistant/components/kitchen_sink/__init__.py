@@ -4,8 +4,6 @@ This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 from random import random
@@ -62,6 +60,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.RADIO_FREQUENCY,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WEATHER,

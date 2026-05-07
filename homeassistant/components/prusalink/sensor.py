@@ -1,7 +1,5 @@
 """PrusaLink sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -16,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
@@ -29,8 +26,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
-from .coordinator import PrusaLinkUpdateCoordinator
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
@@ -50,6 +46,7 @@ class PrusaLinkSensorEntityDescription(
     """Describes PrusaLink sensor entity."""
 
     available_fn: Callable[[T], bool] = lambda _: True
+    supported_fn: Callable[[T], bool] = lambda _: True
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -105,6 +102,26 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["printer"]["axis_z"]),
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterStatus](
+            key="printer.telemetry.x-position",
+            translation_key="x_position",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["printer"]["axis_x"]),
+            supported_fn=lambda data: data["printer"].get("axis_x") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterStatus](
+            key="printer.telemetry.y-position",
+            translation_key="y_position",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["printer"]["axis_y"]),
+            supported_fn=lambda data: data["printer"].get("axis_y") is not None,
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterStatus](
@@ -198,19 +215,33 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             value_fn=lambda data: cast(str, data["nozzle_diameter"]),
             entity_registry_enabled_default=False,
         ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="info.location",
+            translation_key="location",
+            value_fn=lambda data: cast(str, data["location"]),
+            supported_fn=lambda data: data.get("location") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="info.min_extrusion_temp",
+            translation_key="min_extrusion_temp",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            value_fn=lambda data: cast(int, data["min_extrusion_temp"]),
+            supported_fn=lambda data: data.get("min_extrusion_temp") is not None,
+            entity_registry_enabled_default=False,
+        ),
     ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink sensor based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
 
@@ -219,6 +250,7 @@ async def async_setup_entry(
         entities.extend(
             PrusaLinkSensorEntity(coordinator, sensor_description)
             for sensor_description in sensors
+            if sensor_description.supported_fn(coordinator.data)
         )
 
     async_add_entities(entities)

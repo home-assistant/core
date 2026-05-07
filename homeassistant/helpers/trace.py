@@ -1,7 +1,5 @@
 """Helpers for script and condition tracing."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
