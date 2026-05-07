@@ -99,12 +99,19 @@ async def test_turn_on_off(
     assert_key_press(aioclient_mock, "speaker", expected_key)
 
 
-@pytest.mark.parametrize("expected_key", ["BACK", "CH_UP", "SMARTCAST"])
+@pytest.mark.parametrize(
+    ("command", "expected_key"),
+    # Mix canonical, lowercase, and case-varied inputs to exercise the
+    # service's case-insensitive normalization in addition to the
+    # underlying key-press wire effect.
+    [("BACK", "BACK"), ("ch_up", "CH_UP"), ("SMARTCAST", "SMARTCAST")],
+)
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_send_command_tv_valid(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_tv_config_entry: MockConfigEntry,
+    command: str,
     expected_key: str,
 ) -> None:
     """Test send_command resolves valid TV commands."""
@@ -113,12 +120,7 @@ async def test_send_command_tv_valid(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {
-            ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-            # Service accepts case-insensitive command names; pass the
-            # canonical form here.
-            ATTR_COMMAND: [expected_key],
-        },
+        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
         blocking=True,
     )
     assert_key_press(aioclient_mock, "tv", expected_key)
@@ -146,14 +148,17 @@ async def test_send_command_tv_invalid(
 
 
 @pytest.mark.parametrize(
-    "expected_key",
-    ["MUTE_TOGGLE", "PAUSE", "VOL_UP"],
+    ("command", "expected_key"),
+    # Mix canonical and lowercase inputs to exercise the service's
+    # case-insensitive normalization for speaker keys too.
+    [("MUTE_TOGGLE", "MUTE_TOGGLE"), ("pause", "PAUSE"), ("VOL_UP", "VOL_UP")],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_send_command_speaker_valid(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_speaker_config_entry: MockConfigEntry,
+    command: str,
     expected_key: str,
 ) -> None:
     """Test send_command resolves valid speaker commands."""
@@ -162,7 +167,7 @@ async def test_send_command_speaker_valid(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [expected_key]},
+        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
         blocking=True,
     )
     assert_key_press(aioclient_mock, "speaker", expected_key)

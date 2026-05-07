@@ -69,6 +69,14 @@ def settings_options_url(host: str, device_class: str, suffix: str) -> str:
 
 
 def _prepend_mock(aioclient_mock: AiohttpClientMocker) -> Any:
+    """Move the most-recently-added mock to the front of the match queue.
+
+    ``AiohttpClientMocker`` matches first-registered first, and exposes no
+    public ``prepend`` / ``replace`` API. Touching ``_mocks`` is the only
+    way to make a later override take precedence over an existing mock.
+    Adding a public method to ``AiohttpClientMocker`` upstream would let
+    us drop this internal access.
+    """
     new_mock = aioclient_mock._mocks.pop()
     aioclient_mock._mocks.insert(0, new_mock)
     return new_mock
