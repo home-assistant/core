@@ -3,8 +3,6 @@
 Reads position data from PajGpsCoordinator and exposes it as a TrackerEntity.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.device_tracker import SourceType
