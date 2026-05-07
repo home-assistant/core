@@ -31,7 +31,6 @@ from .const import (
     CONF_KNX_TELEGRAM_DSN,
     DOMAIN,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
-    TELEGRAM_BACKEND_MEMORY,
     TELEGRAM_BACKEND_POSTGRES,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_DB_PATH_DEFAULT,
@@ -87,8 +86,8 @@ class Telegrams:
         self.project = project
         self.config = config
 
-        backend = config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
-        self.store: TelegramStore
+        backend = config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_SQLITE)
+        self.store: TelegramStore | None = None
 
         if backend == TELEGRAM_BACKEND_POSTGRES:
             dsn = str(config.get(CONF_KNX_TELEGRAM_DSN, ""))
@@ -104,8 +103,10 @@ class Telegrams:
                 else hass.config.path(STORAGE_DIR, db_path)
             )
             self.store = SqliteStore(full_path)
-        else:  # Fallback to in-memory SQLite
-            self.store = SqliteStore(":memory:")
+        else:
+            _LOGGER.error(
+                "Invalid KNX telegram storage backend configured: %s", backend
+            )
 
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
@@ -124,7 +125,9 @@ class Telegrams:
 
     async def load_history(self) -> None:
         """Load history from store."""
-        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
+        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_SQLITE)
+        if self.store is None:
+            return
         info = self._get_backend_info()
         try:
             _LOGGER.debug(
@@ -159,16 +162,17 @@ class Telegrams:
         await self.migrate_telegrams()
 
         # Hydrate last_ga_telegrams from store
-        try:
-            query = TelegramQuery(limit=1000, order_descending=False)
-            result = await self.store.query(query)
-            for m in result.telegrams:
-                t_dict = self.model_to_dict(m)
-                if t_dict["payload"] is not None:
-                    self.last_ga_telegrams[t_dict["destination"]] = t_dict
-            _LOGGER.debug("Hydrated %d telegrams from store", len(result.telegrams))
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("Error hydrating last_ga_telegrams: %s", err)
+        if self.store is not None:
+            try:
+                query = TelegramQuery(limit=1000, order_descending=False)
+                result = await self.store.query(query)
+                for m in result.telegrams:
+                    t_dict = self.model_to_dict(m)
+                    if t_dict["payload"] is not None:
+                        self.last_ga_telegrams[t_dict["destination"]] = t_dict
+                _LOGGER.debug("Hydrated %d telegrams from store", len(result.telegrams))
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Error hydrating last_ga_telegrams: %s", err)
 
     def _create_repair_issue(self, backend: str, info: str, error: str) -> None:
         """Create a repair issue for storage initialization failure."""
@@ -192,7 +196,8 @@ class Telegrams:
             self._async_remove_listener()
         if self._pending_tasks:
             await asyncio.gather(*self._pending_tasks, return_exceptions=True)
-        await self.store.close()
+        if self.store is not None:
+            await self.store.close()
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
@@ -311,8 +316,8 @@ class Telegrams:
     async def migrate_telegrams(self) -> None:
         """Migrate telegrams from JSON storage to the current store."""
         if (
-            isinstance(self.store, SqliteStore)
-            and self.store.engine.url.database == ":memory:"
+            not isinstance(self.store, SqliteStore)
+            or self.store.engine.url.database == ":memory:"
         ):
             return
 
@@ -366,7 +371,7 @@ class Telegrams:
 
     def _get_backend_info(self) -> str:
         """Get meaningful information about the current backend."""
-        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_MEMORY)
+        backend = self.config.get(CONF_KNX_TELEGRAM_DB_BACKEND, TELEGRAM_BACKEND_SQLITE)
         if backend == TELEGRAM_BACKEND_POSTGRES:
             dsn = self.config.get(CONF_KNX_TELEGRAM_DSN, "")
             # Mask password
@@ -375,7 +380,7 @@ class Telegrams:
             return re.sub(r":(\d+)\.0($|[/?])", r":\1\2", dsn)
         if backend == TELEGRAM_BACKEND_SQLITE:
             return TELEGRAM_DB_PATH_DEFAULT
-        return "Memory"
+        return "Unknown"
 
     def _resolve_dpt_name(self, main: int | None, sub: int | None) -> str | None:
         """Resolve DPT name from main and sub numbers."""

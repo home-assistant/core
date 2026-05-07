@@ -55,7 +55,6 @@ CONF_KNX_TELEGRAM_LOAD_HOURS: Final = "telegram_load_hours"
 CONF_KNX_TELEGRAM_DB_PATH: Final = "telegram_db_path"
 CONF_KNX_TELEGRAM_DSN: Final = "telegram_dsn"
 
-TELEGRAM_BACKEND_MEMORY: Final = "memory"
 TELEGRAM_BACKEND_SQLITE: Final = "sqlite"
 TELEGRAM_BACKEND_POSTGRES: Final = "postgres"
 
