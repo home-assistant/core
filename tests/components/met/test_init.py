@@ -84,11 +84,21 @@ async def test_removing_incorrect_devices(
     assert "Removing improper device Forecast_legacy" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("title", "expected_title", "entity_id"),
+    [
+        ("", "Somewhere", "weather.forecast_somewhere"),
+        ("Custom title", "Custom title", "weather.forecast_custom_title"),
+    ],
+)
 async def test_migrate_name_to_title(
     hass: HomeAssistant,
     mock_weather: MagicMock,
+    title: str,
+    expected_title: str,
+    entity_id: str,
 ) -> None:
-    """Test legacy stored names migrate to the config entry title."""
+    """Test legacy stored names migrate to the config entry title when needed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -98,7 +108,7 @@ async def test_migrate_name_to_title(
             CONF_LONGITUDE: 20,
             CONF_ELEVATION: 0,
         },
-        title="",
+        title=title,
         minor_version=1,
     )
     entry.add_to_hass(hass)
@@ -108,10 +118,10 @@ async def test_migrate_name_to_title(
 
     assert entry.version == 1
     assert entry.minor_version == 2
-    assert entry.title == "Somewhere"
+    assert entry.title == expected_title
     assert entry.data == {
         CONF_LATITUDE: 10,
         CONF_LONGITUDE: 20,
         CONF_ELEVATION: 0,
     }
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
+    assert hass.states.async_entity_ids("weather") == [entity_id]
