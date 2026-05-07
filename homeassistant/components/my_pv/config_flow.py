@@ -182,52 +182,47 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the local setup."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="setup_local",
-                data_schema=LOCAL_HOST_SCHEMA,
-            )
-
         errors: dict[str, str] = {}
+        data_schema = LOCAL_HOST_SCHEMA
 
-        host = user_input[CONF_HOST]
-        password_needed = False
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            password_needed = False
 
-        # Check if we can connect to the device
-        device = await MyPVLocalDevice(host)
-        try:
-            if not await device.connect():
-                errors[CONF_BASE] = "cannot_connect"
-        except MyPVAuthenticationError:
-            password_needed = True
-        finally:
-            await device.disconnect()
+            # Check if we can connect to the device
+            device = await MyPVLocalDevice(host)
+            try:
+                if not await device.connect():
+                    errors[CONF_BASE] = "cannot_connect"
+            except MyPVAuthenticationError:
+                password_needed = True
+            finally:
+                await device.disconnect()
 
-        if errors:
+            if not errors and password_needed:
+                self._host = host
+                self._device_model = device.model
+                return await self.async_step_local_auth()
+
+            if not errors:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_configured()
+
+                title = f"my-PV {device.model}"
+                data = {
+                    CONF_TYPE: CONF_TYPE_LOCAL,
+                    CONF_HOST: host,
+                }
+                return self.async_create_entry(title=title, data=data)
+
             # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(
-                LOCAL_HOST_SCHEMA, user_input
-            )
-            return self.async_show_form(
-                step_id="setup_local",
-                data_schema=data_schema,
-                errors=errors,
-            )
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
 
-        if password_needed:
-            self._host = host
-            self._device_model = device.model
-            return await self.async_step_local_auth()
-
-        await self.async_set_unique_id(device.serial_number)
-        self._abort_if_unique_id_configured()
-
-        title = f"my-PV {device.model}"
-        data = {
-            CONF_TYPE: CONF_TYPE_LOCAL,
-            CONF_HOST: host,
-        }
-        return self.async_create_entry(title=title, data=data)
+        return self.async_show_form(
+            step_id="setup_local",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     async def async_step_local_auth(
         self, user_input: dict[str, Any] | None = None
