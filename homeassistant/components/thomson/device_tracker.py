@@ -1,7 +1,5 @@
 """Support for Thomson routers as device tracker."""
 
-from __future__ import annotations
-
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

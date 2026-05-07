@@ -88,7 +88,9 @@ async def test_device_disconnected(
     assert state is not None
     assert state.state == STATE_HOME
 
-    with patch("homeassistant.components.thomson.coordinator.telnetlib.Telnet") as mock_new:
+    with patch(
+        "homeassistant.components.thomson.coordinator.telnetlib.Telnet"
+    ) as mock_new:
         telnet_instance = MagicMock()
         mock_new.return_value = telnet_instance
         telnet_instance.read_until.side_effect = [
@@ -144,7 +146,9 @@ async def test_new_device_added_on_update(
         + b"ff:ee:dd:cc:bb:aa 192.168.1.200  C     dynamic  nas  eth0  new-device\r\n"
     )
 
-    with patch("homeassistant.components.thomson.coordinator.telnetlib.Telnet") as mock_new:
+    with patch(
+        "homeassistant.components.thomson.coordinator.telnetlib.Telnet"
+    ) as mock_new:
         telnet_instance = MagicMock()
         mock_new.return_value = telnet_instance
         telnet_instance.read_until.side_effect = [
