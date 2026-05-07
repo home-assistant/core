@@ -241,7 +241,7 @@ async def test_mixed_device_dispatch(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A device with openCloseStatus is a cover; a device without is a button."""
+    """A device with openCloseStatus exposes both a cover and a button; a device without exposes only a button."""
 
     async def _status(device_id: str) -> dict[str, Any]:
         if device_id == DEVICE_ID_1:
@@ -252,6 +252,6 @@ async def test_mixed_device_dispatch(
     await setup_integration(hass, mock_config_entry)
 
     assert entity_registry.async_get("cover.device_1") is not None
-    assert entity_registry.async_get("button.device_1") is None
+    assert entity_registry.async_get("button.device_1") is not None
     assert entity_registry.async_get("button.device_2") is not None
     assert entity_registry.async_get("cover.device_2") is None
