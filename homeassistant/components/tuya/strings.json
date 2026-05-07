@@ -169,14 +169,8 @@
       "battery_backup_reserve": {
         "name": "Battery backup reserve"
       },
-      "brightness": {
-        "name": "Brightness"
-      },
       "cloud_recipe": {
         "name": "Cloud recipe"
-      },
-      "contrast": {
-        "name": "Contrast"
       },
       "cook_temperature": {
         "name": "Cooking temperature"
@@ -244,9 +238,6 @@
       "sensitivity": {
         "name": "Sensitivity"
       },
-      "sharpness": {
-        "name": "Sharpness"
-      },
       "siren_duration": {
         "name": "Siren duration"
       },
@@ -264,6 +255,15 @@
       },
       "time": {
         "name": "Time"
+      },
+      "video_brightness": {
+        "name": "Video brightness"
+      },
+      "video_contrast": {
+        "name": "Video contrast"
+      },
+      "video_sharpness": {
+        "name": "Video sharpness"
       },
       "voice_times": {
         "name": "Voice times"

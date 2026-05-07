@@ -301,17 +301,17 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.IPC_BRIGHT,
-            translation_key="brightness",
+            translation_key="video_brightness",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.IPC_CONTRAST,
-            translation_key="contrast",
+            translation_key="video_contrast",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.IPC_SHARP,
-            translation_key="sharpness",
+            translation_key="video_sharpness",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
