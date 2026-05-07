@@ -30,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -477,6 +478,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
+    # unique id is set by the config flow using the serial number
+    serial = entry.unique_id
+    if not serial:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="no_serial_number"
+        )
+
     config_data = dict(entry.data)
     config_data.update(entry.options)
 
@@ -515,28 +523,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         control_light,
     )
     device.name = name
-    device.serial_number = ""
+    device.serial_number = serial
     device.device_info = None
 
     try:
-        device.serial_number = (await api.async_serial_number or "").strip()
+        fetched_serial = (await api.async_serial_number or "").strip()
     except AmcrestError:
-        device.serial_number = ""
+        fetched_serial = ""
 
-    identifier = device.serial_number or entry.entry_id
+    if fetched_serial and fetched_serial != serial:
+        _LOGGER.debug(
+            "Config entry unique_id (%s) does not match device serial (%s)",
+            serial,
+            fetched_serial,
+        )
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, identifier)},
+        identifiers={(DOMAIN, serial)},
         name=name,
-        serial_number=device.serial_number or None,
+        serial_number=serial,
         manufacturer="Amcrest",
         configuration_url=api.get_base_url(),
     )
     device.device_info = DeviceInfo(
-        identifiers={(DOMAIN, identifier)},
+        identifiers={(DOMAIN, serial)},
         name=name,
-        serial_number=device.serial_number or None,
+        serial_number=serial,
         manufacturer="Amcrest",
         configuration_url=api.get_base_url(),
     )

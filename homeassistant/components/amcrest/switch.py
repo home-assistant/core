@@ -45,7 +45,7 @@ async def async_setup_entry(
     runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
     device = runtime_data["device"]
     name = device.name
-    serial = device.serial_number or config_entry.entry_id
+    serial = device.serial_number
 
     entities = [
         AmcrestSwitch(

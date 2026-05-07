@@ -68,7 +68,7 @@ async def async_setup_entry(
     """Set up an Amcrest camera from a config entry."""
     runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
     device = runtime_data["device"]
-    serial = device.serial_number or config_entry.entry_id
+    serial = device.serial_number
     unique_id = f"{serial}-{device.resolution}-{device.channel}"
     entity = AmcrestCam(
         device.name,
