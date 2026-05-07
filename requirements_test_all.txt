@@ -693,6 +693,9 @@ crownstone-sse==2.0.5
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
 
+# homeassistant.components.data_grand_lyon
+data-grand-lyon-ha==0.5.0
+
 # homeassistant.components.datadog
 datadog==0.52.0
 
@@ -2785,7 +2788,7 @@ victron-vrm==0.1.8
 vilfo-api-client==0.5.0
 
 # homeassistant.components.watts
-visionpluspython==1.0.2
+visionpluspython==1.1.0
 
 # homeassistant.components.caldav
 vobject==0.9.9
