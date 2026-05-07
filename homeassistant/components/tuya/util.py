@@ -1,5 +1,6 @@
 """Utility methods for the Tuya integration."""
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
@@ -36,7 +37,9 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
 
 def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
     """Get device info."""
-    model = device.product_name
+    manufacturer = "Unspecified Tuya"
+    model: str | None = device.product_name
+    model_id: str | None = device.product_id
 
     if initial:
         # Note: the model is overridden via entity.device_info property
@@ -44,10 +47,18 @@ def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceI
         # stay as unsupported
         model = f"{device.product_name} (unsupported)"
 
+    if (
+        quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
+    ) and quirk.manufacturer:
+        # If the manufacturer is not set, we cannot trust the model/model_id
+        manufacturer = quirk.manufacturer
+        model = quirk.model
+        model_id = quirk.model_id
+
     return DeviceInfo(
         identifiers={(DOMAIN, device.id)},
-        manufacturer="Unspecified Tuya",
+        manufacturer=manufacturer,
         name=device.name,
         model=model,
-        model_id=device.product_id,
+        model_id=model_id,
     )
