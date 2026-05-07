@@ -443,6 +443,9 @@ class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
@@ -490,34 +493,32 @@ class EntityConditionBase(Condition):
         """
         return True
 
+    def _state_valid_since(self, _state: State) -> datetime:
+        """Return the datetime that anchors `for:` durations for `state`.
+
+        Override in subclasses whose `is_valid_state` reads
+        attributes directly without going through `value_source`.
+        """
+        if self._domain_specs[_state.domain].value_source is None:
+            return _state.last_changed
+        return _state.last_updated
+
     def _update_valid_since(self, entity_id: str, _state: State | None) -> None:
         """Update _valid_since tracking for an entity based on its current state.
 
-        If the entity is in a valid state and not already tracked, records when
-        the condition became true. If the entity is not in a valid state, removes
-        it from tracking.
-
-        For state-based conditions (value_source is None), last_changed
-        accurately reflects when the state changed to the current value.
-        For attribute-based conditions, last_changed only tracks main state
-        changes, so we use last_updated which is bumped on any update
-        (state or attributes). This is conservative — the tracked attribute
-        may have held its value longer — but it's the best we can do
-        to avoid false positives.
+        If the entity is in a valid state and not already tracked, records
+        when the condition became true (via `_state_valid_since`). If the
+        entity is not in a valid state, removes it from tracking.
         """
         if (
             _state is not None
-            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self._should_include(_state)
             and self.is_valid_state(_state)
         ):
             # Only record the time if not already tracked, to avoid
             # resetting the duration on unrelated state/attribute updates.
             if entity_id not in self._valid_since:
-                domain_spec = self._domain_specs[_state.domain]
-                if domain_spec.value_source is None:
-                    self._valid_since[entity_id] = _state.last_changed
-                else:
-                    self._valid_since[entity_id] = _state.last_updated
+                self._valid_since[entity_id] = self._state_valid_since(_state)
         else:
             self._valid_since.pop(entity_id, None)
 
@@ -565,12 +566,15 @@ class EntityConditionBase(Condition):
             cb()
         self._on_unload.clear()
 
-    def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[entity_state.domain]
-        if domain_spec.value_source is None:
-            return entity_state.state
-        return entity_state.attributes.get(domain_spec.value_source)
+    def _should_include(self, _state: State) -> bool:
+        """Check if an entity should participate in any/all checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the condition relies on.
+        """
+        return _state.state not in self._excluded_states
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -628,7 +632,7 @@ class EntityConditionBase(Condition):
             _state
             for entity_id in filtered_entity_ids
             if (_state := self._hass.states.get(entity_id))
-            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self._should_include(_state)
         ]
         return self._matcher(entity_states)
 
@@ -646,6 +650,13 @@ class EntityStateConditionBase(EntityConditionBase):
         return any(
             spec.value_source is not None for spec in self._domain_specs.values()
         )
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""

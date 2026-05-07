@@ -344,12 +344,14 @@ async def test_climate_attribute_condition_behavior_all(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_any(
             "climate.target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -388,12 +390,14 @@ async def test_climate_numerical_condition_behavior_any(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_all(
             "climate.target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

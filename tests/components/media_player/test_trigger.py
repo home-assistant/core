@@ -19,11 +19,17 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+_VOLUME_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_VOLUME_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
 @pytest.fixture
@@ -37,6 +43,8 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     [
         "media_player.muted",
         "media_player.unmuted",
+        "media_player.volume_changed",
+        "media_player.volume_crossed_threshold",
         "media_player.paused_playing",
         "media_player.started_playing",
         "media_player.stopped_playing",
@@ -118,6 +126,13 @@ def parametrize_muted_trigger_states(
         ("media_player.stopped_playing", {}, True, True),
         ("media_player.turned_off", {}, True, True),
         ("media_player.turned_on", {}, True, True),
+        ("media_player.volume_changed", _VOLUME_CHANGED_THRESHOLD, False, False),
+        (
+            "media_player.volume_crossed_threshold",
+            _VOLUME_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
     ],
 )
 async def test_media_player_trigger_options_validation(
@@ -327,6 +342,190 @@ async def test_media_player_state_trigger_behavior_last(
         trigger=trigger,
         trigger_options=trigger_options,
         states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("media_player"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "media_player.volume_changed",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_value_scale=0.01,
+            attribute_required=True,
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "media_player.volume_crossed_threshold",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_value_scale=0.01,
+            attribute_required=True,
+        ),
+    ],
+)
+async def test_media_player_volume_trigger_behavior_any(
+    hass: HomeAssistant,
+    target_media_players: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test the media_player volume triggers fire when any entity matches."""
+    await assert_trigger_behavior_any(
+        hass,
+        target_entities=target_media_players,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("media_player"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "media_player.volume_crossed_threshold",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_value_scale=0.01,
+            attribute_required=True,
+        ),
+    ],
+)
+async def test_media_player_volume_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_media_players: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test the media_player volume crossed threshold trigger fires for the first matching entity."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_media_players,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("media_player"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "media_player.volume_crossed_threshold",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_value_scale=0.01,
+            attribute_required=True,
+        ),
+    ],
+)
+async def test_media_player_volume_trigger_behavior_last(
+    hass: HomeAssistant,
+    target_media_players: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test the media_player volume crossed threshold trigger fires for the last matching entity."""
+    await assert_trigger_behavior_last(
+        hass,
+        target_entities=target_media_players,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "limit_entities"),
+    [
+        (
+            "media_player.volume_changed",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.volume_above"},
+                    "value_max": {"entity": "sensor.volume_below"},
+                },
+            },
+            ["sensor.volume_above", "sensor.volume_below"],
+        ),
+        (
+            "media_player.volume_crossed_threshold",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.volume_lower"},
+                    "value_max": {"entity": "sensor.volume_upper"},
+                },
+            },
+            ["sensor.volume_lower", "sensor.volume_upper"],
+        ),
+    ],
+)
+async def test_media_player_trigger_ignores_limit_entity_with_wrong_unit(
+    hass: HomeAssistant,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    limit_entities: list[str],
+) -> None:
+    """Test numerical triggers do not fire if limit entities have the wrong unit."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
+        hass,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="media_player.test_player",
+        reset_state={
+            "state": MediaPlayerState.PLAYING,
+            "attributes": {ATTR_MEDIA_VOLUME_LEVEL: 0.0},
+        },
+        trigger_state={
+            "state": MediaPlayerState.PLAYING,
+            "attributes": {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        },
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="lx",
     )
 
 
