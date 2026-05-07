@@ -423,6 +423,7 @@ homeassistant.components.otp.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.paj_gps.*
 homeassistant.components.panel_custom.*
 homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
@@ -442,6 +443,7 @@ homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
+homeassistant.components.ptdevices.*
 homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
