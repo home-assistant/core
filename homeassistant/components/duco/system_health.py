@@ -35,13 +35,12 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         DOMAIN
     )
 
-    # The remaining write-request quota belongs to one specific Duco box.
+    # Quota is per-box; returning a value would be ambiguous with multiple loaded entries.
     if len(config_entries) != 1:
         return {}
 
     config_entry = config_entries[0]
 
-    # This reflects the integration's API quota rather than device state.
     return {
         "write_requests_remaining": _async_get_write_requests_remaining(config_entry)
     }
