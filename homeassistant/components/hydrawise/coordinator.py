@@ -116,14 +116,11 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         if (water_use := self.water_use_coordinator) is not None and (
             water_use.data is not None
         ):
-            water_use.data = HydrawiseData(
-                user=self.data.user,
-                controllers=self.data.controllers,
-                zones=self.data.zones,
-                zone_id_to_controller=self.data.zone_id_to_controller,
-                sensors=self.data.sensors,
-                daily_water_summary=water_use.data.daily_water_summary,
-            )
+            water_use.data.user = self.data.user
+            water_use.data.controllers = self.data.controllers
+            water_use.data.zones = self.data.zones
+            water_use.data.zone_id_to_controller = self.data.zone_id_to_controller
+            water_use.data.sensors = self.data.sensors
 
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
