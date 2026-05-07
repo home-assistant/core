@@ -8,11 +8,37 @@ from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
+from homeassistant.components.template.const import PLATFORMS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+
+from tests.common import assert_setup_component
+
+
+@pytest.mark.parametrize("domain", PLATFORMS)
+async def test_legacy_template_syntax_creates_warning(
+    hass: HomeAssistant, domain: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test legacy template syntax creates warning for all platforms."""
+    with assert_setup_component(1, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            {
+                domain: {
+                    "platform": "template",
+                }
+            },
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(domain)) == 0
+    assert "entities can only be configured under template:" in caplog.text
 
 
 @pytest.mark.parametrize(

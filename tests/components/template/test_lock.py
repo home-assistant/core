@@ -40,7 +40,6 @@ TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
 TEST_LOCK = TemplatePlatformSetup(
     lock.DOMAIN,
-    None,
     "test_template_lock",
     make_test_trigger(
         TEST_AVAILABILITY_ENTITY_ID,
@@ -130,19 +129,6 @@ async def setup_state_lock_with_attribute(
         state_template,
         {attribute: attribute_template} if attribute else {},
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_lock")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("lock")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(

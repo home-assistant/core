@@ -53,7 +53,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_COVER = TemplatePlatformSetup(
     cover.DOMAIN,
-    "covers",
     "test_template_cover",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -159,26 +158,6 @@ async def setup_empty_action(
         count,
         {"open_cover": [], "close_cover": [], script: []},
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "config"),
-    [
-        (
-            1,
-            "{{ states('sensor.test_state') }}",
-            ConfigurationStyle.LEGACY,
-            COVER_ACTIONS,
-        )
-    ],
-)
-@pytest.mark.usefixtures("setup_state_cover")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("cover")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(

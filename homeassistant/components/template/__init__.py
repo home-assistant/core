@@ -39,10 +39,11 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import DATA_DEPRECATION, async_get_blueprints
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
+DATA_DEPRECATION: HassKey[list[str]] = HassKey("deprecate_legacy_templates")
 
 
 def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
@@ -59,6 +60,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register template as valid domain for Blueprint
     blueprints = async_get_blueprints(hass)
+
+    # Clean up any legacy template deprecations.
+    _clean_up_legacy_template_deprecations(hass)
 
     # Add some default blueprints to blueprints/template, does nothing
     # if blueprints/template already exists but still has to create
@@ -94,7 +98,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if DOMAIN in conf:
             await _process_config(hass, conf)
 
-        _clean_up_legacy_template_deprecations(hass)
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)

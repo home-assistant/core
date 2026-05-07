@@ -30,9 +30,18 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+    CONF_ICON,
+    CONF_ICON_TEMPLATE,
+    CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -47,12 +56,12 @@ from homeassistant.util.unit_conversion import (
 )
 
 from . import TriggerUpdateCoordinator, validators as template_validators
+from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
     async_setup_template_platform,
     async_setup_template_preview,
-    rewrite_legacy_to_modern_config,
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -131,7 +140,11 @@ CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 
 DEFAULT_NAME = "Template Weather"
 
-LEGACY_FIELDS = {
+LEGACY_OPTIONS = {
+    CONF_ICON_TEMPLATE: CONF_ICON,
+    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
+    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
+    CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_APPARENT_TEMPERATURE_TEMPLATE: CONF_APPARENT_TEMPERATURE,
     CONF_ATTRIBUTION_TEMPLATE: CONF_ATTRIBUTION,
     CONF_CLOUD_COVERAGE_TEMPLATE: CONF_CLOUD_COVERAGE,
@@ -228,6 +241,28 @@ WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
 )
 
 
+def rewrite_legacy_options_to_modern_options(
+    hass: HomeAssistant,
+    entity_cfg: dict[str, Any],
+) -> dict[str, Any]:
+    """Rewrite legacy config."""
+    entity_cfg = {**entity_cfg}
+
+    for from_key, to_key in LEGACY_OPTIONS.items():
+        if from_key not in entity_cfg or to_key in entity_cfg:
+            continue
+
+        val = entity_cfg.pop(from_key)
+        if isinstance(val, str):
+            val = template.Template(val, hass)
+        entity_cfg[to_key] = val
+
+    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
+        entity_cfg[CONF_NAME] = template.Template(entity_cfg[CONF_NAME], hass)
+
+    return entity_cfg
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -247,9 +282,7 @@ async def async_setup_platform(
     entity_configs: list[ConfigType] = discovery_info["entities"]
     modified_entity_configs = []
     for entity_config in entity_configs:
-        entity_config = rewrite_legacy_to_modern_config(
-            hass, entity_config, LEGACY_FIELDS
-        )
+        entity_config = rewrite_legacy_options_to_modern_options(hass, entity_config)
 
         modified_entity_configs.append(entity_config)
 
@@ -264,7 +297,6 @@ async def async_setup_platform(
         TriggerWeatherEntity,
         async_add_entities,
         discovery_info,
-        {},
     )
 
 

@@ -37,7 +37,6 @@ from tests.conftest import WebSocketGenerator
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_EVENT = TemplatePlatformSetup(
     event.DOMAIN,
-    None,
     "template_event",
     make_test_trigger(TEST_STATE_ENTITY_ID),
 )
@@ -111,21 +110,6 @@ async def setup_single_attribute_state_event(
         if attribute and attribute_template
         else {},
     )
-
-
-async def test_legacy_platform_config(hass: HomeAssistant) -> None:
-    """Test a legacy platform does not create event entities."""
-    with assert_setup_component(1, event.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            event.DOMAIN,
-            {"event": {"platform": "template", "events": {TEST_EVENT.object_id: {}}}},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-    assert hass.states.async_all("event") == []
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)

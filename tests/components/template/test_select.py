@@ -48,7 +48,6 @@ TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_SELECT = TemplatePlatformSetup(
     select.DOMAIN,
-    None,
     "template_select",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID),
 )
