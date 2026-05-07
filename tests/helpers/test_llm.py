@@ -675,7 +675,11 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     no_timer_prompt = "This device is not able to start timers."
 
-    location_prompt = (
+    location_prompt_no_device = (
+        "When a request names a generic device without an area, "
+        "ask the user to specify which area they mean before targeting."
+    )
+    location_prompt_with_device = (
         "When a request names a generic device without an area, "
         "treat it as the user's current area and call "
         "`GetCurrentLocation` to resolve it before targeting."
@@ -709,7 +713,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{location_prompt}
+{location_prompt_no_device}
 {no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
@@ -726,13 +730,13 @@ Static Context: An overview of the areas and the devices in this smart home:
     }
 
     # Fake that request is made from a specific device ID with an area.
-    # The prompt no longer changes — area/floor are now exposed via the
-    # GetCurrentLocation tool to keep the prompt cacheable across speakers.
+    # The static area/floor reference is replaced with a directive to call
+    # GetCurrentLocation, keeping the prompt cacheable across speakers.
     llm_context.device_id = device.id
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{location_prompt}
+{location_prompt_with_device}
 {no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
@@ -750,7 +754,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{location_prompt}
+{location_prompt_with_device}
 {no_timer_prompt}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
@@ -771,7 +775,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{location_prompt}
+{location_prompt_with_device}
 {dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
     )
