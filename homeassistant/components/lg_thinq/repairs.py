@@ -1,7 +1,5 @@
 """Repairs for LG ThinQ integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
