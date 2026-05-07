@@ -27,7 +27,12 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -51,6 +56,11 @@ PERGOLA = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
     "io://1234-5678-3293/7614902",
     "cover.garden_pergola",
+)
+UP_DOWN_BIOCLIMATIC_PERGOLA = FixtureDevice(
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "rts://1234-5678-3293/16757826",
+    "cover.kitchen_pergola",
 )
 RTS = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
@@ -129,28 +139,52 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("device", "service", "command_name", "expected_state"),
+    ("device", "service", "command_name", "parameters", "expected_state"),
     [
-        (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
-        (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
-        (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (SHUTTER, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", [], CoverState.OPENING),
+        (GARAGE, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_OPEN_COVER,
+            "open",
+            [0],
+            CoverState.OPENING,
+        ),
+        (SHUTTER, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", [], CoverState.CLOSING),
+        (GARAGE, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (AWNING, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (GARAGE, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_STOP_COVER,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-up-down-bioclimatic-pergola",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-up-down-bioclimatic-pergola",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-up-down-bioclimatic-pergola",
     ],
 )
 async def test_cover_service_actions(
@@ -160,6 +194,7 @@ async def test_cover_service_actions(
     device: FixtureDevice,
     service: str,
     command_name: str,
+    parameters: list[Any],
     expected_state: CoverState,
 ) -> None:
     """Test open, close, and stop cover services."""
@@ -179,6 +214,7 @@ async def test_cover_service_actions(
         mock_client,
         device_url=device.device_url,
         command_name=command_name,
+        parameters=parameters,
     )
 
 

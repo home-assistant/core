@@ -214,6 +214,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.AWNING,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
