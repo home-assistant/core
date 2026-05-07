@@ -504,16 +504,14 @@ class AssistAPI(API):
         if not exposed_entities or not exposed_entities["entities"]:
             return NO_ENTITIES_PROMPT
 
-        # Collect all parts, filtering out any None values
         prompt_parts = [
             DEVICE_CONTROL_TOOL_USAGE_PROMPT,
-            DYNAMIC_CONTEXT_PROMPT,
-            *self._async_get_exposed_entities_prompt(exposed_entities),
             self._async_get_voice_satellite_area_prompt(llm_context),
             self._async_get_no_timer_prompt(llm_context),
+            DYNAMIC_CONTEXT_PROMPT,
+            *self._async_get_exposed_entities_prompt(exposed_entities),
         ]
 
-        # Filter out None and empty strings before joining
         return "\n".join([part for part in prompt_parts if part])
 
     @callback
@@ -522,36 +520,20 @@ class AssistAPI(API):
             self.hass, llm_context.device_id
         ):
             return "This device is not able to start timers."
+        return None
 
-        prompt = [
-            (
-                "When controlling Home Assistant always call the intent tools. "
-                "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just name and domain. "
-                "When controlling an area, prefer passing just area name and domain."
-            ),
-        ]
-
+    @callback
+    def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
         if llm_context.device_id:
-            prompt.append(
+            return (
                 "When a request names a generic device without an area, "
                 "treat it as the user's current area and call "
                 "`GetCurrentLocation` to resolve it before targeting."
             )
-        else:
-            prompt.append(
-                "When a request names a generic device without an area, "
-                "ask the user to specify which area they mean before targeting."
-            )
-
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            prompt.append("This device is not able to start timers.")
-
-        prompt.append(DYNAMIC_CONTEXT_PROMPT)
-
-        return prompt
+        return (
+            "When a request names a generic device without an area, "
+            "ask the user to specify which area they mean before targeting."
+        )
 
     @callback
     def _async_get_exposed_entities_prompt(
