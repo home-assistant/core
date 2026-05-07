@@ -711,14 +711,19 @@ class MQTT:
         """Publish a MQTT message."""
         properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)  # type: ignore[no-untyped-call]
         if message_expiry_interval is not None:
-            if (protocol := self.conf.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
+            if not self.is_mqttv5:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="mqtt_message_expiry_interval_not_supported",
-                    translation_placeholders={"topic": topic, "protocol": protocol},
+                    translation_placeholders={
+                        "topic": topic,
+                        "protocol": self.conf.get(CONF_PROTOCOL, PROTOCOL_311),
+                    },
                 )
             properties.MessageExpiryInterval = message_expiry_interval
-        msg_info = self._mqttc.publish(topic, payload, qos, retain, properties)
+        msg_info = self._mqttc.publish(
+            topic, payload, qos, retain, properties if self.is_mqttv5 else None
+        )
         _LOGGER.debug(
             "Transmitting%s message on %s: '%s', mid: %s, qos: %s, message_expiry_interval: %s",
             " retained" if retain else "",
