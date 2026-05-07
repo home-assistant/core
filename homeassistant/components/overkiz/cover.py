@@ -136,6 +136,16 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
     ),
+    # Needs override since PositionableGarageDoorWithPartialPosition reports
+    # core:OpenClosedPartialState instead of core:OpenClosedState
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GARAGE_DOOR_WITH_PARTIAL_POSITION,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PARTIAL,
+    ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(

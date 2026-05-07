@@ -7531,6 +7531,77 @@
       "type": 1,
       "oid": "2492f7ae-3711-4160-9dae-e8910b708ce1",
       "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Partial Garage Door",
+      "deviceURL": "io://1234-1234-6233/7433515",
+      "shortcut": false,
+      "controllableName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "partialPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "partial"],
+            "qualifiedName": "core:OpenClosedPartialState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "PositionableGarageDoorWithPartialPosition",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedPartialState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PositionableGarageDoorWithPartialPosition",
+      "type": 1,
+      "oid": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "uiClass": "GarageDoor"
     }
   ],
   "zones": [],
