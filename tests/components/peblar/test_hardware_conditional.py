@@ -15,8 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     "init_integration_with_socket", [Platform.BINARY_SENSOR], indirect=True
@@ -27,7 +25,6 @@ from tests.common import MockConfigEntry
 async def test_lock_state_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test lock state binary sensor is created when socket hardware present."""
     entity_id = "binary_sensor.peblar_ev_charger_socket_lock"
@@ -74,8 +71,7 @@ async def test_socket_unlock_button(
         blocking=True,
     )
 
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with()
+    mocked_method.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -105,8 +101,7 @@ async def test_socket_lock_switch(
         blocking=True,
     )
 
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(locked=True)
+    mocked_method.assert_called_once_with(locked=True)
 
     mocked_method.reset_mock()
 
@@ -117,8 +112,7 @@ async def test_socket_lock_switch(
         blocking=True,
     )
 
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(locked=False)
+    mocked_method.assert_called_once_with(locked=False)
 
 
 @pytest.mark.parametrize("init_integration", [Platform.SWITCH], indirect=True)
