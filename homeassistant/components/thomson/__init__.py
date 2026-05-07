@@ -10,9 +10,7 @@ from .coordinator import ThomsonConfigEntry, ThomsonDataUpdateCoordinator
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ThomsonConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThomsonConfigEntry) -> bool:
     """Set up Thomson from a config entry."""
     coordinator = ThomsonDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -21,8 +19,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ThomsonConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThomsonConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

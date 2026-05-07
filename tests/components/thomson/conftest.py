@@ -42,9 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_telnet() -> Generator[MagicMock]:
     """Mock telnetlib.Telnet."""
-    with patch(
-        "homeassistant.components.thomson.coordinator.telnetlib.Telnet"
-    ) as mock:
+    with patch("homeassistant.components.thomson.coordinator.telnetlib.Telnet") as mock:
         telnet_instance = MagicMock()
         mock.return_value = telnet_instance
         telnet_instance.read_until.side_effect = [
@@ -59,9 +57,7 @@ def mock_telnet() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_telnet_validate() -> Generator[MagicMock]:
     """Mock telnetlib.Telnet for config flow validation."""
-    with patch(
-        "homeassistant.components.thomson.coordinator.telnetlib.Telnet"
-    ) as mock:
+    with patch("homeassistant.components.thomson.coordinator.telnetlib.Telnet") as mock:
         telnet_instance = MagicMock()
         mock.return_value = telnet_instance
         telnet_instance.read_until.side_effect = [

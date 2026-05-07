@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-import telnetlib  # pylint: disable=deprecated-module
 from typing import Any
+
+import telnetlib  # pylint: disable=deprecated-module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -32,9 +33,7 @@ _DEVICES_REGEX = re.compile(
 type ThomsonConfigEntry = ConfigEntry[ThomsonDataUpdateCoordinator]
 
 
-class ThomsonDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, dict[str, str]]]
-):
+class ThomsonDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
     """Coordinator for Thomson router device tracking."""
 
     config_entry: ThomsonConfigEntry

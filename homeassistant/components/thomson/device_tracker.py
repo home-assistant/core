@@ -43,9 +43,7 @@ class ThomsonScannerEntity(
 ):
     """Representation of a device connected to a Thomson router."""
 
-    def __init__(
-        self, coordinator: ThomsonDataUpdateCoordinator, mac: str
-    ) -> None:
+    def __init__(self, coordinator: ThomsonDataUpdateCoordinator, mac: str) -> None:
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self._mac = mac
