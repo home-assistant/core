@@ -60,7 +60,6 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
-    TELEGRAM_BACKEND_MEMORY,
     TELEGRAM_BACKEND_POSTGRES,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_DB_PATH_DEFAULT,
@@ -952,8 +951,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 )
             )
             backend = user_input[CONF_KNX_TELEGRAM_DB_BACKEND]
-            if backend == TELEGRAM_BACKEND_MEMORY:
-                return self.finish_flow()
             if backend == TELEGRAM_BACKEND_SQLITE:
                 return await self.async_step_telegram_store_sqlite()
             if backend == TELEGRAM_BACKEND_POSTGRES:
@@ -989,7 +986,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        TELEGRAM_BACKEND_MEMORY,
                         TELEGRAM_BACKEND_SQLITE,
                         TELEGRAM_BACKEND_POSTGRES,
                     ],

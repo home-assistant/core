@@ -41,6 +41,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_LOAD_HOURS,
     CONF_KNX_TELEGRAM_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
@@ -48,7 +49,6 @@ from homeassistant.components.knx.const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
-    TELEGRAM_BACKEND_MEMORY,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_LOAD_HOURS_DEFAULT,
     TELEGRAM_RETENTION_DEFAULT,
@@ -1652,15 +1652,17 @@ async def test_options_communication_settings(
         user_input={
             CONF_KNX_STATE_UPDATER: False,
             CONF_KNX_RATE_LIMIT: 40,
-            CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_MEMORY,
+            CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_SQLITE,
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "telegram_store_memory"
+    assert result["step_id"] == "telegram_store_sqlite"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={
+            CONF_KNX_TELEGRAM_RETENTION_DAYS: 30,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result.get("data")
@@ -1669,7 +1671,9 @@ async def test_options_communication_settings(
         **initial_data,
         CONF_KNX_STATE_UPDATER: False,
         CONF_KNX_RATE_LIMIT: 40,
-        CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_MEMORY,
+        CONF_KNX_TELEGRAM_DB_BACKEND: TELEGRAM_BACKEND_SQLITE,
+        CONF_KNX_TELEGRAM_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_LOAD_HOURS: TELEGRAM_LOAD_HOURS_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_PATH: "knx/telegrams.db",
     }
     knx_setup.assert_called_once()

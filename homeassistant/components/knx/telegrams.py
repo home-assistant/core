@@ -3,7 +3,6 @@
 import asyncio
 from collections import deque
 from collections.abc import Callable, Mapping
-from datetime import datetime
 import json
 import logging
 import os
@@ -24,22 +23,20 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
 from .const import (
     CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DSN,
-    CONF_KNX_TELEGRAM_RETENTION_DAYS,
     DOMAIN,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
     TELEGRAM_BACKEND_MEMORY,
     TELEGRAM_BACKEND_POSTGRES,
     TELEGRAM_BACKEND_SQLITE,
     TELEGRAM_DB_PATH_DEFAULT,
-    TELEGRAM_RETENTION_DEFAULT,
 )
 from .project import KNXProject
 
@@ -100,16 +97,15 @@ class Telegrams:
             if dsn:
                 # Fix potential float port in DSN (e.g. :5432.0/)
                 dsn = re.sub(r":(\d+)\.0($|[/?])", r":\1\2", dsn)
-            retention = config.get(
-                CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
-            )
-            self.store = PostgresStore(dsn, retention_days=retention)  # type: ignore[call-arg]
+            self.store = PostgresStore(dsn)
         elif backend == TELEGRAM_BACKEND_SQLITE:
-            full_path = hass.config.path(STORAGE_DIR, TELEGRAM_DB_PATH_DEFAULT)
-            retention = config.get(
-                CONF_KNX_TELEGRAM_RETENTION_DAYS, TELEGRAM_RETENTION_DEFAULT
+            db_path = config.get(CONF_KNX_TELEGRAM_DB_PATH, TELEGRAM_DB_PATH_DEFAULT)
+            full_path = (
+                db_path
+                if db_path == ":memory:"
+                else hass.config.path(STORAGE_DIR, db_path)
             )
-            self.store = SqliteStore(full_path, retention_days=retention)  # type: ignore[call-arg]
+            self.store = SqliteStore(full_path)
         else:  # Memory
             self.store = MemoryStore()
 
@@ -174,14 +170,6 @@ class Telegrams:
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
 
-        # Initial eviction for SQL backends
-        await self.store.evict_expired()  # type: ignore[attr-defined]
-
-        # Schedule nightly eviction at 3:00 AM
-        self._async_remove_listener = async_track_utc_time_change(
-            self.hass, self._async_evict_telegrams, hour=3, minute=0, second=0
-        )
-
     async def stop(self) -> None:
         """Stop history store."""
         if self._async_remove_listener:
@@ -189,13 +177,6 @@ class Telegrams:
         if self._pending_tasks:
             await asyncio.gather(*self._pending_tasks, return_exceptions=True)
         await self.store.close()
-
-    async def _async_evict_telegrams(self, _now: datetime) -> None:
-        """Evict expired telegrams from store."""
-        _LOGGER.debug("Starting nightly KNX telegram eviction")
-        count = await self.store.evict_expired()  # type: ignore[attr-defined]
-        if count > 0:
-            _LOGGER.info("Evicted %d expired KNX telegrams", count)
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
