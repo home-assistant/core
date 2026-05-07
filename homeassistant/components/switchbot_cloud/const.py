@@ -86,8 +86,8 @@ class SwitchbotCloudDeviceLockState(Enum):
     def get_values(cls) -> list[str]:
         """Get lock value."""
         return [mode.value for mode in cls]
-      
-      
+
+
 @dataclass(frozen=True)
 class SwitchbotCloudDeviceConfig:
     """Switchbot Cloud Device Config."""
@@ -108,6 +108,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Climate Panel": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
     ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
         False, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
