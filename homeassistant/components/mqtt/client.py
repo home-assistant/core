@@ -128,9 +128,21 @@ def publish(
     qos: int = 0,
     retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
+    *,
+    message_expiry_interval: int | None = None,
 ) -> None:
     """Publish message to a MQTT topic."""
-    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
+    hass.create_task(
+        async_publish(
+            hass,
+            topic,
+            payload,
+            qos,
+            retain,
+            encoding,
+            message_expiry_interval=message_expiry_interval,
+        )
+    )
 
 
 async def async_publish(
