@@ -459,16 +459,13 @@ async def test_publish_function_with_bad_encoding_conditions(
         ({"seconds": 86410}, 86410),
     ],
 )
-async def test_publish_action_with_message_retention_interval(
+async def test_publish_action_with_message_expiry_interval(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     interval_data: dict[str, float],
     interval: int,
 ) -> None:
-    """Test the service call with args that can be misinterpreted.
-
-    Empty payload message and ascii formatted qos and retain flags.
-    """
+    """Test the publish action message expiry interval option."""
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
         mqtt.DOMAIN,
