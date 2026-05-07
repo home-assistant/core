@@ -106,8 +106,6 @@ class QubeSwitch(QubeEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",
             )
-        self.coordinator.data.switches[register_key] = value
-        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
