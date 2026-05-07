@@ -6,4 +6,6 @@ import logging
 DOMAIN = "fluss"
 LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=30)
-COMMAND_REFRESH_DELAY = timedelta(seconds=10)
+# Debouncer cooldown for coordinator refreshes triggered after a cover
+# command — gives the device time to physically move before re-querying.
+COMMAND_REFRESH_COOLDOWN = 10

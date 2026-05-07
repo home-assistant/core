@@ -13,10 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-from .const import LOGGER, UPDATE_INTERVAL
+from .const import COMMAND_REFRESH_COOLDOWN, LOGGER, UPDATE_INTERVAL
 
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
@@ -35,6 +36,12 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             name=f"Fluss+ ({slugify(api_key[:8])})",
             config_entry=config_entry,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                LOGGER,
+                cooldown=COMMAND_REFRESH_COOLDOWN,
+                immediate=False,
+            ),
         )
 
     async def _async_get_status(self, device_id: str) -> dict[str, Any]:
@@ -42,11 +49,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         try:
             response = await self.api.async_get_device_status(device_id)
         except FlussApiClientError:
-            previous = (self.data or {}).get(device_id, {})
-            result: dict[str, Any] = {"internetConnected": False}
-            if "openCloseStatus" in previous:
-                result["openCloseStatus"] = previous["openCloseStatus"]
-            return result
+            previous = (self.data or {}).get(device_id)
+            if previous is None:
+                return {"internetConnected": False}
+            return {
+                k: v
+                for k, v in previous.items()
+                if k in ("internetConnected", "openCloseStatus")
+            }
         return response["status"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:

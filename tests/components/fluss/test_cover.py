@@ -117,7 +117,7 @@ async def test_cover_state_preserved_on_transient_status_error(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Last-known openCloseStatus is preserved when a per-device status fetch fails."""
+    """Last-known status is preserved when a per-device status fetch fails."""
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": "Closed"}}
     )
@@ -130,6 +130,8 @@ async def test_cover_state_preserved_on_transient_status_error(
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.data[DEVICE_ID_1]["openCloseStatus"] == "Closed"
+    assert coordinator.data[DEVICE_ID_1]["internetConnected"] is True
+    assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
     assert entity_registry.async_get(ENTITY_ID_1) is not None
 
 
@@ -171,7 +173,7 @@ async def test_cover_commands(
         (SERVICE_CLOSE_COVER, "async_close_device", "Closed", STATE_CLOSED),
     ],
 )
-async def test_cover_press_schedules_delayed_status_refresh(
+async def test_cover_press_triggers_debounced_refresh(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -180,7 +182,7 @@ async def test_cover_press_schedules_delayed_status_refresh(
     post_status: str,
     expected_state: str,
 ) -> None:
-    """A press defers a single-device status fetch by 10s."""
+    """A press requests a coordinator refresh, debounced by the cooldown."""
     initial_status = "Open" if post_status == "Closed" else "Closed"
     initial_state = STATE_OPEN if initial_status == "Open" else STATE_CLOSED
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
@@ -189,7 +191,7 @@ async def test_cover_press_schedules_delayed_status_refresh(
     await _setup_cover_only(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_1).state == initial_state
 
-    mock_api_client.async_get_device_status.reset_mock()
+    pre_press_call_count = mock_api_client.async_get_device_status.call_count
     mock_api_client.async_get_device_status.side_effect = _status_side_effect(
         {DEVICE_ID_1: {"openCloseStatus": post_status}}
     )
@@ -201,13 +203,14 @@ async def test_cover_press_schedules_delayed_status_refresh(
         blocking=True,
     )
 
-    assert mock_api_client.async_get_device_status.call_count == 0
+    # immediate=False on the debouncer means no refresh until the cooldown.
+    assert mock_api_client.async_get_device_status.call_count == pre_press_call_count
     assert hass.states.get(ENTITY_ID_1).state == initial_state
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
 
-    mock_api_client.async_get_device_status.assert_called_once_with(DEVICE_ID_1)
+    mock_api_client.async_get_device_status.assert_any_call(DEVICE_ID_1)
     assert hass.states.get(ENTITY_ID_1).state == expected_state
 
 
