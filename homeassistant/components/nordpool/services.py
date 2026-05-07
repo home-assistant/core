@@ -39,13 +39,17 @@ from .const import ATTR_RESOLUTION, DOMAIN
 
 def _validate_areas(areas: list[str]) -> list[str]:
     """Validate the areas."""
+    validated_areas: list[str] = []
 
     for area in areas:
-        cv.string(area)
-        if area.upper() not in AREAS:
+        validated_area = cv.string(area)
+        validated_area = validated_area.upper()
+        if validated_area not in AREAS:
             raise vol.Invalid(f"Area {area} is not valid")
 
-    return [area.upper() for area in areas]
+        validated_areas.append(validated_area)
+
+    return validated_areas
 
 
 _LOGGER = logging.getLogger(__name__)
