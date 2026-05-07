@@ -20,20 +20,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-MOCK_CONFIG_LOCAL_AUTH = {
-    CONF_PASSWORD: "test-password",
-}
-
-MOCK_CONFIG_CLOUD = {
-    CONF_TYPE: CONF_TYPE_CLOUD,
-    CONF_SERIAL_NUMBER: "1601500000000000",
-    CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
-}
-
-MOCK_CONFIG_CLOUD_REAUTH = {
-    CONF_TOKEN: "my0000000000000000000000000000000000000000000000PV",
-}
-
 DHCP_DISCOVERY = DhcpServiceInfo(
     "127.0.0.1",
     macaddress="986d35cabcdef",
