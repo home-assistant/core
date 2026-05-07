@@ -105,11 +105,6 @@ class HomematicipHAP:
 
     home: AsyncHome
 
-    # Bounded wait for websocket reconnect before refreshing state.
-    _WS_WAIT_INTERVAL = 2
-    _WS_WAIT_WARNING = 60
-    _WS_WAIT_TIMEOUT = 120
-
     def __init__(
         self, hass: HomeAssistant, config_entry: HomematicIPConfigEntry
     ) -> None:
@@ -218,85 +213,25 @@ class HomematicipHAP:
         self._get_state_task.add_done_callback(self.get_state_finished)
         self._ws_connection_closed.clear()
 
-    async def _wait_for_websocket_connection(self) -> bool:
-        """Wait up to ``_WS_WAIT_TIMEOUT`` seconds for the websocket to be connected.
-
-        Returns ``True`` when the websocket reports connected, ``False`` when the
-        wait times out. Even on timeout we proceed with ``get_state``: the REST
-        call is independent and may still recover the entity state.
-        """
-        elapsed = 0
-        warning_logged = False
-
-        while not self.home.websocket_is_connected():
-            if elapsed >= self._WS_WAIT_TIMEOUT:
-                _LOGGER.warning(
-                    "Websocket did not reconnect within %s seconds; "
-                    "proceeding with HomematicIP state refresh anyway (%s)",
-                    self._WS_WAIT_TIMEOUT,
-                    self._websocket_diagnostic_context(),
-                )
-                return False
-            await asyncio.sleep(self._WS_WAIT_INTERVAL)
-            elapsed += self._WS_WAIT_INTERVAL
-            # Re-check connectivity before logging so a reconnect during the
-            # sleep does not produce a misleading "still waiting" warning.
-            if (
-                not warning_logged
-                and elapsed >= self._WS_WAIT_WARNING
-                and not self.home.websocket_is_connected()
-            ):
-                warning_logged = True
-                _LOGGER.warning(
-                    "Still waiting for HomematicIP websocket reconnect after "
-                    "%s seconds (%s)",
-                    elapsed,
-                    self._websocket_diagnostic_context(),
-                )
-
-        return True
-
     async def _try_get_state(self) -> None:
-        """Call get_state in a loop until no error occurs.
+        """Refresh state after a websocket reconnect.
 
-        Uses exponential backoff on error.
+        Delegates the bounded websocket wait + retry-with-exponential-backoff
+        to the homematicip library (``refresh_state_after_reconnect_async``),
+        and only handles HA-specific concerns here:
+        - on authentication failure, trigger reauth
+        - clear the per-device ``unreach`` flag and signal entity updates
+          (the workaround for core#160048)
         """
-
-        await self._wait_for_websocket_connection()
-
-        delay = 8
-        max_delay = 1500
-        while True:
-            try:
-                await self.get_state()
-                break
-            except HmipAuthenticationError:
-                _LOGGER.error(
-                    "Authentication error from HomematicIP Cloud, triggering reauth"
-                )
-                self.config_entry.async_start_reauth(self.hass)
-                break
-            except HmipConnectionError as err:
-                _LOGGER.warning(
-                    "Get_state failed, retrying in %s seconds: %s", delay, err
-                )
-                await asyncio.sleep(delay)
-                delay = min(delay * 2, max_delay)
-            except asyncio.CancelledError:
-                raise
-            except Exception:
-                # Catch-all is intentional: this is the recovery loop after
-                # reconnect, and we must keep retrying rather than die on an
-                # unforeseen error. core#160048 had a NoneType error that
-                # would have been swallowed silently by a narrow catch.
-                _LOGGER.exception(
-                    "Unexpected error updating state after HomematicIP "
-                    "reconnect, retrying in %s seconds (%s)",
-                    delay,
-                    self._websocket_diagnostic_context(),
-                )
-                await asyncio.sleep(delay)
-                delay = min(delay * 2, max_delay)
+        try:
+            await self.home.refresh_state_after_reconnect_async()
+        except HmipAuthenticationError:
+            _LOGGER.error(
+                "Authentication error from HomematicIP Cloud, triggering reauth"
+            )
+            self.config_entry.async_start_reauth(self.hass)
+            return
+        self._post_state_refresh()
 
     async def _on_websocket_stale(self, severity: str, seconds_since: float) -> None:
         """Log a websocket-stale event surfaced by the library.
@@ -316,14 +251,20 @@ class HomematicipHAP:
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
         await self.home.get_current_state_async()
-        # ``set_all_to_unavailable`` marked every device unreach=True on
-        # disconnect; ``get_current_state_async`` only clears that flag for
-        # devices whose state actually changed during the outage, so the rest
-        # stay stuck unavailable after reconnect. Force-clear for all devices.
-        # Trade-off: a device that is *genuinely* unreachable on the cloud
-        # side will briefly appear available until its next state push
-        # corrects it. That self-corrects, while the previous behaviour left
-        # entities stuck unavailable indefinitely (core #160048).
+        self._post_state_refresh()
+
+    def _post_state_refresh(self) -> None:
+        """Apply HA-specific post-processing after a state refresh.
+
+        ``set_all_to_unavailable`` marked every device unreach=True on
+        disconnect; ``get_current_state_async`` only clears that flag for
+        devices whose state actually changed during the outage, so the rest
+        stay stuck unavailable after reconnect. Force-clear for all devices.
+        Trade-off: a device that is *genuinely* unreachable on the cloud
+        side will briefly appear available until its next state push
+        corrects it. That self-corrects, while the previous behaviour left
+        entities stuck unavailable indefinitely (core #160048).
+        """
         for device in self.home.devices:
             device.unreach = False
         self.update_all()
