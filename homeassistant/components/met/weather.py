@@ -1,7 +1,7 @@
 """Support for Met.no weather service."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -65,9 +64,7 @@ async def async_setup_entry(
     if config_entry.data.get(CONF_TRACK_HOME, False):
         name = hass.config.location_name
     else:
-        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
-        if TYPE_CHECKING:
-            assert isinstance(name, str)
+        name = config_entry.title or DEFAULT_NAME
 
     entities = [MetWeather(coordinator, config_entry, name, is_metric)]
 

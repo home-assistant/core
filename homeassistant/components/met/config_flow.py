@@ -103,6 +103,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -163,7 +164,7 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
             # Update config entry with data from user input while preserving
             # existing fields such as legacy stored names.
             self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-            return self.async_create_entry(title="", data=data)
+            return self.async_create_entry(title=self.config_entry.title, data=data)
 
         return self.async_show_form(
             step_id="init",

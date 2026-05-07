@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -59,6 +59,29 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+) -> bool:
+    """Migrate old config entry."""
+    if config_entry.version > 1:
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        data = dict(config_entry.data)
+        title = config_entry.title
+        if name := data.pop(CONF_NAME, None):
+            title = name
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            title=title,
+            minor_version=2,
+        )
+
+    return True
 
 
 async def cleanup_old_device(hass: HomeAssistant) -> None:
