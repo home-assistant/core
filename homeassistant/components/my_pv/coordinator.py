@@ -23,7 +23,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MyPVCoordinator(DataUpdateCoordinator):
+class MyPVCoordinator(DataUpdateCoordinator[None]):
     """my-PV Data Update Coordinator."""
 
     _device: MyPVDevice
@@ -154,7 +154,7 @@ class MyPVCoordinator(DataUpdateCoordinator):
     async def _async_setup(self):
         """Set up the coordinator."""
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         if not self._device.connected and not await self._device.connect():
             raise UpdateFailed(
@@ -173,8 +173,6 @@ class MyPVCoordinator(DataUpdateCoordinator):
                 translation_key="device_unavailable",
                 translation_placeholders={"uri": self._device.uri},
             ) from exc
-
-        return {}
 
     def get_setup_value(self, key: str) -> bool | float | int | str | None:
         """Get the setup value for the given key."""
