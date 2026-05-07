@@ -1,6 +1,6 @@
 """BleBox sensor entities."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import blebox_uniapi.sensor
 
@@ -30,6 +30,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
+SCAN_INTERVAL = timedelta(seconds=5)
+
+
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="pm1",
@@ -53,9 +56,9 @@ SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="powerConsumption",
-        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        icon="mdi:lightning-bolt",
     ),
     SensorEntityDescription(
         key="humidity",
@@ -150,6 +153,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
+        if self.state_class != SensorStateClass.TOTAL:
+            return None
         native_implementation = getattr(self._feature, "last_reset", None)
-
         return native_implementation or super().last_reset
