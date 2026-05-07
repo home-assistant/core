@@ -1,6 +1,5 @@
 """Config flow for the my-PV integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -8,7 +7,7 @@ from my_pv import CLOUD_FRONTEND, MyPVCloudDevice, MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -39,7 +38,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _device_model: str
-    _reauth_entry: ConfigEntry | None = None
 
     LOCAL_HOST_SCHEMA: Final = vol.Schema(
         {
@@ -241,34 +239,24 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle local password authentication."""
-        step_id = "local_auth"
-        if self._reauth_entry:
-            name = self._reauth_entry.title
-            step_id = "reauth_local"
-        else:
-            name = f"my-PV {self._device_model}"
-
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": name,
+                    "name": f"my-PV {self._device_model}",
                 }
             }
         )
 
         if user_input is None:
             return self.async_show_form(
-                step_id=step_id,
+                step_id="local_auth",
                 data_schema=self.LOCAL_AUTH_SCHEMA,
                 description_placeholders=self.context["title_placeholders"],
             )
 
         errors: dict[str, str] = {}
 
-        if self._reauth_entry:
-            host = self._reauth_entry.data[CONF_HOST]
-        elif self._host:
-            host = self._host
+        host = self._host
         password = user_input.get(CONF_PASSWORD)
 
         # Check if we can connect to the device
@@ -287,19 +275,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.LOCAL_AUTH_SCHEMA, user_input
             )
             return self.async_show_form(
-                step_id=step_id,
+                step_id="local_auth",
                 data_schema=data_schema,
                 errors=errors,
-            )
-
-        # If reauthenticating only the existing configuration needs to be updated with the
-        # new password.
-        if self._reauth_entry:
-            return self.async_update_reload_and_abort(
-                self._reauth_entry,
-                data_updates={
-                    CONF_PASSWORD: password,
-                },
             )
 
         await self.async_set_unique_id(device.serial_number)
@@ -317,32 +295,24 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the cloud setup."""
-        step_id = "setup_cloud"
-        data_schema = self.CLOUD_SCHEMA
-        if self._reauth_entry:
-            step_id = "reauth_cloud"
-            data_schema = self.CLOUD_REAUTH_SCHEMA
         description_placeholders = {"cloud_url": CLOUD_FRONTEND}
 
         if user_input is None:
             return self.async_show_form(
-                step_id=step_id,
-                data_schema=data_schema,
+                step_id="setup_cloud",
+                data_schema=self.CLOUD_SCHEMA,
                 description_placeholders=description_placeholders,
             )
 
         errors: dict[str, str] = {}
 
-        if self._reauth_entry:
-            serial_number = self._reauth_entry.data[CONF_SERIAL_NUMBER]
-        else:
-            serial_number = user_input[CONF_SERIAL_NUMBER]
+        serial_number = user_input[CONF_SERIAL_NUMBER]
 
-            # Validate serial number.
-            try:
-                _VALIDATE_SERIAL_NUMBER(serial_number)
-            except vol.Invalid:
-                errors[CONF_SERIAL_NUMBER] = "invalid_serial_number"
+        # Validate serial number.
+        try:
+            _VALIDATE_SERIAL_NUMBER(serial_number)
+        except vol.Invalid:
+            errors[CONF_SERIAL_NUMBER] = "invalid_serial_number"
 
         api_token = user_input[CONF_TOKEN]
 
@@ -365,22 +335,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if errors:
             # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+            data_schema = self.add_suggested_values_to_schema(
+                self.CLOUD_SCHEMA, user_input
+            )
             return self.async_show_form(
-                step_id=step_id,
+                step_id="setup_cloud",
                 data_schema=data_schema,
                 errors=errors,
                 description_placeholders=description_placeholders,
-            )
-
-        # If reauthenticating only the existing configuration needs to be updated with the
-        # new API token.
-        if self._reauth_entry:
-            return self.async_update_reload_and_abort(
-                self._reauth_entry,
-                data_updates={
-                    CONF_TOKEN: api_token,
-                },
             )
 
         await self.async_set_unique_id(serial_number)
@@ -393,37 +355,3 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_TOKEN: api_token,
         }
         return self.async_create_entry(title=title, data=data)
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        # pylint: disable=unused-argument
-        """Perform reauth upon an authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
-        if entry_data[CONF_TYPE] == CONF_TYPE_LOCAL:
-            _LOGGER.debug("Reauthentication needed for my-PV local device")
-            return await self.async_step_reauth_local()
-
-        if entry_data[CONF_TYPE] == CONF_TYPE_CLOUD:
-            _LOGGER.debug("Reauthentication needed for my-PV Cloud")
-            return await self.async_step_reauth_cloud()
-
-        return self.async_abort(
-            reason="config_type_not_supported",
-            description_placeholders={"config_type": entry_data[CONF_TYPE]},
-        )
-
-    async def async_step_reauth_local(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Perform reauth upon a local authentication error."""
-        return await self.async_step_local_auth(user_input)
-
-    async def async_step_reauth_cloud(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Perform reauth upon a cloud authentication error."""
-        return await self.async_step_setup_cloud(user_input)
