@@ -1039,7 +1039,7 @@ def extract_platform_integrations(
                 platform = item.get(CONF_PLATFORM)
             except AttributeError:
                 continue
-            if platform and isinstance(platform, Hashable):
+            if platform and isinstance(platform, str):
                 platform_integrations.setdefault(domain, set()).add(platform)
     return platform_integrations
 
