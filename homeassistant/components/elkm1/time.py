@@ -57,7 +57,7 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
         else:
             self._attr_available = False
             _LOGGER.warning(
-                "Setting type for '%s' differ between the ElkM1 and the entity. Restart the integration to fix",
+                "Setting type for '%s' differs between the ElkM1 and the entity. Restart the integration to fix",
                 self.entity_id,
             )
 
