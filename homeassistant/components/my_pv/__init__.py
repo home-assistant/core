@@ -30,8 +30,10 @@ PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 
+type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Set up my-PV from a config entry."""
 
     conf_type: str = entry.data[CONF_TYPE]
