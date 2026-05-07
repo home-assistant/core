@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from amcrest import AmcrestError, LoginError
+import pytest
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from .conftest import (
     TEST_HOST,
@@ -138,6 +139,28 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_port(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_amcrest_api: MagicMock,
+) -> None:
+    """Test we handle invalid port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: 70000,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
 
 
 async def test_form_unique_id_already_exists(

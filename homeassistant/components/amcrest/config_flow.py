@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
 from . import AmcrestChecker
 from .camera import STREAM_SOURCE_LIST
@@ -109,11 +110,11 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 }
             ),
             errors=errors,
