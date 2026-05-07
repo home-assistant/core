@@ -4,6 +4,8 @@
 import logging
 from typing import Any
 
+from aenum._enum import property
+
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC,
     WaterHeaterEntity,
@@ -12,13 +14,17 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyPVCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CURRENT_TEMPERATURE_KEY = "temp1"
+TARGET_TEMPERATURE_KEY = "ww1target"
 
 
 async def async_setup_entry(
@@ -42,8 +48,6 @@ async def async_setup_entry(
         entity_description = MyPVWaterHeaterEntityDescription(
             key="boiler",
             temperature_unit=target_temperature_config["unit"],
-            current_temperature_key="temp1",
-            target_temperature_key="ww1target",
             target_temperature_step=target_temperature_config["step"],
             max_temp=target_temperature_config["max"],
             min_temp=target_temperature_config["min"],
@@ -64,15 +68,13 @@ class MyPVWaterHeaterEntityDescription(
 ):
     """A class that describes my-PV water heater entities."""
 
-    current_temperature_key: str
-    target_temperature_key: str
     target_temperature_step: float
     max_temp: float
     min_temp: float
     temperature_unit: str
 
 
-class MyPVWaterHeater(CoordinatorEntity, WaterHeaterEntity):
+class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
     """Base my-PV WaterHeater."""
 
     _attr_has_entity_name = True
@@ -84,7 +86,6 @@ class MyPVWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 
-    coordinator: MyPVCoordinator
     entity_description: MyPVWaterHeaterEntityDescription
 
     def __init__(
@@ -116,37 +117,31 @@ class MyPVWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self._attr_available:
-            return self._attr_available
+        if not self.coordinator.connected:
+            return False
+        if self.coordinator.device.is_on is None:
+            return False
+        if self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY) is None:
+            return False
 
         return self.coordinator.last_update_success
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not self.coordinator.connected:
-            self._attr_available = False
-        else:
-            is_on = self.coordinator.device.is_on
-            current_temperature = self.coordinator.get_data_value(
-                self.entity_description.current_temperature_key
-            )
-            target_temperature = self.coordinator.get_setup_value(
-                self.entity_description.target_temperature_key
-            )
-            if is_on is None or current_temperature is None:
-                self._attr_available = False
-            else:
-                self._attr_current_operation = STATE_ELECTRIC if is_on else STATE_OFF
-                self._attr_current_temperature = float(current_temperature)
-                self._attr_target_temperature = (
-                    float(target_temperature)
-                    if target_temperature is not None
-                    else None
-                )
-                self._attr_available = True
+    @property
+    def current_operation(self) -> str | None:
+        """Return current operation."""
+        return STATE_ELECTRIC if self.coordinator.device.is_on else STATE_OFF
 
-        self.async_write_ha_state()
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        current_temperature = self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY)
+        return float(current_temperature) if current_temperature else None
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        target_temperature = self.coordinator.get_setup_value(TARGET_TEMPERATURE_KEY)
+        return float(target_temperature) if target_temperature is not None else None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -155,7 +150,7 @@ class MyPVWaterHeater(CoordinatorEntity, WaterHeaterEntity):
         if not self.coordinator.connected:
             self._attr_available = False
         elif temperature is not None and await self.coordinator.set_setup_value(
-            self.entity_description.target_temperature_key, float(temperature)
+            TARGET_TEMPERATURE_KEY, float(temperature)
         ):
             self._attr_available = True
             self._attr_target_temperature = temperature
