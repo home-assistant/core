@@ -89,6 +89,11 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_tahoma_rts_tilt_only_europe.json",
+    "rts://1234-1234-6362/16730044",
+    "cover.jaloezie",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -100,6 +105,7 @@ SNAPSHOT_FIXTURES = [
     DYNAMIC_EXTERIOR_VENETIAN_BLIND,
     POSITIONABLE_ROLLER_SHUTTER_UNO,
     POSITIONABLE_DUAL_ROLLER_SHUTTER,
+    TILT_ONLY_VENETIAN_BLIND,
 ]
 
 
@@ -918,3 +924,196 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_command.await_count == 0
+
+
+async def test_tilt_only_venetian_blind_rts(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test tilt-only venetian blind RTS device supports open/close and tilt with correct commands."""
+    await setup_overkiz_integration(fixture=TILT_ONLY_VENETIAN_BLIND.fixture)
+
+    state = hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes["supported_features"] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+    )
+
+    # RTS commands get a 0 delay parameter appended by the executor
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == CoverState.OPENING
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="open",
+        parameters=[0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                exec_id="exec-1",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ],
+    )
+
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == CoverState.CLOSING
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="close",
+        parameters=[0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                exec_id="exec-2",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ],
+    )
+
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="stop",
+        parameters=[0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                exec_id="exec-3",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ],
+    )
+
+    # tiltPositive/tiltNegative are in COMMANDS_WITHOUT_DELAY so no delay is appended
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == CoverState.OPENING
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="tiltPositive",
+        parameters=[1, 0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                exec_id="exec-4",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ],
+    )
+
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == CoverState.CLOSING
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="tiltNegative",
+        parameters=[1, 0],
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.EXECUTION_STATE_CHANGED.value,
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                exec_id="exec-5",
+                new_state=ExecutionState.COMPLETED.value,
+            )
+        ],
+    )
+
+    mock_client.execute_command.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: TILT_ONLY_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+        command_name="stop",
+        parameters=[0],
+    )
