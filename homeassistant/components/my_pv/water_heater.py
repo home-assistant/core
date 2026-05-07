@@ -144,12 +144,6 @@ class MyPVWaterHeater(CoordinatorEntity, WaterHeaterEntity):
                     if target_temperature is not None
                     else None
                 )
-                # self._attr_target_temperature_high = (
-                #     target_temperature + 3 if target_temperature else None
-                # )
-                # self._attr_target_temperature_low = (
-                #     target_temperature - 3 if target_temperature else None
-                # )
                 self._attr_available = True
 
         self.async_write_ha_state()
