@@ -79,6 +79,17 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "EUR",
+        },
+        json=load_json[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
             "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
