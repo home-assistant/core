@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_WIZ_PIR, OCCUPANCY_SOURCES
+from .const import DOMAIN, OCCUPANCY_SOURCES, SIGNAL_WIZ_PIR
 from .coordinator import WizConfigEntry, WizData
 from .entity import WizEntity
 
