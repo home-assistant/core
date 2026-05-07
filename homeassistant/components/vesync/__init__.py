@@ -77,7 +77,11 @@ async def async_setup_entry(
         ) from err
 
     await manager.update()
-    await manager.check_firmware()
+
+    try:
+        await manager.check_firmware()
+    except VeSyncServerError as err:
+        _LOGGER.warning("Unable to check firmware for all devices: %s", err)
 
     config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
 
