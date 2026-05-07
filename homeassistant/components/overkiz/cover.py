@@ -100,15 +100,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.LOWER_CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to remove open/close commands
+    # Needs override to add support for very specific tilt commands
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        # Position commands fully open/close the tilt
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # Tilt commands move the tilt with a few degrees
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         open_tilt_command_args=(1, 0),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
