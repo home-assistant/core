@@ -9,11 +9,17 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from tfa_me_ha_local.client import (
+    TFAmeConnectionError,
+    TFAmeException,
+    TFAmeHTTPError,
+    TFAmeJSONError,
+    TFAmeTimeoutError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
-from homeassistant.components.tfa_me.data import TFAmeException
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -41,18 +47,62 @@ async def test_show_form(hass: HomeAssistant) -> None:
         "check_in_values",
     ),
     [
-        (  # 1) TFAmeException raised -> error stored under "base"
+        (  # 1) TFAmeTimeoutError raised -> error stored under "base"
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
-            {"side_effect": TFAmeException("host_empty")},
+            {"side_effect": TFAmeTimeoutError("timeout_connect")},
             {
                 CONF_IP_ADDRESS: "192.168.0.10",
                 CONF_NAME_WITH_STATION_ID: True,
             },
             "base",
-            "host_empty",
+            "timeout_connect",
             False,
         ),
-        (  # 2) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
+        (  # 2) TFAmeConnectionError raised -> error stored under "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
+            {"side_effect": TFAmeConnectionError("cannot_connect")},
+            {
+                CONF_IP_ADDRESS: "192.168.0.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+            "base",
+            "cannot_connect",
+            False,
+        ),
+        (  # 3) TFAmeHTTPError raised -> error stored under "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
+            {"side_effect": TFAmeHTTPError("invalid_response")},
+            {
+                CONF_IP_ADDRESS: "192.168.0.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+            "base",
+            "invalid_response",
+            False,
+        ),
+        (  # 4) TFAmeJSONError raised -> error stored under "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
+            {"side_effect": TFAmeJSONError("invalid_response")},
+            {
+                CONF_IP_ADDRESS: "192.168.0.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+            "base",
+            "invalid_response",
+            False,
+        ),
+        (  # 54) TFAmeException raised -> error stored under "base"
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
+            {"side_effect": TFAmeException("unknown")},
+            {
+                CONF_IP_ADDRESS: "192.168.0.10",
+                CONF_NAME_WITH_STATION_ID: True,
+            },
+            "base",
+            "unknown",
+            False,
+        ),
+        (  # 7) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
             None,
             None,
             {
@@ -63,7 +113,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "invalid_ip_host",
             False,
         ),
-        (  # 3) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
+        (  # 8) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
             None,
             None,
             {
@@ -74,7 +124,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "invalid_name_with_station_id",
             True,  # check error via values()
         ),
-        (  # 4) Generic exception while connecting -> error on "base"
+        (  # 9) Generic exception while connecting -> error on "base"
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
             {
@@ -87,7 +137,11 @@ async def test_show_form(hass: HomeAssistant) -> None:
         ),
     ],
     ids=[
-        "tfa_exception_host_empty",
+        "timeout_connect",
+        "cannot_connect",
+        "invalid_response",
+        "invalid_response",
+        "unknown",
         "invalid_ip_host",
         "invalid_name_with_station_id",
         "cannot_connect",

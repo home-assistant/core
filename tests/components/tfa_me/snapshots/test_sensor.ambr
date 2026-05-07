@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_tfa_me_sensor_entities_snapshot
   dict({
-    'sensor.05b3e4e44_05b3e4e44_barometric_pressure': dict({
+    'sensor.tfa_me_05b_3e4_e44_05b3e4e44_barometric_pressure': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'barometric_pressure',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
@@ -9,14 +9,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'atmospheric_pressure',
         'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) Barometric pressure',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'hPa',
       }),
-      'entity_id': 'sensor.05b3e4e44_05b3e4e44_barometric_pressure',
+      'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_barometric_pressure',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_05b3e4e44_humidity': dict({
+    'sensor.tfa_me_05b_3e4_e44_05b3e4e44_humidity': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'humidity',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
@@ -24,41 +24,41 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'humidity',
         'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) Humidity',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.05b3e4e44_05b3e4e44_humidity',
+      'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_humidity',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_05b3e4e44_lowbatt': dict({
+    'sensor.tfa_me_05b_3e4_e44_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': '05B-3E4-E44',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'Yes',
       }),
-      'entity_id': 'sensor.05b3e4e44_05b3e4e44_lowbatt',
+      'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_05b3e4e44_rssi': dict({
+    'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': '05B-3E4-E44',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_05b3e4e44_rssi',
+      'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_05b3e4e44_temperature': dict({
+    'sensor.tfa_me_05b_3e4_e44_05b3e4e44_temperature': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'temperature',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
@@ -66,27 +66,27 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'temperature',
         'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) Temperature',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_05b3e4e44_temperature',
+      'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_temperature',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a1fffffea_lowbatt': dict({
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A1F-FFF-FEA',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'No',
       }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_lowbatt',
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a1fffffea_rain': dict({
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rain',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
@@ -94,29 +94,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'precipitation',
         'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Rain',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': 'mm',
       }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_rain',
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a1fffffea_rain_1_hour': dict({
-      'attributes': ReadOnlyDict({
-        'Measurement': 'rain_1_hour',
-        'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
-        'Unique ID': 'A1F-FFF-FEA',
-        'Via TFA.me station': '05B-3E4-E44',
-        'device_class': 'precipitation',
-        'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Rain last hour',
-        'icon': '',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'mm',
-      }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_rain_1_hour',
-      'state': 'unknown',
-    }),
-    'sensor.05b3e4e44_a1fffffea_rain_24_hours': dict({
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_24_hours': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rain_24_hours',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
@@ -124,14 +109,29 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'precipitation',
         'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Rain last 24 hours',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'mm',
       }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_rain_24_hours',
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_24_hours',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a1fffffea_rain_rel': dict({
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_hour': dict({
+      'attributes': ReadOnlyDict({
+        'Measurement': 'rain_1_hour',
+        'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
+        'Unique ID': 'A1F-FFF-FEA',
+        'Via TFA.me station': '05B-3E4-E44',
+        'device_class': 'precipitation',
+        'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Rain last hour',
+        'icon': None,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'mm',
+      }),
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_hour',
+      'state': 'unknown',
+    }),
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_relative_rain': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rain_rel',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
@@ -139,83 +139,83 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'precipitation',
         'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) Relative rain',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'mm',
       }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_rain_rel',
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_relative_rain',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a1fffffea_rssi': dict({
+    'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A1F-FFF-FEA',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a1fffffea_rssi',
+      'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_lowbatt': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A20-4E4-DF6',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'No',
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_lowbatt',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_rssi': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A20-4E4-DF6',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_rssi',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_wind_direction': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_direction',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A20-4E4-DF6',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind direction',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '',
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_wind_direction',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_wind_direction_deg': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_2': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_direction_deg',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A20-4E4-DF6',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind direction',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°',
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_wind_direction_deg',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_2',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_wind_gust': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_gust': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_gust',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
@@ -223,14 +223,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'wind_speed',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind gust',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_wind_gust',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_gust',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a204e4df6_wind_speed': dict({
+    'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_speed': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_speed',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
@@ -238,69 +238,69 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'wind_speed',
         'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind speed',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a204e4df6_wind_speed',
+      'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_speed',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_lowbatt': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A2F-FFF-FFB',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'No',
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_lowbatt',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_rssi': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A2F-FFF-FFB',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_rssi',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_wind_direction': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_direction',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A2F-FFF-FFB',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind direction',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '',
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_wind_direction',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_wind_direction_deg': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_2': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_direction_deg',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A2F-FFF-FFB',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind direction',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '°',
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_wind_direction_deg',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_2',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_wind_gust': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_gust': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_gust',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
@@ -308,14 +308,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'wind_speed',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind gust',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_wind_gust',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_gust',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a2ffffffb_wind_speed': dict({
+    'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_speed': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'wind_speed',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
@@ -323,41 +323,41 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'wind_speed',
         'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind speed',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a2ffffffb_wind_speed',
+      'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_speed',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a364f3d67_lowbatt': dict({
+    'sensor.tfa_me_a36_4f3_d67_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 8, 47, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A36-4F3-D67',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A36-4F3-D67 (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'No',
       }),
-      'entity_id': 'sensor.05b3e4e44_a364f3d67_lowbatt',
+      'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a364f3d67_rssi': dict({
+    'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 8, 47, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A36-4F3-D67',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A36-4F3-D67 (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a364f3d67_rssi',
+      'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a364f3d67_temperature': dict({
+    'sensor.tfa_me_a36_4f3_d67_05b3e4e44_temperature': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'temperature',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 8, 47, tzinfo=datetime.timezone.utc),
@@ -365,14 +365,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'temperature',
         'friendly_name': 'TFA.me A36-4F3-D67 (05B3E4E44) Temperature',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a364f3d67_temperature',
+      'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_temperature',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a4481290f_humidity': dict({
+    'sensor.tfa_me_a44_812_90f_05b3e4e44_humidity': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'humidity',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
@@ -380,41 +380,41 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'humidity',
         'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) Humidity',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.05b3e4e44_a4481290f_humidity',
+      'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_humidity',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a4481290f_lowbatt': dict({
+    'sensor.tfa_me_a44_812_90f_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A44-812-90F',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'No',
       }),
-      'entity_id': 'sensor.05b3e4e44_a4481290f_lowbatt',
+      'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a4481290f_rssi': dict({
+    'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A44-812-90F',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a4481290f_rssi',
+      'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a4481290f_temperature': dict({
+    'sensor.tfa_me_a44_812_90f_05b3e4e44_temperature': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'temperature',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
@@ -422,14 +422,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'temperature',
         'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) Temperature',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a4481290f_temperature',
+      'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_temperature',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a4481290f_temperature_probe': dict({
+    'sensor.tfa_me_a44_812_90f_05b3e4e44_temperature_2': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'temperature_probe',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
@@ -437,14 +437,14 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'temperature',
         'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) Temperature',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a4481290f_temperature_probe',
+      'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_temperature_2',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a6f169ad1_humidity': dict({
+    'sensor.tfa_me_a6f_169_ad1_05b3e4e44_humidity': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'humidity',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 5, tzinfo=datetime.timezone.utc),
@@ -452,41 +452,41 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'humidity',
         'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) Humidity',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.05b3e4e44_a6f169ad1_humidity',
+      'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_humidity',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a6f169ad1_lowbatt': dict({
+    'sensor.tfa_me_a6f_169_ad1_05b3e4e44_low_battery': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'lowbatt',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 5, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A6F-169-AD1',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) Low battery',
-        'icon': '',
+        'icon': None,
         'unit_of_measurement': 'Yes',
       }),
-      'entity_id': 'sensor.05b3e4e44_a6f169ad1_lowbatt',
+      'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_low_battery',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a6f169ad1_rssi': dict({
+    'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'rssi',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 5, tzinfo=datetime.timezone.utc),
         'Unique ID': 'A6F-169-AD1',
         'Via TFA.me station': '05B-3E4-E44',
         'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) RSSI (Signal strength)',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': '/255',
       }),
-      'entity_id': 'sensor.05b3e4e44_a6f169ad1_rssi',
+      'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength',
       'state': 'unknown',
     }),
-    'sensor.05b3e4e44_a6f169ad1_temperature': dict({
+    'sensor.tfa_me_a6f_169_ad1_05b3e4e44_temperature': dict({
       'attributes': ReadOnlyDict({
         'Measurement': 'temperature',
         'Timestamp': datetime.datetime(2025, 11, 26, 15, 11, 5, tzinfo=datetime.timezone.utc),
@@ -494,11 +494,11 @@
         'Via TFA.me station': '05B-3E4-E44',
         'device_class': 'temperature',
         'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) Temperature',
-        'icon': '',
+        'icon': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
-      'entity_id': 'sensor.05b3e4e44_a6f169ad1_temperature',
+      'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_temperature',
       'state': 'unknown',
     }),
   })

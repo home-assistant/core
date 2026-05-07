@@ -14,7 +14,7 @@ from homeassistant.components.tfa_me.coordinator import (
     TFAmeUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import AsyncMock, Mock, MockConfigEntry
@@ -41,9 +41,19 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
 @pytest.fixture
 def tfa_me_mock_entry(hass: HomeAssistant, tfa_me_mock_coordinator):
     """Return a mock ConfigEntry."""
-    entry = AsyncMock()
-    entry.entry_id = "1234"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TFA.me",
+        data={
+            CONF_IP_ADDRESS: "192.168.1.46",
+            CONF_NAME: "TFA.me",
+            CONF_NAME_WITH_STATION_ID: False,
+        },
+        entry_id="1234",
+    )
     entry.runtime_data = tfa_me_mock_coordinator
+    entry.add_to_hass(hass)
     return entry
 
 

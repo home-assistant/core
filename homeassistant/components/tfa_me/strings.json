@@ -3,16 +3,16 @@
     "error": {
       "cannot_connect": "Cannot connect to the station.",
       "host_empty": "Invalid IP or station ID (empty).",
-      "invalid_host": "Invalid IP or station ID.",
       "invalid_ip_host": "Invalid IP or station ID.",
       "invalid_name_with_station_id": "Invalid value for name_with_station_id",
+      "invalid_response": "Response invalid from station.",
       "missing_identifier": "The station ID is missing in JSON.",
+      "timeout_connect": "Timeout while connection to the station.",
       "unknown": "Unexpected error."
     },
     "step": {
       "user": {
         "data": {
-          "host": "IP or host name",
           "ip_address": "IP address or station ID",
           "name_with_station_id": "Add station ID to device name. When you have only one station don't check this box."
         },
@@ -31,7 +31,7 @@
         "name": "Barometric pressure"
       },
       "co2": {
-        "name": "CO2, Air aquality"
+        "name": "CO2, Air quality"
       },
       "humidity": {
         "name": "Humidity"
@@ -69,22 +69,6 @@
       },
       "wind_speed": {
         "name": "Wind speed"
-      }
-    }
-  },
-
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "action_rain": "Reset all rain sensors",
-          "select_option": "Select an option:"
-        },
-        "data_description": {
-          "select_option": "Select an option"
-        },
-        "description": "Check box and press Submit to reset all rain last hour and rain last 24 hours rain values.",
-        "title": "Reset time-based rainfall amount"
       }
     }
   }
