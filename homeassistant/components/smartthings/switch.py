@@ -10,11 +10,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
@@ -605,10 +606,19 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
         return super()._current_state()["value"]
 
 
-class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity):
-    """Define a SmartThings switch that uses the execute command."""
+class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity, RestoreEntity):
+    """Define a SmartThings switch that uses the execute command.
+
+    The cloud does not propagate state for these legacy execute commands, so
+    state is tracked optimistically: we remember what we last commanded and
+    restore that across HA restarts via RestoreEntity. assumed_state=True
+    advertises this to the user — the UI shows two buttons and an "Assumed"
+    badge, and external changes (e.g. via the SmartThings mobile app) will
+    drift out of sync.
+    """
 
     entity_description: SmartThingsExecuteSwitchEntityDescription
+    _attr_assumed_state = True
 
     def __init__(
         self,
@@ -623,6 +633,12 @@ class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity):
             f"{device.device.device_id}_{MAIN}_{entity_description.key}"
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Restore last known state from prior HA session."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._attr_is_on = last_state.state == STATE_ON
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.execute_device_command(
@@ -630,6 +646,8 @@ class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity):
             Command.EXECUTE,
             self.entity_description.off_argument,
         )
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -638,3 +656,5 @@ class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity):
             Command.EXECUTE,
             self.entity_description.on_argument,
         )
+        self._attr_is_on = True
+        self.async_write_ha_state()

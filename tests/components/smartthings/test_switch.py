@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -34,7 +34,7 @@ from . import (
     trigger_update,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_all_entities(
@@ -664,12 +664,17 @@ async def test_execute_workaround_switch_disabled_by_default(
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
 @pytest.mark.parametrize(
-    ("action", "expected_argument"),
+    ("action", "expected_argument", "expected_state"),
     [
-        (SERVICE_TURN_ON, ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}]),
+        (
+            SERVICE_TURN_ON,
+            ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}],
+            STATE_ON,
+        ),
         (
             SERVICE_TURN_OFF,
             ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
+            STATE_OFF,
         ),
     ],
 )
@@ -680,8 +685,9 @@ async def test_execute_workaround_switch_turn_on_off(
     entity_registry: er.EntityRegistry,
     action: str,
     expected_argument: list[str],
+    expected_state: str,
 ) -> None:
-    """Test execute workaround switch uses reversed API arguments (Light_Off=on, Light_On=off)."""
+    """Test execute workaround switch uses reversed API arguments and updates state optimistically."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -691,6 +697,10 @@ async def test_execute_workaround_switch_turn_on_off(
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["assumed_state"] is True
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -705,6 +715,40 @@ async def test_execute_workaround_switch_turn_on_off(
         MAIN,
         expected_argument,
     )
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+@pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])
+async def test_execute_workaround_switch_restores_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    restored_state: str,
+) -> None:
+    """Test execute workaround switch restores last known state across HA restart."""
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        _EHS_LIGHTING_UNIQUE_ID,
+        suggested_object_id="klimatyzator_korytarz_display_lighting",
+        disabled_by=None,
+    )
+    mock_restore_cache(
+        hass,
+        [State("switch.klimatyzator_korytarz_display_lighting", restored_state)],
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == restored_state
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_01001"])
