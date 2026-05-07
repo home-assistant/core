@@ -1,7 +1,5 @@
 """Services for the monoprice integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service

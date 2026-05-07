@@ -1,7 +1,5 @@
 """Elmax sensor platform."""
 
-from __future__ import annotations
-
 from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.command import AreaCommand

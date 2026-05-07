@@ -1,7 +1,5 @@
 """Matter valve platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters

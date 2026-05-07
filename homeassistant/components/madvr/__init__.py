@@ -1,7 +1,5 @@
 """The madvr-envy integration."""
 
-from __future__ import annotations
-
 import logging
 
 from madvr.madvr import Madvr

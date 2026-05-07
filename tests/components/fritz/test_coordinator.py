@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 from typing import cast

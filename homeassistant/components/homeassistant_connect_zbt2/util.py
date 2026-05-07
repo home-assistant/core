@@ -1,7 +1,5 @@
 """Utility functions for Home Assistant Connect ZBT-2 integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry

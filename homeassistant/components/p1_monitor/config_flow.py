@@ -1,7 +1,5 @@
 """Config flow for P1 Monitor integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from p1monitor import P1Monitor, P1MonitorError

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Fumis."""
 
-from __future__ import annotations
-
 from fumis import (
     Fumis,
     FumisAuthenticationError,

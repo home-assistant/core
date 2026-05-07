@@ -60,15 +60,27 @@ async def test_climate_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+_TEMPERATURE_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("climate.is_off", {}, True, True),
-        ("climate.is_on", {}, True, False),
-        ("climate.is_cooling", {}, True, False),
-        ("climate.is_drying", {}, True, False),
-        ("climate.is_heating", {}, True, False),
+        ("climate.is_on", {}, True, True),
+        ("climate.is_cooling", {}, True, True),
+        ("climate.is_drying", {}, True, True),
+        ("climate.is_heating", {}, True, True),
+        ("climate.is_hvac_mode", {"hvac_mode": [HVACMode.HEAT]}, True, True),
+        ("climate.target_humidity", _HUMIDITY_THRESHOLD, True, True),
+        ("climate.target_temperature", _TEMPERATURE_THRESHOLD, True, True),
     ],
 )
 async def test_climate_condition_options_validation(
@@ -332,12 +344,14 @@ async def test_climate_attribute_condition_behavior_all(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_any(
             "climate.target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -376,12 +390,14 @@ async def test_climate_numerical_condition_behavior_any(
             "climate.target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_all(
             "climate.target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

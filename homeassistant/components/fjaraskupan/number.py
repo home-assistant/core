@@ -1,7 +1,5 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
