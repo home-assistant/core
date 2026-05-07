@@ -994,7 +994,7 @@
         "name": "Motion alarm"
       },
       "motion_detection_zone": {
-        "name": "Motion detection zone"
+        "name": "Use motion detection zone"
       },
       "motion_recording": {
         "name": "Motion recording"
