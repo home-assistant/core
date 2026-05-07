@@ -1248,6 +1248,12 @@
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
+    },
+    "telegram_backend": {
+      "options": {
+        "postgres": "PostgreSQL",
+        "sqlite": "SQLite"
+      }
     }
   },
   "services": {

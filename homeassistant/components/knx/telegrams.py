@@ -138,6 +138,14 @@ class Telegrams:
             _LOGGER.info(
                 "Successfully initialized KNX telegram storage backend '%s'", backend
             )
+        except TimeoutError:
+            _LOGGER.error(
+                "Timeout initializing KNX telegram storage backend '%s' (%s)",
+                backend,
+                info,
+            )
+            self._create_repair_issue(backend, info, "Timeout")
+            await self._fallback_to_memory()
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error initializing KNX telegram storage backend '%s' (%s): %s",
@@ -145,23 +153,8 @@ class Telegrams:
                 info,
                 err,
             )
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="telegram_storage_error",
-                translation_placeholders={
-                    "backend": backend,
-                    "info": info,
-                    "error": str(err),
-                },
-            )
-            # Fallback to MemoryStore to allow integration to start
-            if not isinstance(self.store, MemoryStore):
-                self.store = MemoryStore()
-                await self.store.initialize()
+            self._create_repair_issue(backend, info, str(err))
+            await self._fallback_to_memory()
         else:
             ir.async_delete_issue(
                 self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR
@@ -169,6 +162,28 @@ class Telegrams:
 
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
+
+    async def _fallback_to_memory(self) -> None:
+        """Fallback to MemoryStore to allow integration to start."""
+        if not isinstance(self.store, MemoryStore):
+            self.store = MemoryStore()
+            await self.store.initialize()
+
+    def _create_repair_issue(self, backend: str, info: str, error: str) -> None:
+        """Create a repair issue for storage initialization failure."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="telegram_storage_error",
+            translation_placeholders={
+                "backend": backend,
+                "info": info,
+                "error": error,
+            },
+        )
 
     async def stop(self) -> None:
         """Stop history store."""
@@ -272,6 +287,11 @@ class Telegrams:
         if isinstance(value, (int, float)):
             value_numeric = float(value)
 
+        # Ensure value is a serializable type supported by the store
+        # Supported: int, float, bool, str, dict (JSON)
+        is_supported_type = isinstance(value, (int, float, bool, str, dict))
+        store_value = value if is_supported_type else None
+
         return StoredTelegram(
             timestamp=dt_util.parse_datetime(t["timestamp"]) or dt_util.now(),
             source=t["source"],
@@ -279,7 +299,7 @@ class Telegrams:
             direction=t["direction"],
             telegramtype=t["telegramtype"],
             payload=t["payload"],
-            value=value if isinstance(value, (int, float, bool, str, dict)) else None,
+            value=store_value,
             value_numeric=value_numeric,
             dpt_main=t["dpt_main"],
             dpt_sub=t["dpt_sub"],

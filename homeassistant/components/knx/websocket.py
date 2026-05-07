@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     KNX_MODULE_KEY,
     SUPPORTED_PLATFORMS_UI,
+    TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
@@ -310,9 +311,10 @@ async def ws_group_monitor_info(
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    start_time = None
-    if (load_hours := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_HOURS)) is not None:
-        start_time = dt_util.now() - timedelta(hours=load_hours)
+    load_hours = knx.entry.data.get(
+        CONF_KNX_TELEGRAM_LOAD_HOURS, TELEGRAM_LOAD_HOURS_DEFAULT
+    )
+    start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=False)
     result = await knx.telegrams.store.query(query)
@@ -377,10 +379,10 @@ async def ws_query_telegrams(
 ) -> None:
     """Handle query telegrams command."""
     start_time = msg.get("start_time")
-    if (
-        start_time is None
-        and (load_hours := knx.entry.data.get(CONF_KNX_TELEGRAM_LOAD_HOURS)) is not None
-    ):
+    if start_time is None:
+        load_hours = knx.entry.data.get(
+            CONF_KNX_TELEGRAM_LOAD_HOURS, TELEGRAM_LOAD_HOURS_DEFAULT
+        )
         start_time = dt_util.now() - timedelta(hours=load_hours)
 
     query = TelegramQuery(
