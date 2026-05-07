@@ -114,7 +114,7 @@ async def setup_single_attribute_binary_sensor(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
 async def test_setup_minimal(hass: HomeAssistant) -> None:
@@ -142,7 +142,7 @@ async def test_setup_minimal(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
 async def test_setup(hass: HomeAssistant) -> None:
@@ -209,35 +209,10 @@ async def test_setup_config_entry(
 @pytest.mark.parametrize(
     ("config", "domain"),
     [
-        # No legacy binary sensors
-        (
-            {"binary_sensor": {"platform": "template"}},
-            binary_sensor.DOMAIN,
-        ),
-        # Legacy binary sensor missing mandatory config
-        (
-            {"binary_sensor": {"platform": "template", "sensors": {"foo bar": {}}}},
-            binary_sensor.DOMAIN,
-        ),
         # Binary sensor missing mandatory config
         (
             {"template": {"binary_sensor": {}}},
             template.DOMAIN,
-        ),
-        # Legacy binary sensor with invalid device class
-        (
-            {
-                "binary_sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "test": {
-                            "value_template": "{{ foo }}",
-                            "device_class": "foobarnotreal",
-                        }
-                    },
-                }
-            },
-            binary_sensor.DOMAIN,
         ),
         # Binary sensor with invalid device class
         (
@@ -251,22 +226,25 @@ async def test_setup_config_entry(
             },
             template.DOMAIN,
         ),
-        # Legacy binary sensor missing mandatory config
-        (
-            {
-                "binary_sensor": {
-                    "platform": "template",
-                    "sensors": {"test": {"device_class": "motion"}},
-                }
-            },
-            binary_sensor.DOMAIN,
-        ),
     ],
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "style", "extra_config"),
+    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_legacy_template_creates_warning(
+    hass: HomeAssistant, caplog_setup_text
+) -> None:
+    """Test legacy YAML configuration logs a warning."""
+    assert len(hass.states.async_all("binary_sensor")) == 0
+    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -331,7 +309,6 @@ async def test_state(
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_state"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template", ""),
         (ConfigurationStyle.MODERN, "icon", ""),
         (ConfigurationStyle.TRIGGER, "icon", None),
     ],
@@ -362,7 +339,6 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str | None) -> 
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_state"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template", ""),
         (ConfigurationStyle.MODERN, "picture", ""),
         (ConfigurationStyle.TRIGGER, "picture", None),
     ],
@@ -395,7 +371,6 @@ async def test_entity_picture_template(
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_value"),
     [
-        (ConfigurationStyle.LEGACY, "attribute_templates", "It ."),
         (ConfigurationStyle.MODERN, "attributes", "It ."),
         (ConfigurationStyle.TRIGGER, "attributes", None),
     ],
@@ -429,7 +404,6 @@ async def test_attribute_templates(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "attribute_templates"),
         (ConfigurationStyle.MODERN, "attributes"),
         (ConfigurationStyle.TRIGGER, "attributes"),
     ],
@@ -478,7 +452,7 @@ def setup_mock() -> Generator[Mock]:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
 async def test_match_all(hass: HomeAssistant, setup_mock: Mock) -> None:
@@ -501,7 +475,7 @@ async def test_match_all(hass: HomeAssistant, setup_mock: Mock) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
 async def test_binary_sensor_state(hass: HomeAssistant) -> None:
@@ -529,7 +503,7 @@ async def test_binary_sensor_state(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "attribute_value",
@@ -587,12 +561,7 @@ async def test_delay_on(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> 
     ],
 )
 @pytest.mark.parametrize(
-    "style",
-    [
-        ConfigurationStyle.LEGACY,
-        ConfigurationStyle.MODERN,
-        ConfigurationStyle.TRIGGER,
-    ],
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
     "attribute_value",
@@ -652,7 +621,7 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
 async def test_available_without_availability_template(hass: HomeAssistant) -> None:
@@ -680,7 +649,6 @@ async def test_available_without_availability_template(hass: HomeAssistant) -> N
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -707,7 +675,6 @@ async def test_availability_template(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -796,7 +763,7 @@ async def test_no_update_template_match_all(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test unique_id option only creates one light per id."""
@@ -824,7 +791,6 @@ async def test_nested_unique_id(
 @pytest.mark.parametrize(
     ("style", "attribute", "initial_state"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template", ""),
         (ConfigurationStyle.MODERN, "icon", ""),
     ],
 )
@@ -858,7 +824,7 @@ async def test_template_icon_validation_error(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.MODERN],
 )
 @pytest.mark.parametrize(
     ("extra_config", "source_state", "restored_state", "initial_state"),
