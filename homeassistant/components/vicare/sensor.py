@@ -8,6 +8,7 @@ from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFloorHeating import FloorHeating
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -91,6 +92,18 @@ class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysM
     """Describes ViCare sensor entity."""
 
     unit_getter: Callable[[PyViCareDevice], str | None] | None = None
+
+
+def _floor_heating_active_mode(api: PyViCareDevice) -> str:
+    """Return active mode for FloorHeating devices only.
+
+    The bare ``getActiveMode()`` name is shared with ``VentilationDevice`` (where
+    it is a deprecated alias for ``getActiveVentilationMode``); restricting by
+    instance type prevents a duplicate entity on ventilation hardware.
+    """
+    if not isinstance(api, FloorHeating):
+        raise PyViCareNotSupportedFeatureError("active_mode")
+    return api.getActiveMode()
 
 
 SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
@@ -1153,6 +1166,13 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getValvePosition(),
         entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="active_mode",
+        translation_key="active_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cooling", "heating", "standby"],
+        value_getter=_floor_heating_active_mode,
     ),
     ViCareSensorEntityDescription(
         key="fuel_need",

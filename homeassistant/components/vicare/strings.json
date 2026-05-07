@@ -161,6 +161,14 @@
       }
     },
     "sensor": {
+      "active_mode": {
+        "name": "Active mode",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },
