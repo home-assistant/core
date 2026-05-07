@@ -449,6 +449,29 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
+@pytest.mark.parametrize(("qos", "retain"), [(None, None), (0, None), (None, False)])
+async def test_publish_api_with_falback_to_none(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    qos: int | None,
+    retain: bool | None,
+) -> None:
+    """Test MQTT publish API function with None as fallback for QoS or Retain."""
+    mqtt_mock = await mqtt_mock_entry()
+    await mqtt.async_publish(hass, "some-topic", "test-payload", qos=qos, retain=retain)
+    assert (
+        "Using `None` values for qos or retain on "
+        "the MQTT async_publish API is deprecated." in caplog.text
+    )
+    async_publish_mock: MagicMock = mqtt_mock.async_publish
+    assert len(async_publish_mock.mock_calls) == 1
+    assert async_publish_mock.mock_calls[0][1][0] == "some-topic"
+    assert async_publish_mock.mock_calls[0][1][1] == "test-payload"
+    assert async_publish_mock.mock_calls[0][1][2] == 0
+    assert async_publish_mock.mock_calls[0][1][3] is False
+
+
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
