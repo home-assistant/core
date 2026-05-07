@@ -115,7 +115,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),
-                self.firefly.get_bills(),
+                self.firefly.get_bills(start=start_date, end=end_date),
             )
 
             category_details = await asyncio.gather(

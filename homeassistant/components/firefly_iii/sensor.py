@@ -1,6 +1,6 @@
 """Sensor platform for Firefly III integration."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pyfirefly.models import Account, Bill, Budget, Category
 
@@ -196,8 +196,6 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
         earned_items = self._category.attributes.earned or []
         spent = sum(float(item.sum) for item in spent_items if item.sum is not None)
         earned = sum(float(item.sum) for item in earned_items if item.sum is not None)
-        if spent == 0 and earned == 0:
-            return None
         return spent + earned
 
 
@@ -345,9 +343,9 @@ class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity)
     def native_value(self) -> datetime | None:
         """Return the next expected match date."""
         value = self._bill.attributes.next_expected_match
-        if value is None:
+        if not value:
             return None
-        return datetime.fromisoformat(value)
+        return _parse_timestamp(value)
 
 
 class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
@@ -361,5 +359,13 @@ class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
         """Return the last paid date."""
         paid_dates = self._bill.attributes.paid_dates
         if paid_dates and paid_dates[-1].date:
-            return datetime.fromisoformat(paid_dates[-1].date)
+            return _parse_timestamp(paid_dates[-1].date)
         return None
+
+
+def _parse_timestamp(value: str) -> datetime | None:
+    """Parse a timestamp string from the API into a timezone-aware datetime."""
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt
