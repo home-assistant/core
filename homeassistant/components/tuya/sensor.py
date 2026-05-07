@@ -1698,7 +1698,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             )
         if (
             description.device_class is None
-            # For enum type DPs, we can assume it's a ENUM sensor
+            # For enum type DPs, we can assume it's an ENUM sensor
             and isinstance(definition.sensor_wrapper, DPCodeEnumWrapper)
         ):
             self._attr_device_class = SensorDeviceClass.ENUM
