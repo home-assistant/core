@@ -35,21 +35,6 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_entity_state(
-    hass: HomeAssistant,
-    mock_paj_gps_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that latitude, longitude, and source type are correctly reported."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("device_tracker.device_1")
-    assert state is not None
-    assert state.attributes["latitude"] == 52.0
-    assert state.attributes["longitude"] == 13.0
-    assert state.attributes["source_type"] == "gps"
-
-
 async def test_entity_unavailable_on_coordinator_error(
     hass: HomeAssistant,
     mock_paj_gps_api: AsyncMock,
