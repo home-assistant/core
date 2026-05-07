@@ -30,7 +30,7 @@ type CastConfigEntry = ConfigEntry[CastRuntimeData]
 class CastRuntimeData:
     """Runtime data for the Cast integration."""
 
-    cast_platform: dict[str, CastProtocol] = field(default_factory=dict)
+    cast_platforms: dict[str, CastProtocol] = field(default_factory=dict)
     unknown_models: dict[str | None, tuple[str | None, str | None]] = field(
         default_factory=dict
     )
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool
             or not hasattr(platform, "async_play_media")
         ):
             raise HomeAssistantError(f"Invalid cast platform {platform}")
-        entry.runtime_data.cast_platform[integration_domain] = platform
+        entry.runtime_data.cast_platforms[integration_domain] = platform
 
     await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
