@@ -2221,6 +2221,9 @@ class EntityRegistry(BaseRegistry):
         now_time = time.time()
         for key, deleted_entity in list(self.deleted_entities.items()):
             if (orphaned_timestamp := deleted_entity.orphaned_timestamp) is None:
+                if deleted_entity.config_entry_id is None:
+                    self.deleted_entities.pop(key)
+                    self.async_schedule_save()
                 continue
 
             if orphaned_timestamp + ORPHANED_ENTITY_KEEP_SECONDS < now_time:
