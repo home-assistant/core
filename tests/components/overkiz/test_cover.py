@@ -89,6 +89,11 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+UP_DOWN_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16747291",
+    "cover.office_venetian_blind",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -918,3 +923,48 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_command.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("service", "command_name", "parameters"),
+    [
+        (SERVICE_OPEN_COVER, "open", [0]),
+        (SERVICE_CLOSE_COVER, "close", [0]),
+        (SERVICE_STOP_COVER, "stop", [0]),
+        (SERVICE_OPEN_COVER_TILT, "tiltPositive", [15, 1, 0]),
+        (SERVICE_CLOSE_COVER_TILT, "tiltNegative", [15, 1, 0]),
+        (SERVICE_STOP_COVER_TILT, "stop", [0]),
+    ],
+    ids=[
+        "open",
+        "close",
+        "stop",
+        "open-tilt",
+        "close-tilt",
+        "stop-tilt",
+    ],
+)
+async def test_up_down_venetian_blind_commands(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    service: str,
+    command_name: str,
+    parameters: list[Any],
+) -> None:
+    """Test UpDownVenetianBlind cover and tilt commands."""
+    await setup_overkiz_integration(fixture=UP_DOWN_VENETIAN_BLIND.fixture)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: UP_DOWN_VENETIAN_BLIND.entity_id},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=UP_DOWN_VENETIAN_BLIND.device_url,
+        command_name=command_name,
+        parameters=parameters,
+    )

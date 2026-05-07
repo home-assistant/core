@@ -323,6 +323,90 @@
       "type": 1,
       "oid": "ef870fe7-daf3-4f33-b91e-62b2a809ef4e",
       "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1613676700000,
+      "lastUpdateTime": 1613676700000,
+      "label": "Office Venetian Blind",
+      "deviceURL": "rts://1234-1234-6362/16747291",
+      "shortcut": false,
+      "controllableName": "rts:VenetianBlindRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "open",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "moveOf",
+            "nparams": 2
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          },
+          {
+            "commandName": "tiltNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "tiltPositive",
+            "nparams": 2
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownVenetianBlind",
+        "uiProfiles": ["OpenCloseBlind", "OpenClose"],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "rts:VenetianBlindRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "UpDownVenetianBlind",
+      "type": 1,
+      "oid": "3496a041-cafc-4d5d-ab3b-7947985812dc",
+      "uiClass": "VenetianBlind"
     }
   ],
   "zones": [],

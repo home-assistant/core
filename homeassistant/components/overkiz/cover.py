@@ -124,6 +124,20 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override to support very specific tilt commands (rts:VenetianBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
