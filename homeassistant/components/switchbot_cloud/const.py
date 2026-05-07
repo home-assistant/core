@@ -93,32 +93,32 @@ class SwitchbotCloudDeviceConfig:
     """Switchbot Cloud Device Config."""
 
     webhook: bool
-    entity_config: list[Platform]
+    entity_config: tuple[Platform, ...]
 
 
 DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Motion Sensor": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Contact Sensor": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Presence Sensor": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Hub 3": SwitchbotCloudDeviceConfig(
-        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Climate Panel": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+        False, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "WeatherStation": SwitchbotCloudDeviceConfig(
-        False, entity_config=[Platform.SENSOR]
+        False, entity_config=(Platform.SENSOR,)
     ),
-    "Meter": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "MeterPlus": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "WoIOSensor": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "Hub 2": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "MeterPro": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
-    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "Meter": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "MeterPlus": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "WoIOSensor": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "Hub 2": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "MeterPro": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
 }
