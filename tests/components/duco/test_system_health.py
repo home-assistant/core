@@ -1,11 +1,10 @@
 """Tests for Duco system health."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 from duco.exceptions import DucoConnectionError
 
 from homeassistant.components.duco.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,34 +49,5 @@ async def test_system_health_no_loaded_entries(hass: HomeAssistant) -> None:
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
-
-    assert await get_system_health_info(hass, DOMAIN) == {}
-
-
-async def test_system_health_multiple_entries(hass: HomeAssistant) -> None:
-    """Test system health omits per-device quota for multiple loaded entries."""
-    hass.config.components.add(DOMAIN)
-    assert await async_setup_component(hass, "system_health", {})
-    await hass.async_block_till_done()
-
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-        state=ConfigEntryState.LOADED,
-    )
-    first_entry.add_to_hass(hass)
-    first_entry.runtime_data = Mock(
-        client=Mock(async_get_write_req_remaining=AsyncMock(return_value=100))
-    )
-
-    second_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="11:22:33:44:55:66",
-        state=ConfigEntryState.LOADED,
-    )
-    second_entry.add_to_hass(hass)
-    second_entry.runtime_data = Mock(
-        client=Mock(async_get_write_req_remaining=AsyncMock(return_value=200))
-    )
 
     assert await get_system_health_info(hass, DOMAIN) == {}

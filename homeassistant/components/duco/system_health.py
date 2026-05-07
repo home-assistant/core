@@ -35,8 +35,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         DOMAIN
     )
 
-    # Quota is per-box; returning a value would be ambiguous with multiple loaded entries.
-    if len(config_entries) != 1:
+    if not config_entries:
         return {}
 
     config_entry = config_entries[0]
