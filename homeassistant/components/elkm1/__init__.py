@@ -76,6 +76,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
