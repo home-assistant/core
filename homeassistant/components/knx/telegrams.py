@@ -1,7 +1,6 @@
 """KNX Telegram handler."""
 
 import asyncio
-from collections import deque
 from collections.abc import Callable, Mapping
 import json
 import logging
@@ -10,7 +9,6 @@ import re
 from typing import Any, TypedDict
 
 from knx_telegram_store import StoredTelegram, TelegramStore
-from knx_telegram_store.backends.memory import MemoryStore
 from knx_telegram_store.backends.postgres import PostgresStore
 from knx_telegram_store.backends.sqlite import SqliteStore
 from xknx import XKNX
@@ -106,8 +104,8 @@ class Telegrams:
                 else hass.config.path(STORAGE_DIR, db_path)
             )
             self.store = SqliteStore(full_path)
-        else:  # Memory
-            self.store = MemoryStore()
+        else:  # Fallback to in-memory SQLite
+            self.store = SqliteStore(":memory:")
 
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
@@ -120,7 +118,6 @@ class Telegrams:
                 self._xknx_data_secure_group_key_issue_cb,
             )
         )
-        self.recent_telegrams: deque[TelegramDict] = deque(maxlen=200)
         self.last_ga_telegrams: dict[str, TelegramDict] = {}
         self._async_remove_listener: Callable[[], None] | None = None
         self._pending_tasks: set[asyncio.Task[Any]] = set()
@@ -145,7 +142,6 @@ class Telegrams:
                 info,
             )
             self._create_repair_issue(backend, info, "Timeout")
-            await self._fallback_to_memory()
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error initializing KNX telegram storage backend '%s' (%s): %s",
@@ -154,7 +150,6 @@ class Telegrams:
                 err,
             )
             self._create_repair_issue(backend, info, str(err))
-            await self._fallback_to_memory()
         else:
             ir.async_delete_issue(
                 self.hass, DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR
@@ -162,12 +157,6 @@ class Telegrams:
 
         # Migrate legacy JSON storage if it exists
         await self.migrate_telegrams()
-
-    async def _fallback_to_memory(self) -> None:
-        """Fallback to MemoryStore to allow integration to start."""
-        if not isinstance(self.store, MemoryStore):
-            self.store = MemoryStore()
-            await self.store.initialize()
 
     def _create_repair_issue(self, backend: str, info: str, error: str) -> None:
         """Create a repair issue for storage initialization failure."""
@@ -196,7 +185,6 @@ class Telegrams:
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
-        self.recent_telegrams.append(telegram_dict)
         if telegram_dict["payload"] is not None:
             # exclude GroupValueRead telegrams
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
@@ -217,7 +205,6 @@ class Telegrams:
     def _xknx_data_secure_group_key_issue_cb(self, telegram: Telegram) -> None:
         """Handle telegrams with undecodable data secure payload from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
-        self.recent_telegrams.append(telegram_dict)
 
         # Store in history store asynchronously
         if self.store is not None:
@@ -311,7 +298,10 @@ class Telegrams:
 
     async def migrate_telegrams(self) -> None:
         """Migrate telegrams from JSON storage to the current store."""
-        if isinstance(self.store, MemoryStore):
+        if (
+            isinstance(self.store, SqliteStore)
+            and self.store.engine.url.database == ":memory:"
+        ):
             return
 
         path = self.hass.config.path(STORAGE_DIR, "knx/telegrams_history.json")

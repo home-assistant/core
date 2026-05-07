@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
 from knx_telegram_store import TelegramQuery
+from knx_telegram_store.backends.postgres import PostgresStore
+from knx_telegram_store.backends.sqlite import SqliteStore
 import voluptuous as vol
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
@@ -202,7 +204,13 @@ def ws_get_base_data(
         "version": knx.xknx.version,
         "connected": knx.xknx.connection_manager.connected.is_set(),
         "current_address": str(knx.xknx.current_address),
-        "telegram_backend": knx.telegrams.store.__class__.__name__.replace("Store", ""),
+        "telegram_backend": (
+            "sqlite"
+            if isinstance(knx.telegrams.store, SqliteStore)
+            else "postgres"
+            if isinstance(knx.telegrams.store, PostgresStore)
+            else "unknown"
+        ),
         "telegram_retention": knx.telegrams.store.retention_days
         if hasattr(knx.telegrams.store, "retention_days")
         else None,
@@ -364,7 +372,7 @@ def ws_group_telegrams(
         vol.Optional("end_time"): vol.Datetime(),
         vol.Optional("delta_before_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional("delta_after_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional("limit"): vol.All(vol.Coerce(int), vol.Range(min=1, max=250_000)),
+        vol.Optional("limit"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100_000)),
         vol.Optional("offset"): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional("order_descending"): bool,
     }
@@ -395,7 +403,7 @@ async def ws_query_telegrams(
         end_time=msg.get("end_time"),
         delta_before_ms=msg.get("delta_before_ms", 0),
         delta_after_ms=msg.get("delta_after_ms", 0),
-        limit=msg.get("limit", 250_000),
+        limit=msg.get("limit", 100_000),
         offset=msg.get("offset", 0),
         order_descending=msg.get("order_descending", True),
     )

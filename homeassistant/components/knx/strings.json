@@ -1128,7 +1128,7 @@
       "title": "KNX Data Secure telegrams can't be decrypted"
     },
     "telegram_storage_error": {
-      "description": "The configured KNX telegram storage backend failed to initialize. Home Assistant has fallen back to memory-only storage. Telegram history will be lost on restart until the issue is resolved.\n\nCheck the persistent notifications or logs for more details.",
+      "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
       "title": "KNX telegram storage error"
     }
   },

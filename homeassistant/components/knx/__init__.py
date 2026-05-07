@@ -19,7 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_KNX_EXPOSE,
     CONF_KNX_KNXKEY_FILENAME,
-    CONF_KNX_TELEGRAM_DB_PATH,
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
@@ -182,9 +181,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
 
-    def remove_files(
-        storage_dir: Path, knxkeys_filename: str | None, db_path: str | None
-    ) -> None:
+    def remove_files(storage_dir: Path, knxkeys_filename: str | None) -> None:
         """Remove KNX files."""
         if knxkeys_filename is not None:
             with contextlib.suppress(FileNotFoundError):
@@ -198,21 +195,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / "knx/telegrams.db").unlink()
 
-        if db_path is not None:
-            full_db_path = storage_dir / db_path
-            if full_db_path.resolve().is_relative_to(storage_dir.resolve()):
-                with contextlib.suppress(FileNotFoundError):
-                    full_db_path.unlink()
-
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()
 
     storage_dir = Path(hass.config.path(STORAGE_DIR))
     knxkeys_filename = entry.data.get(CONF_KNX_KNXKEY_FILENAME)
-    db_path = entry.data.get(CONF_KNX_TELEGRAM_DB_PATH)
-    await hass.async_add_executor_job(
-        remove_files, storage_dir, knxkeys_filename, db_path
-    )
+    await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
 async def async_remove_config_entry_device(

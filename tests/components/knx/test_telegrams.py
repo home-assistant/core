@@ -40,8 +40,6 @@ async def test_store_telegram_history(
     # Wait for async store task
     await hass.async_block_till_done()
 
-    assert len(telegrams_module.recent_telegrams) == 2
-
     # Verify in Memory store
     result = await telegrams_module.store.query(TelegramQuery(order_descending=False))
     assert len(result.telegrams) == 2
