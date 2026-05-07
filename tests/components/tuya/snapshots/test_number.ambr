@@ -2301,7 +2301,7 @@
     'state': '0.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera-entry]
+# name: test_platform_setup_and_discovery[number.security_camera_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2320,7 +2320,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.security_camera',
+    'entity_id': 'number.security_camera_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2328,12 +2328,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Brightness',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Brightness',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2343,10 +2343,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera-state]
+# name: test_platform_setup_and_discovery[number.security_camera_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera',
+      'friendly_name': 'Security Camera Brightness',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2354,14 +2354,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.security_camera',
+    'entity_id': 'number.security_camera_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera_2-entry]
+# name: test_platform_setup_and_discovery[number.security_camera_contrast-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2380,7 +2380,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.security_camera_2',
+    'entity_id': 'number.security_camera_contrast',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2388,12 +2388,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Contrast',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Contrast',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2403,10 +2403,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera_2-state]
+# name: test_platform_setup_and_discovery[number.security_camera_contrast-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera',
+      'friendly_name': 'Security Camera Contrast',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2414,14 +2414,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.security_camera_2',
+    'entity_id': 'number.security_camera_contrast',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera_3-entry]
+# name: test_platform_setup_and_discovery[number.security_camera_sharpness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2440,7 +2440,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.security_camera_3',
+    'entity_id': 'number.security_camera_sharpness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2448,12 +2448,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Sharpness',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Sharpness',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2463,10 +2463,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.security_camera_3-state]
+# name: test_platform_setup_and_discovery[number.security_camera_sharpness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera',
+      'friendly_name': 'Security Camera Sharpness',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2474,7 +2474,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.security_camera_3',
+    'entity_id': 'number.security_camera_sharpness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
