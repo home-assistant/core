@@ -152,39 +152,3 @@ async def test_switch_unavailable_on_coordinator_error(
     # All switches should be unavailable
     states = hass.states.async_all("switch")
     assert all(s.state == STATE_UNAVAILABLE for s in states)
-
-
-async def test_switch_retains_state_on_switch_read_failure(
-    hass: HomeAssistant,
-    mock_qube_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test switches retain previous state when read_all_switches fails."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Record initial switch states
-    switch_states_before = {
-        s.entity_id: s.state for s in hass.states.async_all("switch")
-    }
-    assert len(switch_states_before) > 0
-    assert all(s != STATE_UNAVAILABLE for s in switch_states_before.values())
-
-    # Make only switch reads fail, sensor data succeeds
-    mock_qube_client.read_all_switches = AsyncMock(
-        side_effect=ConnectionError("Switch read failed")
-    )
-
-    freezer.tick(timedelta(seconds=31))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Sensors should still be available
-    sensor_states = hass.states.async_all("sensor")
-    assert all(s.state != STATE_UNAVAILABLE for s in sensor_states)
-
-    # Switches should retain their previous on/off states
-    for entity_id, previous_state in switch_states_before.items():
-        current = hass.states.get(entity_id)
-        assert current is not None
-        assert current.state == previous_state

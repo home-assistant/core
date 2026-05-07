@@ -39,6 +39,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
         """Fetch data from the device."""
         try:
             data = await self.client.get_all_data()
+            self.switches = await self.client.read_all_switches()
         except (ConnectionError, TimeoutError, OSError) as exc:
             raise UpdateFailed(
                 f"Error communicating with Qube heat pump: {exc}"
@@ -46,12 +47,5 @@ class QubeCoordinator(DataUpdateCoordinator[QubeState]):
 
         if data is None:
             raise UpdateFailed("No data received from Qube heat pump")
-
-        try:
-            self.switches = await self.client.read_all_switches()
-        except ConnectionError, TimeoutError, OSError:
-            _LOGGER.warning(
-                "Failed to read switch states from Qube heat pump", exc_info=True
-            )
 
         return data
