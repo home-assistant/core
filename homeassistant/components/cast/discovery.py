@@ -26,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def discover_chromecast(
-    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo
+    hass: HomeAssistant,
+    cast_info: pychromecast.models.CastInfo,
+    config_entry: CastConfigEntry,
 ) -> None:
     """Discover a Chromecast."""
 
@@ -38,7 +40,7 @@ def discover_chromecast(
         _LOGGER.error("Discovered chromecast without uuid %s", info)
         return
 
-    info = info.fill_out_missing_chromecast_info(hass)
+    info = info.fill_out_missing_chromecast_info(hass, config_entry)
     _LOGGER.debug("Discovered new or updated chromecast %s", info)
 
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
@@ -67,11 +69,11 @@ def setup_internal_discovery(
 
         def add_cast(self, uuid, _):
             """Handle zeroconf discovery of a new chromecast."""
-            discover_chromecast(hass, browser.devices[uuid])
+            discover_chromecast(hass, browser.devices[uuid], config_entry)
 
         def update_cast(self, uuid, _):
             """Handle zeroconf discovery of an updated chromecast."""
-            discover_chromecast(hass, browser.devices[uuid])
+            discover_chromecast(hass, browser.devices[uuid], config_entry)
 
         def remove_cast(self, uuid, service, cast_info):
             """Handle zeroconf discovery of a removed chromecast."""
