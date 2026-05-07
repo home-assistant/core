@@ -8885,7 +8885,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Tuya',
+    'manufacturer': 'Unspecified Tuya',
     'model': 'Security Camera',
     'model_id': 'knkaf1d0dytgyhix',
     'name': 'Security Camera',
