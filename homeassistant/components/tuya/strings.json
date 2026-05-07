@@ -919,7 +919,7 @@
     },
     "siren": {
       "siren": {
-        "name": "Siren"
+        "name": "[%key:component::siren::title%]"
       }
     },
     "switch": {
