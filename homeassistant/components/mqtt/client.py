@@ -136,8 +136,8 @@ async def async_publish(
     hass: HomeAssistant,
     topic: str,
     payload: PublishPayloadType,
-    qos: int = 0,
-    retain: bool = False,
+    qos: int | None = 0,
+    retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
     *,
     message_expiry_interval: int | None = None,
@@ -182,8 +182,8 @@ async def async_publish(
     await mqtt_data.client.async_publish(
         topic,
         outgoing_payload,
-        qos,
-        retain,
+        qos or 0,
+        retain or False,
         message_expiry_interval=message_expiry_interval,
     )
 
