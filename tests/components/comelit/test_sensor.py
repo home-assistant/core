@@ -194,51 +194,53 @@ async def test_vedo_sensor_dynamic(
 
 @pytest.mark.parametrize(
     (
-        "mock_fixture",
-        "config_entry_fixture",
-        "device_type",
+        "device_identifier_type",
+        "old_unique_id_suffix",
         "expected_unique_id_suffix",
         "old_unique_id_removed",
     ),
     [
         (
-            "mock_vedo",
-            "mock_vedo_config_entry",
             "zone",
+            "0",
             "human_status-0",
             True,
         ),
         (
-            "mock_serial_bridge",
-            "mock_serial_bridge_config_entry",
             "other",
             "0",
+            "0",
+            False,
+        ),
+        (
+            "zone",
+            "human_status-0",
+            "human_status-0",
             False,
         ),
     ],
 )
 async def test_migrate_sensor_unique_id(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
-    mock_fixture: str,
-    config_entry_fixture: str,
-    device_type: str,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+    device_identifier_type: str,
+    old_unique_id_suffix: str,
     expected_unique_id_suffix: str,
     old_unique_id_removed: bool,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor unique ID migration."""
-    request.getfixturevalue(mock_fixture)
-    config_entry = request.getfixturevalue(config_entry_fixture)
+    config_entry = mock_vedo_config_entry
     config_entry.add_to_hass(hass)
 
-    old_unique_id = f"{config_entry.entry_id}-0"
+    old_unique_id = f"{config_entry.entry_id}-{old_unique_id_suffix}"
     new_unique_id = f"{config_entry.entry_id}-{expected_unique_id_suffix}"
 
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-{device_type}-0")},
+        identifiers={(DOMAIN, f"{config_entry.entry_id}-{device_identifier_type}-0")},
     )
 
     entity_entry = entity_registry.async_get_or_create(
@@ -259,3 +261,37 @@ async def test_migrate_sensor_unique_id(
     )
     assert (old_entity_id is None) is old_unique_id_removed
     assert (old_entity_id == entity_entry.entity_id) is not old_unique_id_removed
+
+
+async def test_migrate_sensor_unique_id_missing_device(
+    hass: HomeAssistant,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor unique ID migration when linked device no longer exists."""
+    config_entry = mock_vedo_config_entry
+    config_entry.add_to_hass(hass)
+
+    old_unique_id = f"{config_entry.entry_id}-0"
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}-zone-0")},
+    )
+
+    entity_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        old_unique_id,
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    with patch.object(device_registry, "async_get", return_value=None):
+        await setup_integration(hass, config_entry)
+
+    migrated_entry = entity_registry.async_get(entity_entry.entity_id)
+    assert migrated_entry
+    assert migrated_entry.unique_id == old_unique_id

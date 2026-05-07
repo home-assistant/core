@@ -116,8 +116,9 @@ async def _async_migrate_zone_sensor_unique_ids(
         if entry.domain != Platform.SENSOR or entry.device_id is None:
             return None
 
-        zone_index = entry.unique_id.removeprefix(f"{config_entry.entry_id}-")
-        if zone_index == entry.unique_id or not zone_index.isdigit():
+        if not (
+            zone_index := entry.unique_id.removeprefix(f"{config_entry.entry_id}-")
+        ).isdigit():
             return None
 
         if not (device_entry := device_registry.async_get(entry.device_id)):
