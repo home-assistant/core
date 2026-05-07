@@ -29,9 +29,9 @@ class MyPVCoordinator(DataUpdateCoordinator):
     _device: MyPVDevice
     _device_info: DeviceInfo
 
-    _data_configurations: ItemsView[str, Any] | None = None
-    _setup_configurations: ItemsView[str, Any] | None = None
-    _command_configurations: ItemsView[str, Any] | None = None
+    _data_configurations: ItemsView[str, dict[str, Any]] | None = None
+    _setup_configurations: ItemsView[str, dict[str, Any]] | None = None
+    _command_configurations: ItemsView[str, dict[str, Any]] | None = None
 
     def __init__(
         self,
@@ -101,13 +101,13 @@ class MyPVCoordinator(DataUpdateCoordinator):
         return self._device.connected
 
     @property
-    def setup_configurations(self) -> ItemsView[str, Any]:
+    def setup_configurations(self) -> ItemsView[str, dict[str, Any]] | None:
         """Get the configurations for the available setup parameters."""
-        if not self._setup_configurations:
+        if self._setup_configurations is not None:
             self._setup_configurations = self._device.get_setup_configurations().items()
         return self._setup_configurations
 
-    def get_setup_configuration(self, key: str) -> dict | None:
+    def get_setup_configuration(self, key: str) -> dict[str, Any] | None:
         """Get setup configuration for given key."""
         return self._device.get_setup_configuration(key)
 
@@ -116,13 +116,13 @@ class MyPVCoordinator(DataUpdateCoordinator):
         return self._device.supports_data(key)
 
     @property
-    def data_configurations(self) -> ItemsView[str, Any]:
+    def data_configurations(self) -> ItemsView[str, dict[str, Any]] | None:
         """Get the configurations for the available data."""
-        if not self._data_configurations:
+        if self._data_configurations is not None:
             self._data_configurations = self._device.get_data_configurations().items()
         return self._data_configurations
 
-    def get_data_configuration(self, key: str) -> dict | None:
+    def get_data_configuration(self, key: str) -> dict[str, Any] | None:
         """Get data configuration for given key."""
         return self._device.get_data_configuration(key)
 
@@ -131,9 +131,9 @@ class MyPVCoordinator(DataUpdateCoordinator):
         return self._device.supports_command(command)
 
     @property
-    def command_configurations(self) -> ItemsView[str, Any]:
+    def command_configurations(self) -> ItemsView[str, dict[str, Any]] | None:
         """Get the configurations for the available commands."""
-        if not self._command_configurations:
+        if self._command_configurations is not None:
             self._command_configurations = (
                 self._device.get_command_configurations().items()
             )
