@@ -65,12 +65,39 @@ async def test_water_heater_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("water_heater.turned_off", {}, True, True),
         ("water_heater.turned_on", {}, True, True),
+        (
+            "water_heater.operation_mode_changed",
+            {"operation_mode": [STATE_ECO]},
+            True,
+            True,
+        ),
+        (
+            "water_heater.target_temperature_changed",
+            _CHANGED_THRESHOLD,
+            False,
+            False,
+        ),
+        (
+            "water_heater.target_temperature_crossed_threshold",
+            _CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
     ],
 )
 async def test_water_heater_trigger_options_validation(
@@ -164,12 +191,14 @@ async def test_water_heater_state_trigger_behavior_any(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -270,6 +299,7 @@ async def test_water_heater_state_trigger_behavior_first(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -370,6 +400,7 @@ async def test_water_heater_state_trigger_behavior_last(
             STATE_ECO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

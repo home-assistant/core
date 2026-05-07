@@ -57,6 +57,9 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
+type MillConfigEntry = ConfigEntry[MillDataUpdateCoordinator]
+
+
 class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Mill historic data."""
 
