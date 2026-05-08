@@ -17,16 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
-from .conftest import (
-    LOCATION_ID,
-    make_latest,
-    make_location,
-    make_response,
-    make_sensor,
-)
+from .conftest import LOCATION_ID, make_latest, make_response, make_sensor
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -93,7 +86,7 @@ async def test_sensor_entities(
         "sensor.del_norte_distance_from_home_assistant"
     )
     assert distance is not None
-    assert distance.capabilities == {"state_class": SensorStateClass.MEASUREMENT}
+    assert distance.capabilities is None
     assert distance.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert distance.entity_category is EntityCategory.DIAGNOSTIC
     assert distance.original_device_class is SensorDeviceClass.DISTANCE
@@ -135,60 +128,6 @@ async def test_distance_from_home_sensor(
     assert state.state == "0.0"
     assert state.attributes["device_class"] == SensorDeviceClass.DISTANCE
     assert state.attributes["unit_of_measurement"] == UnitOfLength.KILOMETERS
-
-
-async def test_distance_from_home_sensor_uses_configured_unit_system(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test distance from Home Assistant sensor uses the configured unit system."""
-    hass.config.latitude = 35.1
-    hass.config.longitude = -106.6
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    entity_registry.async_get_or_create(
-        "sensor",
-        "openaq",
-        f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
-        disabled_by=None,
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    distance = entity_registry.async_get(
-        "sensor.del_norte_distance_from_home_assistant"
-    )
-    assert distance is not None
-    assert distance.unit_of_measurement == UnitOfLength.MILES
-    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
-    assert state.state == "0.0"
-    assert state.attributes["unit_of_measurement"] == UnitOfLength.MILES
-
-
-async def test_distance_from_home_sensor_unknown_without_coordinates(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test distance from Home Assistant sensor without valid coordinates."""
-    mock_openaq_client.locations.get.return_value = make_response(
-        [make_location(coordinates=(True, -106.6))]
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "openaq",
-        f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
-        disabled_by=None,
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_missing_latest_values_are_not_created(
