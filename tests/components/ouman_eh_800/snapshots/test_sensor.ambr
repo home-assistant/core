@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_curve_supply_water_temperature-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Curve supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_fine_adjustment_effect-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,23 +99,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_fine_adjustment_effect-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H1 Fine adjustment effect',
+      'friendly_name': 'H1 Patterilämmitys Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_supply_water_temperature-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,23 +157,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_supply_water_temperature-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,23 +215,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature setpoint',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_valve_position-entry]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,15 +273,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_valve_position-state]
+# name: test_entities[sensor-l1_constant_temp_relay_summer_stop][sensor.h1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'H1 Valve position',
+      'friendly_name': 'H1 Patterilämmitys Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -346,7 +346,7 @@
     'state': '0.4',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -388,23 +388,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_curve_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Curve supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_fine_adjustment_effect-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -420,7 +420,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -446,23 +446,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_fine_adjustment_effect-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H1 Fine adjustment effect',
+      'friendly_name': 'H1 Patterilämmitys Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -478,7 +478,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -504,23 +504,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -536,7 +536,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -562,23 +562,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature setpoint',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_valve_position-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -594,7 +594,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -620,22 +620,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h1_valve_position-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'H1 Valve position',
+      'friendly_name': 'H1 Patterilämmitys Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -651,7 +651,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_curve_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -677,23 +677,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_curve_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Curve supply water temperature',
+      'friendly_name': 'H2 Lattialämmitys Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_curve_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_delayed_outdoor_temperature_effect-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_delayed_outdoor_temperature_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -709,7 +709,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_outdoor_temperature_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -735,23 +735,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_delayed_outdoor_temperature_effect-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H2 Delayed outdoor temperature effect',
+      'friendly_name': 'H2 Lattialämmitys Delayed outdoor temperature effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_outdoor_temperature_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_supply_water_temperature-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -767,7 +767,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h2_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -793,23 +793,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_supply_water_temperature-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Supply water temperature',
+      'friendly_name': 'H2 Lattialämmitys Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -825,7 +825,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -851,23 +851,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Supply water temperature setpoint',
+      'friendly_name': 'H2 Lattialämmitys Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_valve_position-entry]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -883,7 +883,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h2_valve_position',
+    'entity_id': 'sensor.h2_lattialammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -909,15 +909,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-no_room_sensors][sensor.h2_valve_position-state]
+# name: test_entities[sensor-no_room_sensors][sensor.h2_lattialammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'H2 Valve position',
+      'friendly_name': 'H2 Lattialämmitys Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_valve_position',
+    'entity_id': 'sensor.h2_lattialammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1214,7 +1214,7 @@
     'state': '0.4',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1230,7 +1230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1256,23 +1256,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_curve_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Curve supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_curve_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_delayed_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_delayed_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1288,7 +1288,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_delayed_room_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_delayed_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1314,23 +1314,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_delayed_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_delayed_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Delayed room temperature',
+      'friendly_name': 'H1 Patterilämmitys Delayed room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_delayed_room_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_delayed_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.4',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_fine_adjustment_effect-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_fine_adjustment_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1346,7 +1346,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1372,23 +1372,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_fine_adjustment_effect-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_fine_adjustment_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H1 Fine adjustment effect',
+      'friendly_name': 'H1 Patterilämmitys Fine adjustment effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_fine_adjustment_effect',
+    'entity_id': 'sensor.h1_patterilammitys_fine_adjustment_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_sensor_potentiometer-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_sensor_potentiometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1404,7 +1404,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_room_sensor_potentiometer',
+    'entity_id': 'sensor.h1_patterilammitys_room_sensor_potentiometer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1430,23 +1430,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_sensor_potentiometer-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_sensor_potentiometer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H1 Room sensor potentiometer',
+      'friendly_name': 'H1 Patterilämmitys Room sensor potentiometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_room_sensor_potentiometer',
+    'entity_id': 'sensor.h1_patterilammitys_room_sensor_potentiometer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1462,7 +1462,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_room_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1488,23 +1488,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Room temperature',
+      'friendly_name': 'H1 Patterilämmitys Room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_room_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.5',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1520,7 +1520,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_room_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1546,23 +1546,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_room_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Room temperature setpoint',
+      'friendly_name': 'H1 Patterilämmitys Room temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_room_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1578,7 +1578,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1604,23 +1604,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '39.1',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1636,7 +1636,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1662,23 +1662,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H1 Supply water temperature setpoint',
+      'friendly_name': 'H1 Patterilämmitys Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h1_patterilammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.7',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_valve_position-entry]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1694,7 +1694,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1720,22 +1720,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h1_valve_position-state]
+# name: test_entities[sensor-room_sensors][sensor.h1_patterilammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'H1 Valve position',
+      'friendly_name': 'H1 Patterilämmitys Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h1_valve_position',
+    'entity_id': 'sensor.h1_patterilammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_curve_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_curve_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1751,7 +1751,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_curve_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_curve_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1777,23 +1777,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_curve_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_curve_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Curve supply water temperature',
+      'friendly_name': 'H2 Lattialämmitys Curve supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_curve_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_curve_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_delayed_outdoor_temperature_effect-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_delayed_outdoor_temperature_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1809,7 +1809,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_outdoor_temperature_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1835,23 +1835,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_delayed_outdoor_temperature_effect-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_delayed_outdoor_temperature_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature_delta',
-      'friendly_name': 'H2 Delayed outdoor temperature effect',
+      'friendly_name': 'H2 Lattialämmitys Delayed outdoor temperature effect',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_delayed_outdoor_temperature_effect',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_outdoor_temperature_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_delayed_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_delayed_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1867,7 +1867,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_delayed_room_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1893,23 +1893,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_delayed_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_delayed_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Delayed room temperature',
+      'friendly_name': 'H2 Lattialämmitys Delayed room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_delayed_room_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_delayed_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.9',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_room_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1925,7 +1925,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h2_room_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_room_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1951,23 +1951,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_room_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Room temperature',
+      'friendly_name': 'H2 Lattialämmitys Room temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_room_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_room_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_room_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1983,7 +1983,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_room_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_room_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2009,23 +2009,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_room_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_room_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Room temperature setpoint',
+      'friendly_name': 'H2 Lattialämmitys Room temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_room_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_room_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_supply_water_temperature-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_supply_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2041,7 +2041,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h2_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2067,23 +2067,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_supply_water_temperature-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_supply_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Supply water temperature',
+      'friendly_name': 'H2 Lattialämmitys Supply water temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_supply_water_temperature',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_supply_water_temperature_setpoint-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_supply_water_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2099,7 +2099,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.h2_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2125,23 +2125,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_supply_water_temperature_setpoint-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_supply_water_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'H2 Supply water temperature setpoint',
+      'friendly_name': 'H2 Lattialämmitys Supply water temperature setpoint',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_supply_water_temperature_setpoint',
+    'entity_id': 'sensor.h2_lattialammitys_supply_water_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_valve_position-entry]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2157,7 +2157,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.h2_valve_position',
+    'entity_id': 'sensor.h2_lattialammitys_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2183,15 +2183,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor-room_sensors][sensor.h2_valve_position-state]
+# name: test_entities[sensor-room_sensors][sensor.h2_lattialammitys_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'H2 Valve position',
+      'friendly_name': 'H2 Lattialämmitys Valve position',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.h2_valve_position',
+    'entity_id': 'sensor.h2_lattialammitys_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

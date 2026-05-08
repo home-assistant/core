@@ -4,6 +4,8 @@ from datetime import timedelta
 import logging
 
 from ouman_eh_800_api import (
+    L1BaseEndpoints,
+    L2BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
     OumanEh800Client,
@@ -92,3 +94,19 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             return await self.client.get_values(self._registry_set)
         except OumanClientCommunicationError as err:
             raise UpdateFailed("Error communicating with API") from err
+
+    def sync_circuit_device_names(self) -> None:
+        """Set the device-reported circuit names for the L1/L2 sub-device names.
+
+        Should be called after the data update so that platforms register
+        L1/L2 devices with the resolved names.
+        """
+        for device, endpoint, translation_key in (
+            (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "l1_with_circuit_name"),
+            (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "l2_with_circuit_name"),
+        ):
+            if circuit_name := self.data.get(endpoint):
+                assert isinstance(circuit_name, str)
+                device_info = self.device_info[device]
+                device_info["translation_key"] = translation_key
+                device_info["translation_placeholders"] = {"circuit_name": circuit_name}

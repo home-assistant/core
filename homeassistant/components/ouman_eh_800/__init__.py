@@ -15,6 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -
     coordinator = OumanEh800Coordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
+    coordinator.sync_circuit_device_names()
 
     entry.runtime_data = coordinator
 
