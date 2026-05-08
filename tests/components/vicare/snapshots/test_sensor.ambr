@@ -1218,7 +1218,7 @@
     'state': '46',
   })
 # ---
-# name: test_all_entities[sensor.model11_active_mode-entry]
+# name: test_all_entities[sensor.model11_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1238,7 +1238,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model11_active_mode',
+    'entity_id': 'sensor.model11_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1246,12 +1246,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Active mode',
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Active mode',
+    'original_name': 'Mode',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1261,11 +1261,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model11_active_mode-state]
+# name: test_all_entities[sensor.model11_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'model11 Active mode',
+      'friendly_name': 'model11 Mode',
       'options': list([
         'cooling',
         'heating',
@@ -1273,7 +1273,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model11_active_mode',
+    'entity_id': 'sensor.model11_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
