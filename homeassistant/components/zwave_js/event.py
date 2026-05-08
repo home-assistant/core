@@ -164,8 +164,6 @@ class ZWaveBatteryLowEventEntity(EventEntity):
         ):
             return
         urgency = notification.urgency
-        if urgency is BatteryReplacementStatus.NO:
-            return
         self._trigger_event(urgency.name.lower(), {ATTR_URGENCY: urgency.value})
         self.async_write_ha_state()
 

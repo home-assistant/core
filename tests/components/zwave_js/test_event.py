@@ -277,27 +277,6 @@ async def test_battery_low_event(
     assert state.attributes[ATTR_URGENCY] == 2
 
 
-async def test_battery_low_event_no_urgency_ignored(
-    hass: HomeAssistant,
-    client,
-    ring_keypad: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test that urgency=NO does not trigger the battery low event entity."""
-    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-    ring_keypad.receive_event(
-        _battery_notification_event(ring_keypad.node_id, urgency=0)
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-
 async def test_battery_low_event_other_notifications_ignored(
     hass: HomeAssistant,
     client,
