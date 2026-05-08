@@ -54,9 +54,6 @@
       "heatbed_temperature": {
         "name": "Heatbed temperature"
       },
-      "location": {
-        "name": "Location"
-      },
       "material": {
         "name": "Material"
       },
