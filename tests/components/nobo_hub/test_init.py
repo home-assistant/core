@@ -148,7 +148,7 @@ async def test_migrate_options(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 4
+    assert entry.minor_version == 3
     assert entry.options == expected_options
 
 
@@ -173,41 +173,12 @@ async def test_migrate_data_drops_auto_discovered(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 4
+    assert entry.minor_version == 3
     assert entry.data == {
         CONF_SERIAL: SERIAL,
         CONF_IP_ADDRESS: STORED_IP,
-        CONF_MAC: None,
     }
     assert entry.options == {}
-
-
-async def test_migrate_data_adds_mac_field(
-    hass: HomeAssistant,
-    mock_nobo_class: MagicMock,
-) -> None:
-    """Migrating from minor_version 3 adds the MAC field as None."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="My Eco Hub",
-        unique_id=SERIAL,
-        data={
-            CONF_SERIAL: SERIAL,
-            CONF_IP_ADDRESS: STORED_IP,
-        },
-        version=1,
-        minor_version=3,
-    )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.minor_version == 4
-    assert entry.data == {
-        CONF_SERIAL: SERIAL,
-        CONF_IP_ADDRESS: STORED_IP,
-        CONF_MAC: None,
-    }
 
 
 async def test_setup_registers_hub_device(
@@ -249,7 +220,7 @@ async def test_setup_registers_hub_device_with_mac(
             CONF_MAC: "7C8306011192",
         },
         version=1,
-        minor_version=4,
+        minor_version=3,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
