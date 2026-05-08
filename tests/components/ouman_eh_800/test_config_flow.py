@@ -28,11 +28,31 @@ USER_INPUT = {
 
 
 @pytest.mark.usefixtures("mock_ouman_client")
+@pytest.mark.parametrize(
+    ("submitted_url", "expected_url"),
+    [
+        pytest.param(TEST_URL, TEST_URL, id="already_normalized"),
+        pytest.param(f"{TEST_URL}/eh800.html", TEST_URL, id="html_path"),
+        pytest.param(f"{TEST_URL}:80/eh800.html/", TEST_URL, id="port_80_and_path"),
+        pytest.param(
+            f"{TEST_URL}:8080/eh800.html",
+            f"{TEST_URL}:8080",
+            id="non_default_port",
+        ),
+        pytest.param(
+            "https://proxied.device.com/eh800.html/",
+            "https://proxied.device.com",
+            id="https_url",
+        ),
+    ],
+)
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    submitted_url: str,
+    expected_url: str,
 ) -> None:
-    """Test successful user config flow."""
+    """Test the user flow accepts and normalizes various URL forms."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -41,34 +61,18 @@ async def test_user_flow_success(
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Ouman EH-800"
-    assert result["data"] == USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_ouman_client")
-async def test_user_flow_normalizes_url(hass: HomeAssistant) -> None:
-    """Test that URL is normalized (trailing slashes and eh800.html removed)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: f"{TEST_URL}/eh800.html",
+            CONF_URL: submitted_url,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_URL] == TEST_URL
+    assert result["title"] == "Ouman EH-800"
+    assert result["data"] == {**USER_INPUT, CONF_URL: expected_url}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
