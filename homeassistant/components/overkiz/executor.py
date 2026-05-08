@@ -22,6 +22,8 @@ COMMANDS_WITHOUT_DELAY = [
     OverkizCommand.ON,
     OverkizCommand.ON_WITH_TIMER,
     OverkizCommand.TEST,
+    OverkizCommand.TILT_POSITIVE,
+    OverkizCommand.TILT_NEGATIVE,
 ]
 
 
