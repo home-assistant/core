@@ -323,6 +323,63 @@
       "type": 1,
       "oid": "ef870fe7-daf3-4f33-b91e-62b2a809ef4e",
       "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1613676700000,
+      "lastUpdateTime": 1613676700000,
+      "label": "Jaloezie",
+      "deviceURL": "rts://1234-1234-6362/16730044",
+      "shortcut": false,
+      "controllableName": "rts:TiltOnlyVenetianBlindRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltPositive",
+            "nparams": 2
+          },
+          {
+            "commandName": "tiltNegative",
+            "nparams": 2
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "attributes": [],
+        "dataProperties": [],
+        "widgetName": "TiltOnlyVenetianBlind",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "rts:TiltOnlyVenetianBlindRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "TiltOnlyVenetianBlind",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "uiClass": "VenetianBlind"
     }
   ],
   "zones": [],
