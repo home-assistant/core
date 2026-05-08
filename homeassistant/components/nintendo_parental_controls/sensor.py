@@ -107,9 +107,9 @@ async def async_setup_entry(
     for device in entry.runtime_data.api.devices.values():
         entities.extend(
             NintendoParentalControlsPlayerSensorEntity(
-                entry.runtime_data, device, player, sensor
+                entry.runtime_data, device, player_id, sensor
             )
-            for player in device.players
+            for player_id in device.players.keys()
             for sensor in PLAYER_SENSOR_DESCRIPTIONS
         )
     async_add_entities(entities)
