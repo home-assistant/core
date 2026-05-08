@@ -15,28 +15,21 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, NAME
 from .coordinator import CCLConfigEntry, CCLCoordinator
+from .devices import devices
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-devices: dict[str, CCLDevice] = {}
 
-
-async def register_webhook(hass: HomeAssistant, webhook_id: str) -> str:
+async def register_webhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Register webhook for the device."""
 
     async def handle_webhook(
         hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> Any:
         """Handle incoming requests from CCL devices."""
-        return CCLServer.handler(request, devices)
-
-    webhook_url = webhook.async_generate_url(
-        hass,
-        webhook_id,
-        allow_ip=True,
-    )
+        return await CCLServer.handler(request, devices)
 
     webhook.async_register(
         hass,
@@ -47,30 +40,27 @@ async def register_webhook(hass: HomeAssistant, webhook_id: str) -> str:
         allowed_methods=[METH_POST],
     )
 
-    return webhook_url
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
     # Create the device and register a webhook after restart
-    if entry.data[CONF_WEBHOOK_ID] not in devices:
-        device = devices[entry.data[CONF_WEBHOOK_ID]] = CCLDevice(
-            entry.data[CONF_WEBHOOK_ID]
-        )
+    if webhook_id not in devices:
+        device = devices[webhook_id] = CCLDevice(webhook_id)
 
         coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
         devices[device.passkey] = device
 
         try:
-            webhook_url = await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
-            _LOGGER.debug("Webhook registered at hass: %s", webhook_url)
+            await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
         except (ValueError, NoURLAvailableError) as err:
             _LOGGER.error("Failed to register webhook: %s", err)
             raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
+        _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
 
     else:
-        device = devices[entry.data[CONF_WEBHOOK_ID]]
+        device = devices[webhook_id]
 
         coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 

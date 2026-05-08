@@ -29,13 +29,15 @@ async def test_create_entry(
     await async_setup_component(hass, "http", {})
     await async_setup_component(hass, "webhook", {})
 
-    with patch("secrets.token_hex", return_value=WEBHOOK_ID):
+    with patch(
+        "homeassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
+    ):
+        # Initial step should return SHOW_PROGRESS while waiting for device update
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        await hass.async_block_till_done()
-        assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-        assert result["step_id"] == "finish"
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "user"
 
         # Simulate successful webhook request
         client = await hass_client_no_auth()
@@ -45,7 +47,7 @@ async def test_create_entry(
         def handler_side_effect(request, devices_dict):
             # Simulate the handler setting last_update_time
             device = devices_dict[WEBHOOK_ID]
-            device.last_update_time = 12345
+            device.last_update_time = 123
             return web.Response(status=200)
 
         with patch("aioccl.CCLServer.handler", side_effect=handler_side_effect):
@@ -53,13 +55,12 @@ async def test_create_entry(
 
         assert resp.status == 200
 
-        # Wait for the task to complete
+        # Wait for the background task to complete after webhook is posted
         await hass.async_block_till_done()
 
-        # Configure again to complete the flow
+        # After device updates, configure to complete the flow
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
+        assert len(mock_setup_entry.mock_calls) == 1

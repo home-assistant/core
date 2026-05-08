@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aioccl
+from aioccl.exception import CCLDataUpdateException
 import pytest
 
 from homeassistant.components.ccl.const import DOMAIN
@@ -59,7 +59,7 @@ def mock_ccl() -> Generator[MagicMock]:
         device_mock.mac_address = "48:31:B7:06:D5:59"
         device_mock.model = "HA100"
         device_mock.last_update_time = None
-        device_mock.get_sensors.side_effect = aioccl.CCLDataUpdateException(
+        device_mock.get_sensors.side_effect = CCLDataUpdateException(
             "Device is offline or not ready"
         )
 
