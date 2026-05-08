@@ -1,7 +1,5 @@
 """Config flow for Amcrest integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -20,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    AmcrestChecker,
     CONF_CONTROL_LIGHT,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RESOLUTION,
@@ -29,6 +26,7 @@ from . import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_RESOLUTION,
+    AmcrestChecker,
 )
 from .camera import STREAM_SOURCE_LIST
 from .const import DOMAIN
