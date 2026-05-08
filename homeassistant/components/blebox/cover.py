@@ -1,5 +1,6 @@
 """BleBox cover entity."""
 
+from datetime import timedelta
 from typing import Any
 
 import blebox_uniapi.cover
@@ -18,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "gate": CoverDeviceClass.GATE,
