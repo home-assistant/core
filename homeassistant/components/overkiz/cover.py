@@ -391,7 +391,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """Return if the cover is closed."""
         if is_closed_state := self.entity_description.is_closed_state:
             if state := self.device.states.get(is_closed_state):
-                if state.value == "unknown":  # TODO wait for pyOverkiz enum update
+                if state.value == OverkizCommandParam.UNKNOWN:
                     return None
                 return state.value == OverkizCommandParam.CLOSED
 
