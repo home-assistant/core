@@ -68,7 +68,20 @@ async def test_user_flow_error(
     )
 
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
+
+    mock_everhome_client.async_update.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: IP_ADDRESS},
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EcoTracker " + DEVICE_ID
+    assert result["data"] == {CONF_HOST: IP_ADDRESS}
+    assert result["result"].unique_id == DEVICE_ID
 
 
 async def test_zeroconf_flow(
