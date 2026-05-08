@@ -242,7 +242,7 @@ async def test_cover_service_actions(
     parameters: list[Any] | None,
     expected_state: CoverState | str,
 ) -> None:
-    """Test open, close, and stop cover services."""
+    """Test open, close, and stop cover and tilt services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
