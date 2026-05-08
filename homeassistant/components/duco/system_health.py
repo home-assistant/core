@@ -38,8 +38,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     if not config_entries:
         return {}
 
-    config_entry = config_entries[0]
-
     return {
-        "write_requests_remaining": _async_get_write_requests_remaining(config_entry)
+        "write_requests_remaining": _async_get_write_requests_remaining(
+            config_entries[0]
+        )
     }
