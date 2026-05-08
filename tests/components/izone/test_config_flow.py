@@ -212,7 +212,7 @@ async def test_manual_ip_already_configured(hass: HomeAssistant) -> None:
 async def test_manual_ip_updates_existing_discovery_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Test that entering a host updates an existing discovery entry."""
+    """Test that entering a host updates an existing discovery entry and reloads it."""
     entry = MockConfigEntry(
         domain=IZONE,
         title="iZone",
@@ -220,9 +220,23 @@ async def test_manual_ip_updates_existing_discovery_entry(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.izone.config_flow.async_get_device_uid",
-        return_value="000013170",
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_get_device_uid",
+            return_value="000013170",
+        ),
+        patch(
+            "homeassistant.components.izone.async_add_controller_by_ip",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
@@ -233,11 +247,13 @@ async def test_manual_ip_updates_existing_discovery_entry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "192.168.2.100"}
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reconfigure_successful"
-        assert entry.data[CONF_HOST] == "192.168.2.100"
-        assert entry.unique_id == "000013170"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "192.168.2.100"
+    assert entry.unique_id == "000013170"
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_single_instance_allowed_when_entry_exists(

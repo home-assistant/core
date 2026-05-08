@@ -87,19 +87,23 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                     errors[CONF_HOST] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(device_uid)
-                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                    # Reload so the new host is applied immediately
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host}, reload_on_update=True
+                    )
 
                     # Only one entry is allowed — if a discovery entry
                     # already exists (no host), update it with the host
                     existing = self._async_current_entries()
                     if existing:
                         if len(existing) == 1 and not existing[0].data.get(CONF_HOST):
-                            self.hass.config_entries.async_update_entry(
+                            # Reload so static-IP registration happens right away
+                            return self.async_update_reload_and_abort(
                                 existing[0],
-                                data={**existing[0].data, CONF_HOST: host},
                                 unique_id=device_uid,
+                                data_updates={CONF_HOST: host},
+                                reason="reconfigure_successful",
                             )
-                            return self.async_abort(reason="reconfigure_successful")
                         return self.async_abort(reason="single_instance_allowed")
 
                     return self.async_create_entry(
