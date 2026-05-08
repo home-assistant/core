@@ -9,7 +9,7 @@ rules:
   config-flow-test-coverage:
     status: done
     comment: >
-      Confirm every config flow test terminates in CREATE_ENTRY or ABORT.
+      Tests driven to terminal CREATE_ENTRY or ABORT in PR #170141.
   config-flow: done
   dependency-transparency: done
   docs-actions:
