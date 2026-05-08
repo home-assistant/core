@@ -167,7 +167,13 @@ async def test_cover_entities_snapshot(
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
-        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            DYNAMIC_GARAGE_DOOR_OGP,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             TILT_ONLY_VENETIAN_BLIND,
