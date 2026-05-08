@@ -99,6 +99,21 @@ TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
     "rts://1234-1234-6362/16730044",
     "cover.jaloezie",
 )
+DYNAMIC_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730050",
+    "cover.garage_door",
+)
+DYNAMIC_GARAGE_DOOR_OGP = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/6632544",
+    "cover.ogp_garage_door",
+)
+PARTIAL_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/7433515",
+    "cover.partial_garage_door",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -144,10 +159,16 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER,
@@ -158,6 +179,9 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
         (
             TILT_ONLY_VENETIAN_BLIND,
@@ -185,14 +209,23 @@ async def test_cover_entities_snapshot(
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-dynamic-garage-door",
+        "open-dynamic-garage-door-ogp",
+        "open-partial-garage-door",
         "open-tilt-only-venetian-blind",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-dynamic-garage-door",
+        "close-dynamic-garage-door-ogp",
+        "close-partial-garage-door",
         "close-tilt-only-venetian-blind",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-dynamic-garage-door",
+        "stop-dynamic-garage-door-ogp",
+        "stop-partial-garage-door",
         "stop-tilt-only-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
         "close-tilt-tilt-only-venetian-blind",

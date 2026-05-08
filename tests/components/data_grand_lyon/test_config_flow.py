@@ -92,6 +92,85 @@ async def test_form_error_recovers(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth flow updates credentials on success."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ClientConnectionError(), "cannot_connect"),
+        (ClientResponseError(None, None, status=401), "invalid_auth"),
+        (ClientResponseError(None, None, status=500), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+    ids=["connection-error", "auth-401", "http-500", "unknown"],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test the reauth flow shows errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+    }
+
+
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
