@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VARIABLES,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -31,9 +32,9 @@ from .const import (
     CONF_IGNORE_STRING,
     CONF_NETWORK,
     CONF_SENSOR_STRING,
-    CONF_TLS_VER,
     DEFAULT_IGNORE_STRING,
     DEFAULT_SENSOR_STRING,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
@@ -62,6 +63,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
+    """Migrate old config entries."""
+    _LOGGER.debug("Migrating ISY config entry from version %s", entry.version)
+
+    if entry.version > 2:
+        return False
+
+    if entry.version == 1:
+        # Drop the legacy "tls" version field; pyisy now negotiates automatically.
+        new_data = {key: value for key, value in entry.data.items() if key != "tls"}
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     """Set up the ISY 994 integration."""
     isy_config = entry.data
@@ -73,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     host = urlparse(isy_config[CONF_HOST])
 
     # Optional
-    tls_version = isy_config.get(CONF_TLS_VER)
+    verify_ssl = isy_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 
@@ -98,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         username=user,
         password=password,
         use_https=https,
-        tls_ver=tls_version,
+        verify_ssl=verify_ssl,
         webroot=host.path,
         websession=session,
         use_websocket=True,

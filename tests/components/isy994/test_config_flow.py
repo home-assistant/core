@@ -7,13 +7,12 @@ from pyisy import ISYConnectionError, ISYInvalidAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
-    CONF_TLS_VER,
     DOMAIN,
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IGNORE, SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -30,7 +29,7 @@ MOCK_USERNAME = "test-username"
 MOCK_PASSWORD = "test-password"
 
 # Don't use the integration defaults here to make sure they're being set correctly.
-MOCK_TLS_VERSION = 1.2
+MOCK_VERIFY_SSL = True
 MOCK_IGNORE_STRING = "{IGNOREME}"
 MOCK_RESTORE_LIGHT_STATE = True
 MOCK_SENSOR_STRING = "IMASENSOR"
@@ -40,13 +39,13 @@ MOCK_USER_INPUT = {
     CONF_HOST: f"http://{MOCK_HOSTNAME}",
     CONF_USERNAME: MOCK_USERNAME,
     CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_TLS_VER: MOCK_TLS_VERSION,
+    CONF_VERIFY_SSL: MOCK_VERIFY_SSL,
 }
 MOCK_IOX_USER_INPUT = {
     CONF_HOST: f"http://{MOCK_HOSTNAME}:8080",
     CONF_USERNAME: MOCK_USERNAME,
     CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_TLS_VER: MOCK_TLS_VERSION,
+    CONF_VERIFY_SSL: MOCK_VERIFY_SSL,
 }
 
 MOCK_DEVICE_NAME = "Name of the device"
@@ -127,7 +126,7 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
             "host": MOCK_HOSTNAME,  # Test with missing protocol (http://)
             "username": MOCK_USERNAME,
             "password": MOCK_PASSWORD,
-            "tls": MOCK_TLS_VERSION,
+            "verify_ssl": MOCK_VERIFY_SSL,
         },
     )
 
