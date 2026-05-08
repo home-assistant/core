@@ -30,7 +30,7 @@ class PTDevicesBinarySensors(StrEnum):
 class PTDevicesBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description for PTDevices binary sensor entities."""
 
-    is_on_fn: Callable[[dict[str, StateType]], bool]
+    is_on_fn: Callable[[dict[str, StateType]], bool | None]
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] = (
@@ -41,6 +41,8 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda data: (
             data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS) == "low"
+            if data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS)
+            else None
         ),
     ),
 )
@@ -99,6 +101,6 @@ class PTDevicesBinarySensorEntity(PTDevicesEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.device)
