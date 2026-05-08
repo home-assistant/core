@@ -29,7 +29,12 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -90,6 +95,11 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730044",
+    "cover.jaloezie",
+)
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
@@ -145,26 +155,62 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("device", "service", "command_name", "expected_state"),
+    ("device", "service", "command_name", "parameters", "expected_state"),
     [
-        (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
-        (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
-        (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
+        (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
+        (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            DYNAMIC_GARAGE_DOOR_OGP,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
+        (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [1, 0],
+            CoverState.OPENING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [1, 0],
+            CoverState.CLOSING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
@@ -173,18 +219,24 @@ async def test_cover_entities_snapshot(
         "open-dynamic-garage-door",
         "open-dynamic-garage-door-ogp",
         "open-partial-garage-door",
+        "open-tilt-only-venetian-blind",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
         "close-dynamic-garage-door",
         "close-dynamic-garage-door-ogp",
         "close-partial-garage-door",
+        "close-tilt-only-venetian-blind",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-partial-garage-door",
+        "stop-tilt-only-venetian-blind",
+        "open-tilt-tilt-only-venetian-blind",
+        "close-tilt-tilt-only-venetian-blind",
+        "stop-tilt-tilt-only-venetian-blind",
     ],
 )
 async def test_cover_service_actions(
@@ -194,9 +246,10 @@ async def test_cover_service_actions(
     device: FixtureDevice,
     service: str,
     command_name: str,
-    expected_state: CoverState,
+    parameters: list[Any] | None,
+    expected_state: CoverState | str,
 ) -> None:
-    """Test open, close, and stop cover services."""
+    """Test open, close, and stop cover and tilt services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
@@ -213,6 +266,7 @@ async def test_cover_service_actions(
         mock_client,
         device_url=device.device_url,
         command_name=command_name,
+        parameters=parameters,
     )
 
 
