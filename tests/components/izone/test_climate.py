@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.izone.const import UNAVAILABLE_DEBOUNCE
 from homeassistant.core import HomeAssistant
@@ -427,3 +428,27 @@ async def test_zone_follows_controller_debounced_availability(
     # Zone should now be unavailable (follows controller)
     zone = hass.states.get(zone_entity_id)
     assert zone.state == "unavailable"
+
+
+async def test_debounce_cancelled_on_entity_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """Test that the debounce timer is cancelled when entity is removed."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    disco = get_discovery_service(mock_discovery)
+
+    # Trigger a disconnect to start the debounce timer
+    disco.controller_disconnected(mock_controller, ConnectionError("timeout"))
+    await hass.async_block_till_done()
+
+    # Unload the entry — should cancel debounce without error
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the entry is unloaded (no crash from stale callback)
+    assert mock_config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
