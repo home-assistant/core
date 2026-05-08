@@ -18,7 +18,7 @@
       "invalid_password": "Invalid password",
       "invalid_serial_number": "Invalid serial number",
       "invalid_serial_number_or_cloud_api_token": "Invalid serial number or my-PV Cloud API Access Token",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "discovery_confirm": {
