@@ -134,7 +134,7 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY)
-        return float(current_temperature) if current_temperature else None
+        return float(current_temperature) if current_temperature is not None else None
 
     @property
     def target_temperature(self) -> float | None:
