@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -23,6 +23,25 @@ from .entity import AndroidTVRemoteBaseEntity
 from .helpers import AndroidTVRemoteConfigEntry
 
 PARALLEL_UPDATES = 0
+
+PREFIX_SEPARATOR: Final[str] = ":"
+VALID_PREFIXES: Final[frozenset[str]] = frozenset(
+    {
+        "SHORT",
+        "START_LONG",
+        "END_LONG",
+    }
+)
+
+
+def _parse_command(single_command: str) -> tuple[str, str | None]:
+    """Split an optional prefix from the key code."""
+    prefix, separator, rest = single_command.partition(PREFIX_SEPARATOR)
+    if separator:
+        normalized = prefix.upper()
+        if normalized in VALID_PREFIXES:
+            return rest, normalized
+    return single_command, None
 
 
 async def async_setup_entry(
@@ -100,10 +119,11 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
+                key_code, direction = _parse_command(single_command)
                 if hold_secs:
-                    self._send_key_command(single_command, "START_LONG")
+                    self._send_key_command(key_code, "START_LONG")
                     await asyncio.sleep(hold_secs)
-                    self._send_key_command(single_command, "END_LONG")
+                    self._send_key_command(key_code, "END_LONG")
                 else:
-                    self._send_key_command(single_command, "SHORT")
+                    self._send_key_command(key_code, direction or "SHORT")
                 await asyncio.sleep(delay_secs)
