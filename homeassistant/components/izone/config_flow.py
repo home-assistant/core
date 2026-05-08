@@ -42,6 +42,9 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     disco = await async_start_discovery_service(hass)
 
+    if disco.pi_disco.controllers:
+        controller_ready.set()
+
     with suppress(TimeoutError):
         async with asyncio.timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
@@ -85,6 +88,19 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                 else:
                     await self.async_set_unique_id(device_uid)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+                    # Only one entry is allowed — if a discovery entry
+                    # already exists (no host), update it with the host
+                    existing = self._async_current_entries()
+                    if existing:
+                        if len(existing) == 1 and not existing[0].data.get(CONF_HOST):
+                            return self.async_update_reload_and_abort(
+                                existing[0],
+                                data={**existing[0].data, CONF_HOST: host},
+                                unique_id=device_uid,
+                                reason="reconfigure_successful",
+                            )
+                        return self.async_abort(reason="single_instance_allowed")
 
                     return self.async_create_entry(
                         title=f"iZone {device_uid}",

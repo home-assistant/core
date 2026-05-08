@@ -205,6 +205,37 @@ async def test_manual_ip_already_configured(hass: HomeAssistant) -> None:
         assert entry.data[CONF_HOST] == "192.168.2.100"
 
 
+async def test_manual_ip_updates_existing_discovery_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that entering a host updates an existing discovery entry."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_get_device_uid",
+        return_value="000013170",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_HOST] == "192.168.2.100"
+        assert entry.unique_id == "000013170"
+
+
 async def test_single_instance_allowed_when_entry_exists(
     hass: HomeAssistant,
 ) -> None:
