@@ -1,8 +1,12 @@
 """Support for Z-Wave controls using the event platform."""
 
 from dataclasses import dataclass
+from typing import Any
 
+from zwave_js_server.const.command_class.battery import BatteryReplacementStatus
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.notification import BatteryNotification
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.event import (
@@ -10,13 +14,14 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_VALUE, DOMAIN
+from .const import ATTR_URGENCY, ATTR_VALUE, DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
+from .helpers import get_device_info, get_valueless_base_unique_id
 from .models import (
     NewZWaveDiscoverySchema,
     ZwaveJSConfigEntry,
@@ -49,11 +54,26 @@ async def async_setup_entry(
         ]
         async_add_entities(entities)
 
+    @callback
+    def async_add_battery_low_event_entity(node: ZwaveNode) -> None:
+        """Add a battery low event entity for the given node."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZWaveBatteryLowEventEntity(driver, node)])
+
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{EVENT_DOMAIN}",
             async_add_event,
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_battery_low_event_entity",
+            async_add_battery_low_event_entity,
         )
     )
 
@@ -113,6 +133,53 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
                 "value notification",
                 lambda event: self._async_handle_event(event["value_notification"]),
             )
+        )
+
+
+class ZWaveBatteryLowEventEntity(EventEntity):
+    """Representation of a Battery CC battery low event entity."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_event_types = [
+        BatteryReplacementStatus.SOON.name.lower(),
+        BatteryReplacementStatus.NOW.name.lower(),
+    ]
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_translation_key = "battery_low"
+
+    def __init__(self, driver: Driver, node: ZwaveNode) -> None:
+        """Initialize a Battery low event entity."""
+        self.node = node
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        self._attr_unique_id = f"{self._base_unique_id}.battery_low"
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
+
+    @callback
+    def _async_handle_notification(self, event: dict[str, Any]) -> None:
+        """Handle a node battery low notification."""
+        if not isinstance(
+            notification := event.get("notification"), BatteryNotification
+        ):
+            return
+        urgency = notification.urgency
+        if urgency is BatteryReplacementStatus.NO:
+            return
+        self._trigger_event(urgency.name.lower(), {ATTR_URGENCY: urgency.value})
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
+            )
+        )
+        self.async_on_remove(
+            self.node.on("notification", self._async_handle_notification)
         )
 
 

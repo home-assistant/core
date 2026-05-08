@@ -828,6 +828,17 @@ class NodeEvents:
                 node,
             )
 
+        # Create a battery low event entity for each non-controller node that
+        # supports the Battery CC.
+        if not node.is_controller_node and any(
+            cc.id == CommandClass.BATTERY.value for cc in node.command_classes
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_battery_low_event_entity",
+                node,
+            )
+
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
