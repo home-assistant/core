@@ -10,7 +10,6 @@ from homeassistant.components.easywave.const import (
     CONF_RECEIVER_KIND,
     DOMAIN,
     ENTRY_TYPE_RECEIVER,
-    RECEIVER_KIND_IMPULSE,
     RECEIVER_KIND_UNIVERSAL,
 )
 from homeassistant.core import HomeAssistant
@@ -88,46 +87,6 @@ def _get_entity_id_by_unique_id(hass: HomeAssistant, suffix: str) -> str:
     entity_entry = registry.async_get_entity_id("button", DOMAIN, unique_id)
     assert entity_entry is not None, f"No entity for unique_id {unique_id}"
     return entity_entry
-
-
-async def test_impulse_button_setup(hass: HomeAssistant) -> None:
-    """Test impulse button entity is created from receiver config entry."""
-    gateway = _make_gateway(RECEIVER_KIND_IMPULSE)
-    gateway.add_to_hass(hass)
-    hass.config.country = "DE"
-
-    t_patch, c_patch, _mock_transceiver, _mock_coordinator = _patch_integration()
-    with t_patch, c_patch:
-        assert await hass.config_entries.async_setup(gateway.entry_id)
-        await hass.async_block_till_done()
-
-    entity_id = _get_entity_id_by_unique_id(hass, "toggle")
-    state = hass.states.get(entity_id)
-    assert state is not None
-
-
-async def test_impulse_button_press(hass: HomeAssistant) -> None:
-    """Test pressing impulse button sends button A command."""
-    gateway = _make_gateway(RECEIVER_KIND_IMPULSE)
-    gateway.add_to_hass(hass)
-    hass.config.country = "DE"
-
-    t_patch, c_patch, mock_transceiver, _mock_coordinator = _patch_integration()
-    with t_patch, c_patch:
-        assert await hass.config_entries.async_setup(gateway.entry_id)
-        await hass.async_block_till_done()
-
-        entity_id = _get_entity_id_by_unique_id(hass, "toggle")
-        await hass.services.async_call(
-            "button",
-            "press",
-            {"entity_id": entity_id},
-            blocking=True,
-        )
-
-    mock_transceiver.send_command.assert_called_once_with(
-        bytes.fromhex(MOCK_GATEWAY_SERIAL), 0
-    )
 
 
 async def test_universal_buttons_setup(hass: HomeAssistant) -> None:

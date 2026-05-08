@@ -15,7 +15,6 @@ from .const import (
     CONF_ENTRY_TYPE,
     CONF_RECEIVER_KIND,
     ENTRY_TYPE_RECEIVER,
-    RECEIVER_KIND_IMPULSE,
     RECEIVER_KIND_UNIVERSAL,
 )
 from .entity import EasywaveDeviceEntry, EasywaveReceiverEntity
@@ -40,11 +39,7 @@ async def async_setup_entry(
         if subentry.data.get(CONF_ENTRY_TYPE) != ENTRY_TYPE_RECEIVER:
             continue
         receiver_kind = subentry.data.get(CONF_RECEIVER_KIND)
-        if receiver_kind == RECEIVER_KIND_IMPULSE:
-            async_add_entities(
-                [EasywaveReceiverButton(entry, subentry, "toggle", BUTTON_A)],
-            )
-        elif receiver_kind == RECEIVER_KIND_UNIVERSAL:
+        if receiver_kind == RECEIVER_KIND_UNIVERSAL:
             async_add_entities(
                 [
                     EasywaveReceiverButton(entry, subentry, suffix, button_code)
@@ -67,10 +62,7 @@ class EasywaveReceiverButton(EasywaveReceiverEntity, ButtonEntity):
         super().__init__(entry, subentry, f"button_{suffix}")
         self._button_code = button_code
 
-        if subentry.data[CONF_RECEIVER_KIND] == RECEIVER_KIND_IMPULSE:
-            self._attr_translation_key = "impulse"
-        else:
-            self._attr_translation_key = f"universal_{suffix}"
+        self._attr_translation_key = f"universal_{suffix}"
 
     async def async_press(self) -> None:
         """Send the button command to the receiver."""

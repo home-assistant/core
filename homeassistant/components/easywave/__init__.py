@@ -44,12 +44,8 @@ type EasywaveConfigEntry = ConfigEntry[EasywaveRuntimeData]
 # async_setup_entry iterates entry.options["devices"] to create only the
 # entities relevant to its device type.
 _ALL_PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
-    Platform.COVER,
-    Platform.EVENT,
     Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 

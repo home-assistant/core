@@ -27,19 +27,13 @@ from .const import (
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
-    CONF_SENSOR_TYPES,
     CONF_SWITCH_MODE,
-    CONF_USAGE_TYPE,
     DOMAIN,
-    ENTRY_TYPE_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     NEO_SENSOR_TYPE_HUMIDITY,
     NEO_SENSOR_TYPE_TEMPERATURE,
-    SENSOR_KIND_HUMIDITY,
-    SENSOR_KIND_TEMPERATURE,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
-    TRANSMITTER_USAGE_COVER,
 )
 from .coordinator import EasywaveCoordinator
 from .entity import EasywaveDeviceEntry, EasyWaveSensorEntity, EasywaveTransmitterEntity
@@ -57,55 +51,18 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.coordinator
     async_add_entities([EasywaveGatewaySensor(entry, coordinator)])
 
-    # Per-subentry sensors.
+    # Per-subentry sensors: type-1 group-mode transmitters only.
     for subentry in get_devices(entry):
-        entry_type = subentry.data.get(CONF_ENTRY_TYPE)
-
-        if entry_type == ENTRY_TYPE_SENSOR:
-            sensor_types: list[str] = subentry.data.get(CONF_SENSOR_TYPES, [])
-            entities: list[EasyWaveSensorEntity] = []
-            if SENSOR_KIND_TEMPERATURE in sensor_types:
-                entities.append(EWneoTemperatureSensor(entry, subentry))
-            if SENSOR_KIND_HUMIDITY in sensor_types:
-                entities.append(EWneoHumiditySensor(entry, subentry))
-            # Battery warning sensor (always created for EWneo devices).
-            entities.append(EasywaveNeoBatterySensor(entry, subentry))
-            async_add_entities(entities)
-
-        elif entry_type == ENTRY_TYPE_TRANSMITTER:
-            operating_type = str(subentry.data.get(CONF_OPERATING_TYPE, "1"))
-
-            # Type-3: motor state sensor + battery sensor.
-            if operating_type == "3":
-                motor = EasywaveTransmitterMotorSensor(entry, subentry)
-                battery_motor = EasywaveTransmitterBatterySensor(entry, subentry)
-                async_add_entities([motor, battery_motor])
-                continue
-
-            if operating_type == "1":
-                grouping_mode: str = str(
-                    subentry.data.get(CONF_GROUPING_MODE, "single")
-                )
-                if grouping_mode == TRANSMITTER_GROUPING_GROUP:
-                    # Group mode: one last-button sensor + battery sensor.
-                    sensor = EasywaveTransmitterLastButtonSensor(entry, subentry)
-                    battery_grp = EasywaveTransmitterBatterySensor(entry, subentry)
-                    async_add_entities([sensor, battery_grp])
-                else:
-                    # Individual mode: EventEntity buttons are created by event.py.
-                    # Only the battery sensor lives here.
-                    battery_indiv = EasywaveTransmitterBatterySensor(entry, subentry)
-                    async_add_entities([battery_indiv])
-                continue
-
-            if operating_type == "2":
-                # Type-2 COVER channel state sensors are built by the helper.
-                if subentry.data.get(CONF_USAGE_TYPE) == TRANSMITTER_USAGE_COVER:
-                    _setup_type2_cover_sensors(entry, subentry, async_add_entities)
-                # Channel binary sensors (SWITCH usage) are created by binary_sensor.py.
-                # Battery sensor always lives here.
-                battery_ch = EasywaveTransmitterBatterySensor(entry, subentry)
-                async_add_entities([battery_ch])
+        if subentry.data.get(CONF_ENTRY_TYPE) != ENTRY_TYPE_TRANSMITTER:
+            continue
+        if str(subentry.data.get(CONF_OPERATING_TYPE, "1")) != "1":
+            continue
+        grouping_mode: str = str(subentry.data.get(CONF_GROUPING_MODE, "single"))
+        if grouping_mode != TRANSMITTER_GROUPING_GROUP:
+            continue
+        last_button = EasywaveTransmitterLastButtonSensor(entry, subentry)
+        battery = EasywaveTransmitterBatterySensor(entry, subentry)
+        async_add_entities([last_button, battery])
 
 
 def _setup_type2_cover_sensors(

@@ -13,8 +13,6 @@ from homeassistant.components.easywave.const import (
     CONF_GATEWAY_SERIAL,
     CONF_OPERATING_TYPE,
     CONF_RECEIVER_KIND,
-    CONF_SENSOR_SERIAL,
-    CONF_SENSOR_TYPES,
     CONF_TRANSMITTER_SERIAL,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
@@ -23,10 +21,8 @@ from homeassistant.components.easywave.const import (
     CONF_USB_VID,
     DOMAIN,
     ENTRY_TYPE_RECEIVER,
-    ENTRY_TYPE_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
-    RECEIVER_KIND_SWITCH,
-    SENSOR_KIND_TEMPERATURE,
+    RECEIVER_KIND_UNIVERSAL,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
@@ -43,7 +39,6 @@ MOCK_ENTRY_DATA = {
 
 MOCK_GATEWAY_SERIAL = "00" * 14 + "abcd"
 MOCK_TRANSMITTER_SERIAL = "aa" * 16
-MOCK_SENSOR_SERIAL = "aabbccdd" * 2
 
 
 @pytest.fixture
@@ -83,7 +78,7 @@ def mock_config_entry_with_receiver() -> MockConfigEntry:
                         CONF_ENTRY_TYPE: ENTRY_TYPE_RECEIVER,
                         CONF_GATEWAY_INDEX: 0,
                         CONF_GATEWAY_SERIAL: MOCK_GATEWAY_SERIAL,
-                        CONF_RECEIVER_KIND: RECEIVER_KIND_SWITCH,
+                        CONF_RECEIVER_KIND: RECEIVER_KIND_UNIVERSAL,
                     },
                 }
             ]
@@ -112,36 +107,6 @@ def mock_config_entry_with_transmitter() -> MockConfigEntry:
                         CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
                         CONF_OPERATING_TYPE: "1",
                         CONF_BUTTON_COUNT: 4,
-                    },
-                }
-            ]
-        },
-    )
-
-
-MOCK_SENSOR_SUBENTRY_ID = "sensor_subentry_01"
-
-
-@pytest.fixture
-def mock_config_entry_with_sensor() -> MockConfigEntry:
-    """Return a gateway ConfigEntry with a sensor device in options."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="Easywave Gateway",
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options={
-            "devices": [
-                {
-                    "id": MOCK_SENSOR_SUBENTRY_ID,
-                    "title": "Test Sensor",
-                    "unique_id": f"sensor_{MOCK_SENSOR_SERIAL}",
-                    "data": {
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_SENSOR,
-                        CONF_SENSOR_SERIAL: MOCK_SENSOR_SERIAL,
-                        CONF_SENSOR_TYPES: [SENSOR_KIND_TEMPERATURE],
                     },
                 }
             ]

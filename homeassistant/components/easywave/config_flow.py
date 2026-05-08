@@ -213,7 +213,6 @@ class _EasywaveDeviceMixin(_MixinBase):
             menu_options=[
                 "add_receiver",
                 "add_transmitter",
-                "add_sensor",
             ],
         )
 
@@ -230,7 +229,7 @@ class _EasywaveDeviceMixin(_MixinBase):
             return self.async_abort(reason="device_not_connected")
         return self.async_show_menu(
             step_id="add_receiver",
-            menu_options=list(_RECEIVER_MODE_MAP),
+            menu_options=["mode_universal"],
         )
 
     async def _async_set_mode(self, mode: str) -> ConfigFlowResult:
@@ -391,14 +390,14 @@ class _EasywaveDeviceMixin(_MixinBase):
     async def async_step_add_transmitter(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Select transmitter button type."""
+        """Set up a type-1 group-impulse transmitter (the only supported type)."""
         coordinator = self._get_coordinator()
         if coordinator is None or not coordinator.transceiver.is_connected:
             return self.async_abort(reason="device_not_connected")
-        return self.async_show_menu(
-            step_id="add_transmitter",
-            menu_options=list(_TRANSMITTER_TYPE_MAP),
-        )
+        self._operating_type = "1"
+        self._grouping_mode = TRANSMITTER_GROUPING_GROUP
+        self._switch_mode = TRANSMITTER_SWITCH_IMPULSE
+        return await self.async_step_button_count_select()
 
     async def _async_set_type(self, type_key: str) -> ConfigFlowResult:
         self._operating_type = _TRANSMITTER_TYPE_MAP[type_key]

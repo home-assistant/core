@@ -12,18 +12,14 @@ from homeassistant.components.easywave.const import (
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
     CONF_RECEIVER_KIND,
-    CONF_SENSOR_SERIAL,
-    CONF_SENSOR_TYPES,
     CONF_SWITCH_MODE,
     CONF_TRANSMITTER_SERIAL,
     CONF_USAGE_TYPE,
     DOMAIN,
     ENTRY_TYPE_RECEIVER,
-    ENTRY_TYPE_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
-    RECEIVER_KIND_SWITCH,
-    SENSOR_KIND_TEMPERATURE,
-    TRANSMITTER_GROUPING_SINGLE,
+    RECEIVER_KIND_UNIVERSAL,
+    TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
     TRANSMITTER_USAGE_SWITCH,
 )
@@ -31,7 +27,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_SENSOR_SERIAL, MOCK_TRANSMITTER_SERIAL
+from .conftest import MOCK_TRANSMITTER_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -93,9 +89,9 @@ async def test_receiver_flow_full(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "add_receiver"
 
-    # Choose mode ON/OFF (switch)
+    # Choose mode Universal
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "mode_on_off"}
+        result["flow_id"], {"next_step_id": "mode_universal"}
     )
     # Arrives at receiver_prepare form
     assert result["type"] is FlowResultType.FORM
@@ -128,7 +124,7 @@ async def test_receiver_flow_full(
     device = devices[0]
     assert device["title"] == "Living Room Switch"
     assert device["data"][CONF_ENTRY_TYPE] == ENTRY_TYPE_RECEIVER
-    assert device["data"][CONF_RECEIVER_KIND] == RECEIVER_KIND_SWITCH
+    assert device["data"][CONF_RECEIVER_KIND] == RECEIVER_KIND_UNIVERSAL
     assert CONF_GATEWAY_INDEX in device["data"]
     assert CONF_GATEWAY_SERIAL in device["data"]
 
@@ -150,7 +146,7 @@ async def test_receiver_flow_retry_learn(
         result["flow_id"], {"next_step_id": "add_receiver"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "mode_on_off"}
+        result["flow_id"], {"next_step_id": "mode_universal"}
     )
     assert result["step_id"] == "receiver_prepare"
     result = await hass.config_entries.flow.async_configure(
@@ -179,7 +175,7 @@ async def test_receiver_flow_no_gateway_serial(
     # get_gateway_serial returns None → abort happens inside receiver_prepare
     # before the form is shown, so mode selection already returns ABORT directly
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "mode_on_off"}
+        result["flow_id"], {"next_step_id": "mode_universal"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_get_gateway_serial"
@@ -199,11 +195,11 @@ def _make_transmitter_telegram(serial_hex: str = MOCK_TRANSMITTER_SERIAL) -> dic
     }
 
 
-async def test_transmitter_flow_1button_individual(
+async def test_transmitter_flow_group_impulse(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test transmitter learning flow for 1-button individual mode."""
+    """Test transmitter learning flow for group-impulse mode (the only supported type)."""
     telegram = _make_transmitter_telegram()
     coordinator = _make_coordinator(telegram=telegram)
     mock_config_entry.add_to_hass(hass)
@@ -215,29 +211,16 @@ async def test_transmitter_flow_1button_individual(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "add_transmitter"}
     )
-    assert result["step_id"] == "add_transmitter"
-
-    # Select 1-button type → grouping menu
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "type_1button"}
-    )
-    assert result["step_id"] == "transmitter_grouping"
-
-    # Select individual grouping → button count menu (no switch-mode step for individual)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "grouping_single"}
-    )
+    # add_transmitter auto-sets type=1/group/impulse → button_count_select menu
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "button_count_select"
 
-    # Select 1 button → learning task runs synchronously (eager + AsyncMock),
-    # telegram is received immediately, flow advances to confirm form directly
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "buttons_1"}
+        result["flow_id"], {"next_step_id": "buttons_4"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "transmitter_confirm"
 
-    # Submit name
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"name": "Hall Remote"}
     )
@@ -251,8 +234,8 @@ async def test_transmitter_flow_1button_individual(
     assert device["data"][CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
     assert device["data"][CONF_TRANSMITTER_SERIAL] == MOCK_TRANSMITTER_SERIAL
     assert device["data"][CONF_OPERATING_TYPE] == "1"
-    assert device["data"][CONF_BUTTON_COUNT] == 1
-    assert device["data"][CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_SINGLE
+    assert device["data"][CONF_BUTTON_COUNT] == 4
+    assert device["data"][CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
     assert device["data"][CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
     assert device["data"][CONF_USAGE_TYPE] == TRANSMITTER_USAGE_SWITCH
 
@@ -267,19 +250,20 @@ async def test_transmitter_flow_timeout_then_retry(
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
 
-    # Navigate to learn step via: add_transmitter → type_3button (skips grouping)
+    # Navigate to learn step via: add_transmitter → button_count_select → buttons_4
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "add_transmitter"}
     )
+    assert result["step_id"] == "button_count_select"
 
     # Patch LEARNING_TIMEOUT to a negative value so the while-loop exits immediately
     # (eager task + AsyncMock runs synchronously, so deadline must already be past)
     with patch("homeassistant.components.easywave.config_flow.LEARNING_TIMEOUT", -1):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "type_3button"}
+            result["flow_id"], {"next_step_id": "buttons_4"}
         )
     # Task timed out → flow advanced to learn_timeout menu directly
     assert result["type"] is FlowResultType.MENU
@@ -310,9 +294,10 @@ async def test_transmitter_flow_abort_learning(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "add_transmitter"}
     )
+    assert result["step_id"] == "button_count_select"
     with patch("homeassistant.components.easywave.config_flow.LEARNING_TIMEOUT", -1):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "type_3button"}
+            result["flow_id"], {"next_step_id": "buttons_4"}
         )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "learn_timeout"
@@ -342,142 +327,10 @@ async def test_transmitter_flow_duplicate_rejected(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "add_transmitter"}
     )
-    # Valid telegram → task completes synchronously; duplicate check fires before
-    # form is shown → ABORT immediately
+    # add_transmitter auto-proceeds to button_count_select; valid telegram →
+    # duplicate check fires before form is shown → ABORT immediately
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "type_3button"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-# ---------------------------------------------------------------------------
-# Sensor (EWneo) flow
-# ---------------------------------------------------------------------------
-
-
-def _make_sensor_telegram(
-    serial_hex: str = "aabbccdd" * 2,
-    sensor_type_code: int = 1,  # 1 = temperature
-) -> dict:
-    """Return a mock EWneo sensor learn telegram."""
-    # info_data[1] bit 7 = learn flag, info_data[2] bits 7-2 = sensor_type_code
-    info_data = bytes([0x00, 0x80, sensor_type_code << 2])
-    return {
-        "info_type": 0x02,
-        "serial": bytes.fromhex(serial_hex),
-        "info_data": info_data,
-    }
-
-
-async def test_sensor_flow_full(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the full EWneo sensor learning flow."""
-    telegram = _make_sensor_telegram()
-    coordinator = _make_coordinator(telegram=telegram)
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    # Valid telegram → learning task completes synchronously → confirm form directly
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_sensor"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"name": "Living Room Temp"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "device_added"
-
-    devices = mock_config_entry.options.get("devices", [])
-    assert len(devices) == 1
-    device = devices[0]
-    assert device["title"] == "Living Room Temp"
-    assert device["data"][CONF_ENTRY_TYPE] == ENTRY_TYPE_SENSOR
-    assert CONF_SENSOR_SERIAL in device["data"]
-    assert SENSOR_KIND_TEMPERATURE in device["data"][CONF_SENSOR_TYPES]
-
-
-async def test_sensor_flow_timeout_then_abort(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensor flow timeout shows retry/cancel menu and cancels correctly."""
-    coordinator = _make_coordinator(telegram=None)
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    with patch("homeassistant.components.easywave.config_flow.LEARNING_TIMEOUT", -1):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "add_sensor"}
-        )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "sensor_learn_timeout"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "abort_sensor_learn"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "learning_cancelled"
-
-
-async def test_sensor_flow_timeout_then_retry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensor flow retry after timeout."""
-    telegram = _make_sensor_telegram()
-    coordinator = _make_coordinator(telegram=None)  # no telegram yet
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    with patch("homeassistant.components.easywave.config_flow.LEARNING_TIMEOUT", -1):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "add_sensor"}
-        )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "sensor_learn_timeout"
-
-    # Re-mock receive_telegram to return a valid telegram, then retry
-    coordinator.transceiver.receive_telegram = AsyncMock(return_value=telegram)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "sensor_learn"}
-    )
-    # Second attempt: telegram received synchronously → confirm form directly
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sensor_confirm"
-
-
-async def test_sensor_flow_duplicate_rejected(
-    hass: HomeAssistant,
-    mock_config_entry_with_sensor: MockConfigEntry,
-) -> None:
-    """Test that a duplicate sensor serial is rejected."""
-    telegram = _make_sensor_telegram(serial_hex=MOCK_SENSOR_SERIAL)
-    coordinator = _make_coordinator(telegram=telegram)
-    mock_config_entry_with_sensor.add_to_hass(hass)
-    mock_config_entry_with_sensor.runtime_data = _make_connected_runtime(coordinator)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    # Valid telegram → task completes synchronously; duplicate check fires before
-    # form is shown → ABORT immediately
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_sensor"}
+        result["flow_id"], {"next_step_id": "buttons_4"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -490,7 +343,7 @@ async def test_sensor_flow_duplicate_rejected(
 
 @pytest.mark.parametrize(
     "menu_choice",
-    ["add_receiver", "add_transmitter", "add_sensor"],
+    ["add_receiver", "add_transmitter"],
 )
 async def test_device_flow_aborts_when_disconnected(
     hass: HomeAssistant,

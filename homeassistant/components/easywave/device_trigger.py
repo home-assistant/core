@@ -25,24 +25,13 @@ from .const import (
     CONF_BUTTON_COUNT,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
-    CONF_OPERATING_TYPE,
     CONF_SWITCH_MODE,
     DOMAIN,
-    ENTRY_TYPE_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
     TRANSMITTER_GROUPING_GROUP,
 )
 
-# Trigger types fired by the coordinator on transmitter telegrams.
-TRIGGER_TYPE_BUTTON_RELEASED = "button_released"
-_BUTTON_PRESSED_TYPES = (
-    "button_a_pressed",
-    "button_b_pressed",
-    "button_c_pressed",
-    "button_d_pressed",
-)
-_MOTOR_TRIGGER_TYPES = ("opened", "closed", "stopped")
 _BATTERY_TRIGGER_TYPES = ("battery_low", "battery_normal")
 # Type-1 group mode: state_a / state_b / state_c / state_d / state_released
 _GROUP_STATE_TYPES = (
@@ -56,9 +45,6 @@ _GROUP_STATE_TYPES = (
 _GATEWAY_TRIGGER_TYPES = ("gateway_connected", "gateway_disconnected")
 
 ALL_TRIGGER_TYPES: set[str] = {
-    *_BUTTON_PRESSED_TYPES,
-    TRIGGER_TYPE_BUTTON_RELEASED,
-    *_MOTOR_TRIGGER_TYPES,
     *_BATTERY_TRIGGER_TYPES,
     *_GROUP_STATE_TYPES,
     *_GATEWAY_TRIGGER_TYPES,
@@ -133,48 +119,25 @@ async def async_get_triggers(
     if _is_gateway_device(hass, device_id):
         return [{**base, CONF_TYPE: t} for t in _GATEWAY_TRIGGER_TYPES]
 
-    data = _get_device_data(hass, device_id)
+    data = _get_transmitter_device_data(hass, device_id)
     if data is None:
         return []
 
-    entry_type = data.get(CONF_ENTRY_TYPE)
+    button_count = min(int(data.get(CONF_BUTTON_COUNT, 4)), 4)
+    grouping_mode = str(data.get(CONF_GROUPING_MODE, "single"))
 
-    # EWneo sensors expose battery triggers only.
-    if entry_type == ENTRY_TYPE_SENSOR:
-        return [{**base, CONF_TYPE: t} for t in _BATTERY_TRIGGER_TYPES]
-
-    if entry_type != ENTRY_TYPE_TRANSMITTER:
+    if grouping_mode != TRANSMITTER_GROUPING_GROUP:
         return []
 
-    button_count = min(int(data.get(CONF_BUTTON_COUNT, 4)), 4)
-    operating_type = str(data.get(CONF_OPERATING_TYPE, "1"))
+    # Group mode: one sensor whose value cycles through a/b/c/d/released.
+    group_types = [f"state_{letter}" for letter in "abcd"[:button_count]]
+    # "state_released" only applies in impulse mode; permanent mode
+    # keeps the last state and never fires a release event.
+    switch_mode = str(data.get(CONF_SWITCH_MODE, "impulse"))
+    if switch_mode == "impulse":
+        group_types.append("state_released")
 
-    # Type-3 motor transmitters expose semantic triggers instead of raw buttons.
-    if operating_type == "3":
-        triggers = [{**base, CONF_TYPE: t} for t in _MOTOR_TRIGGER_TYPES]
-    elif operating_type == "2":
-        # Type-2 transmitters: channel state triggers are provided by the
-        # binary_sensor platform ("turned on" / "turned off", "opened" / "not
-        # opened") via binary_sensor/device_trigger.py.  No custom triggers.
-        triggers = []
-    else:
-        grouping_mode = str(data.get(CONF_GROUPING_MODE, "single"))
-        if grouping_mode == TRANSMITTER_GROUPING_GROUP:
-            # Group mode: one sensor whose value cycles through a/b/c/d/released.
-            group_types = [f"state_{letter}" for letter in "abcd"[:button_count]]
-            # "state_released" only applies in impulse mode; permanent mode
-            # keeps the last state and never fires a release event.
-            switch_mode = str(data.get(CONF_SWITCH_MODE, "impulse"))
-            if switch_mode == "impulse":
-                group_types.append("state_released")
-            triggers = [{**base, CONF_TYPE: t} for t in group_types]
-        else:
-            triggers = [
-                {**base, CONF_TYPE: _BUTTON_PRESSED_TYPES[i]}
-                for i in range(button_count)
-            ]
-            triggers.append({**base, CONF_TYPE: TRIGGER_TYPE_BUTTON_RELEASED})
-
+    triggers = [{**base, CONF_TYPE: t} for t in group_types]
     triggers.extend({**base, CONF_TYPE: t} for t in _BATTERY_TRIGGER_TYPES)
     return triggers
 
@@ -185,7 +148,7 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
-    if _get_device_data(hass, device_id) is None and not _is_gateway_device(
+    if _get_transmitter_device_data(hass, device_id) is None and not _is_gateway_device(
         hass, device_id
     ):
         raise InvalidDeviceAutomationConfig(
