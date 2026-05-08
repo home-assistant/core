@@ -106,7 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     zone_control_coordinator = TadoZoneControlUpdateCoordinator(
         hass, entry, tado, coordinator.zones, coordinator.home_id
     )
-    await zone_control_coordinator.async_config_entry_first_refresh()
+    try:
+        await zone_control_coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        _LOGGER.warning(
+            "Failed to load Tado heating circuit data; select entities will be unavailable"
+        )
 
     # Pre-register the bridge device to ensure it exists before other devices reference it
     device_registry = dr.async_get(hass)

@@ -23,6 +23,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -482,9 +483,11 @@ class TadoZoneControlUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch zone control and heating circuits data from Tado."""
 
-        # Update zone controls for all zones
+        # Update zone controls for heating zones only
         mapped_zone_controls: dict[int, dict] = {}
         for zone in self.zones:
+            if zone["type"] != TYPE_HEATING:
+                continue
             zone_id = zone["id"]
             mapped_zone_controls[zone_id] = await self._update_zone_control(zone_id)
 

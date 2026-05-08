@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TadoConfigEntry
+from .const import TYPE_HEATING
 from .coordinator import TadoZoneControlUpdateCoordinator
 from .entity import TadoZoneControlEntity
 
@@ -30,7 +31,7 @@ async def async_setup_entry(
             zone_control_coordinator, zone["name"], zone["id"]
         )
         for zone in tado.zones
-        if zone["type"] == "HEATING"
+        if zone["type"] == TYPE_HEATING
     ]
 
     async_add_entities(entities, True)
@@ -66,7 +67,6 @@ class TadoHeatingCircuitSelectEntity(TadoZoneControlEntity, SelectEntity):
             else self.coordinator.data["heating_circuits"].get(option, {}).get("number")
         )
         await self.coordinator.set_heating_circuit(self.zone_id, heating_circuit_id)
-        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
