@@ -252,6 +252,13 @@ class ControllerDevice(ClimateEntity):
             )
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel pending debounce timer when entity is removed."""
+        if self._disconnect_debounce is not None:
+            self._disconnect_debounce()
+            self._disconnect_debounce = None
+            self._pending_disconnect_ex = None
+
     @callback
     def set_available(self, available: bool, ex: Exception | None = None) -> None:
         """Set availability for the controller with debounce for disconnects.

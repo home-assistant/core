@@ -105,10 +105,9 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle auto-discovery of iZone controllers on local network."""
-        # Prevent multiple discovery entries
-        if any(
-            not entry.data.get(CONF_HOST) for entry in self._async_current_entries()
-        ):
+        # Prevent multiple entries - the integration uses a shared
+        # discovery service so all entries see all controllers
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
