@@ -25,4 +25,5 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
             serial_number=info_data.get("serial"),
             sw_version=version_data.get("firmware"),
             configuration_url=self.coordinator.api.client.host,
+            suggested_area=info_data.get("location"),
         )
