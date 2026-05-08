@@ -430,6 +430,82 @@ async def test_zone_follows_controller_debounced_availability(
     assert zone.state == "unavailable"
 
 
+async def test_second_disconnect_during_debounce_is_noop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a second disconnect while debounce is pending does not reset the timer."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    entity_id = "climate.izone_controller_test_controller_123"
+    disco = get_discovery_service(mock_discovery)
+
+    # First disconnect — starts debounce timer
+    disco.controller_disconnected(mock_controller, ConnectionError("timeout"))
+    await hass.async_block_till_done()
+
+    # Entity still available during debounce
+    assert hass.states.get(entity_id).state != "unavailable"
+
+    # Second disconnect before debounce fires — should be a no-op
+    disco.controller_disconnected(mock_controller, ConnectionError("timeout again"))
+    await hass.async_block_till_done()
+
+    # Still available — timer still pending from the first disconnect
+    assert hass.states.get(entity_id).state != "unavailable"
+
+    # Advance past debounce — entity now marked unavailable
+    freezer.tick(timedelta(seconds=UNAVAILABLE_DEBOUNCE + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "unavailable"
+
+
+async def test_mark_unavailable_guard_when_already_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test _mark_unavailable early-returns when the entity is already unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    entity_id = "climate.izone_controller_test_controller_123"
+    disco = get_discovery_service(mock_discovery)
+
+    # First disconnect — debounce fires, entity becomes unavailable
+    disco.controller_disconnected(mock_controller, ConnectionError("timeout"))
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=UNAVAILABLE_DEBOUNCE + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "unavailable"
+
+    # Force _mark_unavailable to run again while already unavailable
+    # by finding the ControllerDevice and calling it directly
+    from homeassistant.components.izone.climate import ControllerDevice
+
+    entity = next(
+        e
+        for e in hass.data["entity_components"]["climate"].entities
+        if isinstance(e, ControllerDevice)
+    )
+    # Calling _mark_unavailable on an already-unavailable entity must not raise
+    entity._mark_unavailable(None)  # noqa: SLF001
+
+    # Should remain unavailable with no state-write side effects
+    assert hass.states.get(entity_id).state == "unavailable"
+
+
 async def test_debounce_cancelled_on_entity_removal(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
