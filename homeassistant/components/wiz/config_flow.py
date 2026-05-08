@@ -81,6 +81,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 exc_info=True,
             )
             raise AbortFlow("cannot_connect") from ex
+        finally:
+            await bulb.async_close()
         self._name = name_from_bulb_type_and_mac(bulbtype, device.mac_address)
 
     async def async_step_discovery_confirm(
@@ -118,6 +120,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 bulbtype = await bulb.get_bulbtype()
             except WIZ_CONNECT_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
+            finally:
+                await bulb.async_close()
 
             return self.async_create_entry(
                 title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
@@ -182,6 +186,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=name,
                         data=user_input,
                     )
+                finally:
+                    await bulb.async_close()
 
         return self.async_show_form(
             step_id="user",
