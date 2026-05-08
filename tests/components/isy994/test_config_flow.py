@@ -1,8 +1,10 @@
 """Test the Universal Devices ISY/IoX config flow."""
 
 import re
+import ssl
 from unittest.mock import patch
 
+import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 
 from homeassistant import config_entries
@@ -186,6 +188,27 @@ async def test_form_isy_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
+    """Test we surface ssl_error when pyisy chains an aiohttp.ClientSSLError."""
+    ssl_cause = aiohttp.ClientSSLError(
+        connection_key=None, os_error=ssl.SSLError("handshake failed")
+    )
+    isy_error = ISYConnectionError("ssl handshake failed")
+    isy_error.__cause__ = ssl_cause
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(PATCH_CONNECTION, side_effect=isy_error):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "ssl_error"}
 
 
 async def test_form_isy_parse_response_error(hass: HomeAssistant) -> None:

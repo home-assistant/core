@@ -94,7 +94,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or HTTPS_PORT
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
         _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost

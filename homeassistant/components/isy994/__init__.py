@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or 443
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
         _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
