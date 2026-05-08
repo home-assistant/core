@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.everhome.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -20,15 +21,11 @@ async def test_connection_failed(
     hass: HomeAssistant,
     mock_everhome_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device registry integration."""
     mock_everhome_client.async_update.return_value = False
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
-    )
-    assert device_entry is None
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
