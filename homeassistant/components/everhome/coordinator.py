@@ -27,7 +27,6 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
         host: str,
         config_entry: EcoTrackerConfigEntry,
     ) -> None:
