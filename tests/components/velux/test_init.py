@@ -6,16 +6,19 @@ when scene or node loading fails.
 They also verify that unloading the integration properly disconnects.
 """
 
-from unittest.mock import patch
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyvlx.exception import PyVLXException
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.components.velux.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import AsyncMock, ConfigEntry, MockConfigEntry
+from tests.common import ConfigEntry, MockConfigEntry
 
 
 async def test_setup_retry_on_nodes_failure(
@@ -81,6 +84,40 @@ async def test_setup_auth_error(
 
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_not_called()
+
+
+async def test_setup_uses_preconnected_pyvlx_from_config_flow(
+    hass: HomeAssistant, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that setup reuses the PyVLX instance from config flow without disconnecting.
+
+    The config flow connects once; setup should reuse that instance without
+    disconnecting and reconnecting, preventing an unnecessary disconnect/reboot
+    cycle between connection validation and integration start.
+    """
+    with patch("homeassistant.components.velux.PLATFORMS", []):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "127.0.0.1",
+                CONF_PASSWORD: "NotAStrongPassword",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["result"].state is ConfigEntryState.LOADED
+
+    # connect was called exactly once (by config flow), setup must not call it again
+    mock_pyvlx.connect.assert_awaited_once()
+    # ensure_connected was called once (by async_setup_entry)
+    mock_pyvlx.ensure_connected.assert_awaited_once()
+    # The gateway must not be disconnected between config flow and setup
+    mock_pyvlx.disconnect.assert_not_awaited()
+    mock_pyvlx.load_scenes.assert_awaited_once()
+    mock_pyvlx.load_nodes.assert_awaited_once()
 
 
 @pytest.fixture

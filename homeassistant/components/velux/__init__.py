@@ -13,7 +13,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS, PYVLX_FROM_CONFIG_FLOW
 
 type VeluxConfigEntry = ConfigEntry[PyVLX]
 
@@ -24,10 +24,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     """Set up the velux component."""
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
-    pyvlx = PyVLX(host=host, password=password)
 
-    LOGGER.debug("Setting up Velux gateway %s", host)
+    # Prefer the already-connected instance passed from the config flow so that
+    # we do not force a disconnect/reboot between connection validation and setup.
+    # Falls back to creating a fresh instance on HA restart or reload.
+    pyvlx: PyVLX | None = hass.data.get(PYVLX_FROM_CONFIG_FLOW, {}).pop(host, None)
+    if pyvlx is None:
+        pyvlx = PyVLX(host=host, password=password)
+
     try:
+        LOGGER.debug("Ensuring connection to Velux gateway %s", host)
+        await pyvlx.ensure_connected()
         LOGGER.debug("Retrieving scenes from %s", host)
         await pyvlx.load_scenes()
         LOGGER.debug("Retrieving nodes from %s", host)
