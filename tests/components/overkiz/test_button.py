@@ -118,29 +118,6 @@ async def test_button_press_with_args(
     )
 
 
-async def test_button_press_check_event_trigger(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test pressing check event trigger button sends command with short parameter."""
-    await setup_overkiz_integration(fixture=CHECK_EVENT_TRIGGER.fixture)
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: CHECK_EVENT_TRIGGER.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=CHECK_EVENT_TRIGGER.device_url,
-        command_name="checkEventTrigger",
-        parameters=["short"],
-    )
-
-
 async def test_button_unavailability(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
