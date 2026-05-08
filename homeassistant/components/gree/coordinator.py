@@ -1,7 +1,5 @@
 """Helper and wrapper classes for Gree module."""
 
-from __future__ import annotations
-
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta

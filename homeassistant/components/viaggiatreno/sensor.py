@@ -1,7 +1,5 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

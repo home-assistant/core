@@ -1,7 +1,5 @@
 """Voice over IP (VoIP) implementation."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 import logging
@@ -150,11 +148,6 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
         if self.transport is None:
             return
 
-        if self._audio_bytes is None:
-            # 16Khz, 16-bit mono audio message
-            file_path = Path(__file__).parent / self.file_name
-            self._audio_bytes = file_path.read_bytes()
-
         if self._audio_task is None:
             self._audio_task = self.hass.async_create_background_task(
                 self._play_message(),
@@ -162,6 +155,11 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
             )
 
     async def _play_message(self) -> None:
+        if self._audio_bytes is None:
+            _LOGGER.debug("Loading audio from file %s", self.file_name)
+            self._audio_bytes = await self._load_audio()
+            _LOGGER.debug("Read %s bytes", len(self._audio_bytes))
+
         await self.hass.async_add_executor_job(
             partial(
                 self.send_audio,
@@ -175,3 +173,8 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
 
         # Allow message to play again
         self._audio_task = None
+
+    async def _load_audio(self) -> bytes:
+        # 16Khz, 16-bit mono audio message
+        file_path = Path(__file__).parent / self.file_name
+        return await self.hass.async_add_executor_job(file_path.read_bytes)

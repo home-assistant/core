@@ -6,7 +6,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "transmission_version": "Minimum required version is 4.0.0. Please upgrade Transmission and then retry."
     },
     "step": {
       "reauth_confirm": {
@@ -122,6 +123,9 @@
   "exceptions": {
     "could_not_add_torrent": {
       "message": "Could not add torrent: unsupported type or no permission."
+    },
+    "version_error": {
+      "message": "You are running {transmission_version} of Transmission. Minimum required version is {min_version}. Please upgrade Transmission and then restart Home Assistant."
     }
   },
   "options": {

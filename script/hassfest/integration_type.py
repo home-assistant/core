@@ -1,7 +1,5 @@
 """Validate integration type is set for config flow integrations."""
 
-from __future__ import annotations
-
 from .model import Config, Integration
 
 # Integrations with config_flow that are missing integration_type.
@@ -37,7 +35,6 @@ MISSING_INTEGRATION_TYPE = {
     "gree",
     "holiday",
     "homekit",
-    "html5",
     "ifttt",
     "influxdb",
     "ios",
@@ -54,7 +51,6 @@ MISSING_INTEGRATION_TYPE = {
     "modern_forms",
     "ness_alarm",
     "nmap_tracker",
-    "otp",
     "profiler",
     "proximity",
     "rhasspy",
