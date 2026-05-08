@@ -7,12 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_NAME,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_MODEL, ATTR_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -48,7 +43,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_suggested_display_precision = PRECISION_WHOLE
+    _attr_suggested_display_precision = 1
 
     def __init__(self, serial: str, hub: nobo) -> None:
         """Initialize the temperature sensor."""
