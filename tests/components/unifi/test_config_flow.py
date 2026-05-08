@@ -38,6 +38,8 @@ from .conftest import ConfigEntryFactoryType
 
 from tests.common import MockConfigEntry
 
+ANONYMOUS_CONTROLLER_ID = "24f81231-a456-4c32-abcd-f5612345385f"
+
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
 DEVICES = [
@@ -125,7 +127,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Site name"
+    assert result["title"] == "1.2.3.4 (Site name)"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "username",
@@ -134,7 +136,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].unique_id == "1"
+    assert result["result"].unique_id == f"{ANONYMOUS_CONTROLLER_ID}::1"
 
 
 async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
@@ -295,7 +297,7 @@ async def test_flow_fails_and_recovers(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Site name"
+    assert result["title"] == "1.2.3.4 (Site name)"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "username",
@@ -304,7 +306,97 @@ async def test_flow_fails_and_recovers(
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].unique_id == "1"
+    assert result["result"].unique_id == f"{ANONYMOUS_CONTROLLER_ID}::1"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"name": "default", "role": "admin", "desc": "Default", "_id": "default"}]],
+)
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{"anonymous_controller_id": "controller-b"}]],
+)
+async def test_flow_allows_second_controller_with_same_default_site(
+    hass: HomeAssistant,
+) -> None:
+    """A second controller with the same default site should create a new entry."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="controller-a::default",
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_SITE_ID: "default",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.1.1",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "10.0.1.1 (Default)"
+    assert result["result"].unique_id == "controller-b::default"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"name": "default", "role": "admin", "desc": "Default", "_id": "default"}]],
+)
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{"anonymous_controller_id": "controller-b"}]],
+)
+async def test_flow_migrates_legacy_site_only_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Legacy site-only entries should be upgraded to controller-plus-site IDs."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="default",
+        data={
+            CONF_HOST: "10.0.1.1",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_SITE_ID: "default",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.1.1",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "configuration_updated"
+    assert existing_entry.unique_id == "controller-b::default"
 
 
 async def test_reauth_flow_update_configuration(
@@ -338,6 +430,56 @@ async def test_reauth_flow_update_configuration(
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"name": "default", "role": "admin", "desc": "Default", "_id": "default"}]],
+)
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{"anonymous_controller_id": "controller-b"}]],
+)
+async def test_reauth_flow_extracts_site_id_from_compound_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Reauth should use the raw site_id from the compound unique ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="controller-b::default",
+        data={
+            CONF_HOST: "10.0.1.1",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_SITE_ID: "default",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
+    ) as ws_mock:
+        ws_mock.return_value = False
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "10.0.1.1",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+                CONF_PORT: 443,
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.unique_id == "controller-b::default"
 
 
 async def test_reauth_flow_update_configuration_on_not_loaded_entry(
