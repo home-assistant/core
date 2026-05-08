@@ -16,6 +16,7 @@ from tesla_powerwall import (
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -209,6 +210,14 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Powerwall."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        self.ip_address = reconfigure_entry.data[CONF_IP_ADDRESS]
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -225,6 +234,13 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(
                         info["unique_id"], raise_on_progress=False
                     )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={**user_input, CONFIG_ENTRY_COOKIE: None},
+                    )
+                if info["unique_id"]:
                     self._abort_if_unique_id_configured(
                         updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                     )
