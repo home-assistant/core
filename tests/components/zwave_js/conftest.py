@@ -1513,3 +1513,15 @@ def fibaro_fgms001_v2_8_fixture(
     node = Node(client, fibaro_fgms001_v2_8_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="fibaro_fgms001_unknown_firmware")
+def fibaro_fgms001_unknown_firmware_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load FGMS001 node with no reported firmware version."""
+    state = copy.deepcopy(fibaro_fgms001_v2_8_state)
+    state.pop("firmwareVersion", None)
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
