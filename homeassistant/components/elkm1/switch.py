@@ -107,8 +107,6 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
         """Turn off the output."""
         self._elk_set(ThermostatMode.EMERGENCY_HEAT)
 
-    async def async_switch_output_turn_on_for(
-        self, duration: int | None = None
-    ) -> None:
+    async def async_switch_output_turn_on_for(self, duration: timedelta) -> None:
         """Turn on an output for specified length of time: not supported for thermostat."""
         raise HomeAssistantError("supported only on ElkM1 output switch entities")
