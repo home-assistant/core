@@ -2477,7 +2477,7 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      'current_position': 15,
       'current_tilt_position': 68,
       'device_class': 'blind',
       'friendly_name': 'Office Blinds',

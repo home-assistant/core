@@ -28,6 +28,11 @@ MEMORIZED_POSITION = FixtureDevice(
     "io://1234-1234-6233/12184029",
     "number.garden_house_shutter_my_position",
 )
+OFFICE_BLINDS_MEMORIZED_POSITION = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/4877511",
+    "number.office_blinds_my_position",
+)
 EXPECTED_NUMBER_OF_SHOWER = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#1",
@@ -61,6 +66,7 @@ FREEZE_PROTECTION_TEMPERATURE = FixtureDevice(
 
 SNAPSHOT_FIXTURES = [
     MEMORIZED_POSITION,
+    OFFICE_BLINDS_MEMORIZED_POSITION,
     EXPECTED_NUMBER_OF_SHOWER,
     COMFORT_ROOM_TEMPERATURE,
 ]

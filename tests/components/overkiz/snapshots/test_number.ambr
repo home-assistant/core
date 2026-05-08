@@ -1517,3 +1517,723 @@
     'state': '86',
   })
 # ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bathroom_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bathroom_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/5456600-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bathroom_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bathroom Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bathroom_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bedroom_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bedroom_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/16130150-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bedroom_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bedroom Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bedroom_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.dining_room_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.dining_room_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/13662182-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.dining_room_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dining Room Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.dining_room_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.garage_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.garage_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/11292138-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.garage_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garage Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.garage_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.guest_room_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.guest_room_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6553884-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.guest_room_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Guest Room Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.guest_room_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.hallway_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.hallway_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/10076003-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.hallway_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hallway Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hallway_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.kitchen_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.kitchen_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/3248049-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.kitchen_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kitchen_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.living_room_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.living_room_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6380765-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.living_room_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.living_room_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.master_bedroom_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.master_bedroom_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/12736675-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.master_bedroom_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Master Bedroom Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.master_bedroom_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.nursery_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.nursery_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/4803435-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.nursery_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nursery Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.nursery_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.office_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.office_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/4877511-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.office_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Office Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.office_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '85',
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.study_blinds_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.study_blinds_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6375755-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.study_blinds_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Study Blinds My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.study_blinds_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
