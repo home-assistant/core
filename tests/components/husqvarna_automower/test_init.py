@@ -469,7 +469,7 @@ async def test_add_and_remove_work_area(
                 last_time_completed=datetime(
                     2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
                 ),
-                type=WorkAreaType.RANDOM,
+                type=WorkAreaType.SYSTEMATIC,
                 use_global_cutting_height=False,
             )
         }
