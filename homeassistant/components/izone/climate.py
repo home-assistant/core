@@ -29,11 +29,12 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
@@ -46,6 +47,7 @@ from .const import (
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
     IZONE,
+    UNAVAILABLE_DEBOUNCE,
 )
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
@@ -148,6 +150,10 @@ class ControllerDevice(ClimateEntity):
         """Initialise ControllerDevice."""
         self._controller = controller
 
+        # Debounce tracking for disconnect events
+        self._disconnect_debounce: CALLBACK_TYPE | None = None
+        self._pending_disconnect_ex: Exception | None = None
+
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_OFF
@@ -246,25 +252,74 @@ class ControllerDevice(ClimateEntity):
             )
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel pending debounce timer when entity is removed."""
+        if self._disconnect_debounce is not None:
+            self._disconnect_debounce()
+            self._disconnect_debounce = None
+            self._pending_disconnect_ex = None
+
     @callback
     def set_available(self, available: bool, ex: Exception | None = None) -> None:
-        """Set availability for the controller.
+        """Set availability for the controller with debounce for disconnects.
 
-        Also sets zone availability as they follow the same availability.
+        Disconnects are debounced to prevent the entity from flapping
+        between available/unavailable on transient network issues. The
+        controller only shows as unavailable if it remains disconnected
+        for UNAVAILABLE_DEBOUNCE seconds.
         """
-        if self.available == available:
-            return
-
         if available:
-            _LOGGER.warning("Reconnected controller %s ", self._controller.device_uid)
-        else:
-            _LOGGER.warning(
-                "Controller %s disconnected due to exception: %s",
+            # Cancel any pending disconnect timer
+            if self._disconnect_debounce is not None:
+                self._disconnect_debounce()
+                self._disconnect_debounce = None
+                self._pending_disconnect_ex = None
+
+            if not self._attr_available:
+                # Was actually unavailable, now reconnected
+                _LOGGER.warning(
+                    "Reconnected controller %s",
+                    self._controller.device_uid,
+                )
+                self._attr_available = True
+                self.async_write_ha_state()
+                for zone in self.zones.values():
+                    if zone.hass is not None:
+                        zone.async_schedule_update_ha_state()
+        elif self._attr_available and self._disconnect_debounce is None:
+            # Don't immediately mark as unavailable - start debounce
+            _LOGGER.debug(
+                "Controller %s disconnect detected, starting %ss debounce "
+                "(exception: %s)",
                 self._controller.device_uid,
+                UNAVAILABLE_DEBOUNCE,
                 ex,
             )
+            self._pending_disconnect_ex = ex
+            self._disconnect_debounce = async_call_later(
+                self.hass, UNAVAILABLE_DEBOUNCE, self._mark_unavailable
+            )
 
-        self._attr_available = available
+    @callback
+    def _mark_unavailable(self, _now) -> None:
+        """Mark the controller as unavailable after the debounce period.
+
+        Called when the controller has remained disconnected for the
+        full debounce duration without reconnecting.
+        """
+        self._disconnect_debounce = None
+        ex = self._pending_disconnect_ex
+        self._pending_disconnect_ex = None
+
+        if not self._attr_available:
+            return  # Already unavailable
+
+        _LOGGER.warning(
+            "Controller %s disconnected due to exception: %s",
+            self._controller.device_uid,
+            ex,
+        )
+        self._attr_available = False
         self.async_write_ha_state()
         for zone in self.zones.values():
             if zone.hass is not None:

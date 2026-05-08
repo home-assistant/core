@@ -4,13 +4,23 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    CONF_HOST,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CONFIG, IZONE
-from .discovery import async_start_discovery_service, async_stop_discovery_service
+from .const import DATA_CONFIG, DATA_DISCOVERY_SERVICE, IZONE
+from .discovery import (
+    async_add_controller_by_ip,
+    async_start_discovery_service,
+    async_stop_discovery_service,
+)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -55,10 +65,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    # If a host is configured, manually add the controller by IP.
+    # Pass unique_id (device UID) to skip redundant HTTP lookup.
+    if host := entry.data.get(CONF_HOST):
+        try:
+            await async_add_controller_by_ip(hass, host, entry.unique_id)
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to iZone device at {host}"
+            ) from err
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload the config entry and stop discovery process."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    """Unload a config entry."""
+    result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if not result:
+        return result
+
+    if (disco := hass.data.get(DATA_DISCOVERY_SERVICE)) and entry.data.get(CONF_HOST):
+        disco.remove_static_host(entry.unique_id)
+
+    return result

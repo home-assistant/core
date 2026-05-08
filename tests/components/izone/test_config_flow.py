@@ -2,15 +2,24 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
+from homeassistant.components.izone.const import (
+    DATA_DISCOVERY_SERVICE,
+    DISPATCH_CONTROLLER_DISCOVERED,
+    IZONE,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from . import setup_controller, setup_integration
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -31,7 +40,7 @@ def _mock_start_discovery(hass: HomeAssistant, mock_disco: Mock) -> Callable[...
 
 
 async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
-    """Test not finding iZone controller."""
+    """Test not finding iZone controller via auto-discovery."""
 
     with (
         patch(
@@ -47,11 +56,14 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
+        # User form with optional host field
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
+        # Submit with blank host to trigger auto-discovery
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_devices_found"
 
         await hass.async_block_till_done()
 
@@ -59,7 +71,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
 
 
 async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
-    """Test not finding iZone controller."""
+    """Test finding iZone controller via auto-discovery."""
     mock_disco.pi_disco.controllers["blah"] = object()
 
     with (
@@ -80,12 +92,411 @@ async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
+        # User form with optional host field
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        # Submit with blank host to trigger auto-discovery
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        # Discovery confirmation form
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "discover"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {}
 
         await hass.async_block_till_done()
 
     mock_setup.assert_called_once()
+
+
+async def test_manual_ip_success(hass: HomeAssistant) -> None:
+    """Test manually configuring an iZone controller by IP address."""
+    mock_controller = Mock()
+    mock_controller.device_uid = "000013170"
+
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.izone.config_flow.async_get_device_uid",
+            return_value="000013170",
+        ),
+        patch(
+            "homeassistant.components.izone.async_add_controller_by_ip",
+            return_value=mock_controller,
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "iZone 000013170"
+        assert result["data"] == {CONF_HOST: "192.168.2.100"}
+
+        await hass.async_block_till_done()
+
+    mock_setup.assert_called_once()
+
+
+async def test_manual_ip_cannot_connect(hass: HomeAssistant) -> None:
+    """Test manually configuring with an unreachable IP address."""
+    with patch(
+        "homeassistant.components.izone.config_flow.async_get_device_uid",
+        side_effect=ConnectionError("Unable to connect"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+
+        # Should show form again with error
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_manual_ip_already_configured(hass: HomeAssistant) -> None:
+    """Test manually configuring an already-configured device."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone 000013170",
+        data={CONF_HOST: "192.168.2.50"},
+        unique_id="000013170",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_get_device_uid",
+        return_value="000013170",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+
+        # Should abort because unique_id already exists (IP gets updated)
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+        # Verify the host was updated
+        assert entry.data[CONF_HOST] == "192.168.2.100"
+
+
+async def test_manual_ip_updates_existing_discovery_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that entering a host updates an existing discovery entry and reloads it."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_get_device_uid",
+            return_value="000013170",
+        ),
+        patch(
+            "homeassistant.components.izone.async_add_controller_by_ip",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "192.168.2.100"
+    assert entry.unique_id == "000013170"
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_single_instance_allowed_when_entry_exists(
+    hass: HomeAssistant,
+) -> None:
+    """Test that auto-discovery aborts when a discovery entry already exists."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        IZONE, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # User form should still show (allows adding manual IP)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Submit blank host to trigger auto-discovery
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should abort because a discovery entry already exists
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_import_flow(hass: HomeAssistant, mock_disco: Mock) -> None:
+    """Test import from configuration.yaml."""
+    mock_disco.pi_disco.controllers["blah"] = object()
+
+    with (
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.izone.config_flow.async_start_discovery_service"
+        ) as start_disco,
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+    ):
+        start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_IMPORT}
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "iZone"
+        assert result["data"] == {}
+
+        await hass.async_block_till_done()
+
+    mock_setup.assert_called_once()
+
+
+async def test_import_already_configured(hass: HomeAssistant) -> None:
+    """Test import aborts when already configured."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        IZONE, context={"source": config_entries.SOURCE_IMPORT}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_manual_ip_single_instance_when_existing_has_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test manual IP aborts when the existing entry already has a host configured."""
+    existing = MockConfigEntry(
+        domain=IZONE,
+        title="iZone 000099999",
+        data={CONF_HOST: "192.168.2.50"},
+        unique_id="000099999",
+    )
+    existing.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_get_device_uid",
+        return_value="000013170",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.2.100"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_import_no_devices(hass: HomeAssistant, mock_disco: Mock) -> None:
+    """Test import aborts when no devices found."""
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_start_discovery_service"
+        ) as start_disco,
+        patch(
+            "homeassistant.components.izone.config_flow.async_stop_discovery_service",
+            return_value=None,
+        ),
+    ):
+        start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_IMPORT}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_devices_found"
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """Test unloading a config entry."""
+
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_with_host(hass: HomeAssistant) -> None:
+    """Test setup entry when host is configured."""
+    mock_controller = Mock()
+    mock_controller.device_uid = "000013170"
+
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone 000013170",
+        data={CONF_HOST: "192.168.2.100"},
+        unique_id="000013170",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.async_add_controller_by_ip",
+            return_value=mock_controller,
+        ) as mock_add,
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_add.assert_called_once_with(hass, "192.168.2.100", "000013170")
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_setup_entry_with_host_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup entry raises ConfigEntryNotReady on connection error."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        title="iZone 000013170",
+        data={CONF_HOST: "192.168.2.100"},
+        unique_id="000013170",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.async_add_controller_by_ip",
+            side_effect=ConnectionError("Unable to connect"),
+        ),
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            return_value=None,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry_with_host_removes_static_host(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test unloading an entry with a host removes its static controller from discovery."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        data={CONF_HOST: "192.168.2.100"},
+        unique_id="000013170",
+    )
+    entry.add_to_hass(hass)
+
+    mock_ctrl = Mock()
+    mock_ctrl._refresh_address = Mock()
+    mock_ctrl._initialize = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.pizone.Controller",
+            return_value=mock_ctrl,
+        ),
+        patch(
+            "homeassistant.components.izone.climate.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert DATA_DISCOVERY_SERVICE in hass.data
+    disco = hass.data[DATA_DISCOVERY_SERVICE]
+    assert "000013170" in disco._static_hosts
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "000013170" not in disco._static_hosts
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED

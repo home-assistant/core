@@ -1,12 +1,26 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
-      "confirm": {
-        "description": "Do you want to set up iZone?"
+      "discover": {
+        "description": "iZone controller(s) found on your network. Do you want to set up iZone?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address of the iZone hub (e.g. 192.168.1.100). Leave empty for auto-discovery."
+        },
+        "description": "Enter the IP address of your iZone hub, or leave blank to auto-discover on the local network."
       }
     }
   },
