@@ -6,6 +6,7 @@ import contextlib
 import logging
 
 from heimanconnect import DeviceManagement
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
