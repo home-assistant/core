@@ -158,6 +158,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED_PARTIAL,
     ),
+    # Needs override since DiscreteGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
@@ -242,7 +253,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         device_class=CoverDeviceClass.GATE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
