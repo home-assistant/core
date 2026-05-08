@@ -201,19 +201,24 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-def mock_ouman_client(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
-    """Mock the Ouman EH-800 client.
+@pytest.fixture(params=[_DEFAULT_SCENARIO])
+def scenario(request: pytest.FixtureRequest) -> str:
+    """Scenario id; defaults to ``room_sensors`` unless overridden via parametrize."""
+    return request.param
 
-    Indirectly parametrize with a key from ``SCENARIOS`` to choose which
-    registry set the mocked device exposes; defaults to ``room_sensors``.
-    """
-    scenario_id = getattr(request, "param", _DEFAULT_SCENARIO)
-    registry_set = OumanRegistrySet(registries=SCENARIOS[scenario_id])
+
+@pytest.fixture
+def registry_set(scenario: str) -> OumanRegistrySet:
+    """The registry set the mocked device exposes for the active scenario."""
+    return OumanRegistrySet(registries=SCENARIOS[scenario])
+
+
+@pytest.fixture
+def mock_ouman_client(registry_set: OumanRegistrySet) -> Generator[AsyncMock]:
+    """Mock the Ouman EH-800 client for the active scenario."""
     values = {
         endpoint: _ENDPOINT_VALUES[endpoint] for endpoint in registry_set.endpoints
     }
-
     client = AsyncMock()
     client.get_active_registries.return_value = registry_set
     client.get_values.return_value = values

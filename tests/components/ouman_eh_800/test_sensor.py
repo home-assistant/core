@@ -12,7 +12,7 @@ from .conftest import SCENARIOS
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize("mock_ouman_client", SCENARIOS.keys(), indirect=True)
+@pytest.mark.parametrize("scenario", SCENARIOS.keys(), indirect=True)
 @pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
