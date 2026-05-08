@@ -7,14 +7,18 @@ from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
     CHAR_CONFIGURED_NAME,
+    CHAR_CURRENT_VISIBILITY_STATE,
     CHAR_REMOTE_KEY,
+    CHAR_TARGET_VISIBILITY_STATE,
     CONF_FEATURE_LIST,
+    CONF_HOMEKIT_HIDDEN_SOURCES,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
+    SERV_INPUT_SOURCE,
     SERV_SWITCH,
 )
 from homeassistant.components.homekit.type_media_players import (
@@ -45,7 +49,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 async def test_media_player_set_state(
@@ -689,3 +693,173 @@ async def test_media_player_receiver(
 
     assert acc.aid == 2
     assert acc.category == 34  # Receiver
+
+
+def _input_visibility_chars(acc: TelevisionMediaPlayer, source: str) -> tuple:
+    """Return (current, target) visibility characteristics for an input source."""
+    for service in acc.services:
+        if service.display_name != SERV_INPUT_SOURCE:
+            continue
+        if service.unique_id != source:
+            continue
+        return (
+            service.get_characteristic(CHAR_CURRENT_VISIBILITY_STATE),
+            service.get_characteristic(CHAR_TARGET_VISIBILITY_STATE),
+        )
+    raise AssertionError(f"InputSource service for {source!r} not found")
+
+
+def _make_television_state(hass: HomeAssistant, entity_id: str) -> None:
+    """Set up a TV-class media_player state with four HDMI sources."""
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
+        },
+    )
+
+
+async def test_television_input_visibility_default_unchanged(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Without persisted hides every input is visible (no behaviour change)."""
+    entity_id = "media_player.television"
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    for source in ("HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"):
+        char_current, char_target = _input_visibility_chars(acc, source)
+        assert char_current.value == 0
+        assert char_target.value == 0
+
+
+async def test_television_input_visibility_applied_on_create(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Hides recorded in config entry options are applied at accessory creation."""
+    entity_id = "media_player.television"
+    entry = MockConfigEntry(
+        domain="homekit",
+        options={CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 3"]}},
+    )
+    entry.add_to_hass(hass)
+    hk_driver.entry_id = entry.entry_id
+
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    char_current, char_target = _input_visibility_chars(acc, "HDMI 3")
+    assert char_current.value == 1
+    assert char_target.value == 1
+    for source in ("HDMI 1", "HDMI 2", "HDMI 4"):
+        other_current, _ = _input_visibility_chars(acc, source)
+        assert other_current.value == 0
+
+
+async def test_television_input_visibility_setter_persists(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Writing TargetVisibilityState mirrors to current state and persists to options."""
+    entity_id = "media_player.television"
+    entry = MockConfigEntry(domain="homekit", options={})
+    entry.add_to_hass(hass)
+    hk_driver.entry_id = entry.entry_id
+
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    char_current, char_target = _input_visibility_chars(acc, "HDMI 2")
+    assert char_current.value == 0
+
+    char_target.client_update_value(1)
+    await hass.async_block_till_done()
+    assert char_current.value == 1
+
+    acc._visibility_debouncer.async_cancel()
+    await acc._async_persist_hidden_sources()
+    await hass.async_block_till_done()
+
+    assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 2"]}
+
+
+async def test_television_input_visibility_unhide(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Writing TargetVisibilityState=0 removes the source from the persisted list."""
+    entity_id = "media_player.television"
+    entry = MockConfigEntry(
+        domain="homekit",
+        options={CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 1", "HDMI 4"]}},
+    )
+    entry.add_to_hass(hass)
+    hk_driver.entry_id = entry.entry_id
+
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    char_current, char_target = _input_visibility_chars(acc, "HDMI 1")
+    assert char_current.value == 1
+
+    char_target.client_update_value(0)
+    await hass.async_block_till_done()
+    assert char_current.value == 0
+
+    acc._visibility_debouncer.async_cancel()
+    await acc._async_persist_hidden_sources()
+    await hass.async_block_till_done()
+
+    assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 4"]}
+
+
+async def test_television_input_visibility_round_trip(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """A hide written through one accessory is restored when a fresh one is built."""
+    entity_id = "media_player.television"
+    entry = MockConfigEntry(domain="homekit", options={})
+    entry.add_to_hass(hass)
+    hk_driver.entry_id = entry.entry_id
+
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    _, char_target = _input_visibility_chars(acc, "HDMI 4")
+    char_target.client_update_value(1)
+    await hass.async_block_till_done()
+    acc._visibility_debouncer.async_cancel()
+    await acc._async_persist_hidden_sources()
+    await hass.async_block_till_done()
+
+    assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 4"]}
+
+    acc2 = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 3, None)
+    acc2.run()
+    await hass.async_block_till_done()
+
+    char_current_2, char_target_2 = _input_visibility_chars(acc2, "HDMI 4")
+    assert char_current_2.value == 1
+    assert char_target_2.value == 1

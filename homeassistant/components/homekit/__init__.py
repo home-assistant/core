@@ -109,6 +109,7 @@ from .const import (
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
+    CONF_HOMEKIT_HIDDEN_SOURCES,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
@@ -385,7 +386,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     )
 
     entry_data = HomeKitEntryData(
-        homekit=homekit, pairing_qr=None, pairing_qr_secret=None
+        homekit=homekit,
+        pairing_qr=None,
+        pairing_qr_secret=None,
+        last_options=dict(entry.options),
     )
     entry.runtime_data = entry_data
 
@@ -403,6 +407,22 @@ async def _async_update_listener(
     """Handle options update."""
     if entry.source == SOURCE_IMPORT:
         return
+    # Per-input visibility writes from HomeKit go through entry.options too.
+    # Skip the reload (which tears down the bridge and disrupts pairings) when
+    # the only thing that changed is the persisted hidden-source map.
+    entry_data = entry.runtime_data
+    new_options = dict(entry.options)
+    if entry_data is not None:
+        last = entry_data.last_options
+        last_without_visibility = {
+            k: v for k, v in last.items() if k != CONF_HOMEKIT_HIDDEN_SOURCES
+        }
+        new_without_visibility = {
+            k: v for k, v in new_options.items() if k != CONF_HOMEKIT_HIDDEN_SOURCES
+        }
+        entry_data.last_options = new_options
+        if last_without_visibility == new_without_visibility:
+            return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
