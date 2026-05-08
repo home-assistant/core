@@ -7,7 +7,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 import pytest
@@ -335,7 +335,7 @@ async def test_new_endpoint_callback(
         for endpoint in await async_load_json_array_fixture(
             hass, "endpoints.json", DOMAIN
         )
-        if endpoint["Status"] == 1
+        if endpoint["Status"] == EndpointStatus.UP
     ]
 
     coordinator = mock_config_entry.runtime_data
