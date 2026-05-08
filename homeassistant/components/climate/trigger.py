@@ -8,14 +8,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    EntityNumericalStateChangedTriggerBase,
     EntityNumericalStateChangedTriggerWithUnitBase,
+    EntityNumericalStateCrossedThresholdTriggerBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
+    EntityNumericalStateTriggerBase,
     EntityNumericalStateTriggerWithUnitBase,
     EntityTargetStateTriggerBase,
     Trigger,
     TriggerConfig,
-    make_entity_numerical_state_changed_trigger,
-    make_entity_numerical_state_crossed_threshold_trigger,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
@@ -55,6 +56,13 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    def _should_include(self, state: State) -> bool:
+        """Skip climate entities that do not expose a target temperature."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_TEMPERATURE) is not None
+        )
+
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
         # Climate entities convert temperatures to the system unit via show_temp
@@ -75,6 +83,32 @@ class ClimateTargetTemperatureCrossedThresholdTrigger(
     """Trigger for climate target temperature value crossing a threshold."""
 
 
+class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
+    """Mixin for climate target humidity triggers."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
+    _valid_unit = "%"
+
+    def _should_include(self, state: State) -> bool:
+        """Skip climate entities that do not expose a target humidity."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_HUMIDITY) is not None
+        )
+
+
+class ClimateTargetHumidityChangedTrigger(
+    _ClimateTargetHumidityTriggerMixin, EntityNumericalStateChangedTriggerBase
+):
+    """Trigger for climate target humidity value changes."""
+
+
+class ClimateTargetHumidityCrossedThresholdTrigger(
+    _ClimateTargetHumidityTriggerMixin, EntityNumericalStateCrossedThresholdTriggerBase
+):
+    """Trigger for climate target humidity value crossing a threshold."""
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "hvac_mode_changed": HVACModeChangedTrigger,
     "started_cooling": make_entity_target_state_trigger(
@@ -83,14 +117,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started_drying": make_entity_target_state_trigger(
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
     ),
-    "target_humidity_changed": make_entity_numerical_state_changed_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
-        valid_unit="%",
-    ),
-    "target_humidity_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
-        valid_unit="%",
-    ),
+    "target_humidity_changed": ClimateTargetHumidityChangedTrigger,
+    "target_humidity_crossed_threshold": ClimateTargetHumidityCrossedThresholdTrigger,
     "target_temperature_changed": ClimateTargetTemperatureChangedTrigger,
     "target_temperature_crossed_threshold": ClimateTargetTemperatureCrossedThresholdTrigger,
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),

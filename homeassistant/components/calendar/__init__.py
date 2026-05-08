@@ -1,7 +1,5 @@
 """Support for Calendar event device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
@@ -15,7 +13,10 @@ from aiohttp import web
 from dateutil.rrule import rrulestr
 import voluptuous as vol
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.components import frontend, http, websocket_api
+from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
@@ -32,7 +33,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -738,10 +739,7 @@ class CalendarEntity(Entity):
             listener(None)
             return
 
-        event_list: list[JsonValueType] = [
-            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
-            for event in events
-        ]
+        event_list: list[JsonValueType] = [event.as_dict() for event in events]
         listener(event_list)
 
     async def async_get_events(
@@ -789,6 +787,10 @@ class CalendarEventView(http.HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Return calendar events."""
+        user: User = request[KEY_HASS_USER]
+        if not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise Unauthorized(entity_id=entity_id)
+
         if not (entity := self.component.get_entity(entity_id)) or not isinstance(
             entity, CalendarEntity
         ):
@@ -840,10 +842,14 @@ class CalendarListView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
+        user: User = request[KEY_HASS_USER]
         hass = request.app[http.KEY_HASS]
+        entity_perm = user.permissions.check_entity
         calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
+            if not entity_perm(entity.entity_id, POLICY_READ):
+                continue
             state = hass.states.get(entity.entity_id)
             assert state
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
@@ -863,6 +869,9 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
@@ -902,6 +911,8 @@ async def handle_calendar_event_delete(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
 
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
@@ -947,7 +958,10 @@ async def handle_calendar_event_delete(
 async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle creation of a calendar event."""
+    """Handle update of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
@@ -991,6 +1005,9 @@ async def handle_calendar_event_subscribe(
 ) -> None:
     """Subscribe to calendar event updates."""
     entity_id: str = msg["entity_id"]
+
+    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+        raise Unauthorized(entity_id=entity_id)
 
     if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
         connection.send_error(

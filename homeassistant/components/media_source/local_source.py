@@ -1,7 +1,5 @@
 """Local Media Source Implementation."""
 
-from __future__ import annotations
-
 import io
 import logging
 import mimetypes
@@ -314,7 +312,7 @@ class LocalMediaView(http.HomeAssistantView):
 
     async def head(
         self, request: web.Request, source_dir_id: str, location: str
-    ) -> None:
+    ) -> web.Response:
         """Handle a HEAD request.
 
         This is sent by some DLNA renderers, like Samsung ones, prior to sending
@@ -322,7 +320,9 @@ class LocalMediaView(http.HomeAssistantView):
 
         Check whether the location exists or not.
         """
-        await self._validate_media_path(source_dir_id, location)
+        media_path = await self._validate_media_path(source_dir_id, location)
+        mime_type, _ = mimetypes.guess_type(str(media_path))
+        return web.Response(content_type=mime_type)
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str

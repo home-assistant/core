@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "name": "Device 1",
+  "imei": "IMEI1",
+  "modellid": 100,
+  "alarmbewegung": 1,
+  "alarmakkuwarnung": 1,
+  "alarmsos": 1,
+  "alarmgeschwindigkeit": 1,
+  "alarmstromunterbrechung": 1,
+  "alarmzuendalarm": 1,
+  "alarm_fall_enabled": 1,
+  "alarm_volt": 1,
+  "device_models": []
+}

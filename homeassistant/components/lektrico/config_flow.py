@@ -1,7 +1,5 @@
 """Config flow for Lektrico Charging Station."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from lektricowifi import Device, DeviceConnectionError

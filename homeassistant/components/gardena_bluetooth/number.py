@@ -1,7 +1,5 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from gardena_bluetooth.const import (
@@ -88,17 +86,6 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=AquaContourWatering.remaining_watering_time.unique_id,
-        translation_key="remaining_watering_time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        native_min_value=0.0,
-        native_max_value=24 * 60 * 60,
-        native_step=60.0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        char=AquaContourWatering.remaining_watering_time,
-        device_class=NumberDeviceClass.DURATION,
-    ),
-    GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.unique_id,
         translation_key="rain_pause",
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -142,6 +129,7 @@ DESCRIPTIONS = (
         native_min_value=0.0,
         native_max_value=359.0,
         native_step=1.0,
+        entity_category=EntityCategory.CONFIG,
         char=Spray.sector,
     ),
     GardenaBluetoothNumberEntityDescription(
@@ -153,6 +141,7 @@ DESCRIPTIONS = (
         native_max_value=100.0,
         native_step=0.1,
         char=Spray.distance,
+        entity_category=EntityCategory.CONFIG,
         scale=10.0,
     ),
 )

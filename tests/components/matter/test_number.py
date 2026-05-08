@@ -342,6 +342,44 @@ async def test_thermostat_occupied_setback(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_multi_state_p100"])
+async def test_boolean_state_configuration_current_sensitivity_level(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test sensitivity level number entity for Aqara P100."""
+    entity_id = "number.multi_state_sensor_p100_sensitivity"
+
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 1,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=(
+                clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel
+            ),
+        ),
+        value=0,
+    )
+
+    set_node_attribute(matter_node, 1, 128, 0, 4)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_attributes(
     hass: HomeAssistant,

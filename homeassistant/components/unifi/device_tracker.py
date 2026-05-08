@@ -1,7 +1,5 @@
 """Track both clients and devices using UniFi Network."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
@@ -35,6 +33,7 @@ from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"

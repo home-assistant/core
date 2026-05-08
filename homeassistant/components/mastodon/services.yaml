@@ -50,6 +50,14 @@ post:
             - private
             - direct
           translation_key: post_visibility
+    quote_approval_policy:
+      selector:
+        select:
+          options:
+            - public
+            - followers
+            - nobody
+          translation_key: quote_approval_policy
     idempotency_key:
       selector:
         text:

@@ -1,7 +1,5 @@
 """Config flow for DoorBird integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging

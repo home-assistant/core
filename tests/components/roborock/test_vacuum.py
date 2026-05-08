@@ -143,6 +143,29 @@ async def test_commands(
 
 
 @pytest.mark.parametrize(
+    "entity_id",
+    [
+        ENTITY_ID,
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_set_fan_speed_invalid(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test calling set_fan_speed with an invalid mode."""
+    with pytest.raises(ServiceValidationError, match="Invalid fan speed: some-mode"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "some-mode"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("in_cleaning_int", "in_returning_int", "expected_command"),
     [
         (0, 1, RoborockCommand.APP_CHARGE),
@@ -878,25 +901,6 @@ async def test_q10_set_fan_speed_command(
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
     assert q10_vacuum_api.vacuum.set_fan_level.call_args[0] == (YXFanLevel.QUIET,)
-
-
-async def test_q10_set_invalid_fan_speed(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    q10_vacuum_api: Mock,
-) -> None:
-    """Test that setting an invalid fan speed raises an error."""
-    vacuum = hass.states.get(Q10_ENTITY_ID)
-    assert vacuum
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "invalid_speed"},
-            blocking=True,
-        )
-    assert q10_vacuum_api.vacuum.set_fan_level.call_count == 0
 
 
 @pytest.mark.parametrize(
