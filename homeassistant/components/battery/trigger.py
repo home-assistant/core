@@ -1,0 +1,60 @@
+"""Provides triggers for batteries."""
+
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import DomainSpec
+from homeassistant.helpers.trigger import (
+    Trigger,
+    make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_crossed_threshold_trigger,
+    make_entity_target_state_trigger,
+)
+
+BATTERY_LOW_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.BATTERY),
+}
+
+BATTERY_CHARGING_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING
+    ),
+}
+
+BATTERY_PERCENTAGE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
+}
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    "low": make_entity_target_state_trigger(
+        BATTERY_LOW_DOMAIN_SPECS, STATE_ON, primary_entities_only=False
+    ),
+    "not_low": make_entity_target_state_trigger(
+        BATTERY_LOW_DOMAIN_SPECS, STATE_OFF, primary_entities_only=False
+    ),
+    "started_charging": make_entity_target_state_trigger(
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON, primary_entities_only=False
+    ),
+    "stopped_charging": make_entity_target_state_trigger(
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF, primary_entities_only=False
+    ),
+    "level_changed": make_entity_numerical_state_changed_trigger(
+        BATTERY_PERCENTAGE_DOMAIN_SPECS,
+        valid_unit="%",
+        primary_entities_only=False,
+    ),
+    "level_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+        BATTERY_PERCENTAGE_DOMAIN_SPECS,
+        valid_unit="%",
+        primary_entities_only=False,
+    ),
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the triggers for batteries."""
+    return TRIGGERS

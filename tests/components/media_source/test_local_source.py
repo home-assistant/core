@@ -132,9 +132,14 @@ async def test_media_view(
     # Fetch available media
     resp = await client.head("/media/local/test.mp3")
     assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "audio/mpeg"
 
     resp = await client.get("/media/local/test.mp3")
     assert resp.status == HTTPStatus.OK
+
+    resp = await client.head("/media/local/Epic Sax Guy 10 Hours.mp4")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "video/mp4"
 
     resp = await client.get("/media/local/Epic Sax Guy 10 Hours.mp4")
     assert resp.status == HTTPStatus.OK

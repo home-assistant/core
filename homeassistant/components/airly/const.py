@@ -1,7 +1,5 @@
 """Constants for Airly integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 ATTR_API_ADVICE: Final = "ADVICE"
@@ -37,3 +35,5 @@ MAX_UPDATE_INTERVAL: Final = 90
 MIN_UPDATE_INTERVAL: Final = 5
 NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."
 URL = "https://airly.org/map/#{latitude},{longitude}"
+
+DEFAULT_NAME: Final = "Airly"

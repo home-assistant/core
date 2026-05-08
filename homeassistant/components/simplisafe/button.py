@@ -1,7 +1,5 @@
 """Buttons for the SimpliSafe integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -9,14 +7,12 @@ from simplipy.errors import SimplipyError
 from simplipy.system import System
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
-from .const import DOMAIN
+from . import SimpliSafe, SimpliSafeConfigEntry
 from .entity import SimpliSafeEntity
 from .typing import SystemType
 
@@ -47,11 +43,11 @@ BUTTON_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe buttons based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
 
     async_add_entities(
         [

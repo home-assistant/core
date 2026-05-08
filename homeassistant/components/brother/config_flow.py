@@ -1,7 +1,5 @@
 """Adds config flow for Brother Printer."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModelError

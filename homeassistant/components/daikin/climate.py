@@ -1,7 +1,5 @@
 """Support for the Daikin HVAC."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import logging
 from typing import Any

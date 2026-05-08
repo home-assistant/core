@@ -28,7 +28,7 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
         self._attr_unique_id = f"{softener_key}-{entity_key}"
         self._attr_device_info = DeviceInfo(
             name=self.softener.name,
-            hw_version=self.softener.fwVersion,
+            hw_version=self.softener.diagnostics.fw_version,
             identifiers={(DOMAIN, str(softener_key))},
             manufacturer=self.softener.brand,
             model=self.softener.ssn,

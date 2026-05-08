@@ -1,7 +1,5 @@
 """Config flow for the Template integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
@@ -13,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -180,18 +179,16 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.BINARY_SENSOR:
-        schema |= _SCHEMA_STATE
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in BinarySensorDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="binary_sensor_device_class",
-                        sort=True,
-                    ),
+        schema |= _SCHEMA_STATE | {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in BinarySensorDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="binary_sensor_device_class",
+                    sort=True,
                 ),
-            }
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
@@ -288,6 +285,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.NUMBER:
         schema |= {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in NumberDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="number_device_class",
+                    sort=True,
+                ),
+            ),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),

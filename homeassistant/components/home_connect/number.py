@@ -136,7 +136,7 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
     entity_registry: er.EntityRegistry,
-) -> list[HomeConnectOptionEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of currently available option entities."""
     return [
         HomeConnectOptionNumberEntity(appliance_coordinator, description)

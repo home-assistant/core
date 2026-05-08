@@ -1,7 +1,5 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import cast
 
@@ -119,5 +117,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

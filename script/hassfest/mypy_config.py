@@ -1,7 +1,5 @@
 """Generate mypy config."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import configparser
 import io
@@ -50,7 +48,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
-    "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
     "enable_error_code": ", ".join(  # noqa: FLY002
         [

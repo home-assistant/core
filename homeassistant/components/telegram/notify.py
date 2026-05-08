@@ -1,7 +1,5 @@
 """Telegram platform for notify component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -16,6 +14,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.components.telegram_bot import (
+    ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_MESSAGE_TAG,
@@ -58,7 +57,7 @@ async def async_get_service(
         hass,
         DOMAIN,
         "migrate_notify",
-        breaks_in_ha_version="2026.5.0",
+        breaks_in_ha_version="2026.8.0",
         is_fixable=False,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
@@ -80,7 +79,7 @@ class TelegramNotificationService(BaseNotificationService):
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
-        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
+        service_data = {ATTR_CHAT_ID: kwargs.get(ATTR_TARGET, self._chat_id)}
         data = kwargs.get(ATTR_DATA)
 
         # Set message tag

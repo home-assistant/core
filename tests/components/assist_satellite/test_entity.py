@@ -29,11 +29,12 @@ from homeassistant.components.assist_satellite.entity import AssistSatelliteStat
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
+from tests.common import MockUser
 from tests.components.tts.common import MockResultStream
 
 
@@ -182,6 +183,43 @@ async def test_new_pipeline_cancels_pipeline(
             )
             await pipeline1_cancelled.wait()
             await pipeline2_finished.wait()
+
+
+async def test_pipeline_validation_error_ends_pipeline(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test validation pipeline errors end the satellite pipeline cleanly."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        stt_engine="test-stt-engine",
+        stt_language="en",
+        conversation_engine="conversation.non_existing",
+    )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+    ):
+        await entity.async_accept_pipeline_from_satellite(
+            object(),  # type: ignore[arg-type]
+            end_stage=PipelineStage.INTENT,
+        )
+
+    assert [event.type for event in entity.events[-3:]] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.ERROR,
+        PipelineEventType.RUN_END,
+    ]
+    assert entity.events[-2].data == {
+        "code": "intent-not-supported",
+        "message": "Intent recognition engine conversation.non_existing is not found",
+    }
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == AssistSatelliteState.IDLE
 
 
 @pytest.mark.parametrize(
@@ -928,6 +966,24 @@ async def test_ask_question(
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
+
+
+async def test_ask_question_requires_entity_permission(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test ask_question is denied for users without POLICY_CONTROL on the entity."""
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            "assist_satellite",
+            "ask_question",
+            {"entity_id": "assist_satellite.test_entity", "question": "Anything?"},
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
 
 
 async def test_wake_word_start_keeps_responding(

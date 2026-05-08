@@ -1,7 +1,5 @@
 """Config flow for Hue BLE integration."""
 
-from __future__ import annotations
-
 from enum import Enum
 import logging
 from typing import Any

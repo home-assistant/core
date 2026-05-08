@@ -1,5 +1,6 @@
 """Config flow for OpenEVSE integration."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from openevsehttp.__main__ import OpenEVSE
@@ -9,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_ID, CONF_SERIAL, DOMAIN
@@ -36,7 +38,9 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Check if we can connect to the OpenEVSE charger."""
 
-        charger = OpenEVSE(host, user, password)
+        charger = OpenEVSE(
+            host, user, password, session=async_get_clientsession(self.hass)
+        )
         try:
             result = await charger.test_and_get()
         except TimeoutError:
@@ -165,5 +169,40 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="auth",
             data_schema=self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication on an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors, _ = await self.check_status(
+                reauth_entry.data[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input),
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

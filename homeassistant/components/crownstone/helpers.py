@@ -1,19 +1,16 @@
 """Helper functions for the Crownstone integration."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import os
 
-from serial.tools.list_ports_common import ListPortInfo
-
 from homeassistant.components import usb
+from homeassistant.components.usb import USBDevice
 
 from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
 
 
 def list_ports_as_str(
-    serial_ports: Sequence[ListPortInfo], no_usb_option: bool = True
+    serial_ports: Sequence[USBDevice], no_usb_option: bool = True
 ) -> list[str]:
     """Represent currently available serial ports as string.
 
@@ -31,8 +28,8 @@ def list_ports_as_str(
             port.serial_number,
             port.manufacturer,
             port.description,
-            f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
-            f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
+            port.vid,
+            port.pid,
         )
         for port in serial_ports
     )

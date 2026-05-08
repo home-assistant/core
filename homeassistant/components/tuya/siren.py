@@ -1,11 +1,11 @@
 """Support for Tuya siren."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
+from tuya_device_handlers.definition.siren import (
+    SirenDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
@@ -18,8 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
@@ -27,21 +27,25 @@ SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
+            translation_key="siren",
         ),
     ),
     DeviceCategory.DGNBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
+            translation_key="siren",
         ),
     ),
     DeviceCategory.SGBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
+            name=None,
         ),
     ),
     DeviceCategory.SP: (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
+            translation_key="siren",
         ),
     ),
 }
@@ -66,13 +70,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, manager, description, dpcode_wrapper)
+                    TuyaSirenEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -88,20 +88,17 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
-    _attr_name = None
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
-        dpcode_wrapper: DeviceWrapper[bool],
+        definition: SirenDefinition,
     ) -> None:
         """Init Tuya Siren."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.siren_wrapper
 
     @property
     def is_on(self) -> bool | None:
