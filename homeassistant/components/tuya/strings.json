@@ -917,6 +917,11 @@
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
     "switch": {
       "anion": {
         "name": "Anion"

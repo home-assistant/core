@@ -1,7 +1,5 @@
 """Support for MQTT notify."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components import notify

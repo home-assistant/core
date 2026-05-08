@@ -1,7 +1,5 @@
 """Config flow for flume integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os

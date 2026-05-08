@@ -1,7 +1,4 @@
 """Support for mill wifi-enabled home heaters."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
 
 import mill
 
@@ -11,12 +8,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_IP_ADDRESS,
-    CONF_USERNAME,
     PERCENTAGE,
     EntityCategory,
     UnitOfEnergy,
@@ -31,11 +25,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BATTERY,
-    CLOUD,
     CONNECTION_TYPE,
     CONSUMPTION_TODAY,
     CONSUMPTION_YEAR,
-    DOMAIN,
     ECO2,
     HUMIDITY,
     LOCAL,
@@ -43,7 +35,7 @@ from .const import (
     TEMPERATURE,
     TVOC,
 )
-from .coordinator import MillDataUpdateCoordinator
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillBaseEntity
 
 HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -148,13 +140,13 @@ SOCKET_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mill sensor."""
-    if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
+    mill_data_coordinator = entry.runtime_data
 
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
         async_add_entities(
             LocalMillSensor(
                 mill_data_coordinator,
@@ -163,8 +155,6 @@ async def async_setup_entry(
             for entity_description in LOCAL_SENSOR_TYPES
         )
         return
-
-    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
 
     entities = [
         MillSensor(

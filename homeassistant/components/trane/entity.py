@@ -1,7 +1,5 @@
 """Base entity for the Trane Local integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from steamloop import ThermostatConnection, Zone

@@ -1,7 +1,5 @@
 """Icon helper methods."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache

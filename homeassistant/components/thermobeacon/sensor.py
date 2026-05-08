@@ -1,7 +1,5 @@
 """Support for ThermoBeacon sensors."""
 
-from __future__ import annotations
-
 from thermobeacon_ble import (
     SensorDeviceClass as ThermoBeaconSensorDeviceClass,
     SensorUpdate,

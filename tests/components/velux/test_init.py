@@ -17,8 +17,6 @@ from homeassistant.components.velux.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.setup import async_setup_component
 
 from tests.common import ConfigEntry, MockConfigEntry
 
@@ -161,42 +159,3 @@ async def test_unload_does_not_disconnect_if_platform_unload_fails(
 
     # Verify disconnect was NOT called since platform unload failed
     mock_pyvlx.disconnect.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_reboot_gateway_service_raises_on_exception(
-    hass: HomeAssistant, mock_pyvlx: AsyncMock
-) -> None:
-    """Test that reboot_gateway service raises HomeAssistantError on exception."""
-
-    mock_pyvlx.reboot_gateway.side_effect = OSError("Connection failed")
-    with pytest.raises(HomeAssistantError, match="Failed to reboot gateway"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )
-
-    mock_pyvlx.reboot_gateway.side_effect = PyVLXException("Reboot failed")
-    with pytest.raises(HomeAssistantError, match="Failed to reboot gateway"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )
-
-
-async def test_reboot_gateway_service_raises_validation_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test that reboot_gateway service raises ServiceValidationError when no gateway is loaded."""
-    # Set up the velux integration's async_setup to register the service
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    with pytest.raises(ServiceValidationError, match="No loaded Velux gateway found"):
-        await hass.services.async_call(
-            "velux",
-            "reboot_gateway",
-            blocking=True,
-        )

@@ -1,7 +1,5 @@
 """Class for helpers and communication with the OverKiz API."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -22,6 +20,8 @@ COMMANDS_WITHOUT_DELAY = [
     OverkizCommand.ON,
     OverkizCommand.ON_WITH_TIMER,
     OverkizCommand.TEST,
+    OverkizCommand.TILT_POSITIVE,
+    OverkizCommand.TILT_NEGATIVE,
 ]
 
 

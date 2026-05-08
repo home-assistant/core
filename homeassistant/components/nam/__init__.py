@@ -1,7 +1,5 @@
 """The Nettigo Air Monitor component."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp.client_exceptions import ClientError

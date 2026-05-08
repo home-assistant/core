@@ -1,7 +1,5 @@
 """Config flow for Ecovacs mqtt integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 import ssl
@@ -139,10 +137,6 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
-        if not self.show_advanced_options:
-            return await self.async_step_auth()
-
         if user_input:
             self._mode = user_input[CONF_MODE]
             return await self.async_step_auth()
