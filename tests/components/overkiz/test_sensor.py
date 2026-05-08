@@ -44,7 +44,6 @@ COZYTOUCH_DHW = FixtureDevice(
     "io://1234-5678-5643/109286#2",
     "sensor.patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
-
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
