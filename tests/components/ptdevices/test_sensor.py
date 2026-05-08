@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioptdevices.interface import PTDevicesResponse
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -39,7 +38,6 @@ async def test_add_remove_sensor(
     hass: HomeAssistant,
     mock_ptdevices_interface: AsyncMock,
     mock_ptdevices_config_entry: MockConfigEntry,
-    mock_ptdevices_level: PTDevicesResponse,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling of missing and new sensors."""
@@ -52,9 +50,7 @@ async def test_add_remove_sensor(
     assert state.state != STATE_UNKNOWN
 
     # Remove the status
-    data: PTDevicesResponse = mock_ptdevices_level
-    data["body"]["C0FFEEC0FFEE"].pop("status")
-    mock_ptdevices_interface.get_data.return_value = data
+    mock_ptdevices_interface.get_data.return_value["body"]["C0FFEEC0FFEE"].pop("status")
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
