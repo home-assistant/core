@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/infrared",
   "integration_type": "entity",
   "quality_scale": "internal",
-  "requirements": ["infrared-protocols==3.1.0"]
+  "requirements": ["infrared-protocols==3.2.0"]
 }
