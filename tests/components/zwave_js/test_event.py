@@ -1,6 +1,7 @@
 """Test the Z-Wave JS event platform."""
 
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 import pytest
@@ -234,7 +235,7 @@ def _battery_notification_event(node_id: int, urgency: int) -> Event:
 async def test_battery_low_event(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
+    client: MagicMock,
     ring_keypad: Node,
     integration: MockConfigEntry,
 ) -> None:
@@ -279,7 +280,7 @@ async def test_battery_low_event(
 
 async def test_battery_low_event_other_notifications_ignored(
     hass: HomeAssistant,
-    client,
+    client: MagicMock,
     ring_keypad: Node,
     integration: MockConfigEntry,
 ) -> None:
