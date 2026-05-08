@@ -66,7 +66,7 @@
           "token": "[%key:component::my_pv::common::token%]"
         },
         "data_description": {
-          "serial_number": "You can find the serial number on the device label.",
+          "serial_number": "You can find the 16-digit serial number on the device label.",
           "token": "[%key:component::my_pv::common::token_description%]"
         },
         "title": "my-PV Cloud Device"
