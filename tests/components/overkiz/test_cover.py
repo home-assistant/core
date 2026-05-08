@@ -57,6 +57,11 @@ PERGOLA = FixtureDevice(
     "io://1234-5678-3293/7614902",
     "cover.garden_pergola",
 )
+UP_DOWN_BIOCLIMATIC_PERGOLA = FixtureDevice(
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "rts://1234-5678-3293/16757826",
+    "cover.kitchen_pergola",
+)
 RTS = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16730022",
@@ -162,6 +167,13 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_OPEN_COVER,
+            "open",
+            [0],
+            CoverState.OPENING,
+        ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
@@ -176,6 +188,13 @@ async def test_cover_entities_snapshot(
         ),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
+        (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER,
             "close",
@@ -188,6 +207,13 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_STOP_COVER,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
         (
             TILT_ONLY_VENETIAN_BLIND,
@@ -218,6 +244,7 @@ async def test_cover_entities_snapshot(
         "open-dynamic-garage-door",
         "open-dynamic-garage-door-ogp",
         "open-partial-garage-door",
+        "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
         "close-roller-shutter",
         "close-awning",
@@ -225,6 +252,7 @@ async def test_cover_entities_snapshot(
         "close-dynamic-garage-door",
         "close-dynamic-garage-door-ogp",
         "close-partial-garage-door",
+        "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
         "stop-roller-shutter",
         "stop-awning",
@@ -232,6 +260,7 @@ async def test_cover_entities_snapshot(
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-partial-garage-door",
+        "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
         "close-tilt-tilt-only-venetian-blind",
