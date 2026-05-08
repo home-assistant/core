@@ -1,13 +1,22 @@
 """Camera entity for PrusaLink."""
 
+from dataclasses import dataclass
+
 from pyprusalink.types import PrinterState
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
+
+
+@dataclass(frozen=True, kw_only=True)
+class PrusaLinkCameraEntityDescription(
+    CameraEntityDescription, PrusaLinkEntityDescription
+):
+    """Describes PrusaLink camera entity."""
 
 
 async def async_setup_entry(
@@ -23,7 +32,7 @@ async def async_setup_entry(
 class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     """Defines a PrusaLink camera."""
 
-    entity_description = PrusaLinkEntityDescription(
+    entity_description = PrusaLinkCameraEntityDescription(
         key="job_preview",
         translation_key="job_preview",
         available_fn=lambda data: bool(
