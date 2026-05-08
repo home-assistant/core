@@ -14,6 +14,7 @@ from aioautomower.model import (
     MowerModes,
     RestrictedReasons,
     WorkArea,
+    WorkAreaType,
 )
 
 from homeassistant.components.sensor import (
@@ -351,7 +352,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="progress",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.progress is not None,
+        exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=attrgetter("progress"),
@@ -359,7 +360,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
-        exists_fn=lambda data: data.last_time_completed is not None,
+        exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=attrgetter("last_time_completed"),
     ),
@@ -487,6 +488,11 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.work_area_attributes)
+
+    @property
+    def available(self) -> bool:
+        """Return True if the work area reports a value for this sensor."""
+        return super().available and self.native_value is not None
 
     @property
     def translation_key(self) -> str:
