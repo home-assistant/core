@@ -42,10 +42,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery: todo
-  discovery-update-info:
-    status: exempt
-    comment: IP address changes are recovered via UDP rediscovery on connection failure.
+  discovery: done
+  discovery-update-info: todo
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
