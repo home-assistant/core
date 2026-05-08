@@ -294,9 +294,9 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_mode(self) -> str | None:
         """Return the current vertical swing mode for the device."""
         try:
-            return VERTICAL_SWING_MODES_REVERSE[
+            return VERTICAL_SWING_MODES_REVERSE.get(
                 VerticalSwing(self.coordinator.device.vertical_swing)
-            ]
+            )
         except ValueError:
             return None
 
@@ -316,9 +316,9 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_horizontal_mode(self) -> str | None:
         """Return the current horizontal swing mode for the device."""
         try:
-            return HORIZONTAL_SWING_MODES_REVERSE[
+            return HORIZONTAL_SWING_MODES_REVERSE.get(
                 HorizontalSwing(self.coordinator.device.horizontal_swing)
-            ]
+            )
         except ValueError:
             return None
 
