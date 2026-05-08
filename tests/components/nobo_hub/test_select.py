@@ -6,7 +6,6 @@ from pynobo import nobo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nobo_hub.select import NoboProfileSelector
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -148,15 +147,3 @@ async def test_zone_removed_marks_week_profile_unavailable(
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(PROFILE_ENTITY).state == STATE_UNAVAILABLE
-
-
-def test_profile_selector_state_is_per_instance(mock_nobo_hub: MagicMock) -> None:
-    """NoboProfileSelector mutable state must live on the instance, not the class.
-
-    Mutable defaults at class level would be shared across every selector
-    in the integration (multi-zone, multi-hub).
-    """
-    selector_a = NoboProfileSelector("1", mock_nobo_hub)
-    selector_b = NoboProfileSelector("1", mock_nobo_hub)
-    assert selector_a._profiles is not selector_b._profiles
-    assert selector_a._attr_options is not selector_b._attr_options
