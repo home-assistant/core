@@ -216,13 +216,6 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
-            key="info.location",
-            translation_key="location",
-            value_fn=lambda data: cast(str, data["location"]),
-            supported_fn=lambda data: data.get("location") is not None,
-            entity_registry_enabled_default=False,
-        ),
-        PrusaLinkSensorEntityDescription[PrinterInfo](
             key="info.min_extrusion_temp",
             translation_key="min_extrusion_temp",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
