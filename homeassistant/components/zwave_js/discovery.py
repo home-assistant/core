@@ -1284,19 +1284,19 @@ def async_discover_single_value(
             continue
 
         # check firmware_version_range
-        if schema.firmware_version_range is not None and (
-            (
+        if schema.firmware_version_range is not None:
+            # skip schema if device firmware version is unknown
+            if value.node.firmware_version is None:
+                continue
+            node_firmware = AwesomeVersion(value.node.firmware_version)
+            if (
                 schema.firmware_version_range.min is not None
-                and schema.firmware_version_range.min_ver
-                > AwesomeVersion(value.node.firmware_version)
-            )
-            or (
+                and schema.firmware_version_range.min_ver > node_firmware
+            ) or (
                 schema.firmware_version_range.max is not None
-                and schema.firmware_version_range.max_ver
-                < AwesomeVersion(value.node.firmware_version)
-            )
-        ):
-            continue
+                and schema.firmware_version_range.max_ver < node_firmware
+            ):
+                continue
 
         # check device_class_generic
         # If the value has an endpoint but it is missing on the node

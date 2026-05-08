@@ -1,5 +1,7 @@
 """Tests for WiZ binary_sensor platform."""
 
+import pytest
+
 from homeassistant.components import wiz
 from homeassistant.components.wiz.binary_sensor import OCCUPANCY_UNIQUE_ID
 from homeassistant.config_entries import ConfigEntryState
@@ -21,20 +23,27 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("occupancy_source", ["pir", "wfsens"])
 async def test_binary_sensor_created_from_push_updates(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    occupancy_source: str,
 ) -> None:
     """Test a binary sensor created from push updates."""
     bulb, _ = await async_setup_integration(hass)
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "src": "pir", "state": True})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "src": occupancy_source, "state": True}
+    )
 
     entity_id = "binary_sensor.mock_title_occupancy"
     assert entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_occupancy"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "src": "pir", "state": False})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "src": occupancy_source, "state": False}
+    )
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
