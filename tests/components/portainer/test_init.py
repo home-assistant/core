@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -300,6 +301,19 @@ async def test_container_stack_device_links(
 
     assert standalone_container_device is not None
     assert standalone_container_device.via_device_id == endpoint_device.id
+
+
+async def test_docker_system_df_refresh_runs_on_ha_start(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test docker system df coordinator refreshes DF data on HA start."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_new_endpoint_callback(
