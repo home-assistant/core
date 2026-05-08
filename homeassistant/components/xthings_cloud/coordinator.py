@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Xthings Cloud."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -20,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
-type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
+type XthingsCloudConfigEntry = ConfigEntry["XthingsCloudCoordinator"]
 
 
 class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):

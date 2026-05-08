@@ -1,7 +1,5 @@
 """Tests for Xthings Cloud config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError

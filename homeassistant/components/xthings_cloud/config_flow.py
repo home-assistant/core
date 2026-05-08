@@ -1,7 +1,5 @@
 """Config flow for Xthings Cloud."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from ha_xthings_cloud import (

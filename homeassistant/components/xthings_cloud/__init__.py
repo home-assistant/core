@@ -1,7 +1,5 @@
 """Xthings Cloud integration for Home Assistant."""
 
-from __future__ import annotations
-
 from ha_xthings_cloud import XthingsCloudApiClient
 
 from homeassistant.core import HomeAssistant

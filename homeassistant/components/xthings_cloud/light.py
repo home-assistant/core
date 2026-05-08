@@ -1,7 +1,5 @@
 """Light platform for Xthings Cloud."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.light import (
