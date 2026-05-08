@@ -228,13 +228,9 @@ async def test_configure_invalid_serial_undiscovered(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Invalid serial in the manual step surfaces an error; valid serial recovers."""
-    with patch(
-        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "manual"}
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -270,13 +266,9 @@ async def test_configure_invalid_ip_address(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Invalid IP surfaces an error; valid IP recovers."""
-    with patch(
-        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789")],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "manual"}
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -561,15 +553,11 @@ async def test_dhcp_discovery_aborts_when_ignored_mac_matches(
     )
     ignored_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
-        return_value={("192.168.1.106", "102000100")},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DHCP_DISCOVERY,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
