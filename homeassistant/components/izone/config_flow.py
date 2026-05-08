@@ -94,12 +94,13 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                     existing = self._async_current_entries()
                     if existing:
                         if len(existing) == 1 and not existing[0].data.get(CONF_HOST):
-                            return self.async_update_reload_and_abort(
+                            self.hass.config_entries.async_update_entry(
                                 existing[0],
                                 data={**existing[0].data, CONF_HOST: host},
                                 unique_id=device_uid,
-                                reason="reconfigure_successful",
                             )
+                            return self.async_abort(reason="reconfigure_successful")
+                        return self.async_abort(reason="single_instance_allowed")
                         return self.async_abort(reason="single_instance_allowed")
 
                     return self.async_create_entry(
