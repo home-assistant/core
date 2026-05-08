@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -294,7 +295,7 @@ async def test_disconnect_debounce_becomes_unavailable_after_timeout(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that entity becomes unavailable after the debounce period expires."""
     await setup_integration(hass, mock_config_entry)
@@ -326,7 +327,7 @@ async def test_disconnect_debounce_cancelled_by_reconnect(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that reconnecting during debounce cancels the unavailable timer."""
     await setup_integration(hass, mock_config_entry)
@@ -368,7 +369,7 @@ async def test_disconnect_reconnect_flapping(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that rapid disconnect/reconnect cycles don't cause unavailability."""
     await setup_integration(hass, mock_config_entry)
@@ -400,7 +401,7 @@ async def test_zone_follows_controller_debounced_availability(
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that zones follow the controller's debounced availability."""
     await setup_integration(hass, mock_config_entry)

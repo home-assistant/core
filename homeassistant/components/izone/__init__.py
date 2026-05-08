@@ -86,9 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not result:
         return result
 
-    if (disco := hass.data.get(DATA_DISCOVERY_SERVICE)) and entry.data.get(
-        CONF_HOST
-    ):
+    if (disco := hass.data.get(DATA_DISCOVERY_SERVICE)) and entry.data.get(CONF_HOST):
         disco.remove_static_host(entry.unique_id)
 
     return result

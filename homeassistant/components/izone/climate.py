@@ -286,9 +286,7 @@ class ControllerDevice(ClimateEntity):
                 for zone in self.zones.values():
                     if zone.hass is not None:
                         zone.async_schedule_update_ha_state()
-        elif (
-            self._attr_available and self._disconnect_debounce is None
-        ):
+        elif self._attr_available and self._disconnect_debounce is None:
             # Don't immediately mark as unavailable - start debounce
             _LOGGER.debug(
                 "Controller %s disconnect detected, starting %ss debounce "
