@@ -18,5 +18,5 @@ async def test_unload_entry(hass: HomeAssistant, mock_litejet) -> None:
     """Test being able to unload an entry."""
     entry = await async_init_integration(hass, use_switch=True, use_scene=True)
 
-    assert await litejet.async_unload_entry(hass, entry)
+    assert await litejet.async_unload_entry(hass, entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     assert DOMAIN not in hass.data

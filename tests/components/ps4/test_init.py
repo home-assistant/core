@@ -114,7 +114,7 @@ MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
 
 async def test_ps4_integration_setup(hass: HomeAssistant) -> None:
     """Test PS4 integration is setup."""
-    await ps4.async_setup(hass, {})
+    await ps4.async_setup(hass, {})  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
     assert hass.data[PS4_DATA].protocol is not None
 
@@ -175,7 +175,7 @@ async def test_config_flow_entry_migrate(
             return_value=entity_registry,
         ),
     ):
-        await ps4.async_migrate_entry(hass, mock_entry)
+        await ps4.async_migrate_entry(hass, mock_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     await hass.async_block_till_done()
 

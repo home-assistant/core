@@ -1415,7 +1415,7 @@ async def test_subentry_unload_during_entry_unload(
     hass.config_entries.async_unload = mock_async_unload
 
     # ACT: Directly call the unload function
-    result = await async_unload_entry(hass, mock_config_entry)
+    result = await async_unload_entry(hass, mock_config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
 
     # ASSERT: Line 363 should have been executed

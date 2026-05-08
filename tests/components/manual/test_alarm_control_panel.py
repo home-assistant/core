@@ -42,7 +42,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
-    await demo.async_setup_entry(hass, {}, add_entities)
+    await demo.async_setup_entry(hass, {}, add_entities)  # pylint: disable=hass-no-direct-init-calls-in-tests
     assert add_entities.call_count == 1
 
 

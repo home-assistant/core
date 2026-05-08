@@ -229,7 +229,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     await hass.async_block_till_done()
 
     # Manually set up sensor platform with our callback
-    await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)
+    await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
 
     coord = CoordinatorStub.instances[0]
@@ -242,7 +242,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     assert await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
-    await thermopro_sensor.async_setup_entry(hass, entry2, add_entities_second)
+    await thermopro_sensor.async_setup_entry(hass, entry2, add_entities_second)  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
 
     assert add_entities_callbacks, "No add_entities callback was registered"

@@ -205,6 +205,27 @@ def enforce_runtime_data_checker_fixture(
     return enforce_runtime_data_checker
 
 
+@pytest.fixture(name="hass_no_direct_init_calls_in_tests", scope="package")
+def hass_no_direct_init_calls_in_tests_fixture() -> ModuleType:
+    """Fixture to load the hass_no_direct_init_calls_in_tests plugin."""
+    return _load_plugin_from_file(
+        "hass_no_direct_init_calls_in_tests",
+        "pylint/plugins/hass_no_direct_init_calls_in_tests.py",
+    )
+
+
+@pytest.fixture(name="no_direct_init_calls_in_tests_checker")
+def no_direct_init_calls_in_tests_checker_fixture(
+    hass_no_direct_init_calls_in_tests, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_no_direct_init_calls_in_tests checker."""
+    checker = hass_no_direct_init_calls_in_tests.HassNoDirectInitCallsInTestsChecker(
+        linter
+    )
+    checker.module = "tests.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="hass_enforce_greek_micro_char", scope="package")
 def hass_enforce_greek_micro_checker_fixture() -> ModuleType:
     """Fixture to the content for the hass_enforce_greek_micro_char check."""

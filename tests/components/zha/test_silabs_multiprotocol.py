@@ -41,7 +41,7 @@ async def test_async_get_channel_missing(
     """Test reading channel with an inactive ZHA installation, no valid channel."""
     await setup_zha()
 
-    await zha.async_unload_entry(hass, get_zha_data(hass).config_entry)
+    await zha.async_unload_entry(hass, get_zha_data(hass).config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     # Network settings were never loaded for whatever reason
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()

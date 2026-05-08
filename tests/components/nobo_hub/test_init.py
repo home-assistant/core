@@ -109,7 +109,7 @@ async def test_setup_rediscovery_failure(
         ]
         mock_cls.async_discover_hubs.return_value = discovered_hubs
         with pytest.raises(ConfigEntryNotReady) as exc_info:
-            await async_setup_entry(hass, mock_config_entry)
+            await async_setup_entry(hass, mock_config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     assert exc_info.value.translation_key == "cannot_connect"
     assert exc_info.value.translation_placeholders == expected_placeholders

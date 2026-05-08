@@ -1372,7 +1372,7 @@ async def test_async_setup_entry_failed(
         mock_bot.side_effect = InvalidToken("mock invalid token error")
 
         with pytest.raises(ConfigEntryAuthFailed) as err:
-            await async_setup_entry(hass, mock_broadcast_config_entry)
+            await async_setup_entry(hass, mock_broadcast_config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     await hass.async_block_till_done()
     assert err.value.args[0] == "Invalid API token for Telegram Bot."

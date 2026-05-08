@@ -287,6 +287,6 @@ async def test_load_unload_entry(hass: HomeAssistant, client, webhook_id) -> Non
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await traccar.async_unload_entry(hass, entry)
+    assert await traccar.async_unload_entry(hass, entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]
