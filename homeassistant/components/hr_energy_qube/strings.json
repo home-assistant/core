@@ -130,6 +130,17 @@
         "name": "User pump"
       }
     },
+    "select": {
+      "sg_ready_mode": {
+        "name": "SG Ready mode",
+        "state": {
+          "block": "Block",
+          "max": "Max",
+          "off": "[%key:common::state::off%]",
+          "plus": "Plus"
+        }
+      }
+    },
     "sensor": {
       "compressor_speed": {
         "name": "Compressor speed"
