@@ -6,7 +6,10 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: >
+      Confirm every config flow test terminates in CREATE_ENTRY or ABORT.
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -24,7 +27,12 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: >
+      Entity actions (climate set_hvac_mode/set_preset_mode/set_temperature,
+      select select_option) currently raise unwrapped exceptions; will wrap
+      in HomeAssistantError with translation keys.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -35,10 +43,17 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The hub does not require authentication.
-  test-coverage: done
+  test-coverage:
+    status: done
+    comment: >
+      Investigate whether the `_spec_hub` helper in `test_init.py` can be
+      replaced by the conftest base mock.
 
   # Gold
-  devices: done
+  devices:
+    status: done
+    comment: >
+      Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
   diagnostics: todo
   discovery: done
   discovery-update-info: todo
@@ -51,7 +66,11 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class:
+    status: todo
+    comment: >
+      Custom device class on global override select being dropped in
+      PR #170135.
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
@@ -63,8 +82,10 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: Integration uses a local TCP socket (via pynobo); no HTTP client is used.
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: Requires release of pynobo 1.9.0
