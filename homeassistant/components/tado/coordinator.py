@@ -1,5 +1,6 @@
 """Coordinator for the Tado integration."""
 
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import logging
 from typing import Any
@@ -29,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_ZONE_CONTROL_INTERVAL = timedelta(hours=1)
-
-type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -449,6 +448,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get the current rate limit status from Tado."""
         return self._tado.rate_limit_info()
 
+
 class TadoZoneControlUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage zone control and heating circuits data from Tado via PyTado."""
 
@@ -548,3 +548,14 @@ class TadoZoneControlUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         updated_zone_control = await self._update_zone_control(zone_id)
         self.data["zone_control"][zone_id] = updated_zone_control
         self.async_set_updated_data(self.data)
+
+
+@dataclass
+class TadoData:
+    """Class to hold Tado data."""
+
+    coordinator: TadoDataUpdateCoordinator
+    zone_control_coordinator: TadoZoneControlUpdateCoordinator
+
+
+type TadoConfigEntry = ConfigEntry[TadoData]

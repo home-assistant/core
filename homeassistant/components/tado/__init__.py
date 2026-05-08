@@ -35,10 +35,10 @@ from .const import (
 )
 from .coordinator import (
     TadoConfigEntry,
+    TadoData,
     TadoDataUpdateCoordinator,
     TadoZoneControlUpdateCoordinator,
 )
-from .models import TadoData
 from .services import async_setup_services
 
 PLATFORMS = [
