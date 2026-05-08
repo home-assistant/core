@@ -42,7 +42,6 @@ async def test_user_flow(
         user_input={CONF_HOST: IP_ADDRESS},
     )
 
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "EcoTracker " + DEVICE_ID
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
