@@ -11,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from . import config_flow
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
@@ -54,9 +55,7 @@ async def _async_pick_legacy_migration_controller(
         ConfigEntryError: More than one eligible controller (ambiguous).
 
     """
-    from . import config_flow as izone_config_flow  # noqa: PLC0415
-
-    controllers = await izone_config_flow._async_discover_controllers(hass)  # noqa: SLF001
+    controllers = await config_flow.async_discover_controllers(hass)
     conf: ConfigType | None = hass.data.get(DATA_CONFIG)
     excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
     configured_uids = {

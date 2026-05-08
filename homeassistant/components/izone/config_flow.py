@@ -44,7 +44,7 @@ SELECTED_CONTROLLER_UID = "selected_controller_uid"
 # ---------------------------------------------------------------------------
 
 
-async def _async_discover_controllers(
+async def async_discover_controllers(
     hass: HomeAssistant,
     *,
     refresh: bool = False,
@@ -249,7 +249,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             return self.async_abort(reason="already_in_progress")
 
         # refresh=True requests a rescan only when discovery is already running.
-        controllers = await _async_discover_controllers(self.hass, refresh=True)
+        controllers = await async_discover_controllers(self.hass, refresh=True)
         if not controllers:
             _LOGGER.debug("No controllers found")
             return self.async_abort(reason="no_devices_found")
@@ -362,7 +362,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
 
         # A HomeKit advertisement implies a specific UID has appeared. Request a
         # refresh, but if that UID is already known we skip the rescan and continue.
-        controllers = await _async_discover_controllers(
+        controllers = await async_discover_controllers(
             self.hass,
             refresh=True,
             wait_for_uid=device_uid,
@@ -430,7 +430,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                 },
             )
 
-        controllers = await _async_discover_controllers(self.hass)
+        controllers = await async_discover_controllers(self.hass)
         if not controllers:
             _LOGGER.debug("No controllers found")
             return self.async_abort(reason="no_devices_found")
