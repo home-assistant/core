@@ -47,7 +47,7 @@ rules:
     comment: Integration does not use discovery.
   discovery:
     status: exempt
-    comment: Integration requires an API key and selected monitoring locations.
+    comment: OpenAQ is a cloud data service; monitoring locations are selected from the API and are not discoverable via Home Assistant discovery protocols.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
