@@ -7672,6 +7672,106 @@
       "type": 1,
       "oid": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
       "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1660551260000,
+      "lastUpdateTime": 1660551260000,
+      "label": "OGP Gate",
+      "deviceURL": "ogp://1234-1234-6233/10410217",
+      "shortcut": false,
+      "controllableName": "ogp:Gate",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicGate",
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
+        "uiClass": "Gate",
+        "qualifiedName": "ogp:Gate",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "OGP Gate"
+        },
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "io2way"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "DynamicGate",
+      "oid": "a8d3e9f1-4b2c-4d5e-8f6a-1234567890ab",
+      "uiClass": "Gate"
     }
   ],
   "zones": [],
