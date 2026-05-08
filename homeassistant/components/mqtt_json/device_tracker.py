@@ -1,7 +1,5 @@
 """Support for GPS tracking MQTT enabled devices."""
 
-from __future__ import annotations
-
 import json
 import logging
 

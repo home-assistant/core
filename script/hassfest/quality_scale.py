@@ -1,7 +1,5 @@
 """Validate integration quality scale files."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol
@@ -475,7 +473,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -986,7 +983,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -1295,7 +1291,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "eliqonline",
     "elkm1",
     "elmax",
-    "elgato",
     "elv",
     "elvia",
     "emby",
@@ -1458,7 +1453,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -1922,7 +1916,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
@@ -1987,7 +1980,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -2104,6 +2096,7 @@ NO_QUALITY_SCALE = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "ffmpeg",
     "file_upload",
     "frontend",

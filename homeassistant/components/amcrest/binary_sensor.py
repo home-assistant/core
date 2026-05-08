@@ -1,7 +1,5 @@
 """Support for Amcrest IP camera binary sensors."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta

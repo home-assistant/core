@@ -13,6 +13,7 @@ from homeassistant.components.conversation import (
     AssistantContent,
     ToolResultContent,
     UserContent,
+    trace,
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
@@ -795,3 +796,72 @@ async def test_history_always_user_first_turn(
         == "Garage door left open, do you want to close it?"
     )
     assert actual_history[1].role == "model"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    mock_send_message_stream: AsyncMock,
+) -> None:
+    """Test that token stats are reported to the chat log."""
+    trace.async_clear_traces()
+
+    agent_id = "conversation.google_ai_conversation"
+    context = Context()
+
+    messages = [
+        [
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [{"text": "Hello! "}],
+                            "role": "model",
+                        },
+                    }
+                ],
+            ),
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [{"text": "How can I help you?"}],
+                            "role": "model",
+                        },
+                        "finish_reason": "STOP",
+                    }
+                ],
+                usage_metadata={
+                    "prompt_token_count": 10,
+                    "candidates_token_count": 20,
+                    "cached_content_token_count": 5,
+                },
+            ),
+        ],
+    ]
+
+    mock_send_message_stream.return_value = messages
+
+    await conversation.async_converse(
+        hass,
+        "Hello",
+        mock_chat_log.conversation_id,
+        context,
+        agent_id=agent_id,
+    )
+
+    traces = trace.async_get_traces()
+    trace_obj = next(iter(traces))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        e["data"]["stats"]
+        for e in events
+        if e.get("event_type") == "agent_detail" and e.get("data", {}).get("stats")
+    )
+    assert stats == {
+        "input_tokens": 10,
+        "cached_input_tokens": 5,
+        "output_tokens": 20,
+    }

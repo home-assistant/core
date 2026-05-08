@@ -1,7 +1,5 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from __future__ import annotations
-
 from asyncio import sleep
 from typing import Any, cast
 

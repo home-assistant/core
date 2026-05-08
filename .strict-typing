@@ -46,6 +46,7 @@ homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
+homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
@@ -154,6 +155,7 @@ homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
+homeassistant.components.data_grand_lyon.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deako.*
@@ -178,6 +180,7 @@ homeassistant.components.dropbox.*
 homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
+homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
@@ -223,6 +226,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
+homeassistant.components.fumis.*
 homeassistant.components.fyta.*
 homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
@@ -421,6 +425,7 @@ homeassistant.components.otp.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.paj_gps.*
 homeassistant.components.panel_custom.*
 homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
@@ -440,6 +445,7 @@ homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
+homeassistant.components.ptdevices.*
 homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
@@ -553,6 +559,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
+homeassistant.components.teleinfo.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
@@ -596,6 +603,7 @@ homeassistant.components.vallox.*
 homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.velux.*
+homeassistant.components.victron_gx.*
 homeassistant.components.vivotek.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*

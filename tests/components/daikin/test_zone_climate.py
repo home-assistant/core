@@ -1,7 +1,5 @@
 """Tests for Daikin zone climate entities."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

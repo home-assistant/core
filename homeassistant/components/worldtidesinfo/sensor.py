@@ -1,7 +1,5 @@
 """Support for the worldtides.info API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time

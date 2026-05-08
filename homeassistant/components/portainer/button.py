@@ -1,7 +1,5 @@
 """Support for Portainer buttons."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -14,6 +12,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -41,10 +40,9 @@ PARALLEL_UPDATES = 1
 class PortainerButtonDescription(ButtonEntityDescription):
     """Class to describe a Portainer button entity."""
 
-    # Note to reviewer: I am keeping the third argument a str, in order to keep mypy happy :)
     press_action: Callable[
         [Portainer, int, str],
-        Coroutine[Any, Any, None],
+        Coroutine[Any, Any, None | DockerContainer],
     ]
 
 
@@ -99,6 +97,19 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
         press_action=(
             lambda portainer, endpoint_id, container_id: portainer.unpause_container(
                 endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="recreate",
+        translation_key="recreate_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.container_recreate(
+                endpoint_id=endpoint_id,
+                container_id=container_id,
+                timeout=timedelta(minutes=10),
+                pull_image=True,
             )
         ),
     ),

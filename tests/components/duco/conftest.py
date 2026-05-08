@@ -1,11 +1,20 @@
 """Fixtures for Duco tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from duco.models import BoardInfo, LanInfo, Node, NodeGeneralInfo, NodeVentilationInfo
+from duco.models import (
+    ApiEndpointInfo,
+    ApiInfo,
+    BoardInfo,
+    DiagComponent,
+    DiagStatus,
+    LanInfo,
+    Node,
+    NodeGeneralInfo,
+    NodeSensorInfo,
+    NodeVentilationInfo,
+)
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -42,6 +51,25 @@ def mock_board_info() -> BoardInfo:
         serial_duco_box="GHI789",
         serial_duco_comm="JKL012",
         time=1700000000,
+        public_api_version="2.5",
+        software_version="1.2.3",
+    )
+
+
+@pytest.fixture
+def mock_api_info() -> ApiInfo:
+    """Return mock API info."""
+    return ApiInfo(
+        api_version="2.5",
+        reported_api_version="2.5.1",
+        endpoints=[
+            ApiEndpointInfo(
+                url="/info",
+                query_parameters=["module", "submodule"],
+                methods=["GET"],
+                modules=["General", "Diag"],
+            )
+        ],
     )
 
 
@@ -62,7 +90,7 @@ def mock_lan_info() -> LanInfo:
 
 @pytest.fixture
 def mock_nodes() -> list[Node]:
-    """Return a list with a single BOX node."""
+    """Return a list of nodes covering all supported types."""
     return [
         Node(
             node_id=1,
@@ -82,18 +110,110 @@ def mock_nodes() -> list[Node]:
                 mode="AUTO",
                 flow_lvl_tgt=0,
             ),
-        )
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=None,
+                iaq_rh=None,
+                temp=27.9,
+            ),
+        ),
+        Node(
+            node_id=2,
+            general=NodeGeneralInfo(
+                node_type="UCCO2",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Office CO2",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=405,
+                iaq_co2=80,
+                rh=None,
+                iaq_rh=None,
+                temp=19.8,
+            ),
+        ),
+        Node(
+            node_id=113,
+            general=NodeGeneralInfo(
+                node_type="BSRH",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Bathroom RH",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=42.0,
+                iaq_rh=85,
+                temp=27.9,
+            ),
+        ),
+        Node(
+            node_id=50,
+            general=NodeGeneralInfo(
+                node_type="UCRH",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Kitchen RH",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=61.0,
+                iaq_rh=90,
+                temp=22.5,
+            ),
+        ),
     ]
 
 
 @pytest.fixture
 def mock_duco_client(
+    mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
+        patch(
+            "homeassistant.components.duco.build_ssl_context",
+        ),
+        patch(
+            "homeassistant.components.duco.config_flow.build_ssl_context",
+        ),
         patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
@@ -104,9 +224,14 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
+        client.async_get_api_info.return_value = mock_api_info
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_diagnostics.return_value = [
+            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+        ]
+        client.async_get_write_req_remaining.return_value = 100
         yield client
 
 

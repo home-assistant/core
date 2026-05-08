@@ -1,7 +1,5 @@
 """The Forecast.Solar integration."""
 
-from __future__ import annotations
-
 from types import MappingProxyType
 
 from homeassistant.config_entries import ConfigSubentry

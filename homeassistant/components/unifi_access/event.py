@@ -1,12 +1,11 @@
 """Event platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from unifi_access_api import Door
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -31,7 +30,7 @@ DOORBELL_EVENT_DESCRIPTION = UnifiAccessEventEntityDescription(
     key="doorbell",
     translation_key="doorbell",
     device_class=EventDeviceClass.DOORBELL,
-    event_types=["ring"],
+    event_types=[DoorbellEventType.RING],
     category="doorbell",
 )
 

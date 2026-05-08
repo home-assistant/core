@@ -88,9 +88,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         mid = 100
         rc = 0
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         mqtt_client = mock_client.return_value
         mqtt_client.connect = MagicMock(
             return_value=0,
@@ -1305,9 +1303,7 @@ async def test_publish_error(
     entry.add_to_hass(hass)
 
     # simulate an Out of memory error
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         mock_client().connect = lambda **kwargs: 1
         mock_client().publish().rc = 1
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1404,9 +1400,7 @@ async def test_setup_mqtt_client_clean_session_and_protocol(
     clean_session: bool | None,
 ) -> None:
     """Test MQTT client clean_session and protocol setup."""
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         await mqtt_mock_entry()
 
     # check if clean_session was correctly
@@ -1470,9 +1464,7 @@ async def test_handle_mqtt_timeout_on_callback(
         mid = 102
         rc = 0
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
 
         def _mock_ack(topic: str, qos: int = 0) -> tuple[int, int]:
             # Handle ACK for subscribe normally
@@ -1539,9 +1531,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         mock_client().connect = MagicMock(side_effect=exception)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -1576,9 +1566,7 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     def mock_tls_insecure_set(insecure_param) -> None:
         insecure_check["insecure"] = insecure_param
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         mock_client().tls_set = mock_tls_set
         mock_client().tls_insecure_set = mock_tls_insecure_set
         await mqtt_mock_entry()
@@ -1618,7 +1606,7 @@ async def test_client_id_is_set(
 ) -> None:
     """Test setup defaults for tls."""
     with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+        "homeassistant.components.mqtt.client.AsyncMQTTClient"
     ) as async_client_mock:
         await mqtt_mock_entry()
         await hass.async_block_till_done()
@@ -2179,6 +2167,9 @@ async def test_server_sock_connect_and_disconnect(
     # Should have failed
     assert len(recorded_calls) == 0
 
+    # Cleanup. Server is closed earlier already.
+    client.close()
+
 
 async def test_server_sock_buffer_size(
     hass: HomeAssistant,
@@ -2201,6 +2192,10 @@ async def test_server_sock_buffer_size(
         mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
+
+    # Cleanup
+    client.close()
+    server.close()
 
 
 async def test_server_sock_buffer_size_with_websocket(
@@ -2233,6 +2228,10 @@ async def test_server_sock_buffer_size_with_websocket(
         )
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
+
+    # Cleanup
+    client.close()
+    server.close()
 
 
 async def test_client_sock_failure_after_connect(
@@ -2267,6 +2266,9 @@ async def test_client_sock_failure_after_connect(
     unsub()
     # Should have failed
     assert len(recorded_calls) == 0
+
+    # Cleanup. Client is closed earlier already.
+    server.close()
 
 
 async def test_loop_write_failure(
@@ -2308,3 +2310,6 @@ async def test_loop_write_failure(
     await hass.async_block_till_done()
 
     assert "Error returned from MQTT server: The connection was lost." in caplog.text
+
+    # Cleanup. Server is closed earlier already.
+    client.close()

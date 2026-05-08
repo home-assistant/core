@@ -1,7 +1,5 @@
 """Use Bayesian Inference to trigger a binary sensor."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Callable
 import logging
