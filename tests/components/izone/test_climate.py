@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.izone.climate import ControllerDevice
 from homeassistant.components.izone.const import UNAVAILABLE_DEBOUNCE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -492,15 +493,13 @@ async def test_mark_unavailable_guard_when_already_unavailable(
 
     # Force _mark_unavailable to run again while already unavailable
     # by finding the ControllerDevice and calling it directly
-    from homeassistant.components.izone.climate import ControllerDevice
-
     entity = next(
         e
         for e in hass.data["entity_components"]["climate"].entities
         if isinstance(e, ControllerDevice)
     )
     # Calling _mark_unavailable on an already-unavailable entity must not raise
-    entity._mark_unavailable(None)  # noqa: SLF001
+    entity._mark_unavailable(None)
 
     # Should remain unavailable with no state-write side effects
     assert hass.states.get(entity_id).state == "unavailable"

@@ -458,8 +458,8 @@ async def test_unload_entry_with_host_removes_static_host(
     entry.add_to_hass(hass)
 
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
-    mock_ctrl._initialize = AsyncMock()  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
+    mock_ctrl._initialize = AsyncMock()
 
     with (
         patch(
@@ -477,10 +477,10 @@ async def test_unload_entry_with_host_removes_static_host(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert DATA_DISCOVERY_SERVICE in hass.data
     disco = hass.data[DATA_DISCOVERY_SERVICE]
-    assert "000013170" in disco._static_hosts  # noqa: SLF001
+    assert "000013170" in disco._static_hosts
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "000013170" not in disco._static_hosts  # noqa: SLF001
+    assert "000013170" not in disco._static_hosts
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED

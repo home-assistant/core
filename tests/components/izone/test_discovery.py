@@ -4,12 +4,10 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.izone.const import (
-    DATA_DISCOVERY_SERVICE,
-    STATIC_RECONNECT_INTERVAL,
-)
+from homeassistant.components.izone.const import STATIC_RECONNECT_INTERVAL
 from homeassistant.components.izone.discovery import (
     DiscoveryService,
     async_add_controller_by_ip,
@@ -61,9 +59,7 @@ async def test_async_get_device_uid_success(hass: HomeAssistant) -> None:
 async def test_async_get_device_uid_missing_field(hass: HomeAssistant) -> None:
     """Test ConnectionError when the response lacks AirStreamDeviceUId."""
     mock_session = Mock()
-    mock_session.get = Mock(
-        return_value=_make_aiohttp_context({"OtherField": "value"})
-    )
+    mock_session.get = Mock(return_value=_make_aiohttp_context({"OtherField": "value"}))
 
     with (
         patch(
@@ -99,7 +95,7 @@ async def test_async_add_controller_by_ip_fetches_uid_when_none(
 ) -> None:
     """Test that async_add_controller_by_ip fetches the UID when not provided."""
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
 
     with patch(
         "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
@@ -132,7 +128,7 @@ async def test_discovery_service_register_existing_controller(
     """Test registering a controller that is already in the discovery service."""
     disco = DiscoveryService(hass)
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
 
     mock_pi_disco = Mock()
     mock_pi_disco.controllers = {"uid123": mock_ctrl}
@@ -141,8 +137,8 @@ async def test_discovery_service_register_existing_controller(
     result = await disco.async_register_controller("192.168.1.100", "uid123")
 
     assert result is mock_ctrl
-    mock_ctrl._refresh_address.assert_called_with("192.168.1.100")  # noqa: SLF001
-    assert disco._static_hosts["uid123"] == "192.168.1.100"  # noqa: SLF001
+    mock_ctrl._refresh_address.assert_called_with("192.168.1.100")
+    assert disco._static_hosts["uid123"] == "192.168.1.100"
 
 
 async def test_discovery_service_register_new_controller(
@@ -157,8 +153,8 @@ async def test_discovery_service_register_new_controller(
     disco.pi_disco = mock_pi_disco
 
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
-    mock_ctrl._initialize = AsyncMock()  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
+    mock_ctrl._initialize = AsyncMock()
 
     with patch(
         "homeassistant.components.izone.discovery.pizone.Controller",
@@ -167,85 +163,85 @@ async def test_discovery_service_register_new_controller(
         result = await disco.async_register_controller("192.168.1.100", "uid456")
 
     assert result is mock_ctrl
-    mock_ctrl._initialize.assert_called_once()  # noqa: SLF001
+    mock_ctrl._initialize.assert_called_once()
     assert mock_pi_disco.controllers["uid456"] is mock_ctrl
     mock_pi_disco.controller_discovered.assert_called_once_with(mock_ctrl)
-    assert disco._static_hosts["uid456"] == "192.168.1.100"  # noqa: SLF001
+    assert disco._static_hosts["uid456"] == "192.168.1.100"
 
 
 async def test_start_keepalive_runs_only_once(hass: HomeAssistant) -> None:
     """Test that _start_keepalive is idempotent — a second call is a no-op."""
     disco = DiscoveryService(hass)
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
 
     mock_pi_disco = Mock()
     mock_pi_disco.controllers = {"uid123": mock_ctrl}
     disco.pi_disco = mock_pi_disco
-    disco._static_hosts["uid123"] = "192.168.1.100"  # noqa: SLF001
+    disco._static_hosts["uid123"] = "192.168.1.100"
 
-    disco._start_keepalive()  # noqa: SLF001
-    first_unsub = disco._keepalive_unsub  # noqa: SLF001
+    disco._start_keepalive()
+    first_unsub = disco._keepalive_unsub
     assert first_unsub is not None
 
-    disco._start_keepalive()  # noqa: SLF001
-    assert disco._keepalive_unsub is first_unsub  # noqa: SLF001
+    disco._start_keepalive()
+    assert disco._keepalive_unsub is first_unsub
 
 
 async def test_keepalive_tick_triggers_reconnect(
     hass: HomeAssistant,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the keepalive tick calls _refresh_address when a failure is pending."""
     disco = DiscoveryService(hass)
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
-    mock_ctrl._fail_exception = Exception("timed out")  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
+    mock_ctrl._fail_exception = Exception("timed out")
 
     mock_pi_disco = Mock()
     mock_pi_disco.controllers = {"uid123": mock_ctrl}
     disco.pi_disco = mock_pi_disco
-    disco._static_hosts["uid123"] = "192.168.1.100"  # noqa: SLF001
-    disco._start_keepalive()  # noqa: SLF001
+    disco._static_hosts["uid123"] = "192.168.1.100"
+    disco._start_keepalive()
 
     freezer.tick(timedelta(seconds=STATIC_RECONNECT_INTERVAL + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_ctrl._refresh_address.assert_called_with("192.168.1.100")  # noqa: SLF001
+    mock_ctrl._refresh_address.assert_called_with("192.168.1.100")
 
 
 async def test_keepalive_tick_skips_healthy_controller(
     hass: HomeAssistant,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test keepalive tick does not refresh a controller with no pending failure."""
     disco = DiscoveryService(hass)
     mock_ctrl = Mock()
-    mock_ctrl._refresh_address = Mock()  # noqa: SLF001
-    mock_ctrl._fail_exception = None  # noqa: SLF001
+    mock_ctrl._refresh_address = Mock()
+    mock_ctrl._fail_exception = None
 
     mock_pi_disco = Mock()
     mock_pi_disco.controllers = {"uid123": mock_ctrl}
     disco.pi_disco = mock_pi_disco
-    disco._static_hosts["uid123"] = "192.168.1.100"  # noqa: SLF001
-    disco._start_keepalive()  # noqa: SLF001
+    disco._static_hosts["uid123"] = "192.168.1.100"
+    disco._start_keepalive()
 
     freezer.tick(timedelta(seconds=STATIC_RECONNECT_INTERVAL + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_ctrl._refresh_address.assert_not_called()  # noqa: SLF001
+    mock_ctrl._refresh_address.assert_not_called()
 
 
 async def test_keepalive_tick_with_pi_disco_none(
     hass: HomeAssistant,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test keepalive tick exits early when pi_disco is None."""
     disco = DiscoveryService(hass)
-    disco._static_hosts["uid123"] = "192.168.1.100"  # noqa: SLF001
-    disco._start_keepalive()  # noqa: SLF001
+    disco._static_hosts["uid123"] = "192.168.1.100"
+    disco._start_keepalive()
     disco.pi_disco = None  # Simulate service torn down
 
     freezer.tick(timedelta(seconds=STATIC_RECONNECT_INTERVAL + 1))
@@ -256,15 +252,15 @@ async def test_keepalive_tick_with_pi_disco_none(
 async def test_remove_static_host_stops_keepalive(hass: HomeAssistant) -> None:
     """Test removing the last static host stops the keepalive timer."""
     disco = DiscoveryService(hass)
-    disco._static_hosts["uid123"] = "192.168.1.100"  # noqa: SLF001
+    disco._static_hosts["uid123"] = "192.168.1.100"
     mock_unsub = Mock()
-    disco._keepalive_unsub = mock_unsub  # noqa: SLF001
+    disco._keepalive_unsub = mock_unsub
 
     disco.remove_static_host("uid123")
 
-    assert "uid123" not in disco._static_hosts  # noqa: SLF001
+    assert "uid123" not in disco._static_hosts
     mock_unsub.assert_called_once()
-    assert disco._keepalive_unsub is None  # noqa: SLF001
+    assert disco._keepalive_unsub is None
 
 
 async def test_remove_static_host_keeps_keepalive_when_others_remain(
@@ -272,14 +268,14 @@ async def test_remove_static_host_keeps_keepalive_when_others_remain(
 ) -> None:
     """Test keepalive continues when other static hosts remain after removal."""
     disco = DiscoveryService(hass)
-    disco._static_hosts["uid1"] = "192.168.1.100"  # noqa: SLF001
-    disco._static_hosts["uid2"] = "192.168.1.101"  # noqa: SLF001
+    disco._static_hosts["uid1"] = "192.168.1.100"
+    disco._static_hosts["uid2"] = "192.168.1.101"
     mock_unsub = Mock()
-    disco._keepalive_unsub = mock_unsub  # noqa: SLF001
+    disco._keepalive_unsub = mock_unsub
 
     disco.remove_static_host("uid1")
 
-    assert "uid1" not in disco._static_hosts  # noqa: SLF001
-    assert "uid2" in disco._static_hosts  # noqa: SLF001
+    assert "uid1" not in disco._static_hosts
+    assert "uid2" in disco._static_hosts
     mock_unsub.assert_not_called()
-    assert disco._keepalive_unsub is mock_unsub  # noqa: SLF001
+    assert disco._keepalive_unsub is mock_unsub
