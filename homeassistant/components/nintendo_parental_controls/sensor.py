@@ -109,7 +109,7 @@ async def async_setup_entry(
             NintendoParentalControlsPlayerSensorEntity(
                 entry.runtime_data, device, player_id, sensor
             )
-            for player_id in device.players.keys()
+            for player_id in device.players
             for sensor in PLAYER_SENSOR_DESCRIPTIONS
         )
     async_add_entities(entities)
