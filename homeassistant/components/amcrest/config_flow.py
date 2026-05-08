@@ -48,7 +48,7 @@ async def _validate_connection(
 
     try:
         await api.async_current_time
-        serial_number = (await api.async_serial_number or "").strip()
+        serial_number = await api.async_serial_number
     except LoginError:
         return (None, "invalid_auth")
     except AmcrestError:
@@ -59,7 +59,7 @@ async def _validate_connection(
     else:
         if not serial_number:
             return (None, "no_serial_number")
-        return (serial_number, None)
+        return (serial_number.strip(), None)
 
 
 class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
