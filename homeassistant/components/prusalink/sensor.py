@@ -27,26 +27,20 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
-@dataclass(frozen=True)
-class PrusaLinkSensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], datetime | StateType]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription(
-    SensorEntityDescription, PrusaLinkSensorEntityDescriptionMixin[T], Generic[T]
+    SensorEntityDescription,
+    PrusaLinkEntityDescription,
+    Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
-    supported_fn: Callable[[T], bool] = lambda _: True
+    value_fn: Callable[[T], datetime | StateType]
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -268,10 +262,3 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return if sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
-        )

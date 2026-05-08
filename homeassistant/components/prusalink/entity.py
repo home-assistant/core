@@ -1,16 +1,37 @@
 """The PrusaLink integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PrusaLinkUpdateCoordinator
 
 
+@dataclass(frozen=True, kw_only=True)
+class PrusaLinkEntityDescription(EntityDescription):
+    """Base description for PrusaLink entities."""
+
+    available_fn: Callable[[Any], bool] = lambda _: True
+    supported_fn: Callable[[Any], bool] = lambda _: True
+
+
 class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     """Defines a base PrusaLink entity."""
 
     _attr_has_entity_name = True
+    entity_description: PrusaLinkEntityDescription
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
