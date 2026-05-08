@@ -143,6 +143,13 @@
       }
     },
     "sensor": {
+      "battery_warning": {
+        "name": "Battery",
+        "state": {
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
       "gateway_status": {
         "name": "Connection Status",
         "state": {
