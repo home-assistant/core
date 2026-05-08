@@ -105,6 +105,11 @@ TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
     "rts://1234-1234-6362/16730044",
     "cover.jaloezie",
 )
+UP_DOWN_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16747291",
+    "cover.office_venetian_blind",
+)
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
@@ -182,6 +187,7 @@ async def test_cover_entities_snapshot(
             CoverState.OPENING,
         ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
@@ -209,6 +215,7 @@ async def test_cover_entities_snapshot(
             [0],
             CoverState.CLOSING,
         ),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
@@ -245,6 +252,28 @@ async def test_cover_entities_snapshot(
             [0],
             STATE_UNKNOWN,
         ),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [15, 1],
+            CoverState.OPENING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [15, 1],
+            CoverState.CLOSING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
@@ -256,6 +285,7 @@ async def test_cover_entities_snapshot(
         "open-partial-garage-door",
         "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
+        "open-venetian-blind-rts",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
@@ -265,6 +295,7 @@ async def test_cover_entities_snapshot(
         "close-partial-garage-door",
         "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
+        "close-venetian-blind-rts",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
@@ -277,6 +308,10 @@ async def test_cover_entities_snapshot(
         "open-tilt-tilt-only-venetian-blind",
         "close-tilt-tilt-only-venetian-blind",
         "stop-tilt-tilt-only-venetian-blind",
+        "stop-venetian-blind-rts",
+        "open-tilt-venetian-blind-rts",
+        "close-tilt-venetian-blind-rts",
+        "stop-tilt-venetian-blind-rts",
     ],
 )
 async def test_cover_service_actions(
