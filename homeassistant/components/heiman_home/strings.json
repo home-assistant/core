@@ -49,18 +49,6 @@
       }
     }
   },
-  "entity": {
-    "select": {
-      "alarm_sound_option": {
-        "name": "Alarm Sound Option",
-        "state": {
-          "fast": "Fast Beep",
-          "medium": "Medium Beep",
-          "slow": "Slow Beep"
-        }
-      }
-    }
-  },
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "OAuth2 implementation is not available. Please check your configuration."

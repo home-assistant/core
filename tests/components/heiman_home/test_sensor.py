@@ -1084,8 +1084,8 @@ async def test_sensor_signal_strength_non_numeric_skips_device_class(
 async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
     """Test sensor platform skips bool/list/dict properties.
 
-    This covers sensor.py line 146 where non-scalar properties are filtered out.
-    Properties with bool, list, or dict values should not create sensors.
+    Properties with bool, list, or dict values should not create sensors
+    as they cannot be represented by sensor native_value.
     """
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1103,7 +1103,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
             data_type="float",
             readable=True,
         ),
-        # Bool property - should be skipped (line 146)
+        # Bool property - should be skipped
         "is_active": DeviceProperty(
             identifier="is_active",
             name="Is Active",
@@ -1111,7 +1111,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
             data_type="bool",
             readable=True,
         ),
-        # List property - should be skipped (line 146)
+        # List property - should be skipped
         "supported_modes": DeviceProperty(
             identifier="supported_modes",
             name="Supported Modes",
@@ -1119,7 +1119,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
             data_type="array",
             readable=True,
         ),
-        # Dict property - should be skipped (line 146)
+        # Dict property - should be skipped
         "config": DeviceProperty(
             identifier="config",
             name="Configuration",
@@ -1149,7 +1149,7 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Only the numeric temperature property should create a sensor
-    # Bool, list, and dict properties should be filtered out (line 146)
+    # Bool, list, and dict properties should be filtered out
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-1_temperature_sensor"
     assert added_entities[0]._property_identifier == "temperature"

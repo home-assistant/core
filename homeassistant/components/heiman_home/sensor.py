@@ -1,7 +1,5 @@
 """Sensor platform for Heiman integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -264,6 +262,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                     config = None
 
         if config and matched_key:
+            self._attr_translation_key = config.translation_key
             if config.device_class:
                 self._attr_device_class = config.device_class
             self._attr_native_unit_of_measurement = config.native_unit_of_measurement

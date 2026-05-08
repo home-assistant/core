@@ -633,10 +633,11 @@ async def test_setup_mqtt_init_failure_with_cleanup(
 
 
 async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
-    """Test unload when entry has no runtime_data (line 153 coverage).
+    """Test unload when entry has no runtime_data.
 
     This tests the edge case where async_unload_platforms succeeds but
     coordinator is None because setup failed before runtime_data was set.
+    In this scenario, unload should return True without attempting cleanup.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,

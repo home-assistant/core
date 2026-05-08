@@ -4,8 +4,6 @@ This module provides a thin wrapper around the heimanconnect library,
 handling OAuth2 token management and client initialization.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

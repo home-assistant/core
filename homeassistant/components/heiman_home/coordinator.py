@@ -1,7 +1,5 @@
 """Data update coordinator for Heiman integration."""
 
-from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
