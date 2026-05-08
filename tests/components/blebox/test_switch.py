@@ -37,12 +37,14 @@ def switchbox_fixture():
         full_name="switchBox-0.relay",
         device_class="relay",
         is_on=False,
+        index=0,
     )
+    type(feature).name = PropertyMock(return_value=None)
     feature.async_update = AsyncMock()
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBox")
-    return (feature, "switch.my_switch_box_switchbox_0_relay")
+    return (feature, "switch.my_switch_box")
 
 
 async def test_switchbox_init(
@@ -57,7 +59,7 @@ async def test_switchbox_init(
     assert entry.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My switch box switchBox-0.relay"
+    assert state.name == "My switch box"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
 
@@ -160,13 +162,16 @@ async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
 def relay_mock(relay_id=0):
     """Return a default switchBoxD switch entity mock."""
 
-    return mock_only_feature(
+    feature = mock_only_feature(
         blebox_uniapi.switch.Switch,
         unique_id=f"BleBox-switchBoxD-1afe34e750b8-{relay_id}.relay",
         full_name=f"switchBoxD-{relay_id}.relay",
         device_class="relay",
         is_on=None,
+        index=relay_id,
     )
+    type(feature).name = PropertyMock(return_value=None)
+    return feature
 
 
 @pytest.fixture(name="switchbox_d")
@@ -190,7 +195,7 @@ def switchbox_d_fixture():
 
     return (
         features,
-        ["switch.my_relays_switchboxd_0_relay", "switch.my_relays_switchboxd_1_relay"],
+        ["switch.my_relays", "switch.my_relays_relay_1"],
     )
 
 
@@ -209,7 +214,7 @@ async def test_switchbox_d_init(
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay"
 
     state = hass.states.get(entity_ids[0])
-    assert state.name == "My relays switchBoxD-0.relay"
+    assert state.name == "My relays"
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
@@ -225,7 +230,7 @@ async def test_switchbox_d_init(
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
 
     state = hass.states.get(entity_ids[1])
-    assert state.name == "My relays switchBoxD-1.relay"
+    assert state.name == "My relays Relay 1"
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
@@ -387,6 +392,28 @@ async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
     )
     assert hass.states.get(entity_ids[0]).state == STATE_ON
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
+
+
+async def test_switchbox_with_name(hass: HomeAssistant) -> None:
+    """Test that a switch with a feature name uses it as the entity name."""
+    feature = mock_feature(
+        "switches",
+        blebox_uniapi.switch.Switch,
+        unique_id="BleBox-switchBoxD-1afe34e750b8-0.relay",
+        full_name="switchBoxD-0.relay",
+        device_class="relay",
+        is_on=False,
+        index=0,
+    )
+    type(feature).name = PropertyMock(return_value="Garden lights")
+    feature.async_update = AsyncMock()
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My switch box")
+    type(product).model = PropertyMock(return_value="switchBoxD")
+
+    await async_setup_entity(hass, "switch.my_switch_box_garden_lights")
+    state = hass.states.get("switch.my_switch_box_garden_lights")
+    assert state.name == "My switch box Garden lights"
 
 
 ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]

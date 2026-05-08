@@ -17,7 +17,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_feature
+from .conftest import (
+    async_setup_entities,
+    async_setup_entity,
+    mock_feature,
+    mock_only_feature,
+    setup_product_mock,
+)
 
 
 @pytest.fixture(name="airsensor")
@@ -31,11 +37,12 @@ def airsensor_fixture():
         device_class="pm1",
         unit="concentration_of_mp",
         native_value=None,
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My air sensor")
     type(product).model = PropertyMock(return_value="airSensor")
-    return (feature, "sensor.my_air_sensor_airsensor_0_air")
+    return (feature, "sensor.my_air_sensor_pm_1")
 
 
 @pytest.fixture(name="tempsensor")
@@ -50,11 +57,12 @@ def tempsensor_fixture():
         unit="celsius",
         current=None,
         native_value=None,
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My temperature sensor")
     type(product).model = PropertyMock(return_value="tempSensor")
-    return (feature, "sensor.my_temperature_sensor_tempsensor_0_temperature")
+    return (feature, "sensor.my_temperature_sensor_temperature")
 
 
 async def test_init(
@@ -67,7 +75,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-tempSensor-1afe34db9437-0.temperature"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My temperature sensor tempSensor-0.temperature"
+    assert state.name == "My temperature sensor Temperature"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
@@ -122,7 +130,7 @@ async def test_airsensor_init(
     assert entry.unique_id == "BleBox-airSensor-1afe34db9437-0.air"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My air sensor airSensor-0.air"
+    assert state.name == "My air sensor PM 1"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PM1
     assert state.state == STATE_UNKNOWN
@@ -134,6 +142,73 @@ async def test_airsensor_init(
     assert device.manufacturer == "BleBox"
     assert device.model == "airSensor"
     assert device.sw_version == "1.23"
+
+
+async def test_multi_sensor_single_has_no_channel_suffix(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a single sensor of its type shows no channel suffix."""
+    feature = mock_feature(
+        "sensors",
+        blebox_uniapi.sensor.Temperature,
+        unique_id="BleBox-tempSensor-1afe34db9437-0.temperature",
+        full_name="tempSensor-0.temperature",
+        device_class="temperature",
+        unit="celsius",
+        current=None,
+        native_value=None,
+        sensor_id=0,
+        index=0,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My temp sensor")
+    type(product).model = PropertyMock(return_value="tempSensor")
+
+    await async_setup_entity(hass, "sensor.my_temp_sensor_temperature")
+    state = hass.states.get("sensor.my_temp_sensor_temperature")
+    assert state.name == "My temp sensor Temperature"
+
+
+async def test_multi_sensor_multiple_have_channel_suffix(
+    hass: HomeAssistant,
+) -> None:
+    """Test that multiple sensors of the same type get a channel number suffix."""
+    features = [
+        mock_only_feature(
+            blebox_uniapi.sensor.Temperature,
+            unique_id=f"BleBox-multiSensor-aabbcc-temperature_{i}",
+            full_name=f"multiSensor-temperature_{i}",
+            device_class="temperature",
+            unit="celsius",
+            current=None,
+            native_value=None,
+            sensor_id=i,
+            index=i,
+        )
+        for i in range(3)
+    ]
+
+    product = setup_product_mock("sensors", features)
+    type(product).name = PropertyMock(return_value="My multi sensor")
+    type(product).model = PropertyMock(return_value="multiSensor")
+    type(product).brand = PropertyMock(return_value="BleBox")
+    type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).unique_id = PropertyMock(return_value="aabbcc112233")
+
+    for feature in features:
+        type(feature).product = PropertyMock(return_value=product)
+        feature.async_update = AsyncMock()
+
+    entity_ids = [
+        "sensor.my_multi_sensor_temperature",
+        "sensor.my_multi_sensor_temperature_1",
+        "sensor.my_multi_sensor_temperature_2",
+    ]
+    await async_setup_entities(hass, entity_ids)
+
+    assert hass.states.get(entity_ids[0]).name == "My multi sensor Temperature"
+    assert hass.states.get(entity_ids[1]).name == "My multi sensor Temperature 1"
+    assert hass.states.get(entity_ids[2]).name == "My multi sensor Temperature 2"
 
 
 async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:

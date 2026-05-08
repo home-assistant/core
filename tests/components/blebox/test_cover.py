@@ -56,7 +56,7 @@ def shutterbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return (feature, "cover.my_shutter_shutterbox_position")
+    return (feature, "cover.my_shutter")
 
 
 @pytest.fixture(name="gatebox")
@@ -77,7 +77,7 @@ def gatebox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return (feature, "cover.my_gatebox_gatebox_position")
+    return (feature, "cover.my_gatebox")
 
 
 @pytest.fixture(name="gatecontroller")
@@ -98,7 +98,7 @@ def gate_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return (feature, "cover.my_gate_controller_gatecontroller_position")
+    return (feature, "cover.my_gate_controller")
 
 
 async def test_init_gatecontroller(
@@ -111,7 +111,7 @@ async def test_init_gatecontroller(
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gate controller gateController-position"
+    assert state.name == "My gate controller"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -142,7 +142,7 @@ async def test_init_shutterbox(
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My shutter shutterBox-position"
+    assert state.name == "My shutter"
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -173,7 +173,7 @@ async def test_init_gatebox(
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gatebox gateBox-position"
+    assert state.name == "My gatebox"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]

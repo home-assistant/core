@@ -16,10 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 class BleBoxEntity[_FeatureT: Feature](Entity):
     """Implements a common class for entities representing a BleBox feature."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, feature: _FeatureT) -> None:
         """Initialize a BleBox entity."""
         self._feature = feature
-        self._attr_name = feature.full_name
         self._attr_unique_id = feature.unique_id
         product = feature.product
         self._attr_device_info = DeviceInfo(
@@ -36,4 +37,4 @@ class BleBoxEntity[_FeatureT: Feature](Entity):
         try:
             await self._feature.async_update()
         except Error as ex:
-            _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
+            _LOGGER.error("Updating '%s' failed: %s", self._feature.full_name, ex)

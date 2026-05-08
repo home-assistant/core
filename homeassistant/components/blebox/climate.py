@@ -50,6 +50,7 @@ async def async_setup_entry(
 class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
+    _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
