@@ -4720,19 +4720,30 @@
           'type': None,
         }),
       }),
+      dict({
+        'data': list([
+        ]),
+        'device': dict({
+          'id': 'deviceId_unsupported',
+          'modelId': 'unsupported_model',
+          'roles': list([
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
+      }),
     ]),
     'entry': dict({
       'data': dict({
-        'client_id': '**REDACTED**',
-        'password': '**REDACTED**',
-        'username': '**REDACTED**',
+        'auth_implementation': 'vicare',
+        'token': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'vicare',
       'entry_id': '1234',
-      'minor_version': 2,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -4742,7 +4753,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

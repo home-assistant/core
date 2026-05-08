@@ -39,9 +39,16 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "condition",
     [
-        condition
-        for _, is_open, is_closed in DEVICE_CLASS_CONDITIONS
-        for condition in (is_open, is_closed)
+        "cover.awning_is_closed",
+        "cover.awning_is_open",
+        "cover.blind_is_closed",
+        "cover.blind_is_open",
+        "cover.curtain_is_closed",
+        "cover.curtain_is_open",
+        "cover.shade_is_closed",
+        "cover.shade_is_open",
+        "cover.shutter_is_closed",
+        "cover.shutter_is_open",
     ],
 )
 async def test_cover_conditions_gated_by_labs_flag(
