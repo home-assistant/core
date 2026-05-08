@@ -94,6 +94,11 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730044",
+    "cover.jaloezie",
+)
 UP_DOWN_VENETIAN_BLIND = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16747291",
@@ -162,13 +167,27 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
-        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            DYNAMIC_GARAGE_DOOR_OGP,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
@@ -176,6 +195,28 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [1, 0],
+            CoverState.OPENING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [1, 0],
+            CoverState.CLOSING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
         (
             UP_DOWN_VENETIAN_BLIND,
@@ -206,6 +247,7 @@ async def test_cover_entities_snapshot(
         "open-dynamic-garage-door",
         "open-dynamic-garage-door-ogp",
         "open-partial-garage-door",
+        "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
         "close-roller-shutter",
         "close-awning",
@@ -213,6 +255,7 @@ async def test_cover_entities_snapshot(
         "close-dynamic-garage-door",
         "close-dynamic-garage-door-ogp",
         "close-partial-garage-door",
+        "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
         "stop-roller-shutter",
         "stop-awning",
@@ -220,6 +263,10 @@ async def test_cover_entities_snapshot(
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-partial-garage-door",
+        "stop-tilt-only-venetian-blind",
+        "open-tilt-tilt-only-venetian-blind",
+        "close-tilt-tilt-only-venetian-blind",
+        "stop-tilt-tilt-only-venetian-blind",
         "stop-venetian-blind-rts",
         "open-tilt-venetian-blind-rts",
         "close-tilt-venetian-blind-rts",
@@ -236,7 +283,7 @@ async def test_cover_service_actions(
     parameters: list[Any] | None,
     expected_state: CoverState | str,
 ) -> None:
-    """Test open, close, and stop cover services."""
+    """Test open, close, and stop cover and tilt services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
