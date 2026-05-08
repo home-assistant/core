@@ -58,7 +58,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
     ) -> None:
         """Initialize the water heater."""
         super().__init__(coordinator, entry)
-        self._attr_unique_id = f"{entry.entry_id}-water_heater"
+        self._attr_unique_id = entry.entry_id
 
     @property
     def current_temperature(self) -> float | None:

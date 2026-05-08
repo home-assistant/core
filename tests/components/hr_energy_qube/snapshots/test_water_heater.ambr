@@ -39,7 +39,7 @@
     'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': 'water_heater',
-    'unique_id': '01JQUBEHEATPUMP00000000000-water_heater',
+    'unique_id': '01JQUBEHEATPUMP00000000000',
     'unit_of_measurement': None,
   })
 # ---
