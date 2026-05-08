@@ -65,6 +65,15 @@ class QubeSGReadySelect(QubeEntity, SelectEntity):
         self._attr_unique_id = f"{entry.entry_id}-sg_ready_mode"
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and SGREADY_A_KEY in self.coordinator.data.switches
+            and SGREADY_B_KEY in self.coordinator.data.switches
+        )
+
+    @property
     def current_option(self) -> str | None:
         """Return the current SG Ready mode."""
         bit_a = self.coordinator.data.switches.get(SGREADY_A_KEY)
