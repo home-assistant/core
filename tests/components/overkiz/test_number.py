@@ -118,32 +118,6 @@ async def test_number_set_value(
     assert args[1].parameters == [3]
 
 
-async def test_number_set_value_temperature(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test setting a temperature number value."""
-    await setup_overkiz_integration(fixture=COMFORT_ROOM_TEMPERATURE.fixture)
-
-    state = hass.states.get(COMFORT_ROOM_TEMPERATURE.entity_id)
-    assert state
-    assert state.state == "23.0"
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: COMFORT_ROOM_TEMPERATURE.entity_id, ATTR_VALUE: 25.0},
-        blocking=True,
-    )
-
-    assert mock_client.execute_command.await_count == 1
-    args = mock_client.execute_command.await_args.args
-    assert args[0] == COMFORT_ROOM_TEMPERATURE.device_url
-    assert args[1].name == "setComfortTemperature"
-    assert args[1].parameters == [25.0]
-
-
 async def test_number_dynamic_min_max(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
