@@ -1,18 +1,18 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This service is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "API key for OpenAQ"
@@ -23,33 +23,29 @@
   "config_subentries": {
     "location": {
       "abort": {
-        "already_configured": "This monitoring location is already configured"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
       },
       "entry_type": "Monitoring location",
       "error": {
-        "cannot_connect": "Failed to connect",
-        "invalid_auth": "Invalid authentication",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
         "no_locations_found": "No OpenAQ monitoring locations were found nearby.",
-        "rate_limited": "OpenAQ rate limit exceeded. Try again later.",
-        "unknown": "Unexpected error"
+        "rate_limited": "[%key:component::openaq::config::error::rate_limited%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
         "user": "Add monitoring location"
       },
       "step": {
-        "map": {
-          "data": {
-            "limit": "Maximum locations",
-            "location": "Location",
-            "radius": "Search radius"
-          },
-          "data_description": {
-            "radius": "Search radius in meters, up to 25000"
-          }
-        },
         "select": {
           "data": {
-            "location_id": "Monitoring location"
+            "location_id": "[%key:component::openaq::config_subentries::location::entry_type%]"
+          }
+        },
+        "user": {
+          "data": {
+            "limit": "Maximum locations",
+            "location": "[%key:common::config_flow::data::location%]"
           }
         }
       }
@@ -60,38 +56,11 @@
       "bc": {
         "name": "Black carbon"
       },
-      "co": {
-        "name": "Carbon monoxide"
-      },
-      "co2": {
-        "name": "Carbon dioxide"
-      },
       "distance_from_home": {
         "name": "Distance from Home Assistant"
       },
-      "no": {
-        "name": "Nitrogen monoxide"
-      },
-      "no2": {
-        "name": "Nitrogen dioxide"
-      },
       "nox": {
         "name": "Nitrogen oxides"
-      },
-      "o3": {
-        "name": "Ozone"
-      },
-      "pm1": {
-        "name": "PM1"
-      },
-      "pm10": {
-        "name": "PM10"
-      },
-      "pm25": {
-        "name": "PM2.5"
-      },
-      "so2": {
-        "name": "Sulphur dioxide"
       }
     }
   },

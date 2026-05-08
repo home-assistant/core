@@ -5,22 +5,17 @@ import logging
 from math import inf
 from typing import Any
 
+import httpx
 from openaq import (
     ApiKeyMissingError,
     AsyncOpenAQ,
-    BadGatewayError,
-    BadRequestError,
     ForbiddenError,
-    GatewayTimeoutError,
     HTTPRateLimitError,
     NotAuthorizedError,
-    NotFoundError,
     RateLimitError,
-    ServerError,
-    ServiceUnavailableError,
-    TimeoutError as OpenAQTimeoutError,
-    ValidationError,
 )
+from openaq.shared.exceptions import APIError
+from openaq.shared.responses import Location
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -57,11 +52,7 @@ from .const import (
     MAX_RADIUS,
     SUBENTRY_TYPE_LOCATION,
 )
-from .coordinator import (
-    async_create_openaq_client,
-    get_openaq_value,
-    normalize_parameter,
-)
+from .coordinator import async_create_openaq_client, normalize_parameter
 from .sensor import SENSOR_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,28 +118,17 @@ async def validate_input(_hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise InvalidAuth from err
     except (HTTPRateLimitError, RateLimitError) as err:
         raise RateLimited from err
-    except (
-        BadGatewayError,
-        BadRequestError,
-        GatewayTimeoutError,
-        NotFoundError,
-        OpenAQTimeoutError,
-        ServerError,
-        ServiceUnavailableError,
-        ValidationError,
-    ) as err:
+    except (APIError, httpx.HTTPError) as err:
         raise CannotConnect from err
     finally:
         await client.close()
 
 
-def _location_title(location: object) -> str:
+def _location_title(location: Location) -> str:
     """Return a display title for an OpenAQ location."""
-    name = get_openaq_value(location, "name")
-    locality = get_openaq_value(location, "locality")
-    if isinstance(locality, str) and locality and locality != name:
-        return f"{name}, {locality}"
-    return str(name)
+    if location.locality and location.locality != location.name:
+        return f"{location.name}, {location.locality}"
+    return location.name
 
 
 def _search_radii(max_radius: int) -> tuple[int, ...]:
@@ -163,26 +143,19 @@ def _search_radii(max_radius: int) -> tuple[int, ...]:
     return tuple(radii)
 
 
-def _supported_parameters(location: object) -> tuple[str, ...]:
+def _supported_parameters(location: Location) -> tuple[str, ...]:
     """Return supported sensor parameters for an OpenAQ location."""
-    sensors = get_openaq_value(location, "sensors")
-    if not isinstance(sensors, list):
-        return ()
-
     parameters: set[str] = set()
-    for sensor in sensors:
-        parameter_name = normalize_parameter(get_openaq_value(sensor, "parameter"))
+    for sensor in location.sensors:
+        parameter_name = normalize_parameter(sensor.parameter)
         if parameter_name in SENSOR_DESCRIPTIONS:
             parameters.add(parameter_name)
     return tuple(sorted(parameters))
 
 
-def _location_distance(location: object) -> float | None:
+def _location_distance(location: Location) -> float | None:
     """Return the location distance in meters."""
-    distance = get_openaq_value(location, "distance")
-    if isinstance(distance, bool) or not isinstance(distance, (int, float)):
-        return None
-    return float(distance)
+    return location.distance
 
 
 def _location_sort_key(
@@ -197,18 +170,14 @@ def _location_sort_key(
     )
 
 
-def _location_from_result(location: object) -> OpenAQLocationFlowData | None:
+def _location_from_result(location: Location) -> OpenAQLocationFlowData | None:
     """Return flow data for a useful OpenAQ location result."""
-    location_id = get_openaq_value(location, "id")
-    if not isinstance(location_id, int):
-        return None
-
     supported_parameters = _supported_parameters(location)
     if not supported_parameters:
         return None
 
     return OpenAQLocationFlowData(
-        location_id=location_id,
+        location_id=location.id,
         title=_location_title(location),
         supported_parameters=supported_parameters,
         distance=_location_distance(location),
@@ -244,8 +213,7 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(DOMAIN)
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -278,30 +246,32 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Handle adding an OpenAQ location."""
-        return await self.async_step_map()
-
-    async def async_step_map(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
         """Find OpenAQ locations near a map point."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            selected_location = user_input[CONF_LOCATION]
             coordinates = (
-                user_input[CONF_LOCATION][CONF_LATITUDE],
-                user_input[CONF_LOCATION][CONF_LONGITUDE],
+                selected_location[CONF_LATITUDE],
+                selected_location[CONF_LONGITUDE],
+            )
+            max_radius = max(
+                1,
+                min(
+                    int(selected_location.get(CONF_RADIUS, DEFAULT_RADIUS)),
+                    MAX_RADIUS,
+                ),
             )
             client = await _get_client(self.hass, self._get_entry().data[CONF_API_KEY])
             try:
                 locations: dict[int, OpenAQLocationFlowData] = {}
-                for radius in _search_radii(user_input[CONF_RADIUS]):
+                for radius in _search_radii(max_radius):
                     response = await client.locations.list(
                         coordinates=coordinates,
                         radius=radius,
                         limit=user_input[CONF_LIMIT],
                     )
-                    for location in response.results:
-                        location_data = _location_from_result(location)
+                    for result_location in response.results:
+                        location_data = _location_from_result(result_location)
                         if location_data is None:
                             continue
                         locations.setdefault(location_data.location_id, location_data)
@@ -309,16 +279,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 errors["base"] = "invalid_auth"
             except HTTPRateLimitError, RateLimitError:
                 errors["base"] = "rate_limited"
-            except (
-                BadGatewayError,
-                BadRequestError,
-                GatewayTimeoutError,
-                NotFoundError,
-                OpenAQTimeoutError,
-                ServerError,
-                ServiceUnavailableError,
-                ValidationError,
-            ):
+            except APIError, httpx.HTTPError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -338,15 +299,12 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 await client.close()
 
         return self.async_show_form(
-            step_id="map",
+            step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_LOCATION): LocationSelector(
-                            LocationSelectorConfig(radius=False)
-                        ),
-                        vol.Required(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
-                            vol.Coerce(int), vol.Range(min=1, max=MAX_RADIUS)
+                            LocationSelectorConfig(radius=True)
                         ),
                         vol.Required(
                             CONF_LIMIT, default=DEFAULT_LOCATION_LIMIT
@@ -357,6 +315,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     CONF_LOCATION: {
                         CONF_LATITUDE: self.hass.config.latitude,
                         CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_RADIUS: DEFAULT_RADIUS,
                     }
                 },
             ),

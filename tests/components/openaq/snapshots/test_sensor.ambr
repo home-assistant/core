@@ -94,7 +94,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co2',
+    'translation_key': None,
     'unique_id': '2178_co2',
     'unit_of_measurement': 'ppm',
   })
@@ -153,7 +153,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co',
+    'translation_key': None,
     'unique_id': '2178_co',
     'unit_of_measurement': 'ppm',
   })
@@ -181,9 +181,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -223,7 +221,6 @@
       'attribution': 'Data provided by OpenAQ',
       'device_class': 'distance',
       'friendly_name': 'Del Norte Distance from Home Assistant',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -271,7 +268,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'no2',
+    'translation_key': None,
     'unique_id': '2178_no2',
     'unit_of_measurement': 'ppb',
   })
@@ -330,7 +327,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'no',
+    'translation_key': None,
     'unique_id': '2178_no',
     'unit_of_measurement': 'ppb',
   })
@@ -447,7 +444,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'o3',
+    'translation_key': None,
     'unique_id': '2178_o3',
     'unit_of_measurement': 'ppb',
   })
@@ -506,7 +503,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm1',
+    'translation_key': None,
     'unique_id': '2178_pm1',
     'unit_of_measurement': 'μg/m³',
   })
@@ -565,7 +562,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10',
+    'translation_key': None,
     'unique_id': '2178_pm10',
     'unit_of_measurement': 'μg/m³',
   })
@@ -624,7 +621,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm25',
+    'translation_key': None,
     'unique_id': '2178_pm25',
     'unit_of_measurement': 'μg/m³',
   })
@@ -683,7 +680,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'so2',
+    'translation_key': None,
     'unique_id': '2178_so2',
     'unit_of_measurement': 'ppb',
   })
