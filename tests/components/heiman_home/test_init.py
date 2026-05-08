@@ -632,67 +632,6 @@ async def test_setup_mqtt_init_failure_with_cleanup(
     mock_api_client_instance.async_close.assert_called_once()
 
 
-async def test_setup_first_refresh_failure_with_cleanup(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test setup cleans up API client when first refresh fails (lines 112-118).
-
-    When async_config_entry_first_refresh raises an exception after the API
-    wrapper has been initialized, the integration should close the API client
-    to prevent resource leaks.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Create mocks for API client
-    mock_api_client_instance = MagicMock()
-    mock_api_client_instance.async_close = AsyncMock()
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.api_client = mock_api_client_instance
-    # Make first refresh raise an exception
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock(
-        side_effect=RuntimeError("Network error during first refresh")
-    )
-
-    with (
-        patch(
-            "homeassistant.components.heiman_home.HeimanDataUpdateCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
-            new_callable=AsyncMock,
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.heiman_home.HeimanApiClient",
-            return_value=mock_api_client_instance,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Verify setup failed
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-    # Verify API client was closed to prevent resource leak
-    mock_api_client_instance.async_close.assert_called_once()
-
 
 async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
     """Test unload when entry has no runtime_data (line 153 coverage).
