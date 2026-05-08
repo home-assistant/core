@@ -50,7 +50,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.home_power-entry]
+# name: test_all_entities[binary_sensor.home_external_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.home_power',
+    'entity_id': 'binary_sensor.home_external_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'External power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'External power',
     'platform': 'ptdevices',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,14 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.home_power-state]
+# name: test_all_entities[binary_sensor.home_external_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Home Power',
+      'friendly_name': 'Home External power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_power',
+    'entity_id': 'binary_sensor.home_external_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
