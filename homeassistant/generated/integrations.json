@@ -8220,6 +8220,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "yoto": {
+      "name": "Yoto",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "youless": {
       "name": "YouLess",
       "integration_type": "device",

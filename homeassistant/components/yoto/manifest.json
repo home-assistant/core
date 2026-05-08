@@ -1,0 +1,13 @@
+{
+  "domain": "yoto",
+  "name": "Yoto",
+  "codeowners": ["@cdnninja", "@piitaya"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/yoto",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["yoto_api", "paho.mqtt"],
+  "quality_scale": "bronze",
+  "requirements": ["yoto-api==2.2.9"]
+}
