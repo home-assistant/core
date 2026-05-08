@@ -46,15 +46,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "upcoming_days": "Number of upcoming days to display"
-        }
-      }
-    }
-  },
   "services": {
     "get_movies": {
       "description": "Gets all movies in Radarr with their details and status.",
