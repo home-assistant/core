@@ -14,17 +14,6 @@
         },
         {
           "type": 10,
-          "name": "core:SupportedAliases",
-          "value": [
-            {
-              "features": ["openClosePosition"],
-              "type": "ventilation",
-              "id": "55299"
-            }
-          ]
-        },
-        {
-          "type": 10,
           "name": "io:Features",
           "value": [
             {

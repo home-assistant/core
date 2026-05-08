@@ -1,9 +1,9 @@
 """Support for Overkiz (virtual) buttons."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
+from pyoverkiz.enums import OverkizAttribute, OverkizCommand, OverkizCommandParam
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.button import (
@@ -17,7 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity
+from .coordinator import OverkizDataUpdateCoordinator
+from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
 @dataclass(frozen=True)
@@ -71,13 +72,6 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     OverkizButtonDescription(
         key=OverkizCommand.RING, name="Ring", icon="mdi:bell-ring"
     ),
-    # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
-    OverkizButtonDescription(
-        key=OverkizCommand.GO_TO_ALIAS,
-        press_args="1",
-        name="My position",
-        icon="mdi:star",
-    ),
     OverkizButtonDescription(
         key=OverkizCommand.CYCLE,
         name="Toggle",
@@ -97,6 +91,8 @@ SUPPORTED_COMMANDS = {
     description.key: description for description in BUTTON_DESCRIPTIONS
 }
 
+ALIAS_TYPES_WITH_TRANSLATION: set[str] = {"favorite1", "ventilation", "partial"}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -114,15 +110,26 @@ async def async_setup_entry(
         ):
             continue
 
-        entities.extend(
-            OverkizButton(
-                device.device_url,
-                data.coordinator,
-                description,
-            )
-            for command in device.definition.commands
-            if (description := SUPPORTED_COMMANDS.get(command))
-        )
+        for command in device.definition.commands:
+            # Dynamically generate buttons for goToAlias commands based on the supported aliases of the device
+            if command == OverkizCommand.GO_TO_ALIAS:
+                if attribute := device.attributes.get(
+                    OverkizAttribute.CORE_SUPPORTED_ALIASES
+                ):
+                    entities.extend(
+                        OverkizAliasButton(
+                            device.device_url,
+                            data.coordinator,
+                            alias_id=str(alias["id"]),
+                            alias_type=alias.get("type", ""),
+                        )
+                        for alias in cast(list, attribute.value)
+                    )
+            # Create buttons for supported commands based on the predefined BUTTON_DESCRIPTIONS
+            elif description := SUPPORTED_COMMANDS.get(command):
+                entities.append(
+                    OverkizButton(device.device_url, data.coordinator, description)
+                )
 
     async_add_entities(entities)
 
@@ -142,3 +149,34 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
             return
 
         await self.executor.async_execute_command(self.entity_description.key)
+
+
+class OverkizAliasButton(OverkizEntity, ButtonEntity):
+    """Representation of an Overkiz goToAlias button."""
+
+    _attr_icon = "mdi:star"
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        alias_id: str,
+        alias_type: str,
+    ) -> None:
+        """Initialize the alias button."""
+        super().__init__(device_url, coordinator)
+        self._alias_id = alias_id
+        if alias_type in ALIAS_TYPES_WITH_TRANSLATION:
+            self._attr_translation_key = f"go_to_alias_{alias_type}"
+        else:
+            self._attr_name = f"{alias_type.capitalize()} position"
+        self._attr_unique_id = (
+            f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias_id}"
+        )
+
+    @override
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.executor.async_execute_command(
+            OverkizCommand.GO_TO_ALIAS, self._alias_id
+        )

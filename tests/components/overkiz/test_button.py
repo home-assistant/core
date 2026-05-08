@@ -28,21 +28,31 @@ IDENTIFY = FixtureDevice(
     "io://1234-1234-6233/12184029",
     "button.office_garden_house_shutter_identify",
 )
-GO_TO_ALIAS = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe_2.json",
-    "io://1234-5678-1516/77700",
-    "button.roof_window_my_position",
-)
 CHECK_EVENT_TRIGGER = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/8907539",
     "button.maple_residence_living_room_smoke_detector_test",
 )
+VELUX_WINDOW = FixtureDevice(
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json",
+    "io://1234-5678-5010/13522671",
+    "button.loft_loft_window",
+)
+STUDIO_WINDOW = FixtureDevice(
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json",
+    "io://1234-5678-5010/3912866",
+    "button.loft_studio_window",
+)
+GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730050",
+    "button.living_room_garage_door",
+)
 
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
-    GO_TO_ALIAS,
     CHECK_EVENT_TRIGGER,
+    VELUX_WINDOW,
 ]
 
 
@@ -94,26 +104,36 @@ async def test_button_press(
     )
 
 
-async def test_button_press_with_args(
+@pytest.mark.parametrize(
+    ("device", "alias_id"),
+    [
+        pytest.param(VELUX_WINDOW, "55299", id="ventilation"),
+        pytest.param(STUDIO_WINDOW, "1", id="favorite1"),
+        pytest.param(GARAGE_DOOR, "55305", id="partial"),
+    ],
+)
+async def test_button_press_alias(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    alias_id: str,
 ) -> None:
-    """Test pressing a button with arguments sends the correct command."""
-    await setup_overkiz_integration(fixture=GO_TO_ALIAS.fixture)
+    """Test pressing an alias button sends goToAlias with the matching id."""
+    await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: GO_TO_ALIAS.entity_id},
+        {ATTR_ENTITY_ID: device.entity_id},
         blocking=True,
     )
 
     assert_command_call(
         mock_client,
-        device_url=GO_TO_ALIAS.device_url,
+        device_url=device.device_url,
         command_name="goToAlias",
-        parameters=["1"],
+        parameters=[alias_id],
     )
 
 
@@ -142,3 +162,17 @@ async def test_button_unavailability(
     )
 
     assert hass.states.get(MY_POSITION.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_no_button_without_supported_aliases_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test that no goToAlias button is created when SupportedAliases state is missing."""
+    await setup_overkiz_integration(
+        fixture="setup/local_somfy_tahoma_switch_europe_2.json"
+    )
+
+    # The Roof Window device in this fixture has a goToAlias command but no
+    # core:SupportedAliases state, so it should not get an alias button.
+    assert hass.states.get("button.roof_window_my_position") is None
