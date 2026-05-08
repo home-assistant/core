@@ -150,17 +150,17 @@ class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
         self,
         coordinator: NintendoUpdateCoordinator,
         device: Device,
-        player: str,
+        player_id: str,
         description: NintendoParentalControlsPlayerSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
         self.entity_description = description
-        self.player_id = player
-        player_obj = device.get_player(player)
+        self.player_id = player_id
+        player_obj = device.get_player(player_id)
         nickname = player_obj.nickname or ""
         self._attr_translation_placeholders = {"nickname": nickname}
-        self._attr_unique_id = f"{device.device_id}_{player}_{description.key}"
+        self._attr_unique_id = f"{device.device_id}_{player_id}_{description.key}"
 
     @property
     def entity_picture(self) -> str | None:
