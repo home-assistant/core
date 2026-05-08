@@ -35,7 +35,6 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
         self._endpoint = endpoint
         self.entity_description = description
 
-        assert coordinator.config_entry is not None
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
             f"_{description.device}_{description.key}"

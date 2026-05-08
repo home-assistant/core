@@ -31,6 +31,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
     """Ouman EH-800 data update coordinator."""
 
     _registry_set: OumanRegistrySet
+    config_entry: OumanEh800ConfigEntry
 
     def __init__(
         self,
