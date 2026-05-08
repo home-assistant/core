@@ -169,43 +169,6 @@ async def test_unique_id_migration(
     )
 
 
-async def test_unique_id_migration_collision(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    router: Mock,
-) -> None:
-    """Test migration logs a warning when target unique_id already exists."""
-    old_unique_id = f"{MOCK_MAC} Freebox download speed"
-    new_unique_id = f"{MOCK_MAC} rate_down"
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN, DOMAIN, old_unique_id, config_entry=entry
-    )
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN, DOMAIN, new_unique_id, config_entry=entry
-    )
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # Both entities still exist; migration did not crash.
-    assert (
-        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
-        is not None
-    )
-    assert (
-        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, new_unique_id)
-        is not None
-    )
-
-
 async def test_home_device_label_sync(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

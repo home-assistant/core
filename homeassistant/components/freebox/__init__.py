@@ -62,21 +62,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
         )
 
         for platform, old_uid, new_uid in migrations:
-            entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_uid)
-            if entity_id is None:
-                continue
-            try:
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, old_uid
+            ):
                 entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
-            except ValueError:
-                _LOGGER.warning(
-                    "Unable to migrate unique_id from %s to %s: target already exists",
+                _LOGGER.debug(
+                    "Migrated %s unique_id from %s to %s",
+                    entity_id,
                     old_uid,
                     new_uid,
                 )
-                continue
-            _LOGGER.debug(
-                "Migrated %s unique_id from %s to %s", entity_id, old_uid, new_uid
-            )
 
         hass.config_entries.async_update_entry(entry, version=2)
 
