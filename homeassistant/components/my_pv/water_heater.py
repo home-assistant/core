@@ -4,8 +4,6 @@
 import logging
 from typing import Any
 
-from aenum._enum import property
-
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC,
     WaterHeaterEntity,
