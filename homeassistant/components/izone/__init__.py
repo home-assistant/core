@@ -97,8 +97,6 @@ async def _async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    if entry.unique_id == IZONE:
-        await _async_migrate_legacy_entry(hass, entry)
 
     had_loaded_entries = any(
         config_entry.state
