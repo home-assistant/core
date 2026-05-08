@@ -1,7 +1,5 @@
 """Config Flow for Cielo integration."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from aiohttp import ClientError
