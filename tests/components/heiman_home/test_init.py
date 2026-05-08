@@ -632,7 +632,6 @@ async def test_setup_mqtt_init_failure_with_cleanup(
     mock_api_client_instance.async_close.assert_called_once()
 
 
-
 async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
     """Test unload when entry has no runtime_data (line 153 coverage).
 
