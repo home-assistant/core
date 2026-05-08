@@ -8,21 +8,15 @@ from types import MappingProxyType
 from typing import Any, cast
 
 import httpx
-from openaq import (
-    ApiKeyMissingError,
-    AsyncOpenAQ,
-    BadGatewayError,
-    BadRequestError,
-    ForbiddenError,
-    GatewayTimeoutError,
-    HTTPRateLimitError,
-    NotAuthorizedError,
-    NotFoundError,
-    RateLimitError,
-    ServerError,
-    ServiceUnavailableError,
-    TimeoutError as OpenAQTimeoutError,
-    ValidationError,
+from openaq import AsyncOpenAQ
+from openaq.shared.exceptions import APIError, OpenAQError
+from openaq.shared.responses import (
+    Coordinates,
+    Latest,
+    Location,
+    Parameter,
+    ParameterBase,
+    Sensor,
 )
 from openaq.shared.transport import check_response
 
@@ -104,13 +98,14 @@ class HomeAssistantOpenAQTransport:
         return check_response(response)
 
     async def close(self) -> None:
-        """Keep the shared Home Assistant httpx client open."""
+        """The OpenAQ SDK calls this when closing, but Home Assistant owns the shared httpx client."""
 
 
 def create_openaq_client(api_key: str, httpx_client: httpx.AsyncClient) -> AsyncOpenAQ:
     """Create an OpenAQ client with a Home Assistant managed transport."""
     return AsyncOpenAQ(
         api_key=api_key,
+        # Avoid importing the SDK's private transport type just for this cast.
         transport=cast(Any, HomeAssistantOpenAQTransport(httpx_client)),
     )
 
@@ -120,31 +115,9 @@ async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> Async
     return create_openaq_client(api_key, get_async_client(hass))
 
 
-def get_openaq_value(data: object, *names: str) -> Any:
-    """Get a value from an SDK object or a dict-like test object."""
-    for name in names:
-        if isinstance(data, dict) and name in data:
-            return data[name]
-        if hasattr(data, name):
-            return getattr(data, name)
-    return None
-
-
-def normalize_parameter(parameter: object) -> str | None:
+def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     """Normalize an OpenAQ parameter object to its canonical name."""
-    name = get_openaq_value(parameter, "name")
-    if isinstance(name, str):
-        return name.lower().replace(".", "").replace("_", "")
-    return None
-
-
-def _normalize_sensor_id(value: object) -> int | None:
-    """Normalize an OpenAQ sensor id to an integer."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, str) and value.isdecimal():
-        return int(value)
-    return None
+    return parameter.name.lower().replace(".", "").replace("_", "")
 
 
 def _as_float(value: object) -> float | None:
@@ -161,19 +134,11 @@ def _normalize_unit(unit: object) -> str | None:
     return OPENAQ_UNIT_ALIASES.get(unit, unit)
 
 
-def _coordinate_value(coordinates: object, name: str) -> float | None:
-    """Return a numeric coordinate value."""
-    value = get_openaq_value(coordinates, name)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return None
-    return float(value)
-
-
-def _distance_to_home(hass: HomeAssistant, location: object) -> float | None:
+def _distance_to_home(hass: HomeAssistant, location: Location) -> float | None:
     """Return the distance in meters from Home Assistant to the OpenAQ location."""
-    coordinates = get_openaq_value(location, "coordinates")
-    latitude = _coordinate_value(coordinates, "latitude")
-    longitude = _coordinate_value(coordinates, "longitude")
+    coordinates: Coordinates = location.coordinates
+    latitude = _as_float(coordinates.latitude)
+    longitude = _as_float(coordinates.longitude)
     if latitude is None or longitude is None:
         return None
     return location_util.distance(
@@ -185,56 +150,33 @@ def _distance_to_home(hass: HomeAssistant, location: object) -> float | None:
 
 
 def _sensor_metadata_by_id(
-    sensors: Sequence[object],
+    sensors: Sequence[Sensor],
 ) -> dict[int, tuple[str, str | None]]:
     """Return parameter metadata keyed by OpenAQ sensor id."""
     metadata: dict[int, tuple[str, str | None]] = {}
     for sensor in sensors:
-        sensor_id = _normalize_sensor_id(get_openaq_value(sensor, "id"))
-        parameter = get_openaq_value(sensor, "parameter")
+        parameter = sensor.parameter
         parameter_name = normalize_parameter(parameter)
-        if sensor_id is None or parameter_name is None:
-            continue
-        metadata[sensor_id] = (
+        metadata[sensor.id] = (
             parameter_name,
-            _normalize_unit(get_openaq_value(parameter, "units")),
+            _normalize_unit(parameter.units),
         )
     return metadata
 
 
 def normalize_latest_measurements(
-    latest_results: Sequence[object], sensors: Sequence[object]
+    latest_results: Sequence[Latest], sensors: Sequence[Sensor]
 ) -> MappingProxyType[str, OpenAQMeasurement]:
     """Normalize OpenAQ latest measurements by parameter name."""
     sensor_metadata = _sensor_metadata_by_id(sensors)
     measurements: dict[str, OpenAQMeasurement] = {}
 
     for latest in latest_results:
-        sensor_id = _normalize_sensor_id(
-            get_openaq_value(latest, "sensors_id", "sensorsId")
-        )
-        value = _as_float(get_openaq_value(latest, "value"))
-        if sensor_id is None or value is None:
+        value = _as_float(latest.value)
+        if value is None or latest.sensors_id not in sensor_metadata:
             continue
-        if sensor_id not in sensor_metadata:
-            continue
-        parameter, unit = sensor_metadata[sensor_id]
+        parameter, unit = sensor_metadata[latest.sensors_id]
         measurements[parameter] = OpenAQMeasurement(parameter, value, unit)
-
-    for sensor in sensors:
-        parameter = get_openaq_value(sensor, "parameter")
-        parameter_name = normalize_parameter(parameter)
-        latest = get_openaq_value(sensor, "latest")
-        value = (
-            _as_float(get_openaq_value(latest, "value")) if latest is not None else None
-        )
-        if parameter_name is None or parameter_name in measurements or value is None:
-            continue
-        measurements[parameter_name] = OpenAQMeasurement(
-            parameter_name,
-            value,
-            _normalize_unit(get_openaq_value(parameter, "units")),
-        )
 
     return MappingProxyType(measurements)
 
@@ -262,13 +204,13 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         self.client = client
         self.subentry = subentry
         self.location_id: int = subentry.data[CONF_LOCATION_ID]
-        self._location: object | None = None
-        self._sensors: Sequence[object] | None = None
+        self._location: Location | None = None
+        self._sensors: Sequence[Sensor] | None = None
 
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
-        location: object
-        sensors: Sequence[object]
+        location: Location
+        sensors: Sequence[Sensor]
         try:
             if self._location is None or self._sensors is None:
                 (
@@ -293,21 +235,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 location = self._location
                 sensors = self._sensors
                 latest_response = await self.client.locations.latest(self.location_id)
-        except (
-            BadGatewayError,
-            BadRequestError,
-            ApiKeyMissingError,
-            ForbiddenError,
-            GatewayTimeoutError,
-            HTTPRateLimitError,
-            NotFoundError,
-            NotAuthorizedError,
-            OpenAQTimeoutError,
-            RateLimitError,
-            ServerError,
-            ServiceUnavailableError,
-            ValidationError,
-        ) as err:
+        except (APIError, OpenAQError, httpx.HTTPError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
@@ -316,22 +244,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(
             location_id=self.location_id,
-            name=str(get_openaq_value(location, "name")),
+            name=location.name,
             distance_to_home=_distance_to_home(self.hass, location),
             measurements=measurements,
         )
-
-
-__all__ = [
-    "HomeAssistantOpenAQTransport",
-    "OpenAQConfigEntry",
-    "OpenAQDataUpdateCoordinator",
-    "OpenAQLocationData",
-    "OpenAQMeasurement",
-    "OpenAQRuntimeData",
-    "async_create_openaq_client",
-    "create_openaq_client",
-    "get_openaq_value",
-    "normalize_latest_measurements",
-    "normalize_parameter",
-]

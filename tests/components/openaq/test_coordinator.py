@@ -1,6 +1,6 @@
 """Test OpenAQ data coordinator helpers."""
 
-from types import MappingProxyType, SimpleNamespace
+from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import httpx
@@ -10,7 +10,6 @@ from homeassistant.components.openaq.coordinator import (
     OpenAQMeasurement,
     async_create_openaq_client,
     create_openaq_client,
-    get_openaq_value,
     normalize_latest_measurements,
 )
 from homeassistant.const import (
@@ -83,29 +82,17 @@ async def test_async_create_openaq_client_uses_shared_httpx_client(
         await httpx_client.aclose()
 
 
-def test_get_openaq_value_dict() -> None:
-    """Test getting OpenAQ values from dict data."""
-    data = {"id": 123}
-
-    assert get_openaq_value(data, "id") == 123
-    assert get_openaq_value(data, "missing") is None
-
-
-def test_normalize_latest_measurements_ignores_invalid_data() -> None:
-    """Test normalizing latest measurements ignores invalid API data."""
+def test_normalize_latest_measurements() -> None:
+    """Test normalizing latest measurements by sensor metadata."""
     measurements = normalize_latest_measurements(
         [
-            make_latest("1", 8.5),
-            make_latest("unknown", 12.1),
+            make_latest(1, 8.5),
             make_latest(999, 44.1),
-            make_latest(2, True),
-            make_latest(3, 33.2),
+            make_latest(2, None),
         ],
         [
-            make_sensor("1", "pm2.5", "µg/m3"),
+            make_sensor(1, "pm2.5", "µg/m3"),
             make_sensor(2, "pm10"),
-            make_sensor(3, "no_units", 123),
-            SimpleNamespace(id=4, parameter=SimpleNamespace()),
         ],
     )
 
@@ -116,20 +103,15 @@ def test_normalize_latest_measurements_ignores_invalid_data() -> None:
                 value=8.5,
                 unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             ),
-            "nounits": OpenAQMeasurement(
-                parameter="nounits",
-                value=33.2,
-                unit=None,
-            ),
         }
     )
 
 
-def test_normalize_latest_measurements_uses_sensor_latest() -> None:
-    """Test normalizing measurements from sensor latest data."""
+def test_normalize_latest_measurements_normalizes_unit_aliases() -> None:
+    """Test normalizing measurement unit aliases."""
     measurements = normalize_latest_measurements(
-        [],
-        [make_sensor(1, "pm10", "mg/m3", value=12.1)],
+        [make_latest(1, 12.1)],
+        [make_sensor(1, "pm10", "mg/m3")],
     )
 
     assert measurements == MappingProxyType(
