@@ -58,7 +58,6 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         self.device_info: dict[OumanDevice, DeviceInfo] = {
             OumanDevice.MAIN: DeviceInfo(
                 identifiers={main_device_identifier},
-                name="Ouman EH-800",
                 manufacturer="Ouman",
                 model="EH-800",
                 configuration_url=config_entry.data[CONF_URL],
