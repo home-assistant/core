@@ -26,6 +26,9 @@
     "binary_sensor": {
       "battery_status": {
         "name": "Battery status"
+      },
+      "external_power": {
+        "name": "External power"
       }
     },
     "sensor": {
