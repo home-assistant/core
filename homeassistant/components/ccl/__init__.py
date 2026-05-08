@@ -45,24 +45,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     # Create the device and register a webhook after restart
-    if webhook_id not in devices:
-        device = devices[webhook_id] = CCLDevice(webhook_id)
+    device = devices[webhook_id] = CCLDevice(webhook_id)
 
-        coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
+    coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
-        devices[device.passkey] = device
-
-        try:
-            await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
-        except (ValueError, NoURLAvailableError) as err:
-            _LOGGER.error("Failed to register webhook: %s", err)
-            raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
-        _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
-
-    else:
-        device = devices[webhook_id]
-
-        coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
+    try:
+        await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
+    except (ValueError, NoURLAvailableError) as err:
+        _LOGGER.error("Failed to register webhook: %s", err)
+        raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
+    _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
 
     @callback
     def push_update_callback(data) -> None:

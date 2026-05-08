@@ -32,6 +32,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.device: CCLDevice | None = None
         self.task_one: asyncio.Task | None = None
+        self.webhook_id: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -41,12 +42,12 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Initial step, set up the webhook and device
         if CONF_PATH not in self.data:
-            webhook_id = self.data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
+            self.webhook_id = self.data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
 
             try:
                 webhook_url = webhook.async_generate_url(
                     self.hass,
-                    webhook_id,
+                    self.webhook_id,
                     allow_ip=True,
                 )
             except NoURLAvailableError as err:
@@ -54,27 +55,28 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="invalid_host")
 
             res = urlsplit(webhook_url)
+            port = res.port or (443 if res.scheme == "https" else 80)
             self.data[CONF_HOST] = res.hostname
-            self.data[CONF_PORT] = str(res.port)
-            self.data[CONF_PATH] = webhook.async_generate_path(webhook_id)
+            self.data[CONF_PORT] = str(port)
+            self.data[CONF_PATH] = webhook.async_generate_path(self.webhook_id)
 
-            self.device = CCLDevice(webhook_id)
+            self.device = CCLDevice(self.webhook_id)
             # Try to register the device, but if it already exists, use the existing one
             try:
                 register(devices, self.device)
             except CCLDeviceRegistrationException:
                 _LOGGER.debug(
                     "Device with webhook ID %s is already registered",
-                    webhook_id,
+                    self.webhook_id,
                 )
-                self.device = devices[webhook_id]
+                self.device = devices[self.webhook_id]
             # Try to register the webhook
             try:
-                await register_webhook(self.hass, webhook_id)
+                await register_webhook(self.hass, self.webhook_id)
             except (ValueError, NoURLAvailableError) as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
                 return self.async_abort(reason="invalid_webhook")
-            _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
+            _LOGGER.debug("Webhook registered at hass: %s", self.webhook_id)
 
         # Create a task to wait for the first update from the device
         if not self.task_one:
@@ -104,14 +106,14 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except TimeoutError:
                 _LOGGER.error("Timed out waiting for device update during config flow")
                 self.task_one = None
-                webhook.async_unregister(self.hass, webhook_id)
-                devices.pop(webhook_id, None)
+                webhook.async_unregister(self.hass, self.webhook_id)
+                devices.pop(self.webhook_id, None)
                 return self.async_abort(reason="connect_timeout")
             except AbortFlow:
                 _LOGGER.debug("Device already configured during config flow")
                 self.task_one = None
-                webhook.async_unregister(self.hass, webhook_id)
-                devices.pop(webhook_id, None)
+                webhook.async_unregister(self.hass, self.webhook_id)
+                devices.pop(self.webhook_id, None)
                 return self.async_abort(reason="already_configured")
 
         if uncompleted_task:

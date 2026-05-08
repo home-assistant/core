@@ -50,7 +50,10 @@ async def test_create_entry(
             device.last_update_time = 123
             return web.Response(status=200)
 
-        with patch("aioccl.CCLServer.handler", side_effect=handler_side_effect):
+        with patch(
+            "homeassistant.components.ccl.CCLServer.handler",
+            side_effect=handler_side_effect,
+        ):
             resp = await client.post(urlparse(webhook_url).path, json=body)
 
         assert resp.status == 200

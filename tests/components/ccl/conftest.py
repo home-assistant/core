@@ -42,7 +42,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_ccl() -> Generator[MagicMock]:
     """Return a mocked CCL device."""
-    with patch("aioccl.CCLDevice", autospec=True) as device_mock:
+    with patch(
+        "homeassistant.components.ccl.config_flow.CCLDevice", autospec=True
+    ) as device_mock:
         device_mock = device_mock.return_value
 
         device_mock.info = {

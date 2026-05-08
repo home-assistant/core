@@ -78,7 +78,10 @@ async def test_webhook_post(
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         return web.Response(status=HTTPStatus.OK)
 
-    with patch("aioccl.CCLServer.handler", side_effect=handler_side_effect):
+    with patch(
+        "homeassistant.components.ccl.CCLServer.handler",
+        side_effect=handler_side_effect,
+    ):
         resp = await client.post(urlparse(webhook_url).path, headers=headers, json=body)
 
     # Wait for remaining tasks to complete.

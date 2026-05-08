@@ -1,28 +1,22 @@
 {
   "entity": {
     "sensor": {
+      "aqi": {
+        "default": "mdi:grain"
+      },
       "ch_sensor_type": {
         "default": "mdi:thermometer",
         "state": {
-          "thermo-hygro": "mdi:thermometer-water",
           "pool": "mdi:pool-thermometer",
-          "soil": "mdi:thermometer-water"
+          "soil": "mdi:thermometer-water",
+          "thermo-hygro": "mdi:thermometer-water"
         }
-      },
-      "uvi": {
-        "default": "mdi:sun-wireless-outline"
-      },
-      "voc_level": {
-        "default": "mdi:molecule"
-      },
-      "aqi": {
-        "default": "mdi:grain"
       },
       "leakage": {
         "default": "mdi:pipe-leak",
         "state": {
-          "no_leak": "mdi:marker-check",
-          "leaking": "mdi:pipe-leak"
+          "leaking": "mdi:pipe-leak",
+          "no_leak": "mdi:marker-check"
         }
       },
       "lightning_distance": {
@@ -33,6 +27,12 @@
       },
       "lightning_frequency": {
         "default": "mdi:flash"
+      },
+      "uvi": {
+        "default": "mdi:sun-wireless-outline"
+      },
+      "voc_level": {
+        "default": "mdi:molecule"
       }
     }
   }
