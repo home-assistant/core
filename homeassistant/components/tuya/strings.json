@@ -214,6 +214,9 @@
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       },
+      "irrigation_duration": {
+        "name": "Irrigation duration"
+      },
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
@@ -706,11 +709,22 @@
       "inverter_output_power": {
         "name": "Inverter output power"
       },
+      "irrigation_status": {
+        "name": "Status",
+        "state": {
+          "auto": "Automatic",
+          "idle": "[%key:common::state::idle%]",
+          "manual": "Manual"
+        }
+      },
       "last_amount": {
         "name": "Last amount"
       },
       "last_operation_duration": {
         "name": "Last operation duration"
+      },
+      "last_watering_time": {
+        "name": "Last watering time"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
