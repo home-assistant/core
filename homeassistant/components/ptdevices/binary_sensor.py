@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -24,6 +25,7 @@ class PTDevicesBinarySensors(StrEnum):
     """Store keys for PTDevices binary sensors."""
 
     DEVICE_BATTERY_STATUS = "battery_status"
+    DEVICE_EXTERNAL_POWER = "external_power"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -43,6 +45,15 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] =
             data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS) == "low"
             if data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS)
             else None
+        ),
+    ),
+    PTDevicesBinarySensorEntityDescription(
+        key=PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER,
+        translation_key=PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda data: cast(
+            bool, data.get(PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER)
         ),
     ),
 )
