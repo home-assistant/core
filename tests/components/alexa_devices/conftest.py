@@ -1,8 +1,9 @@
 """Alexa Devices tests configuration."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiosignal import Signal
 import pytest
@@ -60,7 +61,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
         client.routines = ["Test Routine"]
-        client.start_http2_processing = AsyncMock()
+        client.start_http2_processing = AsyncMock(return_value=Mock(spec=asyncio.Task))
         client.stop_http2_processing = AsyncMock()
         client.sync_media_state = AsyncMock()
         client.send_sound_notification = AsyncMock()

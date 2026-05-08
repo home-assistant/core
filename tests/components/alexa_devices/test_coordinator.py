@@ -1,7 +1,7 @@
 """Tests for the Alexa Devices coordinator."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aioamazondevices.structures import AmazonMediaState, AmazonVolumeState
 from freezegun.api import FrozenDateTimeFactory
@@ -96,7 +96,7 @@ async def test_media_state_event_updates_coordinator(
 
     coordinator = mock_config_entry.runtime_data
 
-    listener = AsyncMock()
+    listener = Mock()
     coordinator.async_add_listener(listener)
 
     media_state = {
@@ -136,7 +136,7 @@ async def test_volume_state_event_updates_coordinator(
 
     coordinator = mock_config_entry.runtime_data
 
-    listener = AsyncMock()
+    listener = Mock()
     coordinator.async_add_listener(listener)
 
     volume_state = {TEST_DEVICE_1_SN: AmazonVolumeState(volume=30, is_muted=False)}

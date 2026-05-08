@@ -1,6 +1,7 @@
 """Tests for the Alexa Devices integration."""
 
-from unittest.mock import AsyncMock
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -121,3 +122,19 @@ async def test_migrate_entry(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 3
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+async def test_http2_task_exception_is_logged(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HTTP2 task callback logs failures."""
+    failed_task: asyncio.Future[None] = hass.loop.create_future()
+    failed_task.set_exception(RuntimeError("boom"))
+    mock_amazon_devices_client.start_http2_processing.return_value = failed_task
+
+    with patch("homeassistant.components.alexa_devices._LOGGER.exception") as mock_exc:
+        await setup_integration(hass, mock_config_entry)
+
+    mock_exc.assert_called_once_with("HTTP2 task failed")
