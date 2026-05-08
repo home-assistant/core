@@ -645,6 +645,76 @@
       "uiClass": "GarageDoor"
     },
     {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Basement Garage Door",
+      "deviceURL": "io://1234-1234-6233/1166864",
+      "shortcut": false,
+      "controllableName": "io:GarageOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "unknown"],
+            "qualifiedName": "core:OpenClosedUnknownState"
+          }
+        ],
+        "widgetName": "PositionableGarageDoor",
+        "uiProfiles": [
+          "StatefulCloseableGarageOpener",
+          "StatefulCloseable",
+          "Closeable",
+          "OpenClose"
+        ],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:GarageOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedUnknownState",
+          "type": 3,
+          "value": "unknown"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PositionableGarageDoor",
+      "type": 1,
+      "oid": "1df95043-359c-4b3d-9147-f49b2b35053d",
+      "uiClass": "GarageDoor"
+    },
+    {
       "creationTime": 1552163547000,
       "lastUpdateTime": 1552163547000,
       "label": "Garden House Shutter",
