@@ -23,7 +23,7 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .migration import _migrate_unique_id
+from .migration import _match_legacy_class_name, _migrate_unique_id
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,6 +154,42 @@ async def async_migrate_entry(
                     entry.unique_id,
                 )
                 entity_registry.async_remove(entry.entity_id)
+
+        # Deduplicate legacy entries that would migrate to the same new
+        # unique_id (e.g. HomematicipNotificationLight + ...V2 for the same
+        # HmIP-BSL after firmware 2.0.0, or Switch + SwitchMeasuring on a
+        # device whose capability class changed). Prefer the entry whose
+        # legacy class name is longer — that is the more specific / newer
+        # variant (V2 over V1, Measuring over plain) and is the one HA has
+        # been actively binding to, so customizations and statistics tied to
+        # it should survive.
+        targets: dict[tuple[str, str], list[er.RegistryEntry]] = {}
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        ):
+            new_id = _migrate_unique_id(entry.unique_id)
+            if new_id is None:
+                continue
+            targets.setdefault((entry.domain, new_id), []).append(entry)
+
+        for (_, new_id), group in targets.items():
+            if len(group) <= 1:
+                continue
+            group.sort(
+                key=lambda e: len(_match_legacy_class_name(e.unique_id) or ""),
+                reverse=True,
+            )
+            keeper, *duplicates = group
+            for dup in duplicates:
+                _LOGGER.warning(
+                    "Removing duplicate registry entry %s (%s) — collides"
+                    " with %s on migration to %s",
+                    dup.entity_id,
+                    dup.unique_id,
+                    keeper.entity_id,
+                    new_id,
+                )
+                entity_registry.async_remove(dup.entity_id)
 
         @callback
         def _update_unique_id(

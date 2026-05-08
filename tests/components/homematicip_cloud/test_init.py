@@ -362,3 +362,67 @@ async def test_migrate_battery_and_obsolete_access_point(
     assert entity_registry.async_get_entity_id(
         "binary_sensor", DOMAIN, "3014F711ABCD_0_battery"
     )
+
+
+@pytest.mark.parametrize(
+    ("platform", "old_unique_id_a", "old_unique_id_b", "new_unique_id"),
+    [
+        (
+            "light",
+            "HomematicipNotificationLight_Top_3014F711ABCD",
+            "HomematicipNotificationLightV2_Top_3014F711ABCD",
+            "3014F711ABCD_2_notification_light",
+        ),
+        (
+            "switch",
+            "HomematicipSwitch_3014F711ABCD",
+            "HomematicipSwitchMeasuring_3014F711ABCD",
+            "3014F711ABCD_1_switch",
+        ),
+    ],
+    ids=["notification_light_v1_v2", "switch_vs_measuring"],
+)
+async def test_migrate_unique_id_collision(
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    platform: str,
+    old_unique_id_a: str,
+    old_unique_id_b: str,
+    new_unique_id: str,
+) -> None:
+    """Test that legacy duplicates targeting the same new id are deduped."""
+    entity_a = entity_registry.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_unique_id_a,
+        config_entry=mock_config_entry_v1,
+    )
+    entity_b = entity_registry.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_unique_id_b,
+        config_entry=mock_config_entry_v1,
+    )
+
+    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+        instance = mock_hap.return_value
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
+        instance.home.currentAPVersion = "mock-ap-version"
+        instance.async_reset = AsyncMock(return_value=True)
+
+        await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry_v1.version == 2
+    # The longer class-name match (entity_b: V2 / Measuring) wins the collision
+    surviving_id = entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id)
+    assert surviving_id == entity_b.entity_id
+    # The shorter-class entry was removed
+    assert entity_registry.async_get(entity_a.entity_id) is None
+    assert "Removing duplicate registry entry" in caplog.text
