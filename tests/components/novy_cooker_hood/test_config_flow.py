@@ -59,7 +59,6 @@ async def test_user_flow_test_then_finish(
     """Submitting the user step fires the test, then Finish creates the entry."""
     result = await _start_user_flow(hass, code="3")
 
-    # Test was fired automatically (toggle on, wait, toggle off).
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "test_light"
     mock_get_codes.async_load_command.assert_awaited_with(COMMAND_LIGHT)
@@ -89,14 +88,12 @@ async def test_user_flow_retry_picks_different_code(
     result = await _start_user_flow(hass, code="1")
     assert result["type"] is FlowResultType.MENU
 
-    # Pick Retry → back to user step.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "retry"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Submit a different code → test fires again, menu shown.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -221,7 +218,6 @@ async def test_reconfigure_updates_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Submit a new code on the same transmitter.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
