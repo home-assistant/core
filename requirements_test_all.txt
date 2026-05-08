@@ -552,7 +552,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.axis
-axis==69
+axis==70
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
