@@ -100,20 +100,41 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.LOWER_CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to remove open/close commands
+    # Needs override to add support for very specific tilt commands
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        # Position commands fully open/close the tilt
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        # Tilt commands move the tilt with a few degrees
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(1, 0),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(1, 0),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
     # uiClass is ExteriorVenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to support very specific tilt commands (rts:VenetianBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
@@ -240,6 +261,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.AWNING,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
