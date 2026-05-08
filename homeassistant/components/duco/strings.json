@@ -6,11 +6,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device you entered belongs to a different Duco box.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "This device is not supported. Only Duco devices with a Connectivity Board (article 0000-4810) are supported."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "[%key:component::duco::config::abort::unsupported_board%]"
     },
     "step": {
       "discovery_confirm": {

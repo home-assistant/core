@@ -5,7 +5,7 @@ from ssl import SSLContext
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, LanInfo
+from duco.models import BoardFamily, BoardInfo, LanInfo
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -469,6 +469,10 @@ async def test_user_flow_builds_ssl_context_in_executor(
             return_value=mock_ssl_context,
         ) as mock_build,
         patch(
+            "homeassistant.components.duco.config_flow.async_detect_board_family",
+            return_value=BoardFamily.CONNECTIVITY_BOARD,
+        ) as mock_detect,
+        patch(
             "homeassistant.components.duco.config_flow.DucoClient",
             autospec=True,
         ) as mock_client_class,
@@ -486,8 +490,112 @@ async def test_user_flow_builds_ssl_context_in_executor(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_build.assert_called_once()
+    mock_detect.assert_called_once_with(
+        host=TEST_HOST,
+        session=ANY,
+        ssl_context=mock_ssl_context,
+    )
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,
         ssl_context=mock_ssl_context,
     )
+
+
+async def test_user_flow_unsupported_board(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_detect_board_family: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow shows unsupported_board error for Communication and Print Board and recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_detect_board_family.return_value = BoardFamily.COMMUNICATION_PRINT
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_detect_board_family.return_value = BoardFamily.CONNECTIVITY_BOARD
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
+
+
+async def test_zeroconf_discovery_unsupported_board(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_detect_board_family: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test zeroconf discovery aborts for Communication and Print Board."""
+    mock_detect_board_family.return_value = BoardFamily.COMMUNICATION_PRINT
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_board"
+    assert "Duco device discovered at 192.168.1.100 (via zeroconf)" in caplog.text
+
+
+async def test_dhcp_discovery_unsupported_board(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_detect_board_family: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test DHCP discovery aborts for Communication and Print Board."""
+    mock_detect_board_family.return_value = BoardFamily.COMMUNICATION_PRINT
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_board"
+    assert "Duco device discovered at 192.168.1.100 (via DHCP)" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unsupported_board(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_detect_board_family: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow shows unsupported_board error for Communication and Print Board and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_detect_board_family.return_value = BoardFamily.COMMUNICATION_PRINT
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_detect_board_family.return_value = BoardFamily.CONNECTIVITY_BOARD
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

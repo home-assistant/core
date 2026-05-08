@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from duco import DucoClient, build_ssl_context
+from duco import BoardFamily, DucoClient, async_detect_board_family, build_ssl_context
 from duco.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
@@ -17,6 +17,11 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class _UnsupportedBoardError(DucoError):
+    """Raised when the detected board family is not supported by this integration."""
+
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -45,6 +50,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             box_name, _ = await self._validate_input(discovery_info.ip)
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except _UnsupportedBoardError:
+            _LOGGER.warning(
+                "Duco device discovered at %s (via DHCP) but its board type is not supported. Only the Connectivity Board (0000-4810) is supported",
+                discovery_info.ip,
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoError:
             _LOGGER.exception("Unexpected error discovering Duco box via DHCP")
             return self.async_abort(reason="unknown")
@@ -63,6 +74,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             box_name, mac = await self._validate_input(discovery_info.host)
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except _UnsupportedBoardError:
+            _LOGGER.warning(
+                "Duco device discovered at %s (via zeroconf) but its board type is not supported. Only the Connectivity Board (0000-4810) is supported",
+                discovery_info.host,
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoError:
             _LOGGER.exception("Unexpected error discovering Duco box via zeroconf")
             return self.async_abort(reason="unknown")
@@ -104,6 +121,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
+            except _UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoError:
                 _LOGGER.exception("Unexpected error connecting to Duco box")
                 errors["base"] = "unknown"
@@ -135,6 +154,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
+            except _UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoError:
                 _LOGGER.exception("Unexpected error connecting to Duco box")
                 errors["base"] = "unknown"
@@ -158,9 +179,17 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns a tuple of (box_name, mac_address).
         """
+        session = async_get_clientsession(self.hass)
         ssl_context = await self.hass.async_add_executor_job(build_ssl_context)
+        board_family = await async_detect_board_family(
+            host=host,
+            session=session,
+            ssl_context=ssl_context,
+        )
+        if board_family is not BoardFamily.CONNECTIVITY_BOARD:
+            raise _UnsupportedBoardError
         client = DucoClient(
-            session=async_get_clientsession(self.hass),
+            session=session,
             host=host,
             ssl_context=ssl_context,
         )

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from duco.models import (
     ApiEndpointInfo,
     ApiInfo,
+    BoardFamily,
     BoardInfo,
     DiagComponent,
     DiagStatus,
@@ -200,11 +201,22 @@ def mock_nodes() -> list[Node]:
 
 
 @pytest.fixture
+def mock_detect_board_family() -> Generator[AsyncMock]:
+    """Mock async_detect_board_family returning CONNECTIVITY_BOARD by default."""
+    with patch(
+        "homeassistant.components.duco.config_flow.async_detect_board_family",
+        return_value=BoardFamily.CONNECTIVITY_BOARD,
+    ) as mock_detect:
+        yield mock_detect
+
+
+@pytest.fixture
 def mock_duco_client(
     mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_detect_board_family: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
