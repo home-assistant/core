@@ -88,7 +88,7 @@
     'object_id_base': 'Global override',
     'options': dict({
     }),
-    'original_device_class': 'nobo_hub__override',
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Global override',
     'platform': 'nobo_hub',
@@ -103,7 +103,6 @@
 # name: test_select_entities[select.my_eco_hub_global_override-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'nobo_hub__override',
       'friendly_name': 'My Eco Hub Global override',
       'options': list([
         'none',
