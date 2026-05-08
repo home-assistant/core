@@ -134,13 +134,4 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) ->
             entry, data=new_data, version=1, minor_version=3
         )
 
-    if entry.version == 1 and entry.minor_version < 4:
-        # MAC is populated for DHCP-discovered hubs; existing entries
-        # backfill it the next time DHCP fires for the hub.
-        new_data = dict(entry.data)
-        new_data.setdefault(CONF_MAC, None)
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, version=1, minor_version=4
-        )
-
     return True
