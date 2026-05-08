@@ -49,7 +49,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_translation_key = "dhw"
+    _attr_translation_key = "water_heater"
 
     def __init__(
         self,
@@ -58,7 +58,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
     ) -> None:
         """Initialize the water heater."""
         super().__init__(coordinator, entry)
-        self._attr_unique_id = f"{entry.entry_id}-dhw"
+        self._attr_unique_id = f"{entry.entry_id}-water_heater"
 
     @property
     def current_temperature(self) -> float | None:

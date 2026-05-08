@@ -215,7 +215,7 @@
       }
     },
     "water_heater": {
-      "dhw": {
+      "water_heater": {
         "name": "Domestic hot water"
       }
     }
