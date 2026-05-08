@@ -1,15 +1,16 @@
 """Test Z-Wave JS events."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture
@@ -354,6 +355,43 @@ async def test_power_level_notification(
     assert events[0].data["test_node_id"] == 1
     assert events[0].data["status"] == 0
     assert events[0].data["acknowledged_frames"] == 2
+
+
+async def test_battery_notification(
+    hass: HomeAssistant,
+    hank_binary_switch: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test Battery CC notification bus events."""
+    # just pick a random node to fake the notification event
+    node = hank_binary_switch
+    events = async_capture_events(hass, "zwave_js_notification")
+
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": 32,
+            "endpointIndex": 0,
+            "ccId": 128,
+            "args": {
+                "eventType": "battery low",
+                "urgency": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["home_id"] == client.driver.controller.home_id
+    assert events[0].data["node_id"] == 32
+    assert events[0].data["endpoint"] == 0
+    assert events[0].data["command_class"] == CommandClass.BATTERY
+    assert events[0].data["command_class_name"] == "Battery"
+    assert events[0].data["event_type"] == "battery low"
+    assert events[0].data["urgency"] == 1
 
 
 async def test_unknown_notification(
