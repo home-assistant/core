@@ -17,6 +17,9 @@ from .entity import FlussEntity
 
 PARALLEL_UPDATES = 0
 
+STATUS_OPEN = "Open"
+STATUS_CLOSED = "Closed"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -49,9 +52,9 @@ class FlussCover(FlussEntity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return whether the cover is closed."""
         status = self.device.get("openCloseStatus")
-        if status == "Closed":
+        if status == STATUS_CLOSED:
             return True
-        if status == "Open":
+        if status == STATUS_OPEN:
             return False
         return None
 

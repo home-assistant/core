@@ -35,12 +35,6 @@ DEVICE_ID_1 = "2a303030sdj1"
 DEVICE_ID_2 = "ape93k9302j2"
 
 
-async def _setup_cover_only(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Set up the integration with only the cover platform forwarded."""
-    with patch("homeassistant.components.fluss.PLATFORMS", [Platform.COVER]):
-        await setup_integration(hass, entry)
-
-
 async def test_covers(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
@@ -51,6 +45,7 @@ async def test_covers(
     """Test cover entity registration."""
 
     async def _status(device_id: str) -> dict[str, Any]:
+        """Return distinct openCloseStatus per device for snapshot diversity."""
         return {
             "status": {
                 "internetConnected": True,
@@ -59,7 +54,8 @@ async def test_covers(
         }
 
     mock_api_client.async_get_device_status.side_effect = _status
-    await _setup_cover_only(hass, mock_config_entry)
+    with patch("homeassistant.components.fluss.PLATFORMS", [Platform.COVER]):
+        await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -78,7 +74,7 @@ async def test_cover_state(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": status_value}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID_1)
     assert state is not None
@@ -94,7 +90,7 @@ async def test_cover_unavailable_when_offline(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": False, "openCloseStatus": "Closed"}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
 
@@ -109,7 +105,7 @@ async def test_cover_state_preserved_on_transient_status_error(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_1).state == STATE_CLOSED
 
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError("boom")
@@ -141,7 +137,7 @@ async def test_cover_commands(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -176,7 +172,7 @@ async def test_cover_press_triggers_debounced_refresh(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": initial_status}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID_1).state == initial_state
 
     pre_press_call_count = mock_api_client.async_get_device_status.call_count
@@ -220,7 +216,7 @@ async def test_cover_command_error(
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
-    await _setup_cover_only(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     getattr(mock_api_client, method).side_effect = FlussApiClientError("boom")
 
@@ -244,6 +240,7 @@ async def test_mixed_device_dispatch(
     """A device with openCloseStatus exposes both a cover and a button; a device without exposes only a button."""
 
     async def _status(device_id: str) -> dict[str, Any]:
+        """Return openCloseStatus for device 1; omit it for device 2."""
         if device_id == DEVICE_ID_1:
             return {"status": {"internetConnected": True, "openCloseStatus": "Closed"}}
         return {"status": {"internetConnected": True}}
