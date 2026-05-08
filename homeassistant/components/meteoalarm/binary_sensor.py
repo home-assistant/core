@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from meteoalertapi import Meteoalert
 import voluptuous as vol
@@ -38,6 +39,22 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+
+def _sanitize_alert_data(value: Any) -> Any:
+    """Sanitize alert payload data for JSON serialization."""
+    if isinstance(value, str):
+        return value.encode("utf-8", "ignore").decode("utf-8")
+    if isinstance(value, dict):
+        return {
+            _sanitize_alert_data(key): _sanitize_alert_data(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_sanitize_alert_data(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_sanitize_alert_data(item) for item in value)
+    return value
 
 
 def setup_platform(
@@ -82,5 +99,5 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
             expiration_date = dt_util.parse_datetime(alert["expires"])
 
             if expiration_date is not None and expiration_date > dt_util.utcnow():
-                self._attr_extra_state_attributes = alert
+                self._attr_extra_state_attributes = _sanitize_alert_data(alert)
                 self._attr_is_on = True
