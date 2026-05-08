@@ -225,9 +225,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            if self.source == SOURCE_RECONFIGURE and not user_input.get(
-                CONF_PASSWORD
-            ):
+            if self.source == SOURCE_RECONFIGURE and not user_input.get(CONF_PASSWORD):
                 user_input[CONF_PASSWORD] = self._get_reconfigure_entry().data[
                     CONF_PASSWORD
                 ]
