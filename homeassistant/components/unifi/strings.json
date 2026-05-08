@@ -67,9 +67,6 @@
       "client_bandwidth_tx": {
         "name": "TX"
       },
-      "client_uptime": {
-        "name": "Uptime"
-      },
       "device_clients": {
         "name": "Clients"
       },
@@ -101,9 +98,6 @@
       },
       "device_uplink_mac": {
         "name": "Uplink MAC"
-      },
-      "device_uptime": {
-        "name": "Uptime"
       },
       "outlet_power": {
         "name": "{outlet_name} outlet power"

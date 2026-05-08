@@ -212,14 +212,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_uptime',
+    'translation_key': None,
     'unique_id': 'device_uptime-20:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -227,7 +227,7 @@
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Device Uptime',
     }),
     'context': <ANY>,
@@ -678,14 +678,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_uptime',
+    'translation_key': None,
     'unique_id': 'device_uptime-01:02:03:04:05:ff',
     'unit_of_measurement': None,
   })
@@ -693,7 +693,7 @@
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Dummy USP-PDU-Pro Uptime',
     }),
     'context': <ANY>,
@@ -1872,14 +1872,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'device_uptime',
+    'translation_key': None,
     'unique_id': 'device_uptime-10:00:00:00:01:01',
     'unit_of_measurement': None,
   })
@@ -1887,7 +1887,7 @@
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'mock-name Uptime',
     }),
     'context': <ANY>,
@@ -2150,14 +2150,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'client_uptime',
+    'translation_key': None,
     'unique_id': 'uptime-00:00:00:00:00:01',
     'unit_of_measurement': None,
   })
@@ -2165,7 +2165,7 @@
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Wired client Uptime',
     }),
     'context': <ANY>,
@@ -2317,14 +2317,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'client_uptime',
+    'translation_key': None,
     'unique_id': 'uptime-00:00:00:00:00:02',
     'unit_of_measurement': None,
   })
@@ -2332,7 +2332,7 @@
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Wireless client Uptime',
     }),
     'context': <ANY>,
