@@ -1,7 +1,5 @@
 """Support for Tasmota lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from hatasmota import light as tasmota_light

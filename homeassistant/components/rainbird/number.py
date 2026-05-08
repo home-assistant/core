@@ -1,7 +1,5 @@
 """The number platform for rainbird."""
 
-from __future__ import annotations
-
 import logging
 
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException

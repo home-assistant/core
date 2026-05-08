@@ -1,7 +1,5 @@
 """Component to interface with cameras."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
@@ -926,6 +924,7 @@ async def websocket_get_prefs(
         vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

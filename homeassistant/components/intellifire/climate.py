@@ -1,7 +1,5 @@
 """Intellifire Climate Entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
