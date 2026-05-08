@@ -114,10 +114,36 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
+            serial_number = config_entry.data[SERIAL_NUMBER]
+
+            # Installations ended up with multiple config entries per physical adapter
+            # in 2026.5.0 and 2026.5.1. We need to delete the older entry.
+            same_serial = [
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get(SERIAL_NUMBER) == serial_number
+            ]
+            canonical = max(
+                same_serial,
+                key=lambda e: (e.minor_version, e.modified_at, e.entry_id),
+            )
+
+            if canonical.entry_id != config_entry.entry_id:
+                _LOGGER.debug(
+                    "Removing duplicate config entry %s for serial %s in favor of %s",
+                    config_entry.entry_id,
+                    serial_number,
+                    canonical.entry_id,
+                )
+                hass.async_create_task(
+                    hass.config_entries.async_remove(config_entry.entry_id)
+                )
+                return False
+
             # Replace the synthetic unique ID with the USB serial number
             hass.config_entries.async_update_entry(
                 config_entry,
-                unique_id=config_entry.data[SERIAL_NUMBER],
+                unique_id=serial_number,
                 version=1,
                 minor_version=2,
             )

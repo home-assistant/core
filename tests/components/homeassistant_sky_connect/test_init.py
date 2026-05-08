@@ -79,6 +79,145 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("older", "newer", "serial_number"),
+    [
+        # Same physical dongle, different unique IDs
+        (
+            {
+                "unique_id": (
+                    "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa"
+                    "_SkyConnect v1.0 - Nabu Casa SkyConnect"
+                ),
+                "source": "usb",
+                "data": {
+                    "description": "SkyConnect v1.0",
+                    "device": (
+                        "/dev/serial/by-id/"
+                        "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+                    ),
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "product": "SkyConnect v1.0 - Nabu Casa SkyConnect",
+                    "firmware": "ezsp",
+                    "firmware_version": "7.4.4.0",
+                },
+            },
+            {
+                "unique_id": (
+                    "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa_SkyConnect v1.0"
+                ),
+                "source": "import",
+                "data": {
+                    "description": "SkyConnect v1.0",
+                    "device": (
+                        "/dev/serial/by-id/"
+                        "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+                    ),
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "product": "SkyConnect v1.0",
+                    "firmware": "ezsp",
+                    "firmware_version": "7.4.4.0",
+                },
+            },
+            "9e2adbd75b8beb119fe564a0f320645d",
+        ),
+        # Two entries with identical unique IDs for the same dongle
+        (
+            {
+                "unique_id": (
+                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d_Nabu_Casa_SkyConnect v1.0"
+                ),
+                "source": "usb",
+                "data": {
+                    "description": "SkyConnect v1.0",
+                    "device": (
+                        "/dev/serial/by-id/"
+                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+                    ),
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "product": "SkyConnect v1.0",
+                    "firmware": "ezsp",
+                    "firmware_version": "7.4.4.0",
+                },
+            },
+            {
+                "unique_id": (
+                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d_Nabu_Casa_SkyConnect v1.0"
+                ),
+                "source": "import",
+                "data": {
+                    "description": "SkyConnect v1.0",
+                    "device": (
+                        "/dev/serial/by-id/"
+                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+                    ),
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "product": "SkyConnect v1.0",
+                    "firmware": "spinel",
+                    "firmware_version": "SL-OPENTHREAD/2.7.2.0_GitHub-fb0446f53; EFR32",
+                },
+            },
+            "3c0ed67c628beb11b1cd64a0f320645d",
+        ),
+    ],
+)
+async def test_config_entry_migration_v5_collapses_duplicates(
+    hass: HomeAssistant,
+    older: dict,
+    newer: dict,
+    serial_number: str,
+) -> None:
+    """Test that v1.5 migration removes duplicate entries sharing a serial number."""
+
+    older_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=older["unique_id"],
+        source=older["source"],
+        data=older["data"],
+        version=1,
+        minor_version=4,
+    )
+    older_entry.add_to_hass(hass)
+
+    newer_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=newer["unique_id"],
+        source=newer["source"],
+        data=newer["data"],
+        version=1,
+        minor_version=4,
+    )
+    newer_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    remaining = hass.config_entries.async_entries(DOMAIN)
+    assert len(remaining) == 1
+    unique_entry = remaining[0]
+    assert unique_entry.entry_id == newer_entry.entry_id
+    assert unique_entry.minor_version == 5
+    assert unique_entry.unique_id == serial_number
+    assert unique_entry.data == newer["data"]
+    assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+
+
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
     """Test setup failing when the USB port is missing."""
 
