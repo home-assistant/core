@@ -1810,7 +1810,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/15702199#2-core:RSSILevelState',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_rssi_level-state]
@@ -1819,7 +1819,7 @@
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_rssi_level',
@@ -2804,7 +2804,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9253412#2-core:RSSILevelState',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_rssi_level-state]
@@ -2813,7 +2813,7 @@
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Radiator Study Temp Probe RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_radiator_study_temp_probe_rssi_level',
@@ -4182,7 +4182,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9187218#2-core:RSSILevelState',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_rssi_level-state]
@@ -4191,7 +4191,7 @@
       'device_class': 'signal_strength',
       'friendly_name': 'Study Radiator Nursery Temp Probe RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_radiator_nursery_temp_probe_rssi_level',
