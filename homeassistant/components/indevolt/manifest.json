@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/indevolt",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
-  "requirements": ["indevolt-api==1.6.5"]
+  "quality_scale": "silver",
+  "requirements": ["indevolt-api==1.7.1"]
 }
