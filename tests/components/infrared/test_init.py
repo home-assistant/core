@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from infrared_protocols import NECCommand
+from infrared_protocols.commands.nec import NECCommand
 import pytest
 
 from homeassistant.components.infrared import (

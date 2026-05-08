@@ -166,7 +166,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 ):
                     return self.async_abort(reason="already_configured")
 
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     config_entry, data=self.config, reason=abort_reason
                 )
 
@@ -226,7 +226,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(updates=self.config)
+        self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
 
         self.context["title_placeholders"] = {
             CONF_HOST: host,

@@ -8,7 +8,7 @@ from enum import StrEnum
 import logging
 from typing import final
 
-from infrared_protocols import Command as InfraredCommand
+from infrared_protocols.commands import Command as InfraredCommand
 from propcache.api import cached_property
 import voluptuous as vol
 
