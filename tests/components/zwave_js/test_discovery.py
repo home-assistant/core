@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -37,6 +38,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_UNKNOWN,
     EntityCategory,
@@ -245,6 +247,53 @@ async def test_shelly_001p10_disabled_entities(
     # Test if the main entity from endpoint 1 was created.
     state = hass.states.get("cover.wave_shutter")
     assert state
+
+
+async def test_qubino_shutter_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    qubino_shutter,
+    integration,
+) -> None:
+    """Test that Qubino Flush Shutter entity created by endpoint 2 is disabled."""
+
+    entity_id = "cover.flush_shutter_2"
+    state = hass.states.get(entity_id)
+    assert state is None
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # Test enabling entity
+    updated_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    client.async_send_command.reset_mock()
+
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
+
+    # Test if the main entity from endpoint 1 was created.
+    state = hass.states.get("cover.flush_shutter")
+    assert state
+
+    # Verify that the main entity has both position and tilt features
+    # since the device is in venetian mode (config parameter 71 = 1)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
 
 
 async def test_merten_507801_disabled_enitites(
