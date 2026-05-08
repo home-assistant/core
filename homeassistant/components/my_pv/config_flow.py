@@ -3,19 +3,12 @@
 import logging
 from typing import Any, Final
 
-from my_pv import CLOUD_FRONTEND, MyPVCloudDevice, MyPVLocalDevice
+from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_BASE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_TYPE,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -25,12 +18,9 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_SERIAL_NUMBER, CONF_TYPE_CLOUD, CONF_TYPE_LOCAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_VALIDATE_SERIAL_NUMBER = cv.matches_regex(r"^[0-9]{16}$")
-_VALIDATE_CLOUD_API_TOKEN = cv.matches_regex(r"^my.{46}PV$")
 
 
 LOCAL_HOST_SCHEMA: Final = vol.Schema(
@@ -41,14 +31,6 @@ LOCAL_HOST_SCHEMA: Final = vol.Schema(
 LOCAL_AUTH_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
-    }
-)
-CLOUD_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_SERIAL_NUMBER): TextSelector(),
-        vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -129,7 +111,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if password_needed and password_valid:
             data = {
-                CONF_TYPE: CONF_TYPE_LOCAL,
                 CONF_HOST: self._host,
                 CONF_PASSWORD: password,
             }
@@ -137,7 +118,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None and not password_needed:
             data = {
-                CONF_TYPE: CONF_TYPE_LOCAL,
                 CONF_HOST: self._host,
             }
             return self.async_create_entry(title=title, data=data)
@@ -166,19 +146,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        # pylint: disable=unused-argument
-        """Handle the initial step."""
-        return self.async_show_menu(
-            step_id="user",
-            menu_options=[
-                "setup_local",
-                "setup_cloud",
-            ],
-        )
-
-    async def async_step_setup_local(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the local setup."""
@@ -210,7 +177,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 title = f"my-PV {device.model}"
                 data = {
-                    CONF_TYPE: CONF_TYPE_LOCAL,
                     CONF_HOST: host,
                 }
                 return self.async_create_entry(title=title, data=data)
@@ -219,7 +185,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
 
         return self.async_show_form(
-            step_id="setup_local",
+            step_id="user",
             data_schema=data_schema,
             errors=errors,
         )
@@ -274,71 +240,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         title = f"my-PV {device.model}"
         data = {
-            CONF_TYPE: CONF_TYPE_LOCAL,
             CONF_HOST: host,
             CONF_PASSWORD: password,
-        }
-        return self.async_create_entry(title=title, data=data)
-
-    async def async_step_setup_cloud(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the cloud setup."""
-        description_placeholders = {"cloud_url": CLOUD_FRONTEND}
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id="setup_cloud",
-                data_schema=CLOUD_SCHEMA,
-                description_placeholders=description_placeholders,
-            )
-
-        errors: dict[str, str] = {}
-
-        serial_number = user_input[CONF_SERIAL_NUMBER]
-
-        # Validate serial number.
-        try:
-            _VALIDATE_SERIAL_NUMBER(serial_number)
-        except vol.Invalid:
-            errors[CONF_SERIAL_NUMBER] = "invalid_serial_number"
-
-        api_token = user_input[CONF_TOKEN]
-
-        # Validate API token.
-        try:
-            _VALIDATE_CLOUD_API_TOKEN(api_token)
-        except vol.Invalid:
-            errors[CONF_TOKEN] = "invalid_cloud_api_token"
-
-        if not errors:
-            # Test if we can connect to the cloud.
-            device = await MyPVCloudDevice(serial_number, api_token)
-            try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
-            except MyPVAuthenticationError:
-                errors[CONF_BASE] = "invalid_serial_number_or_cloud_api_token"
-            finally:
-                await device.disconnect()
-
-        if errors:
-            # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(CLOUD_SCHEMA, user_input)
-            return self.async_show_form(
-                step_id="setup_cloud",
-                data_schema=data_schema,
-                errors=errors,
-                description_placeholders=description_placeholders,
-            )
-
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
-
-        title = f"my-PV {device.model}"
-        data = {
-            CONF_TYPE: CONF_TYPE_CLOUD,
-            CONF_SERIAL_NUMBER: serial_number,
-            CONF_TOKEN: api_token,
         }
         return self.async_create_entry(title=title, data=data)
