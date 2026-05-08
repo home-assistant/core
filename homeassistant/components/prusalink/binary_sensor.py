@@ -21,20 +21,14 @@ T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkBinarySensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], bool]
-
-
-@dataclass(frozen=True, kw_only=True)
 class PrusaLinkBinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    PrusaLinkBinarySensorEntityDescriptionMixin[T],
     PrusaLinkEntityDescription,
     Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
+
+    value_fn: Callable[[T], bool]
 
 
 BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = {

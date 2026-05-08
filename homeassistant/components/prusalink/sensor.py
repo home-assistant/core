@@ -33,20 +33,14 @@ T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkSensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], datetime | StateType]
-
-
-@dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription(
     SensorEntityDescription,
-    PrusaLinkSensorEntityDescriptionMixin[T],
     PrusaLinkEntityDescription,
     Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
+
+    value_fn: Callable[[T], datetime | StateType]
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {

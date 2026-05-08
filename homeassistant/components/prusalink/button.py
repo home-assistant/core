@@ -19,20 +19,14 @@ T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
-
-
-@dataclass(frozen=True, kw_only=True)
 class PrusaLinkButtonEntityDescription(
     ButtonEntityDescription,
-    PrusaLinkButtonEntityDescriptionMixin[T],
     PrusaLinkEntityDescription,
     Generic[T],
 ):
     """Describes PrusaLink button entity."""
+
+    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
 
 
 BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
