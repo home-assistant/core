@@ -99,6 +99,21 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
 )
+DYNAMIC_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730050",
+    "cover.garage_door",
+)
+DYNAMIC_GARAGE_DOOR_OGP = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/6632544",
+    "cover.ogp_garage_door",
+)
+PARTIAL_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/7433515",
+    "cover.partial_garage_door",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -144,6 +159,9 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
         (AWNING, SERVICE_OPEN_COVER, "deploy", [], CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", [], CoverState.OPENING),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_OPEN_COVER,
@@ -154,6 +172,9 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", [], CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", [], CoverState.CLOSING),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_CLOSE_COVER,
@@ -164,6 +185,9 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
+        (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", [], CoverState.CLOSED),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_STOP_COVER,
@@ -176,14 +200,23 @@ async def test_cover_entities_snapshot(
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-dynamic-garage-door",
+        "open-dynamic-garage-door-ogp",
+        "open-partial-garage-door",
         "open-up-down-bioclimatic-pergola",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-dynamic-garage-door",
+        "close-dynamic-garage-door-ogp",
+        "close-partial-garage-door",
         "close-up-down-bioclimatic-pergola",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-dynamic-garage-door",
+        "stop-dynamic-garage-door-ogp",
+        "stop-partial-garage-door",
         "stop-up-down-bioclimatic-pergola",
     ],
 )
