@@ -10,7 +10,12 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.zwave_js.const import ATTR_URGENCY
-from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -312,3 +317,31 @@ async def test_battery_low_event_other_notifications_ignored(
     state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_battery_low_event_removed_on_interview_started(
+    hass: HomeAssistant,
+    client: MagicMock,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the entity is removed when the node starts a reinterview."""
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    ring_keypad.receive_event(
+        Event(
+            type="interview started",
+            data={
+                "source": "node",
+                "event": "interview started",
+                "nodeId": ring_keypad.node_id,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
