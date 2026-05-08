@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, build_event
+from .helpers import assert_command_call, async_deliver_events, build_event
 
 from tests.common import snapshot_platform
 
@@ -38,30 +38,10 @@ EXPECTED_NUMBER_OF_SHOWER = FixtureDevice(
     "io://1234-5678-5643/109286#1",
     "number.patio_water_heating_expected_number_of_shower",
 )
-TARGET_DHW_TEMPERATURE = FixtureDevice(
-    "setup/cloud_atlantic_cozytouch.json",
-    "io://1234-5678-5643/109286#1",
-    "number.patio_water_heating_target_temperature",
-)
-WATER_TARGET_TEMPERATURE = FixtureDevice(
-    "setup/cloud_atlantic_cozytouch.json",
-    "io://1234-5678-5643/109286#1",
-    "number.patio_water_heating_water_target_temperature",
-)
 COMFORT_ROOM_TEMPERATURE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "ovp://1234-5678-1698/374762#1",
     "number.terrace_radiator_comfort_room_temperature",
-)
-ECO_ROOM_TEMPERATURE = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json",
-    "ovp://1234-5678-1698/374762#1",
-    "number.terrace_radiator_eco_room_temperature",
-)
-FREEZE_PROTECTION_TEMPERATURE = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json",
-    "ovp://1234-5678-1698/374762#1",
-    "number.terrace_radiator_freeze_protection_temperature",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -117,11 +97,12 @@ async def test_number_set_value(
         blocking=True,
     )
 
-    assert mock_client.execute_command.await_count == 1
-    args = mock_client.execute_command.await_args.args
-    assert args[0] == EXPECTED_NUMBER_OF_SHOWER.device_url
-    assert args[1].name == "setExpectedNumberOfShower"
-    assert args[1].parameters == [3]
+    assert_command_call(
+        mock_client,
+        device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
+        command_name="setExpectedNumberOfShower",
+        parameters=[3],
+    )
 
 
 async def test_number_dynamic_min_max(
