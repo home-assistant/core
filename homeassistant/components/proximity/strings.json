@@ -9,6 +9,7 @@
       "user": {
         "data": {
           "ignored_zones": "Zones to ignore",
+          "speed_threshold": "Speed threshold",
           "tolerance": "Tolerance distance",
           "tracked_entities": "Devices or persons to track",
           "zone": "Zone to track distance to"
@@ -38,7 +39,8 @@
           "towards": "[%key:component::proximity::entity::sensor::dir_of_travel::state::towards%]"
         }
       },
-      "nearest_dist_to_zone": { "name": "Nearest distance" }
+      "nearest_dist_to_zone": { "name": "Nearest distance" },
+      "speed": { "name": "{tracked_entity} speed" }
     }
   },
   "issues": {
@@ -59,6 +61,7 @@
       "init": {
         "data": {
           "ignored_zones": "[%key:component::proximity::config::step::user::data::ignored_zones%]",
+          "speed_threshold": "[%key:component::proximity::config::step::user::data::speed_threshold%]",
           "tolerance": "[%key:component::proximity::config::step::user::data::tolerance%]",
           "tracked_entities": "[%key:component::proximity::config::step::user::data::tracked_entities%]",
           "zone": "[%key:component::proximity::config::step::user::data::zone%]"

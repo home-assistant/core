@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_ZONE, UnitOfLength
+from homeassistant.const import CONF_ZONE, UnitOfLength, UnitOfSpeed
 from homeassistant.core import State, callback
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -26,9 +26,11 @@ from homeassistant.util import slugify
 
 from .const import (
     CONF_IGNORED_ZONES,
+    CONF_SPEED_THRESHOLD,
     CONF_TOLERANCE,
     CONF_TRACKED_ENTITIES,
     DEFAULT_PROXIMITY_ZONE,
+    DEFAULT_SPEED_THRESHOLD,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
@@ -56,6 +58,17 @@ def _base_schema(user_input: dict[str, Any]) -> VolDictType:
         ): NumberSelector(
             NumberSelectorConfig(
                 min=1, max=100, step=1, unit_of_measurement=UnitOfLength.METERS
+            ),
+        ),
+        vol.Required(
+            CONF_SPEED_THRESHOLD,
+            default=user_input.get(CONF_SPEED_THRESHOLD, DEFAULT_SPEED_THRESHOLD),
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0,
+                max=10,
+                step=0.1,
+                unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
             ),
         ),
     }

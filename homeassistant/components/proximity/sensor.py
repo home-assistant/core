@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfLength
+from homeassistant.const import UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -20,6 +20,7 @@ from .const import (
     ATTR_NEAREST,
     ATTR_NEAREST_DIR_OF_TRAVEL,
     ATTR_NEAREST_DIST_TO,
+    ATTR_SPEED,
     DOMAIN,
 )
 from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
@@ -38,6 +39,12 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
         translation_key=ATTR_DIR_OF_TRAVEL,
         device_class=SensorDeviceClass.ENUM,
         options=DIRECTIONS,
+    ),
+    SensorEntityDescription(
+        key=ATTR_SPEED,
+        translation_key=ATTR_SPEED,
+        device_class=SensorDeviceClass.SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
 ]
 
@@ -191,7 +198,7 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
-    def data(self) -> dict[str, str | int | None]:
+    def data(self) -> dict[str, str | int | float | None]:
         """Get data from coordinator."""
         return self.coordinator.data.entities[self.tracked_entity_id]
 

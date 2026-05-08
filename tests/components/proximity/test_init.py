@@ -1,11 +1,15 @@
 """The tests for the Proximity component."""
 
+import asyncio
+
 import pytest
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
+    CONF_SPEED_THRESHOLD,
     CONF_TOLERANCE,
     CONF_TRACKED_ENTITIES,
+    DEFAULT_SPEED_THRESHOLD,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -24,7 +28,7 @@ from tests.common import MockConfigEntry
 async def async_setup_single_entry(
     hass: HomeAssistant,
     zone: str,
-    tracked_entites: list[str],
+    tracked_entities: list[str],
     ignored_zones: list[str],
     tolerance: int,
 ) -> MockConfigEntry:
@@ -34,9 +38,10 @@ async def async_setup_single_entry(
         title="Home",
         data={
             CONF_ZONE: zone,
-            CONF_TRACKED_ENTITIES: tracked_entites,
+            CONF_TRACKED_ENTITIES: tracked_entities,
             CONF_IGNORED_ZONES: ignored_zones,
             CONF_TOLERANCE: tolerance,
+            CONF_SPEED_THRESHOLD: DEFAULT_SPEED_THRESHOLD,
         },
     )
     mock_config.add_to_hass(hass)
@@ -50,12 +55,14 @@ async def async_setup_single_entry(
     [
         {
             CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_SPEED_THRESHOLD: 0.5,
             CONF_TRACKED_ENTITIES: ["device_tracker.test1", "device_tracker.test2"],
             CONF_TOLERANCE: 1,
             CONF_ZONE: "zone.home",
         },
         {
             CONF_IGNORED_ZONES: [],
+            CONF_SPEED_THRESHOLD: 0.5,
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_TOLERANCE: 1,
             CONF_ZONE: "zone.work",
@@ -275,6 +282,8 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
     assert state.state == "2218742"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
+
+    await asyncio.sleep(0.1)
 
     hass.states.async_set(
         "device_tracker.test1",
