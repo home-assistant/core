@@ -132,7 +132,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        [EcoTrackerSensor(coordinator, description) for description in SENSOR_TYPES]
+        EcoTrackerSensor(coordinator, description) for description in SENSOR_TYPES
     )
 
 
