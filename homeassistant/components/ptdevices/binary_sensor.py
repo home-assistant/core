@@ -53,7 +53,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda data: (
             bool(data.get(PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER))
-            if data.get(PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER)
+            if data.get(PTDevicesBinarySensors.DEVICE_EXTERNAL_POWER) is not None
             else None
         ),
     ),
