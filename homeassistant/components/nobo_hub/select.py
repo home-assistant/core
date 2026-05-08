@@ -109,7 +109,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         """Initialize the week profile selector."""
         super().__init__(hub)
         self._id = zone_id
-        self._profiles: dict[int, str] = {}
+        self._profiles: dict[str, str] = {}
         self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
         self._attr_device_info = DeviceInfo(
