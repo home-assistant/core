@@ -283,8 +283,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "last_boot": SysMonitorSensorEntityDescription(
         key="last_boot",
-        translation_key="last_boot",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         value_fn=lambda entity: entity.coordinator.data.boot_time,
         add_to_update=lambda entity: ("boot", ""),
     ),
