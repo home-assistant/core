@@ -3,25 +3,15 @@
 from datetime import timedelta
 import logging
 
-from my_pv import MyPVCloudDevice, MyPVLocalDevice
+from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SERIAL_NUMBER, CONF_TYPE_CLOUD, CONF_TYPE_LOCAL, DOMAIN
+from .const import DOMAIN
 from .coordinator import MyPVCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,24 +26,8 @@ type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Set up my-PV from a config entry."""
 
-    conf_type: str = entry.data[CONF_TYPE]
-
-    device = None
     update_interval = timedelta(seconds=5)
-    if conf_type == CONF_TYPE_LOCAL:
-        password = entry.data.get(CONF_PASSWORD)
-        device = await MyPVLocalDevice(entry.data[CONF_HOST], password)
-    elif conf_type == CONF_TYPE_CLOUD:
-        device = await MyPVCloudDevice(
-            entry.data[CONF_SERIAL_NUMBER], entry.data[CONF_TOKEN]
-        )
-        update_interval = timedelta(seconds=30)
-    else:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="config_type_not_supported",
-            translation_placeholders={"config_type": conf_type},
-        )
+    device = await MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
 
     try:
         if not await device.connect():
