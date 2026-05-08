@@ -327,11 +327,13 @@ async def test_reconfigure_flow_changes_ip(
 )
 async def test_reconfigure_flow_rejects_bad_ip(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
     submitted_ip: str,
     connect_outcome: dict[str, object],
     expected_error: str,
 ) -> None:
-    """A bad IP is rejected inline; nothing is persisted."""
+    """A bad IP is rejected inline; resubmitting a good IP completes the reconfigure."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=SERIAL,
@@ -349,6 +351,25 @@ async def test_reconfigure_flow_rejects_bad_ip(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": expected_error}
     assert config_entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True),
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_IP_ADDRESS: "3.3.3.3"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: "3.3.3.3"}
 
 
 async def test_reconfigure_flow_unchanged_ip_skips_reload(
