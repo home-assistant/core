@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .fixtures import (
     NOT_VICTRON_SERVICE_INFO,
-    VICTRON_INVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_RS_SERVICE_INFO,
     VICTRON_TEST_WRONG_TOKEN,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
@@ -96,7 +96,7 @@ async def test_async_step_bluetooth_invalid_key_retry(
         ),
         (
             SOURCE_BLUETOOTH,
-            VICTRON_INVERTER_SERVICE_INFO,
+            VICTRON_INVERTER_RS_SERVICE_INFO,
             "not_supported",
         ),
         (

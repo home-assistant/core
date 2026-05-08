@@ -1,7 +1,5 @@
 """Hass.io const variables."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -10,9 +8,11 @@ from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from aiohasupervisor.models import (
+        AddonsStats,
         HomeAssistantInfo,
         HostInfo,
         InstalledAddon,
+        InstalledAddonComplete,
         NetworkInfo,
         OSInfo,
         RootInfo,
@@ -114,8 +114,12 @@ DATA_OS_INFO: HassKey[OSInfo] = HassKey("hassio_os_info")
 DATA_NETWORK_INFO: HassKey[NetworkInfo] = HassKey("hassio_network_info")
 DATA_SUPERVISOR_INFO: HassKey[SupervisorInfo] = HassKey("hassio_supervisor_info")
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
-DATA_ADDONS_INFO = "hassio_addons_info"
-DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_ADDONS_INFO: HassKey[dict[str, InstalledAddonComplete | None]] = HassKey(
+    "hassio_addons_info"
+)
+DATA_ADDONS_STATS: HassKey[dict[str, AddonsStats | None]] = HassKey(
+    "hassio_addons_stats"
+)
 DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)

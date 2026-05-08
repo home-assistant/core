@@ -1,7 +1,5 @@
 """Support for Overkiz covers - shutters etc."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,10 +22,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -125,6 +124,32 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override since PositionableGarageDoor reports
+    # core:OpenClosedUnknownState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+    ),
+    # Needs override since PositionableGarageDoorWithPartialPosition reports
+    # core:OpenClosedPartialState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GARAGE_DOOR_WITH_PARTIAL_POSITION,
+        device_class=CoverDeviceClass.GARAGE,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PARTIAL,
+    ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
@@ -201,7 +226,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -507,6 +532,35 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         if command := self.entity_description.set_tilt_position_command:
             await self.executor.async_execute_command(command, position)
+
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
+        """Move cover and tilt to a specific position simultaneously.
+
+        Exposed as the `overkiz.set_cover_position_and_tilt` service action. Uses the
+        setClosureAndOrientation command to move slats and closure in a single instruction.
+        Calling set_cover_position and set_cover_tilt_position sequentially will cause
+        the motor to stop between commands on some devices (e.g. Somfy
+        DynamicExteriorVenetianBlind).
+        """
+        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_set_position_and_tilt",
+            )
+
+        position = kwargs[ATTR_POSITION]
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+
+        if self.entity_description.invert_position:
+            position = 100 - position
+        if self.entity_description.invert_tilt_position:
+            tilt_position = 100 - tilt_position
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_ORIENTATION,
+            position,
+            tilt_position,
+        )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""

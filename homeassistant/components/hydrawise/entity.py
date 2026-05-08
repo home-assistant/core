@@ -1,7 +1,5 @@
 """Base classes for Hydrawise entities."""
 
-from __future__ import annotations
-
 from pydrawise.schema import Controller, Sensor, Zone
 
 from homeassistant.core import callback
