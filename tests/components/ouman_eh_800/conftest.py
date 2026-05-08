@@ -219,19 +219,19 @@ def mock_ouman_client(registry_set: OumanRegistrySet) -> Generator[AsyncMock]:
     values = {
         endpoint: _ENDPOINT_VALUES[endpoint] for endpoint in registry_set.endpoints
     }
-    client = AsyncMock()
-    client.get_active_registries.return_value = registry_set
-    client.get_values.return_value = values
     with (
         patch(
             "homeassistant.components.ouman_eh_800.coordinator.OumanEh800Client",
-            return_value=client,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.ouman_eh_800.config_flow.OumanEh800Client",
-            return_value=client,
+            new=mock_client,
         ),
     ):
+        client = mock_client.return_value
+        client.get_active_registries.return_value = registry_set
+        client.get_values.return_value = values
         yield client
 
 
