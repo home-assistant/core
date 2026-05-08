@@ -88,26 +88,35 @@ def _make_volume_state(volume: int = 50) -> AmazonVolumeState:
     return AmazonVolumeState(volume=volume, is_muted=False)
 
 
-def _patch_coordinator_states(
-    hass: HomeAssistant,
-    config_entry_id: str,
+async def _push_media_state(
+    mock_amazon_devices_client: AsyncMock,
     media_state: AmazonMediaState | None = None,
-    volume_state: AmazonVolumeState | None = None,
 ) -> None:
-    """Directly set media/volume states on the live coordinator."""
-    from homeassistant.components.alexa_devices.coordinator import (  # noqa: PLC0415
-        AmazonDevicesCoordinator,
+    """Update coordinator media state via the client push-event signal."""
+    await mock_amazon_devices_client.on_media_state_event.send(
+        {TEST_DEVICE_1_SN: media_state} if media_state is not None else {}
     )
 
-    for entry in hass.config_entries.async_entries():
-        if entry.entry_id == config_entry_id:
-            coordinator: AmazonDevicesCoordinator = entry.runtime_data
-            if media_state is not None:
-                coordinator._media_states = {TEST_DEVICE_1_SN: media_state}
-            if volume_state is not None:
-                coordinator._volume_states = {TEST_DEVICE_1_SN: volume_state}
-            coordinator.async_update_listeners()
-            break
+
+async def _push_volume_state(
+    mock_amazon_devices_client: AsyncMock,
+    volume_state: AmazonVolumeState | None = None,
+) -> None:
+    """Update coordinator volume state via the client push-event signal."""
+    await mock_amazon_devices_client.on_volume_state_event.send(
+        {TEST_DEVICE_1_SN: volume_state} if volume_state is not None else {}
+    )
+
+
+async def _setup_media_player_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Set up integration with only the media player platform enabled."""
+    with patch(
+        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
+    ):
+        await setup_integration(hass, mock_config_entry)
 
 
 # ---------------------------------------------------------------------------
@@ -123,10 +132,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities are registered correctly (snapshot)."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -145,10 +151,7 @@ async def test_media_player_not_created_for_unsupported_device(
         TEST_DEVICE_1_SN: device
     }
 
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID) is None
 
@@ -174,10 +177,7 @@ async def test_coordinator_data_update_fails(
     side_effect: Exception,
 ) -> None:
     """Entity becomes unavailable when the coordinator poll raises an exception."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID) is not None
 
@@ -206,10 +206,7 @@ async def test_offline_device_is_unavailable(
         TEST_DEVICE_1_SN
     ].online = False
 
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
@@ -226,10 +223,7 @@ async def test_offline_device_recovers(
         TEST_DEVICE_1_SN
     ].online = False
 
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
@@ -268,15 +262,14 @@ async def test_player_state(
     expected_ha_state: MediaPlayerState,
 ) -> None:
     """Player state is mapped correctly from the API value."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_media_state(
+        mock_amazon_devices_client,
         media_state=_make_media_state(player_state=player_state),
+    )
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(),
     )
     await hass.async_block_till_done()
@@ -291,10 +284,7 @@ async def test_idle_when_no_media_state(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """State is idle when the coordinator has no media state for the device."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == MediaPlayerState.IDLE
@@ -321,14 +311,10 @@ async def test_volume_level(
     expected_level: float,
 ) -> None:
     """Volume level is converted from 0-100 integer to 0.0-1.0 float."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(raw_volume),
     )
     await hass.async_block_till_done()
@@ -353,14 +339,10 @@ async def test_is_volume_muted(
     expected_muted: bool,
 ) -> None:
     """Volume is considered muted only when the raw level is 0."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(raw_volume),
     )
     await hass.async_block_till_done()
@@ -380,14 +362,10 @@ async def test_media_metadata_attributes(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Media title, artist, album and image URL are forwarded from the API."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_media_state(
+        mock_amazon_devices_client,
         media_state=_make_media_state(
             now_playing_title="Bohemian Rhapsody",
             now_playing_line1="Queen",
@@ -417,10 +395,7 @@ async def test_media_metadata_none_when_no_state(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Metadata attributes are absent when there is no media state."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
     for attr in ("media_title", "media_artist", "media_album_name", "media_duration"):
@@ -438,10 +413,7 @@ async def test_service_set_volume_level(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """SERVICE_VOLUME_SET converts the 0.0-1.0 value and calls the API."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -460,14 +432,10 @@ async def test_service_mute_volume(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Muting sets the device volume to 0 and stores the previous level."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(60),
     )
     await hass.async_block_till_done()
@@ -489,14 +457,10 @@ async def test_service_unmute_volume_restores_level(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Un-muting restores the volume level saved before muting."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(80),
     )
     await hass.async_block_till_done()
@@ -522,17 +486,25 @@ async def test_service_unmute_volume_restores_level(
 
 
 @pytest.mark.parametrize(
-    ("service", "media_controls_attr", "extra_media_state_kwargs"),
+    ("service", "media_controls_attr", "media_state"),
     [
-        (SERVICE_MEDIA_STOP, "Stop", {}),
+        (SERVICE_MEDIA_STOP, "Stop", _make_media_state()),
         (
             SERVICE_MEDIA_PAUSE,
             "Pause",
-            {"player_state": "PLAYING", "pause_enabled": True},
+            _make_media_state(player_state="PLAYING", pause_enabled=True),
         ),
-        (SERVICE_MEDIA_PLAY, "Play", {"player_state": "PAUSED", "pause_enabled": True}),
-        (SERVICE_MEDIA_NEXT_TRACK, "Next", {"next_enabled": True}),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, "Previous", {"previous_enabled": True}),
+        (
+            SERVICE_MEDIA_PLAY,
+            "Play",
+            _make_media_state(player_state="PAUSED", pause_enabled=True),
+        ),
+        (SERVICE_MEDIA_NEXT_TRACK, "Next", _make_media_state(next_enabled=True)),
+        (
+            SERVICE_MEDIA_PREVIOUS_TRACK,
+            "Previous",
+            _make_media_state(previous_enabled=True),
+        ),
     ],
 )
 async def test_media_transport_commands(
@@ -541,23 +513,18 @@ async def test_media_transport_commands(
     mock_config_entry: MockConfigEntry,
     service: str,
     media_controls_attr: str,
-    extra_media_state_kwargs: dict,
+    media_state: AmazonMediaState,
 ) -> None:
     """Each transport service sends the correct AmazonMediaControls command."""
     from aioamazondevices.structures import AmazonMediaControls  # noqa: PLC0415
 
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    if extra_media_state_kwargs:
-        _patch_coordinator_states(
-            hass,
-            mock_config_entry.entry_id,
-            media_state=_make_media_state(**extra_media_state_kwargs),
-        )
-        await hass.async_block_till_done()
+    await _push_media_state(
+        mock_amazon_devices_client,
+        media_state=media_state,
+    )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -580,10 +547,7 @@ async def test_service_play_media(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """SERVICE_PLAY_MEDIA forwards the search term and provider to the API."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -659,14 +623,10 @@ async def test_supported_features_are_dynamic(
     absent: list[MediaPlayerEntityFeature],
 ) -> None:
     """Optional feature flags appear only when the API reports them as enabled."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_media_state(
+        mock_amazon_devices_client,
         media_state=_make_media_state(
             pause_enabled=pause_enabled,
             next_enabled=next_enabled,
@@ -690,10 +650,7 @@ async def test_standard_features_always_present(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """VOLUME_SET, VOLUME_STEP, VOLUME_MUTE, STOP, and PLAY_MEDIA are always supported."""
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
     raw = state.attributes.get("supported_features", 0)
@@ -714,16 +671,11 @@ async def test_mute_volume_no_volume_state_returns_early(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Mute returns early when there is no volume state."""
-
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     # Remove volume state entirely
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=None,
     )
     await hass.async_block_till_done()
@@ -744,16 +696,11 @@ async def test_unmute_volume_without_prev_volume_returns_early(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unmute returns early when there is no previous volume stored."""
-
-    with patch(
-        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await _setup_media_player_platform(hass, mock_config_entry)
 
     # Ensure entity exists with a valid volume state
-    _patch_coordinator_states(
-        hass,
-        mock_config_entry.entry_id,
+    await _push_volume_state(
+        mock_amazon_devices_client,
         volume_state=_make_volume_state(50),
     )
     await hass.async_block_till_done()

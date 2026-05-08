@@ -132,9 +132,12 @@ async def test_http2_task_exception_is_logged(
     """Test HTTP2 task callback logs failures."""
     failed_task: asyncio.Future[None] = hass.loop.create_future()
     failed_task.set_exception(RuntimeError("boom"))
-    mock_amazon_devices_client.start_http2_processing.return_value = failed_task
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: failed_task
+    )
 
     with patch("homeassistant.components.alexa_devices._LOGGER.exception") as mock_exc:
         await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
 
     mock_exc.assert_called_once_with("HTTP2 task failed")

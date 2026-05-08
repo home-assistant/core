@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from aiosignal import Signal
 import pytest
@@ -61,7 +61,14 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
         client.routines = ["Test Routine"]
-        client.start_http2_processing = AsyncMock(return_value=Mock(spec=asyncio.Task))
+
+        async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
+            async def _completed_task() -> None:
+                return
+
+            return asyncio.create_task(_completed_task())
+
+        client.start_http2_processing = AsyncMock(side_effect=_start_http2_processing)
         client.stop_http2_processing = AsyncMock()
         client.sync_media_state = AsyncMock()
         client.send_sound_notification = AsyncMock()
