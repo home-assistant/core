@@ -1,6 +1,7 @@
 """Class to hold remote accessories."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -59,6 +60,11 @@ from .const import (
 from .util import cleanup_name_for_homekit
 
 VISIBILITY_PERSIST_COOLDOWN = 1.0
+
+# Per-entry locks serialise the read-modify-write of entry.options so that
+# concurrent visibility persists from sibling accessories on the same bridge
+# can't drop each other's updates.
+_VISIBILITY_PERSIST_LOCKS: dict[str, asyncio.Lock] = {}
 
 MAXIMUM_SOURCES = (
     90  # Maximum services per accessory is 100. The base acccessory uses 9
@@ -209,20 +215,30 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         entry_id = self.driver.entry_id
         if not entry_id:
             return
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            return
-        new_options = dict(entry.options)
-        hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
-        sorted_sources = sorted(self._hidden_sources)
-        if sorted_sources:
-            hidden_map[self.entity_id] = sorted_sources
-        else:
-            hidden_map.pop(self.entity_id, None)
-        new_options[CONF_HOMEKIT_HIDDEN_SOURCES] = hidden_map
-        if new_options == dict(entry.options):
-            return
-        self.hass.config_entries.async_update_entry(entry, options=new_options)
+        if (lock := _VISIBILITY_PERSIST_LOCKS.get(entry_id)) is None:
+            lock = _VISIBILITY_PERSIST_LOCKS[entry_id] = asyncio.Lock()
+        async with lock:
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            if entry is None:
+                return
+            new_options = dict(entry.options)
+            hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
+            sorted_sources = sorted(self._hidden_sources)
+            if sorted_sources:
+                hidden_map[self.entity_id] = sorted_sources
+            else:
+                hidden_map.pop(self.entity_id, None)
+            new_options[CONF_HOMEKIT_HIDDEN_SOURCES] = hidden_map
+            if new_options == dict(entry.options):
+                return
+            self.hass.config_entries.async_update_entry(entry, options=new_options)
+
+    @callback
+    def async_stop(self) -> None:
+        """Cancel any pending visibility persist before tearing down."""
+        if (debouncer := getattr(self, "_visibility_debouncer", None)) is not None:
+            debouncer.async_cancel()
+        super().async_stop()
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
         """Return a dict of sources mapped to their homekit safe name."""
