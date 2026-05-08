@@ -3,7 +3,6 @@
   "name": "OpenAQ",
   "codeowners": ["@jeeftor"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/openaq",
   "integration_type": "service",
   "iot_class": "cloud_polling",

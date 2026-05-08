@@ -2,8 +2,24 @@
 
 from collections.abc import Generator
 from types import SimpleNamespace
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
+from openaq.shared.responses import (
+    Coordinates,
+    CountryBase,
+    Datetime,
+    InstrumentBase,
+    Latest,
+    LatestBase,
+    Location,
+    OwnerBase,
+    Parameter,
+    ParameterBase,
+    ProviderBase,
+    Sensor,
+    SensorBase,
+)
 import pytest
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
@@ -16,6 +32,7 @@ API_KEY = "test-api-key"
 LOCATION_ID = 2178
 LOCATION_NAME = "Del Norte"
 SUBENTRY_ID = "ABCDEF"
+DATETIME = Datetime(utc="2026-05-08T00:00:00Z", local="2026-05-07T18:00:00-06:00")
 
 
 def make_response(results: list[object]) -> SimpleNamespace:
@@ -30,29 +47,56 @@ def make_location(
     coordinates: tuple[float, float] = (35.1, -106.6),
     distance: float | None = 0.0,
     sensor_parameters: tuple[str, ...] = ("pm25",),
-) -> SimpleNamespace:
+) -> Location:
     """Return an OpenAQ location."""
-    return SimpleNamespace(
+    return Location(
         id=location_id,
         name=name,
         locality=locality,
-        coordinates=SimpleNamespace(
-            latitude=coordinates[0],
-            longitude=coordinates[1],
-        ),
-        distance=distance,
+        timezone="America/Denver",
+        country=CountryBase(id=1, code="US", name="United States"),
+        owner=OwnerBase(id=1, name="OpenAQ"),
+        provider=ProviderBase(id=1, name="OpenAQ"),
+        is_mobile=False,
+        is_monitor=True,
+        instruments=[InstrumentBase(id=1, name="Monitor")],
         sensors=[
-            make_sensor(sensor_id, parameter)
+            make_sensor_base(sensor_id, parameter)
             for sensor_id, parameter in enumerate(sensor_parameters, start=1)
         ],
+        coordinates=Coordinates(latitude=coordinates[0], longitude=coordinates[1]),
+        bounds=(-106.6, 35.1, -106.6, 35.1),
+        distance=distance,
+        datetime_first=DATETIME,
+        datetime_last=DATETIME,
     )
 
 
 def make_parameter(
     name: str, units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-) -> SimpleNamespace:
+) -> Parameter:
     """Return an OpenAQ parameter."""
-    return SimpleNamespace(name=name, units=units)
+    return Parameter(id=1, name=name, units=units)
+
+
+def make_parameter_base(
+    name: str, units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+) -> ParameterBase:
+    """Return an OpenAQ base parameter."""
+    return ParameterBase(id=1, name=name, units=units, display_name=None)
+
+
+def make_sensor_base(
+    sensor_id: int,
+    parameter: str,
+    units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+) -> SensorBase:
+    """Return an OpenAQ base sensor."""
+    return SensorBase(
+        id=sensor_id,
+        name=parameter,
+        parameter=make_parameter_base(parameter, units),
+    )
 
 
 def make_sensor(
@@ -60,19 +104,34 @@ def make_sensor(
     parameter: str,
     units: str = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     value: float | None = None,
-) -> SimpleNamespace:
+) -> Sensor:
     """Return an OpenAQ sensor."""
-    latest = None if value is None else SimpleNamespace(value=value)
-    return SimpleNamespace(
+    latest = (
+        None
+        if value is None
+        else LatestBase(
+            datetime=DATETIME,
+            value=value,
+            coordinates=Coordinates(latitude=35.1, longitude=-106.6),
+        )
+    )
+    return Sensor(
         id=sensor_id,
+        name=parameter,
         parameter=make_parameter(parameter, units),
         latest=latest,
     )
 
 
-def make_latest(sensor_id: int, value: float | None) -> SimpleNamespace:
+def make_latest(sensor_id: int, value: float | None) -> Latest:
     """Return an OpenAQ latest measurement."""
-    return SimpleNamespace(sensors_id=sensor_id, value=value)
+    return Latest(
+        datetime=DATETIME,
+        value=cast(float, value),
+        coordinates=Coordinates(latitude=35.1, longitude=-106.6),
+        sensors_id=sensor_id,
+        locations_id=LOCATION_ID,
+    )
 
 
 @pytest.fixture

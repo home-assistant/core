@@ -1,25 +1,18 @@
 """Test the OpenAQ config flow."""
 
 from collections.abc import Sequence
-from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, call
 
+import httpx
 from openaq import (
     ApiKeyMissingError,
-    BadGatewayError,
-    BadRequestError,
     ForbiddenError,
-    GatewayTimeoutError,
     HTTPRateLimitError,
     NotAuthorizedError,
-    NotFoundError,
     RateLimitError,
-    ServerError,
-    ServiceUnavailableError,
-    TimeoutError as OpenAQTimeoutError,
-    ValidationError,
 )
+from openaq.shared.exceptions import APIError
 import pytest
 
 from homeassistant import config_entries
@@ -72,7 +65,6 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenAQ"
     assert result["data"] == {CONF_API_KEY: API_KEY}
-    assert result["result"].unique_id == DOMAIN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -80,8 +72,9 @@ async def test_user_flow_success(
     ("exception", "error"),
     [
         (NotAuthorizedError("Invalid API key"), "invalid_auth"),
-        (GatewayTimeoutError("Timeout"), "cannot_connect"),
         (HTTPRateLimitError("Rate limited"), "rate_limited"),
+        (APIError("API error"), "cannot_connect"),
+        (httpx.ConnectError("Connection error"), "cannot_connect"),
         (Exception("Unexpected"), "unknown"),
     ],
 )
@@ -120,17 +113,38 @@ async def test_duplicate_parent_entry(
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test duplicate parent setup aborts."""
+    """Test duplicate parent setup aborts for the same API key."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_API_KEY: "other-api-key"},
+        data={CONF_API_KEY: API_KEY},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_openaq_client.parameters.list.assert_not_awaited()
+
+
+async def test_different_api_key_parent_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a parent entry can be added for a different API key."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    mock_setup_entry.reset_mock()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_API_KEY: "other-api-key"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_API_KEY: "other-api-key"}
 
 
 async def test_location_subentry_map_flow(
@@ -148,13 +162,16 @@ async def test_location_subentry_map_flow(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "map"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -193,8 +210,11 @@ async def test_location_subentry_map_flow_without_locality(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -245,8 +265,11 @@ async def test_location_subentry_map_flow_sorts_by_sensor_count_before_distance(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 10000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 10000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -271,10 +294,10 @@ async def test_location_subentry_map_flow_labels_unknown_distance(
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test map search labels locations with invalid distances."""
+    """Test map search labels locations with unknown distances."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.return_value = make_response(
-        [make_location(location_id=9999, distance=True)]
+        [make_location(location_id=9999, distance=None)]
     )
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "location"),
@@ -284,8 +307,11 @@ async def test_location_subentry_map_flow_labels_unknown_distance(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -322,8 +348,11 @@ async def test_location_subentry_map_flow_limits_to_top_five_locations(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -361,8 +390,11 @@ async def test_location_subentry_map_flow_omits_locations_without_supported_sens
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -393,8 +425,11 @@ async def test_location_subentry_map_flow_deduplicates_locations_across_radius_s
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 10000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 10000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -431,8 +466,11 @@ async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 10000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 10000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -459,70 +497,17 @@ async def test_location_subentry_no_locations_found(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "map"
-    assert result["errors"] == {"base": "no_locations_found"}
-
-
-async def test_location_subentry_invalid_map_location_id(
-    hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test map search ignores locations without integer IDs."""
-    mock_config_entry.add_to_hass(hass)
-    mock_openaq_client.locations.list.return_value = make_response(
-        [SimpleNamespace(id="bad", name="Bad", locality="Albuquerque")]
-    )
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "location"),
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
-            CONF_LIMIT: 10,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "map"
-    assert result["errors"] == {"base": "no_locations_found"}
-
-
-async def test_location_subentry_invalid_map_sensors(
-    hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test map search ignores locations without sensor lists."""
-    mock_config_entry.add_to_hass(hass)
-    mock_openaq_client.locations.list.return_value = make_response(
-        [SimpleNamespace(id=9999, name="Bad", locality="Albuquerque", sensors=None)]
-    )
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "location"),
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
-            CONF_LIMIT: 10,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "map"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_locations_found"}
 
 
@@ -541,14 +526,8 @@ def test_location_select_label_without_supported_parameters() -> None:
         (NotAuthorizedError("Invalid API key"), "invalid_auth"),
         (HTTPRateLimitError("Rate limited"), "rate_limited"),
         (RateLimitError("Rate limited"), "rate_limited"),
-        (BadGatewayError("Bad gateway"), "cannot_connect"),
-        (BadRequestError("Bad request"), "cannot_connect"),
-        (GatewayTimeoutError("Timeout"), "cannot_connect"),
-        (NotFoundError("Not found"), "cannot_connect"),
-        (OpenAQTimeoutError("Timeout"), "cannot_connect"),
-        (ServerError("Server error"), "cannot_connect"),
-        (ServiceUnavailableError("Service unavailable"), "cannot_connect"),
-        (ValidationError("Validation error"), "cannot_connect"),
+        (APIError("API error"), "cannot_connect"),
+        (httpx.ConnectError("Connection error"), "cannot_connect"),
         (Exception("Unexpected"), "unknown"),
     ],
 )
@@ -569,14 +548,17 @@ async def test_location_subentry_map_flow_errors(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "map"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
 
@@ -595,8 +577,11 @@ async def test_duplicate_location_subentry_from_map_selection(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
@@ -629,8 +614,11 @@ async def test_duplicate_location_subentry_across_entries(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            ATTR_LOCATION: {ATTR_LATITUDE: 35.1, ATTR_LONGITUDE: -106.6},
-            CONF_RADIUS: 5000,
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
             CONF_LIMIT: 10,
         },
     )
