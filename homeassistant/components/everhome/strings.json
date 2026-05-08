@@ -42,17 +42,11 @@
       "energy_counter_out": {
         "name": "Energy out"
       },
-      "power": {
-        "name": "Power"
-      },
       "power_avg": {
         "name": "Power average"
       },
       "power_phase": {
         "name": "Power phase {phase_number}"
-      },
-      "rssi": {
-        "name": "WIFI RSSI"
       }
     }
   }
