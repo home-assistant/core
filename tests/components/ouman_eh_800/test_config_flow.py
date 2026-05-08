@@ -8,8 +8,8 @@ from ouman_eh_800_api import (
 )
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.ouman_eh_800.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,7 +34,7 @@ async def test_user_flow_success(
 ) -> None:
     """Test successful user config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -55,7 +55,7 @@ async def test_user_flow_success(
 async def test_user_flow_normalizes_url(hass: HomeAssistant) -> None:
     """Test that URL is normalized (trailing slashes and eh800.html removed)."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -90,7 +90,7 @@ async def test_user_flow_errors_recover(
     mock_ouman_client.login.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
@@ -112,7 +112,7 @@ async def test_user_flow_errors_recover(
 async def test_user_flow_invalid_url_recovers(hass: HomeAssistant) -> None:
     """Test that an unparsable URL surfaces an error and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -143,7 +143,7 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
