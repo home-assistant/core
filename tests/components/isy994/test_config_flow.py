@@ -191,7 +191,11 @@ async def test_form_isy_connection_error(hass: HomeAssistant) -> None:
 
 
 async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
-    """Test we surface ssl_error when pyisy chains an aiohttp.ClientSSLError."""
+    """Test we surface ssl_error when pyisy chains an aiohttp.ClientSSLError.
+
+    Uses an HTTPS URL so the HTTPS session branch (which honors verify_ssl)
+    is also exercised.
+    """
     ssl_cause = aiohttp.ClientSSLError(
         connection_key=None, os_error=ssl.SSLError("handshake failed")
     )
@@ -204,7 +208,7 @@ async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
     with patch(PATCH_CONNECTION, side_effect=isy_error):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_USER_INPUT,
+            {**MOCK_USER_INPUT, CONF_HOST: f"https://{MOCK_HOSTNAME}"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -703,6 +707,22 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    ssl_error = ISYConnectionError("ssl handshake failed")
+    ssl_error.__cause__ = aiohttp.ClientSSLError(
+        connection_key=None, os_error=ssl.SSLError("handshake failed")
+    )
+    with patch(PATCH_CONNECTION, side_effect=ssl_error):
+        result_ssl = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result_ssl["type"] is FlowResultType.FORM
+    assert result_ssl["errors"] == {"base": "ssl_error"}
+
     with (
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
@@ -711,7 +731,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
+            result_ssl["flow_id"],
             {
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
