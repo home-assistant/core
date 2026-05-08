@@ -213,7 +213,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             )
 
         try:
-            device = await self.client.get_device(self.device_id, refresh=True)
+            device = await self.client.get_device(self.device_id)
         except (
             WattsVisionAuthError,
             WattsVisionConnectionError,

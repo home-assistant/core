@@ -7370,6 +7370,238 @@
       "widget": "DiscreteGateWithPedestrianPosition",
       "oid": "6ba9b1de-8037-41d7-9150-21f7d5f49a3f",
       "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Garage Door",
+      "deviceURL": "io://1234-1234-6233/16730050",
+      "shortcut": false,
+      "controllableName": "io:DynamicGarageDoorComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "DynamicGarageDoor",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DynamicGarageDoorComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicGarageDoor",
+      "type": 1,
+      "oid": "a5d47351-52d0-4a4c-a52d-abcdef123456",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "OGP Garage Door",
+      "deviceURL": "ogp://1234-1234-6233/6632544",
+      "shortcut": false,
+      "controllableName": "ogp:GarageDoor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "DynamicGarageDoor",
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "ogp:GarageDoor",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "io2way"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicGarageDoor",
+      "type": 1,
+      "oid": "2492f7ae-3711-4160-9dae-e8910b708ce1",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Partial Garage Door",
+      "deviceURL": "io://1234-1234-6233/7433515",
+      "shortcut": false,
+      "controllableName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "partialPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "partial"],
+            "qualifiedName": "core:OpenClosedPartialState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "PositionableGarageDoorWithPartialPosition",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedPartialState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PositionableGarageDoorWithPartialPosition",
+      "type": 1,
+      "oid": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "uiClass": "GarageDoor"
     }
   ],
   "zones": [],
