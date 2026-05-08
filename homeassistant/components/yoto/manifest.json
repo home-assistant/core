@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["yoto_api", "paho.mqtt"],
   "quality_scale": "bronze",
-  "requirements": ["yoto-api==2.2.9"]
+  "requirements": ["yoto-api==2.3.0"]
 }
