@@ -13,10 +13,11 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.deprecation import deprecated_class
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -30,6 +31,8 @@ __all__ = [
     "DOMAIN",
     "InfraredEmitterEntity",
     "InfraredEmitterEntityDescription",
+    "InfraredEntity",
+    "InfraredEntityDescription",
     "InfraredReceivedSignal",
     "InfraredReceiverEntity",
     "InfraredReceiverEntityDescription",
@@ -43,8 +46,8 @@ __all__ = [
 class InfraredDeviceClass(StrEnum):
     """Device class for infrared entities."""
 
-    RECEIVER = "receiver"
     EMITTER = "emitter"
+    RECEIVER = "receiver"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -267,7 +270,11 @@ class InfraredReceiverEntity(RestoreEntity):
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
+        if state is not None and state.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+            None,
+        ):
             self.__last_signal_received = state.state
 
     @final
@@ -304,3 +311,19 @@ class InfraredReceiverEntity(RestoreEntity):
             callbacks.discard(signal_callback)
 
         return remove_callback
+
+
+@deprecated_class(
+    "homeassistant.components.infrared.InfraredEmitterEntityDescription",
+    breaks_in_ha_version="2027.5",
+)
+class InfraredEntityDescription(InfraredEmitterEntityDescription):
+    """Deprecated alias for InfraredEmitterEntityDescription."""
+
+
+@deprecated_class(
+    "homeassistant.components.infrared.InfraredEmitterEntity",
+    breaks_in_ha_version="2027.5",
+)
+class InfraredEntity(InfraredEmitterEntity):
+    """Deprecated alias for InfraredEmitterEntity."""
