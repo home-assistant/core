@@ -1,7 +1,5 @@
 """Sensor that can display the current Home Assistant versions."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription

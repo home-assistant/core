@@ -1,7 +1,5 @@
 """Support for Broadlink selects."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.select import SelectEntity

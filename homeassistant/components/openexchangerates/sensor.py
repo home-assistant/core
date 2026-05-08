@@ -1,7 +1,5 @@
 """Support for openexchangerates.org exchange rates service."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_QUOTE
 from homeassistant.core import HomeAssistant

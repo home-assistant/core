@@ -52,7 +52,7 @@ async def test_select_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("select.is_option_selected", {"option": ["option_a"]}, True, False),
+        ("select.is_option_selected", {"option": ["option_a"]}, True, True),
     ],
 )
 async def test_select_condition_options_validation(
