@@ -71,9 +71,12 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
         return self.coordinator.data.state.setpoint_dhw
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
-        if self.coordinator.data.switches.get(DHW_BOOST_KEY):
+        boost = self.coordinator.data.switches.get(DHW_BOOST_KEY)
+        if boost is None:
+            return None
+        if boost:
             return STATE_PERFORMANCE
         return STATE_HEAT_PUMP
 
