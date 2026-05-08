@@ -14,7 +14,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
     CONF_BUTTON_COUNT,
-    CONF_DETECTED_BUTTON,
     CONF_DEVICE_PATH,
     CONF_ENTRY_TYPE,
     CONF_GATEWAY_INDEX,
@@ -22,11 +21,8 @@ from .const import (
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
     CONF_RECEIVER_KIND,
-    CONF_SENSOR_SERIAL,
-    CONF_SENSOR_TYPES,
     CONF_SWITCH_MODE,
     CONF_TRANSMITTER_SERIAL,
-    CONF_USAGE_TYPE,
     CONF_USB_MANUFACTURER,
     CONF_USB_PID,
     CONF_USB_PRODUCT,
@@ -34,60 +30,21 @@ from .const import (
     CONF_USB_VID,
     DOMAIN,
     ENTRY_TYPE_RECEIVER,
-    ENTRY_TYPE_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
     LEARNING_TIMEOUT,
-    NEO_SENSOR_TYPE_HUMIDITY,
-    NEO_SENSOR_TYPE_TEMPERATURE,
-    RECEIVER_KIND_COVER,
-    RECEIVER_KIND_HEATING,
-    RECEIVER_KIND_IMPULSE,
-    RECEIVER_KIND_MOTOR,
-    RECEIVER_KIND_SWITCH,
     RECEIVER_KIND_UNIVERSAL,
-    SENSOR_KIND_HUMIDITY,
-    SENSOR_KIND_TEMPERATURE,
     TRANSMITTER_GROUPING_GROUP,
-    TRANSMITTER_GROUPING_SINGLE,
     TRANSMITTER_SWITCH_IMPULSE,
-    TRANSMITTER_SWITCH_PERMANENT,
-    TRANSMITTER_USAGE_COVER,
-    TRANSMITTER_USAGE_SWITCH,
     USB_DEVICE_NAMES,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-_RECEIVER_MODE_MAP: dict[str, str] = {
-    "mode_impulse": RECEIVER_KIND_IMPULSE,
-    "mode_on_off": RECEIVER_KIND_SWITCH,
-    "mode_up_down": RECEIVER_KIND_COVER,
-    "mode_up_stop_down": RECEIVER_KIND_MOTOR,
-    "mode_heating": RECEIVER_KIND_HEATING,
-    "mode_universal": RECEIVER_KIND_UNIVERSAL,
-}
-
-_TRANSMITTER_TYPE_MAP: dict[str, str] = {
-    "type_1button": "1",
-    "type_2button": "2",
-    "type_3button": "3",
-}
-
-_USAGE_TYPE_MAP: dict[str, str] = {
-    "usage_switch": TRANSMITTER_USAGE_SWITCH,
-    "usage_cover": TRANSMITTER_USAGE_COVER,
-}
 
 _BUTTON_COUNT_MAP: dict[str, int] = {
     "buttons_1": 1,
     "buttons_2": 2,
     "buttons_3": 3,
     "buttons_4": 4,
-}
-
-_CHANNEL_COUNT_MAP: dict[str, int] = {
-    "channels_1": 2,  # 1 channel = 2 buttons (A+B)
-    "channels_2": 4,  # 2 channels = 4 buttons (A+B+C+D)
 }
 
 
@@ -114,14 +71,11 @@ class _EasywaveDeviceMixin(_MixinBase):
         self._receiver_kind: str | None = None
         self._receiver_gateway_index: int | None = None
         self._receiver_gateway_serial: str | None = None
-        self._operating_type: str = "1"
-        self._usage_type: str = TRANSMITTER_USAGE_SWITCH
-        self._grouping_mode: str = TRANSMITTER_GROUPING_SINGLE
+        self._grouping_mode: str = TRANSMITTER_GROUPING_GROUP
         self._switch_mode: str = TRANSMITTER_SWITCH_IMPULSE
         self._button_count: int = 4
         self._learn_task: asyncio.Task[dict[str, Any] | None] | None = None
         self._learned_device: dict[str, Any] | None = None
-        self._sensor_learn_task: asyncio.Task[dict[str, Any] | None] | None = None
 
     # ------------------------------------------------------------------
     # Abstract interface (implemented by each concrete flow)
@@ -174,7 +128,7 @@ class _EasywaveDeviceMixin(_MixinBase):
         """Return a suggested device name based on the existing device count.
 
         Receivers use the gateway index (1..128) so the name stays stable per
-        slot; transmitters and EWneo sensors use the count of existing devices
+        slot; transmitters use the count of existing devices
         of the same kind +1, since they have no fixed slot.
         """
         if entry_type == ENTRY_TYPE_RECEIVER:
@@ -188,13 +142,6 @@ class _EasywaveDeviceMixin(_MixinBase):
                 if d["data"].get(CONF_ENTRY_TYPE) == ENTRY_TYPE_TRANSMITTER
             )
             return f"EW Transmitter {count + 1}"
-        if entry_type == ENTRY_TYPE_SENSOR:
-            count = sum(
-                1
-                for d in self._get_devices()
-                if d["data"].get(CONF_ENTRY_TYPE) == ENTRY_TYPE_SENSOR
-            )
-            return f"EWneo Sensor {count + 1}"
         return ""
 
     # ------------------------------------------------------------------
@@ -232,45 +179,12 @@ class _EasywaveDeviceMixin(_MixinBase):
             menu_options=["mode_universal"],
         )
 
-    async def _async_set_mode(self, mode: str) -> ConfigFlowResult:
-        self._receiver_kind = _RECEIVER_MODE_MAP[mode]
-        return await self.async_step_receiver_prepare()
-
-    async def async_step_mode_impulse(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle impulse mode selection."""
-        return await self._async_set_mode("mode_impulse")
-
-    async def async_step_mode_on_off(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle ON/OFF mode selection."""
-        return await self._async_set_mode("mode_on_off")
-
-    async def async_step_mode_up_down(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle UP/DOWN mode selection."""
-        return await self._async_set_mode("mode_up_down")
-
-    async def async_step_mode_up_stop_down(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle UP/STOP/DOWN mode selection."""
-        return await self._async_set_mode("mode_up_stop_down")
-
-    async def async_step_mode_heating(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle heating mode selection."""
-        return await self._async_set_mode("mode_heating")
-
     async def async_step_mode_universal(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle universal mode selection."""
-        return await self._async_set_mode("mode_universal")
+        self._receiver_kind = RECEIVER_KIND_UNIVERSAL
+        return await self.async_step_receiver_prepare()
 
     async def async_step_receiver_prepare(
         self, user_input: dict[str, Any] | None = None
@@ -394,136 +308,7 @@ class _EasywaveDeviceMixin(_MixinBase):
         coordinator = self._get_coordinator()
         if coordinator is None or not coordinator.transceiver.is_connected:
             return self.async_abort(reason="device_not_connected")
-        self._operating_type = "1"
-        self._grouping_mode = TRANSMITTER_GROUPING_GROUP
-        self._switch_mode = TRANSMITTER_SWITCH_IMPULSE
         return await self.async_step_button_count_select()
-
-    async def _async_set_type(self, type_key: str) -> ConfigFlowResult:
-        self._operating_type = _TRANSMITTER_TYPE_MAP[type_key]
-        if type_key == "type_3button":
-            self._button_count = 4
-            return await self.async_step_learn()
-        if type_key == "type_2button":
-            return await self.async_step_transmitter_usage()
-        # type_1button: ask how buttons should be grouped
-        return await self.async_step_transmitter_grouping()
-
-    async def async_step_type_1button(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 1-button selection."""
-        return await self._async_set_type("type_1button")
-
-    async def async_step_type_2button(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 2-button selection."""
-        return await self._async_set_type("type_2button")
-
-    async def async_step_type_3button(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 3-button (cover) selection."""
-        return await self._async_set_type("type_3button")
-
-    # ── 1-button grouping / switch-mode ──────────────────────────────────────
-
-    async def async_step_transmitter_grouping(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select whether buttons act individually or as a group (1-button mode)."""
-        return self.async_show_menu(
-            step_id="transmitter_grouping",
-            menu_options=["grouping_single", "grouping_group"],
-        )
-
-    async def async_step_grouping_single(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Each button fires its own event entity (single mode)."""
-        self._grouping_mode = TRANSMITTER_GROUPING_SINGLE
-        return await self.async_step_button_count_select()
-
-    async def async_step_grouping_group(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """All buttons share one 'last pressed' sensor (group mode)."""
-        self._grouping_mode = TRANSMITTER_GROUPING_GROUP
-        return await self.async_step_transmitter_switch_mode()
-
-    async def async_step_transmitter_switch_mode(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select impulse or permanent state behaviour (group mode only)."""
-        return self.async_show_menu(
-            step_id="transmitter_switch_mode",
-            menu_options=["switch_mode_impulse", "switch_mode_permanent"],
-        )
-
-    async def async_step_switch_mode_impulse(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """State resets to 'released' after each button release."""
-        self._switch_mode = TRANSMITTER_SWITCH_IMPULSE
-        return await self.async_step_button_count_select()
-
-    async def async_step_switch_mode_permanent(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """State stays until the next button press."""
-        self._switch_mode = TRANSMITTER_SWITCH_PERMANENT
-        return await self.async_step_button_count_select()
-
-    # ── 2-button usage / channel count ───────────────────────────────────────
-
-    async def async_step_transmitter_usage(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select whether 2-button mode controls a switch or a cover."""
-        return self.async_show_menu(
-            step_id="transmitter_usage",
-            menu_options=list(_USAGE_TYPE_MAP),
-        )
-
-    async def async_step_usage_switch(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User chose switch (ON/OFF) usage."""
-        self._usage_type = TRANSMITTER_USAGE_SWITCH
-        return await self.async_step_channel_count_select()
-
-    async def async_step_usage_cover(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User chose cover (UP/DOWN) usage."""
-        self._usage_type = TRANSMITTER_USAGE_COVER
-        return await self.async_step_channel_count_select()
-
-    async def async_step_channel_count_select(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select number of channels (for 2-button mode)."""
-        return self.async_show_menu(
-            step_id="channel_count_select",
-            menu_options=list(_CHANNEL_COUNT_MAP),
-        )
-
-    async def _async_set_channel_count(self, count_key: str) -> ConfigFlowResult:
-        self._button_count = _CHANNEL_COUNT_MAP[count_key]
-        return await self.async_step_learn()
-
-    async def async_step_channels_1(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Single channel (2 buttons: A+B)."""
-        return await self._async_set_channel_count("channels_1")
-
-    async def async_step_channels_2(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Double channel (4 buttons: A+B+C+D)."""
-        return await self._async_set_channel_count("channels_2")
 
     async def async_step_button_count_select(
         self, user_input: dict[str, Any] | None = None
@@ -658,18 +443,11 @@ class _EasywaveDeviceMixin(_MixinBase):
             data: dict[str, Any] = {
                 CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
                 CONF_TRANSMITTER_SERIAL: serial_hex,
-                CONF_OPERATING_TYPE: self._operating_type,
+                CONF_OPERATING_TYPE: "1",
                 CONF_BUTTON_COUNT: self._button_count,
-                CONF_USAGE_TYPE: self._usage_type,
+                CONF_GROUPING_MODE: self._grouping_mode,
+                CONF_SWITCH_MODE: self._switch_mode,
             }
-            if self._operating_type == "1":
-                data[CONF_GROUPING_MODE] = self._grouping_mode
-                data[CONF_SWITCH_MODE] = self._switch_mode
-                # For 1-button individual-mode remotes, record which physical button
-                # (A=0, B=1, C=2, D=3) was pressed so the entity platform can create
-                # the correct button entity.
-                if self._button_count == 1:
-                    data[CONF_DETECTED_BUTTON] = self._learned_device["button"]
             return self._save_device(
                 title=user_input["name"],
                 unique_id=unique_id,
@@ -686,156 +464,6 @@ class _EasywaveDeviceMixin(_MixinBase):
                     ): str,
                 }
             ),
-        )
-
-    # ------------------------------------------------------------------
-    # EWneo Sensor path
-    # ------------------------------------------------------------------
-
-    async def async_step_add_sensor(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Start EWneo sensor learning flow."""
-        coordinator = self._get_coordinator()
-        if coordinator is None or not coordinator.transceiver.is_connected:
-            return self.async_abort(reason="device_not_connected")
-        return await self.async_step_sensor_learn()
-
-    async def async_step_sensor_learn(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show progress while waiting for an EWneo sensor learn telegram."""
-        coordinator = self._get_coordinator()
-        if coordinator is None or not coordinator.transceiver.is_connected:
-            return self.async_abort(reason="device_not_connected")
-
-        if self._sensor_learn_task is None:
-            self._sensor_learn_task = self.hass.async_create_task(
-                self._do_sensor_learning(coordinator),
-                "easywave_sensor_learning",
-            )
-
-        if not self._sensor_learn_task.done():
-            return self.async_show_progress(
-                step_id="sensor_learn",
-                progress_action="waiting_for_sensor",
-                progress_task=self._sensor_learn_task,
-            )
-
-        try:
-            result = self._sensor_learn_task.result()
-        except OSError, TimeoutError, asyncio.CancelledError:
-            result = None
-        finally:
-            self._sensor_learn_task = None
-
-        if result is None:
-            return self.async_show_progress_done(next_step_id="sensor_learn_timeout")
-
-        self._learned_device = result
-        return self.async_show_progress_done(next_step_id="sensor_confirm")
-
-    async def _do_sensor_learning(self, coordinator: Any) -> dict[str, Any] | None:
-        """Wait for an EWneo sensor learn telegram (background task)."""
-        await coordinator.suspend_telegram_listener()
-        try:
-            deadline = time.monotonic() + LEARNING_TIMEOUT
-            while time.monotonic() < deadline:
-                remaining = deadline - time.monotonic()
-                telegram = await coordinator.transceiver.receive_telegram(
-                    timeout=min(remaining, 10.0)
-                )
-                if telegram is None:
-                    continue
-
-                info_type = telegram.get("info_type", 0)
-                if info_type != 0x02:
-                    continue
-
-                info_data = telegram.get("info_data", b"")
-                if not info_data or len(info_data) < 3:
-                    continue
-
-                is_learn = bool(info_data[1] & 0x80)
-                if not is_learn:
-                    continue
-
-                sensor_type_code = (info_data[2] >> 2) & 0x3F
-                sensor_types = []
-                if sensor_type_code == NEO_SENSOR_TYPE_TEMPERATURE:
-                    sensor_types.append(SENSOR_KIND_TEMPERATURE)
-                elif sensor_type_code == NEO_SENSOR_TYPE_HUMIDITY:
-                    sensor_types.append(SENSOR_KIND_HUMIDITY)
-
-                if not sensor_types:
-                    sensor_types = [SENSOR_KIND_TEMPERATURE, SENSOR_KIND_HUMIDITY]
-
-                serial_bytes: bytes = telegram.get("serial", b"")
-                return {
-                    "serial": serial_bytes,
-                    "sensor_types": sensor_types,
-                }
-        finally:
-            coordinator.resume_telegram_listener()
-
-        return None
-
-    async def async_step_sensor_learn_timeout(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Timeout during sensor learning - offer retry or cancel."""
-        return self.async_show_menu(
-            step_id="sensor_learn_timeout",
-            menu_options=["sensor_learn", "abort_sensor_learn"],
-        )
-
-    async def async_step_abort_sensor_learn(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort sensor learning."""
-        return self.async_abort(reason="learning_cancelled")
-
-    async def async_step_sensor_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm learned sensor and save."""
-        if self._learned_device is None:
-            return self.async_abort(reason="no_device_learned")
-
-        serial_bytes: bytes = self._learned_device["serial"]
-        serial_hex = serial_bytes.hex()
-        unique_id = f"sensor_{serial_hex}"
-        sensor_types: list[str] = self._learned_device.get(
-            "sensor_types", [SENSOR_KIND_TEMPERATURE]
-        )
-
-        if self._is_duplicate(unique_id):
-            return self.async_abort(reason="already_configured")
-
-        if user_input is not None and "name" in user_input:
-            return self._save_device(
-                title=user_input["name"],
-                unique_id=unique_id,
-                data={
-                    CONF_ENTRY_TYPE: ENTRY_TYPE_SENSOR,
-                    CONF_SENSOR_SERIAL: serial_hex,
-                    CONF_SENSOR_TYPES: sensor_types,
-                },
-            )
-
-        return self.async_show_form(
-            step_id="sensor_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "name",
-                        default=self._next_default_name(ENTRY_TYPE_SENSOR),
-                    ): str,
-                }
-            ),
-            description_placeholders={
-                "sensor_types": ", ".join(sensor_types),
-            },
         )
 
 

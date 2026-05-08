@@ -14,14 +14,12 @@ from homeassistant.components.easywave.const import (
     CONF_RECEIVER_KIND,
     CONF_SWITCH_MODE,
     CONF_TRANSMITTER_SERIAL,
-    CONF_USAGE_TYPE,
     DOMAIN,
     ENTRY_TYPE_RECEIVER,
     ENTRY_TYPE_TRANSMITTER,
     RECEIVER_KIND_UNIVERSAL,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
-    TRANSMITTER_USAGE_SWITCH,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -237,7 +235,6 @@ async def test_transmitter_flow_group_impulse(
     assert device["data"][CONF_BUTTON_COUNT] == 4
     assert device["data"][CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
     assert device["data"][CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
-    assert device["data"][CONF_USAGE_TYPE] == TRANSMITTER_USAGE_SWITCH
 
 
 async def test_transmitter_flow_timeout_then_retry(

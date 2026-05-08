@@ -7,14 +7,8 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
-    SensorStateClass,
 )
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfTemperature,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,13 +24,11 @@ from .const import (
     CONF_SWITCH_MODE,
     DOMAIN,
     ENTRY_TYPE_TRANSMITTER,
-    NEO_SENSOR_TYPE_HUMIDITY,
-    NEO_SENSOR_TYPE_TEMPERATURE,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
 )
 from .coordinator import EasywaveCoordinator
-from .entity import EasywaveDeviceEntry, EasyWaveSensorEntity, EasywaveTransmitterEntity
+from .entity import EasywaveDeviceEntry, EasywaveTransmitterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,41 +55,6 @@ async def async_setup_entry(
         last_button = EasywaveTransmitterLastButtonSensor(entry, subentry)
         battery = EasywaveTransmitterBatterySensor(entry, subentry)
         async_add_entities([last_button, battery])
-
-
-def _setup_type2_cover_sensors(
-    entry: EasywaveConfigEntry,
-    subentry: EasywaveDeviceEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Create channel state sensors for a type-2 transmitter with COVER usage."""
-    button_count: int = min(subentry.data.get(CONF_BUTTON_COUNT, 4), 4)
-    if button_count <= 2:
-        ch_entities: list[EasywaveTransmitterChannelSensor] = [
-            EasywaveTransmitterChannelSensor(
-                entry,
-                subentry,
-                uid_suffix="cover",
-                translation_key="transmitter_channel_state",
-                button_map={0: _CHANNEL_OPENED, 1: _CHANNEL_CLOSED},
-            )
-        ]
-    else:
-        ch_entities = [
-            EasywaveTransmitterChannelSensor(
-                entry,
-                subentry,
-                uid_suffix=f"cover_{suffix}",
-                translation_key=f"transmitter_channel_state_{suffix}",
-                button_map=ch_map,
-            )
-            for suffix, ch_map in (
-                ("ab", {0: _CHANNEL_OPENED, 1: _CHANNEL_CLOSED}),
-                ("cd", {2: _CHANNEL_OPENED, 3: _CHANNEL_CLOSED}),
-            )
-        ]
-    if ch_entities:
-        async_add_entities(ch_entities)
 
 
 class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity):
@@ -243,103 +200,6 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         return {"device_path": device_path}
 
 
-class EWneoSensorBase(EasyWaveSensorEntity, SensorEntity):
-    """Base class for EWneo temperature/humidity sensor entities."""
-
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        entry: EasywaveConfigEntry,
-        subentry: EasywaveDeviceEntry,
-        unique_id_suffix: str,
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry, subentry, unique_id_suffix)
-        self._native_value: float | None = None
-
-    @property
-    def native_value(self) -> float | None:
-        """Return current measurement value."""
-        return self._native_value
-
-    @callback
-    def handle_telegram(self, info_data: bytes) -> None:
-        """Parse EWneo sensor data telegram (8 bytes) and update state.
-
-        Telegram format:
-        - Byte 0: version (bits 2-0, must be 0)
-        - Byte 1: battery (bit7=1 for learn, bit6=has_battery, bits5-3=level)
-        - Byte 2: sensor_type_code = (byte >> 2) & 0x3F  (4=temp, 5=humidity)
-        - Bytes 3-4: raw measurement (big-endian uint16)
-        - Bytes 5-6: reference value (optional)
-        - Byte 7: max telegram interval
-        """
-        if not info_data or len(info_data) < 5:
-            return
-
-        # Byte 1 bit7: learn telegram flag — skip, but still update
-        is_learn = bool(info_data[1] & 0x80)
-        if is_learn:
-            return
-
-        sensor_type_code = (info_data[2] >> 2) & 0x3F
-        raw = (info_data[3] << 8) | info_data[4]
-
-        value = self._parse_value(sensor_type_code, raw)
-        if value is not None:
-            self._native_value = value
-            self.async_write_ha_state()
-
-    def _parse_value(self, sensor_type_code: int, raw: int) -> float | None:
-        """Parse raw measurement. Subclasses must implement."""
-        raise NotImplementedError
-
-
-class EWneoTemperatureSensor(EWneoSensorBase):
-    """EWneo temperature sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "ewneo_temperature"
-
-    def __init__(
-        self, entry: EasywaveConfigEntry, subentry: EasywaveDeviceEntry
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry, subentry, "temperature")
-
-    def _parse_value(self, sensor_type_code: int, raw: int) -> float | None:
-        """Convert raw temperature telegram value to °C."""
-        if sensor_type_code != NEO_SENSOR_TYPE_TEMPERATURE:
-            return None
-        # raw / 20.0 = Kelvin; subtract 273.15 for Celsius
-        return round(raw / 20.0 - 273.15, 1)
-
-
-class EWneoHumiditySensor(EWneoSensorBase):
-    """EWneo humidity sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_translation_key = "ewneo_humidity"
-
-    def __init__(
-        self, entry: EasywaveConfigEntry, subentry: EasywaveDeviceEntry
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry, subentry, "humidity")
-
-    def _parse_value(self, sensor_type_code: int, raw: int) -> float | None:
-        """Convert raw humidity telegram value to %."""
-        if sensor_type_code != NEO_SENSOR_TYPE_HUMIDITY:
-            return None
-        return round((raw / 4095.0) * 100, 1)
-
-
-# ── Type-1 group-mode transmitter "last button" sensor ────────────────────────
-
-
 _BUTTON_STATE_A = "a"
 _BUTTON_STATE_B = "b"
 _BUTTON_STATE_C = "c"
@@ -440,226 +300,9 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
                 )
 
 
-# ── Type-3 motor-mode transmitter state sensor ────────────────────────────────
-
-
-_MOTOR_STATE_OPENED = "opened"
-_MOTOR_STATE_CLOSED = "closed"
-_MOTOR_STATE_STOPPED = "stopped"
-
-_MOTOR_BUTTON_MAP: dict[int, str] = {
-    0: _MOTOR_STATE_OPENED,
-    1: _MOTOR_STATE_CLOSED,
-    2: _MOTOR_STATE_STOPPED,
-    3: _MOTOR_STATE_STOPPED,
-}
-
-_ICON_MAP_MOTOR: dict[str, str] = {
-    _MOTOR_STATE_OPENED: "mdi:window-open",
-    _MOTOR_STATE_CLOSED: "mdi:window-closed",
-    _MOTOR_STATE_STOPPED: "mdi:stop-circle-outline",
-}
-
-
-class EasywaveTransmitterMotorSensor(EasywaveTransmitterEntity, RestoreSensor):
-    """Enum sensor showing the last motor action of a type-3 motor transmitter.
-
-    States: ``opened`` / ``closed`` / ``stopped``.  Buttons 0/2 → opened,
-    buttons 1/3 → closed; the dedicated stop pairing maps to ``stopped``.
-    """
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_translation_key = "transmitter_motor_state"
-    _attr_options = [_MOTOR_STATE_OPENED, _MOTOR_STATE_CLOSED, _MOTOR_STATE_STOPPED]
-
-    def __init__(
-        self,
-        entry: EasywaveConfigEntry,
-        subentry: EasywaveDeviceEntry,
-    ) -> None:
-        """Initialize the motor state sensor."""
-        super().__init__(entry, subentry, "motor_state")
-        self._native_value: str | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator and restore last known state.
-
-        Restore BEFORE calling super() to prevent the coordinator listener
-        from overwriting the restored value.
-        """
-        if (last_data := await self.async_get_last_sensor_data()) is not None:
-            native = last_data.native_value
-            if native in self._attr_options:
-                self._native_value = str(native)
-        await super().async_added_to_hass()
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the current motor state."""
-        return self._native_value
-
-    @property
-    def icon(self) -> str:
-        """Return an icon reflecting the most recent motor state."""
-        return _ICON_MAP_MOTOR.get(
-            self._native_value or _MOTOR_STATE_CLOSED, "mdi:window-closed"
-        )
-
-    @callback
-    def handle_telegram(self, info_type: int, button: int) -> None:
-        """Update the sensor state from an incoming transmitter telegram."""
-        if info_type != 0x01:
-            return
-        state = _MOTOR_BUTTON_MAP.get(button)
-        if state is not None:
-            self._native_value = state
-            self.async_write_ha_state()
-            self.hass.async_create_task(
-                self.async_persist_state(),
-                eager_start=False,
-            )
-
-
-# ── Type-2 cover-mode transmitter channel state sensor ───────────────────────
-
-_CHANNEL_OPENED = "opened"
-_CHANNEL_CLOSED = "closed"
-_CHANNEL_OPTIONS = [_CHANNEL_OPENED, _CHANNEL_CLOSED]
-
-_ICON_MAP_CHANNEL: dict[str, str] = {
-    _CHANNEL_OPENED: "mdi:window-open",
-    _CHANNEL_CLOSED: "mdi:window-closed",
-}
-
-
-class EasywaveTransmitterChannelSensor(EasywaveTransmitterEntity, RestoreSensor):
-    """Enum sensor showing the open/closed state of a type-2 cover-mode transmitter channel.
-
-    States: ``opened`` / ``closed``.
-    Button A (or C for the second channel) → opened; Button B (or D) → closed.
-    """
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = _CHANNEL_OPTIONS
-
-    def __init__(
-        self,
-        entry: EasywaveConfigEntry,
-        subentry: EasywaveDeviceEntry,
-        uid_suffix: str,
-        translation_key: str,
-        button_map: dict[int, str],
-    ) -> None:
-        """Initialize the channel state sensor."""
-        super().__init__(entry, subentry, uid_suffix)
-        self._attr_translation_key = translation_key
-        self._button_map = button_map
-        self._native_value: str | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator and restore last known state.
-
-        Restore BEFORE calling super() to prevent the coordinator listener
-        from overwriting the restored value.
-        """
-        if (last_data := await self.async_get_last_sensor_data()) is not None:
-            native = last_data.native_value
-            if native in _CHANNEL_OPTIONS:
-                self._native_value = str(native)
-        await super().async_added_to_hass()
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the current channel state."""
-        return self._native_value
-
-    @property
-    def icon(self) -> str:
-        """Return an icon reflecting the current channel state."""
-        return _ICON_MAP_CHANNEL.get(
-            self._native_value or _CHANNEL_CLOSED, "mdi:window-closed"
-        )
-
-    @callback
-    def handle_telegram(self, info_type: int, button: int) -> None:
-        """Update sensor state from an incoming transmitter telegram."""
-        if info_type != 0x01:
-            return
-        state = self._button_map.get(button)
-        if state is not None:
-            self._native_value = state
-            self.async_write_ha_state()
-            self.hass.async_create_task(
-                self.async_persist_state(),
-                eager_start=False,
-            )
-
-
-# ── Battery warning enum sensors ──────────────────────────────────────────────
-
 _BATTERY_STATE_OK = "ok"
 _BATTERY_STATE_LOW = "low"
 _BATTERY_OPTIONS = [_BATTERY_STATE_OK, _BATTERY_STATE_LOW]
-
-
-class EasywaveNeoBatterySensor(EasyWaveSensorEntity, RestoreSensor):
-    """Diagnostic battery-state sensor for an Easywave neo measurement sensor.
-
-    Parses the 3-bit battery level from the EWneo telegram (info_type=0x02,
-    byte 1 bits 5..3): level 7 = full (ok), 0..6 = low.
-    """
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "battery_warning"
-    _attr_options = _BATTERY_OPTIONS
-
-    def __init__(
-        self, entry: EasywaveConfigEntry, subentry: EasywaveDeviceEntry
-    ) -> None:
-        """Initialize the EWneo battery sensor."""
-        super().__init__(entry, subentry, "battery_warning")
-        self._native_value: str | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator and restore last known battery state."""
-        await super().async_added_to_hass()
-        if (last_data := await self.async_get_last_sensor_data()) is not None:
-            native = last_data.native_value
-            if native in _BATTERY_OPTIONS:
-                self._native_value = str(native)
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the current battery state."""
-        return self._native_value
-
-    @property
-    def icon(self) -> str:
-        """Return a battery icon reflecting the current state."""
-        if self._native_value == _BATTERY_STATE_LOW:
-            return "mdi:battery-alert"
-        if self._native_value == _BATTERY_STATE_OK:
-            return "mdi:battery"
-        return "mdi:battery-unknown"
-
-    @callback
-    def handle_telegram(self, info_data: bytes) -> None:
-        """Update battery state from the sensor telegram payload."""
-        if not info_data or len(info_data) < 2:
-            return
-        # Skip learn telegrams — they don't carry meaningful battery data.
-        if info_data[1] & 0x80:
-            return
-        battery_level = (info_data[1] >> 3) & 0x07
-        new_state = _BATTERY_STATE_LOW if battery_level < 7 else _BATTERY_STATE_OK
-        if self._native_value != new_state:
-            self._native_value = new_state
-            self.async_write_ha_state()
-            self._coordinator.fire_device_event(
-                self._subentry_id,
-                "battery_low" if new_state == _BATTERY_STATE_LOW else "battery_normal",
-            )
 
 
 class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor):

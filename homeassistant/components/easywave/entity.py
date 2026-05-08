@@ -14,20 +14,12 @@ from .const import (
     CONF_GROUPING_MODE,
     CONF_OPERATING_TYPE,
     CONF_RECEIVER_KIND,
-    CONF_SENSOR_SERIAL,
     CONF_SWITCH_MODE,
     CONF_TRANSMITTER_SERIAL,
-    CONF_USAGE_TYPE,
     DOMAIN,
-    RECEIVER_KIND_COVER,
-    RECEIVER_KIND_HEATING,
-    RECEIVER_KIND_IMPULSE,
-    RECEIVER_KIND_MOTOR,
-    RECEIVER_KIND_SWITCH,
     RECEIVER_KIND_UNIVERSAL,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_PERMANENT,
-    TRANSMITTER_USAGE_COVER,
 )
 
 if TYPE_CHECKING:
@@ -60,30 +52,14 @@ def _transmitter_model(data: dict[str, Any]) -> str:
         )
         mode = data.get(CONF_SWITCH_MODE, "")
         parts.append("Permanent" if mode == TRANSMITTER_SWITCH_PERMANENT else "Impulse")
-    elif op == "2":
-        parts.append("2-Button Operation")
-        count = data.get(CONF_BUTTON_COUNT, 2)
-        parts.append(f"{count} Buttons")
-        usage = data.get(CONF_USAGE_TYPE, "")
-        parts.append("UP/DOWN" if usage == TRANSMITTER_USAGE_COVER else "ON/OFF")
-    elif op == "3":
-        parts.append("3-Button Operation")
-        parts.append("3 or 4 Buttons")
-        usage = data.get(CONF_USAGE_TYPE, "")
-        parts.append("UP/DOWN" if usage == TRANSMITTER_USAGE_COVER else "ON/OFF")
     return ", ".join(parts)
 
 
 def _receiver_model(data: dict[str, Any]) -> str:
     """Return a human-readable model string describing the receiver operating mode."""
-    return {
-        RECEIVER_KIND_IMPULSE: "Impulse (1-Button)",
-        RECEIVER_KIND_SWITCH: "ON/OFF (2-Button)",
-        RECEIVER_KIND_COVER: "UP/DOWN (2-Button)",
-        RECEIVER_KIND_MOTOR: "UP/STOP/DOWN (3-Button)",
-        RECEIVER_KIND_HEATING: "ON/OFF Heating",
-        RECEIVER_KIND_UNIVERSAL: "Universal (4-Button)",
-    }.get(data.get(CONF_RECEIVER_KIND, ""), "")
+    if data.get(CONF_RECEIVER_KIND) == RECEIVER_KIND_UNIVERSAL:
+        return "Universal (4-Button)"
+    return ""
 
 
 class EasywaveReceiverEntity(Entity):
@@ -214,59 +190,3 @@ class EasywaveTransmitterEntity(Entity):
         Default implementation is a no-op; overridden by the per-transmitter
         battery binary sensor.
         """
-
-
-class EasyWaveSensorEntity(Entity):
-    """Base entity for an EWneo sensor (temperature/humidity)."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        entry: EasywaveConfigEntry,
-        subentry: EasywaveDeviceEntry,
-        unique_id_suffix: str,
-    ) -> None:
-        """Initialize the sensor entity."""
-        self._entry = entry
-        self._sensor_serial: str = subentry.data[CONF_SENSOR_SERIAL]
-        self._subentry_id: str = subentry.subentry_id
-
-        self._attr_unique_id = f"{subentry.subentry_id}_{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, subentry.subentry_id)},
-            name=subentry.title,
-            manufacturer="ELDAT",
-            via_device=(DOMAIN, entry.entry_id),
-        )
-
-    @property
-    def _coordinator(self) -> EasywaveCoordinator:
-        """Return the coordinator from the shared runtime data."""
-        return self._entry.runtime_data.coordinator
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator updates and register for sensor telegram dispatch."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-        coordinator = self._coordinator
-        coordinator.register_sensor_entities([self])
-        self.async_on_remove(lambda: coordinator.unregister_sensor_entity(self))
-
-    @property
-    def sensor_serial(self) -> str:
-        """Return the sensor serial for matching telegrams."""
-        return self._sensor_serial
-
-    @property
-    def subentry_id(self) -> str:
-        """Return the subentry id (used for device identifier lookup)."""
-        return self._subentry_id
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available (transceiver connected)."""
-        return self._coordinator.transceiver.is_connected

@@ -45,7 +45,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.transceiver = transceiver
         self.is_offline = not transceiver.is_connected
         self._transmitter_entities: list[Any] = []
-        self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
 
     async def _async_setup(self) -> None:
@@ -164,7 +163,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def _has_telegram_listeners(self) -> bool:
         """Return True if any entities need telegram listening."""
-        return bool(self._transmitter_entities or self._sensor_entities)
+        return bool(self._transmitter_entities)
 
     def register_transmitter_entities(self, entities: list[Any]) -> None:
         """Register transmitter event entities for telegram dispatching."""
@@ -176,19 +175,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Remove a single transmitter entity from telegram dispatching."""
         with contextlib.suppress(ValueError):
             self._transmitter_entities.remove(entity)
-        if not self._has_telegram_listeners:
-            self._stop_telegram_listener()
-
-    def register_sensor_entities(self, entities: list[Any]) -> None:
-        """Register EWneo sensor entities for telegram dispatching."""
-        self._sensor_entities.extend(entities)
-        if entities and not self.is_offline:
-            self._start_telegram_listener()
-
-    def unregister_sensor_entity(self, entity: Any) -> None:
-        """Remove a single EWneo sensor entity."""
-        with contextlib.suppress(ValueError):
-            self._sensor_entities.remove(entity)
         if not self._has_telegram_listeners:
             self._stop_telegram_listener()
 
@@ -240,7 +226,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     # EWB info_type constants (from easywave_home_control protocol)
     _INFO_TYPE_EW_RELEASE = 0x00
     _INFO_TYPE_EW_PUSH = 0x01
-    _INFO_TYPE_SENSOR_DATA = 0x02
 
     def _dispatch_telegram(self, telegram: dict[str, Any]) -> None:
         """Dispatch a received telegram to the matching entity based on info_type."""
@@ -250,8 +235,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if info_type in (self._INFO_TYPE_EW_RELEASE, self._INFO_TYPE_EW_PUSH):
             self._dispatch_transmitter_telegram(telegram, serial_hex)
-        elif info_type == self._INFO_TYPE_SENSOR_DATA:
-            self._dispatch_sensor_telegram(telegram, serial_hex)
         else:
             _LOGGER.debug(
                 "Unknown telegram info_type=0x%02x from %s", info_type, serial_hex
@@ -414,18 +397,3 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "type": event_type,
             },
         )
-
-    def _dispatch_sensor_telegram(
-        self, telegram: dict[str, Any], serial_hex: str
-    ) -> None:
-        """Dispatch an EWneo sensor data telegram."""
-        info_data: bytes = telegram.get("info_data", b"")
-        matched = False
-        for entity in self._sensor_entities:
-            if entity.sensor_serial == serial_hex:
-                entity.handle_telegram(info_data)
-                matched = True
-        if not matched:
-            _LOGGER.debug(
-                "Received sensor telegram from unknown sensor: %s", serial_hex
-            )
