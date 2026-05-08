@@ -101,7 +101,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                             )
                             return self.async_abort(reason="reconfigure_successful")
                         return self.async_abort(reason="single_instance_allowed")
-                        return self.async_abort(reason="single_instance_allowed")
 
                     return self.async_create_entry(
                         title=f"iZone {device_uid}",
