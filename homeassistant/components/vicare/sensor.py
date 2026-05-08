@@ -93,18 +93,6 @@ class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysM
     unit_getter: Callable[[PyViCareDevice], str | None] | None = None
 
 
-def _floor_heating_active_mode(api: PyViCareDevice) -> str:
-    """Return active mode for FloorHeating devices only.
-
-    The bare ``getActiveMode()`` name is shared with ``VentilationDevice`` (where
-    it is a deprecated alias for ``getActiveVentilationMode``); restricting by
-    instance type prevents a duplicate entity on ventilation hardware.
-    """
-    if not isinstance(api, FloorHeating):
-        raise PyViCareNotSupportedFeatureError("active_mode")
-    return api.getActiveMode()
-
-
 SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
     ViCareSensorEntityDescription(
         key="supply_temperature",
@@ -1159,13 +1147,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
-        key="active_mode",
-        translation_key="active_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=["cooling", "heating", "standby"],
-        value_getter=_floor_heating_active_mode,
-    ),
-    ViCareSensorEntityDescription(
         key="fuel_need",
         translation_key="fuel_need",
         state_class=SensorStateClass.MEASUREMENT,
@@ -1283,6 +1264,16 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     SUPPLY_TEMPERATURE_SENSOR,
+)
+
+FLOOR_HEATING_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="active_mode",
+        translation_key="active_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cooling", "heating", "standby"],
+        value_getter=lambda api: api.getActiveMode(),
+    ),
 )
 
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -1520,6 +1511,18 @@ def _build_entities(
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
         )
+        # add device-class-specific entities
+        if isinstance(device.api, FloorHeating):
+            entities.extend(
+                ViCareSensor(
+                    description,
+                    get_device_serial(device.api),
+                    device.config,
+                    device.api,
+                )
+                for description in FLOOR_HEATING_SENSORS
+                if is_supported(description.key, description.value_getter, device.api)
+            )
         # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
