@@ -338,6 +338,124 @@ async def test_migrate_property_unique_ids_skipped_when_no_velbus_identifier(
     assert entity_registry.async_get_entity_id("select", DOMAIN, "test_serial-0")
 
 
+async def test_migrate_property_unique_ids_skipped_when_no_device_id(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration is skipped when the entity has no device_id."""
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-0",
+        config_entry=config_entry,
+        original_name="Selected program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_NAME_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("select", DOMAIN, "test_serial-0")
+
+
+async def test_migrate_property_unique_ids_skipped_for_sub_device(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration is skipped for sub-devices (via_device_id is set)."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+    )
+    sub_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1-2")},
+        via_device=(DOMAIN, "1"),
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-0",
+        config_entry=config_entry,
+        device_id=sub_device.id,
+        original_name="Selected program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_NAME_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("select", DOMAIN, "test_serial-0")
+
+
+async def test_migrate_property_unique_ids_skipped_when_no_original_name(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration is skipped when the entity has no original_name."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-0",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_NAME_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("select", DOMAIN, "test_serial-0")
+
+
+async def test_migrate_property_unique_ids_skipped_when_name_not_in_map(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration is skipped when original_name is not a known property."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "test_serial-0",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="Some regular channel",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_NAME_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test_serial-0")
+
+
 async def test_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
