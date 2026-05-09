@@ -154,7 +154,7 @@ class LetPotSelectEntity[_DataT: LetPotDeviceStatus](
 ):
     """Defines a LetPot select entity."""
 
-    entity_description: LetPotSelectEntityDescription
+    entity_description: LetPotSelectEntityDescription[_DataT]
 
     def __init__(
         self,

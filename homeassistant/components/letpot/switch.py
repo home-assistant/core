@@ -102,7 +102,7 @@ class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
 ):
     """Defines a LetPot switch entity."""
 
-    entity_description: LetPotSwitchEntityDescription
+    entity_description: LetPotSwitchEntityDescription[_DataT]
 
     def __init__(
         self,

@@ -113,7 +113,7 @@ class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
 ):
     """Defines a LetPot number entity."""
 
-    entity_description: LetPotNumberEntityDescription
+    entity_description: LetPotNumberEntityDescription[_DataT]
 
     def __init__(
         self,
