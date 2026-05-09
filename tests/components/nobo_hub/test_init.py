@@ -60,7 +60,7 @@ async def test_setup_rediscovery_updates_ip(
     assert mock_nobo_class.call_args_list[1].kwargs["ip"] == NEW_IP
 
 
-async def test_setup_aborts_when_rediscovery_finds_nothing(
+async def test_setup_retries_when_rediscovery_finds_nothing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
@@ -83,7 +83,7 @@ async def test_setup_aborts_when_rediscovery_finds_nothing(
     }
 
 
-async def test_setup_aborts_when_rediscovered_ip_also_fails(
+async def test_setup_retries_when_rediscovered_ip_also_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
