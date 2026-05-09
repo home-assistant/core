@@ -1086,6 +1086,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/microbees/ @microBeesTech
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
+/homeassistant/components/mijn_ista/ @aalaei
+/tests/components/mijn_ista/ @aalaei
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen

@@ -445,6 +445,7 @@ FLOWS = {
         "metoffice",
         "microbees",
         "miele",
+        "mijn_ista",
         "mikrotik",
         "mill",
         "minecraft_server",
