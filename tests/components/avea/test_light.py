@@ -5,14 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.avea.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -32,20 +31,9 @@ def mock_bulb() -> MagicMock:
 
 
 @pytest.fixture
-def mock_entry() -> MockConfigEntry:
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Bedroom",
-        unique_id=AVEA_DISCOVERY_INFO.address,
-        data={CONF_ADDRESS: AVEA_DISCOVERY_INFO.address},
-    )
-
-
-@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_bulb: MagicMock,
 ) -> AsyncGenerator[MagicMock]:
     """Set up the integration."""
@@ -56,8 +44,8 @@ async def setup_integration(
         ),
         patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
     ):
-        mock_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield mock_bulb
 
@@ -128,13 +116,13 @@ async def test_update_state(hass: HomeAssistant, setup_integration: MagicMock) -
 
 async def test_remove_entry_closes_bulb(
     hass: HomeAssistant,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     setup_integration: MagicMock,
 ) -> None:
     """Test removing the entry closes the bulb."""
     bulb = setup_integration
     bulb.close.reset_mock()
 
-    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
 
     bulb.close.assert_called_once()

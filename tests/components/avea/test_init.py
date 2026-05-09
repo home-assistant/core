@@ -2,29 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import AVEA_DISCOVERY_INFO
-
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a mock Avea config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="Bedroom",
-        unique_id=AVEA_DISCOVERY_INFO.address,
-        data={CONF_ADDRESS: AVEA_DISCOVERY_INFO.address},
-    )
 
 
 def _mock_discovered_bulb(
@@ -143,4 +127,32 @@ async def test_yaml_import_handles_when_no_bulbs_are_discovered(
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_no_bulbs"
+    )
+
+
+async def test_yaml_import_handles_when_no_bulbs_can_be_imported(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import completes when all bulbs fail validation."""
+    bulbs = [
+        _mock_discovered_bulb(
+            "AA:BB:CC:DD:EE:FF",
+            "Bedroom",
+            name_side_effect=RuntimeError("boom"),
+        )
+    ]
+
+    await _setup_yaml_import(hass, bulbs)
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    bulbs[0].close.assert_called_once()
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_no_bulbs"
     )

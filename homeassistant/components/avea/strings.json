@@ -26,6 +26,10 @@
     "deprecated_yaml": {
       "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_no_bulbs": {
+      "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future release. While importing your YAML configuration, Home Assistant could not discover any Avea bulbs. Make sure the bulbs are powered on, nearby, and reachable over Bluetooth, then restart Home Assistant. If you no longer use the YAML configuration, remove the `{domain}` entry from your `configuration.yaml` file.",
+      "title": "Avea YAML configuration import failed"
     }
   }
 }

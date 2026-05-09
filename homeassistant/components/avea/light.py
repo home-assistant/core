@@ -21,7 +21,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -30,10 +29,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, INTEGRATION_TITLE, MANUFACTURER, MODEL
+from .const import DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
+BREAKS_IN_HA_VERSION = "2026.12.0"
 
 
 def _create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
@@ -42,12 +42,30 @@ def _create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.10.0",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+def _create_yaml_import_failed_issue(hass: HomeAssistant) -> None:
+    """Create a repair issue when the Avea YAML import cannot find bulbs."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_import_issue_no_bulbs",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_import_issue_no_bulbs",
         translation_placeholders={
             "domain": DOMAIN,
             "integration_title": INTEGRATION_TITLE,
@@ -61,7 +79,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities([AveaLight(entry.runtime_data, entry)], update_before_add=True)
+    async_add_entities([AveaLight(entry.runtime_data)], update_before_add=True)
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -69,7 +87,7 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
     discovered_bulbs: list[dict[str, str]] = []
 
     for bulb in avea.discover_avea_bulbs():
-        address = getattr(bulb.addr, "address", bulb.addr)
+        address = bulb.addr
         try:
             name = bulb.get_name()
             brightness = bulb.get_brightness()
@@ -113,6 +131,9 @@ async def async_setup_platform(
     except UPDATE_EXCEPTIONS as err:
         raise PlatformNotReady("Could not discover Avea bulbs for YAML import") from err
 
+    if not bulbs:
+        _create_yaml_import_failed_issue(hass)
+
     for bulb in bulbs:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -131,16 +152,6 @@ async def async_setup_platform(
             )
             continue
 
-        if result.get("type") not in {
-            FlowResultType.ABORT,
-            FlowResultType.CREATE_ENTRY,
-        }:
-            _LOGGER.warning(
-                "Unexpected result while importing Avea bulb %s: %s",
-                bulb[CONF_ADDRESS],
-                result.get("type"),
-            )
-
     _create_deprecated_yaml_issue(hass)
 
 
@@ -150,19 +161,11 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
+    def __init__(self, light: avea.Bulb) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = entry.title
-        self._attr_unique_id = entry.data[CONF_ADDRESS]
+        self._attr_name = light.name
         self._attr_brightness = light.brightness
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            connections={(CONNECTION_BLUETOOTH, self._attr_unique_id)},
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            name=entry.title,
-        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
