@@ -198,4 +198,4 @@ async def test_coordinator_device_removal(
 
     # Entity should no longer exist after device removal
     entity_reg = er.async_get(hass)
-    assert entity_reg.async_get(ENTITY_LIGHT) is None
+    assert entity_registry.async_get(ENTITY_LIGHT) is None
