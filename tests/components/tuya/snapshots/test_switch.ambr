@@ -1842,12 +1842,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auto trigger siren',
+    'object_id_base': 'Auto-trigger siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto trigger siren',
+    'original_name': 'Auto-trigger siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1860,7 +1860,7 @@
 # name: test_platform_setup_and_discovery[switch.c9_auto_trigger_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Auto trigger siren',
+      'friendly_name': 'C9 Auto-trigger siren',
     }),
     'context': <ANY>,
     'entity_id': 'switch.c9_auto_trigger_siren',
@@ -9247,12 +9247,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auto trigger siren',
+    'object_id_base': 'Auto-trigger siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto trigger siren',
+    'original_name': 'Auto-trigger siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -9265,7 +9265,7 @@
 # name: test_platform_setup_and_discovery[switch.security_camera_auto_trigger_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Auto trigger siren',
+      'friendly_name': 'Security Camera Auto-trigger siren',
     }),
     'context': <ANY>,
     'entity_id': 'switch.security_camera_auto_trigger_siren',
