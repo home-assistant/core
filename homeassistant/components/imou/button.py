@@ -1,7 +1,5 @@
 """Support for Imou button controls."""
 
-from __future__ import annotations
-
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 

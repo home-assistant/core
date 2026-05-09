@@ -1,7 +1,5 @@
 """An abstract class common to all Imou entities."""
 
-from __future__ import annotations
-
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo

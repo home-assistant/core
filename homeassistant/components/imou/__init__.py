@@ -1,7 +1,5 @@
 """Support for Imou devices."""
 
-from __future__ import annotations
-
 import logging
 
 from pyimouapi.device import ImouDeviceManager

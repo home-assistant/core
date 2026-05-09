@@ -29,9 +29,6 @@
       "mute": {
         "name": "Mute"
       },
-      "restart_device": {
-        "name": "Restart device"
-      },
       "ptz_down": {
         "name": "PTZ down"
       },
@@ -43,6 +40,9 @@
       },
       "ptz_up": {
         "name": "PTZ up"
+      },
+      "restart_device": {
+        "name": "Restart device"
       }
     }
   },
