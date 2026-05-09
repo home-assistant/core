@@ -74,7 +74,6 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
             identifiers={
                 (DOMAIN, f"{client.device.system_id}_{zone_name.zone_number}"),
             },
-            name=zone_name.zone_name,
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
