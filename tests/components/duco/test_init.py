@@ -14,9 +14,11 @@ from duco_connectivity import (
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_HOST
+from .conftest import TEST_HOST, TEST_MAC
 
 from tests.common import MockConfigEntry
 
@@ -78,6 +80,37 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_duco_client")
+async def test_cleanup_orphaned_temperature_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that stale temperature entity entries from prior versions are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    old_unique_ids = [
+        f"{TEST_MAC}_1_box_temperature",
+        f"{TEST_MAC}_2_temperature",
+    ]
+    for unique_id in old_unique_ids:
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            "duco",
+            unique_id,
+            config_entry=mock_config_entry,
+        )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id in old_unique_ids:
+        assert (
+            entity_registry.async_get_entity_id(Platform.SENSOR, "duco", unique_id)
+            is None
+        )
 
 
 async def test_setup_entry_creates_http_client(

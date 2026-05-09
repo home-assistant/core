@@ -59,7 +59,9 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
             if state != VentilationState.UNKNOWN
         ],
         value_fn=lambda node: (
-            node.ventilation.state.lower() if node.ventilation else None
+            node.ventilation.state.lower()
+            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            else None
         ),
         node_types=(NodeType.BOX,),
     ),

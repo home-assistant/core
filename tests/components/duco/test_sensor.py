@@ -11,13 +11,14 @@ from duco_connectivity import (
     NodeSensorInfo,
     NodeType,
     NodeVentilationInfo,
+    VentilationState,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -355,3 +356,40 @@ async def test_unknown_node_logged_at_debug(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "has an unsupported device type" in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_ventilation_state_unknown_returns_state_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
+    box_node = next(n for n in mock_nodes if n.general.node_type == "BOX")
+    updated_nodes = [
+        Node(
+            node_id=box_node.node_id,
+            general=box_node.general,
+            ventilation=NodeVentilationInfo(
+                state=VentilationState.UNKNOWN,
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=box_node.sensor,
+        )
+        if n is box_node
+        else n
+        for n in mock_nodes
+    ]
+    mock_duco_client.async_get_nodes.return_value = updated_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation_state")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
