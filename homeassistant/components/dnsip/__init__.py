@@ -51,14 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
         udp_port=entry.options[CONF_PORT_IPV6],
     )
 
-    queries = [
-        resolver_ipv4.query(hostname, "A"),
-        resolver_ipv6.query(hostname, "AAAA"),
-    ]
-
     try:
         async with asyncio.timeout(10):
-            results = await asyncio.gather(*queries, return_exceptions=True)
+            results = await asyncio.gather(
+                resolver_ipv4.query(hostname, "A"),
+                resolver_ipv6.query(hostname, "AAAA"),
+                return_exceptions=True,
+            )
     except TimeoutError as err:
         await resolver_ipv4.close()
         await resolver_ipv6.close()

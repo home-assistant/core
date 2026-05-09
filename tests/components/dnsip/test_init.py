@@ -275,5 +275,3 @@ async def test_setup_dns_timeout(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
