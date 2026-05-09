@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:clock-check-outline',
+    'original_icon': None,
     'original_name': 'Next departure 1',
     'platform': 'data_grand_lyon',
     'previous_unique_id': None,
@@ -41,7 +41,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'C3 - Stop 100 Next departure 1',
-      'icon': 'mdi:clock-check-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_1',
@@ -187,7 +186,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:clock-outline',
+    'original_icon': None,
     'original_name': 'Next departure 2',
     'platform': 'data_grand_lyon',
     'previous_unique_id': None,
@@ -203,7 +202,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'C3 - Stop 100 Next departure 2',
-      'icon': 'mdi:clock-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.c3_stop_100_next_departure_2',
