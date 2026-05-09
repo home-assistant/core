@@ -61,7 +61,7 @@ async def test_user_flow_success(
         CONF_MODEL: MarantzModel.PM6006,
         CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
     }
-    assert result["result"].unique_id == f"marantz_ir_pm6006_{MOCK_INFRARED_ENTITY_ID}"
+    assert result["result"].unique_id == f"pm6006_{MOCK_INFRARED_ENTITY_ID}"
 
 
 @pytest.mark.usefixtures("setup_infrared")

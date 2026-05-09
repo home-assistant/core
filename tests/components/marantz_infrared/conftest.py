@@ -54,7 +54,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_MODEL: MarantzModel.PM6006,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
-        unique_id=f"marantz_ir_pm6006_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"pm6006_{MOCK_INFRARED_ENTITY_ID}",
     )
 
 

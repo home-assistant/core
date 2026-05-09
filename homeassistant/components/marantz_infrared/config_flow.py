@@ -42,7 +42,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
             entity_id = user_input[CONF_INFRARED_ENTITY_ID]
             model = user_input[CONF_MODEL]
 
-            await self.async_set_unique_id(f"marantz_ir_{model}_{entity_id}")
+            await self.async_set_unique_id(f"{model}_{entity_id}")
             self._abort_if_unique_id_configured()
 
             ent_reg = er.async_get(self.hass)
