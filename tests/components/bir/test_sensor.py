@@ -115,3 +115,44 @@ async def test_sensor_unavailable_when_waste_type_missing(
     state = hass.states.get("sensor.teststreet_1_bergen_mixed_waste_days_until_pickup")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_unique_ids_remain_stable_after_reconfigure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_address_search: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor unique IDs do not change after reconfigure."""
+    expected_unique_ids = {
+        f"{mock_config_entry.entry_id}_{description.key}" for description in SENSORS
+    }
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in entity_entries} == expected_unique_ids
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Testveien"},
+    )
+
+    with patch(
+        "homeassistant.components.bir.config_flow.BirClient.authenticate",
+        new_callable=AsyncMock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"selected_address": "67890"},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entity_entries) == len(SENSORS)
+    assert {entry.unique_id for entry in entity_entries} == expected_unique_ids

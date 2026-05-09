@@ -1,7 +1,5 @@
 """Config flow for the BIR integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pybirno import Address, BirClient, BirError
