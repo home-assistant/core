@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr  # , entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 
@@ -98,45 +98,75 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
         finally:
             await AirtouchDiscovery_instance.close()
         # looking for climate entities
-        # entity_registry = er.async_get(hass)
-        # for entity in entity_registry.entities.values():
-        #     new_unique_id = None  # initialize
-        #     if entity.platform == DOMAIN:
-        #         if entity.domain == "climate":
-        #             if entity.unique_id.startswith("zone_"):
-        #                 zone_number = entity.unique_id.split("_")[1]
-        #                 new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
-        #             elif entity.unique_id.startswith("ac_"):
-        #                 new_unique_id = f"{airtouch_device.system_id}"
-        #             else:
-        #                 continue
-        #         elif entity.domain == "cover":
-        #             zone_number = entity.unique_id.split("_")[1]
-        #             new_unique_id = (
-        #                 f"{airtouch_device.system_id}_{zone_number}_open_percentage"
-        #             )
-        #         else:
-        #             continue
-        #         entity_id = entity_registry.async_get_entity_id(
-        #             entity.domain, DOMAIN, entity.unique_id
-        #         )
-        #         assert entity_id is not None
-        #         entity_entry = entity_registry.async_get(entity_id)
-        #         assert entity_entry is not None
+        entity_registry = er.async_get(hass)
 
-        #         entity_registry.async_update_entity(
-        #             entity_entry.entity_id, new_unique_id=new_unique_id
-        #         )
+        for entity in list(entity_registry.entities.values()):
+            if entity.platform != DOMAIN:
+                continue
 
-        #         _LOGGER.debug(
-        #             "Found entity: %s (unique_id=%s) new ID=%s",
-        #             entity.entity_id,
-        #             entity.unique_id,
-        #             new_unique_id,
-        #         )
-        device_registry = dr.async_get(hass)
-        update_device_id(airtouch_device, device_registry)
+            new_unique_id = build_new_unique_id(
+                entity.unique_id,
+                airtouch_device.system_id,
+            )
+
+            # nothing to do
+            if not new_unique_id:
+                continue
+
+            # already correct → skip
+            if entity.unique_id == new_unique_id:
+                continue
+
+            # optional safety check: prevent accidental overwrite
+            existing = entity_registry.async_get_entity_id(
+                entity.domain,
+                DOMAIN,
+                new_unique_id,
+            )
+
+            if existing and existing != entity.entity_id:
+                _LOGGER.warning(
+                    "Skipping %s → %s (already used)",
+                    entity.unique_id,
+                    new_unique_id,
+                )
+                continue
+
+            entity_registry.async_update_entity(
+                entity.entity_id,
+                new_unique_id=new_unique_id,
+            )
+            _LOGGER.info(
+                "Found entity: %s (unique_id=%s) new ID=%s",
+                entity.entity_id,
+                entity.unique_id,
+                new_unique_id,
+            )
+    # device_registry = dr.async_get(hass)
+    # update_device_id(airtouch_device, device_registry)
     return True
+
+
+def build_new_unique_id(old_uid: str, system_id: str) -> str | None:
+    """Map legacy Airtouch IDs to new stable format."""
+
+    # already migrated → skip
+    if old_uid.startswith(f"{system_id}_"):
+        return None
+
+    # legacy AC
+    if old_uid.startswith("ac_"):
+        return f"{system_id}_ac"
+
+    # legacy zones
+    if old_uid.startswith("zone_"):
+        parts = old_uid.split("_")
+        if len(parts) < 2:
+            return None
+        zone = parts[1]
+        return f"{system_id}_{zone}"
+
+    return None
 
 
 def update_device_id(
