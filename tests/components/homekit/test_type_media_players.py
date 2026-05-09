@@ -831,6 +831,36 @@ async def test_television_input_visibility_unhide(
     assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 4"]}
 
 
+async def test_television_input_visibility_unhide_last_clears_key(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """When the last hidden source is unhidden, the options key is removed."""
+    entity_id = "media_player.television"
+    entry = MockConfigEntry(
+        domain="homekit",
+        options={CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 2"]}},
+    )
+    entry.add_to_hass(hass)
+    hk_driver.entry_id = entry.entry_id
+
+    _make_television_state(hass, entity_id)
+    await hass.async_block_till_done()
+
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    _, char_target = _input_visibility_chars(acc, "HDMI 2")
+    char_target.client_update_value(0)
+    await hass.async_block_till_done()
+
+    acc._visibility_debouncer.async_cancel()
+    await acc._async_persist_hidden_sources()
+    await hass.async_block_till_done()
+
+    assert CONF_HOMEKIT_HIDDEN_SOURCES not in entry.options
+
+
 async def test_television_input_visibility_round_trip(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

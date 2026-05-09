@@ -1,7 +1,6 @@
 """Class to hold remote accessories."""
 
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -15,6 +14,7 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -57,14 +57,10 @@ from .const import (
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
 )
+from .models import HomeKitEntryData
 from .util import cleanup_name_for_homekit
 
 VISIBILITY_PERSIST_COOLDOWN = 1.0
-
-# Per-entry locks serialise the read-modify-write of entry.options so that
-# concurrent visibility persists from sibling accessories on the same bridge
-# can't drop each other's updates.
-_VISIBILITY_PERSIST_LOCKS: dict[str, asyncio.Lock] = {}
 
 MAXIMUM_SOURCES = (
     90  # Maximum services per accessory is 100. The base acccessory uses 9
@@ -215,23 +211,43 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         entry_id = self.driver.entry_id
         if not entry_id:
             return
-        if (lock := _VISIBILITY_PERSIST_LOCKS.get(entry_id)) is None:
-            lock = _VISIBILITY_PERSIST_LOCKS[entry_id] = asyncio.Lock()
-        async with lock:
-            entry = self.hass.config_entries.async_get_entry(entry_id)
-            if entry is None:
-                return
-            new_options = dict(entry.options)
-            hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
-            sorted_sources = sorted(self._hidden_sources)
-            if sorted_sources:
-                hidden_map[self.entity_id] = sorted_sources
-            else:
-                hidden_map.pop(self.entity_id, None)
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return
+        # Serialise the read-modify-write so sibling accessories on the same
+        # bridge can't drop each other's updates. The lock lives on the entry's
+        # runtime data and is reclaimed with the entry on unload; if runtime
+        # data isn't present (unit tests that build accessories directly) we
+        # fall through without locking — there's no real concurrency in those.
+        entry_data = getattr(entry, "runtime_data", None)
+        lock = (
+            entry_data.visibility_lock
+            if isinstance(entry_data, HomeKitEntryData)
+            else None
+        )
+        if lock is not None:
+            async with lock:
+                self._async_write_hidden_sources(entry)
+        else:
+            self._async_write_hidden_sources(entry)
+
+    @callback
+    def _async_write_hidden_sources(self, entry: ConfigEntry) -> None:
+        """Compute and apply the new options for this entity's hide list."""
+        new_options = dict(entry.options)
+        hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
+        sorted_sources = sorted(self._hidden_sources)
+        if sorted_sources:
+            hidden_map[self.entity_id] = sorted_sources
+        else:
+            hidden_map.pop(self.entity_id, None)
+        if hidden_map:
             new_options[CONF_HOMEKIT_HIDDEN_SOURCES] = hidden_map
-            if new_options == dict(entry.options):
-                return
-            self.hass.config_entries.async_update_entry(entry, options=new_options)
+        else:
+            new_options.pop(CONF_HOMEKIT_HIDDEN_SOURCES, None)
+        if new_options == dict(entry.options):
+            return
+        self.hass.config_entries.async_update_entry(entry, options=new_options)
 
     @callback
     def async_stop(self) -> None:
