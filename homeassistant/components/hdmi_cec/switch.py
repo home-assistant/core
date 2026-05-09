@@ -1,5 +1,7 @@
 """Support for HDMI CEC devices as switches."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 

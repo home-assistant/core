@@ -1,5 +1,7 @@
 """Support for HDMI CEC devices as media players."""
 
+from __future__ import annotations
+
 import logging
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
