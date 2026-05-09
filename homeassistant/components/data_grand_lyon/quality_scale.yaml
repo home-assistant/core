@@ -62,7 +62,6 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  entity-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
