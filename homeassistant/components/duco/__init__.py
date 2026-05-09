@@ -1,5 +1,7 @@
 """The Duco integration."""
 
+import re
+
 from duco_connectivity import DucoClient
 
 from homeassistant.const import CONF_HOST
@@ -9,6 +11,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
 from .coordinator import DucoConfigEntry, DucoCoordinator
+
+_REMOVED_SENSOR_RE = re.compile(r"_\d+_(box_)?temperature$")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
@@ -23,13 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
-    # Remove entity registry entries for sensors that were removed in a
-    # previous version of the integration (temperature and box_temperature).
+    # Remove entity registry entries for the temperature and box_temperature
+    # sensors that were removed when migrating to python-duco-connectivity.
     entity_registry = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
-        if entity_entry.unique_id.endswith(("_temperature", "_box_temperature")):
+        if _REMOVED_SENSOR_RE.search(entity_entry.unique_id):
             entity_registry.async_remove(entity_entry.entity_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
