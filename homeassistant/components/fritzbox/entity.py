@@ -16,6 +16,8 @@ from .coordinator import FritzboxDataUpdateCoordinator
 class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
     """Basis FritzBox entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: FritzboxDataUpdateCoordinator,
@@ -27,11 +29,9 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
         self.ain = ain
         if entity_description is not None:
-            self._attr_has_entity_name = True
             self.entity_description = entity_description
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
-            self._attr_name = self.data.name
             self._attr_unique_id = ain
 
     @property
