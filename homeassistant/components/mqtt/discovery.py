@@ -601,7 +601,7 @@ async def async_start(  # noqa: C901
             hass,
             topic,
             async_discovery_message_received,
-            0,
+            2,
             job_type=HassJobType.Callback,
         )
         # Subscribe first for platform discovery wildcard topics first,

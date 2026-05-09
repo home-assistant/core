@@ -1798,8 +1798,8 @@ async def test_subscription_done_when_birth_message_is_sent(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     for component in SUPPORTED_COMPONENTS:
-        assert (f"homeassistant/{component}/+/config", 0) in subscribe_calls
-        assert (f"homeassistant/{component}/+/+/config", 0) in subscribe_calls
+        assert (f"homeassistant/{component}/+/config", 2) in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 2) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )
