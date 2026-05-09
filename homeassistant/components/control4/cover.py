@@ -1,6 +1,5 @@
 """Platform for Control4 Covers (blinds and shades)."""
 
-
 from datetime import timedelta
 import logging
 from typing import Any
