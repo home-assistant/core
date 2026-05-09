@@ -156,7 +156,7 @@ def build_new_unique_id(old_uid: str, system_id: str) -> str | None:
 
     # legacy AC
     if old_uid.startswith("ac_"):
-        return f"{system_id}_ac"
+        return f"{system_id}"
 
     # legacy zones
     if old_uid.startswith("zone_"):
