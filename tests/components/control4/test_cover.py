@@ -1,12 +1,15 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -24,11 +27,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_component, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -316,16 +319,17 @@ async def test_cover_partial_variables(
 )
 async def test_cover_unavailable_when_data_disappears(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cover_variables: dict,
 ) -> None:
     """Cover becomes unavailable if coordinator stops returning its idx."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    component: entity_component.EntityComponent = hass.data[COVER_DOMAIN]
-    entity = component.get_entity(ENTITY_ID)
-    assert entity is not None
-    entity.coordinator.async_set_updated_data({})
+    mock_cover_variables.clear()
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
