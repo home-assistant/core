@@ -1,6 +1,7 @@
 """Test the backups for WebDAV."""
 
-from collections.abc import AsyncGenerator, AsyncIterator
+import asyncio
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable
 from copy import deepcopy
 from io import StringIO
 from unittest.mock import Mock, patch
@@ -498,3 +499,53 @@ async def test_agents_list_backups_skips_invalid_metadata_file(
             "with_automatic_settings": None,
         }
     ]
+
+
+async def test_agents_list_backups_downloads_metadata_in_four_streams(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    webdav_client: AsyncMock,
+) -> None:
+    """Test listing backups downloads metadata files four at a time."""
+    metadata_paths = [f"/backup-{idx}.metadata.json" for idx in range(5)]
+    metadata_by_path = {}
+    for idx, metadata_path in enumerate(metadata_paths):
+        backup = deepcopy(BACKUP_METADATA)
+        backup["backup_id"] = f"backup-{idx}"
+        backup["name"] = f"Backup {idx}"
+        metadata_by_path[metadata_path] = backup
+
+    async def _download_metadata(
+        path: str, timeout: object = None
+    ) -> AsyncIterator[bytes]:
+        yield json_dumps(metadata_by_path[path]).encode()
+
+    async def _gather_with_limited_concurrency(
+        limit: int,
+        *tasks: Awaitable[AgentBackup | None],
+        return_exceptions: bool = False,
+    ) -> list[AgentBackup | None]:
+        assert limit == 4
+        assert len(tasks) == len(metadata_paths)
+        assert not return_exceptions
+        return await asyncio.gather(*tasks)
+
+    webdav_client.list_files.return_value = ["/backup-0.tar", *metadata_paths]
+    webdav_client.download_iter.side_effect = _download_metadata
+
+    with patch(
+        "homeassistant.components.webdav.backup.gather_with_limited_concurrency",
+        side_effect=_gather_with_limited_concurrency,
+    ) as gather_mock:
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+
+    assert gather_mock.call_count == 1
+    assert webdav_client.download_iter.call_count == len(metadata_paths)
+    assert {backup["backup_id"] for backup in response["result"]["backups"]} == {
+        f"backup-{idx}" for idx in range(5)
+    }
