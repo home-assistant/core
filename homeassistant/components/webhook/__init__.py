@@ -248,6 +248,7 @@ class WebhookView(HomeAssistantView):
         "type": "webhook/list",
     }
 )
+@websocket_api.require_admin
 @callback
 def websocket_list(
     hass: HomeAssistant,
