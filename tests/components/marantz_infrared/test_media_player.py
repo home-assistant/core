@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from infrared_protocols.codes.marantz.pm6006 import MarantzPM6006Code
+from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -37,7 +37,7 @@ from tests.common import (
     snapshot_platform,
 )
 
-MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_amplifier_pm6006"
+MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_pm6006_integrated_amplifier"
 
 
 @pytest.fixture
@@ -71,11 +71,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_code"),
     [
-        (SERVICE_TURN_ON, {}, MarantzPM6006Code.POWER),
-        (SERVICE_TURN_OFF, {}, MarantzPM6006Code.POWER),
-        (SERVICE_VOLUME_UP, {}, MarantzPM6006Code.VOLUME_UP),
-        (SERVICE_VOLUME_DOWN, {}, MarantzPM6006Code.VOLUME_DOWN),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, MarantzPM6006Code.MUTE),
+        (SERVICE_TURN_ON, {}, MarantzAudioCode.POWER),
+        (SERVICE_TURN_OFF, {}, MarantzAudioCode.POWER),
+        (SERVICE_VOLUME_UP, {}, MarantzAudioCode.VOLUME_UP),
+        (SERVICE_VOLUME_DOWN, {}, MarantzAudioCode.VOLUME_DOWN),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, MarantzAudioCode.MUTE),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -84,7 +84,7 @@ async def test_media_player_action_sends_correct_code(
     mock_infrared_entity: MockInfraredEntity,
     service: str,
     service_data: dict[str, bool],
-    expected_code: MarantzPM6006Code,
+    expected_code: MarantzAudioCode,
 ) -> None:
     """Test each media player action sends the correct IR code."""
     await hass.services.async_call(
@@ -101,13 +101,13 @@ async def test_media_player_action_sends_correct_code(
 @pytest.mark.parametrize(
     ("source", "expected_code"),
     [
-        ("cd", MarantzPM6006Code.SOURCE_CD),
-        ("recorder", MarantzPM6006Code.SOURCE_CDR),
-        ("phono", MarantzPM6006Code.SOURCE_PHONO),
-        ("tuner", MarantzPM6006Code.SOURCE_TUNER),
-        ("coax", MarantzPM6006Code.SOURCE_COAX),
-        ("network", MarantzPM6006Code.SOURCE_NETWORK),
-        ("optical", MarantzPM6006Code.SOURCE_OPTICAL),
+        ("cd", MarantzAudioCode.SOURCE_CD),
+        ("recorder", MarantzAudioCode.SOURCE_CDR),
+        ("phono", MarantzAudioCode.SOURCE_PHONO),
+        ("tuner", MarantzAudioCode.SOURCE_TUNER),
+        ("coax", MarantzAudioCode.SOURCE_COAX),
+        ("network", MarantzAudioCode.SOURCE_NETWORK),
+        ("optical", MarantzAudioCode.SOURCE_OPTICAL),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -115,7 +115,7 @@ async def test_media_player_select_source(
     hass: HomeAssistant,
     mock_infrared_entity: MockInfraredEntity,
     source: str,
-    expected_code: MarantzPM6006Code,
+    expected_code: MarantzAudioCode,
 ) -> None:
     """Test selecting a source sends the correct IR code and updates state."""
     await hass.services.async_call(
@@ -168,8 +168,8 @@ async def test_turn_on_off_update_assumed_state(
     assert state.state == "on"
 
     assert mock_infrared_entity.send_command_calls == [
-        MarantzPM6006Code.POWER,
-        MarantzPM6006Code.POWER,
+        MarantzAudioCode.POWER,
+        MarantzAudioCode.POWER,
     ]
 
 
@@ -206,7 +206,7 @@ async def test_restores_state_source_and_mute(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_entity: MockInfraredEntity,
-    mock_make_marantz_amplifier_command: None,
+    mock_marantz_to_command: None,
     restored_state: MediaPlayerState,
 ) -> None:
     """State, source, and mute survive a restart even from the OFF state.

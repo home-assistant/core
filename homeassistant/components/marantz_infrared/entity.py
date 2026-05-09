@@ -2,7 +2,8 @@
 
 import logging
 
-from infrared_protocols.codes.marantz.pm6006 import MarantzPM6006Code, make_command
+from infrared_protocols.codes.marantz import models as marantz_models
+from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.const import STATE_UNAVAILABLE
@@ -12,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import MarantzIrConfigEntry
-from .const import CONF_MODEL, DOMAIN, MODEL_DISPLAY_NAMES, MODEL_IDS, MarantzModel
+from .const import CONF_MODEL, DOMAIN, MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +33,13 @@ class MarantzIrEntity(Entity):
         self._infrared_entity_id = infrared_entity_id
         self._runtime_data = entry.runtime_data
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
-        model = MarantzModel(entry.data[CONF_MODEL])
+        lib_model = MODELS[entry.data[CONF_MODEL]]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Marantz {MODEL_DISPLAY_NAMES[model]}",
+            name=f"Marantz {lib_model.name}",
             manufacturer="Marantz",
-            model=MODEL_IDS.get(model),
+            # Generic catch-all entries aren't a specific physical product.
+            model=None if lib_model is marantz_models.GENERIC else lib_model.name,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -73,7 +75,7 @@ class MarantzIrEntity(Entity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    async def _send_command(self, code: MarantzPM6006Code) -> None:
+    async def _send_command(self, code: MarantzAudioCode) -> None:
         """Send an IR command using the Marantz protocol.
 
         Flips the RC-5 toggle bit before each frame so the receiver
@@ -83,6 +85,6 @@ class MarantzIrEntity(Entity):
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            make_command(code, toggle=self._runtime_data.toggle),
+            code.to_command(toggle=self._runtime_data.toggle),
             context=self._context,
         )

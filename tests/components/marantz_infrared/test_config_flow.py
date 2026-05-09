@@ -10,7 +10,6 @@ from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
-    MarantzModel,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -49,18 +48,21 @@ async def test_user_flow_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MODEL: MarantzModel.PM6006,
+            CONF_MODEL: "pm6006_integrated_amplifier",
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Amplifier PM6006"
+    assert result["title"] == "PM6006 Integrated Amplifier"
     assert result["data"] == {
-        CONF_MODEL: MarantzModel.PM6006,
+        CONF_MODEL: "pm6006_integrated_amplifier",
         CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
     }
-    assert result["result"].unique_id == f"pm6006_{MOCK_INFRARED_ENTITY_ID}"
+    assert (
+        result["result"].unique_id
+        == f"pm6006_integrated_amplifier_{MOCK_INFRARED_ENTITY_ID}"
+    )
 
 
 @pytest.mark.usefixtures("setup_infrared")
@@ -79,7 +81,7 @@ async def test_user_flow_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MODEL: MarantzModel.PM6006,
+            CONF_MODEL: "pm6006_integrated_amplifier",
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
@@ -105,14 +107,14 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("model", "expected_title"),
     [
-        (MarantzModel.GENERIC_AMPLIFIER, "Amplifier"),
-        (MarantzModel.PM6006, "Amplifier PM6006"),
+        ("generic_amplifier", "Generic Amplifier"),
+        ("pm6006_integrated_amplifier", "PM6006 Integrated Amplifier"),
     ],
 )
 async def test_user_flow_title_from_model(
-    hass: HomeAssistant, model: MarantzModel, expected_title: str
+    hass: HomeAssistant, model: str, expected_title: str
 ) -> None:
-    """Test config entry title is the model display name."""
+    """Test config entry title is the model name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

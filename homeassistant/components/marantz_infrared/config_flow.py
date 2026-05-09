@@ -12,18 +12,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_INFRARED_ENTITY_ID,
-    CONF_MODEL,
-    DOMAIN,
-    MODEL_DISPLAY_NAMES,
-    MarantzModel,
-)
+from .const import CONF_INFRARED_ENTITY_ID, CONF_MODEL, DOMAIN, MODELS
 
 
 class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,9 +41,12 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{model}_{entity_id}")
             self._abort_if_unique_id_configured()
 
-            title = MODEL_DISPLAY_NAMES[MarantzModel(model)]
+            return self.async_create_entry(title=MODELS[model].name, data=user_input)
 
-            return self.async_create_entry(title=title, data=user_input)
+        model_options = [
+            SelectOptionDict(value=slug, label=model.name)
+            for slug, model in MODELS.items()
+        ]
 
         return self.async_show_form(
             step_id="user",
@@ -56,7 +54,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
-                            options=[model.value for model in MarantzModel],
+                            options=model_options,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 from infrared_protocols.commands import Command as InfraredCommand
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
-    MarantzModel,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -25,6 +25,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
+MOCK_MODEL = "pm6006_integrated_amplifier"
 
 
 class MockInfraredEntity(InfraredEntity):
@@ -49,12 +50,12 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
-        title="Amplifier PM6006",
+        title="PM6006 Integrated Amplifier",
         data={
-            CONF_MODEL: MarantzModel.PM6006,
+            CONF_MODEL: MOCK_MODEL,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
-        unique_id=f"pm6006_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"{MOCK_MODEL}_{MOCK_INFRARED_ENTITY_ID}",
     )
 
 
@@ -71,16 +72,17 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_make_marantz_amplifier_command() -> Generator[None]:
-    """Patch make_command to return the MarantzPM6006Code directly.
+def mock_marantz_to_command() -> Generator[None]:
+    """Make ``MarantzAudioCode.to_command`` return the code itself.
 
-    This allows tests to assert on the high-level code enum value
-    rather than the raw RC-5 timings.
+    This lets tests assert on the high-level code enum value rather
+    than on the raw RC-5 timings.
     """
-    with patch(
-        "homeassistant.components.marantz_infrared.entity.make_command",
-        side_effect=lambda code, **kwargs: code,
-    ):
+
+    def _identity(self: MarantzAudioCode, repeat_count: int = 0, *, toggle: int = 0):
+        return self
+
+    with patch.object(MarantzAudioCode, "to_command", _identity):
         yield
 
 
@@ -89,7 +91,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_entity: MockInfraredEntity,
-    mock_make_marantz_amplifier_command: None,
+    mock_marantz_to_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Marantz Infrared integration for testing."""
