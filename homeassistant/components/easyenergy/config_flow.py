@@ -20,7 +20,7 @@ class EasyEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()

@@ -48,8 +48,11 @@ async def test_user_flow_cannot_connect(
     mock_easyenergy: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
-    """Test we handle connection errors."""
-    mock_easyenergy.energy_prices.side_effect = EasyEnergyConnectionError
+    """Test we handle connection errors and recover."""
+    mock_easyenergy.energy_prices.side_effect = [
+        EasyEnergyConnectionError,
+        mock_easyenergy.energy_prices.return_value,
+    ]
 
     with patch(
         "homeassistant.components.easyenergy.config_flow.EasyEnergy",
@@ -59,14 +62,25 @@ async def test_user_flow_cannot_connect(
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-    assert len(mock_setup_entry.mock_calls) == 0
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "easyEnergy"
+    assert result["data"] == {}
+
+    assert mock_easyenergy.energy_prices.call_count == 2
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_single_instance(
