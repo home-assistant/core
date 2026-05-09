@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
-    format_mac,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,7 +52,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         model_id = coordinator.device_client.info.model_id
         manufacturer = model_id.split(".")[0]
         model = model_id[len(manufacturer) + 1 :]
-        mac = format_mac(coordinator.device_client.info.mac)
+        mac = coordinator.device_client.info.mac
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},

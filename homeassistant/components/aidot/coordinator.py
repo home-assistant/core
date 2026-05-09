@@ -149,7 +149,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         identifiers = {
             (
                 DOMAIN,
-                f"{device_coordinator.device_client.info.dev_id}",
+                device_coordinator.device_client.info.dev_id,
             )
             for device_coordinator in self.device_coordinators.values()
         }
