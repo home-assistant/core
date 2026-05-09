@@ -1,7 +1,5 @@
 """Functional utility functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from copy import deepcopy
 from operator import contains

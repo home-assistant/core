@@ -583,26 +583,26 @@ async def test_get_action_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     cc_options = [
-        (133, "Association"),
-        (89, "Association Group Information"),
-        (128, "Battery"),
-        (129, "Clock"),
-        (112, "Configuration"),
-        (90, "Device Reset Locally"),
-        (122, "Firmware Update Meta Data"),
-        (135, "Indicator"),
-        (114, "Manufacturer Specific"),
-        (96, "Multi Channel"),
-        (142, "Multi Channel Association"),
-        (49, "Multilevel Sensor"),
-        (115, "Powerlevel"),
-        (68, "Thermostat Fan Mode"),
-        (69, "Thermostat Fan State"),
-        (64, "Thermostat Mode"),
-        (66, "Thermostat Operating State"),
-        (67, "Thermostat Setpoint"),
-        (134, "Version"),
-        (94, "Z-Wave Plus Info"),
+        ("133", "Association"),
+        ("89", "Association Group Information"),
+        ("128", "Battery"),
+        ("129", "Clock"),
+        ("112", "Configuration"),
+        ("90", "Device Reset Locally"),
+        ("122", "Firmware Update Meta Data"),
+        ("135", "Indicator"),
+        ("114", "Manufacturer Specific"),
+        ("96", "Multi Channel"),
+        ("142", "Multi Channel Association"),
+        ("49", "Multilevel Sensor"),
+        ("115", "Powerlevel"),
+        ("68", "Thermostat Fan Mode"),
+        ("69", "Thermostat Fan State"),
+        ("64", "Thermostat Mode"),
+        ("66", "Thermostat Operating State"),
+        ("67", "Thermostat Setpoint"),
+        ("134", "Version"),
+        ("94", "Z-Wave Plus Info"),
     ]
 
     assert voluptuous_serialize.convert(
@@ -649,11 +649,11 @@ async def test_get_action_capabilities(
             "name": "value",
             "required": True,
             "options": [
-                (0, "Disabled"),
-                (1, "0.5° F"),
-                (2, "1.0° F"),
-                (3, "1.5° F"),
-                (4, "2.0° F"),
+                ("0", "Disabled"),
+                ("1", "0.5° F"),
+                ("2", "1.0° F"),
+                ("3", "1.5° F"),
+                ("4", "2.0° F"),
             ],
             "type": "select",
         }
@@ -835,3 +835,22 @@ async def test_unavailable_entity_actions(
         action.get("entity_id") == entity_id_unavailable for action in actions
     )
     assert not any(action.get("entity_id") == binary_sensor.id for action in actions)
+
+
+def test_action_schema_coerces_string_command_class() -> None:
+    """Test that SET_VALUE action schema accepts both int and string command_class."""
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_action.SET_VALUE_SCHEMA(
+            {
+                "device_id": "device123",
+                "domain": DOMAIN,
+                "type": "set_value",
+                "command_class": command_class_value,
+                "property": "targetMode",
+                "value": 255,
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

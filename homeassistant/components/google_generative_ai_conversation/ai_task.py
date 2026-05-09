@@ -1,7 +1,5 @@
 """AI Task integration for Google Generative AI Conversation."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 from typing import TYPE_CHECKING
 

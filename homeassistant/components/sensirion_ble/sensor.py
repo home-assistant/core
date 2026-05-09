@@ -1,7 +1,5 @@
 """Support for Sensirion sensors."""
 
-from __future__ import annotations
-
 from sensor_state_data import (
     DeviceKey,
     SensorDescription,
@@ -109,6 +107,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sensirion BLE sensors."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]

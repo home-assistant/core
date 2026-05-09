@@ -1,7 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 from uuid import UUID

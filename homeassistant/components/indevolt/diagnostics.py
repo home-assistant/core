@@ -1,8 +1,8 @@
 """Diagnostics support for Indevolt integration."""
 
-from __future__ import annotations
-
 from typing import Any
+
+from indevolt_api import IndevoltBattery, IndevoltSystem
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
@@ -15,13 +15,13 @@ from .coordinator import IndevoltConfigEntry
 TO_REDACT = {
     CONF_HOST,
     CONF_SERIAL_NUMBER,
-    "0",
-    "9008",
-    "9032",
-    "9051",
-    "9070",
-    "9218",
-    "9165",
+    IndevoltSystem.SERIAL_NUMBER,
+    IndevoltBattery.MAIN_SERIAL_NUMBER,
+    IndevoltBattery.PACK_1_SERIAL_NUMBER,
+    IndevoltBattery.PACK_2_SERIAL_NUMBER,
+    IndevoltBattery.PACK_3_SERIAL_NUMBER,
+    IndevoltBattery.PACK_4_SERIAL_NUMBER,
+    IndevoltBattery.PACK_5_SERIAL_NUMBER,
 }
 
 

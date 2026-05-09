@@ -1,7 +1,5 @@
 """Preference management for cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid

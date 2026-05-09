@@ -20,6 +20,7 @@ _PAYLOAD_LIGHT_STATE_ON = '{"id":"UL15","properties":{"value":60},"type":"state"
 _PAYLOAD_LIGHT_STATE_BRIGHTNESS = (
     '{"id":"UL15","properties":{"value":' + str(_BRIGHTNESS_PCT) + '},"type":"state"}'
 )
+_PAYLOAD_LIGHT_STATE_EVENT = '{"id":"UL15","action":"on","type":"event"}'
 _PAYLOAD_LIGHT_STATE_OFF = '{"id":"UL15","properties":{"value":0},"type":"state"}'
 
 _PAYLOAD_LIGHT_SET_STATE_ON = '{"id": "UL15", "type": "action", "action": "on"}'
@@ -104,3 +105,37 @@ async def test_light(
     await hass.async_block_till_done()
 
     assert hass.states.get(_LIGHT_ENTITY_ID).state == STATE_OFF
+
+
+async def test_light_ignore_missing_percentage(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_integration: None,
+) -> None:
+    """Test ignoring events without percentage."""
+
+    # Switch ON
+    mqtt_mock.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY_ID},
+        blocking=True,
+    )
+
+    # Simulate response
+    async_fire_mqtt_message(hass, _TOPIC_LIGHT_STATE, _PAYLOAD_LIGHT_STATE_ON)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(_LIGHT_ENTITY_ID)
+    brightness = entity.attributes.get(ATTR_BRIGHTNESS)
+    assert entity.state == STATE_ON
+    assert brightness > 0
+
+    # Simulate additional event response
+    async_fire_mqtt_message(hass, _TOPIC_LIGHT_STATE, _PAYLOAD_LIGHT_STATE_EVENT)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(_LIGHT_ENTITY_ID)
+    assert entity.state == STATE_ON
+    assert entity.attributes.get(ATTR_BRIGHTNESS) == brightness

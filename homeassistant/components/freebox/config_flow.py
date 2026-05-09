@@ -44,6 +44,8 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         self._data = user_input
 
         # Check if already configured
+        # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
+        # pylint: disable-next=hass-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()
 

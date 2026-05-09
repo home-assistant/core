@@ -1,7 +1,5 @@
 """Interface implementation for cloud client."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
@@ -374,6 +372,7 @@ class CloudClient(Interface):
             method=payload["method"],
             query_string=payload["query"],
             mock_source=DOMAIN,
+            remote=None,  # Remote will be used for the local_only check, but since this is from the cloud we want it to be None to mark it as non-local and bypass the ip parsing and remote checks
         )
 
         response = await webhook.async_handle_webhook(

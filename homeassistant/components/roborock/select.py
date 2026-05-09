@@ -8,6 +8,7 @@ from typing import Any
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import (
+    CleanPathPreferenceMapping,
     RoborockDockDustCollectionModeCode,
     RoborockEnum,
     WaterLevelMapping,
@@ -116,6 +117,16 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         api_fn=lambda api, value: api.set_mode(CleanTypeMapping.from_value(value)),
         value_fn=lambda data: data.mode.value if data.mode else None,
         options_lambda=lambda _: list(CleanTypeMapping.keys()),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockB01SelectDescription(
+        key="cleaning_route",
+        translation_key="cleaning_route",
+        api_fn=lambda api, value: api.set_clean_path_preference(
+            CleanPathPreferenceMapping.from_value(value)
+        ),
+        value_fn=lambda data: data.clean_path_preference_name,
+        options_lambda=lambda _: list(CleanPathPreferenceMapping.keys()),
         entity_category=EntityCategory.CONFIG,
     ),
 ]

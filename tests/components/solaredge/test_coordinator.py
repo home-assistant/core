@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -41,7 +41,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

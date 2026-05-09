@@ -1,7 +1,5 @@
 """Support for Huawei LTE switches."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -10,16 +8,12 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    KEY_DIALUP_MOBILE_DATASWITCH,
-    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
-)
+from . import HuaweiLteConfigEntry
+from .const import KEY_DIALUP_MOBILE_DATASWITCH, KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
 from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,11 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     switches: list[Entity] = []
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):

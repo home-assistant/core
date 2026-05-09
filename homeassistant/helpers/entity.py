@@ -50,7 +50,7 @@ from homeassistant.core import (
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.loader import async_suggest_report_issue, bind_hass
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
@@ -91,7 +91,6 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @callback
-@bind_hass
 @singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources.

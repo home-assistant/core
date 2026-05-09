@@ -1,7 +1,5 @@
 """The Control4 integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import json
 import logging

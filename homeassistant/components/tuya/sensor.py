@@ -1,14 +1,15 @@
 """Support for Tuya sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.sensor import (
-    TuyaSensorDefinition,
+    SensorDefinition,
     get_default_definition,
 )
-from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
     ElectricityCurrentJsonWrapper,
@@ -44,7 +45,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -53,6 +53,7 @@ from .const import (
     DeviceCategory,
     DPCode,
 )
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
@@ -379,6 +380,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
@@ -1680,7 +1682,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        definition: TuyaSensorDefinition,
+        definition: SensorDefinition,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager, description)
@@ -1694,6 +1696,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_suggested_unit_of_measurement = (
                 definition.sensor_wrapper.suggested_unit
             )
+        if (
+            description.device_class is None
+            # For enum type DPs, we can assume it's an ENUM sensor
+            and isinstance(definition.sensor_wrapper, DPCodeEnumWrapper)
+        ):
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = definition.sensor_wrapper.options
         if (
             description.state_class is None
             # For integer type DPs with "sum" report type, we can assume it's a total
@@ -1711,6 +1720,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # match Home Assistants requirements.
         if (
             self.device_class is not None
+            and self.device_class != SensorDeviceClass.ENUM
             and not self.device_class.startswith(DOMAIN)
             and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed

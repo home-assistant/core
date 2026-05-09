@@ -42,6 +42,7 @@ BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confi
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 
+BSH_OPERATION_STATE_DELAYED_START = "BSH.Common.EnumType.OperationState.DelayedStart"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
 BSH_OPERATION_STATE_PAUSE = "BSH.Common.EnumType.OperationState.Pause"
 BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"

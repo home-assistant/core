@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components import mill
+from homeassistant.components.mill.coordinator import MillDataUpdateCoordinator
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -156,7 +157,8 @@ async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     ):
         assert await async_setup_component(hass, "mill", {})
 
+        assert isinstance(entry.runtime_data, MillDataUpdateCoordinator)
+
         assert await hass.config_entries.async_unload(entry.entry_id)
 
         assert unload_entry.call_count == 3
-        assert entry.entry_id not in hass.data[mill.DOMAIN]

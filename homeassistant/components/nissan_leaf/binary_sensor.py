@@ -1,7 +1,5 @@
 """Plugged In Status Support for the Nissan Leaf."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.binary_sensor import (
