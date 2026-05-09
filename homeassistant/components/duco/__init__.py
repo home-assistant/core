@@ -1,6 +1,6 @@
 """The Duco integration."""
 
-from duco import DucoClient, build_ssl_context
+from duco_connectivity import DucoClient
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -12,11 +12,9 @@ from .coordinator import DucoConfigEntry, DucoCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
     """Set up Duco from a config entry."""
-    ssl_context = await hass.async_add_executor_job(build_ssl_context)
     client = DucoClient(
         session=async_get_clientsession(hass),
         host=entry.data[CONF_HOST],
-        ssl_context=ssl_context,
     )
 
     coordinator = DucoCoordinator(hass, entry, client)

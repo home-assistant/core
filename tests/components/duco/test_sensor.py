@@ -3,8 +3,9 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import (
+from duco_connectivity import (
+    DucoConnectionError,
+    DucoError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
@@ -70,10 +71,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in (
-        "sensor.living_signal_strength",
-        "sensor.living_box_temperature",
-    ):
+    for entity_id in ("sensor.living_signal_strength",):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
