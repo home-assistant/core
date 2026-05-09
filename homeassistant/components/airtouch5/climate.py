@@ -134,16 +134,6 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         super().__init__(client)
         self._ability = ability
 
-        # Check to see if the System_id is set to 0 (old way of doing things)
-        # if client.device.system_id == 0:
-        #     self._attr_unique_id = f"ac_{client.device.system_id}"
-        #     self._attr_device_info = DeviceInfo(
-        #         identifiers={(DOMAIN, f"ac_{client.device.system_id}")},
-        #         name=f"AC {client.device.system_id}",
-        #         manufacturer="Polyaire",
-        #         model="AirTouch 5",
-        #     )
-        # else:  # new way
         self._attr_unique_id = f"{client.device.system_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id), (DOMAIN, "AC_0")},
@@ -295,16 +285,6 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         super().__init__(client)
         self._name = name
 
-        # Check to see if the System_id is set to 0 (old way of doing things)
-        # if client.device.system_id == 0:
-        #     self._attr_unique_id = f"zone_{name.zone_number}"
-        #     self._attr_device_info = DeviceInfo(
-        #         identifiers={(DOMAIN, f"zone_{name.zone_number}")},
-        #         name=name.zone_name,
-        #         manufacturer="Polyaire",
-        #         model="AirTouch 5",
-        #     )
-        # else:  # new way
         self._attr_unique_id = f"zone_{client.device.system_id}_{name.zone_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={
