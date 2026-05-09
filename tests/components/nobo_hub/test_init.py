@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 from pynobo import nobo as pynobo_nobo
 import pytest
 
-from homeassistant.components.nobo_hub import async_setup_entry
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
@@ -14,7 +13,6 @@ from homeassistant.components.nobo_hub.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import SERIAL, STORED_IP
@@ -67,18 +65,19 @@ async def test_setup_aborts_when_rediscovery_finds_nothing(
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Setup raises cannot_connect when the stored IP fails and rediscovery is empty."""
+    """Setup retries with cannot_connect when the stored IP fails and rediscovery is empty."""
     mock_config_entry.add_to_hass(hass)
     failing_hub = MagicMock(spec=pynobo_nobo)
     failing_hub.connect.side_effect = OSError("Unreachable")
     mock_nobo_class.side_effect = [failing_hub]
     mock_nobo_class.async_discover_hubs.return_value = set()
 
-    with pytest.raises(ConfigEntryNotReady) as exc_info:
-        await async_setup_entry(hass, mock_config_entry)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders == {
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
         "serial": SERIAL,
         "ip": STORED_IP,
     }
@@ -89,7 +88,7 @@ async def test_setup_aborts_when_rediscovered_ip_also_fails(
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Setup raises cannot_connect when both the stored and rediscovered IPs fail."""
+    """Setup retries with cannot_connect when both the stored and rediscovered IPs fail."""
     mock_config_entry.add_to_hass(hass)
     first_failing_hub = MagicMock(spec=pynobo_nobo)
     first_failing_hub.connect.side_effect = OSError("Unreachable")
@@ -98,11 +97,12 @@ async def test_setup_aborts_when_rediscovered_ip_also_fails(
     mock_nobo_class.side_effect = [first_failing_hub, second_failing_hub]
     mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
 
-    with pytest.raises(ConfigEntryNotReady) as exc_info:
-        await async_setup_entry(hass, mock_config_entry)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders == {
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
         "serial": SERIAL,
         "ip": NEW_IP,
     }
