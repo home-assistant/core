@@ -7,6 +7,7 @@ from deebot_client.capabilities import Capabilities, CapabilityMap, DeviceType
 from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent, MapTraceEvent
 from deebot_client.map import Map
+from deebot_client.mower_trace import MowerMapTrace
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
-
-_TRACE_MAX_POINTS = 5000
 
 
 async def async_setup_entry(
@@ -113,62 +112,26 @@ class EcovacsMowerTraceMap(
     def __init__(self, device: Device, hass: HomeAssistant) -> None:
         """Initialize entity."""
         super().__init__(device, device.capabilities, hass=hass)
-        self._points: list[tuple[int, int]] = []
+        self._trace = MowerMapTrace()
         self._svg_cache: bytes | None = None
 
     def image(self) -> bytes | None:
         """Return bytes of image or None."""
-        if not self._points:
+        if not self._trace.has_points:
             return None
         if self._svg_cache is None:
-            self._svg_cache = self._render_svg().encode()
+            if (svg := self._trace.to_svg()) is None:
+                return None
+            self._svg_cache = svg.encode()
         return self._svg_cache
-
-    def _render_svg(self) -> str:
-        xs = [p[0] for p in self._points]
-        ys = [p[1] for p in self._points]
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        padding = max(50, (max(max_x - min_x, max_y - min_y)) // 20)
-        min_x -= padding
-        max_x += padding
-        min_y -= padding
-        max_y += padding
-        width = max_x - min_x
-        height = max_y - min_y
-        # Mower coordinates use bottom-up Y; flip for SVG top-down rendering.
-        flipped = " ".join(f"{x},{max_y + min_y - y}" for x, y in self._points)
-        stroke_width = max(20, width // 200)
-        return (
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'viewBox="{min_x} {min_y} {width} {height}" '
-            f'preserveAspectRatio="xMidYMid meet">'
-            f'<polyline points="{flipped}" fill="none" '
-            f'stroke="#1976d2" stroke-width="{stroke_width}" '
-            f'stroke-linejoin="round" stroke-linecap="round"/>'
-            f"</svg>"
-        )
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
         async def on_trace(event: MapTraceEvent) -> None:
-            new_points: list[tuple[int, int]] = []
-            for token in event.data.split(";"):
-                token = token.strip()
-                if not token:
-                    continue
-                try:
-                    x_str, y_str = token.split(",")
-                    new_points.append((int(x_str), int(y_str)))
-                except ValueError:
-                    continue
-            if not new_points:
+            if self._trace.add_data(event.data) == 0:
                 return
-            self._points.extend(new_points)
-            if len(self._points) > _TRACE_MAX_POINTS:
-                self._points = self._points[-_TRACE_MAX_POINTS:]
             self._svg_cache = None
             self._attr_image_last_updated = datetime.now(tz=UTC)
             self.async_write_ha_state()
