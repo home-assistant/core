@@ -184,6 +184,7 @@ async def test_coordinator_device_removal(
     mock_config_entry: MockConfigEntry,
     patch_aidot_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test coordinator handles device removal."""
     await async_init_integration(hass, mock_config_entry)
@@ -197,5 +198,4 @@ async def test_coordinator_device_removal(
     await hass.async_block_till_done()
 
     # Entity should no longer exist after device removal
-    entity_reg = er.async_get(hass)
     assert entity_registry.async_get(ENTITY_LIGHT) is None
