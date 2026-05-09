@@ -12,9 +12,6 @@
       },
       "ptz_up": {
         "default": "mdi:arrow-up-bold"
-      },
-      "restart_device": {
-        "default": "mdi:restart"
       }
     }
   }

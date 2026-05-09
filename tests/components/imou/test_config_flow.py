@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import (
+    ConnectFailedException,
+    ImouException,
+    InvalidAppIdOrSecretException,
+    RequestFailedException,
+)
 import pytest
 
 from homeassistant.components.imou.const import (
@@ -111,14 +116,23 @@ async def test_user_flow_form_initial(
     assert "data_schema" in result
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (ConnectFailedException("fail"), "cannot_connect"),
+        (RequestFailedException("fail"), "cannot_connect"),
+        (InvalidAppIdOrSecretException("fail"), "invalid_auth"),
+        (ImouException("fail"), "unknown"),
+    ],
+)
 async def test_user_flow_exception_handling(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test exception handling in user flow."""
-    mock_exception = ImouException("Connection timeout")
-    mock_exception.get_title = lambda: "Connection timeout"
-    mock_api_client.async_get_token.side_effect = mock_exception
+    """Test exception handling in user flow maps to stable error keys."""
+    mock_api_client.async_get_token.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -133,7 +147,7 @@ async def test_user_flow_exception_handling(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "errors" in result
-    assert result["errors"]["base"] == "Connection timeout"
+    assert result["errors"]["base"] == expected_error
 
 
 async def test_user_flow_different_api_urls(

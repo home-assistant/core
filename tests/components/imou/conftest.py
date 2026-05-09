@@ -21,6 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=CONFIG_ENTRY_DATA,
         unique_id=CONFIG_ENTRY_DATA["app_id"],
+        entry_id="test_entry_id",
     )
 
 
@@ -52,4 +53,4 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
-    return await async_init_integration(hass)
+    return await async_init_integration(hass, mock_config_entry)

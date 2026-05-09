@@ -47,18 +47,20 @@ def create_mock_api_client() -> MagicMock:
 
 async def async_init_integration(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry | None = None,
+    *,
     config_entry_data: dict | None = None,
 ) -> MockConfigEntry:
     """Set up the Imou integration in Home Assistant."""
-    if config_entry_data is None:
-        config_entry_data = CONFIG_ENTRY_DATA
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_entry_data,
-        unique_id=config_entry_data.get(CONF_APP_ID),
-        entry_id="test_entry_id",
-    )
+    if config_entry is None:
+        if config_entry_data is None:
+            config_entry_data = CONFIG_ENTRY_DATA
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=config_entry_data,
+            unique_id=config_entry_data.get(CONF_APP_ID),
+            entry_id="test_entry_id",
+        )
     config_entry.add_to_hass(hass)
 
     mock_device_manager = create_mock_device_manager()

@@ -2,21 +2,38 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import (
+    ConnectFailedException,
+    ImouException,
+    InvalidAppIdOrSecretException,
+    RequestFailedException,
+)
 from pyimouapi.openapi import ImouOpenApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _imou_exception_to_config_error(exception: ImouException) -> str:
+    """Map library exceptions to stable Home Assistant config-flow error keys."""
+    if isinstance(exception, InvalidAppIdOrSecretException):
+        return "invalid_auth"
+    if isinstance(exception, ConnectFailedException | RequestFailedException):
+        return "cannot_connect"
+    _LOGGER.debug("Imou error during config flow: %s", exception.message)
+    return "unknown"
 
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,7 +58,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await api_client.async_get_token()
             except ImouException as exception:
-                errors["base"] = exception.get_title()
+                errors["base"] = _imou_exception_to_config_error(exception)
             else:
                 return self.async_create_entry(
                     title=DOMAIN,
@@ -59,10 +76,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_APP_SECRET): str,
                     vol.Required(CONF_API_URL, default="sg"): SelectSelector(
                         SelectSelectorConfig(
-                            options=[
-                                SelectOptionDict(value=key, label=key)
-                                for key in API_URLS
-                            ],
+                            options=list(API_URLS),
                             translation_key="api_url",
                             mode=SelectSelectorMode.DROPDOWN,
                         )

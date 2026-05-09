@@ -52,20 +52,17 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the device manager."""
         return self._device_manager
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-        self._devices = await self._device_manager.async_get_devices()
-
     async def _async_update_data(self) -> None:
         """Update coordinator data."""
         async with asyncio.timeout(300):
             try:
+                if not self._devices:
+                    self._devices = await self._device_manager.async_get_devices()
                 await asyncio.gather(
                     *[
                         self._device_manager.async_update_device_status(device)
                         for device in self._devices
                     ],
-                    return_exceptions=True,
                 )
             except TimeoutError as err:
                 raise UpdateFailed(f"Timeout while fetching data: {err}") from err
