@@ -937,7 +937,7 @@
         "name": "Auto clean"
       },
       "auto_siren": {
-        "name": "Auto trigger siren"
+        "name": "Auto-trigger siren"
       },
       "battery_lock": {
         "name": "Battery lock"
