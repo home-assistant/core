@@ -84,7 +84,6 @@ rules:
       Add `async_step_reauth` so users can re-enter credentials without
       removing the config entry when authentication starts failing.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics:
