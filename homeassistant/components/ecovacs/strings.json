@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "device_tracker": {
+      "position": {
+        "name": "Position"
+      }
+    },
     "binary_sensor": {
       "water_mop_attached": {
         "name": "Mop attached"
