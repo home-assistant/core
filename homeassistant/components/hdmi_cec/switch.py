@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from pycec.commands import CecCommand
-from pycec.const import POWER_OFF, POWER_ON
+from pycec.const import CMD_STANDBY, POWER_OFF, POWER_ON
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -53,7 +53,7 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        self._device.send_command(CecCommand(0x36, dst=self._logical_address))
+        self._device.send_command(CecCommand(CMD_STANDBY, dst=self._logical_address))
         self._attr_is_on = False
         self.async_write_ha_state()
 
