@@ -40,6 +40,7 @@ from .entity import CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
@@ -95,7 +96,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        self._device.turn_off()
+        self._device.send_command(CecCommand(0x36, dst=self._logical_address))
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
