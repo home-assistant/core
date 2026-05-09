@@ -232,6 +232,7 @@ async def test_reconfigure_updates_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert init_novy_cooker_hood.data[CONF_CODE] == 4
@@ -255,6 +256,7 @@ async def test_reconfigure_frees_old_unique_id(
     await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
+    await hass.async_block_till_done()
 
     # Adding a new entry on the freed (transmitter, code 1) should now work.
     result = await _start_user_flow(hass, code="1")
