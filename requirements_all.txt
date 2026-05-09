@@ -868,7 +868,7 @@ eagle100==0.1.1
 earn-e-p1==0.1.0
 
 # homeassistant.components.easyenergy
-easyenergy==3.0.0
+easyenergy==3.0.1
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
