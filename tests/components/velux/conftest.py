@@ -230,6 +230,7 @@ def mock_pyvlx(
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
     pyvlx.connect = AsyncMock()
+    pyvlx.ensure_connected = AsyncMock()
     pyvlx.disconnect = AsyncMock()
 
     with (
