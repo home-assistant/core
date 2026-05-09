@@ -1788,18 +1788,26 @@ async def test_delayed_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_options",
-    [ENTRY_DEFAULT_BIRTH_MESSAGE],
+    ("mqtt_config_entry_options", "discovery_qos"),
+    [
+        (ENTRY_DEFAULT_BIRTH_MESSAGE, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 0}, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 1}, 1),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 2}, 2),
+    ],
 )
 async def test_subscription_done_when_birth_message_is_sent(
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient, discovery_qos: int
 ) -> None:
     """Test sending birth message until initial subscription has been completed."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     for component in SUPPORTED_COMPONENTS:
-        assert (f"homeassistant/{component}/+/config", 2) in subscribe_calls
-        assert (f"homeassistant/{component}/+/+/config", 2) in subscribe_calls
+        assert (f"homeassistant/{component}/+/config", discovery_qos) in subscribe_calls
+        assert (
+            f"homeassistant/{component}/+/+/config",
+            discovery_qos,
+        ) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )

@@ -1111,6 +1111,7 @@ async def test_option_flow(
             user_input={
                 mqtt.CONF_DISCOVERY: True,
                 "discovery_prefix": "homeassistant",
+                "discovery_qos": 2,
                 "birth_enable": True,
                 "birth_topic": "ha_state/online",
                 "birth_payload": "online",
@@ -1132,6 +1133,7 @@ async def test_option_flow(
         }
         assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_DISCOVERY_QOS: 2,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
@@ -1390,6 +1392,7 @@ async def test_disable_birth_will(
         user_input={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+            mqtt.CONF_DISCOVERY_QOS: 0,
             "birth_enable": False,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -1407,11 +1410,13 @@ async def test_disable_birth_will(
         "birth_message": {},
         "discovery": True,
         "discovery_prefix": "homeassistant",
+        "discovery_qos": 0,
         "will_message": {},
     }
     assert config_entry.data == {mqtt.CONF_BROKER: "test-broker", CONF_PORT: 1234}
     assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_DISCOVERY_QOS: 0,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
@@ -1507,6 +1512,7 @@ async def test_option_flow_default_suggested_values(
         },
         options={
             mqtt.CONF_DISCOVERY: True,
+            mqtt.CONF_DISCOVERY_QOS: 1,
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
                 mqtt.ATTR_PAYLOAD: "online",
@@ -1528,6 +1534,7 @@ async def test_option_flow_default_suggested_values(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
+        "discovery_qos": 1,
         "birth_qos": 1,
         "birth_retain": True,
         "will_qos": 2,
