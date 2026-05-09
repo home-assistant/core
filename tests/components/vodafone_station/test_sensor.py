@@ -1,5 +1,6 @@
 """Tests for Vodafone Station sensor platform."""
 
+from json import JSONDecodeError
 from unittest.mock import AsyncMock, patch
 
 from aiovodafone.exceptions import AlreadyLogged, CannotAuthenticate, CannotConnect
@@ -126,3 +127,30 @@ async def test_coordinator_client_connector_error(
         state := hass.states.get(f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_uptime")
     )
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_coordinator_json_decode_error_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale-session JSON response triggers config entry reload."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_vodafone_station_router.get_devices_data.side_effect = JSONDecodeError(
+        "Invalid JSON",
+        "<html>stale session</html>",
+        0,
+    )
+
+    with patch.object(
+        hass.config_entries,
+        "async_reload",
+        AsyncMock(return_value=True),
+    ) as mock_async_reload:
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_async_reload.assert_awaited_once_with(mock_config_entry.entry_id)

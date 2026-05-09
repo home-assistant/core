@@ -151,11 +151,14 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_key="cannot_authenticate",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except JSONDecodeError:
+            # Plain html response (usually occurs after a firmware update), requiring session reinitialization
+            _LOGGER.info("Stale session detected, reloading integration")
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
         except (
             exceptions.CannotConnect,
             exceptions.AlreadyLogged,
             exceptions.GenericLoginError,
-            JSONDecodeError,
         ) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
