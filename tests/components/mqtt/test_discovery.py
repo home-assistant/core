@@ -3215,7 +3215,23 @@ async def test_discovery_with_late_via_device_update(
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
 
-@pytest.mark.usefixtures("tag_mock")
+async def test_shared_options_in_sync_with_device_schema() -> None:
+    """Test shared option in device discovery schema are in sync.
+
+    The SHARED_OPTIONS should be in sync with the device discovery schema.
+    """
+    # Check if shared options are present in the device discovery schema and vice versa.
+    for option in SHARED_OPTIONS:
+        assert option in DEVICE_DISCOVERY_SCHEMA.schema
+
+    for option in set(DEVICE_DISCOVERY_SCHEMA.schema) - {
+        "device",
+        "origin",
+        "components",
+    }:
+        assert option in SHARED_OPTIONS
+
+
 @pytest.mark.parametrize(
     ("device_config", "shared_option", "platform_values"),
     [
@@ -3249,6 +3265,7 @@ async def test_shared_options_with_device_discovery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
     device_config: dict[str, Any],
     shared_option: str,
     platform_values: dict[str, str | int],
@@ -3270,23 +3287,9 @@ async def test_shared_options_with_device_discovery(
         CONF_PAYLOAD_NOT_AVAILABLE,
         CONF_STATE_TOPIC,
         CONF_QOS.
-
-    Not all options are being tested.
-    But we test if all shared options are in the schema.
     """
     mqtt_mock = await mqtt_mock_entry()
     mqtt_mock.reset_mock()
-
-    # Check if shared options are present in the device discovery schema and vice versa.
-    for option in SHARED_OPTIONS:
-        assert option in DEVICE_DISCOVERY_SCHEMA.schema
-
-    for option in set(DEVICE_DISCOVERY_SCHEMA.schema) - {
-        "device",
-        "origin",
-        "components",
-    }:
-        assert option in SHARED_OPTIONS
 
     # Listen to discovery handler to catch the component discovery payloads
     # that are being processed.
@@ -3300,7 +3303,7 @@ async def test_shared_options_with_device_discovery(
         async_dispatcher_connect(
             hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), async_discovery_handler
         )
-        for component in (platform_values)
+        for component in platform_values
     ]
 
     async_fire_mqtt_message(
@@ -3324,3 +3327,6 @@ async def test_shared_options_with_device_discovery(
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
+
+    # Check if the MQTT items are all available
+    await help_check_discovered_items(hass, device_registry, tag_mock)
