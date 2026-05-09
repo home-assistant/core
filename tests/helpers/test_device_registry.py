@@ -1931,6 +1931,38 @@ async def test_deleted_device_removing_config_entries(
     assert entry3.id != entry4.id
 
 
+async def test_purge_orphaned_deleted_device_with_legacy_null_timestamp(
+    device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test orphaned deleted devices with legacy null timestamps are purged."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    device_registry.async_remove_device(entry.id)
+    device_registry.async_clear_config_entry(mock_config_entry.entry_id)
+
+    deleted_entry = device_registry.deleted_devices.get_entry(
+        {("bridgeid", "0123")}, None
+    )
+    assert deleted_entry is not None
+    assert deleted_entry.config_entries == set()
+
+    device_registry.deleted_devices[deleted_entry.id] = attr.evolve(
+        deleted_entry, orphaned_timestamp=None
+    )
+
+    with patch.object(device_registry, "async_schedule_save") as mock_schedule_save:
+        device_registry.async_purge_expired_orphaned_devices()
+        mock_schedule_save.assert_called_once()
+
+    assert len(device_registry.deleted_devices) == 0
+
+
 async def test_removing_config_subentries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -3764,8 +3796,12 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
 
     future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
 
-    with patch("time.time", return_value=future_time):
+    with (
+        patch("time.time", return_value=future_time),
+        patch.object(device_registry, "async_schedule_save") as mock_schedule_save,
+    ):
         dr.async_cleanup(hass, device_registry, entity_registry)
+        assert mock_schedule_save.call_count == 3
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 0

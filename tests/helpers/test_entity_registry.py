@@ -4010,6 +4010,25 @@ async def test_restore_entity(
     assert update_events[16].data == {"action": "create", "entity_id": "light.hue_1234"}
 
 
+async def test_purge_orphaned_deleted_entity_with_legacy_null_timestamp(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test orphaned deleted entities with legacy null timestamps are purged."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    entity_registry.async_remove(entry.entity_id)
+    assert len(entity_registry.deleted_entities) == 1
+
+    key = ("light", "hue", "1234")
+    deleted_entry = entity_registry.deleted_entities[key]
+    entity_registry.deleted_entities[key] = attr.evolve(
+        deleted_entry, orphaned_timestamp=None
+    )
+
+    entity_registry.async_purge_expired_orphaned_entities()
+
+    assert len(entity_registry.deleted_entities) == 0
+
+
 @pytest.mark.parametrize(
     ("entity_disabled_by"),
     [

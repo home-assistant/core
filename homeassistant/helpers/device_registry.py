@@ -1682,6 +1682,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         now_time = time.time()
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.orphaned_timestamp is None:
+                if not deleted_device.config_entries:
+                    del self.deleted_devices[deleted_device.id]
+                    self.async_schedule_save()
                 continue
 
             if (
@@ -1689,6 +1692,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 < now_time
             ):
                 del self.deleted_devices[deleted_device.id]
+                self.async_schedule_save()
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
