@@ -1,5 +1,6 @@
 """Test fixtures for caldav."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -19,6 +20,9 @@ TEST_URL = "https://example.com/url-1"
 TEST_USERNAME = "username-1"
 TEST_PASSWORD = "password-1"
 
+CONF_LEGACY_ENTITY_NAMES = "legacy_entity_names"
+CONF_READ_ONLY = "read_only"
+
 
 @pytest.fixture(name="platforms")
 def mock_platforms() -> list[Platform]:
@@ -27,7 +31,7 @@ def mock_platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-async def mock_patch_platforms(platforms: list[str]) -> None:
+async def mock_patch_platforms(platforms: list[str]) -> Any:
     """Fixture to set up the integration."""
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         yield
@@ -40,7 +44,7 @@ def mock_calendars() -> list[Mock]:
 
 
 @pytest.fixture(name="dav_client", autouse=True)
-def mock_dav_client(calendars: list[Mock]) -> Mock:
+def mock_dav_client(calendars: list[Mock]) -> Mock:  # pyright: ignore[reportInvalidTypeForm]
     """Fixture to mock the DAVClient."""
     with patch(
         "homeassistant.components.caldav.calendar.caldav.DAVClient"
@@ -61,5 +65,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_VERIFY_SSL: True,
+            CONF_LEGACY_ENTITY_NAMES: True,
+            CONF_READ_ONLY: False,
         },
     )

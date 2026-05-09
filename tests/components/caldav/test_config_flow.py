@@ -1,7 +1,7 @@
 """Test the CalDAV config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
 import pytest
@@ -13,7 +13,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
+from .conftest import (
+    CONF_LEGACY_ENTITY_NAMES,
+    CONF_READ_ONLY,
+    TEST_PASSWORD,
+    TEST_URL,
+    TEST_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -56,6 +62,8 @@ async def test_form(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_VERIFY_SSL: False,
+        "legacy_entity_names": ANY,
+        "read_only": ANY,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -127,6 +135,8 @@ async def test_reauth_success(
         CONF_USERNAME: "username-1",
         CONF_PASSWORD: "password-2",
         CONF_VERIFY_SSL: True,
+        CONF_READ_ONLY: False,
+        CONF_LEGACY_ENTITY_NAMES: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -177,6 +187,8 @@ async def test_reauth_failure(
         CONF_USERNAME: "username-1",
         CONF_PASSWORD: "password-3",
         CONF_VERIFY_SSL: True,
+        CONF_READ_ONLY: False,
+        CONF_LEGACY_ENTITY_NAMES: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -188,11 +200,15 @@ async def test_reauth_failure(
             CONF_URL: f"{TEST_URL}/different-path",
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
+            "read_only": False,
+            "legacy_entity_names": True,
         },
         {
             CONF_URL: TEST_URL,
             CONF_USERNAME: f"{TEST_USERNAME}-different-user",
             CONF_PASSWORD: TEST_PASSWORD,
+            "read_only": False,
+            "legacy_entity_names": True,
         },
     ],
 )

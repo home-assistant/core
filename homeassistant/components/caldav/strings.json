@@ -1,9 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
@@ -22,12 +18,26 @@
       },
       "user": {
         "data": {
+          "legacy_entity_names": "Use Legacy Entity Names (for backwards compatibility)",
           "password": "[%key:common::config_flow::data::password%]",
+          "read_only": "Read Only",
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "description": "Please enter your CalDAV server credentials"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "read_only": "Read Only",
+          "scan_interval": "Scan Interval"
+        },
+        "description": "Entry Options",
+        "title": "CalDAV Integration Options for Entry"
       }
     }
   }
