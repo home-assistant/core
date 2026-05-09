@@ -213,9 +213,17 @@
       "summer_mode": {
         "name": "Summer mode"
       }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "Domestic hot water"
+      }
     }
   },
   "exceptions": {
+    "set_temperature_failed": {
+      "message": "Failed to set the target temperature."
+    },
     "switch_command_failed": {
       "message": "Failed to send command to the heat pump."
     }
