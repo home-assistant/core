@@ -3270,13 +3270,12 @@ async def test_shared_options_with_device_discovery(
     shared_option: str,
     platform_values: dict[str, str | int],
 ) -> None:
-    """Test share options are passed forward to component configs.
+    """Test shared options are passed forward to component configs.
 
-    Shared options should not overridden, but they can exist as extra options
-    and these exta options are being ignored if they are not a part of the
-    comoponent discovery schema.
-
-    Possible shared options options are:
+    Shared options should not be overridden. They can exist as extra options,
+    and these extra options are ignored if they are not part of the component
+    discovery schema.
+    Possible shared options are:
         CONF_AVAILABILITY,
         CONF_AVAILABILITY_MODE,
         CONF_AVAILABILITY_TEMPLATE,
@@ -3287,6 +3286,8 @@ async def test_shared_options_with_device_discovery(
         CONF_PAYLOAD_NOT_AVAILABLE,
         CONF_STATE_TOPIC,
         CONF_QOS.
+
+    Note that not all options are tested.
     """
     mqtt_mock = await mqtt_mock_entry()
     mqtt_mock.reset_mock()
