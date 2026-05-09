@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import S3ConfigEntry
 from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
-from .helpers import async_list_backups_from_s3
+from .helpers import async_list_backups_from_s3, metadata_cache_dir
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -95,6 +95,7 @@ class S3BackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: S3ConfigEntry) -> None:
         """Initialize the S3 agent."""
         super().__init__()
+        self._hass = hass
         self._client = entry.runtime_data.client
         self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
@@ -102,6 +103,7 @@ class S3BackupAgent(BackupAgent):
         self._backup_cache: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
         self._prefix: str = entry.data.get(CONF_PREFIX, "")
+        self._metadata_cache_dir = metadata_cache_dir(hass, entry.entry_id)
 
     def _with_prefix(self, key: str) -> str:
         """Add prefix to a key if configured."""
@@ -340,7 +342,11 @@ class S3BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups_list = await async_list_backups_from_s3(
-            self._client, self._bucket, self._prefix
+            self._hass,
+            self._client,
+            self._bucket,
+            self._prefix,
+            self._metadata_cache_dir,
         )
         self._backup_cache = {b.backup_id: b for b in backups_list}
         self._cache_expiration = time() + CACHE_TTL

@@ -15,7 +15,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import S3ConfigEntry
-from .helpers import async_list_backups_from_s3
+from .helpers import async_list_backups_from_s3, metadata_cache_dir
 
 TO_REDACT = (CONF_ACCESS_KEY_ID, CONF_SECRET_ACCESS_KEY)
 
@@ -28,9 +28,11 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     backup_manager = hass.data[BACKUP_DATA_MANAGER]
     backups = await async_list_backups_from_s3(
+        hass,
         coordinator.client,
         bucket=entry.data[CONF_BUCKET],
         prefix=entry.data.get(CONF_PREFIX, ""),
+        cache_dir=metadata_cache_dir(hass, entry.entry_id),
     )
 
     data = {

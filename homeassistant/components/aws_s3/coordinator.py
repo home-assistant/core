@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_BUCKET, CONF_PREFIX, DOMAIN
-from .helpers import async_list_backups_from_s3
+from .helpers import async_list_backups_from_s3, metadata_cache_dir
 
 SCAN_INTERVAL = timedelta(hours=6)
 
@@ -52,12 +52,17 @@ class S3DataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
         self.client = client
         self._bucket: str = entry.data[CONF_BUCKET]
         self._prefix: str = entry.data.get(CONF_PREFIX, "")
+        self._metadata_cache_dir = metadata_cache_dir(hass, entry.entry_id)
 
     async def _async_update_data(self) -> SensorData:
         """Fetch data from AWS S3."""
         try:
             backups = await async_list_backups_from_s3(
-                self.client, self._bucket, self._prefix
+                self.hass,
+                self.client,
+                self._bucket,
+                self._prefix,
+                self._metadata_cache_dir,
             )
         except BotoCoreError as error:
             raise UpdateFailed(

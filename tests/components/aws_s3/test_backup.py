@@ -3,6 +3,8 @@
 from collections.abc import AsyncGenerator
 from io import StringIO
 import json
+from pathlib import Path
+import shutil
 from time import time
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
@@ -21,6 +23,7 @@ from homeassistant.components.aws_s3.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from homeassistant.components.aws_s3.helpers import metadata_cache_dir
 from homeassistant.components.backup import (
     DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
@@ -37,6 +40,16 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
+def _metadata_cache_files(hass: HomeAssistant, entry: MockConfigEntry) -> list[Path]:
+    """Return cached metadata files for an entry."""
+    return list(metadata_cache_dir(hass, entry.entry_id).glob("*.json"))
+
+
+def _clear_metadata_cache(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Clear cached metadata files for an entry."""
+    shutil.rmtree(metadata_cache_dir(hass, entry.entry_id), ignore_errors=True)
+
+
 @pytest.fixture(autouse=True)
 async def setup_backup_integration(
     hass: HomeAssistant,
@@ -48,6 +61,7 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+        _clear_metadata_cache(hass, mock_config_entry)
         await setup_integration(hass, mock_config_entry)
 
         await hass.async_block_till_done()
@@ -410,8 +424,8 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    # Coordinator first refresh reads metadata (1) + download reads metadata (1) + tar (1)
-    assert mock_client.get_object.call_count == 3
+    # Coordinator first refresh reads metadata (1) + download reads tar (1)
+    assert mock_client.get_object.call_count == 2
 
 
 async def test_error_during_delete(
@@ -450,12 +464,14 @@ async def test_cache_expiration(
     """Test that the cache expires correctly."""
     # Mock the entry
     mock_entry = MockConfigEntry(
+        entry_id="cache-test",
         domain=DOMAIN,
         data={"bucket": "test-bucket"},
         unique_id="test-unique-id",
         title="Test S3",
     )
     mock_entry.runtime_data = MagicMock(client=mock_client)
+    _clear_metadata_cache(hass, mock_entry)
 
     # Create agent
     agent = S3BackupAgent(hass, mock_entry)
@@ -484,6 +500,9 @@ async def test_cache_expiration(
     await agent.async_list_backups()
     assert mock_client.get_paginator.call_count == 1
     assert mock_client.get_object.call_count == 1
+    cache_filename = _metadata_cache_files(hass, mock_entry)[0].name
+    assert cache_filename.startswith("test_")
+    assert len(cache_filename.removeprefix("test_").removesuffix(".json")) == 16
 
     # Second call should use cache
     await agent.async_list_backups()
@@ -493,9 +512,172 @@ async def test_cache_expiration(
     # Set cache to expire
     agent._cache_expiration = time() - 1
 
-    # Third call should query S3 again
+    # Third call should list S3 again and reuse the disk metadata cache
     await agent.async_list_backups()
     assert mock_client.get_paginator.call_count == 2
+    assert mock_client.get_object.call_count == 1
+
+
+async def test_metadata_disk_cache_refreshes_when_fingerprint_changes(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test metadata is downloaded when the listed object fingerprint changes."""
+    mock_entry = MockConfigEntry(
+        entry_id="fingerprint-cache-test",
+        domain=DOMAIN,
+        data={"bucket": "test-bucket"},
+        unique_id="fingerprint-cache-test",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = MagicMock(client=mock_client)
+    _clear_metadata_cache(hass, mock_entry)
+    agent = S3BackupAgent(hass, mock_entry)
+    mock_client.reset_mock()
+
+    first_content = json.dumps(mock_agent_backup.as_dict()).encode()
+    second_content = json.dumps(
+        mock_agent_backup.as_dict() | {"name": "Updated backup"}
+    ).encode()
+    first_body = AsyncMock()
+    first_body.read.return_value = first_content
+    second_body = AsyncMock()
+    second_body.read.return_value = second_content
+    mock_client.get_object.side_effect = [
+        {"Body": first_body},
+        {"Body": second_body},
+    ]
+
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "test.metadata.json",
+                    "ETag": '"first"',
+                    "Size": len(first_content),
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                }
+            ]
+        }
+    ]
+    await agent.async_list_backups()
+
+    agent._cache_expiration = time() - 1
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "test.metadata.json",
+                    "ETag": '"second"',
+                    "Size": len(second_content),
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                }
+            ]
+        }
+    ]
+
+    backups = await agent.async_list_backups()
+
+    assert backups[0].name == "Updated backup"
+    assert mock_client.get_object.call_count == 2
+
+
+async def test_metadata_disk_cache_prunes_stale_files(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test metadata cache files are pruned after they disappear from S3 listings."""
+    mock_entry = MockConfigEntry(
+        entry_id="prune-cache-test",
+        domain=DOMAIN,
+        data={"bucket": "test-bucket"},
+        unique_id="prune-cache-test",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = MagicMock(client=mock_client)
+    _clear_metadata_cache(hass, mock_entry)
+    agent = S3BackupAgent(hass, mock_entry)
+    mock_client.reset_mock()
+
+    metadata_content = json.dumps(mock_agent_backup.as_dict()).encode()
+    mock_body = AsyncMock()
+    mock_body.read.return_value = metadata_content
+    mock_client.get_object.return_value = {"Body": mock_body}
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "test.metadata.json",
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                }
+            ]
+        }
+    ]
+
+    await agent.async_list_backups()
+    assert len(_metadata_cache_files(hass, mock_entry)) == 1
+
+    agent._cache_expiration = time() - 1
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {"Contents": []}
+    ]
+    await agent.async_list_backups()
+
+    assert _metadata_cache_files(hass, mock_entry) == []
+
+
+async def test_metadata_disk_cache_refetches_corrupt_cache(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test corrupt cached metadata is replaced from S3."""
+    mock_entry = MockConfigEntry(
+        entry_id="corrupt-cache-test",
+        domain=DOMAIN,
+        data={"bucket": "test-bucket"},
+        unique_id="corrupt-cache-test",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = MagicMock(client=mock_client)
+    _clear_metadata_cache(hass, mock_entry)
+    agent = S3BackupAgent(hass, mock_entry)
+    mock_client.reset_mock()
+
+    first_content = json.dumps(mock_agent_backup.as_dict()).encode()
+    second_content = json.dumps(
+        mock_agent_backup.as_dict() | {"name": "Recovered backup"}
+    ).encode()
+    first_body = AsyncMock()
+    first_body.read.return_value = first_content
+    second_body = AsyncMock()
+    second_body.read.return_value = second_content
+    mock_client.get_object.side_effect = [
+        {"Body": first_body},
+        {"Body": second_body},
+    ]
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {
+            "Contents": [
+                {
+                    "Key": "test.metadata.json",
+                    "LastModified": "2023-01-01T00:00:00+00:00",
+                }
+            ]
+        }
+    ]
+
+    await agent.async_list_backups()
+    cache_file = _metadata_cache_files(hass, mock_entry)[0]
+    cache_file.write_text("{invalid", encoding="utf-8")
+
+    agent._cache_expiration = time() - 1
+    backups = await agent.async_list_backups()
+
+    assert backups[0].name == "Recovered backup"
+    assert cache_file.read_bytes() == second_content
     assert mock_client.get_object.call_count == 2
 
 
