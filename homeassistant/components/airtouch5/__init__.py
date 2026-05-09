@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr  # , entity_registry as er
 
 from .const import DOMAIN
 
@@ -85,53 +85,107 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 "console_id": airtouch_device.console_id,
                 "name": airtouch_device.name,
             }
+
+            hass.config_entries.async_update_entry(
+                entry,
+                unique_id=str(airtouch_device.system_id),
+                data=new_data,
+                minor_version=2,
+            )
         except TimeoutError as exception:
             _LOGGER.error("Error while migrating: %s", exception)
             return False
         finally:
             await AirtouchDiscovery_instance.close()
         # looking for climate entities
-        entity_registry = er.async_get(hass)
-        for entity in entity_registry.entities.values():
-            new_unique_id = None  # initialize
-            if entity.platform == DOMAIN:
-                if entity.domain == "climate":
-                    if entity.unique_id.startswith("zone_"):
-                        zone_number = entity.unique_id.split("_")[1]
-                        new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
-                    elif entity.unique_id.startswith("ac_"):
-                        new_unique_id = f"{airtouch_device.system_id}"
-                    else:
-                        continue
-                elif entity.domain == "cover":
-                    zone_number = entity.unique_id.split("_")[1]
-                    new_unique_id = (
-                        f"{airtouch_device.system_id}_{zone_number}_open_percentage"
-                    )
-                else:
-                    continue
-                entity_id = entity_registry.async_get_entity_id(
-                    entity.domain, DOMAIN, entity.unique_id
-                )
-                assert entity_id is not None
-                entity_entry = entity_registry.async_get(entity_id)
-                assert entity_entry is not None
+        # entity_registry = er.async_get(hass)
+        # for entity in entity_registry.entities.values():
+        #     new_unique_id = None  # initialize
+        #     if entity.platform == DOMAIN:
+        #         if entity.domain == "climate":
+        #             if entity.unique_id.startswith("zone_"):
+        #                 zone_number = entity.unique_id.split("_")[1]
+        #                 new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
+        #             elif entity.unique_id.startswith("ac_"):
+        #                 new_unique_id = f"{airtouch_device.system_id}"
+        #             else:
+        #                 continue
+        #         elif entity.domain == "cover":
+        #             zone_number = entity.unique_id.split("_")[1]
+        #             new_unique_id = (
+        #                 f"{airtouch_device.system_id}_{zone_number}_open_percentage"
+        #             )
+        #         else:
+        #             continue
+        #         entity_id = entity_registry.async_get_entity_id(
+        #             entity.domain, DOMAIN, entity.unique_id
+        #         )
+        #         assert entity_id is not None
+        #         entity_entry = entity_registry.async_get(entity_id)
+        #         assert entity_entry is not None
 
-                entity_registry.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=new_unique_id
-                )
+        #         entity_registry.async_update_entity(
+        #             entity_entry.entity_id, new_unique_id=new_unique_id
+        #         )
 
-                _LOGGER.debug(
-                    "Found entity: %s (unique_id=%s) new ID=%s",
-                    entity.entity_id,
-                    entity.unique_id,
-                    new_unique_id,
-                )
-
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=str(airtouch_device.system_id),
-            data=new_data,
-            minor_version=2,
-        )
+        #         _LOGGER.debug(
+        #             "Found entity: %s (unique_id=%s) new ID=%s",
+        #             entity.entity_id,
+        #             entity.unique_id,
+        #             new_unique_id,
+        #         )
+        device_registry = dr.async_get(hass)
+        update_device_id(airtouch_device, device_registry)
     return True
+
+
+def update_device_id(
+    airtouch_device: AirtouchDevice, device_registry: dr.DeviceRegistry
+) -> None:
+    """Update device identifiers in the device registry."""
+    for device in device_registry.devices.values():
+        # Track whether we actually need to update this device
+        updated_identifiers = set(device.identifiers)
+
+        for domain, unique_id in device.identifiers:
+            # Only process devices in your integration domain
+            if domain != DOMAIN:
+                continue
+            if unique_id.startswith("zone_"):
+                zone_number = unique_id.split("_")[1]
+                new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
+            elif unique_id.startswith("ac_"):
+                new_unique_id = f"{airtouch_device.system_id}"
+            else:
+                continue
+
+                # Skip if the new identifier is already present for this device
+            if (DOMAIN, new_unique_id) in updated_identifiers:
+                continue
+
+                # Skip if another device already has this identifier (prevents duplicates)
+            existing_device = device_registry.async_get_device(
+                identifiers={(DOMAIN, new_unique_id)}
+            )
+            if existing_device and existing_device.id != device.id:
+                _LOGGER.warning(
+                    "Skipping identifier %s for device %s: already used by device %s",
+                    new_unique_id,
+                    device.name,
+                    existing_device.name,
+                )
+                continue
+
+            updated_identifiers.add((DOMAIN, new_unique_id))
+            _LOGGER.debug(
+                "Updating device %s identifiers: %s",
+                device.name,
+                updated_identifiers,
+            )
+
+            # Update device only if there are changes
+        if updated_identifiers != device.identifiers:
+            device_registry.async_update_device(
+                device.id,
+                new_identifiers=updated_identifiers,
+            )
