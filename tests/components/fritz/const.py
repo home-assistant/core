@@ -1000,9 +1000,6 @@ MOCK_USER_DATA = {
 
 MOCK_CONFIG = {DOMAIN: {CONF_DEVICES: [MOCK_USER_DATA]}}
 
-MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
-"""User input data with optional port."""
-
 MOCK_USER_INPUT_SIMPLE = {
     CONF_HOST: "fake_host",
     CONF_PASSWORD: "fake_pass",

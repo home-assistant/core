@@ -49,7 +49,6 @@ from .const import (
     MOCK_REQUEST,
     MOCK_SSDP_DATA,
     MOCK_USER_DATA,
-    MOCK_USER_INPUT_ADVANCED,
     MOCK_USER_INPUT_SIMPLE,
 )
 
@@ -60,7 +59,7 @@ from tests.common import MockConfigEntry
     ("user_input", "expected_config", "expected_options"),
     [
         (
-            MOCK_USER_INPUT_ADVANCED,
+            MOCK_USER_DATA,
             {
                 CONF_HOST: "fake_host",
                 CONF_PASSWORD: "fake_pass",
@@ -164,7 +163,7 @@ async def test_user(
 
 @pytest.mark.parametrize(
     ("user_input"),
-    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
+    [(MOCK_USER_DATA), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_user_already_configured(
     hass: HomeAssistant,
@@ -222,7 +221,7 @@ async def test_user_already_configured(
 )
 @pytest.mark.parametrize(
     ("user_input"),
-    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
+    [(MOCK_USER_DATA), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_security(
     hass: HomeAssistant,
@@ -253,7 +252,7 @@ async def test_exception_security(
 
 @pytest.mark.parametrize(
     ("user_input"),
-    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
+    [(MOCK_USER_DATA), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_connection(
     hass: HomeAssistant,
@@ -283,7 +282,7 @@ async def test_exception_connection(
 
 @pytest.mark.parametrize(
     ("user_input"),
-    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
+    [(MOCK_USER_DATA), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_unknown(hass: HomeAssistant, user_input) -> None:
     """Test starting a flow by user with an unknown exception."""
