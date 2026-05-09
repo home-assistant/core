@@ -288,7 +288,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         self._attr_unique_id = f"zone_{client.device.system_id}_{name.zone_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{client.device.system_id}"),
+                (DOMAIN, f"{client.device.system_id}_{name.zone_number}"),
             },
             name=name.zone_name,
             manufacturer="Polyaire",
