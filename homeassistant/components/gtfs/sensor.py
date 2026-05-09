@@ -340,15 +340,14 @@ def get_next_departure(
                  origin_stop_time.departure_time
         LIMIT :limit
         """  # noqa: S608
-    result = schedule.engine.connect().execute(
-        text(sql_query),
-        {
-            "origin_station_id": start_station_id,
-            "end_station_id": end_station_id,
-            "today": now_date,
-            "limit": limit,
-        },
-    )
+    with schedule.engine.connect() as conn:
+        result = conn.execute(
+            text(sql_query),
+            {
+                "origin_station_id": start_station_id,
+            },
+        )
+        rows = result.fetchall()
 
     # Create lookup timetable for today and possibly tomorrow, taking into
     # account any departures from yesterday scheduled after midnight,
@@ -357,7 +356,7 @@ def get_next_departure(
     yesterday_start = today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row_cursor in result:
+    for row_cursor in rows:
         row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
