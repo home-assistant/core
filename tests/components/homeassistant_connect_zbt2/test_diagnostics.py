@@ -47,5 +47,5 @@ async def test_diagnostics_for_config_entry(
     )
 
     assert diagnostics_data == snapshot(
-        exclude=props("created_at", "modified_at", "entry_id", "versions")
+        exclude=props("created_at", "modified_at", "entry_id")
     )
