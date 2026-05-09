@@ -1,0 +1,102 @@
+{
+  "entity": {
+    "button": {
+      "channel_down": {
+        "default": "mdi:chevron-down"
+      },
+      "channel_up": {
+        "default": "mdi:chevron-up"
+      },
+      "down": {
+        "default": "mdi:arrow-down"
+      },
+      "exit": {
+        "default": "mdi:exit-to-app"
+      },
+      "hdmi_1": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "hdmi_2": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "hdmi_3": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "hdmi_4": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "home": {
+        "default": "mdi:home"
+      },
+      "info": {
+        "default": "mdi:information-outline"
+      },
+      "left": {
+        "default": "mdi:arrow-left"
+      },
+      "mute": {
+        "default": "mdi:volume-mute"
+      },
+      "num_0": {
+        "default": "mdi:numeric-0"
+      },
+      "num_1": {
+        "default": "mdi:numeric-1"
+      },
+      "num_2": {
+        "default": "mdi:numeric-2"
+      },
+      "num_3": {
+        "default": "mdi:numeric-3"
+      },
+      "num_4": {
+        "default": "mdi:numeric-4"
+      },
+      "num_5": {
+        "default": "mdi:numeric-5"
+      },
+      "num_6": {
+        "default": "mdi:numeric-6"
+      },
+      "num_7": {
+        "default": "mdi:numeric-7"
+      },
+      "num_8": {
+        "default": "mdi:numeric-8"
+      },
+      "num_9": {
+        "default": "mdi:numeric-9"
+      },
+      "ok": {
+        "default": "mdi:check"
+      },
+      "power": {
+        "default": "mdi:power"
+      },
+      "power_off": {
+        "default": "mdi:power-off"
+      },
+      "return": {
+        "default": "mdi:keyboard-backspace"
+      },
+      "right": {
+        "default": "mdi:arrow-right"
+      },
+      "settings": {
+        "default": "mdi:cog"
+      },
+      "source": {
+        "default": "mdi:video-input-component"
+      },
+      "up": {
+        "default": "mdi:arrow-up"
+      },
+      "volume_down": {
+        "default": "mdi:volume-minus"
+      },
+      "volume_up": {
+        "default": "mdi:volume-plus"
+      }
+    }
+  }
+}
