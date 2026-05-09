@@ -19,10 +19,22 @@
       }
     }
   },
-  "selector": {
-    "model": {
-      "options": {
-        "pm6006": "PM6006"
+  "entity": {
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "cd": "CD",
+              "coax": "Coax",
+              "network": "Network",
+              "optical": "Optical",
+              "phono": "Phono",
+              "recorder": "Recorder",
+              "tuner": "Tuner"
+            }
+          }
+        }
       }
     }
   }

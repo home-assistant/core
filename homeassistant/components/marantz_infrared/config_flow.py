@@ -9,7 +9,6 @@ from homeassistant.components.infrared import (
     async_get_emitters,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -18,11 +17,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_INFRARED_ENTITY_ID, CONF_MODEL, DOMAIN, MarantzModel
-
-MODEL_NAMES: dict[MarantzModel, str] = {
-    MarantzModel.PM6006: "PM6006",
-}
+from .const import (
+    CONF_INFRARED_ENTITY_ID,
+    CONF_MODEL,
+    DOMAIN,
+    MODEL_DISPLAY_NAMES,
+    MarantzModel,
+)
 
 
 class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,13 +46,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{model}_{entity_id}")
             self._abort_if_unique_id_configured()
 
-            ent_reg = er.async_get(self.hass)
-            entry = ent_reg.async_get(entity_id)
-            entity_name = (
-                entry.name or entry.original_name or entity_id if entry else entity_id
-            )
-            model_name = MODEL_NAMES[MarantzModel(model)]
-            title = f"Marantz {model_name} via {entity_name}"
+            title = MODEL_DISPLAY_NAMES[MarantzModel(model)]
 
             return self.async_create_entry(title=title, data=user_input)
 
@@ -62,7 +57,6 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=[model.value for model in MarantzModel],
-                            translation_key=CONF_MODEL,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),

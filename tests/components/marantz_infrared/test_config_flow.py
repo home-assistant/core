@@ -15,7 +15,6 @@ from homeassistant.components.marantz_infrared.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
@@ -56,7 +55,7 @@ async def test_user_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Marantz PM6006 via Test IR transmitter"
+    assert result["title"] == "Amplifier PM6006"
     assert result["data"] == {
         CONF_MODEL: MarantzModel.PM6006,
         CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
@@ -104,28 +103,23 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("setup_infrared")
 @pytest.mark.parametrize(
-    ("entity_name", "expected_title"),
+    ("model", "expected_title"),
     [
-        (None, "Marantz PM6006 via Test IR transmitter"),
-        ("AC IR emitter", "Marantz PM6006 via AC IR emitter"),
+        (MarantzModel.GENERIC_AMPLIFIER, "Amplifier"),
+        (MarantzModel.PM6006, "Amplifier PM6006"),
     ],
 )
-async def test_user_flow_title_from_entity_name(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_name: str | None,
-    expected_title: str,
+async def test_user_flow_title_from_model(
+    hass: HomeAssistant, model: MarantzModel, expected_title: str
 ) -> None:
-    """Test config entry title uses the entity name."""
-    entity_registry.async_update_entity(MOCK_INFRARED_ENTITY_ID, name=entity_name)
-
+    """Test config entry title is the model display name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MODEL: MarantzModel.PM6006,
+            CONF_MODEL: model,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )

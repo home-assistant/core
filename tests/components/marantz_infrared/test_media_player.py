@@ -1,12 +1,19 @@
 """Tests for the Marantz Infrared media player platform."""
 
+from typing import Any
+
 from infrared_protocols.codes.marantz.pm6006 import MarantzPM6006Code
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.infrared import (
+    DATA_COMPONENT as INFRARED_DATA_COMPONENT,
+    DOMAIN as INFRARED_DOMAIN,
+)
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
@@ -14,15 +21,21 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockInfraredEntity
 from .utils import check_availability_follows_ir_entity
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_amplifier_pm6006"
 
@@ -88,13 +101,13 @@ async def test_media_player_action_sends_correct_code(
 @pytest.mark.parametrize(
     ("source", "expected_code"),
     [
-        ("CD", MarantzPM6006Code.SOURCE_CD),
-        ("Recorder", MarantzPM6006Code.SOURCE_CDR),
-        ("Phono", MarantzPM6006Code.SOURCE_PHONO),
-        ("Tuner", MarantzPM6006Code.SOURCE_TUNER),
-        ("Coax", MarantzPM6006Code.SOURCE_COAX),
-        ("Network", MarantzPM6006Code.SOURCE_NETWORK),
-        ("Optical", MarantzPM6006Code.SOURCE_OPTICAL),
+        ("cd", MarantzPM6006Code.SOURCE_CD),
+        ("recorder", MarantzPM6006Code.SOURCE_CDR),
+        ("phono", MarantzPM6006Code.SOURCE_PHONO),
+        ("tuner", MarantzPM6006Code.SOURCE_TUNER),
+        ("coax", MarantzPM6006Code.SOURCE_COAX),
+        ("network", MarantzPM6006Code.SOURCE_NETWORK),
+        ("optical", MarantzPM6006Code.SOURCE_OPTICAL),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -118,13 +131,13 @@ async def test_media_player_select_source(
     assert state is not None
     assert state.attributes[ATTR_INPUT_SOURCE] == source
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
-        "CD",
-        "Coax",
-        "Network",
-        "Optical",
-        "Phono",
-        "Recorder",
-        "Tuner",
+        "cd",
+        "coax",
+        "network",
+        "optical",
+        "phono",
+        "recorder",
+        "tuner",
     ]
 
 
@@ -166,6 +179,76 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
     await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
+
+
+async def _setup_with_restore(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_entity: MockInfraredEntity,
+    restored: State,
+    extra_data: dict[str, Any],
+) -> None:
+    """Seed the restore cache (state + extra data) and set up the integration."""
+    mock_restore_cache_with_extra_data(hass, [(restored, extra_data)])
+    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
+    await hass.async_block_till_done()
+    await hass.data[INFRARED_DATA_COMPONENT].async_add_entities([mock_infrared_entity])
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "restored_state",
+    [MediaPlayerState.ON, MediaPlayerState.OFF],
+)
+async def test_restores_state_source_and_mute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_entity: MockInfraredEntity,
+    mock_make_marantz_amplifier_command: None,
+    restored_state: MediaPlayerState,
+) -> None:
+    """State, source, and mute survive a restart even from the OFF state.
+
+    Source/mute are persisted via extra-restore data so the OFF case
+    (where the base class strips them from state attributes) still
+    restores them — the user sees the previously-selected source the
+    moment they turn the amp back on.
+    """
+    await _setup_with_restore(
+        hass,
+        mock_config_entry,
+        mock_infrared_entity,
+        State(MEDIA_PLAYER_ENTITY_ID, restored_state),
+        extra_data={"source": "phono", "is_volume_muted": True},
+    )
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == restored_state.value
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes[ATTR_INPUT_SOURCE] == "phono"
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_initial_state_unknown_when_no_restore(hass: HomeAssistant) -> None:
+    """With no previous state to restore, the entity reports unknown."""
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is None
 
 
 async def test_toggle_flips_between_commands(

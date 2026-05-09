@@ -12,15 +12,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import MarantzIrConfigEntry
-from .const import CONF_MODEL, DOMAIN, MarantzModel
+from .const import CONF_MODEL, DOMAIN, MODEL_DISPLAY_NAMES, MODEL_IDS, MarantzModel
 
 _LOGGER = logging.getLogger(__name__)
-
-# Display name for each supported model. Kept in the integration because
-# infrared-protocols only exposes the protocol-level codes.
-_MODEL_DISPLAY_NAMES: dict[MarantzModel, str] = {
-    MarantzModel.PM6006: "Amplifier PM6006",
-}
 
 
 class MarantzIrEntity(Entity):
@@ -41,9 +35,9 @@ class MarantzIrEntity(Entity):
         model = MarantzModel(entry.data[CONF_MODEL])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Marantz {_MODEL_DISPLAY_NAMES[model]}",
+            name=f"Marantz {MODEL_DISPLAY_NAMES[model]}",
             manufacturer="Marantz",
-            model=model.value.upper(),
+            model=MODEL_IDS.get(model),
         )
 
     async def async_added_to_hass(self) -> None:

@@ -49,7 +49,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
-        title="Marantz PM6006 via Test IR transmitter",
+        title="Amplifier PM6006",
         data={
             CONF_MODEL: MarantzModel.PM6006,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
