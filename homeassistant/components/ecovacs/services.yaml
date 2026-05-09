@@ -1,5 +1,7 @@
 raw_get_positions:
   target:
     entity:
-      domain: vacuum
-      integration: ecovacs
+      - domain: vacuum
+        integration: ecovacs
+      - domain: lawn_mower
+        integration: ecovacs

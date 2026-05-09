@@ -291,7 +291,7 @@
     }
   },
   "exceptions": {
-    "vacuum_raw_get_positions_not_supported": {
+    "raw_get_positions_not_supported": {
       "message": "Retrieving the positions of the chargers and the device itself is not supported"
     },
     "vacuum_send_command_params_dict": {

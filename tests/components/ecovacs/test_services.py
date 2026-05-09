@@ -66,8 +66,9 @@ def mock_device_execute_response(data: dict[str, Any]) -> Generator[dict[str, An
     ("device_fixture", "entity_id"),
     [
         ("yna5x1", "vacuum.ozmo_950"),
+        ("5xu9h3", "lawn_mower.goat_g1"),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_get_positions_service(
     hass: HomeAssistant,
@@ -75,8 +76,8 @@ async def test_get_positions_service(
     entity_id: str,
 ) -> None:
     """Test that get_positions service response snapshots match."""
-    vacuum = hass.states.get(entity_id)
-    assert vacuum
+    entity = hass.states.get(entity_id)
+    assert entity
 
     assert await hass.services.async_call(
         DOMAIN,
