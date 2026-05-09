@@ -103,13 +103,13 @@ async def async_setup_platform(
         data=data,
     )
     if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
     ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -118,6 +118,7 @@ async def async_setup_platform(
                 "domain": DOMAIN,
                 "integration_title": "Volkszaehler",
             },
+            breaks_in_ha_version="2026.12.0",
         )
         return
 
@@ -133,6 +134,7 @@ async def async_setup_platform(
             "domain": DOMAIN,
             "integration_title": "Volkszaehler",
         },
+        breaks_in_ha_version="2026.12.0",
     )
 
 
