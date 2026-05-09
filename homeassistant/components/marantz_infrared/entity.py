@@ -1,9 +1,8 @@
 """Common entity for Marantz IR integration."""
 
 import logging
-from types import ModuleType
 
-from infrared_protocols.codes.marantz import pm6006
+from infrared_protocols.codes.marantz.pm6006 import MarantzPM6006Code, make_command
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.const import STATE_UNAVAILABLE
@@ -17,11 +16,10 @@ from .const import CONF_MODEL, DOMAIN, MarantzModel
 
 _LOGGER = logging.getLogger(__name__)
 
-# Each supported model points at the library module that exposes its codes
-# and the ``MODEL_ID`` / ``MODEL_NAME`` constants used for the device
-# registry entry.
-_MODEL_MODULES: dict[MarantzModel, ModuleType] = {
-    MarantzModel.PM6006: pm6006,
+# Display name for each supported model. Kept in the integration because
+# infrared-protocols only exposes the protocol-level codes.
+_MODEL_DISPLAY_NAMES: dict[MarantzModel, str] = {
+    MarantzModel.PM6006: "Amplifier PM6006",
 }
 
 
@@ -40,13 +38,12 @@ class MarantzIrEntity(Entity):
         self._infrared_entity_id = infrared_entity_id
         self._runtime_data = entry.runtime_data
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
-        model_module = _MODEL_MODULES[MarantzModel(entry.data[CONF_MODEL])]
-        self._make_command = model_module.make_command
+        model = MarantzModel(entry.data[CONF_MODEL])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Marantz {model_module.MODEL_NAME}",
+            name=f"Marantz {_MODEL_DISPLAY_NAMES[model]}",
             manufacturer="Marantz",
-            model=model_module.MODEL_ID,
+            model=model.value.upper(),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -82,7 +79,7 @@ class MarantzIrEntity(Entity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    async def _send_command(self, code: pm6006.MarantzPM6006Code) -> None:
+    async def _send_command(self, code: MarantzPM6006Code) -> None:
         """Send an IR command using the Marantz protocol.
 
         Flips the RC-5 toggle bit before each frame so the receiver
@@ -92,6 +89,6 @@ class MarantzIrEntity(Entity):
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            self._make_command(code, toggle=self._runtime_data.toggle),
+            make_command(code, toggle=self._runtime_data.toggle),
             context=self._context,
         )

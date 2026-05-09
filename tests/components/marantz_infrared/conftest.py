@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols import Command as InfraredCommand
+from infrared_protocols.commands import Command as InfraredCommand
 import pytest
 
 from homeassistant.components.infrared import (
@@ -78,7 +78,7 @@ def mock_make_marantz_amplifier_command() -> Generator[None]:
     rather than the raw RC-5 timings.
     """
     with patch(
-        "infrared_protocols.codes.marantz.pm6006.make_command",
+        "homeassistant.components.marantz_infrared.entity.make_command",
         side_effect=lambda code, **kwargs: code,
     ):
         yield
