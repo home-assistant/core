@@ -1,7 +1,5 @@
 """The Airtouch 5 integration."""
 
-from __future__ import annotations
-
 import logging
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient, AirtouchDevice
@@ -129,8 +127,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                     entity.unique_id,
                     new_unique_id,
                 )
-        device_registry = dr.async_get(hass)
-        update_device_id(airtouch_device, device_registry)
+        # device_registry = dr.async_get(hass)
+        # update_device_id(airtouch_device, device_registry)
 
         hass.config_entries.async_update_entry(
             entry,
