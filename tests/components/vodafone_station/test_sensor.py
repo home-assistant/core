@@ -151,6 +151,6 @@ async def test_coordinator_json_decode_error_reload(
     ) as mock_async_reload:
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
