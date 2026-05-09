@@ -63,7 +63,9 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
   stale-devices: done
 
   # Platinum
