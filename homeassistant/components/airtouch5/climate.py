@@ -146,7 +146,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         # else:  # new way
         self._attr_unique_id = f"{client.device.system_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id), (DOMAIN, "AC_0")},
             name=f"AC {client.device.name}",
             manufacturer="Polyaire",
             model="AirTouch 5",
@@ -307,7 +307,10 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         # else:  # new way
         self._attr_unique_id = f"zone_{client.device.system_id}_{name.zone_number}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{client.device.system_id}_{name.zone_number}")},
+            identifiers={
+                (DOMAIN, f"{client.device.system_id}_{name.zone_number}"),
+                (DOMAIN, f"zone_{name.zone_number}"),
+            },
             name=name.zone_name,
             manufacturer="Polyaire",
             model="AirTouch 5",
