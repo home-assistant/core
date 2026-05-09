@@ -150,7 +150,7 @@ def build_new_unique_id(old_uid: str, system_id: str) -> str | None:
     """Map legacy Airtouch IDs to new stable format."""
 
     # already migrated → skip
-    if old_uid.startswith(f"{system_id}_"):
+    if old_uid.startswith(f"{system_id}"):
         return None
 
     # legacy AC
