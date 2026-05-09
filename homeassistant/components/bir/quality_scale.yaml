@@ -79,7 +79,7 @@ rules:
   docs-examples:
     status: exempt
     comment: |
-      Documentation will be added to the HA website.
+      Integration is fully UI-configured and has no actions or YAML configuration to provide examples for.
   docs-known-limitations:
     status: exempt
     comment: |
@@ -87,7 +87,7 @@ rules:
   docs-supported-devices:
     status: exempt
     comment: |
-      Documentation will be added to the HA website.
+      Integration does not support specific devices, but rather provides sensors for waste pickup dates based on address and property information.
   docs-supported-functions:
     status: exempt
     comment: |
@@ -116,19 +116,12 @@ rules:
     comment: |
       This integration does not raise user-facing exceptions.
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      The only configuration is the address. Changing addresses means
-      setting up a new entry for a different location.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
       There are no known issues that require user intervention.
-  stale-devices:
-    status: exempt
-    comment: |
-      Each config entry represents a single address/property.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
