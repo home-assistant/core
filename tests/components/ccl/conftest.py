@@ -7,6 +7,7 @@ from aioccl.exception import CCLDataUpdateException
 import pytest
 
 from homeassistant.components.ccl.const import DOMAIN
+from homeassistant.components.ccl.devices import devices
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
@@ -28,6 +29,14 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="0000-0000",
     )
+
+
+@pytest.fixture(autouse=True)
+def clear_devices() -> Generator[None]:
+    """Clear devices dictionary before and after each test."""
+    devices.clear()
+    yield
+    devices.clear()
 
 
 @pytest.fixture
