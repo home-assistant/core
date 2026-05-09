@@ -1,11 +1,13 @@
 """Data update coordinator for iaqualink."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 
 import httpx
 from iaqualink.exception import (
     AqualinkServiceException,
+    AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
 
@@ -17,6 +19,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, UPDATE_INTERVAL_BY_SYSTEM_TYPE, UPDATE_INTERVAL_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
+
+BACKOFF_MULTIPLIER = 1.5
 
 
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -44,9 +48,26 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.system.update()
         except AqualinkServiceUnauthorizedException as err:
             raise ConfigEntryAuthFailed("Invalid credentials for iAquaLink") from err
+        except AqualinkServiceThrottledException:
+            current_interval = self.update_interval or UPDATE_INTERVAL
+            self.update_interval = timedelta(
+                seconds=current_interval.total_seconds() * BACKOFF_MULTIPLIER
+            )
+            _LOGGER.debug(
+                "iAquaLink system %s is rate-limited, increasing update interval to %ss",
+                self.system.serial,
+                self.update_interval.total_seconds(),
+            )
+            return
         except (AqualinkServiceException, httpx.HTTPError) as err:
             raise UpdateFailed(
                 f"Unable to update iAquaLink system {self.system.serial}: {err}"
             ) from err
         if self.system.online is not True:
             raise UpdateFailed(f"iAquaLink system {self.system.serial} is offline")
+        if self.update_interval != UPDATE_INTERVAL:
+            _LOGGER.debug(
+                "iAquaLink system %s rate limit cleared, resetting update interval",
+                self.system.serial,
+            )
+            self.update_interval = UPDATE_INTERVAL
