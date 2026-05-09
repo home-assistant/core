@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "panel": {
+        "default": "mdi:home"
+      },
+      "setting": {
+        "default": "mdi:numeric"
+      }
+    }
+  }
+}

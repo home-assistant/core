@@ -1,0 +1,21 @@
+alarm_arm_automatic:
+  target:
+    entity:
+      domain: alarm_control_panel
+      integration: elke27
+  fields:
+    mode:
+      name: Arming mode
+      description: Arm mode to use for the automatic arming request.
+      required: true
+      selector:
+        select:
+          options:
+            - away
+            - home
+    code:
+      name: Code
+      description: Alarm code to arm the area.
+      required: true
+      selector:
+        text:
