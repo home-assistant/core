@@ -90,7 +90,7 @@ rules:
     status: exempt
     comment: |
       The light entity uses the default icon for its state.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
