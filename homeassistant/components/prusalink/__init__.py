@@ -1,7 +1,5 @@
 """The PrusaLink integration."""
 
-from __future__ import annotations
-
 from pyprusalink import PrusaLink
 from pyprusalink.types import InvalidAuth
 
@@ -27,6 +25,7 @@ from .coordinator import (
     PrusaLinkConfigEntry,
     PrusaLinkUpdateCoordinator,
     StatusCoordinator,
+    VersionUpdateCoordinator,
 )
 
 PLATFORMS: list[Platform] = [
@@ -54,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
         "status": StatusCoordinator(hass, entry, api),
         "job": JobUpdateCoordinator(hass, entry, api),
         "info": InfoUpdateCoordinator(hass, entry, api),
+        "version": VersionUpdateCoordinator(hass, entry, api),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()

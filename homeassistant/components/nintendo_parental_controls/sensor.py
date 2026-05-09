@@ -1,7 +1,5 @@
 """Sensor platform for Nintendo parental controls."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime

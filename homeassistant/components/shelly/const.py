@@ -1,7 +1,5 @@
 """Constants for the Shelly integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from logging import Logger, getLogger
 import re
@@ -218,8 +216,6 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 # Sleep period
 BLOCK_WRONG_SLEEP_PERIOD = 21600
 BLOCK_EXPECTED_SLEEP_PERIOD = 43200
-
-UPTIME_DEVIATION: Final = 60
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60

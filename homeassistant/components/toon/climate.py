@@ -1,7 +1,5 @@
 """Support for Toon thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from toonapi import (

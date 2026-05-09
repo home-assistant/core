@@ -1,13 +1,11 @@
 """The Kiosker integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> bool:

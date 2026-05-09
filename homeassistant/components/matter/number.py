@@ -1,7 +1,5 @@
 """Matter Number Inputs."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -17,7 +15,6 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -30,17 +27,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Number Input from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
@@ -439,6 +436,31 @@ DISCOVERY_SCHEMAS = [
             clusters.OccupancySensing.Attributes.HoldTime,
         ),
         featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="BooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            native_min_value=1,
+            native_step=1,
+            device_to_ha=lambda x: x + 1,
+            ha_to_device=lambda x: int(x) - 1,
+            max_attribute=(
+                clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels
+            ),
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+            clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels,
+        ),
+        featuremap_contains=(
+            clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel
+        ),
         allow_multi=True,
     ),
     MatterDiscoverySchema(

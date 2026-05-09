@@ -1,4 +1,4 @@
-"""Tests for iAqualink integration."""
+"""Tests for iAquaLink integration."""
 
 from unittest.mock import AsyncMock, patch
 

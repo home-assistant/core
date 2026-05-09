@@ -1,7 +1,5 @@
 """Support for SimpliSafe freeze sensor."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from simplipy.device import DeviceTypes

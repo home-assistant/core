@@ -1,7 +1,5 @@
 """Support for EZVIZ sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyezvizapi import HTTPError, PyEzvizError

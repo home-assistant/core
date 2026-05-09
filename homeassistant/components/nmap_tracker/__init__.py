@@ -1,7 +1,5 @@
 """The Nmap Tracker integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -147,6 +145,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
     remove_mac_addresses = [
         mac_address

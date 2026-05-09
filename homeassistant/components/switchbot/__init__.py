@@ -1,7 +1,5 @@
 """Support for Switchbot devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -58,6 +56,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.HYGROMETER_CO2.value: [
         Platform.BUTTON,
+        Platform.NUMBER,
         Platform.SENSOR,
         Platform.SELECT,
     ],

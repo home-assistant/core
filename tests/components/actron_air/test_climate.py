@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from actron_neo_api import ActronAirAPIError
+from actron_neo_api.models.settings import ActronAirModeSupport
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -362,3 +363,122 @@ async def test_zone_hvac_mode_inactive(
 
     state = hass.states.get("climate.living_room")
     assert state.state == "off"
+
+
+async def test_system_hvac_modes_default(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system reports correct HVAC modes when DRY is not supported."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.test_system")
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.OFF,
+    ]
+
+
+async def test_system_hvac_modes_with_dry(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system reports DRY HVAC mode when hardware supports it."""
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.mode_support = ActronAirModeSupport(
+        Cool=True, Heat=True, Fan=True, Auto=True, Dry=True
+    )
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.test_system")
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.DRY,
+        HVACMode.OFF,
+    ]
+
+
+async def test_system_hvac_modes_no_mode_support(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system falls back to default modes when ModeSupport is absent."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.mode_support = None
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.test_system")
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.OFF,
+    ]
+
+
+async def test_zone_hvac_modes_with_dry(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone reports DRY HVAC mode when hardware supports it."""
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.mode_support = ActronAirModeSupport(
+        Cool=True, Heat=True, Fan=True, Auto=True, Dry=True
+    )
+    status.remote_zone_info = [mock_zone]
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.DRY,
+        HVACMode.OFF,
+    ]
+
+
+async def test_zone_hvac_modes_no_mode_support(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone falls back to default modes when ModeSupport is absent."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.mode_support = None
+    status.remote_zone_info = [mock_zone]
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.OFF,
+    ]

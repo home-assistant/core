@@ -1,7 +1,5 @@
 """Support for Ecowitt Weather Stations."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import datetime
 import logging
@@ -213,11 +211,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_KM",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_MILES",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),

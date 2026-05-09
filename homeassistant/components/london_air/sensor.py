@@ -1,7 +1,5 @@
 """Sensor for checking the status of London air."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging

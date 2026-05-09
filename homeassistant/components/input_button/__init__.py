@@ -1,7 +1,5 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
-from __future__ import annotations
-
 import logging
 from typing import Self, cast
 

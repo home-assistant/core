@@ -33,6 +33,7 @@ def mock_version_api() -> Generator[dict[str, str]]:
         "server": "2.1.2",
         "text": "PrusaLink",
         "hostname": "PrusaXL",
+        "firmware": "6.1.2+11023",
     }
     with patch("pyprusalink.PrusaLink.get_version", return_value=resp):
         yield resp
@@ -47,6 +48,7 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "serial": "serial-1337",
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
+        "location": "Workshop",
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp

@@ -725,7 +725,7 @@ async def test_wlan_client_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
     # Validate state object
-    assert hass.states.get("sensor.ssid_1").state == "1"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # Verify state update - increasing number
     wireless_client_1 = client_payload[0]
@@ -736,13 +736,13 @@ async def test_wlan_client_sensors(
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "1"
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "2"
 
     # Verify state update - decreasing number
@@ -753,7 +753,7 @@ async def test_wlan_client_sensors(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "1"
 
     # Verify state update - decreasing number
@@ -764,31 +764,31 @@ async def test_wlan_client_sensors(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "0"
 
     # Availability signalling
 
     # Controller disconnects
     await mock_websocket_state.disconnect()
-    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "0"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
     wlan_1["enabled"] = False
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
     # WLAN gets re-enabled
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "0"
 
 
 @pytest.mark.parametrize(
@@ -1722,9 +1722,9 @@ async def test_wan_monitor_latency_with_no_uptime(
 @pytest.mark.parametrize(
     ("temperature_id", "state", "updated_state", "index_to_update"),
     [
-        ("device_cpu", "66.0", "20", 0),
-        ("device_local", "48.75", "90.64", 1),
-        ("device_phy", "50.25", "80", 2),
+        ("cpu", "66.0", "20", 0),
+        ("local", "48.75", "90.64", 1),
+        ("phy", "50.25", "80", 2),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1810,7 +1810,7 @@ async def test_device_temperature_with_missing_value(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
-    entity_id = "sensor.device_device_cpu_temperature"
+    entity_id = "sensor.device_cpu_temperature"
 
     temperature_entity = entity_registry.async_get(entity_id)
     assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
@@ -1873,9 +1873,7 @@ async def test_device_with_no_temperature(
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    temperature_entity = entity_registry.async_get(
-        "sensor.device_device_cpu_temperature"
-    )
+    temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")
 
     assert temperature_entity is None
 
@@ -1913,9 +1911,7 @@ async def test_device_with_no_matching_temperatures(
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    temperature_entity = entity_registry.async_get(
-        "sensor.device_device_cpu_temperature"
-    )
+    temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")
 
     assert temperature_entity is None
 

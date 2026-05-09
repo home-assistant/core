@@ -7,7 +7,6 @@ from xknx import XKNX
 from xknx.dpt import DPTBase
 from xknx.telegram.address import parse_device_group_address
 
-from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -18,10 +17,6 @@ from homeassistant.helpers import (
 from ..expose import KnxExposeEntity, KnxExposeOptions
 from .entity_store_validation import validate_config_store_data
 from .knx_selector import GASelector
-
-type KNXExposeStoreModel = dict[
-    str, list[KNXExposeStoreOptionModel]  # entity_id: configuration
-]
 
 
 class KNXExposeStoreOptionModel(TypedDict):
@@ -36,11 +31,21 @@ class KNXExposeStoreOptionModel(TypedDict):
     value_template: NotRequired[str]
 
 
+class KNXExposeStoreConfigModel(TypedDict):
+    """Represent stored KNX expose configuration with metadata."""
+
+    options: list[KNXExposeStoreOptionModel]
+    notes: NotRequired[str]
+
+
+type KNXExposeStoreModel = dict[str, KNXExposeStoreConfigModel]  # dict[entity_id: conf]
+
+
 class KNXExposeDataModel(TypedDict):
     """Represent a loaded KNX expose config for validation."""
 
     entity_id: str
-    options: list[KNXExposeStoreOptionModel]
+    data: KNXExposeStoreConfigModel
 
 
 def validate_expose_template_no_coerce(value: str) -> str:
@@ -72,8 +77,13 @@ EXPOSE_OPTION_SCHEMA = vol.Schema(
 
 EXPOSE_CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(),
-        vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
+        vol.Required("entity_id"): selector.EntitySelector(),
+        vol.Required("data"): vol.Schema(
+            {
+                vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                vol.Optional("notes"): str,
+            }
+        ),
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -135,13 +145,13 @@ class ExposeController:
         hass: HomeAssistant,
         xknx: XKNX,
         entity_id: str,
-        expose_config: list[KNXExposeStoreOptionModel],
+        expose_config: KNXExposeStoreConfigModel,
     ) -> None:
         """Update entity expose configuration for an entity."""
         self.remove_entity_expose(entity_id)
 
         expose_options = [
-            _store_to_expose_option(hass, config) for config in expose_config
+            _store_to_expose_option(hass, config) for config in expose_config["options"]
         ]
         expose = KnxExposeEntity(hass, xknx, entity_id, expose_options)
         self._entity_exposes[entity_id] = expose

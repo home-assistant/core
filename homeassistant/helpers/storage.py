@@ -1,7 +1,5 @@
 """Helper to help store data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress

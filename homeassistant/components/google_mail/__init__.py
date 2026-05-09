@@ -1,7 +1,5 @@
 """Support for Google Mail."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
@@ -54,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
             Platform.NOTIFY,
             DOMAIN,
             {DATA_AUTH: auth, CONF_NAME: entry.title},
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=hass-use-runtime-data
             hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )

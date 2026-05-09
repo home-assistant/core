@@ -1,7 +1,5 @@
 """MQTT (entity) component mixins and helpers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
@@ -29,6 +27,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -242,7 +241,7 @@ def async_setup_non_entity_entry_helper(
 
 
 @callback
-def async_setup_entity_entry_helper(
+def async_setup_entity_entry_helper(  # noqa: C901
     hass: HomeAssistant,
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
@@ -391,6 +390,8 @@ def async_setup_entity_entry_helper(
                     and component_config[CONF_ENTITY_CATEGORY] is None
                 ):
                     component_config.pop(CONF_ENTITY_CATEGORY)
+                if component_config.get(CONF_UNIT_OF_MEASUREMENT) == "None":
+                    component_config.pop(CONF_UNIT_OF_MEASUREMENT)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -1473,6 +1474,7 @@ class MqttEntity(
             self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
+        await self._async_finish_update_config()
         self._subscriptions = {}
         self._prepare_subscribe_topics()
         if self._subscriptions:
@@ -1490,6 +1492,12 @@ class MqttEntity(
         To be extended by subclasses.
         """
 
+    async def _async_finish_update_config(self) -> None:
+        """Called after added to hass and after discovery update.
+
+        To be extended by subclasses.
+        """
+
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
         try:
@@ -1500,6 +1508,7 @@ class MqttEntity(
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
+        await self._async_finish_update_config()
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)

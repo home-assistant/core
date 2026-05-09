@@ -1408,22 +1408,20 @@ async def test_logbook_context_from_template(
 
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1493,22 +1491,20 @@ async def test_logbook_(
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1676,22 +1672,20 @@ async def test_logbook_multiple_entities(
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },

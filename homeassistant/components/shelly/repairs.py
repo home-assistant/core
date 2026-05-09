@@ -1,7 +1,5 @@
 """Repairs flow for Shelly."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aioshelly.block_device import BlockDevice
