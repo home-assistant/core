@@ -3331,3 +3331,35 @@ async def test_shared_options_with_device_discovery(
 
     # Check if the MQTT items are all available
     await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+@pytest.mark.usefixtures("tag_mock")
+@pytest.mark.parametrize(
+    ("device_config", "qos"),
+    [(TEST_DEVICE_CONFIG | {"qos": 1}, 1), (TEST_DEVICE_CONFIG | {"qos": 2}, 2)],
+)
+async def test_shared_qos_with_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_config: dict[str, Any],
+    qos: int,
+) -> None:
+    """Test shared qos option are passed forward to component configs."""
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock.reset_mock()
+    async_fire_mqtt_message(
+        hass, TEST_DEVICE_DISCOVERY_TOPIC, json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    # Verify device and registry entries are created
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    # Check the subscriptions for tag and sensor were done with shared QoS
+    mqtt_mock.async_subscribe.assert_has_calls(
+        "", call("foobar/tags/bla3/see", ANY, qos, "utf-8")
+    )
+    mqtt_mock.async_subscribe.assert_has_calls(
+        "", call("foobar/sensors/bla2/state", ANY, qos, "utf-8")
+    )
