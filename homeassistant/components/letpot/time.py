@@ -65,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(
         LetPotTimeEntity[LetPotGardenStatus](coordinator, description)
         for description in TIME_SENSORS
-        for coordinator in coordinators.gardens
+        for coordinator in coordinators
     )
 
 

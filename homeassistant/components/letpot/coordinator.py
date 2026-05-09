@@ -2,19 +2,13 @@
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import cast
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
-from letpot.models import (
-    LetPotDevice,
-    LetPotDeviceStatus,
-    LetPotGardenStatus,
-    LetPotWateringSystemStatus,
-)
+from letpot.models import LetPotDevice, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,15 +19,7 @@ from .const import REQUEST_UPDATE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-type LetPotConfigEntry = ConfigEntry[LetPotCoordinators]
-
-
-@dataclass
-class LetPotCoordinators:
-    """Data class holding coordinators."""
-
-    gardens: list[LetPotGardenCoordinator]
-    watering_systems: list[LetPotWateringSystemCoordinator]
+type LetPotConfigEntry = ConfigEntry[list[LetPotDeviceCoordinator[LetPotGardenStatus]]]
 
 
 class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
@@ -89,13 +75,3 @@ class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
         # The subscription task will have updated coordinator.data, so return that data.
         # If we don't return anything here, coordinator.data will be set to None.
         return self.data
-
-
-class LetPotGardenCoordinator(LetPotDeviceCoordinator[LetPotGardenStatus]):
-    """Class to handle data updates for a specific garden."""
-
-
-class LetPotWateringSystemCoordinator(
-    LetPotDeviceCoordinator[LetPotWateringSystemStatus]
-):
-    """Class to handle data updates for a specific watering system."""

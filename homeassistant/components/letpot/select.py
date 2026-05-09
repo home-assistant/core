@@ -144,7 +144,7 @@ async def async_setup_entry(
     async_add_entities(
         LetPotSelectEntity[LetPotGardenStatus](coordinator, description)
         for description in SELECTORS
-        for coordinator in coordinators.gardens
+        for coordinator in coordinators
         if description.supported_fn(coordinator)
     )
 

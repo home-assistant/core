@@ -100,7 +100,7 @@ async def async_setup_entry(
     async_add_entities(
         LetPotBinarySensorEntity[LetPotGardenStatus](coordinator, description)
         for description in BINARY_SENSORS
-        for coordinator in coordinators.gardens
+        for coordinator in coordinators
         if description.supported_fn(coordinator)
     )
 

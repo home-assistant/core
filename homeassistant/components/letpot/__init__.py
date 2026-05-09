@@ -6,7 +6,7 @@ from letpot.client import LetPotClient
 from letpot.converters import GARDEN_CONVERTERS
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
-from letpot.models import AuthenticationInfo
+from letpot.models import AuthenticationInfo, LetPotGardenStatus
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
@@ -19,7 +19,7 @@ from .const import (
     CONF_REFRESH_TOKEN_EXPIRES,
     CONF_USER_ID,
 )
-from .coordinator import LetPotConfigEntry, LetPotCoordinators, LetPotGardenCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -71,8 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 
     device_client = LetPotDeviceClient(auth)
 
-    garden_coordinators: list[LetPotGardenCoordinator] = [
-        LetPotGardenCoordinator(hass, entry, device, device_client)
+    coordinators: list[LetPotDeviceCoordinator[LetPotGardenStatus]] = [
+        LetPotDeviceCoordinator[LetPotGardenStatus](hass, entry, device, device_client)
         for device in devices
         if any(
             converter.supports_type(device.device_type)
@@ -83,14 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
     await asyncio.gather(
         *[
             coordinator.async_config_entry_first_refresh()
-            for coordinator in garden_coordinators
+            for coordinator in coordinators
         ]
     )
 
-    entry.runtime_data = LetPotCoordinators(
-        gardens=garden_coordinators,
-        watering_systems=[],  # Not yet supported in the integration
-    )
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -100,8 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinators = entry.runtime_data.gardens + entry.runtime_data.watering_systems
-        for coordinator in coordinators:
+        for coordinator in entry.runtime_data:
             await coordinator.device_client.unsubscribe(
                 coordinator.device.serial_number
             )

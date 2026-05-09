@@ -91,7 +91,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = [
         LetPotSwitchEntity[LetPotGardenStatus](coordinator, description)
         for description in SWITCHES
-        for coordinator in coordinators.gardens
+        for coordinator in coordinators
         if description.supported_fn(coordinator)
     ]
     async_add_entities(entities)

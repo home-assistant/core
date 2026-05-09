@@ -103,7 +103,7 @@ async def async_setup_entry(
     async_add_entities(
         LetPotNumberEntity[LetPotGardenStatus](coordinator, description)
         for description in NUMBERS
-        for coordinator in coordinators.gardens
+        for coordinator in coordinators
         if description.supported_fn(coordinator)
     )
 
