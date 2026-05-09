@@ -1,7 +1,7 @@
 """Real-time information about public transport departures in Norway."""
 
-from datetime import datetime, timedelta
-from random import randint
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -17,15 +18,17 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    API_CLIENT_NAME,
     ATTR_DELAY,
     ATTR_EXPECTED_AT,
     ATTR_NEXT_UP_AT,
@@ -45,8 +48,12 @@ from .const import (
     CONF_WHITELIST_LINES,
     DEFAULT_ICON_KEY,
     DEFAULT_NAME,
+    DOMAIN,
     ICONS,
 )
+
+if TYPE_CHECKING:
+    from . import EnturConfigEntry, EnturProxy
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -78,33 +85,60 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Entur public transport sensor."""
-
-    expand = config[CONF_EXPAND_PLATFORMS]
-    line_whitelist = config[CONF_WHITELIST_LINES]
-    name = config[CONF_NAME]
-    show_on_map = config[CONF_SHOW_ON_MAP]
-    stop_ids = config[CONF_STOP_IDS]
-    omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
-    number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
-
-    stops = [s for s in stop_ids if "StopPlace" in s]
-    quays = [s for s in stop_ids if "Quay" in s]
-
-    data = EnturPublicTransportData(
-        API_CLIENT_NAME.format(str(randint(100000, 999999))),
-        stops=stops,
-        quays=quays,
-        line_whitelist=line_whitelist,
-        omit_non_boarding=omit_non_boarding,
-        number_of_departures=number_of_departures,
-        web_session=async_get_clientsession(hass),
+    # Trigger the import flow to migrate YAML to config entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
 
-    if expand:
-        await data.expand_all_quays()
-    await data.update()
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        reason = result.get("reason", "unknown")
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2026.12.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Entur public transport",
+            },
+        )
+        return
 
-    proxy = EnturProxy(data)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Entur public transport",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EnturConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Entur sensors from a config entry."""
+    data = entry.runtime_data.data
+    proxy = entry.runtime_data.proxy
+    show_on_map = entry.runtime_data.show_on_map
+    name = entry.title
 
     entities = []
     for place in data.all_stop_places_quays():
@@ -118,26 +152,6 @@ async def async_setup_platform(
         )
 
     async_add_entities(entities, True)
-
-
-class EnturProxy:
-    """Proxy for the Entur client.
-
-    Ensure throttle to not hit rate limiting on the API.
-    """
-
-    def __init__(self, api):
-        """Initialize the proxy."""
-        self._api = api
-
-    @Throttle(timedelta(seconds=15))
-    async def async_update(self) -> None:
-        """Update data in client."""
-        await self._api.update()
-
-    def get_stop_info(self, stop_id: str) -> dict:
-        """Get info about specific stop place."""
-        return self._api.get_stop_info(stop_id)
 
 
 class EnturPublicTransportSensor(SensorEntity):

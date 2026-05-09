@@ -1,0 +1,23 @@
+# serializer version: 1
+# name: test_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by entur.org under NLOD',
+      'delay': 0,
+      'due_at': '12:05',
+      'friendly_name': 'Entur NSR:StopPlace:548 Bergen stasjon',
+      'icon': 'mdi:train',
+      'real_time': True,
+      'route': '45 Voss',
+      'route_id': 'NSB:Line:45',
+      'stop_id': 'NSR:StopPlace:548',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.entur_nsr_stopplace_548_bergen_stasjon',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
