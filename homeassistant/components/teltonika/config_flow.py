@@ -60,8 +60,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         try:
             device_info = await client.get_device_info()
             auth_valid = await client.validate_credentials()
-            if auth_valid and device_info.device_identifier is None:
+            device_id = device_info.device_identifier
+            if auth_valid and device_id is None:
                 system_info = await client.get_system_info()
+                device_id = system_info.mnf_info.serial
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
                 "Failed to connect to Teltonika device at %s: %s", base_url, err
@@ -79,7 +81,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         return {
             "title": device_info.device_name,
-            "device_id": device_info.device_identifier or system_info.mnf_info.serial,
+            "device_id": device_id,
             "host": base_url,
         }
 

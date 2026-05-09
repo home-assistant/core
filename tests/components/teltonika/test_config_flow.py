@@ -448,6 +448,7 @@ async def test_reauth_flow_success_rut240(
 ) -> None:
     """Reauth on a RUT240 falls back to mnf_info.serial for unique_id matching."""
     mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -559,6 +560,7 @@ async def test_form_user_flow_rut240(
 ) -> None:
     """RUT240 firmware omits device_identifier; the flow falls back to mnf_info.serial."""
     mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -587,6 +589,7 @@ async def test_dhcp_discovery_rut240(
 ) -> None:
     """RUT240 DHCP discovery proceeds to confirmation when the MAC isn't yet known."""
     mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -656,6 +659,7 @@ async def test_dhcp_discovery_rut240_already_configured_updates_host(
     """An already-configured RUT240 gets its host updated through dhcp_confirm."""
     mock_config_entry.add_to_hass(hass)
     mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
