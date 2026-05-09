@@ -2,7 +2,7 @@
 
 import logging
 
-from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
+from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -71,6 +71,6 @@ class LgIrEntity(Entity):
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            make_lg_tv_command(code),
+            code.to_command(),
             context=self._context,
         )

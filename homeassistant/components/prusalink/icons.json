@@ -15,9 +15,6 @@
       "filename": {
         "default": "mdi:file-image-outline"
       },
-      "location": {
-        "default": "mdi:map-marker"
-      },
       "material": {
         "default": "mdi:palette-swatch-variant"
       },

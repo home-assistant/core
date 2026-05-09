@@ -3,10 +3,12 @@
 import asyncio
 from datetime import timedelta
 
+from aiohttp import ClientResponseError
 from data_grand_lyon_ha import DataGrandLyonClient, TclPassage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LINE, CONF_STOP_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_STOP
@@ -57,6 +59,13 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]
         for i, subentry in enumerate(stop_subentries):
             result = stop_results[i]
             if isinstance(result, BaseException):
+                if isinstance(result, ClientResponseError) and result.status in (
+                    401,
+                    403,
+                ):
+                    raise ConfigEntryAuthFailed(
+                        "Authentication failed for Data Grand Lyon"
+                    ) from result
                 LOGGER.warning(
                     "Error fetching departures for stop %s: %s",
                     subentry.subentry_id,
