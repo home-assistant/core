@@ -85,13 +85,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 "console_id": airtouch_device.console_id,
                 "name": airtouch_device.name,
             }
-
-            hass.config_entries.async_update_entry(
-                entry,
-                unique_id=str(airtouch_device.system_id),
-                data=new_data,
-                minor_version=2,
-            )
         except TimeoutError as exception:
             _LOGGER.error("Error while migrating: %s", exception)
             return False
@@ -142,8 +135,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 entity.unique_id,
                 new_unique_id,
             )
+            await hass.config_entries.async_reload(entry.entry_id)
+            hass.config_entries.async_update_entry(
+                entry,
+                unique_id=str(airtouch_device.system_id),
+                data=new_data,
+                minor_version=2,
+            )
     # device_registry = dr.async_get(hass)
     # update_device_id(airtouch_device, device_registry)
+
     return True
 
 
