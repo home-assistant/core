@@ -790,6 +790,16 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_KB_SOUND,
+            translation_key="keyboard_tone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_PROPEL,
+            translation_key="alarm_push",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.WK: (
         SwitchEntityDescription(
