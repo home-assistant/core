@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
+from homeassistant.components.met.const import DEFAULT_NAME
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_WEATHER_DEW_POINT,
@@ -15,6 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -71,6 +73,18 @@ async def test_weather(hass: HomeAssistant, mock_weather: MagicMock) -> None:
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 90
     assert state.attributes[ATTR_WEATHER_DEW_POINT] == 12.1
     assert state.attributes[ATTR_WEATHER_UV_INDEX] == 1.1
+
+
+async def test_fixed_location_uses_entry_title_as_main_entity_name(
+    hass: HomeAssistant, mock_weather: MagicMock
+) -> None:
+    """Test fixed-location weather entity uses the entry title as the entity name."""
+    await init_integration(hass)
+
+    state = hass.states.get("weather.met_no_0_1_0")
+
+    assert state
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{DEFAULT_NAME} (0, 1.0)"
 
 
 async def test_tracking_home(hass: HomeAssistant, mock_weather: MagicMock) -> None:
@@ -146,5 +160,5 @@ async def test_remove_hourly_entity(
         data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_met_no"]
-    assert list(entity_registry.entities.keys()) == ["weather.forecast_met_no"]
+    assert hass.states.async_entity_ids("weather") == ["weather.met_no_10_20"]
+    assert list(entity_registry.entities.keys()) == ["weather.met_no_10_20"]

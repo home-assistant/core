@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.met.const import (
     CONF_TRACK_HOME,
+    DEFAULT_NAME,
     DOMAIN,
     HOME_LOCATION_NAME,
 )
@@ -78,7 +79,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["title"] == f"{DEFAULT_NAME} (0, 0)"
     assert result["data"] == test_data
 
 
@@ -168,8 +169,69 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["title"] == f"{DEFAULT_NAME} (12, 23)"
+    assert entry.title == f"{DEFAULT_NAME} (12, 23)"
     assert result["data"] == update_data
+    weatherdatamock.assert_called_with(
+        {"lat": "12", "lon": "23", "msl": "456"}, ANY, api_url=ANY
+    )
+
+
+@pytest.mark.disable_autouse_fixture
+async def test_options_flow_updates_generated_fixed_location_title(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow updates a generated fixed-location title."""
+    update_data = {
+        CONF_LATITUDE: 12,
+        CONF_LONGITUDE: 23,
+        CONF_ELEVATION: 456,
+    }
+
+    entry = await init_integration(hass)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.met.coordinator.metno.MetWeatherData"
+    ) as weatherdatamock:
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id, data=update_data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} (12, 23)"
+    assert entry.title == f"{DEFAULT_NAME} (12, 23)"
+    assert entry.data == update_data
+    weatherdatamock.assert_called_with(
+        {"lat": "12", "lon": "23", "msl": "456"}, ANY, api_url=ANY
+    )
+
+
+@pytest.mark.disable_autouse_fixture
+async def test_options_flow_preserves_custom_title(hass: HomeAssistant) -> None:
+    """Test options flow preserves a user-customized title."""
+    update_data = {
+        CONF_LATITUDE: 12,
+        CONF_LONGITUDE: 23,
+        CONF_ELEVATION: 456,
+    }
+
+    entry = await init_integration(hass, title="Custom title")
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.met.coordinator.metno.MetWeatherData"
+    ) as weatherdatamock:
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id, data=update_data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Custom title"
+    assert entry.title == "Custom title"
+    assert entry.data == update_data
     weatherdatamock.assert_called_with(
         {"lat": "12", "lon": "23", "msl": "456"}, ANY, api_url=ANY
     )
@@ -198,6 +260,8 @@ async def test_options_flow_tracking_home_entry_uses_fixed_location(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} (12, 23)"
+    assert entry.title == f"{DEFAULT_NAME} (12, 23)"
     assert result["data"] == update_data
     assert entry.data == update_data
     assert CONF_TRACK_HOME not in entry.data

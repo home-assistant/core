@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.met.const import (
     CONF_TRACK_HOME,
+    DEFAULT_NAME,
     DOMAIN,
     HOME_LOCATION_NAME,
 )
@@ -14,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def init_integration(
-    hass: HomeAssistant, track_home: bool = False
+    hass: HomeAssistant, track_home: bool = False, title: str | None = None
 ) -> MockConfigEntry:
     """Set up the Met integration in Home Assistant."""
     entry_data = {
@@ -29,7 +30,13 @@ async def init_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=entry_data,
-        title=HOME_LOCATION_NAME if track_home else "",
+        title=(
+            title
+            if title is not None
+            else HOME_LOCATION_NAME
+            if track_home
+            else f"{DEFAULT_NAME} (0, 1.0)"
+        ),
         minor_version=2,
     )
     with patch(

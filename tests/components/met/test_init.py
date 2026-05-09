@@ -87,8 +87,8 @@ async def test_removing_incorrect_devices(
 @pytest.mark.parametrize(
     ("title", "expected_title", "entity_id"),
     [
-        ("", "Somewhere", "weather.forecast_somewhere"),
-        ("Custom title", "Custom title", "weather.forecast_custom_title"),
+        ("", "Somewhere", "weather.somewhere"),
+        ("Custom title", "Custom title", "weather.custom_title"),
     ],
 )
 async def test_migrate_name_to_title(
