@@ -159,8 +159,10 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) as err:
             if isinstance(err, JSONDecodeError):
                 # Plain html response (usually occurs after a firmware update), requiring session reinitialization
-                _LOGGER.info("Stale session detected, reloading integration")
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                _LOGGER.info("Stale session detected, scheduling integration reload")
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
