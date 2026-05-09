@@ -72,8 +72,7 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{client.device.system_id}_{zone_name.zone_number}"),
-                (DOMAIN, f"zone_{zone_name.zone_number}"),
+                (DOMAIN, f"{client.device.system_id}"),
             },
             name=zone_name.zone_name,
             manufacturer="Polyaire",
