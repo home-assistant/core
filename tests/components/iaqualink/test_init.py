@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
+    AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
 from iaqualink.systems.iaqua.device import (
@@ -20,6 +21,7 @@ from iaqualink.systems.iaqua.system import IaquaSystem
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
+from homeassistant.components.iaqualink.coordinator import BACKOFF_MULTIPLIER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -102,6 +104,70 @@ async def test_system_refresh_failure_marks_entities_unavailable(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_system_rate_limited_keeps_entities_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rate-limited update keeps entities at their last known state and backs off."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+    light = get_aqualink_device(
+        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
+    )
+    devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value=devices)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    coordinators = list(config_entry.runtime_data.coordinators.values())
+    assert len(coordinators) == 1
+    coordinator = coordinators[0]
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+    system.update = AsyncMock(side_effect=AqualinkServiceThrottledException)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert coordinator.update_interval == UPDATE_INTERVAL * BACKOFF_MULTIPLIER
+
+    system.update = AsyncMock()
+
+    freezer.tick(delta=coordinator.update_interval)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.update_interval == UPDATE_INTERVAL
 
 
 async def test_light_service_calls_update_entity_state(
