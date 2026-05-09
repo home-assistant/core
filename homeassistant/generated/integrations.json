@@ -1014,6 +1014,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "cielo_home": {
+      "name": "Cielo Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cisco": {
       "name": "Cisco",
       "integrations": {
@@ -1248,6 +1254,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "data_grand_lyon": {
+      "name": "Data Grand Lyon",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "datadog": {
       "name": "Datadog",
@@ -5169,6 +5181,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "paj_gps": {
+      "name": "PAJ GPS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "palazzetti": {
       "name": "Palazzetti",
