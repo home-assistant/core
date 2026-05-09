@@ -226,9 +226,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         if device_id is not None:
-            # Set unique ID and check for existing conf
             await self.async_set_unique_id(device_id)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         else:
             # Older firmware (API v1.0) does not expose the serial without
             # authentication, so we fall back to the DHCP MAC as the flow
@@ -236,7 +234,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # Already-configured entries (which use the serial as unique_id)
             # are caught later in async_step_dhcp_confirm.
             await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
         self.context["title_placeholders"] = {
