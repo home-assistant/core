@@ -1,0 +1,79 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom service actions.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: Dependencies are not introduced in Milestone 0.
+  inject-websession:
+    status: exempt
+    comment: Web session injection will be added with the client library.
+  strict-typing:
+    status: exempt
+    comment: Strict typing will be added in a later milestone.
