@@ -17,11 +17,11 @@ from iaqualink.systems.iaqua.device import (
     IaquaThermostat,
 )
 from iaqualink.systems.iaqua.system import IaquaSystem
+import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.iaqualink.const import UPDATE_INTERVAL_BY_SYSTEM_TYPE
-from homeassistant.components.iaqualink.coordinator import BACKOFF_MULTIPLIER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -113,8 +113,9 @@ async def test_system_rate_limited_keeps_entities_available(
     config_entry: MockConfigEntry,
     client: AqualinkClient,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a rate-limited update keeps entities at their last known state and backs off."""
+    """Test a rate-limited update keeps entities at their last known state."""
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
@@ -148,12 +149,6 @@ async def test_system_rate_limited_keeps_entities_available(
     assert state is not None
     assert state.state == STATE_ON
 
-    coordinators = list(config_entry.runtime_data.coordinators.values())
-    assert len(coordinators) == 1
-    coordinator = coordinators[0]
-
-    assert coordinator.update_interval == update_interval
-
     system.update = AsyncMock(side_effect=AqualinkServiceThrottledException)
 
     await _advance_coordinator_time(hass, freezer)
@@ -161,15 +156,7 @@ async def test_system_rate_limited_keeps_entities_available(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert coordinator.update_interval == update_interval * BACKOFF_MULTIPLIER
-
-    system.update = AsyncMock()
-
-    freezer.tick(delta=coordinator.update_interval)
-    async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert coordinator.update_interval == update_interval
+    assert "Rate limited by iAquaLink" in caplog.text
 
 
 async def test_light_service_calls_update_entity_state(
