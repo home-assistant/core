@@ -41,7 +41,6 @@ from .entity import CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-
 ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
