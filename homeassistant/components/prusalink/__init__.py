@@ -67,7 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.version > PrusaLinkConfigFlow.VERSION:
+    if (config_entry.version, config_entry.minor_version) > (
+        PrusaLinkConfigFlow.VERSION,
+        PrusaLinkConfigFlow.MINOR_VERSION,
+    ):
         # This means the user has downgraded from a future version
         return False
 
