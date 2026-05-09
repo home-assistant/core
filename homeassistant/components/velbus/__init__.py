@@ -95,51 +95,57 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
 
 
 async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
-    """Ensure property entity unique_ids use {serial}-{property_key} format."""
+    """Ensure property entity unique_ids use {serial}-{property_key} format.
+
+    Old property entities had channel_number=0, so their unique_id ended in "-0".
+    New property entities use the property class name, e.g. "{serial}-SelectedProgram".
+    """
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    property_key_map = await hass.async_add_executor_job(get_property_key_map)
+    # Maps display name -> class name, e.g. "Selected program" -> "SelectedProgram".
+    # Display name matches original_name stored in the entity registry.
+    property_name_map = await hass.async_add_executor_job(get_property_key_map)
+
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
-        if not entry.original_name or not entry.device_id:
+        # Old property entities always had channel_number=0, so unique_id ends in "-0"
+        if not entry.unique_id.endswith("-0"):
             continue
-        property_key = property_key_map.get(entry.original_name)
-        if property_key is None:
+        if not entry.device_id:
             continue
         device = dev_reg.async_get(entry.device_id)
         if device is None or device.via_device_id is not None:
             continue
-        serial = device.serial_number or next(
-            (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
-        )
-        if serial is None:
-            _LOGGER.debug(
-                "Skipping unique_id migration for entity %s: device %s has no serial number or Velbus identifier",
-                entry.entity_id,
-                device.id,
-            )
+        if not any(ident[0] == DOMAIN for ident in device.identifiers):
+            continue
+
+        # Identify which property this is from the entity's display name
+        if not entry.original_name:
+            continue
+        property_key = property_name_map.get(entry.original_name)
+        if property_key is None:
+            continue
+
+        # Parse serial directly from the existing unique_id (everything before "-0")
+        serial = entry.unique_id[:-2]
+        if not serial:
             continue
 
         expected_unique_id = f"{serial}-{property_key}"
-        if entry.unique_id != expected_unique_id:
-            if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
-                # Target unique_id already exists (created by new code) — remove stale entry
-                _LOGGER.debug(
-                    "Removing stale entity %s with outdated unique_id %s",
-                    entry.entity_id,
-                    entry.unique_id,
-                )
-                ent_reg.async_remove(entry.entity_id)
-            else:
-                _LOGGER.debug(
-                    "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
-                )
-                ent_reg.async_update_entity(
-                    entry.entity_id, new_unique_id=expected_unique_id
-                )
+        if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
+            # Target already exists (created by new code) — remove stale entry
+            _LOGGER.debug(
+                "Removing stale entity %s with outdated unique_id %s",
+                entry.entity_id,
+                entry.unique_id,
+            )
+            ent_reg.async_remove(entry.entity_id)
         else:
             _LOGGER.debug(
-                "Unique_id is ok: %s = %s", entry.unique_id, expected_unique_id
+                "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
+            )
+            ent_reg.async_update_entity(
+                entry.entity_id, new_unique_id=expected_unique_id
             )
 
 
