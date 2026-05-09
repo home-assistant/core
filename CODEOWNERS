@@ -1780,6 +1780,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/thermobeacon/ @bdraco
 /homeassistant/components/thermopro/ @bdraco @h3ss
 /tests/components/thermopro/ @bdraco @h3ss
+/homeassistant/components/thesilentwave/ @thesilentwave
+/tests/components/thesilentwave/ @thesilentwave
 /homeassistant/components/thethingsnetwork/ @angelnu
 /tests/components/thethingsnetwork/ @angelnu
 /homeassistant/components/thread/ @home-assistant/core
