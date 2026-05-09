@@ -1,7 +1,5 @@
 """Models used by multiple MQTT modules."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 import asyncio
 from collections import deque
@@ -10,6 +8,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
+
+from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, callback
@@ -26,8 +26,6 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import MQTTMessage
-
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -400,6 +398,12 @@ class MqttData:
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
+    # the entity registry index, which is a tuple (entity_platform, "mqtt", unique_id)
+    # It allows to cleanup disabled entities when an empty payload is received.
+    discovery_discovered_and_disabled: dict[tuple[str, str], tuple[str, str, str]] = (
+        field(default_factory=dict)
+    )
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict

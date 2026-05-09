@@ -183,6 +183,42 @@ async def test_password_auth_incorrect_login(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+async def test_password_auth_account_locked(
+    hass: HomeAssistant, mock_growatt_classic_api: MagicMock, mock_setup_entry: None
+) -> None:
+    """Test password authentication when account is locked out."""
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": "Account locked",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Test recovery after lockout expires
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    mock_growatt_classic_api.plant_list.return_value = GROWATT_PLANT_LIST_RESPONSE
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_password_auth_no_plants(
     hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
@@ -335,8 +371,9 @@ async def test_token_auth_api_error(
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    error = growattServer.GrowattV1ApiError("API error")
-    error.error_code = error_code
+    error = growattServer.GrowattV1ApiError(
+        message="API error", error_code=error_code, error_msg="API error"
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
 
     result = await hass.config_entries.flow.async_configure(
@@ -846,9 +883,11 @@ async def test_reauth_token_success(
 
 
 def _make_no_privilege_error() -> growattServer.GrowattV1ApiError:
-    error = growattServer.GrowattV1ApiError("No privilege access")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
-    return error
+    return growattServer.GrowattV1ApiError(
+        message="No privilege access",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="No privilege access",
+    )
 
 
 @pytest.mark.parametrize(
@@ -906,8 +945,11 @@ async def test_reauth_token_non_auth_api_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    error = growattServer.GrowattV1ApiError("Rate limit exceeded")
-    error.error_code = V1_API_ERROR_RATE_LIMITED
+    error = growattServer.GrowattV1ApiError(
+        message="Rate limit exceeded",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Rate limit exceeded",
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_TOKEN

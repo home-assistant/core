@@ -1,12 +1,13 @@
 """Light platform for Liebherr integration."""
 
-from __future__ import annotations
-
 import math
 from typing import TYPE_CHECKING, Any
 
 from pyliebherrhomeapi import PresentationLightControl
-from pyliebherrhomeapi.const import CONTROL_PRESENTATION_LIGHT
+from pyliebherrhomeapi.const import (
+    CONTROL_PRESENTATION_LIGHT,
+    DEFAULT_PRESENTATION_LIGHT_MAX_BRIGHTNESS,
+)
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrEntity
-
-DEFAULT_MAX_BRIGHTNESS_LEVEL = 5
 
 PARALLEL_UPDATES = 1
 
@@ -108,7 +107,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
         control = self._light_control
         if TYPE_CHECKING:
             assert control is not None
-        max_level = control.max or DEFAULT_MAX_BRIGHTNESS_LEVEL
+        max_level = control.max or DEFAULT_PRESENTATION_LIGHT_MAX_BRIGHTNESS
 
         if ATTR_BRIGHTNESS in kwargs:
             target = max(1, round(kwargs[ATTR_BRIGHTNESS] * max_level / 255))

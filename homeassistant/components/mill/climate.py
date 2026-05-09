@@ -13,14 +13,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_IP_ADDRESS,
-    CONF_USERNAME,
-    PRECISION_TENTHS,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -32,7 +25,6 @@ from .const import (
     ATTR_COMFORT_TEMP,
     ATTR_ROOM_NAME,
     ATTR_SLEEP_TEMP,
-    CLOUD,
     CONNECTION_TYPE,
     DOMAIN,
     LOCAL,
@@ -41,7 +33,7 @@ from .const import (
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
 )
-from .coordinator import MillDataUpdateCoordinator
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillBaseEntity
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
@@ -56,16 +48,15 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mill climate."""
+    mill_data_coordinator = entry.runtime_data
+
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
         async_add_entities([LocalMillHeater(mill_data_coordinator)])
         return
-
-    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
 
     entities = [
         MillHeater(mill_data_coordinator, mill_device)

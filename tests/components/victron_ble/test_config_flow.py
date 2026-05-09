@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .fixtures import (
     NOT_VICTRON_SERVICE_INFO,
-    VICTRON_INVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_RS_SERVICE_INFO,
     VICTRON_TEST_WRONG_TOKEN,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
@@ -96,7 +96,7 @@ async def test_async_step_bluetooth_invalid_key_retry(
         ),
         (
             SOURCE_BLUETOOTH,
-            VICTRON_INVERTER_SERVICE_INFO,
+            VICTRON_INVERTER_RS_SERVICE_INFO,
             "not_supported",
         ),
         (
@@ -307,3 +307,23 @@ async def test_async_step_reauth_device_not_found(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "no_devices_found"}
+
+
+async def test_reauth_flow_sets_title_placeholders(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test that reauth flow has title_placeholders set for flow_title rendering.
+
+    Regression test for https://github.com/home-assistant/core/issues/167105 where
+    the flow_title used '{title}' but HA only automatically provides 'name' in
+    title_placeholders for reauth flows, causing a frontend MISSING_VALUE error.
+    """
+    await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["title_placeholders"]["name"] == (
+        mock_config_entry_added_to_hass.title
+    )

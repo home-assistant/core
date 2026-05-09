@@ -1,7 +1,5 @@
 """Repairs implementation for the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from hass_nabucasa.payments_api import SubscriptionInfo

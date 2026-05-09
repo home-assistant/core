@@ -48,7 +48,7 @@
         "data_description": {
           "advanced_options": "Enable and select **Submit** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
-          "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+          "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
           "client_key": "The private key file that belongs to your client certificate.",
@@ -57,7 +57,7 @@
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "transport": "The transport to be used for the connection to your MQTT broker.",
@@ -83,7 +83,7 @@
           "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
           "username": "[%key:component::mqtt::config::step::broker::data_description::username%]"
         },
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
+        "description": "The MQTT broker reported an authentication error. Please confirm the broker's correct username and password.",
         "title": "Re-authentication required with the MQTT broker"
       },
       "start_addon": {
@@ -162,7 +162,7 @@
             "component": "Entity"
           },
           "data_description": {
-            "component": "Select the entity you want to delete. Minimal one entity is required."
+            "component": "Select the entity you want to delete. At least one entity is required."
           },
           "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
           "title": "Delete entity"
@@ -1119,6 +1119,20 @@
     "invalid_platform_config": {
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
+    },
+    "protocol_5_migration": {
+      "fix_flow": {
+        "abort": {
+          "mqtt_broker_migration_to_v5_failed": "Migrating the broker ({broker}) protocol version from {protocol} to 5 failed, and the migration has been aborted.\n\nYour broker may not support MQTT protocol version 5.\n\nPlease [reconfigure your MQTT broker settings]({url_mqtt_broker_configuration}) or upgrade your broker to support MQTT protocol version 5 to fix this issue."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant is migrating to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will try to migrate your MQTT broker configuration to use protocol version 5 to fix this issue.",
+            "title": "MQTT protocol change required"
+          }
+        }
+      },
+      "title": "Deprecated MQTT protocol {protocol} in use"
     },
     "subentry_migration_discovery": {
       "fix_flow": {

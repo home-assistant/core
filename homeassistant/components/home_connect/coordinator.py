@@ -1,7 +1,5 @@
 """Coordinator for Home Connect."""
 
-from __future__ import annotations
-
 from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -533,7 +531,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         current_program_key = program.key
                         program_options = program.options
                         if (
-                            current_program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+                            current_program_key
+                            in (
+                                ProgramKey.BSH_COMMON_FAVORITE_001,
+                                ProgramKey.BSH_COMMON_FAVORITE_002,
+                            )
                             and program_options
                         ):
                             # The API doesn't allow to fetch the options from the favorite program.
@@ -616,7 +618,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options_to_notify = options.copy()
         options.clear()
         if (
-            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            program_key
+            in (
+                ProgramKey.BSH_COMMON_FAVORITE_001,
+                ProgramKey.BSH_COMMON_FAVORITE_002,
+            )
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
             and isinstance(event.value, str)
         ):
@@ -629,16 +635,19 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options.update(await self.get_options_definitions(resolved_program_key))
 
         for option in options.values():
-            option_value = option.constraints.default if option.constraints else None
-            if option_value is not None:
-                option_event_key = EventKey(option.key)
+            option_event_key = EventKey(option.key)
+            if (
+                option_event_key not in events
+                and option.constraints
+                and (option_default_value := option.constraints.default) is not None
+            ):
                 events[option_event_key] = Event(
                     option_event_key,
                     option.key.value,
                     0,
                     "",
                     "",
-                    option_value,
+                    option_default_value,
                     option.name,
                     unit=option.unit,
                 )
