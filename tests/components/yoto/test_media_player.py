@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -33,7 +34,6 @@ ENTITY_ID = "media_player.nursery_yoto"
 async def test_media_player_state(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_token_hex: MagicMock,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
@@ -60,7 +60,6 @@ async def test_media_player_state(
 async def test_playback_commands(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
     service: str,
@@ -83,7 +82,6 @@ async def test_playback_commands(
 async def test_set_volume(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
@@ -103,7 +101,6 @@ async def test_set_volume(
 async def test_play_media_with_full_id(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
@@ -129,7 +126,6 @@ async def test_play_media_with_full_id(
 async def test_seek(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
@@ -146,10 +142,31 @@ async def test_seek(
     mock_yoto_manager.seek.assert_called_once_with("player-test", 30)
 
 
+async def test_play_media_invalid_seconds(
+    hass: HomeAssistant,
+    mock_yoto_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """A malformed seconds segment raises ServiceValidationError."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "media_content_type": "music",
+                "media_content_id": "card-test+02+02-INT+abc",
+            },
+            blocking=True,
+        )
+
+
 async def test_play_media_card_only(
     hass: HomeAssistant,
     mock_yoto_manager: MagicMock,
-    mock_devices_endpoint,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:

@@ -4,10 +4,8 @@
       "account_mismatch": "The Yoto account that was reauthorized does not match the original account.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "connection_error": "Could not connect to the Yoto API.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "no_family": "No Yoto family was found for this account.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
@@ -41,6 +39,12 @@
     },
     "command_failed": {
       "message": "Yoto command failed: {error}"
+    },
+    "invalid_media_id": {
+      "message": "Could not parse media id {media_id}. Expected a card id, optionally followed by +chapter+track+seconds."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "update_error": {
       "message": "Error communicating with the Yoto API: {error}"

@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import time
 from unittest.mock import MagicMock, patch
 
+import jwt
 import pytest
 from yoto_api import YotoPlayer
 from yoto_api.Card import Card
@@ -15,17 +16,16 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.yoto.const import DOMAIN, YOTO_SCOPES
-from homeassistant.components.yoto.coordinator import DEVICES_ENDPOINT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
-FAMILY_ID = "family-test"
+USER_ID = "auth0|user-test"
 PLAYER_ID = "player-test"
 CARD_ID = "card-test"
 SCOPES = " ".join(YOTO_SCOPES)
+ACCESS_TOKEN = jwt.encode({"sub": USER_ID}, "test-secret-long-enough-for-hmac-sha256")
 
 
 def _build_player() -> YotoPlayer:
@@ -34,6 +34,8 @@ def _build_player() -> YotoPlayer:
         id=PLAYER_ID,
         name="Nursery Yoto",
         device_type="v3",
+        device_family="v3",
+        generation="gen3",
         online=True,
         firmware_version="v2.17.5",
         playback_status="playing",
@@ -95,11 +97,11 @@ def mock_config_entry(expires_at: float) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Yoto",
-        unique_id=FAMILY_ID,
+        unique_id=USER_ID,
         data={
             "auth_implementation": DOMAIN,
             "token": {
-                "access_token": "mock-access-token",
+                "access_token": ACCESS_TOKEN,
                 "refresh_token": "mock-refresh-token",
                 "expires_at": expires_at,
                 "expires_in": 3600,
@@ -109,24 +111,6 @@ def mock_config_entry(expires_at: float) -> MockConfigEntry:
         },
         entry_id="01J5TX5A0FF6G5V0QJX6HBC94T",
     )
-
-
-@pytest.fixture
-def mock_devices_endpoint(
-    aioclient_mock: AiohttpClientMocker, mock_yoto_manager: MagicMock
-) -> AiohttpClientMocker:
-    """Mock /devices/mine using the players already on the manager fixture."""
-    devices = [
-        {
-            "deviceId": pid,
-            "name": player.name,
-            "online": player.online,
-            "deviceType": player.device_type,
-        }
-        for pid, player in mock_yoto_manager.players.items()
-    ]
-    aioclient_mock.get(DEVICES_ENDPOINT, json={"devices": devices})
-    return aioclient_mock
 
 
 @pytest.fixture
