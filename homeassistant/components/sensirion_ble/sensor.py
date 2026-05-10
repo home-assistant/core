@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .models import SensirionBluetoothConfigEntry
+from . import SensirionBluetoothConfigEntry
 
 SENSOR_DESCRIPTIONS: dict[
     tuple[SSDSensorDeviceClass, Units | None], SensorEntityDescription

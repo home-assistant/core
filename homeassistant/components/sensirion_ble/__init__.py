@@ -12,11 +12,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .models import SensirionBluetoothConfigEntry
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+type SensirionBluetoothConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
 async def async_setup_entry(
@@ -40,6 +40,8 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SensirionBluetoothConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
