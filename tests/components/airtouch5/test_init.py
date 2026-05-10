@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.airtouch5 import DOMAIN, update_device_id
+from homeassistant.components.airtouch5 import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -79,8 +79,6 @@ async def test_update_device_id(hass: HomeAssistant) -> None:
         name="Duplicate Device",
         sw_version="1.0",
     )
-
-    update_device_id(airtouch_device, device_registry)
 
     # Check zone_device was updated
     updated_zone = device_registry.async_get_device({(DOMAIN, "sys123_1")})

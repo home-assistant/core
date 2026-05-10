@@ -1,9 +1,5 @@
 """Tests for the Airtouch5 cover platform."""
 
-<<<<<<< HEAD
-from asyncio import sleep
-=======
->>>>>>> ed88036ce95 (removing fragile list index)
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
@@ -129,35 +125,15 @@ async def test_cover_callbacks(
             # Ensure Home Assistant finishes processing
             await hass.async_block_till_done()
 
-<<<<<<< HEAD
-        # And call it to effectively launch the callback as the server would do
-
-        # Partly open
-        await _call_zone_status_callback(0.7)
-        await sleep(0.01)  # let the loop process state updates
-=======
         # Test various positions
 
         # Partly open (70%)
         await _trigger_callback(0.7)
->>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN
         assert state.attributes.get(ATTR_CURRENT_POSITION) == 70
 
-<<<<<<< HEAD
-    # Fully open
-    await _call_zone_status_callback(1)
-    state = hass.states.get(COVER_ENTITY_ID)
-    assert state
-    assert state.state == CoverState.OPEN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
-
-        # Fully closed
-        await _call_zone_status_callback(0.0)
-        await sleep(0.01)  # let the loop process state updates
-=======
         # Fully open (100%)
         await _trigger_callback(1)
         state = hass.states.get(COVER_ENTITY_ID)
@@ -167,20 +143,13 @@ async def test_cover_callbacks(
 
         # Fully closed (0%)
         await _trigger_callback(0.0)
->>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.CLOSED
         assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
-<<<<<<< HEAD
-        # Partly reopened
-        await _call_zone_status_callback(0.3)
-        await sleep(0.01)  # let the loop process state updates
-=======
         # Partly reopened (30%)
         await _trigger_callback(0.3)
->>>>>>> ed88036ce95 (removing fragile list index)
         state = hass.states.get(COVER_ENTITY_ID)
         assert state
         assert state.state == CoverState.OPEN

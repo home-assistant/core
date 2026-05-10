@@ -126,8 +126,8 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _discovery(self) -> list[AirtouchDevice]:
         """Discover Airtouch devices on the network."""
         devices: list[AirtouchDevice] = []
+        AirtouchDiscovery_instance = AirtouchDiscovery()
         try:
-            AirtouchDiscovery_instance = AirtouchDiscovery()
             await AirtouchDiscovery_instance.establish_server()
             devices = await AirtouchDiscovery_instance.discover()
             _LOGGER.info("Finished waiting for airtouch device")
