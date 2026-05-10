@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 import logging
 
-from duco import DucoClient
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, Node
+from duco_connectivity import DucoClient
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
+from duco_connectivity.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

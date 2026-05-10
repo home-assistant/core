@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError
+from duco_connectivity.exceptions import DucoConnectionError
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,9 @@ async def test_system_health_single_entry_quota_error(
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test system health reports unreachable when quota retrieval fails."""
-    mock_duco_client.async_get_write_req_remaining.side_effect = DucoConnectionError
+    mock_duco_client.async_get_write_requests_remaining.side_effect = (
+        DucoConnectionError
+    )
 
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
