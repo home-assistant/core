@@ -11,8 +11,8 @@ from aiocentriconnect.exceptions import (
     CentriConnectTooManyRequestsError,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.centriconnect.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -78,7 +78,7 @@ async def test_form_not_found_error(
 ) -> None:
     """Test we handle not found error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -148,7 +148,7 @@ async def test_form_decode_error(
 ) -> None:
     """Test we handle decode error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -218,7 +218,7 @@ async def test_form_unknown_error(
 ) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -286,7 +286,7 @@ async def test_form_unknown_error(
 async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we handle timeout error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -356,7 +356,7 @@ async def test_form_cannot_connect(
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -426,7 +426,7 @@ async def test_form_too_many_requests(
 ) -> None:
     """Test we handle too many requests error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -496,7 +496,7 @@ async def test_form_empty_response(
 ) -> None:
     """Test we handle empty response error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -569,7 +569,7 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
