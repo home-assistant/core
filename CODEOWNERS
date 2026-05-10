@@ -2033,8 +2033,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/yamaha_musiccast/ @vigonotion @micha91
 /homeassistant/components/yandex_transport/ @rishatik92 @devbis
 /tests/components/yandex_transport/ @rishatik92 @devbis
-/homeassistant/components/yardian/ @h3l1o5
-/tests/components/yardian/ @h3l1o5
+/homeassistant/components/yardian/ @aeon-matrix
+/tests/components/yardian/ @aeon-matrix
 /homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward

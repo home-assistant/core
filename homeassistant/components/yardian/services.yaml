@@ -6,7 +6,7 @@ start_irrigation:
   fields:
     duration:
       required: true
-      default: 6
+      default: 60
       selector:
         number:
           min: 1
