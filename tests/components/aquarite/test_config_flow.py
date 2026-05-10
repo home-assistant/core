@@ -44,22 +44,22 @@ async def _configure(hass: HomeAssistant) -> dict:
 # ── User Step ─────────────────────────────────────────────────────
 
 
-async def test_user_step_shows_form(hass: HomeAssistant) -> None:
-    """Test that the user step shows the auth form."""
+async def test_user_step(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
+) -> None:
+    """Test the user step shows a form and creates an entry on submission."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-async def test_user_step_creates_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_aquarite_client: AsyncMock,
-) -> None:
-    """Test successful authentication creates an entry."""
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
