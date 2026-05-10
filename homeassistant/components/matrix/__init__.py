@@ -108,7 +108,7 @@ type MatrixConfigEntry = ConfigEntry[MatrixBot]
 async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Set up Matrix from a config entry."""
     store: Store[dict[str, str]] = Store(
-        hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
+        hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}", private=True
     )
     bot = MatrixBot(
         hass,
