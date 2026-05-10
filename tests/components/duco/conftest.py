@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from duco.models import (
+from duco_connectivity import (
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
@@ -211,12 +211,6 @@ def mock_duco_client(
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
         patch(
-            "homeassistant.components.duco.build_ssl_context",
-        ),
-        patch(
-            "homeassistant.components.duco.config_flow.build_ssl_context",
-        ),
-        patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
         ) as mock_class,
@@ -233,7 +227,7 @@ def mock_duco_client(
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status=DiagStatus.OK)
         ]
-        client.async_get_write_req_remaining.return_value = 100
+        client.async_get_write_requests_remaining.return_value = 100
         yield client
 
 
