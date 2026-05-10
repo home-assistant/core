@@ -100,7 +100,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.BYPASS_POWER,
-        generation=(2,),
         translation_key="bypass_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -116,7 +115,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.TOTAL_OUTPUT_ENERGY,
-        generation=(2,),
         translation_key="total_ac_output_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -124,7 +122,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.OFF_GRID_OUTPUT_ENERGY,
-        generation=(2,),
         translation_key="off_grid_output_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -132,7 +129,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.BYPASS_INPUT_ENERGY,
-        generation=(2,),
         translation_key="bypass_input_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -140,7 +136,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.DAILY_CHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_daily_charging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -148,7 +143,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.DAILY_DISCHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_daily_discharging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -156,7 +150,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.TOTAL_CHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_total_charging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -164,7 +157,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.TOTAL_DISCHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_total_discharging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -252,7 +244,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_CURRENT_1,
-        generation=(2,),
         translation_key="dc_input_current_1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -261,7 +252,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_VOLTAGE_1,
-        generation=(2,),
         translation_key="dc_input_voltage_1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -278,7 +268,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_CURRENT_2,
-        generation=(2,),
         translation_key="dc_input_current_2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -287,7 +276,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_VOLTAGE_2,
-        generation=(2,),
         translation_key="dc_input_voltage_2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
