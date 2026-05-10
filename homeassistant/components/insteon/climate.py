@@ -108,7 +108,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return HVAC_MODES[self._insteon_device.groups[SYSTEM_MODE].value]
+        return HVAC_MODES.get(
+            self._insteon_device.groups[SYSTEM_MODE].value, HVACMode.OFF
+        )
 
     @property
     def current_temperature(self) -> float | None:
@@ -141,7 +143,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return FAN_MODES[self._insteon_device.groups[FAN_MODE].value]
+        return FAN_MODES.get(self._insteon_device.groups[FAN_MODE].value)
 
     @property
     def target_humidity(self) -> int | None:
@@ -149,7 +151,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         high = self._insteon_device.groups[HUMIDITY_HIGH].value
         low = self._insteon_device.groups[HUMIDITY_LOW].value
         # May not be loaded yet so return a default if required
-        return (high + low) / 2 if high and low else None
+        return int((high + low) / 2) if high is not None and low is not None else None
 
     @property
     def hvac_action(self) -> HVACAction:

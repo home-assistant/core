@@ -1,4 +1,4 @@
-"""Support for INSTEON dimmers via PowerLinc Modem."""
+"""Support for INSTEON switches via PowerLinc Modem."""
 
 from typing import Any
 
