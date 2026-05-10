@@ -52,9 +52,7 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
 
 def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
     """Return if the bluetooth discovery matches an Avea bulb."""
-    return AVEA_SERVICE_UUID in discovery_info.service_uuids or bool(
-        discovery_info.name and "avea" in discovery_info.name.lower()
-    )
+    return AVEA_SERVICE_UUID in discovery_info.service_uuids
 
 
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):

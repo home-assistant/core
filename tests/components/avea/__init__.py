@@ -26,16 +26,16 @@ AVEA_DISCOVERY_INFO = BluetoothServiceInfoBleak(
 )
 
 NOT_AVEA_DISCOVERY_INFO = BluetoothServiceInfoBleak(
-    name="Plain Bulb",
+    name="Not Avea Bulb",
     address="11:22:33:44:55:66",
     rssi=-60,
     manufacturer_data={},
     service_uuids=[],
     service_data={},
     source="local",
-    device=generate_ble_device(address="11:22:33:44:55:66", name="Plain Bulb"),
+    device=generate_ble_device(address="11:22:33:44:55:66", name="Not Avea Bulb"),
     advertisement=generate_advertisement_data(
-        local_name="Plain Bulb",
+        local_name="Not Avea Bulb",
         manufacturer_data={},
         service_data={},
         service_uuids=[],
