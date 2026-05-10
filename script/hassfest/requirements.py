@@ -94,7 +94,7 @@ FORBIDDEN_PACKAGES = {
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
     # backoff is archived / unmaintained
     # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
-    "backoff": "be replaced with python-backoff, it will break in Python 3.16",
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
     # Coloredlogs is unmaintained and contains a '.pth' file
