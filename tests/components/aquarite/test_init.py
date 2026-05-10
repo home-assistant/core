@@ -54,6 +54,9 @@ def _make_coordinator(pool_id: str, pool_name: str) -> MagicMock:
     coord = MagicMock()
     coord.pool_id = pool_id
     coord.pool_name = pool_name
+    coord.data = {}
+    coord.last_update_success = True
+    coord.get_value = MagicMock(return_value=None)
     coord.async_config_entry_first_refresh = AsyncMock()
     coord.subscribe = AsyncMock()
     coord.async_shutdown = AsyncMock()
