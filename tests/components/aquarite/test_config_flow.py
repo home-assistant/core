@@ -18,7 +18,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -29,15 +30,20 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock
 
 
+async def _submit(hass: HomeAssistant, flow_id: str) -> dict:
+    """Submit the user step with the standard credentials."""
+    return await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+
+
 async def _configure(hass: HomeAssistant) -> dict:
-    """Run the user step with the standard credentials."""
+    """Run the user step from start to finish with the standard credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
-    )
+    return await _submit(hass, result["flow_id"])
 
 
 # ── User Step ─────────────────────────────────────────────────────
@@ -55,10 +61,7 @@ async def test_user_step(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
-    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
@@ -68,81 +71,150 @@ async def test_user_step(
     }
 
 
-# ── Error Handling ────────────────────────────────────────────────
+# ── Error Handling (each path also verifies the flow can recover) ─
 
 
 async def test_invalid_auth(
-    hass: HomeAssistant, mock_aquarite_auth: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
+    mock_aquarite_auth: MagicMock,
 ) -> None:
-    """Test authentication error is handled."""
+    """Test the flow surfaces invalid_auth and recovers on retry."""
     mock_aquarite_auth.authenticate.side_effect = AuthenticationError
 
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    # Recover: clear the failure and retry the same flow.
+    mock_aquarite_auth.authenticate.side_effect = None
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
+
 
 async def test_cannot_connect(
-    hass: HomeAssistant, mock_aquarite_auth: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
+    mock_aquarite_auth: MagicMock,
 ) -> None:
-    """Test connectivity error during auth surfaces as cannot_connect."""
+    """Test cannot_connect on auth failure and recovery on retry."""
     mock_aquarite_auth.authenticate.side_effect = AquariteError("network down")
 
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_aquarite_auth.authenticate.side_effect = None
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
 
 
 async def test_cannot_connect_during_pool_fetch(
-    hass: HomeAssistant, mock_aquarite_client: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
 ) -> None:
-    """Test connectivity error while fetching pools surfaces as cannot_connect."""
-    mock_aquarite_client.get_pools = AsyncMock(
-        side_effect=AquariteError("network down")
-    )
+    """Test cannot_connect on get_pools failure and recovery on retry."""
+    mock_aquarite_client.get_pools.side_effect = AquariteError("network down")
 
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_aquarite_client.get_pools.side_effect = None
+    result = await _submit(hass, result["flow_id"])
 
-async def test_unknown_exception_during_pool_fetch(
-    hass: HomeAssistant, mock_aquarite_client: AsyncMock
-) -> None:
-    """Test unexpected error while fetching pools surfaces as unknown."""
-    mock_aquarite_client.get_pools = AsyncMock(side_effect=RuntimeError("boom"))
-
-    result = await _configure(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
 
 
 async def test_unknown_exception(
-    hass: HomeAssistant, mock_aquarite_auth: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
+    mock_aquarite_auth: MagicMock,
 ) -> None:
-    """Test unknown error during auth is handled."""
+    """Test unknown error on auth failure and recovery on retry."""
     mock_aquarite_auth.authenticate.side_effect = RuntimeError("Connection refused")
 
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
+    mock_aquarite_auth.authenticate.side_effect = None
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
+
+
+async def test_unknown_exception_during_pool_fetch(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
+) -> None:
+    """Test unknown error on get_pools failure and recovery on retry."""
+    mock_aquarite_client.get_pools.side_effect = RuntimeError("boom")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    mock_aquarite_client.get_pools.side_effect = None
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
+
 
 async def test_no_pools(
-    hass: HomeAssistant, mock_aquarite_client: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_aquarite_client: AsyncMock,
 ) -> None:
-    """Test that an account with no pools shows the no_pools error."""
-    mock_aquarite_client.get_pools = AsyncMock(return_value={})
+    """Test no_pools on an empty account and recovery once pools appear."""
+    mock_aquarite_client.get_pools.return_value = {}
 
-    result = await _configure(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _submit(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_pools"}
+
+    # Recover: pools appear on the account; resubmit the same flow.
+    mock_aquarite_client.get_pools.return_value = MOCK_POOLS
+    result = await _submit(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
 
 
 async def test_duplicate_account_aborts(
