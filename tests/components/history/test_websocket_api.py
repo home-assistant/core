@@ -15,7 +15,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -2174,3 +2174,114 @@ async def test_history_stream_live_chained_events(
         "id": 1,
         "type": "event",
     }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_history_during_period_filters_unauthorized_entities(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test history_during_period filters by per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"sensor.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.allowed", "on")
+    hass.states.async_set("sensor.forbidden", "on")
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+
+    await client.send_json_auto_id(
+        {
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.allowed", "sensor.forbidden"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "sensor.forbidden" not in response["result"]
+    assert "sensor.allowed" in response["result"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.forbidden"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_history_stream_filters_unauthorized_entities(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test history/stream filters by per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"sensor.allowed": True}}}
+    )
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.allowed", "on")
+    hass.states.async_set("sensor.forbidden", "on")
+    await async_wait_recording_done(hass)
+
+    end_time = dt_util.utcnow() + timedelta(seconds=1)
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+
+    await client.send_json_auto_id(
+        {
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["sensor.allowed", "sensor.forbidden"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    response = await client.receive_json()
+    assert response["type"] == "event"
+    assert "sensor.forbidden" not in response["event"]["states"]
+    assert "sensor.allowed" in response["event"]["states"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["sensor.forbidden"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    response = await client.receive_json()
+    assert response["type"] == "event"
+    assert response["event"]["states"] == {}

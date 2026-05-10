@@ -1,7 +1,5 @@
 """Base entity for the Nobø Ecohub integration."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.core import callback

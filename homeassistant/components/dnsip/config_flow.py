@@ -1,7 +1,5 @@
 """Adds config flow for dnsip integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from typing import Any, Literal
@@ -18,9 +16,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_ADVANCED_OPTIONS,
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
@@ -39,15 +39,17 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-    }
-)
-DATA_SCHEMA_ADV = vol.Schema(
-    {
-        vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_PORT_IPV6): cv.port,
+        vol.Required(CONF_ADVANCED_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_RESOLVER): cv.string,
+                    vol.Optional(CONF_PORT): cv.port,
+                    vol.Optional(CONF_RESOLVER_IPV6): cv.string,
+                    vol.Optional(CONF_PORT_IPV6): cv.port,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
     }
 )
 
@@ -113,10 +115,13 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
-            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
-            port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
+            advanced_options = user_input[CONF_ADVANCED_OPTIONS]
+            resolver = advanced_options.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = advanced_options.get(
+                CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6
+            )
+            port = advanced_options.get(CONF_PORT, DEFAULT_PORT)
+            port_ipv6 = advanced_options.get(CONF_PORT_IPV6, DEFAULT_PORT)
 
             validate = await async_validate_hostname(
                 hostname, resolver, resolver_ipv6, port, port_ipv6
@@ -151,12 +156,6 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        if self.show_advanced_options is True:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA_ADV,
-                errors=errors,
-            )
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,

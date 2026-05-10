@@ -10,6 +10,7 @@ from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from paho.mqtt.client import MQTTMessage
 import pytest
 import voluptuous as vol
 
@@ -449,6 +450,30 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
+@pytest.mark.parametrize(("qos", "retain"), [(None, None), (0, None), (None, False)])
+async def test_publish_api_with_falback_to_none(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    qos: int | None,
+    retain: bool | None,
+) -> None:
+    """Test MQTT publish API function with None as fallback for QoS or Retain."""
+    mqtt_mock = await mqtt_mock_entry()
+    await mqtt.async_publish(hass, "some-topic", "test-payload", qos=qos, retain=retain)
+    assert (
+        "Detected code that that calls the MQTT publish API with `None` for "
+        "qos or retain. The `qos` argument must be an `int`, and the `retain` "
+        "argument must be a `bool`." in caplog.text
+    )
+    async_publish_mock: MagicMock = mqtt_mock.async_publish
+    assert len(async_publish_mock.mock_calls) == 1
+    assert async_publish_mock.mock_calls[0][1][0] == "some-topic"
+    assert async_publish_mock.mock_calls[0][1][1] == "test-payload"
+    assert async_publish_mock.mock_calls[0][1][2] == 0
+    assert async_publish_mock.mock_calls[0][1][3] is False
+
+
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
@@ -699,11 +724,6 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     """Test receiving a non utf8 encoded topic."""
     await mqtt_mock_entry()
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
     from homeassistant.components.mqtt.models import MqttData  # noqa: PLC0415
 
@@ -1910,7 +1930,7 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    with patch("homeassistant.components.mqtt.async_client.AsyncMQTTClient"):
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
         await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
         await hass.async_block_till_done()
 

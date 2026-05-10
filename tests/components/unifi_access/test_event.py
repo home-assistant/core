@@ -1,7 +1,5 @@
 """Tests for the UniFi Access event platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 

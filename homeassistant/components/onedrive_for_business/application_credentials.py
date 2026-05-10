@@ -1,7 +1,5 @@
 """Application credentials platform for the OneDrive for Business integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar

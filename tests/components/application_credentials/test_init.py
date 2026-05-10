@@ -1,7 +1,5 @@
 """Test the Developer Credentials integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 import logging
 from typing import Any
@@ -284,6 +282,22 @@ async def test_websocket_create(ws_client: ClientFixture) -> None:
             "id": ID,
         }
     ]
+
+
+@pytest.mark.parametrize("cmd", ["list", "subscribe"])
+async def test_websocket_list_subscribe_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    cmd: str,
+) -> None:
+    """Test that list and subscribe are restricted to admin users."""
+    ws = await hass_ws_client(access_token=hass_read_only_access_token)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/{cmd}"})
+    resp = await ws.receive_json()
+    assert resp["id"] == 1
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unauthorized"
 
 
 async def test_websocket_create_invalid_domain(ws_client: ClientFixture) -> None:

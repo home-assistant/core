@@ -1,7 +1,5 @@
 """Mathematical and statistical functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from functools import wraps
 import math

@@ -1,7 +1,5 @@
 """Support for Valve devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag, StrEnum

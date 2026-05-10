@@ -4,6 +4,10 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+)
 from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.core import HomeAssistant
 
@@ -16,9 +20,74 @@ from tests.components.common import (
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
+
+# Volume is stored as 0.0–1.0 but the threshold is in percent.
+_VOLUME_VALUE_SCALE = 0.01
+
+_IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+# is_muted=True states (mute attr True OR volume_level == 0)
+_IS_MUTED_STATES = [
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
+    ),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
+    ),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
+    ),
+]
+
+# is_muted=False states (mute attr False/missing AND volume_level != 0)
+_IS_NOT_MUTED_STATES = [
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
+    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
+    (
+        MediaPlayerState.PLAYING,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
+    ),
+]
+
+
+def parametrize_muted_condition_states_any(
+    condition: str, target_muted: bool
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize behavior=any condition states for is_muted/is_unmuted."""
+    return parametrize_condition_states_any(
+        condition=condition,
+        target_states=_IS_MUTED_STATES if target_muted else _IS_NOT_MUTED_STATES,
+        other_states=_IS_NOT_MUTED_STATES if target_muted else _IS_MUTED_STATES,
+        extra_excluded_states=[
+            # State without any volume attributes — filtered by _should_include
+            MediaPlayerState.PLAYING,
+        ],
+    )
+
+
+def parametrize_muted_condition_states_all(
+    condition: str, target_muted: bool
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize behavior=all condition states for is_muted/is_unmuted."""
+    return parametrize_condition_states_all(
+        condition=condition,
+        target_states=_IS_MUTED_STATES if target_muted else _IS_NOT_MUTED_STATES,
+        other_states=_IS_NOT_MUTED_STATES if target_muted else _IS_MUTED_STATES,
+        extra_excluded_states=[
+            # State without any volume attributes — filtered by _should_include
+            MediaPlayerState.PLAYING,
+        ],
+    )
 
 
 @pytest.fixture
@@ -30,11 +99,14 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "condition",
     [
+        "media_player.is_muted",
         "media_player.is_off",
         "media_player.is_on",
         "media_player.is_not_playing",
         "media_player.is_paused",
         "media_player.is_playing",
+        "media_player.is_unmuted",
+        "media_player.is_volume",
     ],
 )
 async def test_media_player_conditions_gated_by_labs_flag(
@@ -48,11 +120,14 @@ async def test_media_player_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
+        ("media_player.is_muted", {}, True, True),
         ("media_player.is_off", {}, True, True),
-        ("media_player.is_on", {}, True, False),
-        ("media_player.is_not_playing", {}, True, False),
+        ("media_player.is_on", {}, True, True),
+        ("media_player.is_not_playing", {}, True, True),
         ("media_player.is_paused", {}, True, True),
         ("media_player.is_playing", {}, True, True),
+        ("media_player.is_unmuted", {}, True, True),
+        ("media_player.is_volume", _IS_VOLUME_THRESHOLD, True, True),
     ],
 )
 async def test_media_player_condition_options_validation(
@@ -80,6 +155,9 @@ async def test_media_player_condition_options_validation(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
+        *parametrize_muted_condition_states_any(
+            "media_player.is_muted", target_muted=True
+        ),
         *parametrize_condition_states_any(
             condition="media_player.is_off",
             target_states=[MediaPlayerState.OFF],
@@ -116,6 +194,16 @@ async def test_media_player_condition_options_validation(
             condition="media_player.is_playing",
             target_states=[MediaPlayerState.PLAYING],
             other_states=other_states(MediaPlayerState.PLAYING),
+        ),
+        *parametrize_muted_condition_states_any(
+            "media_player.is_unmuted", target_muted=False
+        ),
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "media_player.is_volume",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_required=True,
+            attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
     ],
 )
@@ -150,6 +238,9 @@ async def test_media_player_state_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
+        *parametrize_muted_condition_states_all(
+            "media_player.is_muted", target_muted=True
+        ),
         *parametrize_condition_states_all(
             condition="media_player.is_off",
             target_states=[MediaPlayerState.OFF],
@@ -186,6 +277,16 @@ async def test_media_player_state_condition_behavior_any(
             condition="media_player.is_playing",
             target_states=[MediaPlayerState.PLAYING],
             other_states=other_states(MediaPlayerState.PLAYING),
+        ),
+        *parametrize_muted_condition_states_all(
+            "media_player.is_unmuted", target_muted=False
+        ),
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "media_player.is_volume",
+            MediaPlayerState.PLAYING,
+            ATTR_MEDIA_VOLUME_LEVEL,
+            attribute_required=True,
+            attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
     ],
 )

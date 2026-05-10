@@ -1,7 +1,5 @@
 """Track both clients and devices using UniFi Network."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta

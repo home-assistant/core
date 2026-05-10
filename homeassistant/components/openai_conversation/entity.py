@@ -1,7 +1,5 @@
 """Base entity for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
@@ -43,7 +41,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import (
+    Reasoning,
+    ResponseCreateParamsStreaming,
+)
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -520,16 +521,19 @@ class OpenAIBaseLLMEntity(Entity):
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
-            model_args["reasoning"] = {
+            reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": options.get(
-                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-                ),
             }
+            reasoning_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if reasoning_summary != "off":
+                reasoning["summary"] = reasoning_summary
+            model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
         if (

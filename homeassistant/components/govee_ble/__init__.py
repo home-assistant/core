@@ -1,7 +1,5 @@
 """The Govee Bluetooth BLE integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 

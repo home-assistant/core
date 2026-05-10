@@ -1,7 +1,5 @@
 """The USB Discovery integration."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import fnmatch
 import os
@@ -26,6 +24,9 @@ def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
         description=port.product,
+        bcd_device=port.bcd_device,
+        interface_description=port.interface_description,
+        interface_num=port.interface_num,
     )
 
 
@@ -36,6 +37,8 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
         description=port.product,
+        interface_description=port.interface_description,
+        interface_num=port.interface_num,
     )
 
 

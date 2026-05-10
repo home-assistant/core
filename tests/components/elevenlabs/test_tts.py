@@ -1,7 +1,5 @@
 """Tests for the ElevenLabs TTS entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import AsyncIterator, Iterator

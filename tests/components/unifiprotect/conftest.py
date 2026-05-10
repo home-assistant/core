@@ -1,7 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
@@ -155,6 +153,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
+    client.has_public_bootstrap = False
     return client
 
 

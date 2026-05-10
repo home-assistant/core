@@ -1,7 +1,5 @@
 """Services for the Vallox integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum, auto
 import logging
 

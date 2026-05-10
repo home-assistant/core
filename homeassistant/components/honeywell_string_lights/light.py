@@ -1,7 +1,5 @@
 """Light platform for Honeywell String Lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from rf_protocols import get_codes

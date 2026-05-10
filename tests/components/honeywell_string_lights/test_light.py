@@ -1,7 +1,5 @@
 """Tests for the Honeywell String Lights light platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.honeywell_string_lights.light import COMMANDS
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,

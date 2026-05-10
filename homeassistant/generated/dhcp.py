@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
@@ -476,6 +474,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*",
+    },
+    {
+        "domain": "nobo_hub",
+        "hostname": "hub*",
+        "macaddress": "7C8306*",
     },
     {
         "domain": "nuheat",

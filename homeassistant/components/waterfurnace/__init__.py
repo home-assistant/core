@@ -1,7 +1,5 @@
 """Support for WaterFurnace geothermal systems."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 

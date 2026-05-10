@@ -1,7 +1,5 @@
 """The tests for the MQTT datetime platform."""
 
-from __future__ import annotations
-
 import datetime as datetime_lib
 from typing import Any
 from unittest.mock import patch

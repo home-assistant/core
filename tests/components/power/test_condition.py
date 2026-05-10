@@ -50,7 +50,7 @@ _WATT_THRESHOLD = {
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("power.is_value", _WATT_THRESHOLD, True, False),
+        ("power.is_value", _WATT_THRESHOLD, True, True),
     ],
 )
 async def test_power_condition_options_validation(

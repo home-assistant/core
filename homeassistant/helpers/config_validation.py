@@ -1,7 +1,5 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Hashable, Mapping
 import contextlib
 from contextvars import ContextVar
@@ -759,15 +757,7 @@ def dynamic_template(value: Any) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            (
-                "validates schema outside the event loop, "
-                "which will stop working in HA Core 2025.10"
-            ),
-            core_behavior=ReportBehavior.LOG,
-        )
+        raise vol.Invalid("Validates schema outside the event loop")
 
     template_value = template_helper.Template(str(value), hass)
 

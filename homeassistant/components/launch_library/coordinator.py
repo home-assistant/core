@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the launch_library integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TypedDict
