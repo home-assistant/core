@@ -169,9 +169,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle address selection step."""
-        return await self._async_select_address(
-            "select_address", user_input, "create"
-        )
+        return await self._async_select_address("select_address", user_input, "create")
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
