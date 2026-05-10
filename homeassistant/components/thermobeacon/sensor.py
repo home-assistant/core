@@ -28,8 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
+from . import ThermoBeaconConfigEntry
 from .device import device_key_to_bluetooth_entity_key
-from .model import ThermoBeaconConfigEntry
 
 SENSOR_DESCRIPTIONS = {
     (ThermoBeaconSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
