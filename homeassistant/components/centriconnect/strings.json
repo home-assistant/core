@@ -37,32 +37,17 @@
       "altitude": {
         "name": "Altitude"
       },
-      "battery_level": {
-        "name": "Battery level"
-      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
       "device_temperature": {
         "name": "Device temperature"
       },
-      "last_post_time": {
-        "name": "Last post time"
-      },
-      "latitude": {
-        "name": "[%key:common::config_flow::data::latitude%]"
-      },
-      "longitude": {
-        "name": "[%key:common::config_flow::data::longitude%]"
-      },
       "lte_signal_level": {
         "name": "LTE signal level"
       },
       "lte_signal_strength": {
         "name": "LTE signal strength"
-      },
-      "next_post_time": {
-        "name": "Next post time"
       },
       "solar_level": {
         "name": "Solar level"
