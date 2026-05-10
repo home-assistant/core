@@ -70,6 +70,20 @@ def _parse_stop_ids(stop_ids: list[str]) -> tuple[list[str], list[str]]:
     return stops, quays
 
 
+def _get_invalid_stop_ids(stop_ids: list[str]) -> list[str]:
+    """Return the stop IDs that are neither stop places nor quays."""
+    return [
+        stop_id
+        for stop_id in stop_ids
+        if "StopPlace" not in stop_id and "Quay" not in stop_id
+    ]
+
+
+def _has_only_valid_stop_ids(stop_ids: list[str]) -> bool:
+    """Return True if all provided stop IDs are valid stop places or quays."""
+    return not _get_invalid_stop_ids(stop_ids)
+
+
 class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Entur public transport."""
 
@@ -78,17 +92,21 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_and_test(
         self, data: dict[str, Any]
-    ) -> tuple[list[str], list[str], str | None]:
+    ) -> tuple[list[str], list[str], str | None, list[str]]:
         """Validate stop IDs and test connection to Entur API.
 
-        Returns a tuple of (stops, quays, error).
+        Returns a tuple of (stops, quays, error, invalid_stop_ids).
         Error is None if validation and connection test succeeded.
         """
         stop_ids = data.get(CONF_STOP_IDS, [])
         stops, quays = _parse_stop_ids(stop_ids)
+        invalid_stop_ids = _get_invalid_stop_ids(stop_ids)
 
         if not stops and not quays:
-            return stops, quays, "invalid_stop_id"
+            return stops, quays, "invalid_stop_id", invalid_stop_ids
+
+        if not _has_only_valid_stop_ids(stop_ids):
+            return stops, quays, "invalid_stop_id", invalid_stop_ids
 
         omit_non_boarding = data.get(CONF_OMIT_NON_BOARDING, True)
         number_of_departures = data.get(CONF_NUMBER_OF_DEPARTURES, 2)
@@ -106,26 +124,32 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             await client.update()
         except TimeoutError:
-            return stops, quays, "cannot_connect"
+            return stops, quays, "cannot_connect", invalid_stop_ids
         except ClientError:
-            return stops, quays, "cannot_connect"
+            return stops, quays, "cannot_connect", invalid_stop_ids
         except Exception:  # noqa: BLE001
-            return stops, quays, "unknown"
+            return stops, quays, "unknown", invalid_stop_ids
 
-        return stops, quays, None
+        return stops, quays, None, invalid_stop_ids
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        invalid_stop_ids_message = ""
 
         if user_input is not None:
             stop_ids = user_input.get(CONF_STOP_IDS, [])
-            _, _, error = await self._validate_and_test(user_input)
+            _, _, error, invalid_stop_ids = await self._validate_and_test(user_input)
 
             if error:
                 errors["base"] = error
+                if invalid_stop_ids:
+                    invalid_stop_ids_message = (
+                        "\n\nInvalid stop IDs: "
+                        + ", ".join(f"`{stop_id}`" for stop_id in invalid_stop_ids)
+                    )
             else:
                 unique_id = "_".join(sorted(stop_ids))
                 await self.async_set_unique_id(unique_id)
@@ -153,7 +177,10 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
-            description_placeholders={"entur_url": "https://entur.no/"},
+            description_placeholders={
+                "entur_url": "https://entur.no/",
+                "invalid_stop_ids_message": invalid_stop_ids_message,
+            },
             errors=errors,
         )
 
@@ -163,7 +190,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         stop_ids: list[str] = import_data.get(CONF_STOP_IDS, [])
 
-        _, _, error = await self._validate_and_test(dict(import_data))
+        _, _, error, invalid_stop_ids = await self._validate_and_test(dict(import_data))
 
         if error:
             _LOGGER.error(
@@ -171,7 +198,14 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 error,
                 import_data,
             )
-            return self.async_abort(reason=error)
+            return self.async_abort(
+                reason=error,
+                description_placeholders={
+                    "invalid_stop_ids": ", ".join(
+                        f"`{stop_id}`" for stop_id in invalid_stop_ids
+                    )
+                },
+            )
 
         unique_id = "_".join(sorted(stop_ids))
         await self.async_set_unique_id(unique_id)

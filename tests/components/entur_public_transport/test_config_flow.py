@@ -114,6 +114,12 @@ async def test_user_flow_invalid_stop_id(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_stop_id"}
+    assert result["description_placeholders"]["invalid_stop_ids_message"] == (
+        "\n\nInvalid stop IDs: `invalid_id`"
+    )
+    assert result["description_placeholders"]["invalid_stop_ids_message"] == (
+        "\n\nInvalid stop IDs: `invalid_id`"
+    )
 
     # Recover with valid input
     result = await hass.config_entries.flow.async_configure(
@@ -130,6 +136,32 @@ async def test_user_flow_invalid_stop_id(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_mixed_invalid_stop_ids(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test user flow rejects mixed valid and invalid stop IDs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STOP_IDS: ["invalid_id", "NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
+            CONF_SHOW_ON_MAP: False,
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_stop_id"}
 
 
 @pytest.mark.parametrize(
@@ -329,6 +361,29 @@ async def test_import_flow_invalid_stop_id(hass: HomeAssistant) -> None:
     """Test import flow with invalid stop ID."""
     yaml_config = {
         CONF_STOP_IDS: ["invalid_id"],
+        CONF_NAME: "My Bus Stop",
+        CONF_SHOW_ON_MAP: False,
+        CONF_WHITELIST_LINES: [],
+        CONF_OMIT_NON_BOARDING: True,
+        CONF_NUMBER_OF_DEPARTURES: 2,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=yaml_config,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_stop_id"
+    assert result["description_placeholders"]["invalid_stop_ids"] == "`invalid_id`"
+    assert result["description_placeholders"]["invalid_stop_ids"] == "`invalid_id`"
+
+
+async def test_import_flow_mixed_invalid_stop_ids(hass: HomeAssistant) -> None:
+    """Test import flow rejects mixed valid and invalid stop IDs."""
+    yaml_config = {
+        CONF_STOP_IDS: ["invalid_id", "NSR:StopPlace:548"],
         CONF_NAME: "My Bus Stop",
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
