@@ -63,7 +63,11 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         else:
             dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
         super().__init__(
-            client, item.trackable, item.tracker_details, dispatcher_signal
+            client,
+            item.trackable,
+            item.tracker_details,
+            dispatcher_signal,
+            device_type="tracker" if description.hardware_sensor else "pet",
         )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"

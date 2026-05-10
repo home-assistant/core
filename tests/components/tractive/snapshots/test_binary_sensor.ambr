@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[binary_sensor.test_pet_tracker_battery_charging-entry]
+# name: test_binary_sensor[binary_sensor.tractive_tg4422_tracker_battery_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_pet_tracker_battery_charging',
+    'entity_id': 'binary_sensor.tractive_tg4422_tracker_battery_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_pet_tracker_battery_charging-state]
+# name: test_binary_sensor[binary_sensor.tractive_tg4422_tracker_battery_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'Test Pet Tracker battery charging',
+      'friendly_name': 'Tractive TG4422 Tracker battery charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_pet_tracker_battery_charging',
+    'entity_id': 'binary_sensor.tractive_tg4422_tracker_battery_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_pet_tracker_power_saving-entry]
+# name: test_binary_sensor[binary_sensor.tractive_tg4422_tracker_power_saving-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_pet_tracker_power_saving',
+    'entity_id': 'binary_sensor.tractive_tg4422_tracker_power_saving',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,13 +87,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_pet_tracker_power_saving-state]
+# name: test_binary_sensor[binary_sensor.tractive_tg4422_tracker_power_saving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pet Tracker power saving',
+      'friendly_name': 'Tractive TG4422 Tracker power saving',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_pet_tracker_power_saving',
+    'entity_id': 'binary_sensor.tractive_tg4422_tracker_power_saving',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

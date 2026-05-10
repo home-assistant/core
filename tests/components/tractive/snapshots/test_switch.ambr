@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[switch.test_pet_live_tracking-entry]
+# name: test_switch[switch.tractive_tg4422_live_tracking-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_pet_live_tracking',
+    'entity_id': 'switch.tractive_tg4422_live_tracking',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_pet_live_tracking-state]
+# name: test_switch[switch.tractive_tg4422_live_tracking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pet Live tracking',
+      'friendly_name': 'Tractive TG4422 Live tracking',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_pet_live_tracking',
+    'entity_id': 'switch.tractive_tg4422_live_tracking',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.test_pet_tracker_buzzer-entry]
+# name: test_switch[switch.tractive_tg4422_tracker_buzzer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_pet_tracker_buzzer',
+    'entity_id': 'switch.tractive_tg4422_tracker_buzzer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_pet_tracker_buzzer-state]
+# name: test_switch[switch.tractive_tg4422_tracker_buzzer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pet Tracker buzzer',
+      'friendly_name': 'Tractive TG4422 Tracker buzzer',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_pet_tracker_buzzer',
+    'entity_id': 'switch.tractive_tg4422_tracker_buzzer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.test_pet_tracker_led-entry]
+# name: test_switch[switch.tractive_tg4422_tracker_led-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_pet_tracker_led',
+    'entity_id': 'switch.tractive_tg4422_tracker_led',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_pet_tracker_led-state]
+# name: test_switch[switch.tractive_tg4422_tracker_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pet Tracker LED',
+      'friendly_name': 'Tractive TG4422 Tracker LED',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_pet_tracker_led',
+    'entity_id': 'switch.tractive_tg4422_tracker_led',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

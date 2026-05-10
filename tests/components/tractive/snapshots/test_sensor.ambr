@@ -266,7 +266,7 @@
     'state': '122',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_battery-entry]
+# name: test_sensor[sensor.tractive_tg4422_tracker_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -280,7 +280,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_pet_tracker_battery',
+    'entity_id': 'sensor.tractive_tg4422_tracker_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -303,22 +303,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_battery-state]
+# name: test_sensor[sensor.tractive_tg4422_tracker_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Test Pet Tracker battery',
+      'friendly_name': 'Tractive TG4422 Tracker battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_pet_tracker_battery',
+    'entity_id': 'sensor.tractive_tg4422_tracker_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '88',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_state-entry]
+# name: test_sensor[sensor.tractive_tg4422_tracker_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -340,7 +340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_pet_tracker_state',
+    'entity_id': 'sensor.tractive_tg4422_tracker_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -363,11 +363,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_state-state]
+# name: test_sensor[sensor.tractive_tg4422_tracker_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Test Pet Tracker state',
+      'friendly_name': 'Tractive TG4422 Tracker state',
       'options': list([
         'inaccurate_position',
         'not_reporting',
@@ -377,7 +377,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_pet_tracker_state',
+    'entity_id': 'sensor.tractive_tg4422_tracker_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
