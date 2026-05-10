@@ -93,14 +93,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coord: (
-            # TODO(gresrun): Move this logic into the library.
-            # The battery level is estimated based on the battery voltage,
-            # with 3.5V or below being 0% and 4.05V or above being 100%.
-            min(1.0, max(((coord.data.battery_voltage - 3.5) / 0.5), 0.0)) * 100
-            if coord.data.battery_voltage is not None
-            else None
-        ),
+        value_fn=lambda coord: coord.data.battery_level,
     ),
     CentriConnectSensorEntityDescription(
         key=CentriConnectSensorType.BATTERY_VOLTAGE,
@@ -131,14 +124,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
-        value_fn=lambda coord: (
-            # TODO(gresrun): Move this logic into the library.
-            # The LTE signal level is estimated based on the LTE signal strength,
-            # with -140 dBm or below being 0% and -70 dBm or above being 100%.
-            min(1.0, max(((coord.data.lte_signal_strength + 140.0) / 70.0), 0.0)) * 100
-            if coord.data.lte_signal_strength is not None
-            else None
-        ),
+        value_fn=lambda coord: coord.data.lte_signal_level,
     ),
     CentriConnectSensorEntityDescription(
         key=CentriConnectSensorType.LTE_SIGNAL_STRENGTH,
@@ -157,14 +143,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
-        value_fn=lambda coord: (
-            # TODO(gresrun): Move this logic into the library.
-            # The solar level is estimated based on the solar voltage,
-            # with 0V being 0% and 2.86V or above being 110%.
-            min(1.1, max((coord.data.solar_voltage / 2.6), 0.0)) * 100
-            if coord.data.solar_voltage is not None
-            else None
-        ),
+        value_fn=lambda coord: coord.data.solar_level,
     ),
     CentriConnectSensorEntityDescription(
         key=CentriConnectSensorType.SOLAR_VOLTAGE,
@@ -192,11 +171,8 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         suggested_display_precision=2,
         value_fn=lambda coord: (
-            coord.data.tank_level * 0.01 * coord.device_info.tank_size
-            if (
-                coord.data.tank_level is not None
-                and coord.device_info.tank_size_unit == "Gallons"
-            )
+            coord.data.tank_remaining_volume
+            if coord.device_info.tank_size_unit == "Gallons"
             else None
         ),
     ),
@@ -208,11 +184,8 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         suggested_display_precision=2,
         value_fn=lambda coord: (
-            coord.data.tank_level * 0.01 * coord.device_info.tank_size
-            if (
-                coord.data.tank_level is not None
-                and coord.device_info.tank_size_unit == "Liters"
-            )
+            coord.data.tank_remaining_volume
+            if coord.device_info.tank_size_unit == "Liters"
             else None
         ),
     ),
