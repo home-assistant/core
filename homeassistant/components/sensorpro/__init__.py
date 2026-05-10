@@ -1,7 +1,5 @@
 """The SensorPro integration."""
 
-from __future__ import annotations
-
 import logging
 
 from sensorpro_ble import SensorProBluetoothDeviceData

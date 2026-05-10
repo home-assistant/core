@@ -1,7 +1,5 @@
 """Support for KNX weather entities."""
 
-from __future__ import annotations
-
 from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
 

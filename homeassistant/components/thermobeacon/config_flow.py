@@ -1,7 +1,5 @@
 """Config flow for thermobeacon ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from thermobeacon_ble import ThermoBeaconBluetoothDeviceData as DeviceData

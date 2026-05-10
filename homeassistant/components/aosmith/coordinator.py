@@ -1,7 +1,5 @@
 """The data update coordinator for the A. O. Smith integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

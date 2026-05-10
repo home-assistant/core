@@ -1,7 +1,5 @@
 """The Risco integration."""
 
-from __future__ import annotations
-
 from asyncio import CancelledError
 import logging
 

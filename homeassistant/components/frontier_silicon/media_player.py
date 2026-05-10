@@ -1,7 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
@@ -198,7 +196,9 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                (mode.label or mode.id): mode.key for mode in await afsapi.get_modes()
+                (mode.label or mode.id): mode.key
+                for mode in await afsapi.get_modes()
+                if mode.selectable
             }
             self._attr_source_list = list(self.__modes_by_label)
 

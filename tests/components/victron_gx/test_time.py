@@ -1,7 +1,5 @@
 """Tests for Victron GX MQTT time entities."""
 
-from __future__ import annotations
-
 from datetime import time as dt_time
 
 from victron_mqtt import Hub as VictronVenusHub
