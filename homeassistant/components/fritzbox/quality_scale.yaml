@@ -1,7 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
     comment: provides no service calls
   appropriate-polling: done
   brands: done
@@ -10,13 +10,13 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: done
+    status: exempt
     comment: provides no service calls
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
-    status: done
+    status: exempt
     comment: does not rely on events
   entity-unique-id: done
   has-entity-name: done
@@ -27,11 +27,11 @@ rules:
 
   # Silver
   action-exceptions:
-    status: done
+    status: exempt
     comment: provides no service calls
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: done
+    status: exempt
     comment: provides no options flow
   docs-installation-parameters: done
   entity-unavailable: done
@@ -66,7 +66,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: done
+    status: exempt
     comment: no repairs needed
   stale-devices: done
 
