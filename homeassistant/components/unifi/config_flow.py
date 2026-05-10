@@ -120,8 +120,6 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> UnifiConfigEntry | None:
         """Find an already-configured entry for the same controller + site."""
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.domain != DOMAIN:
-                continue
             if _entry_matches_target(
                 entry_unique_id=entry.unique_id,
                 entry_host=str(entry.data.get(CONF_HOST, "")),
