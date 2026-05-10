@@ -13,7 +13,10 @@ from homeassistant.components.unifi.config_entry_unique_id import (
     controller_key_from_system_info,
     extract_site_id,
 )
-from homeassistant.components.unifi.config_flow import _async_discover_unifi
+from homeassistant.components.unifi.config_flow import (
+    _async_discover_unifi,
+    _entry_matches_target,
+)
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -117,6 +120,104 @@ def test_config_entry_unique_id_helpers() -> None:
     )
     assert controller_key_from_system_info(SimpleNamespace(raw={})) is None
     assert extract_site_id(None) is None
+
+
+def test_entry_matches_target_rejects_different_site_id() -> None:
+    """Test entries for different sites are not considered matches."""
+    assert not _entry_matches_target(
+        entry_unique_id="10:00:00:00:00:01::site-a",
+        entry_host="1.2.3.4",
+        entry_site_name="site-a",
+        target_controller_key="10:00:00:00:00:01",
+        target_host="1.2.3.4",
+        target_site_id="site-b",
+        target_site_name="site-b",
+    )
+
+
+async def test_migrate_entry_rejects_future_version(hass: HomeAssistant) -> None:
+    """Future config entry versions should not migrate."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, version=3)
+    existing_entry.add_to_hass(hass)
+
+    assert not await async_migrate_entry(hass, existing_entry)
+
+
+async def test_migrate_entry_rejects_entry_without_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Migration needs an existing site unique ID to preserve site identity."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, unique_id=None, version=1)
+    existing_entry.add_to_hass(hass)
+
+    assert not await async_migrate_entry(hass, existing_entry)
+
+
+async def test_migrate_entry_rejects_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Migration should fail if the controller cannot be queried."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, unique_id="default", version=1)
+    existing_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.unifi.get_unifi_api", side_effect=CannotConnect
+    ):
+        assert not await async_migrate_entry(hass, existing_entry)
+
+
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{}]],
+)
+async def test_migrate_entry_rejects_missing_controller_key(
+    hass: HomeAssistant,
+    mock_default_requests: None,
+) -> None:
+    """Migration needs a stable controller key to build the new unique ID."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="default",
+        version=1,
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_SITE_ID: "default",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    assert not await async_migrate_entry(hass, existing_entry)
+
+
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{}]],
+)
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_shows_error_without_stable_controller_key(
+    hass: HomeAssistant,
+) -> None:
+    """Config flow should not fall back to host when controller key is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "service_unavailable"}
 
 
 @pytest.mark.usefixtures("mock_default_requests")

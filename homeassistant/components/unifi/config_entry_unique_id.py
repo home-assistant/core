@@ -17,7 +17,14 @@ def controller_key_from_system_info(system_info: Any) -> str | None:
         if mac := raw.get(key):
             return format_mac(str(mac))
 
-    if anonymous_controller_id := getattr(system_info, "anonymous_controller_id", None):
+    anonymous_controller_id = raw.get("anonymous_controller_id")
+    if anonymous_controller_id is None:
+        try:
+            anonymous_controller_id = system_info.anonymous_controller_id
+        except AttributeError, KeyError:
+            anonymous_controller_id = None
+
+    if anonymous_controller_id:
         return str(anonymous_controller_id).strip().lower()
 
     return None
