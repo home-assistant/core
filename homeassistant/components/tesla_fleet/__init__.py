@@ -220,8 +220,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_energy, product
             )
 
-            await live_coordinator.async_config_entry_first_refresh()
-            await info_coordinator.async_config_entry_first_refresh()
+            # Tesla may keep deactivated energy sites in the products API after an
+            # old solar system is removed or replaced. Those stale sites can
+            # still return live status while the info endpoint returns an error.
+            # Do not block vehicles or other healthy energy sites from loading.
+            try:
+                await live_coordinator.async_config_entry_first_refresh()
+                await info_coordinator.async_config_entry_first_refresh()
+            except ConfigEntryNotReady as err:
+                LOGGER.warning(
+                    "Skipping Tesla energy site %s because initial setup failed: %s",
+                    site_id,
+                    err,
+                )
+                continue
 
             # Create energy site model
             model = None

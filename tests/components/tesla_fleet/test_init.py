@@ -45,7 +45,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_platform
 from .conftest import create_config_entry
-from .const import LIVE_STATUS, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
+from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -532,6 +532,37 @@ async def test_energy_site_refresh_error(
 
     assert (state := hass.states.get("number.energy_site_backup_reserve"))
     assert state.state == "unavailable"
+
+
+async def test_setup_skips_stale_energy_site(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test setup skips one stale energy site and keeps the entry loaded."""
+    products = deepcopy(mock_products.return_value)
+    active_site = products["response"][1]
+    stale_site = deepcopy(active_site)
+    stale_site["energy_site_id"] = 654321
+    stale_site["site_name"] = "Old Solar Site"
+    products["response"].insert(1, stale_site)
+    mock_products.return_value = products
+
+    # Some Tesla accounts keep an old/deactivated solar system in /products after
+    # a replacement system is installed. The stale site can return live_status
+    # successfully but fail site_info, so it should not block setup of the
+    # vehicle and the healthy energy site.
+    mock_site_info.side_effect = [TeslaFleetError, deepcopy(SITE_INFO)]
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert normal_config_entry.runtime_data.vehicles
+    assert [site.id for site in normal_config_entry.runtime_data.energysites] == [
+        123456
+    ]
+    assert mock_site_info.call_count == 2
 
 
 async def test_energy_refresh_token_expired_recovery(
