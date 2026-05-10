@@ -366,7 +366,7 @@ async def test_ventilation_state_unknown_returns_state_unknown(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
-    box_node = next(n for n in mock_nodes if n.general.node_type == "BOX")
+    box_node = next(n for n in mock_nodes if n.general.node_type == NodeType.BOX)
     updated_nodes = [
         Node(
             node_id=box_node.node_id,
