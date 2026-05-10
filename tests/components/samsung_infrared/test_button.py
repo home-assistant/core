@@ -34,7 +34,7 @@ async def test_entities(
 
     # Verify all entities belong to the same device
     device_entry = device_registry.async_get_device(
-        identifiers={("samsung_ir", mock_config_entry.entry_id)}
+        identifiers={("samsung_infrared", mock_config_entry.entry_id)}
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(

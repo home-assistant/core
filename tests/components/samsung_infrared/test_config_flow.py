@@ -6,7 +6,7 @@ from homeassistant.components.infrared import (
     DATA_COMPONENT as INFRARED_DATA_COMPONENT,
     DOMAIN as INFRARED_DOMAIN,
 )
-from homeassistant.components.samsung_ir.const import (
+from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
@@ -61,7 +61,9 @@ async def test_user_flow_success(
         CONF_DEVICE_TYPE: SamsungDeviceType.TV,
         CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
     }
-    assert result["result"].unique_id == f"samsung_ir_tv_{MOCK_INFRARED_ENTITY_ID}"
+    assert (
+        result["result"].unique_id == f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}"
+    )
 
 
 @pytest.mark.usefixtures("setup_infrared")

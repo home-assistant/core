@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-DOMAIN = "samsung_ir"
+DOMAIN = "samsung_infrared"
 CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 CONF_DEVICE_TYPE = "device_type"
 

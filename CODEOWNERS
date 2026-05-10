@@ -1525,8 +1525,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
-/homeassistant/components/samsung_ir/ @home-assistant/core
-/tests/components/samsung_ir/ @home-assistant/core
+/homeassistant/components/samsung_infrared/ @lmaertin
+/tests/components/samsung_infrared/ @lmaertin
 /homeassistant/components/samsungtv/ @chemelli74 @epenet
 /tests/components/samsungtv/ @chemelli74 @epenet
 /homeassistant/components/sanix/ @tomaszsluszniak

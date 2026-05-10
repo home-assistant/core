@@ -487,7 +487,7 @@ homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
-homeassistant.components.samsung_ir.*
+homeassistant.components.samsung_infrared.*
 homeassistant.components.samsungtv.*
 homeassistant.components.saunum.*
 homeassistant.components.scene.*

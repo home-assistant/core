@@ -11,8 +11,8 @@ from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
     InfraredEntity,
 )
-from homeassistant.components.samsung_ir import PLATFORMS
-from homeassistant.components.samsung_ir.const import (
+from homeassistant.components.samsung_infrared import PLATFORMS
+from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
@@ -54,7 +54,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
-        unique_id=f"samsung_ir_tv_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}",
     )
 
 
@@ -102,7 +102,7 @@ async def init_integration(
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.samsung_ir.PLATFORMS", platforms):
+    with patch("homeassistant.components.samsung_infrared.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

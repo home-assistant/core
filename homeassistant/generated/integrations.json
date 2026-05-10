@@ -6075,7 +6075,7 @@
           "iot_class": "local_polling",
           "name": "Samsung Family Hub"
         },
-        "samsung_ir": {
+        "samsung_infrared": {
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",

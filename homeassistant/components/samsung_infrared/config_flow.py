@@ -42,7 +42,9 @@ class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
             entity_id = user_input[CONF_INFRARED_ENTITY_ID]
             device_type = user_input[CONF_DEVICE_TYPE]
 
-            await self.async_set_unique_id(f"samsung_ir_{device_type}_{entity_id}")
+            await self.async_set_unique_id(
+                f"samsung_infrared_{device_type}_{entity_id}"
+            )
             self._abort_if_unique_id_configured()
 
             # Get entity name for the title
