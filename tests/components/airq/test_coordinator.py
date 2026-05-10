@@ -31,41 +31,21 @@ STATUS_WARMUP = {
 }
 
 
-async def test_logging_in_coordinator_first_update_data(
+async def test_async_setup_populates_device_info(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     mock_airq: AsyncMock,
 ) -> None:
-    """Test that the first AirQCoordinator._async_update_data call logs necessary setup.
-
-    The fields of AirQCoordinator.device_info that are specific to the device are only
-    populated upon the first call to AirQCoordinator._async_update_data. The one field
-    which is actually necessary is 'name', and its absence is checked and logged,
-    as well as its being set.
-    """
-    caplog.set_level(logging.DEBUG)
+    """Test that AirQCoordinator._async_setup populates device_info from the device."""
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
 
-    # check that the name _is_ missing
     assert "name" not in coordinator.device_info
 
-    # First call: fetch missing device info
-    await coordinator._async_update_data()
+    await coordinator._async_setup()
 
-    # check that the missing name is logged...
-    assert (
-        "'name' not found in AirQCoordinator.device_info, fetching from the device"
-        in caplog.text
-    )
-    # ...and fixed
     assert coordinator.device_info.get("name") == TEST_DEVICE_INFO["name"]
-    assert (
-        f"Updated AirQCoordinator.device_info for 'name' {TEST_DEVICE_INFO['name']}"
-        in caplog.text
-    )
-
-    # Also that no warming up sensors is found as none are mocked
-    assert "Following sensors are still warming up" not in caplog.text
+    assert coordinator.device_info.get("model") == TEST_DEVICE_INFO["model"]
+    assert coordinator.device_info.get("sw_version") == TEST_DEVICE_INFO["sw_version"]
+    assert coordinator.device_info.get("hw_version") == TEST_DEVICE_INFO["hw_version"]
 
 
 async def test_logging_in_coordinator_subsequent_update_data(
