@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from duco.exceptions import DucoConnectionError
+from duco_connectivity.exceptions import DucoConnectionError
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
@@ -24,7 +24,9 @@ async def _async_get_write_requests_remaining(
 ) -> int | dict[str, str]:
     """Get the remaining write-request quota for system health."""
     try:
-        return await config_entry.runtime_data.client.async_get_write_req_remaining()
+        return (
+            await config_entry.runtime_data.client.async_get_write_requests_remaining()
+        )
     except DucoConnectionError:
         return {"type": "failed", "error": "unreachable"}
 
