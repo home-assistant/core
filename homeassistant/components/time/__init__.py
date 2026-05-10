@@ -1,7 +1,5 @@
 """Component to allow setting time as platforms."""
 
-from __future__ import annotations
-
 from datetime import time, timedelta
 import logging
 from typing import final

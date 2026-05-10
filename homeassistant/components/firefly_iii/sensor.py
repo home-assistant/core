@@ -1,7 +1,5 @@
 """Sensor platform for Firefly III integration."""
 
-from __future__ import annotations
-
 from pyfirefly.models import Account, Budget, Category
 
 from homeassistant.components.sensor import (

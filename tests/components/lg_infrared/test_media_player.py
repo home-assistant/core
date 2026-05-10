@@ -1,7 +1,5 @@
 """Tests for the LG Infrared media player platform."""
 
-from __future__ import annotations
-
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion

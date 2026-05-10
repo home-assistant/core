@@ -1,7 +1,5 @@
 """Support for RainMachine selects."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from regenmaschine.errors import RainMachineError

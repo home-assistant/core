@@ -1,8 +1,6 @@
 """Assist satellite entity for VoIP integration."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from enum import IntFlag
