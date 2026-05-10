@@ -92,10 +92,8 @@ async def test_select_set_option_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to raise an error
-    mock_indevolt.set_data.side_effect = HomeAssistantError(
-        "Device communication failed"
-    )
+    # Mock set_data to return failure
+    mock_indevolt.set_data.return_value = False
 
     # Attempt to change option
     with pytest.raises(HomeAssistantError):
