@@ -46,7 +46,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': '1',
-      'version': 1,
+      'version': 2,
     }),
     'devices': dict({
       '00:00:00:00:00:01': dict({
