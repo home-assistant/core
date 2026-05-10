@@ -18,7 +18,11 @@ from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -79,6 +83,13 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
         else:
             result[key] = value
     return result
+
+
+def _get_root_exception(err: Exception) -> Exception:
+    """Unwrap nested exception causes to the original error."""
+    while err.__cause__ is not None and isinstance(err.__cause__, Exception):
+        err = err.__cause__
+    return err
 
 
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -335,6 +346,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     """Class to manage fetching energy site info from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
+    site_id: int
     updated_once: bool
 
     def __init__(
@@ -354,7 +366,38 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         )
         self.api = api
         self.data = flatten(product)
+        self.site_id = product["energy_site_id"]
         self.updated_once = False
+
+    async def async_config_entry_first_refresh_or_skip(self) -> bool:
+        """Refresh site info during setup, skipping only stale-site failures."""
+        try:
+            await super().async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            root_err = _get_root_exception(err)
+
+            if isinstance(
+                root_err,
+                (
+                    InvalidToken,
+                    OAuthExpired,
+                    LoginRequired,
+                    OAuth2TokenRequestReauthError,
+                ),
+            ):
+                raise ConfigEntryAuthFailed from root_err
+
+            if not isinstance(root_err, TeslaFleetError):
+                raise
+
+            LOGGER.warning(
+                "Skipping Tesla energy site %s because info setup failed: %s",
+                self.site_id,
+                root_err,
+            )
+            return False
+
+        return True
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""

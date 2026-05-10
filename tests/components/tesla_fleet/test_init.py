@@ -476,6 +476,34 @@ async def test_energy_live_refresh_error(
     assert state.state == "unavailable"
 
 
+async def test_setup_retries_on_initial_energy_live_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test setup retries when initial energy live status refresh fails."""
+    mock_live_status.side_effect = TeslaFleetError
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("side_effect", [InvalidToken, OAuthExpired, LoginRequired])
+async def test_setup_does_not_skip_initial_energy_site_auth_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+    side_effect: type[Exception],
+) -> None:
+    """Test site info auth failures still fail setup."""
+    mock_site_info.side_effect = side_effect
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_energy_live_refresh_bad_response(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
