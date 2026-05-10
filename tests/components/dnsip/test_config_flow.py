@@ -129,7 +129,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
         (AresError),
     ],
 )
-async def test_form_error(hass: HomeAssistant, error: Exception) -> None:
+async def test_form_error(hass: HomeAssistant, error: type[Exception]) -> None:
     """Test validate url fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
