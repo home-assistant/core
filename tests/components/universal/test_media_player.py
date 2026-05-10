@@ -1,7 +1,7 @@
 """The tests for the Universal Media player platform."""
 
 from copy import copy
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -618,6 +618,22 @@ async def test_entity_picture_children_and_attr(
     )
     assert ump.entity_picture == ump.media_image_local
     assert ump.entity_picture != ump.media_image_url
+
+
+async def test_entity_picture_remotely_accessible(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test entity picture property when remotely accessible."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity.media_image_remotely_accessible",
+        new_callable=PropertyMock,
+        return_value=True,
+    ):
+        assert ump.entity_picture == ump.media_image_url
 
 
 async def test_source_list_children_and_attr(
