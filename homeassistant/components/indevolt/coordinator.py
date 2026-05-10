@@ -91,7 +91,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.set_data(sensor_key, value)
         except (TimeoutError, ClientError, OSError) as err:
-            _LOGGER.debug("Device push failed for %s: %s", sensor_key, err)
+            _LOGGER.debug(
+                "Device push failed for %s: %s", sensor_key, err, exc_info=err
+            )
             return False
 
     async def async_switch_energy_mode(
