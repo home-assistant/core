@@ -1,7 +1,6 @@
 """Adds config flow for dnsip integration."""
 
 import asyncio
-import contextlib
 from typing import Any, Literal
 
 import aiodns
@@ -60,18 +59,13 @@ async def async_validate_hostname(
 
     async def async_check(
         hostname: str, resolver: str, qtype: Literal["A", "AAAA"], port: int = 53
-    ) -> bool:
+    ) -> list:
         """Return if able to resolve hostname."""
-        result: bool = False
-        with contextlib.suppress(Exception):
-            # Handle leaking through other (pycares) exceptions than DNSError
-            _resolver = aiodns.DNSResolver(
-                nameservers=[resolver], udp_port=port, tcp_port=port
-            )
-            dns_result = await _resolver.query(hostname, qtype)
-            result = bool(dns_result)
 
-        return result
+        _resolver = aiodns.DNSResolver(
+            nameservers=[resolver], udp_port=port, tcp_port=port
+        )
+        return await _resolver.query(hostname, qtype)
 
     result: dict[str, bool] = {}
 
@@ -79,11 +73,14 @@ async def async_validate_hostname(
         async_check(hostname, resolver_ipv4, "A", port=port),
         async_check(hostname, resolver_ipv6, "AAAA", port=port_ipv6),
         async_check(hostname, resolver_ipv4, "AAAA", port=port),
+        return_exceptions=True,
     )
 
-    result[CONF_IPV4] = tasks[0]
-    result[CONF_IPV6] = tasks[1]
-    result[CONF_IPV6_V4] = tasks[2]
+    result[CONF_IPV4] = bool(tasks[0]) if not isinstance(tasks[0], Exception) else False
+    result[CONF_IPV6] = bool(tasks[1]) if not isinstance(tasks[1], Exception) else False
+    result[CONF_IPV6_V4] = (
+        bool(tasks[2]) if not isinstance(tasks[2], Exception) else False
+    )
 
     return result
 

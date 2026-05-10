@@ -7,6 +7,7 @@ import logging
 from typing import Literal
 
 import aiodns
+from pycares import AresError
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -122,8 +123,7 @@ class WanIpSensor(SensorEntity):
         except TimeoutError as err:
             _LOGGER.debug("Timeout while resolving host: %s", err)
             await self.resolver.close()
-        except Exception as err:  # noqa: BLE001
-            # Handle leaking through other (pycares) exceptions than DNSError
+        except (aiodns.error.DNSError, AresError, asyncio.CancelledError) as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             await self.resolver.close()
 
