@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aiocentriconnect import Tank
 import pytest
 
 from homeassistant.components.centriconnect.const import DOMAIN
@@ -31,30 +32,40 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_centriconnect_client() -> Generator[AsyncMock]:
     """Mock a CentriConnect/MyPropane client."""
-    with patch(
-        "aiocentriconnect.api.API.async_request",
-        return_value={
-            "AlertStatus": "No Alert",
-            "Altitude": 123.456,
-            "BatteryVolts": 4.19,
-            "DeviceID": TEST_TANK_ID,
-            "DeviceName": TEST_TANK_NAME,
-            "DeviceTempCelsius": 17.0,
-            "DeviceTempFahrenheit": 63.0,
-            "LastPostTimeIso": "2026-02-27 22:00:31.000",
-            "Latitude": 40.7128,
-            "Longitude": -74.0060,
-            "NextPostTimeIso": "2026-02-28 10:00:00.000",
-            "SignalQualLTE": -107.0,
-            "SolarVolts": 2.46,
-            "TankLevel": 75.0,
-            "TankSize": 1000,
-            "TankSizeUnit": "Gallons",
-            "VersionHW": "4.1",
-            "VersionLTE": "1.1.2",
-        },
-    ) as mock_client:
-        yield mock_client
+    with (
+        patch(
+            "homeassistant.components.centriconnect.coordinator.CentriConnect",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.centriconnect.config_flow.CentriConnect",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.async_get_tank_data.return_value = Tank(
+            {
+                "AlertStatus": "No Alert",
+                "Altitude": 123.456,
+                "BatteryVolts": 4.19,
+                "DeviceID": TEST_TANK_ID,
+                "DeviceName": TEST_TANK_NAME,
+                "DeviceTempCelsius": 17.0,
+                "DeviceTempFahrenheit": 63.0,
+                "LastPostTimeIso": "2026-02-27 22:00:31.000",
+                "Latitude": 40.7128,
+                "Longitude": -74.0060,
+                "NextPostTimeIso": "2026-02-28 10:00:00.000",
+                "SignalQualLTE": -107.0,
+                "SolarVolts": 2.46,
+                "TankLevel": 75.0,
+                "TankSize": 1000,
+                "TankSizeUnit": "Gallons",
+                "VersionHW": "4.1",
+                "VersionLTE": "1.1.2",
+            }
+        )
+        yield client
 
 
 @pytest.fixture
