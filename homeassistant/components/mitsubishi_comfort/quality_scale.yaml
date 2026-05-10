@@ -1,0 +1,72 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No service actions registered.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: No service actions registered.
+  reauthentication-flow: todo
+  parallel-updates: todo
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow.
+
+  # Gold
+  entity-translations: todo
+  entity-device-class: todo
+  devices: done
+  entity-category:
+    status: exempt
+    comment: Single climate entity per device, no diagnostic entities yet.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Single climate entity per device, enabled by default.
+  discovery: todo
+  stale-devices: todo
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  dynamic-devices: todo
+  discovery-update-info: todo
+  repair-issues: todo
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

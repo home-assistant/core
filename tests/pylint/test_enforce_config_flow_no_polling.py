@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_config_flow_no_polling plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter

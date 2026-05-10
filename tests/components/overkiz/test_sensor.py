@@ -1,7 +1,5 @@
 """Tests for the Overkiz sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch

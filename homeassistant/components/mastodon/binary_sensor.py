@@ -1,7 +1,5 @@
 """Binary sensor platform for the Mastodon integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
