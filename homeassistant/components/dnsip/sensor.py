@@ -125,7 +125,7 @@ class WanIpSensor(SensorEntity):
             if self.resolver:
                 await self.resolver.close()
         except (aiodns.error.DNSError, AresError, asyncio.CancelledError) as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
+            _LOGGER.debug("Exception while resolving host: %s", err)
             if self.resolver:
                 await self.resolver.close()
 
