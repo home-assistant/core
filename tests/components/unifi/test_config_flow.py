@@ -1,11 +1,13 @@
 """Test UniFi Network config flow."""
 
+from collections.abc import Callable
 import socket
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.unifi import async_migrate_entry
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -38,7 +40,7 @@ from .conftest import ConfigEntryFactoryType
 
 from tests.common import MockConfigEntry
 
-ANONYMOUS_CONTROLLER_ID = "24f81231-a456-4c32-abcd-f5612345385f"
+CONTROLLER_MAC = "10:00:00:00:00:01"
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -136,7 +138,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].unique_id == f"{ANONYMOUS_CONTROLLER_ID}::1"
+    assert result["result"].unique_id == f"{CONTROLLER_MAC}::1"
 
 
 async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
@@ -306,7 +308,7 @@ async def test_flow_fails_and_recovers(
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].unique_id == f"{ANONYMOUS_CONTROLLER_ID}::1"
+    assert result["result"].unique_id == f"{CONTROLLER_MAC}::1"
 
 
 @pytest.mark.parametrize(
@@ -315,15 +317,16 @@ async def test_flow_fails_and_recovers(
 )
 @pytest.mark.parametrize(
     "system_information_payload",
-    [[{"anonymous_controller_id": "controller-b"}]],
+    [[{"anonymous_controller_id": "controller-b", "mac": "10:00:00:00:00:02"}]],
 )
 async def test_flow_allows_second_controller_with_same_default_site(
     hass: HomeAssistant,
+    mock_requests: Callable[[str, str], None],
 ) -> None:
     """A second controller with the same default site should create a new entry."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="controller-a::default",
+        unique_id="10:00:00:00:00:01::default",
         data={
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "username",
@@ -334,6 +337,7 @@ async def test_flow_allows_second_controller_with_same_default_site(
         },
     )
     existing_entry.add_to_hass(hass)
+    mock_requests("10.0.1.1", "default")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -344,14 +348,14 @@ async def test_flow_allows_second_controller_with_same_default_site(
             CONF_HOST: "10.0.1.1",
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
-            CONF_PORT: 443,
+            CONF_PORT: 1234,
             CONF_VERIFY_SSL: False,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.0.1.1 (Default)"
-    assert result["result"].unique_id == "controller-b::default"
+    assert result["result"].unique_id == "10:00:00:00:00:02::default"
 
 
 @pytest.mark.parametrize(
@@ -360,12 +364,13 @@ async def test_flow_allows_second_controller_with_same_default_site(
 )
 @pytest.mark.parametrize(
     "system_information_payload",
-    [[{"anonymous_controller_id": "controller-b"}]],
+    [[{"anonymous_controller_id": "controller-b", "mac": "10:00:00:00:00:02"}]],
 )
-async def test_flow_migrates_legacy_site_only_unique_id(
+async def test_flow_updates_legacy_site_only_entry_data(
     hass: HomeAssistant,
+    mock_requests: Callable[[str, str], None],
 ) -> None:
-    """Legacy site-only entries should be upgraded to controller-plus-site IDs."""
+    """Legacy site-only entries should still be matched by config flow."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="default",
@@ -379,6 +384,7 @@ async def test_flow_migrates_legacy_site_only_unique_id(
         },
     )
     existing_entry.add_to_hass(hass)
+    mock_requests("10.0.1.1", "default")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -389,14 +395,47 @@ async def test_flow_migrates_legacy_site_only_unique_id(
             CONF_HOST: "10.0.1.1",
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
-            CONF_PORT: 443,
+            CONF_PORT: 1234,
             CONF_VERIFY_SSL: False,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "configuration_updated"
-    assert existing_entry.unique_id == "controller-b::default"
+    assert existing_entry.unique_id == "default"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"name": "default", "role": "admin", "desc": "Default", "_id": "default"}]],
+)
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [[{"anonymous_controller_id": "controller-b", "mac": "10:00:00:00:00:02"}]],
+)
+async def test_migrate_entry_updates_legacy_site_only_unique_id(
+    hass: HomeAssistant,
+    mock_default_requests: None,
+) -> None:
+    """Legacy site-only entries should migrate before setup loads the integration."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="default",
+        version=1,
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_SITE_ID: "default",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, existing_entry)
+    assert existing_entry.version == 2
+    assert existing_entry.unique_id == "10:00:00:00:00:02::default"
 
 
 async def test_reauth_flow_update_configuration(
@@ -438,15 +477,16 @@ async def test_reauth_flow_update_configuration(
 )
 @pytest.mark.parametrize(
     "system_information_payload",
-    [[{"anonymous_controller_id": "controller-b"}]],
+    [[{"anonymous_controller_id": "controller-b", "mac": "10:00:00:00:00:02"}]],
 )
 async def test_reauth_flow_extracts_site_id_from_compound_unique_id(
     hass: HomeAssistant,
+    mock_requests: Callable[[str, str], None],
 ) -> None:
     """Reauth should use the raw site_id from the compound unique ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="controller-b::default",
+        unique_id="10:00:00:00:00:02::default",
         data={
             CONF_HOST: "10.0.1.1",
             CONF_USERNAME: "username",
@@ -457,6 +497,7 @@ async def test_reauth_flow_extracts_site_id_from_compound_unique_id(
         },
     )
     config_entry.add_to_hass(hass)
+    mock_requests("10.0.1.1", "default")
 
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -472,14 +513,14 @@ async def test_reauth_flow_extracts_site_id_from_compound_unique_id(
                 CONF_HOST: "10.0.1.1",
                 CONF_USERNAME: "new_name",
                 CONF_PASSWORD: "new_pass",
-                CONF_PORT: 443,
+                CONF_PORT: 1234,
                 CONF_VERIFY_SSL: False,
             },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.unique_id == "controller-b::default"
+    assert config_entry.unique_id == "10:00:00:00:00:02::default"
 
 
 async def test_reauth_flow_update_configuration_on_not_loaded_entry(

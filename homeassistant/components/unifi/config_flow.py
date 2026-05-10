@@ -35,6 +35,12 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import UnifiConfigEntry
+from .config_entry_unique_id import (
+    controller_key_from_system_info,
+    extract_controller_key,
+    extract_site_id,
+    make_unique_id,
+)
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -57,48 +63,6 @@ from .hub import UnifiHub, get_unifi_api
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
-UNIQUE_ID_SEPARATOR = "::"
-
-
-@callback
-def _normalize_host(host: str) -> str:
-    """Normalize a controller host for matching and fallback IDs."""
-    return host.strip().lower()
-
-
-@callback
-def _normalize_controller_key(controller_key: str | None, host: str) -> str:
-    """Return the preferred stable controller key, falling back to host."""
-    if controller_key:
-        return controller_key.strip().lower()
-    return _normalize_host(host)
-
-
-@callback
-def _make_unique_id(controller_key: str | None, host: str, site_id: str) -> str:
-    """Build a config-entry unique ID for one controller + one site."""
-    return (
-        f"{_normalize_controller_key(controller_key, host)}"
-        f"{UNIQUE_ID_SEPARATOR}{site_id}"
-    )
-
-
-@callback
-def _extract_site_id(unique_id: str | None) -> str | None:
-    """Return the raw site_id from a legacy or compound unique ID."""
-    if not unique_id:
-        return None
-    if UNIQUE_ID_SEPARATOR not in unique_id:
-        return unique_id
-    return unique_id.rsplit(UNIQUE_ID_SEPARATOR, 1)[-1]
-
-
-@callback
-def _extract_controller_key(unique_id: str | None) -> str | None:
-    """Return the controller key from a compound unique ID if present."""
-    if not unique_id or UNIQUE_ID_SEPARATOR not in unique_id:
-        return None
-    return unique_id.split(UNIQUE_ID_SEPARATOR, 1)[0]
 
 
 @callback
@@ -113,20 +77,17 @@ def _entry_matches_target(
     target_site_name: str,
 ) -> bool:
     """Return True if a config entry matches the same controller + site."""
-    current_site_id = _extract_site_id(entry_unique_id)
+    current_site_id = extract_site_id(entry_unique_id)
     if current_site_id not in (target_site_id, None):
         return False
 
-    target_normalized_host = _normalize_host(target_host)
-    target_normalized_key = _normalize_controller_key(target_controller_key, target_host)
-
-    current_controller_key = _extract_controller_key(entry_unique_id)
+    current_controller_key = extract_controller_key(entry_unique_id)
     if current_controller_key is not None:
-        return current_controller_key == target_normalized_key
+        return current_controller_key == target_controller_key
 
-    current_host = _normalize_host(entry_host or "")
+    current_host = (entry_host or "").strip().lower()
     current_site_name = entry_site_name or ""
-    return current_host == target_normalized_host and current_site_name in (
+    return current_host == target_host.strip().lower() and current_site_name in (
         target_site_name,
         target_site_id,
     )
@@ -135,7 +96,7 @@ def _entry_matches_target(
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     sites: Sites
 
@@ -154,7 +115,9 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
     @callback
-    def _find_matching_entry(self, host: str, site_id: str, site_name: str):
+    def _find_matching_entry(
+        self, host: str, site_id: str, site_name: str
+    ) -> UnifiConfigEntry | None:
         """Find an already-configured entry for the same controller + site."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.domain != DOMAIN:
@@ -194,10 +157,12 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 await hub.system_information.update()
                 controller_info = next(iter(hub.system_information.values()), None)
                 self.controller_key = (
-                    controller_info.anonymous_controller_id
+                    controller_key_from_system_info(controller_info)
                     if controller_info is not None
                     else None
                 )
+                if self.controller_key is None:
+                    errors["base"] = "service_unavailable"
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -206,19 +171,22 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                if (
+                if errors:
+                    pass
+                elif (
                     self.source == SOURCE_REAUTH
                     and (
                         (reauth_unique_id := self._get_reauth_entry().unique_id)
                         is not None
                     )
-                    and (reauth_site_id := _extract_site_id(reauth_unique_id))
+                    and (reauth_site_id := extract_site_id(reauth_unique_id))
                     is not None
                     and reauth_site_id in self.sites
                 ):
                     return await self.async_step_site({CONF_SITE_ID: reauth_site_id})
 
-                return await self.async_step_site()
+                if not errors:
+                    return await self.async_step_site()
 
         if not (host := self.config.get(CONF_HOST, "")) and await _async_discover_unifi(
             self.hass
@@ -252,7 +220,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             site_id = user_input[CONF_SITE_ID]
             site = self.sites[site_id]
             host = str(self.config[CONF_HOST])
-            unique_id = _make_unique_id(self.controller_key, host, site_id)
+            assert self.controller_key is not None
+            unique_id = make_unique_id(self.controller_key, site_id)
             self.config[CONF_SITE_ID] = site.name
 
             config_entry = None
@@ -267,11 +236,6 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                     config_entry = self._find_matching_entry(host, site_id, site.name)
 
             if config_entry:
-                if config_entry.unique_id != unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        config_entry, unique_id=unique_id
-                    )
-
                 if (
                     config_entry.state is ConfigEntryState.LOADED
                     and (hub := config_entry.runtime_data)

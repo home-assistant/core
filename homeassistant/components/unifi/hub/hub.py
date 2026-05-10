@@ -21,6 +21,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from ..config_entry_unique_id import extract_site_id
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
@@ -94,7 +95,9 @@ class UnifiHub:
         self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
-        self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
+        site_id = extract_site_id(self.config.entry.unique_id)
+        assert site_id is not None
+        self.is_admin = self.api.sites[site_id].role == "admin"
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)

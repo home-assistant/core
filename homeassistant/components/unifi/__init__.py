@@ -11,6 +11,11 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
+from .config_entry_unique_id import (
+    controller_key_from_system_info,
+    extract_site_id,
+    make_unique_id,
+)
 from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
@@ -23,6 +28,43 @@ STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry
+) -> bool:
+    """Migrate UniFi Network config entries."""
+    if config_entry.version > 2:
+        return False
+
+    if config_entry.version < 2:
+        site_id = extract_site_id(config_entry.unique_id)
+        if site_id is None:
+            return False
+
+        try:
+            api = await get_unifi_api(hass, config_entry.data)
+            await api.system_information.update()
+
+        except AuthenticationRequired, CannotConnect:
+            return False
+
+        controller_info = next(iter(api.system_information.values()), None)
+        controller_key = (
+            controller_key_from_system_info(controller_info)
+            if controller_info is not None
+            else None
+        )
+        if controller_key is None:
+            return False
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=make_unique_id(controller_key, site_id),
+            version=2,
+        )
+
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -121,6 +121,7 @@ def fixture_config_entry(
         domain=DOMAIN,
         entry_id="1",
         unique_id="1",
+        version=2,
         data=config_entry_data,
         options=config_entry_options,
     )
@@ -213,6 +214,7 @@ def fixture_request(
         )
 
         mock_get_request("/api/self/sites", site_payload)
+        mock_get_request("/api/s/default/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sta", client_payload)
         mock_get_request(f"/api/s/{site_id}/rest/user", clients_all_payload)
         mock_get_request(f"/api/s/{site_id}/stat/device", device_payload)
@@ -290,6 +292,7 @@ def fixture_system_information_data() -> list[dict[str, Any]]:
             "build": "atag_7.4.162_21057",
             "console_display_version": "3.1.15",
             "hostname": "UDMP",
+            "mac": "10:00:00:00:00:01",
             "name": "UDMP",
             "previous_version": "7.4.156",
             "timezone": "Europe/Stockholm",
