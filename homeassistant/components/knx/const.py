@@ -129,7 +129,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)
-    telegram_backend: str  # memory | sqlite | postgres
+    telegram_backend: str  # sqlite | postgres
     telegram_retention_days: int
     telegram_load_hours: int
     telegram_db_path: str

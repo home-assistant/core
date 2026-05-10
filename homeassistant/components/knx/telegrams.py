@@ -319,10 +319,10 @@ class Telegrams:
 
     async def migrate_telegrams(self) -> None:
         """Migrate telegrams from JSON storage to the current store."""
-        if (
-            not isinstance(self.store, SqliteStore)
-            or self.store.engine.url.database == ":memory:"
-        ):
+        database = getattr(
+            getattr(getattr(self.store, "engine", None), "url", None), "database", None
+        )
+        if not isinstance(self.store, SqliteStore) or database == ":memory:":
             return
 
         path = self.hass.config.path(STORAGE_DIR, "knx/telegrams_history.json")

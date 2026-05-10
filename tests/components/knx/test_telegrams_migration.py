@@ -269,6 +269,6 @@ async def test_migrate_telegrams_json_to_sqlite(
 
     finally:
         # Cleanup DB file
-        db_path = hass.config.path(db_name)
+        db_path = hass.config.path(STORAGE_DIR, db_name)
         if os.path.exists(db_path):
             await hass.async_add_executor_job(os.remove, db_path)
