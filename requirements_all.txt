@@ -426,7 +426,7 @@ aioswitcher==6.1.1
 aiosyncthing==0.7.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.5.1
+aiotankerkoenig==0.5.3
 
 # homeassistant.components.tedee
 aiotedee==0.3.0
@@ -1444,7 +1444,7 @@ led-ble==1.1.8
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.6.4
+letpot==0.7.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
