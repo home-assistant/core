@@ -20,13 +20,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
 
-PATCH_SETUP = "homeassistant.components.aquarite.async_setup_entry"
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent actual setup during config flow tests."""
-    with patch(PATCH_SETUP, return_value=True) as mock:
+    with patch(
+        "homeassistant.components.aquarite.async_setup_entry", return_value=True
+    ) as mock:
         yield mock
 
 
