@@ -249,6 +249,10 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
+        ) | (
+            self.supported_features & VacuumEntityFeature.CLEAN_AREA
+            if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
+            else 0
         )
         self._clean_segments_command_topic = config.get(
             CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
