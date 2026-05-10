@@ -5,6 +5,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.youtube.const import (
     ATTR_DESCRIPTION,
     ATTR_LATEST_VIDEO,
+    COORDINATOR,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -40,7 +41,7 @@ async def test_diagnostics_does_not_mutate_coordinator_data(
     """
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    coordinator = entry.runtime_data
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
     descriptions_before = {
         channel_id: channel_data[ATTR_LATEST_VIDEO][ATTR_DESCRIPTION]
@@ -101,7 +102,7 @@ async def test_diagnostics_no_latest_video(
     """
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    coordinator = entry.runtime_data
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
     channel_id = next(iter(coordinator.data))
     original_data = coordinator.data[channel_id].copy()
