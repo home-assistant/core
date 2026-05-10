@@ -142,8 +142,5 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_error",
-                translation_placeholders={
-                    "name": str(self.name),
-                    "value": str(int_value),
-                },
+                translation_placeholders={"name": str(self.name)},
             )

@@ -132,8 +132,5 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_error",
-                translation_placeholders={
-                    "name": str(self.name),
-                    "value": "on" if value else "off",
-                },
+                translation_placeholders={"name": str(self.name)},
             )
