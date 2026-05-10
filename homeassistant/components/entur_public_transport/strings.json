@@ -14,14 +14,18 @@
     "step": {
       "user": {
         "data": {
+          "expand_platforms": "Expand platforms",
           "line_whitelist": "Line whitelist",
+          "name": "Name",
           "number_of_departures": "Number of departures",
           "omit_non_boarding": "Omit non-boarding departures",
           "show_on_map": "Show on map",
           "stop_ids": "Stop IDs"
         },
         "data_description": {
+          "expand_platforms": "Automatically expand stop places to include all quays/platforms",
           "line_whitelist": "Only show departures for these specific line IDs (leave empty for all lines)",
+          "name": "Name prefix for the created sensors",
           "number_of_departures": "Number of upcoming departures to include in attributes",
           "omit_non_boarding": "Hide departures where boarding is not allowed (e.g., last stop)",
           "show_on_map": "Include GPS coordinates in entity attributes for map display",

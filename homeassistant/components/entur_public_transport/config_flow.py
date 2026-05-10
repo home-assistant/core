@@ -35,6 +35,7 @@ from .const import (
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
+    DEFAULT_NAME,
     DOMAIN,
 )
 
@@ -45,6 +46,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_STOP_IDS): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
         ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): BooleanSelector(),
         vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
         vol.Optional(CONF_WHITELIST_LINES, default=[]): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
@@ -89,13 +92,14 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         omit_non_boarding = data.get(CONF_OMIT_NON_BOARDING, True)
         number_of_departures = data.get(CONF_NUMBER_OF_DEPARTURES, 2)
+        line_whitelist = data.get(CONF_WHITELIST_LINES, [])
 
         try:
             client = EnturPublicTransportData(
                 API_CLIENT_NAME.format(str(randint(100000, 999999))),
                 stops=stops,
                 quays=quays,
-                line_whitelist=[],
+                line_whitelist=line_whitelist,
                 omit_non_boarding=omit_non_boarding,
                 number_of_departures=number_of_departures,
                 web_session=async_get_clientsession(self.hass),
@@ -127,12 +131,14 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
-                title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
+                title = user_input.get(CONF_NAME, DEFAULT_NAME)
                 return self.async_create_entry(
                     title=title,
                     data={CONF_STOP_IDS: stop_ids},
                     options={
-                        CONF_EXPAND_PLATFORMS: True,
+                        CONF_EXPAND_PLATFORMS: user_input.get(
+                            CONF_EXPAND_PLATFORMS, True
+                        ),
                         CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
                         CONF_WHITELIST_LINES: user_input.get(CONF_WHITELIST_LINES, []),
                         CONF_OMIT_NON_BOARDING: user_input.get(

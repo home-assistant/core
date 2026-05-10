@@ -37,6 +37,8 @@ async def test_full_user_flow(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: False,
             CONF_SHOW_ON_MAP: False,
             CONF_WHITELIST_LINES: [],
             CONF_OMIT_NON_BOARDING: True,
@@ -46,12 +48,12 @@ async def test_full_user_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Entur NSR:StopPlace:548"
+    assert result["title"] == "My Bus Stop"
     assert result["data"] == {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
     assert result["options"] == {
-        CONF_EXPAND_PLATFORMS: True,
+        CONF_EXPAND_PLATFORMS: False,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -75,6 +77,8 @@ async def test_user_flow_with_quay(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:Quay:48550"],
+            CONF_NAME: "My Quay",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -83,7 +87,7 @@ async def test_user_flow_with_quay(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Entur NSR:Quay:48550"
+    assert result["title"] == "My Quay"
 
 
 async def test_user_flow_invalid_stop_id(
@@ -100,6 +104,8 @@ async def test_user_flow_invalid_stop_id(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["invalid_id"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -114,6 +120,8 @@ async def test_user_flow_invalid_stop_id(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -145,6 +153,8 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -160,6 +170,8 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -186,6 +198,8 @@ async def test_user_flow_unknown_error(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -201,6 +215,8 @@ async def test_user_flow_unknown_error(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_NAME: "My Bus Stop",
+            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
