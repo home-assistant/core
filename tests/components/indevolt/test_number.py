@@ -111,7 +111,6 @@ async def test_number_set_value_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to return failure
     mock_indevolt.set_data.return_value = False
 
     # Attempt to set value

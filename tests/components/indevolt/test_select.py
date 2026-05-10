@@ -92,7 +92,6 @@ async def test_select_set_option_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to return failure
     mock_indevolt.set_data.return_value = False
 
     # Attempt to change option
