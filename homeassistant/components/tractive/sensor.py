@@ -67,7 +67,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
             item.trackable,
             item.tracker_details,
             dispatcher_signal,
-            device_type="tracker" if description.hardware_sensor else "pet",
+            description.hardware_sensor,
         )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
