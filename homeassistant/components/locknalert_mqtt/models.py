@@ -1,4 +1,4 @@
-"""Models used by multiple LocknAlertLocknAlertMQTT modules."""
+"""Models used by multiple MQTT modules."""
 
 from __future__ import annotations
 
@@ -26,14 +26,12 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import LocknAlertMQTTMessage
+    from paho.mqtt.client import MQTTMessage
 
-    from .client import LocknAlertMQTT, Subscription
+    from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
-    from .discovery import LocknAlertMQTTDiscoveryPayload
-    from .tag import LocknAlertMQTTTagScanner
-
+    from .discovery import MQTTDiscoveryPayload
 from .const import DOMAIN, TEMPLATE_ERRORS
 
 
@@ -54,7 +52,7 @@ type PublishPayloadType = str | bytes | int | float | None
 def convert_outgoing_mqtt_payload(
     payload: PublishPayloadType,
 ) -> PublishPayloadType:
-    """Ensure correct raw LocknAlertLocknAlertMQTT payload is passed as bytes for publishing."""
+    """Ensure correct raw MQTT payload is passed as bytes for publishing."""
     if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
@@ -69,7 +67,7 @@ def convert_outgoing_mqtt_payload(
 
 @dataclass
 class PublishMessage:
-    """LocknAlertLocknAlertMQTT Message for publishing."""
+    """MQTT Message for publishing."""
 
     topic: str
     payload: PublishPayloadType
@@ -82,7 +80,7 @@ class PublishMessage:
 # per messages/subscribed_topic.
 @dataclass(slots=True, frozen=True, eq=False)
 class ReceiveMessage:
-    """LocknAlertLocknAlertMQTT Message received."""
+    """MQTT Message received."""
 
     topic: str
     payload: ReceivePayloadType
@@ -120,7 +118,7 @@ class TriggerDebugInfo(TypedDict):
 class PendingDiscovered(TypedDict):
     """Pending discovered items."""
 
-    pending: deque[LocknAlertMQTTDiscoveryPayload]
+    pending: deque[MQTTDiscoveryPayload]
     unsub: CALLBACK_TYPE
 
 
@@ -169,7 +167,7 @@ class MqttCommandTemplateException(ServiceValidationError):
 
 
 class MqttCommandTemplate:
-    """Class for rendering LocknAlertLocknAlertMQTT payload with command templates."""
+    """Class for rendering MQTT payload with command templates."""
 
     def __init__(
         self,
@@ -255,7 +253,7 @@ class MqttValueTemplateException(TemplateError):
 
 
 class MqttValueTemplate:
-    """Class for rendering LocknAlertLocknAlertMQTT value template with possible json values."""
+    """Class for rendering MQTT value template with possible json values."""
 
     def __init__(
         self,
@@ -277,7 +275,7 @@ class MqttValueTemplate:
         default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
-        """Render with possible json value or pass-though a received LocknAlertLocknAlertMQTT value."""
+        """Render with possible json value or pass-though a received MQTT value."""
         rendered_payload: ReceivePayloadType
 
         if self._value_template is None:
@@ -358,7 +356,7 @@ class EntityTopicState:
         self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
-    def process_write_state_requests(self, msg: LocknAlertMQTTMessage) -> None:
+    def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
             entity_id, entity = self.subscribe_calls.popitem()
@@ -390,9 +388,9 @@ class EntityTopicState:
 
 @dataclass
 class MqttData:
-    """Keep the LocknAlertLocknAlertMQTT entry data."""
+    """Keep the MQTT entry data."""
 
-    client: LocknAlertMQTT
+    client: MQTT
     config: list[ConfigType]
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
@@ -400,6 +398,12 @@ class MqttData:
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
+    # the entity registry index, which is a tuple (entity_platform, "mqtt", unique_id)
+    # It allows to cleanup disabled entities when an empty payload is received.
+    discovery_discovered_and_disabled: dict[tuple[str, str], tuple[str, str, str]] = (
+        field(default_factory=dict)
+    )
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
@@ -416,7 +420,7 @@ class MqttData:
     reload_schema: dict[str, VolSchemaType] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
-    tags: dict[str, dict[str, LocknAlertMQTTTagScanner]] = field(default_factory=dict)
+    tags: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -426,17 +430,17 @@ class MqttComponentConfig:
     component: str
     object_id: str
     node_id: str | None
-    discovery_payload: LocknAlertMQTTDiscoveryPayload
+    discovery_payload: MQTTDiscoveryPayload
 
 
 class DeviceMqttOptions(TypedDict, total=False):
-    """Hold the shared LocknAlertLocknAlertMQTT specific options for an LocknAlertLocknAlertMQTT device."""
+    """Hold the shared MQTT specific options for an MQTT device."""
 
     qos: int
 
 
 class MqttDeviceData(TypedDict, total=False):
-    """Hold the data for an LocknAlertLocknAlertMQTT device."""
+    """Hold the data for an MQTT device."""
 
     name: str
     identifiers: str
@@ -458,12 +462,12 @@ class MqttAvailabilityData(TypedDict, total=False):
 
 
 class MqttSubentryData(TypedDict, total=False):
-    """Hold the data for a LocknAlertLocknAlertMQTT subentry."""
+    """Hold the data for a MQTT subentry."""
 
     device: MqttDeviceData
     components: dict[str, dict[str, Any]]
     availability: MqttAvailabilityData
 
 
-DATA_LocknAlertMQTT: HassKey[MqttData] = HassKey("mqtt")
-DATA_LocknAlertMQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("mqtt_client_available")
+DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")
+DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("mqtt_client_available")

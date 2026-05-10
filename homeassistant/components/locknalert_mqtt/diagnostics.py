@@ -1,4 +1,4 @@
-"""Diagnostics support for LocknAlertMQTT."""
+"""Diagnostics support for MQTT."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -74,9 +74,9 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str, Any]:
-    """Represent an LocknAlertLocknAlertMQTT device as a dictionary."""
+    """Represent an MQTT device as a dictionary."""
 
-    # Gather information how this LocknAlertLocknAlertMQTT device is represented in Home Assistant
+    # Gather information how this MQTT device is represented in Home Assistant
     entity_registry = er.async_get(hass)
     data: dict[str, Any] = {
         "id": device.id,
@@ -103,10 +103,8 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
         # The context doesn't provide useful information in this case.
         state_dict.pop("context", None)
 
-        entity_domain = split_entity_id(state.entity_id)[0]
-
         # Retract some sensitive state attributes
-        if entity_domain == device_tracker.DOMAIN:
+        if state.domain == device_tracker.DOMAIN:
             state_dict["attributes"] = async_redact_data(
                 state_dict["attributes"], REDACT_STATE_DEVICE_TRACKER
             )

@@ -1,4 +1,4 @@
-"""Provides device automations for LocknAlertMQTT."""
+"""Provides device automations for MQTT."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, trigger as mqtt_trigger
-from .config import LocknAlertMQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     ATTR_DISCOVERY_HASH,
     CONF_ENCODING,
@@ -35,10 +35,10 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .discovery import LocknAlertMQTTDiscoveryPayload, clear_discovery_hash
+from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
-from .models import DATA_LocknAlertMQTT
-from .schemas import LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA
+from .models import DATA_MQTT
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ CONF_SUBTYPE = "subtype"
 DEFAULT_ENCODING = "utf-8"
 DEVICE = "device"
 
-LocknAlertMQTT_TRIGGER_BASE = {
-    # Trigger when LocknAlertLocknAlertMQTT message is received
+MQTT_TRIGGER_BASE = {
+    # Trigger when MQTT message is received
     CONF_PLATFORM: DEVICE,
     CONF_DOMAIN: DOMAIN,
 }
@@ -60,7 +60,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_DEVICE_ID): str,
         # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.
-        # By default, a LocknAlertLocknAlertMQTT device trigger now will be referenced by
+        # By default, a MQTT device trigger now will be referenced by
         # device_id, type and subtype instead.
         vol.Optional(CONF_DISCOVERY_ID): str,
         vol.Required(CONF_TYPE): cv.string,
@@ -68,10 +68,10 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     },
 )
 
-TRIGGER_DISCOVERY_SCHEMA = LocknAlertMQTT_BASE_SCHEMA.extend(
+TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
-        vol.Required(CONF_DEVICE): LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
         vol.Required(CONF_SUBTYPE): cv.string,
         vol.Required(CONF_TOPIC): cv.string,
@@ -94,7 +94,7 @@ class TriggerInstance:
     remove: CALLBACK_TYPE | None = None
 
     async def async_attach_trigger(self) -> None:
-        """Attach LocknAlertLocknAlertMQTT trigger."""
+        """Attach MQTT trigger."""
         mqtt_config: dict[str, Any] = {
             CONF_PLATFORM: DOMAIN,
             CONF_TOPIC: self.trigger.topic,
@@ -136,12 +136,12 @@ class Trigger:
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
     ) -> Callable[[], None]:
-        """Add LocknAlertLocknAlertMQTT trigger."""
+        """Add MQTT trigger."""
         instance = TriggerInstance(action, trigger_info, self)
         self.trigger_instances.append(instance)
 
         if self.topic is not None:
-            # If we know about the trigger, subscribe to LocknAlertLocknAlertMQTT topic
+            # If we know about the trigger, subscribe to MQTT topic
             await instance.async_attach_trigger()
 
         @callback
@@ -160,7 +160,7 @@ class Trigger:
         return async_remove
 
     async def update_trigger(self, config: ConfigType) -> None:
-        """Update LocknAlertLocknAlertMQTT device trigger."""
+        """Update MQTT device trigger."""
         self.type = config[CONF_TYPE]
         self.subtype = config[CONF_SUBTYPE]
         self.payload = config[CONF_PAYLOAD]
@@ -177,7 +177,7 @@ class Trigger:
                 await trig.async_attach_trigger()
 
     def detach_trigger(self) -> None:
-        """Remove LocknAlertLocknAlertMQTT device trigger."""
+        """Remove MQTT device trigger."""
         # Mark trigger as unknown
         self.topic = None
 
@@ -189,7 +189,7 @@ class Trigger:
 
 
 class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
-    """Setup a LocknAlertLocknAlertMQTT device trigger with auto discovery."""
+    """Setup a MQTT device trigger with auto discovery."""
 
     def __init__(
         self,
@@ -205,7 +205,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._mqtt_data = hass.data[DATA_LocknAlertMQTT]
+        self._mqtt_data = hass.data[DATA_MQTT]
         self.trigger_id = f"{device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
 
         MqttDiscoveryDeviceUpdateMixin.__init__(
@@ -249,8 +249,8 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
-    async def async_update(self, discovery_data: LocknAlertMQTTDiscoveryPayload) -> None:
-        """Handle LocknAlertLocknAlertMQTT device trigger discovery updates."""
+    async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
+        """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         debug_info.update_trigger_discovery_data(
             self.hass, discovery_hash, discovery_data
@@ -258,7 +258,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
         new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
         if new_trigger_id != self.trigger_id:
-            mqtt_data = self.hass.data[DATA_LocknAlertMQTT]
+            mqtt_data = self.hass.data[DATA_MQTT]
             if new_trigger_id in mqtt_data.device_triggers:
                 _LOGGER.error(
                     "Cannot update device trigger %s due to an existing duplicate "
@@ -295,7 +295,7 @@ async def async_setup_trigger(
     config_entry: ConfigEntry,
     discovery_data: DiscoveryInfoType,
 ) -> None:
-    """Set up the LocknAlertLocknAlertMQTT device trigger."""
+    """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
 
     # We update the device based on the trigger config to obtain the device_id.
@@ -307,7 +307,7 @@ async def async_setup_trigger(
     trigger_type = config[CONF_TYPE]
     trigger_subtype = config[CONF_SUBTYPE]
     trigger_id = f"{device_id}_{trigger_type}_{trigger_subtype}"
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    mqtt_data = hass.data[DATA_MQTT]
     if (
         trigger_id in mqtt_data.device_triggers
         and mqtt_data.device_triggers[trigger_id].discovery_data is not None
@@ -333,7 +333,7 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    mqtt_data = hass.data[DATA_MQTT]
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         trigger_id = f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}"
@@ -350,15 +350,15 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
-    """List device triggers for LocknAlertLocknAlertMQTT devices."""
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    """List device triggers for MQTT devices."""
+    mqtt_data = hass.data[DATA_MQTT]
 
     if not mqtt_data.device_triggers:
         return []
 
     return [
         {
-            **LocknAlertMQTT_TRIGGER_BASE,
+            **MQTT_TRIGGER_BASE,
             "device_id": device_id,
             "type": trig.type,
             "subtype": trig.subtype,
@@ -376,7 +376,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_id: str | None = None
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    mqtt_data = hass.data[DATA_MQTT]
     device_id = config[CONF_DEVICE_ID]
 
     # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.

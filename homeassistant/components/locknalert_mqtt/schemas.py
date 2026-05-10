@@ -1,4 +1,4 @@
-"""Shared schemas for LocknAlertLocknAlertMQTT discovery and YAML config items."""
+"""Shared schemas for MQTT discovery and YAML config items."""
 
 from __future__ import annotations
 
@@ -42,7 +42,6 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
-    CONF_OBJECT_ID,
     CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
@@ -73,17 +72,8 @@ SHARED_OPTIONS = [
     CONF_STATE_TOPIC,
 ]
 
-LocknAlertMQTT_ORIGIN_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
-        }
-    ),
-)
 
-_LocknAlertMQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
@@ -96,7 +86,7 @@ _LocknAlertMQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     }
 )
 
-_LocknAlertMQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
             cv.string, vol.In(AVAILABILITY_MODES)
@@ -120,8 +110,8 @@ _LocknAlertMQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     }
 )
 
-_LocknAlertMQTT_AVAILABILITY_SCHEMA = _LocknAlertMQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
-    _LocknAlertMQTT_AVAILABILITY_LIST_SCHEMA.schema
+_MQTT_AVAILABILITY_SCHEMA = _MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
+    _MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
 
 
@@ -135,7 +125,7 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
-LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
+MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
     vol.Schema(
         {
@@ -161,7 +151,7 @@ LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
 )
 
 
-LocknAlertMQTT_ORIGIN_INFO_SCHEMA = vol.All(
+MQTT_ORIGIN_INFO_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_NAME): cv.string,
@@ -171,18 +161,17 @@ LocknAlertMQTT_ORIGIN_INFO_SCHEMA = vol.All(
     ),
 )
 
-LocknAlertMQTT_ENTITY_COMMON_SCHEMA = _LocknAlertMQTT_AVAILABILITY_SCHEMA.extend(
+MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENTITY_PICTURE): cv.url,
-        vol.Optional(CONF_ORIGIN): LocknAlertMQTT_ORIGIN_INFO_SCHEMA,
+        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
-        vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -207,11 +196,11 @@ _COMPONENT_CONFIG_SCHEMA = vol.All(
     check_unique_id,
 )
 
-DEVICE_DISCOVERY_SCHEMA = _LocknAlertMQTT_AVAILABILITY_SCHEMA.extend(
+DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICE): LocknAlertMQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_COMPONENTS): vol.Schema({str: _COMPONENT_CONFIG_SCHEMA}),
-        vol.Required(CONF_ORIGIN): LocknAlertMQTT_ORIGIN_INFO_SCHEMA,
+        vol.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_QOS): valid_qos_schema,

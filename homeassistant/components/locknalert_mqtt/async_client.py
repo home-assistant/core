@@ -12,21 +12,21 @@ from paho.mqtt.client import (
     CallbackOnPublish_v2,
     CallbackOnSubscribe_v2,
     CallbackOnUnsubscribe_v2,
-    Client as LocknAlertMQTTClient,
+    Client as MQTTClient,
 )
 
-_LocknAlertMQTT_LOCK_COUNT = 7
+_MQTT_LOCK_COUNT = 7
 
 
 class NullLock:
     """Null lock."""
 
-    @lru_cache(maxsize=_LocknAlertMQTT_LOCK_COUNT)
+    @lru_cache(maxsize=_MQTT_LOCK_COUNT)
     def __enter__(self) -> Self:
         """Enter the lock."""
         return self
 
-    @lru_cache(maxsize=_LocknAlertMQTT_LOCK_COUNT)
+    @lru_cache(maxsize=_MQTT_LOCK_COUNT)
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -35,17 +35,17 @@ class NullLock:
     ) -> None:
         """Exit the lock."""
 
-    @lru_cache(maxsize=_LocknAlertMQTT_LOCK_COUNT)
+    @lru_cache(maxsize=_MQTT_LOCK_COUNT)
     def acquire(self, blocking: bool = False, timeout: int = -1) -> None:
         """Acquire the lock."""
 
-    @lru_cache(maxsize=_LocknAlertMQTT_LOCK_COUNT)
+    @lru_cache(maxsize=_MQTT_LOCK_COUNT)
     def release(self) -> None:
         """Release the lock."""
 
 
-class AsyncLocknAlertMQTTClient(LocknAlertMQTTClient):
-    """Async LocknAlertLocknAlertMQTT Client.
+class AsyncMQTTClient(MQTTClient):
+    """Async MQTT Client.
 
     Wrapper around paho.mqtt.client.Client to remove the locking
     that is not needed since we are running in an async event loop.

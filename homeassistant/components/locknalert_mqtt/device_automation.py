@@ -1,4 +1,4 @@
-"""Provides device automations for LocknAlertMQTT."""
+"""Provides device automations for MQTT."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
-from .config import LocknAlertMQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .entity import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
@@ -19,7 +19,7 @@ AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]
 AUTOMATION_TYPES_SCHEMA = vol.In(AUTOMATION_TYPES)
 CONF_AUTOMATION_TYPE = "automation_type"
 
-DISCOVERY_SCHEMA = LocknAlertMQTT_BASE_SCHEMA.extend(
+DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
     extra=vol.ALLOW_EXTRA,
 )
@@ -28,7 +28,7 @@ DISCOVERY_SCHEMA = LocknAlertMQTT_BASE_SCHEMA.extend(
 async def async_setup_mqtt_device_automation_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Set up LocknAlertLocknAlertMQTT device automation dynamically through LocknAlertLocknAlertMQTT discovery."""
+    """Set up MQTT device automation dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_automation, hass, config_entry=config_entry)
     async_setup_non_entity_entry_helper(
@@ -42,7 +42,7 @@ async def _async_setup_automation(
     config_entry: ConfigEntry,
     discovery_data: DiscoveryInfoType,
 ) -> None:
-    """Set up an LocknAlertLocknAlertMQTT device automation."""
+    """Set up an MQTT device automation."""
     if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
         await device_trigger.async_setup_trigger(
             hass, config, config_entry, discovery_data

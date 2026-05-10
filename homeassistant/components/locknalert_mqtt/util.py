@@ -1,4 +1,4 @@
-"""Utility functions for the LocknAlertLocknAlertMQTT integration."""
+"""Utility functions for the MQTT integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,12 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -34,7 +39,7 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import DATA_LocknAlertMQTT, DATA_LocknAlertMQTT_AVAILABLE, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
@@ -157,7 +162,7 @@ async def async_forward_entry_setup_and_setup_discovery(
     late: bool = False,
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    mqtt_data = hass.data[DATA_MQTT]
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
     tasks: list[asyncio.Task] = []
@@ -194,18 +199,18 @@ async def async_forward_entry_setup_and_setup_discovery(
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
-    """Return true when the LocknAlertLocknAlertMQTT config entry is enabled."""
+    """Return true when the MQTT config entry is enabled."""
     # If the mqtt client is connected, skip the expensive config
     # entry check as its roughly two orders of magnitude faster.
     return (
-        DATA_LocknAlertLocknAlertMQTT in hass.data and hass.data[DATA_LocknAlertMQTT].client.connected
+        DATA_MQTT in hass.data and hass.data[DATA_MQTT].client.connected
     ) or hass.config_entries.async_has_entries(
         DOMAIN, include_disabled=False, include_ignore=False
     )
 
 
 async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
-    """Wait for the LocknAlertLocknAlertMQTT client to become available.
+    """Wait for the MQTT client to become available.
 
     Waits when mqtt set up is in progress,
     It is not needed that the client is connected.
@@ -220,11 +225,11 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         return True
 
     state_reached_future: asyncio.Future[bool]
-    if DATA_LocknAlertMQTT_AVAILABLE not in hass.data:
+    if DATA_MQTT_AVAILABLE not in hass.data:
         state_reached_future = hass.loop.create_future()
-        hass.data[DATA_LocknAlertMQTT_AVAILABLE] = state_reached_future
+        hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
     else:
-        state_reached_future = hass.data[DATA_LocknAlertMQTT_AVAILABLE]
+        state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
@@ -249,30 +254,30 @@ def valid_topic(topic: Any) -> str:
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
     except UnicodeError as err:
-        raise vol.Invalid("LocknAlertLocknAlertMQTT topic name/filter must be valid UTF-8 string.") from err
+        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.") from err
     if not raw_validated_topic:
-        raise vol.Invalid("LocknAlertLocknAlertMQTT topic name/filter must not be empty.")
+        raise vol.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_validated_topic) > 65535:
         raise vol.Invalid(
-            "LocknAlertLocknAlertMQTT topic name/filter must not be longer than 65535 encoded bytes."
+            "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
 
     for char in validated_topic:
         if char == "\0":
-            raise vol.Invalid("LocknAlertLocknAlertMQTT topic name/filter must not contain null character.")
+            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
         if char <= "\u001f" or "\u007f" <= char <= "\u009f":
             raise vol.Invalid(
-                "LocknAlertLocknAlertMQTT topic name/filter must not contain control characters."
+                "MQTT topic name/filter must not contain control characters."
             )
         if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
-            raise vol.Invalid("LocknAlertLocknAlertMQTT topic name/filter must not contain non-characters.")
+            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
 
     return validated_topic
 
 
 @lru_cache
 def valid_subscribe_topic(topic: Any) -> str:
-    """Validate that we can subscribe using this LocknAlertLocknAlertMQTT topic."""
+    """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic:
         for i in (i for i, c in enumerate(validated_topic) if c == "+"):
@@ -299,7 +304,7 @@ def valid_subscribe_topic(topic: Any) -> str:
 
 
 def valid_subscribe_topic_template(value: Any) -> template.Template:
-    """Validate either a jinja2 template or a valid LocknAlertLocknAlertMQTT subscription topic."""
+    """Validate either a jinja2 template or a valid MQTT subscription topic."""
     tpl = cv.template(value)
 
     if tpl.is_static:
@@ -310,7 +315,7 @@ def valid_subscribe_topic_template(value: Any) -> template.Template:
 
 @lru_cache
 def valid_publish_topic(topic: Any) -> str:
-    """Validate that we can publish using this LocknAlertLocknAlertMQTT topic."""
+    """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
         raise vol.Invalid("Wildcards cannot be used in topic names")
@@ -323,7 +328,7 @@ def valid_qos_schema(qos: Any) -> int:
     return validated_qos
 
 
-_LocknAlertMQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
         vol.Required(ATTR_PAYLOAD): cv.string,
@@ -337,14 +342,14 @@ _LocknAlertMQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 def valid_birth_will(config: ConfigType) -> ConfigType:
     """Validate a birth or will configuration and required topic/payload."""
     if config:
-        config = _LocknAlertMQTT_WILL_BIRTH_SCHEMA(config)
+        config = _MQTT_WILL_BIRTH_SCHEMA(config)
     return config
 
 
 async def async_create_certificate_temp_files(
     hass: HomeAssistant, config: ConfigType
 ) -> None:
-    """Create certificate temporary files for the LocknAlertLocknAlertMQTT client."""
+    """Create certificate temporary files for the MQTT client."""
 
     def _create_temp_file(temp_file: Path, data: str | None) -> None:
         if data is None or data == "auto":
@@ -419,5 +424,32 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
 
 @callback
 def learn_more_url(platform: str) -> str:
-    """Return the URL for the platform specific LocknAlertLocknAlertMQTT documentation."""
+    """Return the URL for the platform specific MQTT documentation."""
     return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"
+
+
+async def async_cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
+    """Clean up the device registry after MQTT removal.
+
+    Remove MQTT from the device registry entry if there are no remaining
+    entities or triggers.
+    """
+    # Local import to avoid circular dependencies
+    from . import device_trigger  # noqa: PLC0415
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    if (
+        device_id
+        and device_id not in device_registry.deleted_devices
+        and config_entry_id
+        and not er.async_entries_for_device(
+            entity_registry, device_id, include_disabled_entities=False
+        )
+        and not await device_trigger.async_get_triggers(hass, device_id)
+    ):
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )

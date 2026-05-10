@@ -1,4 +1,4 @@
-"""Offer LocknAlertLocknAlertMQTT listening automation rules."""
+"""Offer MQTT listening automation rules."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ async def async_attach_trigger(
 
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
-        """Listen for LocknAlertLocknAlertMQTT messages."""
+        """Listen for MQTT messages."""
         if wanted_payload is None or (
             (payload := value_template(mqttmsg.payload, PayloadSentinel.DEFAULT))
             and payload is not PayloadSentinel.DEFAULT
@@ -109,7 +109,7 @@ async def async_attach_trigger(
             hass.async_run_hass_job(job, {"trigger": data})
 
     _LOGGER.debug(
-        "Attaching LocknAlertLocknAlertMQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
+        "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
     return async_subscribe_internal(

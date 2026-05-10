@@ -89,7 +89,7 @@ def async_prepare_subscribe_topics(
     sub_state: dict[str, EntitySubscription] | None,
     topics: dict[str, dict[str, Any]],
 ) -> dict[str, EntitySubscription]:
-    """Prepare (re)subscribe to a set of LocknAlertLocknAlertMQTT topics.
+    """Prepare (re)subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
     key to the subscription state.
@@ -140,7 +140,7 @@ async def async_subscribe_topics(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:
-    """(Re)Subscribe to a set of LocknAlertLocknAlertMQTT topics."""
+    """(Re)Subscribe to a set of MQTT topics."""
     async_subscribe_topics_internal(hass, sub_state)
 
 
@@ -149,9 +149,9 @@ def async_subscribe_topics_internal(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:
-    """(Re)Subscribe to a set of LocknAlertLocknAlertMQTT topics.
+    """(Re)Subscribe to a set of MQTT topics.
 
-    This function is internal to the LocknAlertLocknAlertMQTT integration and should not be called
+    This function is internal to the MQTT integration and should not be called
     from outside the integration.
     """
     for sub in sub_state.values():
@@ -163,7 +163,7 @@ if TYPE_CHECKING:
     def async_unsubscribe_topics(
         hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
     ) -> dict[str, EntitySubscription]:
-        """Unsubscribe from all LocknAlertLocknAlertMQTT topics managed by async_subscribe_topics."""
+        """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
 
 
 async_unsubscribe_topics = partial(async_prepare_subscribe_topics, topics={})

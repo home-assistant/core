@@ -1,10 +1,10 @@
-# Describes the format for available LocknAlertLocknAlertMQTT services
+# Describes the format for available MQTT services
 
 publish:
   fields:
     topic:
       required: true
-      example: /locknalert/hello
+      example: /homeassistant/hello
       selector:
         text:
     payload:
@@ -33,7 +33,7 @@ publish:
 dump:
   fields:
     topic:
-      example: "locknalert/#"
+      example: "OpenZWave/#"
       selector:
         text:
     duration:

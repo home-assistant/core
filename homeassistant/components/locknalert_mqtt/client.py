@@ -1,4 +1,4 @@
-"""Support for LocknAlertLocknAlertMQTT message handling."""
+"""Support for MQTT message handling."""
 
 from __future__ import annotations
 
@@ -38,11 +38,13 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
@@ -70,13 +72,14 @@ from .const import (
     DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
     DOMAIN,
-    LocknAlertMQTT_CONNECTION_STATE,
+    MQTT_CONNECTION_STATE,
+    MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
-    DATA_LocknAlertMQTT,
+    DATA_MQTT,
     MessageCallbackType,
     MqttData,
     PublishMessage,
@@ -87,10 +90,10 @@ from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabl
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
-    # because integrations should be able to optionally rely on LocknAlertMQTT.
+    # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
 
-    from .async_client import AsyncLocknAlertMQTTClient
+    from .async_client import AsyncMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,6 +112,7 @@ INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
+SUBSCRIBE_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
 MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
@@ -130,7 +134,7 @@ def publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to a LocknAlertLocknAlertMQTT topic."""
+    """Publish message to a MQTT topic."""
     hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
@@ -142,15 +146,15 @@ async def async_publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to a LocknAlertLocknAlertMQTT topic."""
+    """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot publish to topic '{topic}', LocknAlertLocknAlertMQTT is not enabled",
+            f"Cannot publish to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    mqtt_data = hass.data[DATA_LocknAlertMQTT]
+    mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
     if not isinstance(payload, bytes) and payload is not None:
         if not encoding:
@@ -178,13 +182,45 @@ async def async_publish(
                     encoding,
                 )
                 return
+                return
 
     await mqtt_data.client.async_publish(
         topic, outgoing_payload, qos or 0, retain or False
     )
 
 
-@bind_hass
+@callback
+def async_on_subscribe_done(
+    hass: HomeAssistant,
+    topic: str,
+    qos: int,
+    on_subscribe_status: CALLBACK_TYPE,
+) -> CALLBACK_TYPE:
+    """Call on_subscribe_done when the matched subscription was completed.
+
+    If a subscription is already present the callback will call
+    on_subscribe_status directly.
+    Call the returned callback to stop and cleanup status monitoring.
+    """
+
+    async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
+        if (topic, qos) not in subscriptions:
+            return
+        hass.loop.call_soon(on_subscribe_status)
+
+    mqtt_data = hass.data[DATA_MQTT]
+    if (
+        mqtt_data.client.connected
+        and mqtt_data.client.is_active_subscription(topic)
+        and not mqtt_data.client.is_pending_subscription(topic)
+    ):
+        hass.loop.call_soon(on_subscribe_status)
+
+    return async_dispatcher_connect(
+        hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
+    )
+
+
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -192,7 +228,7 @@ async def async_subscribe(
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
-    """Subscribe to an LocknAlertLocknAlertMQTT topic.
+    """Subscribe to an MQTT topic.
 
     Call the return value to unsubscribe.
     """
@@ -208,19 +244,19 @@ def async_subscribe_internal(
     encoding: str | None = DEFAULT_ENCODING,
     job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
-    """Subscribe to an LocknAlertLocknAlertMQTT topic.
+    """Subscribe to an MQTT topic.
 
-    This function is internal to the LocknAlertLocknAlertMQTT integration
+    This function is internal to the MQTT integration
     and may change at any time. It should not be considered
     a stable API.
 
     Call the return value to unsubscribe.
     """
     try:
-        mqtt_data = hass.data[DATA_LocknAlertMQTT]
+        mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', make sure LocknAlertLocknAlertMQTT is set up correctly",
+            f"Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
@@ -228,7 +264,7 @@ def async_subscribe_internal(
     client = mqtt_data.client
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', LocknAlertLocknAlertMQTT is not enabled",
+            f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
@@ -236,7 +272,6 @@ def async_subscribe_internal(
     return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
-@bind_hass
 def subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -244,14 +279,14 @@ def subscribe(
     qos: int = DEFAULT_QOS,
     encoding: str = "utf-8",
 ) -> Callable[[], None]:
-    """Subscribe to an LocknAlertLocknAlertMQTT topic."""
+    """Subscribe to an MQTT topic."""
     async_remove = asyncio.run_coroutine_threadsafe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
     def remove() -> None:
         """Remove listener convert."""
-        # LocknAlertLocknAlertMQTT messages tend to be high volume,
+        # MQTT messages tend to be high volume,
         # and since they come in via a thread and need to be processed in the event loop,
         # we want to avoid hass.add_job since most of the time is spent calling
         # inspect to figure out how to run the callback.
@@ -275,10 +310,10 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    _client: AsyncLocknAlertMQTTClient
+    _client: AsyncMQTTClient
 
     def __init__(self, config: ConfigType) -> None:
-        """Initialize the LocknAlertLocknAlertMQTT client setup helper.
+        """Initialize the MQTT client setup helper.
 
         self.setup must be run in an executor job.
         """
@@ -286,35 +321,35 @@ class MqttClientSetup:
         self._config = config
 
     def setup(self) -> None:
-        """Set up the LocknAlertLocknAlertMQTT client.
+        """Set up the MQTT client.
 
-        The setup of the LocknAlertLocknAlertMQTT client should be run in an executor job,
+        The setup of the MQTT client should be run in an executor job,
         because it accesses files, so it does IO.
         """
         # We don't import on the top because some integrations
-        # should be able to optionally rely on LocknAlertMQTT.
+        # should be able to optionally rely on MQTT.
         from paho.mqtt import client as mqtt  # noqa: PLC0415
 
-        from .async_client import AsyncLocknAlertMQTTClient  # noqa: PLC0415
+        from .async_client import AsyncMQTTClient  # noqa: PLC0415
 
         config = self._config
         clean_session: bool | None = None
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
-            proto = mqtt.LocknAlertMQTTv31
+            proto = mqtt.MQTTv31
             clean_session = True
         elif protocol == PROTOCOL_5:
-            proto = mqtt.LocknAlertMQTTv5
+            proto = mqtt.MQTTv5
         else:
-            proto = mqtt.LocknAlertMQTTv311
+            proto = mqtt.MQTTv311
             clean_session = True
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
-            # PAHO LocknAlertLocknAlertMQTT relies on the LocknAlertLocknAlertMQTT server to generate random client ID
+            # PAHO MQTT relies on the MQTT server to generate random client ID
             # for protocol version 3.1, however, that feature is not mandatory
             # so we generate our own.
             client_id = mqtt._base62(uuid4().int, padding=22)  # noqa: SLF001
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
-        self._client = AsyncLocknAlertMQTTClient(
+        self._client = AsyncMQTTClient(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             client_id=client_id,
             # See: https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
@@ -326,8 +361,8 @@ class MqttClientSetup:
             # disconnects. Note that a client will never discard its own outgoing
             # messages on disconnect. Calling connect() or reconnect() will cause the
             # messages to be resent. Use reinitialise() to reset a client to its
-            # original state. The clean_session argument only applies to LocknAlertLocknAlertMQTT versions
-            # v3.1.1 and v3.1. It is not accepted if the LocknAlertLocknAlertMQTT version is v5.0 - use the
+            # original state. The clean_session argument only applies to MQTT versions
+            # v3.1.1 and v3.1. It is not accepted if the MQTT version is v5.0 - use the
             # clean_start argument on connect() instead.
             clean_session=clean_session,
             protocol=proto,
@@ -368,22 +403,22 @@ class MqttClientSetup:
                 self._client.tls_insecure_set(tls_insecure)
 
     @property
-    def client(self) -> AsyncLocknAlertMQTTClient:
-        """Return the paho LocknAlertLocknAlertMQTT client."""
+    def client(self) -> AsyncMQTTClient:
+        """Return the paho MQTT client."""
         return self._client
 
 
-class LocknAlertMQTT:
-    """Home Assistant LocknAlertLocknAlertMQTT client."""
+class MQTT:
+    """Home Assistant MQTT client."""
 
-    _mqttc: AsyncLocknAlertMQTTClient
+    _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
     ) -> None:
-        """Initialize Home Assistant LocknAlertLocknAlertMQTT client."""
+        """Initialize Home Assistant MQTT client."""
         self.hass = hass
         self.loop = hass.loop
         self.config_entry = config_entry
@@ -442,7 +477,7 @@ class LocknAlertMQTT:
         self,
         mqtt_data: MqttData,
     ) -> None:
-        """Start Home Assistant LocknAlertLocknAlertMQTT client."""
+        """Start Home Assistant MQTT client."""
         self._mqtt_data = mqtt_data
         await self.async_init_client()
 
@@ -529,8 +564,8 @@ class LocknAlertMQTT:
         # each time the function is called.
         @callback
         def _async_misc() -> None:
-            """Start the LocknAlertLocknAlertMQTT client misc loop."""
-            if self._mqttc.loop_misc() == mqtt.LocknAlertMQTT_ERR_SUCCESS:
+            """Start the MQTT client misc loop."""
+            if self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
                 self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
 
         self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
@@ -555,7 +590,7 @@ class LocknAlertMQTT:
                 if new_buffer_size <= MIN_BUFFER_SIZE:
                     _LOGGER.warning(
                         "Unable to increase the socket buffer size to %s; "
-                        "The connection may be unstable if the LocknAlertLocknAlertMQTT broker "
+                        "The connection may be unstable if the MQTT broker "
                         "sends data at volume or a large amount of subscriptions "
                         "need to be processed: %s",
                         new_buffer_size,
@@ -640,16 +675,20 @@ class LocknAlertMQTT:
         if fileno > -1:
             self.loop.remove_writer(sock)
 
-    def _is_active_subscription(self, topic: str) -> bool:
+    def is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
         return topic in self._simple_subscriptions or any(
             other.topic == topic for other in self._wildcard_subscriptions
         )
 
+    def is_pending_subscription(self, topic: str) -> bool:
+        """Check if a topic has a pending subscription."""
+        return topic in self._pending_subscriptions
+
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
-        """Publish a LocknAlertLocknAlertMQTT message."""
+        """Publish a MQTT message."""
         msg_info = self._mqttc.publish(topic, payload, qos, retain)
         _LOGGER.debug(
             "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
@@ -675,26 +714,26 @@ class LocknAlertMQTT:
             keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
             # See:
             # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
-            # `clean_start` (bool) – (LocknAlertLocknAlertMQTT v5.0 only) `True`, `False` or
-            # `LocknAlertMQTT_CLEAN_START_FIRST_ONLY`. Sets the LocknAlertLocknAlertMQTT v5.0 clean_start flag
+            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
             #  always, never or on the first successful connect only,
-            # respectively. LocknAlertLocknAlertMQTT session data (such as outstanding messages and
+            # respectively. MQTT session data (such as outstanding messages and
             # subscriptions) is cleared on successful connect when the
-            # clean_start flag is set. For LocknAlertLocknAlertMQTT v3.1.1, the clean_session
+            # clean_start flag is set. For MQTT v3.1.1, the clean_session
             # argument of Client should be used for similar result.
-            clean_start=True if self.is_mqttv5 else mqtt.LocknAlertMQTT_CLEAN_START_FIRST_ONLY,
+            clean_start=True if self.is_mqttv5 else mqtt.MQTT_CLEAN_START_FIRST_ONLY,
         )
         try:
             async with self._connection_lock, self._async_connect_in_executor():
                 result = await self.hass.async_add_executor_job(connect_partial)
         except (OSError, mqtt.WebsocketConnectionError) as err:
-            _LOGGER.error("Failed to connect to LocknAlertLocknAlertMQTT server due to exception: %s", err)
+            _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
         finally:
             if result is not None and result != 0:
                 if result is not None:
                     _LOGGER.error(
-                        "Failed to connect to LocknAlertLocknAlertMQTT server: %s",
+                        "Failed to connect to MQTT server: %s",
                         mqtt.error_string(result),
                     )
                 self._async_connection_result(False)
@@ -720,7 +759,7 @@ class LocknAlertMQTT:
             self._reconnect_task = None
 
     async def _reconnect_loop(self) -> None:
-        """Reconnect to the LocknAlertLocknAlertMQTT server."""
+        """Reconnect to the MQTT server."""
         import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         while True:
@@ -730,13 +769,13 @@ class LocknAlertMQTT:
                         await self.hass.async_add_executor_job(self._mqttc.reconnect)
                 except (OSError, mqtt.WebsocketConnectionError) as err:
                     _LOGGER.debug(
-                        "Error re-connecting to LocknAlertLocknAlertMQTT server due to exception: %s", err
+                        "Error re-connecting to MQTT server due to exception: %s", err
                     )
 
             await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
 
     async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
-        """Stop the LocknAlertLocknAlertMQTT client.
+        """Stop the MQTT client.
 
         We only disconnect grafully if disconnect_paho_client is set, but not
         when Home Assistant is shut down.
@@ -755,7 +794,7 @@ class LocknAlertMQTT:
         if pending := self._pending_operations.values():
             await asyncio.wait(pending)
 
-        # stop the LocknAlertLocknAlertMQTT loop
+        # stop the MQTT loop
         async with self._connection_lock:
             self._should_reconnect = False
             self._async_cancel_reconnect()
@@ -899,7 +938,7 @@ class LocknAlertMQTT:
     @callback
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
-        if self._is_active_subscription(topic):
+        if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
             subs = self._matching_subscriptions(topic)
@@ -916,15 +955,15 @@ class LocknAlertMQTT:
         self._unsubscribe_debouncer.async_schedule()
 
     async def _async_perform_subscriptions(self) -> None:
-        """Perform LocknAlertLocknAlertMQTT client subscriptions."""
+        """Perform MQTT client subscriptions."""
         # Section 3.3.1.3 in the specification:
         # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
         # When sending a PUBLISH Packet to a Client the Server MUST
         # set the RETAIN flag to 1 if a message is sent as a result of a
-        # new subscription being made by a Client [LocknAlertMQTT-3.3.1-8].
+        # new subscription being made by a Client [MQTT-3.3.1-8].
         # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
         # a Client because it matches an established subscription regardless
-        # of how the flag was set in the message it received [LocknAlertMQTT-3.3.1-9].
+        # of how the flag was set in the message it received [MQTT-3.3.1-9].
         #
         # Since we do not know if a published value is retained we need to
         # (re)subscribe, to ensure retained messages are replayed
@@ -963,9 +1002,10 @@ class LocknAlertMQTT:
             self._last_subscribe = time.monotonic()
 
             await self._async_wait_for_mid_or_raise(mid, result)
+            async_dispatcher_send(self.hass, MQTT_PROCESSED_SUBSCRIPTIONS, chunk_list)
 
     async def _async_perform_unsubscribes(self) -> None:
-        """Perform pending LocknAlertLocknAlertMQTT client unsubscribes."""
+        """Perform pending MQTT client unsubscribes."""
         if not self._pending_unsubscribes:
             return
 
@@ -991,7 +1031,7 @@ class LocknAlertMQTT:
         self._async_queue_resubscribe()
         self._subscribe_debouncer.async_schedule()
         await self._ha_started.wait()  # Wait for Home Assistant to start
-        await self._discovery_cooldown()  # Wait for LocknAlertLocknAlertMQTT discovery to cool down
+        await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
         # and make sure we flush the debouncer
         await self._subscribe_debouncer.async_execute()
@@ -1002,7 +1042,7 @@ class LocknAlertMQTT:
             qos=birth_message.qos,
             retain=birth_message.retain,
         )
-        _LOGGER.info("LocknAlertLocknAlertMQTT client initialized, birth message sent")
+        _LOGGER.info("MQTT client initialized, birth message sent")
 
     @callback
     def _async_mqtt_on_connect(
@@ -1029,16 +1069,16 @@ class LocknAlertMQTT:
                 self.hass.async_create_task(self.async_disconnect())
                 self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
-                "Unable to connect to the LocknAlertLocknAlertMQTT broker: %s",
-                reason_code.getName(),  # type: ignore[no-untyped-call]
+                "Unable to connect to the MQTT broker: %s",
+                str(reason_code),
             )
             self._async_connection_result(False)
             return
 
         self.connected = True
-        async_dispatcher_send(self.hass, LocknAlertMQTT_CONNECTION_STATE, True)
+        async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, True)
         _LOGGER.debug(
-            "Connected to LocknAlertLocknAlertMQTT server %s:%s (%s)",
+            "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
             reason_code,
@@ -1089,15 +1129,14 @@ class LocknAlertMQTT:
         subscriptions.extend(
             subscription
             for subscription in self._wildcard_subscriptions
-            # mypy doesn't know that complex_matcher is always set when
-            # is_simple_match is False
-            if subscription.complex_matcher(topic)  # type: ignore[misc]
+            if subscription.complex_matcher is not None
+            and subscription.complex_matcher(topic)
         )
         return subscriptions
 
     @callback
     def _async_mqtt_on_message(
-        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.LocknAlertMQTTMessage
+        self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         try:
             # msg.topic is a property that decodes the topic to a string
@@ -1220,14 +1259,14 @@ class LocknAlertMQTT:
         return future
 
     @callback
-    def _async_handle_callback_exception(self, status: mqtt.LocknAlertMQTTErrorCode) -> None:
+    def _async_handle_callback_exception(self, status: mqtt.MQTTErrorCode) -> None:
         """Handle a callback exception."""
         # We don't import on the top because some integrations
-        # should be able to optionally rely on LocknAlertMQTT.
+        # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         _LOGGER.warning(
-            "Error returned from LocknAlertLocknAlertMQTT server: %s",
+            "Error returned from MQTT server: %s",
             mqtt.error_string(status),
         )
 
@@ -1249,10 +1288,10 @@ class LocknAlertMQTT:
         # result is set make sure the first connection result is set
         self._async_connection_result(False)
         self.connected = False
-        async_dispatcher_send(self.hass, LocknAlertMQTT_CONNECTION_STATE, False)
+        async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
         _LOGGER.log(
             logging.INFO if reason_code == 0 else logging.DEBUG,
-            "Disconnected from LocknAlertLocknAlertMQTT server %s:%s (%s)",
+            "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
             reason_code,
@@ -1290,7 +1329,7 @@ class LocknAlertMQTT:
             await future
         except TimeoutError:
             _LOGGER.warning(
-                "No ACK from LocknAlertLocknAlertMQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
             timer_handle.cancel()
@@ -1317,9 +1356,9 @@ class LocknAlertMQTT:
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
-    from paho.mqtt.matcher import LocknAlertMQTTMatcher  # noqa: PLC0415
+    from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
 
-    matcher = LocknAlertMQTTMatcher()  # type: ignore[no-untyped-call]
+    matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True
 
     return lambda topic: next(matcher.iter_match(topic), False)  # type: ignore[no-untyped-call]

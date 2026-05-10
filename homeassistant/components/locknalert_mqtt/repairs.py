@@ -1,4 +1,4 @@
-"""Repairs for LocknAlertMQTT."""
+"""Repairs for MQTT."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 
 
-class LocknAlertMQTTDeviceEntryMigration(RepairsFlow):
-    """Handler to remove subentry for migrated LocknAlertLocknAlertMQTT device."""
+class MQTTDeviceEntryMigration(RepairsFlow):
+    """Handler to remove subentry for migrated MQTT device."""
 
     def __init__(self, entry_id: str, subentry_id: str, name: str) -> None:
         """Initialize the flow."""
@@ -67,7 +67,7 @@ async def async_create_fix_flow(
         assert isinstance(entry_id, str)
         assert isinstance(subentry_id, str)
         assert isinstance(name, str)
-    return LocknAlertMQTTDeviceEntryMigration(
+    return MQTTDeviceEntryMigration(
         entry_id=entry_id,
         subentry_id=subentry_id,
         name=name,
