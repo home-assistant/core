@@ -72,15 +72,15 @@ def platforms() -> list[Platform]:
 
 @pytest.fixture
 def mock_make_samsung_tv_command() -> Generator[None]:
-    """Patch make_samsung_tv_command to return the SamsungTVCode directly.
+    """Patch SamsungTVCode.to_command to return the code directly.
 
     This allows tests to assert on the high-level code enum value
     rather than the raw Samsung32 timings.
     """
     with patch(
-        "homeassistant.components.samsung_ir.entity.make_samsung_tv_command",
+        "infrared_protocols.codes.samsung.tv.SamsungTVCode.to_command",
         autospec=True,
-        side_effect=lambda code, **kwargs: code,
+        side_effect=lambda self, **kwargs: self,
     ):
         yield
 

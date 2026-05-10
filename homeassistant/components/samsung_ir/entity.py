@@ -2,10 +2,7 @@
 
 import logging
 
-from infrared_protocols.codes.samsung.tv import (
-    SamsungTVCode,
-    make_command as make_samsung_tv_command,
-)
+from infrared_protocols.codes.samsung.tv import SamsungTVCode
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -76,6 +73,6 @@ class SamsungIrEntity(Entity):
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            make_samsung_tv_command(code),
+            code.to_command(),
             context=self._context,
         )
