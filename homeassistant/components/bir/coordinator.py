@@ -1,7 +1,5 @@
 """Data update coordinator for the BIR integration."""
 
-from __future__ import annotations
-
 from datetime import date
 from typing import TypedDict
 

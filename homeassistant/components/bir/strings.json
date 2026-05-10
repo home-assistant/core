@@ -10,24 +10,6 @@
       "search_too_short": "Please enter at least 3 characters to search"
     },
     "step": {
-      "select_address": {
-        "data": {
-          "selected_address": "Address"
-        },
-        "data_description": {
-          "selected_address": "Select the address for your waste collection schedule"
-        },
-        "description": "Found {count} addresses matching \"{query}\". Select your address from the list below."
-      },
-      "user": {
-        "data": {
-          "address_search": "Street address"
-        },
-        "data_description": {
-          "address_search": "Enter the street name or address to search for your waste collection location"
-        },
-        "description": "Search for your address to set up waste collection tracking."
-      },
       "reconfigure": {
         "data": {
           "address_search": "[%key:component::bir::config::step::user::data::address_search%]"
@@ -45,6 +27,24 @@
           "selected_address": "[%key:component::bir::config::step::select_address::data_description::selected_address%]"
         },
         "description": "[%key:component::bir::config::step::select_address::description%]"
+      },
+      "select_address": {
+        "data": {
+          "selected_address": "Address"
+        },
+        "data_description": {
+          "selected_address": "Select the address for your waste collection schedule"
+        },
+        "description": "Found {count} addresses matching \"{query}\". Select your address from the list below."
+      },
+      "user": {
+        "data": {
+          "address_search": "Street address"
+        },
+        "data_description": {
+          "address_search": "Enter the street name or address to search for your waste collection location"
+        },
+        "description": "Search for your address to set up waste collection tracking."
       }
     }
   },

@@ -122,7 +122,6 @@ rules:
     comment: |
       There are no known issues that require user intervention.
   stale-devices: done
-
   # Platinum
   async-dependency: done
   inject-websession: done
