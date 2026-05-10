@@ -1,234 +1,70 @@
-"""Tests for Aquarite sensor entity native_value and platform setup."""
+"""Tests for the Aquarite sensor platform."""
 
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
-
-from homeassistant.components.aquarite.sensor import (
-    SENSOR_DESCRIPTIONS,
-    AquariteSensorEntity,
-    AquariteSensorEntityDescription,
-    _convert_tenths,
-    async_setup_entry,
-)
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
-
-# ── Helpers ─────────────────────────────────────────────────────
+from tests.common import MockConfigEntry
 
 
-def _make_coordinator(
-    data: dict[str, Any],
-    pool_id: str = MOCK_POOL_ID,
-    pool_name: str = MOCK_POOL_NAME,
-) -> MagicMock:
-    """Build a mock coordinator that resolves dot-notation paths."""
-
-    def _get_value(path: str, default: Any = None) -> Any:
-        keys = path.split(".")
-        current: Any = data
-        for key in keys:
-            if isinstance(current, dict) and key in current:
-                current = current[key]
-            else:
-                return default
-        return current
-
-    coord = MagicMock()
-    coord.data = data
-    coord.pool_id = pool_id
-    coord.pool_name = pool_name
-    coord.get_value = MagicMock(side_effect=_get_value)
-    return coord
-
-
-@pytest.fixture
-def mock_coordinator(mock_pool_data: dict[str, Any]) -> MagicMock:
-    """Return a mock coordinator backed by the standard pool fixture."""
-    return _make_coordinator(mock_pool_data)
-
-
-def _patch_entity_init():
-    """Patch CoordinatorEntity.__init__ to skip hass wiring."""
-    return patch(
-        "homeassistant.helpers.update_coordinator.CoordinatorEntity.__init__",
-        lambda self, coordinator, context=None: setattr(
-            self, "coordinator", coordinator
-        ),
-    )
-
-
-def _get_description(key: str) -> AquariteSensorEntityDescription:
-    """Look up a sensor description by key."""
-    for desc in SENSOR_DESCRIPTIONS:
-        if desc.key == key:
-            return desc
-    raise ValueError(f"No description for key={key}")
-
-
-def _make_entity(coordinator: MagicMock, key: str) -> AquariteSensorEntity:
-    """Build an AquariteSensorEntity for the given description key."""
-    with _patch_entity_init():
-        return AquariteSensorEntity(coordinator, _get_description(key))
-
-
-# ── Temperature sensor ──────────────────────────────────────────
-
-
-def test_temperature_native_value(mock_coordinator: MagicMock) -> None:
-    """Test native_value returns raw float from coordinator."""
-    entity = _make_entity(mock_coordinator, "temperature")
-    assert entity.native_value == 25.5
-
-
-def test_temperature_native_value_missing() -> None:
-    """Test native_value returns None when path is missing."""
-    entity = _make_entity(_make_coordinator({"main": {}}), "temperature")
-    assert entity.native_value is None
-
-
-# ── Value sensor (divides by 100) ───────────────────────────────
-
-
-def test_ph_native_value(mock_coordinator: MagicMock) -> None:
-    """Test pH value is divided by 100."""
-    entity = _make_entity(mock_coordinator, "ph")
-    assert entity.native_value == 7.42
-
-
-def test_ph_native_value_missing() -> None:
-    """Test returns None when path is absent."""
-    entity = _make_entity(_make_coordinator({"modules": {}}), "ph")
-    assert entity.native_value is None
-
-
-# ── Hydrolyser sensor (dynamic key) ────────────────────────────
-
-
-def test_hydrolyser_native_value(mock_coordinator: MagicMock) -> None:
-    """Test hydrolyser value is divided by 10."""
-    desc = AquariteSensorEntityDescription(
-        key="electrolysis",
-        translation_key="electrolysis",
-        native_unit_of_measurement="g/h",
-        value_path="hidro.current",
-        value_fn=_convert_tenths,
-    )
-    with _patch_entity_init():
-        entity = AquariteSensorEntity(mock_coordinator, desc)
-    assert entity.native_value == 5.0
-
-
-# ── Redox potential sensor (integer) ───────────────────────────
-
-
-def test_redox_potential_native_value(mock_coordinator: MagicMock) -> None:
-    """Test redox potential value is returned as integer."""
-    entity = _make_entity(mock_coordinator, "redox_potential")
-    assert entity.native_value == 707
-
-
-def test_redox_potential_native_value_missing() -> None:
-    """Test returns None when path is absent."""
-    entity = _make_entity(_make_coordinator({"modules": {}}), "redox_potential")
-    assert entity.native_value is None
-
-
-# ── Time sensor (raw minutes) ──────────────────────────────────
-
-
-def test_time_sensor_native_value(mock_coordinator: MagicMock) -> None:
-    """Test time value is returned as raw minutes (HA converts to hours)."""
-    entity = _make_entity(mock_coordinator, "filtration_intel_time")
-    assert entity.native_value == 600
-
-
-def test_time_sensor_native_value_missing() -> None:
-    """Test returns None when path is absent."""
-    entity = _make_entity(
-        _make_coordinator({"filtration": {}}), "filtration_intel_time"
-    )
-    assert entity.native_value is None
-
-
-# ── RSSI sensor ─────────────────────────────────────────────────
-
-
-def test_rssi_native_value(mock_coordinator: MagicMock) -> None:
-    """Test RSSI value is returned as integer."""
-    entity = _make_entity(mock_coordinator, "rssi")
-    assert entity.native_value == -65
-
-
-def test_rssi_native_value_missing() -> None:
-    """Test returns None when RSSI is missing."""
-    entity = _make_entity(_make_coordinator({"main": {}}), "rssi")
-    assert entity.native_value is None
-
-
-# ── Platform setup ──────────────────────────────────────────────
-
-
-async def _setup_sensor_platform(
-    hass: HomeAssistant, coordinators: list[MagicMock]
-) -> list[AquariteSensorEntity]:
-    """Set up the sensor platform with pre-built coordinators; capture entities."""
-    entry = MagicMock()
-    entry.runtime_data = MagicMock()
-    entry.runtime_data.coordinators = {c.pool_id: c for c in coordinators}
-
-    captured: list[AquariteSensorEntity] = []
-
-    def _add_entities(entities: list, *_args: Any, **_kwargs: Any) -> None:
-        captured.extend(entities)
-
-    with _patch_entity_init():
-        await async_setup_entry(hass, entry, _add_entities)
-    return captured
-
-
-async def test_async_setup_entry_full_modules(
-    hass: HomeAssistant, mock_pool_data: dict[str, Any]
+async def test_sensors_default_modules(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aquarite_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
 ) -> None:
-    """Test setup creates entities for every module flagged as present."""
-    coord = _make_coordinator(mock_pool_data)
-    entities = await _setup_sensor_platform(hass, [coord])
+    """Test sensors come up with the expected states for the default fixture."""
+    mock_aquarite_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
 
-    keys = {e.entity_description.key for e in entities}
-    # Always-on entities
-    assert "temperature" in keys
-    assert "rssi" in keys
-    assert "filtration_intel_time" in keys
-    # Module-gated (fixture has hasPH=1, hasRX=1, hasHidro=1+is_electrolysis=True)
-    assert "ph" in keys
-    assert "redox_potential" in keys
-    assert "electrolysis" in keys
-    # Disabled modules in fixture
-    assert "conductivity" not in keys
-    assert "chlorine" not in keys
-    assert "uv" not in keys
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Always-on sensors.
+    assert hass.states.get("sensor.my_pool_temperature").state == "25.5"
+    assert hass.states.get("sensor.my_pool_filtration_intel_time") is not None
+
+    # Module-gated; the fixture has hasPH=1, hasRX=1, hasHidro=1 with
+    # is_electrolysis=True.
+    assert hass.states.get("sensor.my_pool_ph").state == "7.42"
+    assert hass.states.get("sensor.my_pool_redox_potential").state == "707"
+    assert hass.states.get("sensor.my_pool_electrolysis").state == "5.0"
+
+    # Module-gated and disabled in the fixture (hasCD=0, hasCL=0, hasUV=0).
+    assert hass.states.get("sensor.my_pool_conductivity") is None
+    assert hass.states.get("sensor.my_pool_chlorine") is None
+    assert hass.states.get("sensor.my_pool_uv") is None
 
 
-async def test_async_setup_entry_hydrolysis_branch(hass: HomeAssistant) -> None:
-    """Test the hydrolysis (non-electrolysis) branch."""
-    data = {
+async def test_sensors_hydrolysis_branch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aquarite_client: AsyncMock,
+) -> None:
+    """Test the hydrolysis (non-electrolysis) branch creates the right sensor."""
+    mock_aquarite_client.fetch_pool_data.return_value = {
         "main": {"hasHidro": 1, "version": 1},
         "hidro": {"is_electrolysis": False, "current": 50},
     }
-    coord = _make_coordinator(data)
-    entities = await _setup_sensor_platform(hass, [coord])
-    keys = {e.entity_description.key for e in entities}
-    assert "hydrolysis" in keys
-    assert "electrolysis" not in keys
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_pool_hydrolysis") is not None
+    assert hass.states.get("sensor.my_pool_electrolysis") is None
 
 
-async def test_async_setup_entry_all_modules_enabled(hass: HomeAssistant) -> None:
-    """Test setup when every module flag is enabled."""
-    data = {
+async def test_sensors_all_modules_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aquarite_client: AsyncMock,
+) -> None:
+    """Test every module-gated sensor comes up when all `has*` flags are set."""
+    mock_aquarite_client.fetch_pool_data.return_value = {
         "main": {
             "hasCD": 1,
             "hasCL": 1,
@@ -240,29 +76,38 @@ async def test_async_setup_entry_all_modules_enabled(hass: HomeAssistant) -> Non
         },
         "hidro": {"is_electrolysis": True, "current": 50},
     }
-    coord = _make_coordinator(data)
-    entities = await _setup_sensor_platform(hass, [coord])
-    keys = {e.entity_description.key for e in entities}
-    assert {
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for name in (
         "conductivity",
         "chlorine",
         "ph",
         "redox_potential",
         "uv",
         "electrolysis",
-    } <= keys
+    ):
+        assert hass.states.get(f"sensor.my_pool_{name}") is not None
 
 
-async def test_async_setup_entry_multi_pool(
-    hass: HomeAssistant, mock_pool_data: dict[str, Any]
+async def test_sensors_multi_pool(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aquarite_client: AsyncMock,
+    mock_pool_data: dict[str, Any],
 ) -> None:
-    """Test setup creates entities for every pool on the account."""
-    coord_a = _make_coordinator(mock_pool_data, pool_id="pool_a", pool_name="Pool A")
-    coord_b = _make_coordinator(mock_pool_data, pool_id="pool_b", pool_name="Pool B")
-    entities = await _setup_sensor_platform(hass, [coord_a, coord_b])
+    """Test setup creates sensors for every pool on the account."""
+    mock_aquarite_client.get_pools.return_value = {
+        "pool_a": "Pool A",
+        "pool_b": "Pool B",
+    }
+    mock_aquarite_client.fetch_pool_data.return_value = mock_pool_data
+    mock_config_entry.add_to_hass(hass)
 
-    pool_a_ids = {e._attr_unique_id for e in entities if "pool_a-" in e._attr_unique_id}
-    pool_b_ids = {e._attr_unique_id for e in entities if "pool_b-" in e._attr_unique_id}
-    assert pool_a_ids
-    assert pool_b_ids
-    assert len(pool_a_ids) == len(pool_b_ids)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.pool_a_temperature").state == "25.5"
+    assert hass.states.get("sensor.pool_b_temperature").state == "25.5"
