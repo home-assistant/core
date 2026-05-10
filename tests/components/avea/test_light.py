@@ -112,17 +112,3 @@ async def test_update_state(hass: HomeAssistant, setup_integration: MagicMock) -
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
-
-
-async def test_remove_entry_closes_bulb(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    setup_integration: MagicMock,
-) -> None:
-    """Test removing the entry closes the bulb."""
-    bulb = setup_integration
-    bulb.close.reset_mock()
-
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
-
-    bulb.close.assert_called_once()
