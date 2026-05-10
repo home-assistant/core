@@ -79,6 +79,35 @@ async def test_user_errors(
         assert result["errors"]["base"] == expected_error
 
 
+async def test_user_error_recovery(hass: HomeAssistant) -> None:
+    """Test that the config flow can recover from an error and create an entry."""
+    user_input = {
+        CONF_UUID: "recover-uuid",
+        CONF_HOST: "localhost",
+        CONF_PORT: 80,
+    }
+    with patch(
+        "volkszaehler.Volkszaehler.get_data", side_effect=VolkszaehlerApiConnectionError
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == "cannot_connect"
+
+    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "recover-uuid"
+        assert result["data"] == user_input
+
+
 async def test_import(hass: HomeAssistant) -> None:
     """Test that we can import a config entry."""
     import_data = {
