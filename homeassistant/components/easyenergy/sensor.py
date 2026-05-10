@@ -31,6 +31,9 @@ from .coordinator import (
     EasyEnergyDataUpdateCoordinator,
 )
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EasyEnergySensorEntityDescription(SensorEntityDescription):

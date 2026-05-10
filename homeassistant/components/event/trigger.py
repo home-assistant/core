@@ -41,9 +41,7 @@ class EventReceivedTrigger(StatelessEntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the event type matches one of the configured types."""
-        return super().is_valid_state(state) and (
-            state.attributes.get(ATTR_EVENT_TYPE) in self._event_types
-        )
+        return state.attributes.get(ATTR_EVENT_TYPE) in self._event_types
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

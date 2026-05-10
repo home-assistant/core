@@ -29,7 +29,13 @@ async def test_all_entities(
         Fixture({"type:heatpump"}, "vicare/Vitocal222G_Vitovent300W.json"),
     ]
     with (
-        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
     ):
         await setup_integration(hass, mock_config_entry)
