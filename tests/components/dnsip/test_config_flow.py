@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiodns.error import DNSError
+from pycares import AresError
 import pytest
 
 from homeassistant import config_entries
@@ -121,7 +122,14 @@ async def test_form_adv(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        (DNSError),
+        (AresError),
+    ],
+)
+async def test_form_error(hass: HomeAssistant, error: Exception) -> None:
     """Test validate url fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -129,7 +137,7 @@ async def test_form_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        side_effect=DNSError("Did not find"),
+        side_effect=error("Did not find"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
