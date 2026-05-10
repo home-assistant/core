@@ -66,7 +66,7 @@ ZONE_SCHEMA = vol.Schema(
 class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ness Alarm."""
 
-    VERSION = 1
+    VERSION = 2
 
     @classmethod
     @callback
@@ -109,8 +109,8 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            # Check if already configured
-            self._async_abort_entries_match({CONF_HOST: host})
+            if self._async_current_entries():
+                return self.async_abort(reason="already_configured")
 
             # Test connection to the alarm panel
             try:
@@ -140,8 +140,8 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         host = import_data[CONF_HOST]
         port = import_data[CONF_PORT]
 
-        # Check if already configured
-        self._async_abort_entries_match({CONF_HOST: host})
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
 
         # Test connection to the alarm panel
         try:
