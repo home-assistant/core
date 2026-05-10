@@ -27,11 +27,18 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, INTEGRATION_TITLE
+from .const import DOMAIN, INTEGRATION_TITLE, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 BREAKS_IN_HA_VERSION = "2026.12.0"
+
+
+def _normalize_name(name: str | None) -> str | None:
+    """Return a valid Avea name."""
+    if not name or name == UNKNOWN_NAME:
+        return None
+    return name
 
 
 def _create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
@@ -77,7 +84,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities([AveaLight(entry.runtime_data)], update_before_add=True)
+    async_add_entities([AveaLight(entry.runtime_data, entry)], update_before_add=True)
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -110,7 +117,9 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
         discovered_bulbs.append(
             {
                 CONF_ADDRESS: address,
-                CONF_NAME: name or bulb.name or address,
+                CONF_NAME: _normalize_name(name)
+                or _normalize_name(bulb.name)
+                or address,
             }
         )
 
@@ -159,10 +168,11 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb) -> None:
+    def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = light.name
+        self._attr_unique_id = entry.unique_id or entry.data[CONF_ADDRESS]
+        self._attr_name = entry.title
         self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs: Any) -> None:

@@ -190,6 +190,32 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == AVEA_DISCOVERY_INFO.address
 
 
+async def test_bluetooth_step_uses_discovery_name_for_unknown_bulb_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test bluetooth discovery falls back from the library default name."""
+    inject_bluetooth_service_info(hass, AVEA_DISCOVERY_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    progress = next(iter(hass.config_entries.flow.async_progress_by_handler(DOMAIN)))
+
+    with (
+        patch(
+            "homeassistant.components.avea.config_flow.avea.Bulb",
+            return_value=_mock_bulb("Unknown", 0),
+        ),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            progress["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == AVEA_DISCOVERY_INFO.name
+
+
 async def test_bluetooth_step_cannot_connect_recovers(hass: HomeAssistant) -> None:
     """Test bluetooth confirmation recovers after cannot connect."""
     inject_bluetooth_service_info(hass, AVEA_DISCOVERY_INFO)

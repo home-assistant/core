@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import AVEA_DISCOVERY_INFO
@@ -24,7 +25,7 @@ from tests.common import MockConfigEntry
 def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
-    bulb.name = "Bedroom"
+    bulb.name = "Unknown"
     bulb.brightness = 0
     bulb.get_brightness.return_value = 0
     return bulb
@@ -50,12 +51,18 @@ async def setup_integration(
         yield mock_bulb
 
 
-async def test_init_state(hass: HomeAssistant, setup_integration: MagicMock) -> None:
+async def test_init_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: MagicMock,
+) -> None:
     """Test the initial state."""
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert (entity_entry := entity_registry.async_get("light.bedroom"))
+    assert entity_entry.unique_id == AVEA_DISCOVERY_INFO.address
 
 
 async def test_turn_on_and_off(

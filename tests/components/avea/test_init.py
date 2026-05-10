@@ -156,3 +156,20 @@ async def test_yaml_import_handles_when_no_bulbs_can_be_imported(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_no_bulbs"
     )
+
+
+async def test_yaml_import_ignores_unknown_bulb_name(hass: HomeAssistant) -> None:
+    """Test YAML import ignores the library default name."""
+    bulbs = [
+        _mock_discovered_bulb(
+            "AA:BB:CC:DD:EE:FF",
+            "Unknown",
+        )
+    ]
+    bulbs[0].name = "Bedroom"
+
+    await _setup_yaml_import(hass, bulbs)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].title == "Bedroom"

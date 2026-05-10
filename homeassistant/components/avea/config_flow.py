@@ -15,9 +15,16 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 
-from .const import AVEA_SERVICE_UUID, DOMAIN
+from .const import AVEA_SERVICE_UUID, DOMAIN, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _normalize_name(name: str | None) -> str | None:
+    """Return a valid Avea name."""
+    if not name or name == UNKNOWN_NAME:
+        return None
+    return name
 
 
 def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
@@ -47,7 +54,11 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
     if brightness is None:
         raise CannotConnect
 
-    return name or discovery_info.name or discovery_info.address
+    return (
+        _normalize_name(name)
+        or _normalize_name(discovery_info.name)
+        or discovery_info.address
+    )
 
 
 def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
