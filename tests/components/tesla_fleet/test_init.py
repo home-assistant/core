@@ -553,7 +553,7 @@ async def test_setup_skips_stale_energy_site(
     # a replacement system is installed. The stale site can return live_status
     # successfully but fail site_info, so it should not block setup of the
     # vehicle and the healthy energy site.
-    mock_site_info.side_effect = [TeslaFleetError, deepcopy(SITE_INFO)]
+    mock_site_info.side_effect = [TeslaFleetError(), deepcopy(SITE_INFO)]
 
     await setup_platform(hass, normal_config_entry)
 
