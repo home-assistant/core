@@ -87,7 +87,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
-        translation_key="tracker_battery_level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
