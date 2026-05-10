@@ -119,7 +119,7 @@
     'state': '123.456',
   })
 # ---
-# name: test_all_entities[sensor.my_tank_battery_level-entry]
+# name: test_all_entities[sensor.my_tank_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -135,7 +135,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_tank_battery_level',
+    'entity_id': 'sensor.my_tank_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,12 +143,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery level',
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery level',
+    'original_name': 'Battery',
     'platform': 'centriconnect',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -158,16 +158,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.my_tank_battery_level-state]
+# name: test_all_entities[sensor.my_tank_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'My Tank Battery level',
+      'friendly_name': 'My Tank Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_tank_battery_level',
+    'entity_id': 'sensor.my_tank_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
