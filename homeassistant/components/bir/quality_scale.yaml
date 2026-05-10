@@ -14,18 +14,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
-  docs-installation-instructions:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
-  docs-removal-instructions:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -47,10 +38,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have an options flow.
-  docs-installation-parameters:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -72,34 +60,19 @@ rules:
     status: exempt
     comment: |
       This is a cloud polling integration, not a local device.
-  docs-data-update:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: |
       Integration is fully UI-configured and has no actions or YAML configuration to provide examples for.
-  docs-known-limitations:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
       Integration does not support specific devices, but rather provides sensors for waste pickup dates based on address and property information.
-  docs-supported-functions:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
-  docs-troubleshooting:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
-  docs-use-cases:
-    status: exempt
-    comment: |
-      Documentation will be added to the HA website.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
