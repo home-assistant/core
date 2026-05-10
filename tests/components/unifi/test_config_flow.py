@@ -458,6 +458,7 @@ async def test_flow_allows_second_controller_with_same_default_site(
         },
     )
     existing_entry.add_to_hass(hass)
+    MockConfigEntry(domain="other").add_to_hass(hass)
     mock_requests("10.0.1.1", "default")
 
     result = await hass.config_entries.flow.async_init(
