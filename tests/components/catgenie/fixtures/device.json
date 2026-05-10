@@ -1,0 +1,41 @@
+{
+  "manufacturerId": "DEVICE001",
+  "name": "CatGenie Litter Box",
+  "macAddress": "AA:BB:CC:DD:EE:FF",
+  "hwRevision": "1.0",
+  "fwVersion": "2.5.1",
+  "type": 0,
+  "pumpTypeEnum": "",
+  "status": 2,
+  "reportedStatus": "connected",
+  "connectionMode": "wifi",
+  "lastClean": "2024-01-15T10:30:00Z",
+  "remainingSaniSolution": 75,
+  "serviceLevel": "",
+  "countryCode": 61,
+  "lowHeater": false,
+  "fanShutter": false,
+  "dome": false,
+  "configuration": {
+    "childLock": 0,
+    "autoLock": 0,
+    "volumeLevel": 7,
+    "mode": 0,
+    "catSense": 16,
+    "timezone": "+10:00",
+    "catDelay": 600,
+    "pumpPctT": 100,
+    "extraDry": false,
+    "schedule": [],
+    "activation": {
+      "date": "2023-06-01T00:00:00Z",
+      "state": 1,
+      "count": 150
+    }
+  },
+  "operationStatus": {
+    "state": 1,
+    "progress": 42
+  },
+  "activeErrors": []
+}
