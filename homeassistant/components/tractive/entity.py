@@ -3,7 +3,7 @@
 from typing import Any, Literal
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -30,12 +30,13 @@ class TractiveEntity(Entity):
                 identifiers={(DOMAIN, trackable["_id"])},
                 name=trackable["details"]["name"],
                 via_device=(DOMAIN, tracker_details["_id"]),
+                entry_type=DeviceEntryType.SERVICE,
             )
         else:
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",
                 identifiers={(DOMAIN, tracker_details["_id"])},
-                name=f"Tractive {tracker_details['model_number']}",
+                name=f"Tracker {tracker_details['_id']}",
                 manufacturer="Tractive GmbH",
                 sw_version=tracker_details["fw_version"],
                 model=tracker_details["model_number"],

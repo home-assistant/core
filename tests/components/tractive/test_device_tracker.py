@@ -56,7 +56,7 @@ async def test_source_type_phone(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("device_tracker.tractive_tg4422_tracker").attributes[
+        hass.states.get("device_tracker.tracker_device_id_123_tracker").attributes[
             "source_type"
         ]
         is SourceType.BLUETOOTH
@@ -86,7 +86,7 @@ async def test_source_type_gps(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("device_tracker.tractive_tg4422_tracker").attributes[
+        hass.states.get("device_tracker.tracker_device_id_123_tracker").attributes[
             "source_type"
         ]
         is SourceType.GPS
@@ -109,6 +109,6 @@ async def test_device_tracker_with_empty_hw_info(
         mock_tractive_client.send_position_event(mock_config_entry)
         await hass.async_block_till_done()
 
-    state = hass.states.get("device_tracker.tractive_tg4422_tracker")
+    state = hass.states.get("device_tracker.tracker_device_id_123_tracker")
     assert state is not None
     assert state.attributes.get("battery_level") is None

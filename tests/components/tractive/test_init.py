@@ -150,7 +150,7 @@ async def test_server_unavailable(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the sensor."""
-    entity_id = "sensor.tractive_tg4422_tracker_battery"
+    entity_id = "sensor.tracker_device_id_123_tracker_battery"
 
     await init_integration(hass, mock_config_entry)
 
