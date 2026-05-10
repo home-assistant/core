@@ -68,6 +68,10 @@ def mock_aquarite_client(
     """Mock `AquariteClient` across the config flow and the integration setup."""
     client = AsyncMock()
     client.get_pools = AsyncMock(return_value=MOCK_POOLS)
+    # The coordinator's manual-refresh fallback awaits `fetch_pool_data`;
+    # default to an empty dict so always-on sensors come up with
+    # `native_value=None` and module-gated sensors are skipped.
+    client.fetch_pool_data = AsyncMock(return_value={})
     # The token-refresh loop awaits `auth.get_client()` and expects
     # `(client, refreshed)`.
     mock_aquarite_auth.get_client = AsyncMock(return_value=(client, False))
