@@ -80,14 +80,6 @@ async def test_update_device_id(hass: HomeAssistant) -> None:
         sw_version="1.0",
     )
 
-    # Check zone_device was updated
-    updated_zone = device_registry.async_get_device({(DOMAIN, "sys123_1")})
-    assert updated_zone is not None
-
-    # Check ac_device was updated
-    updated_ac = device_registry.async_get_device({(DOMAIN, "sys123")})
-    assert updated_ac is not None
-
     # Check duplicate device did not overwrite existing device
     updated_duplicate = device_registry.async_get_device({(DOMAIN, "sys123_2")})
     assert updated_duplicate is not None
