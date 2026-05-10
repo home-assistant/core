@@ -411,7 +411,7 @@ aioswitcher==6.1.1
 aiosyncthing==0.7.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.5.1
+aiotankerkoenig==0.5.3
 
 # homeassistant.components.tedee
 aiotedee==0.3.0
@@ -777,7 +777,7 @@ eagle100==0.1.1
 earn-e-p1==0.1.0
 
 # homeassistant.components.easyenergy
-easyenergy==3.0.0
+easyenergy==3.0.1
 
 # homeassistant.components.egauge
 egauge-async==0.4.0
@@ -1199,7 +1199,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==3.2.0
+infrared-protocols==3.5.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
