@@ -4,15 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiohttp
+import jwt
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import _LOGGER, DOMAIN
-
-FAMILY_ENDPOINT = "https://api.yotoplay.com/user/family"
 
 
 class YotoOAuth2FlowHandler(
@@ -28,27 +25,17 @@ class YotoOAuth2FlowHandler(
         return _LOGGER
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Resolve the Yoto family for the authenticated account."""
-        access_token = data["token"]["access_token"]
-        session = async_get_clientsession(self.hass)
+        """Identify the Yoto account from the access token."""
         try:
-            async with session.get(
-                FAMILY_ENDPOINT,
-                headers={"Authorization": f"Bearer {access_token}"},
-            ) as response:
-                if response.status in (401, 403):
-                    return self.async_abort(reason="oauth_unauthorized")
-                response.raise_for_status()
-                payload = await response.json()
-        except aiohttp.ClientError:
-            _LOGGER.exception("Could not load Yoto account family")
-            return self.async_abort(reason="connection_error")
+            claims = jwt.decode(
+                data["token"]["access_token"],
+                options={"verify_signature": False},
+            )
+            user_id = claims["sub"]
+        except jwt.InvalidTokenError, KeyError:
+            return self.async_abort(reason="oauth_unauthorized")
 
-        family_id = (payload.get("family") or {}).get("familyId")
-        if not family_id:
-            return self.async_abort(reason="no_family")
-
-        await self.async_set_unique_id(family_id)
+        await self.async_set_unique_id(user_id)
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="account_mismatch")

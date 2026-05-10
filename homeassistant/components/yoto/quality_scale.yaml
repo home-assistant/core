@@ -36,9 +36,9 @@ rules:
     status: exempt
     comment: This integration has no options flow.
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo

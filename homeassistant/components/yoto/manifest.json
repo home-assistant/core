@@ -6,8 +6,8 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/yoto",
   "integration_type": "hub",
-  "iot_class": "cloud_polling",
-  "loggers": ["yoto_api", "paho.mqtt"],
+  "iot_class": "cloud_push",
+  "loggers": ["yoto_api"],
   "quality_scale": "bronze",
-  "requirements": ["yoto-api==2.3.0"]
+  "requirements": ["yoto-api==2.4.0"]
 }

@@ -4,7 +4,8 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from yoto_api import YotoPlayer
+from yoto_api import YotoError, YotoPlayer
+from yoto_api.Card import Card
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -14,15 +15,17 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoEntity
 
 PARALLEL_UPDATES = 0
+
+# Yoto players expose 16 hardware volume steps.
+VOLUME_STEPS = 16
 
 PLAYBACK_STATE_MAP = {
     "playing": MediaPlayerState.PLAYING,
@@ -50,7 +53,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_image_remotely_accessible = True
-    _attr_volume_step = 1 / 16
+    _attr_volume_step = 1 / VOLUME_STEPS
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -79,14 +82,14 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             return MediaPlayerState.OFF
         if self.player.playback_status in PLAYBACK_STATE_MAP:
             return PLAYBACK_STATE_MAP[self.player.playback_status]
-        return MediaPlayerState.ON
+        return MediaPlayerState.IDLE
 
     @property
     def volume_level(self) -> float | None:
         """Return the current volume level."""
         if self.player.volume is None:
             return None
-        return max(0.0, min(1.0, self.player.volume / 16))
+        return self.player.volume / VOLUME_STEPS
 
     @property
     def media_duration(self) -> int | None:
@@ -114,7 +117,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             return f"{self.player.chapter_title} - {self.player.track_title}"
         return self.player.chapter_title or self.player.track_title
 
-    def _current_card(self) -> Any | None:
+    def _current_card(self) -> Card | None:
         """Return the cached library card for the currently active media."""
         card_id = self.player.card_id
         if not card_id:
@@ -167,13 +170,11 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to ``position`` seconds in the active track."""
-        pos = int(position)
-        await self._async_run(self.coordinator.yoto_manager.seek, self._player_id, pos)
-        # Optimistic local update so the slider holds the new position
-        # until the player publishes its confirmation event.
-        self.player.track_position = pos
-        self.player.last_updated_at = dt_util.utcnow()
-        self.async_write_ha_state()
+        await self._async_run(
+            self.coordinator.yoto_manager.seek,
+            self._player_id,
+            int(position),
+        )
 
     async def async_media_next_track(self) -> None:
         """Skip to the next track on the active card."""
@@ -209,10 +210,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Run a Yoto command in the executor and propagate failures."""
         try:
             await self.hass.async_add_executor_job(func, *args)
-        except Exception as err:
-            # yoto-api wraps multiple unrelated failure modes (paho-mqtt
-            # publish errors, network timeouts, malformed responses) without
-            # a common base exception, so we surface them all the same way.
+        except YotoError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -226,5 +224,15 @@ def _parse_media_id(media_id: str) -> tuple[str, str | None, str | None, int | N
     parts = media_id.split("+")
     parts.extend([""] * (4 - len(parts)))
     card_id, chapter_key, track_key, seconds_raw = parts[:4]
-    seconds_in = int(seconds_raw) if seconds_raw else None
+    if seconds_raw:
+        try:
+            seconds_in: int | None = int(seconds_raw)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media_id",
+                translation_placeholders={"media_id": media_id},
+            ) from err
+    else:
+        seconds_in = None
     return card_id, chapter_key or None, track_key or None, seconds_in
