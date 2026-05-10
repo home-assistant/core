@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -684,3 +685,35 @@ async def test_dhcp_discovery_rut240_already_configured_updates_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "https://192.168.99.99"
+
+
+async def test_dhcp_discovery_apiv1_already_configured_aborts(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_teltasync_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """An API v1.0 (e.g. RUT240) known to the device registry by MAC aborts before dhcp_confirm."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, "20:97:27:aa:bb:cc")},
+    )
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.99.99",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.99.99"
+    mock_teltasync_client.validate_credentials.assert_not_called()

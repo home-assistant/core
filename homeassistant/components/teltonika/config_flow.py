@@ -225,15 +225,29 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # No URL variant worked, device not reachable, don't autodiscover
             return self.async_abort(reason="cannot_connect")
 
-        if device_id is not None:
-            await self.async_set_unique_id(device_id)
-        else:
-            # Older firmware (API v1.0) does not expose the serial without
-            # authentication, so we fall back to the DHCP MAC as the flow
-            # unique_id to suppress parallel discovery and ignored entries.
-            # Already-configured entries (which use the serial as unique_id)
-            # are caught later in async_step_dhcp_confirm.
-            await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
+        formatted_mac = dr.format_mac(discovery_info.macaddress)
+
+        if device_id is None:
+            # FW with API v1.0 doesn't expose any unique identifier on the
+            # unauthorized endpoint. Match existing entries by MAC so it
+            # aborts without asking for credentials again.
+            device_reg = dr.async_get(self.hass)
+            if existing := device_reg.async_get_device(
+                connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+            ):
+                for entry_id in existing.config_entries:
+                    entry = self.hass.config_entries.async_get_entry(entry_id)
+                    if (
+                        entry is not None
+                        and entry.domain == DOMAIN
+                        and entry.unique_id is not None
+                    ):
+                        device_id = entry.unique_id
+                        break
+
+        # Use the MAC as a placeholder unique_id when nothing matched, so
+        # parallel DHCP advertisements don't both reach dhcp_confirm.
+        await self.async_set_unique_id(device_id or formatted_mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
