@@ -1,5 +1,6 @@
 """Config flow for the BIR integration."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from pybirno import Address, BirClient, BirError
@@ -32,7 +33,10 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
     _search_query: str
 
     async def _async_search_address(
-        self, step_id: str, user_input: dict[str, Any] | None, next_step: str
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+        next_step: Callable[[], Awaitable[ConfigFlowResult]],
     ) -> ConfigFlowResult:
         """Handle an address search step."""
         errors: dict[str, str] = {}
@@ -53,7 +57,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
                     if not self._addresses:
                         errors["base"] = "no_addresses_found"
                     else:
-                        return await getattr(self, f"async_step_{next_step}")()
+                        return await next_step()
 
                 except BirError:
                     errors["base"] = "cannot_connect"
@@ -77,7 +81,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         return await self._async_search_address(
-            "user", user_input, "select_address"
+            "user", user_input, self.async_step_select_address
         )
 
     async def _async_select_address(
@@ -174,7 +178,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration flow."""
         return await self._async_search_address(
-            "reconfigure", user_input, "reconfigure_select_address"
+            "reconfigure", user_input, self.async_step_reconfigure_select_address
         )
 
     async def async_step_reconfigure_select_address(
