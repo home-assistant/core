@@ -20,6 +20,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_PASSWORD, MOCK_POOLS, MOCK_USERNAME
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -219,15 +221,12 @@ async def test_no_pools(
 
 async def test_duplicate_account_aborts(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     mock_aquarite_client: AsyncMock,
 ) -> None:
-    """Test that adding the same account twice aborts."""
-    # First entry
-    result = await _configure(hass)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    """Test the flow aborts when an entry for the account already exists."""
+    mock_config_entry.add_to_hass(hass)
 
-    # Same account again
     result = await _configure(hass)
 
     assert result["type"] is FlowResultType.ABORT

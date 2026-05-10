@@ -9,8 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.aquarite.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_USERNAME = "testuser@example.com"
 MOCK_PASSWORD = "testpassword"
@@ -24,6 +25,20 @@ MOCK_POOLS = {MOCK_POOL_ID: MOCK_POOL_NAME}
 def mock_pool_data() -> dict[str, Any]:
     """Return mock coordinator pool data loaded from the JSON fixture."""
     return load_json_object_fixture("pool_data.json", DOMAIN)
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a `MockConfigEntry` for an Aquarite account."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+        unique_id=MOCK_USER_ID,
+    )
 
 
 @pytest.fixture
