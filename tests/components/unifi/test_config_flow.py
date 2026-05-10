@@ -2,12 +2,17 @@
 
 from collections.abc import Callable
 import socket
+from types import SimpleNamespace
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.unifi import async_migrate_entry
+from homeassistant.components.unifi.config_entry_unique_id import (
+    controller_key_from_system_info,
+    extract_site_id,
+)
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -97,6 +102,21 @@ DPI_GROUPS = [
         "site_id": "5ba29dd4e3c58f026e9d7c38",
     },
 ]
+
+
+def test_config_entry_unique_id_helpers() -> None:
+    """Test fallback controller keys and empty site IDs."""
+    assert (
+        controller_key_from_system_info(
+            SimpleNamespace(
+                raw={},
+                anonymous_controller_id=" 24F81231-A456-4C32-ABCD-F5612345385F ",
+            )
+        )
+        == "24f81231-a456-4c32-abcd-f5612345385f"
+    )
+    assert controller_key_from_system_info(SimpleNamespace(raw={})) is None
+    assert extract_site_id(None) is None
 
 
 @pytest.mark.usefixtures("mock_default_requests")
