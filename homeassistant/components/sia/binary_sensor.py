@@ -57,6 +57,7 @@ ENTITY_DESCRIPTION_SMOKE = SIABinarySensorEntityDescription(
         "GH": False,
         "FA": True,
         "FH": False,
+        "FR": False,
         "KA": True,
         "KH": False,
     },
