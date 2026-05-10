@@ -212,10 +212,10 @@ def ws_get_base_data(
             else "unknown"
         ),
         "telegram_retention": knx.telegrams.store.retention_days
-        if hasattr(knx.telegrams.store, "retention_days")
+        if knx.telegrams.store is not None
         else None,
         "telegram_max_count": knx.telegrams.store.max_telegrams
-        if hasattr(knx.telegrams.store, "max_telegrams")
+        if knx.telegrams.store is not None
         else None,
     }
 
@@ -324,6 +324,14 @@ async def ws_group_monitor_info(
     )
     start_time = dt_util.now() - timedelta(hours=load_hours)
 
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "No storage backend",
+        )
+        return
+
     query = TelegramQuery(start_time=start_time, limit=10_000, order_descending=False)
     result = await knx.telegrams.store.query(query)
 
@@ -407,6 +415,14 @@ async def ws_query_telegrams(
         offset=msg.get("offset", 0),
         order_descending=msg.get("order_descending", True),
     )
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "No storage backend",
+        )
+        return
+
     result = await knx.telegrams.store.query(query)
     connection.send_result(
         msg["id"],
