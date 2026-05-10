@@ -65,7 +65,9 @@ async def async_validate_hostname(
         _resolver = aiodns.DNSResolver(
             nameservers=[resolver], udp_port=port, tcp_port=port
         )
-        return await _resolver.query(hostname, qtype)
+        result = await _resolver.query(hostname, qtype)
+        await _resolver.close()
+        return result
 
     result: dict[str, bool] = {}
 
