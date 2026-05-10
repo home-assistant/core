@@ -1,9 +1,13 @@
 """Tests for the MyNeomitis select component."""
 
+import importlib
 from unittest.mock import AsyncMock
 
+import pyaxencoapi
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.myneomitis import select as select_platform
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -33,9 +37,20 @@ UFH_DEVICE = {
     "name": "UFH Device",
     "model": "UFH",
     "state": {"changeOverUser": 0},
+    "parents": ",gw-ufh,",
+    "rfid": "rfid-ufh",
     "connected": True,
     "program": {"data": {}},
 }
+
+
+class DummyPresetMap(dict[str, int]):
+    """Preset mapping with reverse lookup support."""
+
+    @property
+    def reverse(self) -> dict[int, str]:
+        """Return a reverse lookup map for preset codes."""
+        return {code: key for key, code in self.items()}
 
 
 async def test_entities(
@@ -91,6 +106,75 @@ async def test_select_option(
     state = hass.states.get("select.relais_device")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_entities_mapping_presets(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Mapping preset structures should be supported for new library versions."""
+    mapping_relais = DummyPresetMap({"on": 1, "off": 2, "auto": 60})
+    mapping_pilote = {"comfort": 1, "eco": 2, "standby": 4}
+    mapping_ufh = DummyPresetMap({"heating": 0, "cooling": 1})
+
+    with monkeypatch.context() as m:
+        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "EWS_RELAIS", mapping_relais)
+        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "EWS_PILOTE", mapping_pilote)
+        m.setitem(pyaxencoapi.PRESET_MODE_MODELS, "UFH", mapping_ufh)
+        importlib.reload(select_platform)
+
+        mock_pyaxenco_client.get_devices.return_value = [
+            RELAIS_DEVICE,
+            PILOTE_DEVICE,
+            UFH_DEVICE,
+        ]
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        relais_state = hass.states.get("select.relais_device")
+        assert relais_state is not None
+        assert relais_state.attributes["options"] == list(mapping_relais)
+
+        pilote_state = hass.states.get("select.pilote_device")
+        assert pilote_state is not None
+        assert pilote_state.attributes["options"] == list(mapping_pilote)
+
+        ufh_state = hass.states.get("select.ufh_device")
+        assert ufh_state is not None
+        assert ufh_state.attributes["options"] == list(mapping_ufh)
+
+    importlib.reload(select_platform)
+
+
+async def test_select_option_ufh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test UFH select option update uses sub-device UFH API route."""
+    mock_pyaxenco_client.get_devices.return_value = [UFH_DEVICE]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.ufh_device", "option": "cooling"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_sub_device_mode_ufh.assert_awaited_once_with(
+        ",gw-ufh,", "rfid-ufh", 1
+    )
+
+    state = hass.states.get("select.ufh_device")
+    assert state is not None
+    assert state.state == "cooling"
 
 
 async def test_websocket_state_update(

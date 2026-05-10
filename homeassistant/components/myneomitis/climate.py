@@ -1,15 +1,16 @@
 """Climate entities for MyNeomitis integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyaxencoapi import (
-    PRESET_MODE_MAP,
-    PRESET_MODE_MODELS,
-    REVERSE_PRESET_MODE_MAP,
-    Preset,
-    PyAxencoAPI,
-)
+import aiohttp
+from pyaxencoapi import PRESET_MODE_MODELS, Preset, PyAxencoAPI
+
+try:
+    from pyaxencoapi import PRESET_MODE_MAP
+except ImportError:  # pragma: no cover - only needed for newer library versions
+    PRESET_MODE_MAP = {}
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -29,6 +30,31 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EV30", "ECTRL", "ESTAT", "RSS-ECTRL"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"NTD", "ETRV"})
+STANDBY_PRESET = Preset.STANDBY.key
+SETPOINT_PRESET = Preset.SETPOINT.key
+
+
+def _resolve_preset_maps(
+    model: str,
+) -> tuple[list[str], dict[str, int], dict[int, str]]:
+    """Resolve preset maps for both old and new pyaxencoapi structures."""
+    preset_model = PRESET_MODE_MODELS[model]
+
+    if isinstance(preset_model, Mapping) or hasattr(preset_model, "items"):
+        preset_map = dict(preset_model)
+        reverse_map = (
+            preset_model.reverse
+            if hasattr(preset_model, "reverse")
+            else {code: key for key, code in preset_map.items()}
+        )
+        return list(preset_model), preset_map, reverse_map
+
+    preset_modes = list(preset_model)
+    preset_map = {
+        key: PRESET_MODE_MAP[key] for key in preset_modes if key in PRESET_MODE_MAP
+    }
+    reverse_map = {code: key for key, code in preset_map.items()}
+    return preset_modes, preset_map, reverse_map
 
 
 async def async_setup_entry(
@@ -44,6 +70,16 @@ async def async_setup_entry(
     for device in devices:
         model = device.get("model")
         if model not in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS:
+            continue
+
+        # Defensive check: PRESET_MODE_MODELS is provided by pyaxencoapi and always
+        # contains entries for supported models, so this branch is unreachable in practice.
+        if model not in PRESET_MODE_MODELS:
+            _LOGGER.warning(
+                "Skipping climate device %s: model %s has no preset mapping",
+                device.get("name") or device.get("_id"),
+                model,
+            )
             continue
 
         device_id = device.get("_id")
@@ -91,17 +127,14 @@ class MyNeoClimate(ClimateEntity):
 
         state = device.get("state", {})
         self._is_sub_device = model in SUPPORTED_SUB_MODELS
-        self._parents = device.get("parents") or {}
-        if model in PRESET_MODE_MODELS:
-            self._attr_preset_modes = PRESET_MODE_MODELS[model]
-        else:
-            default_presets = [p.key for p in Preset]
-            _LOGGER.warning(
-                "Model %s not found in PRESET_MODE_MODELS, using default presets %s",
-                model,
-                default_presets,
-            )
-            self._attr_preset_modes = default_presets
+        self._parents = device.get("parents")
+
+        (
+            self._attr_preset_modes,
+            self._preset_mode_map,
+            self._preset_mode_map_reverse,
+        ) = _resolve_preset_maps(str(model))
+
         self._attr_min_temp = state.get("comfLimitMin", 7)
         self._attr_max_temp = state.get("comfLimitMax", 30)
         self._attr_current_temperature = state.get("currentTemp")
@@ -112,26 +145,33 @@ class MyNeoClimate(ClimateEntity):
         )
         target_mode = state.get("targetMode")
         if isinstance(target_mode, int):
-            self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(target_mode)
+            self._attr_preset_mode = self._preset_mode_map_reverse.get(target_mode)
         else:
             self._attr_preset_mode = None
         self._last_preset_mode: str | None = (
             self._attr_preset_mode
-            if self._attr_preset_mode and self._attr_preset_mode != "standby"
+            if self._attr_preset_mode and self._attr_preset_mode != STANDBY_PRESET
             else None
         )
-        if model == "NTD" and state.get("changeOverUser") == 1:
+        comf_temp = state.get("comfTemp")
+        eco_temp = state.get("ecoTemp")
+        if (
+            model == "NTD"
+            and isinstance(comf_temp, int | float)
+            and isinstance(eco_temp, int | float)
+            and comf_temp < eco_temp
+        ):
             self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
             self._attr_hvac_mode = (
                 HVACMode.OFF
-                if PRESET_MODE_MAP.get(self._attr_preset_mode or "") == 4
+                if self._attr_preset_mode == STANDBY_PRESET
                 else HVACMode.COOL
             )
         else:
             self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
             self._attr_hvac_mode = (
                 HVACMode.OFF
-                if PRESET_MODE_MAP.get(self._attr_preset_mode or "") == 4
+                if self._attr_preset_mode == STANDBY_PRESET
                 else HVACMode.HEAT
             )
 
@@ -167,12 +207,12 @@ class MyNeoClimate(ClimateEntity):
         elif "targetTemp" in new_state:
             self._attr_target_temperature = new_state["targetTemp"]
         if "targetMode" in new_state:
-            self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(
+            self._attr_preset_mode = self._preset_mode_map_reverse.get(
                 new_state["targetMode"]
             )
-            if self._attr_preset_mode and self._attr_preset_mode != "standby":
+            if self._attr_preset_mode and self._attr_preset_mode != STANDBY_PRESET:
                 self._last_preset_mode = self._attr_preset_mode
-            if self._attr_preset_mode == "standby":
+            if self._attr_preset_mode == STANDBY_PRESET:
                 self._attr_hvac_mode = HVACMode.OFF
             elif self._attr_hvac_mode == HVACMode.OFF:
                 self._attr_hvac_mode = next(
@@ -189,7 +229,7 @@ class MyNeoClimate(ClimateEntity):
 
                 if (
                     self._attr_hvac_mode != HVACMode.OFF
-                    and self._attr_preset_mode != "standby"
+                    and self._attr_preset_mode != STANDBY_PRESET
                 ):
                     self._attr_hvac_mode = HVACMode.COOL
             else:
@@ -197,7 +237,7 @@ class MyNeoClimate(ClimateEntity):
 
                 if (
                     self._attr_hvac_mode != HVACMode.OFF
-                    and self._attr_preset_mode != "standby"
+                    and self._attr_preset_mode != STANDBY_PRESET
                 ):
                     self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
@@ -208,13 +248,13 @@ class MyNeoClimate(ClimateEntity):
         if temperature is None:
             return
 
-        if self._attr_preset_mode != "setpoint":
-            ok = await self._set_device_mode("setpoint")
+        if self._attr_preset_mode != SETPOINT_PRESET:
+            ok = await self._set_device_mode(SETPOINT_PRESET)
             if not ok:
                 raise HomeAssistantError(
-                    f"Failed to set preset mode 'setpoint' for {self.entity_id}"
+                    f"Failed to set preset mode '{SETPOINT_PRESET}' for {self.entity_id}"
                 )
-            self._attr_preset_mode = "setpoint"
+            self._attr_preset_mode = SETPOINT_PRESET
             if self._attr_hvac_mode == HVACMode.OFF:
                 self._attr_hvac_mode = next(
                     (
@@ -236,12 +276,12 @@ class MyNeoClimate(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the climate entity."""
-        if preset_mode not in PRESET_MODE_MAP:
+        if preset_mode not in self._preset_mode_map:
             _LOGGER.warning("Unknown preset mode: %s", preset_mode)
             return
 
         new_hvac_mode = self._attr_hvac_mode
-        if preset_mode == "standby":
+        if preset_mode == STANDBY_PRESET:
             new_hvac_mode = HVACMode.OFF
         elif self._attr_hvac_mode == HVACMode.OFF:
             new_hvac_mode = next(
@@ -260,7 +300,7 @@ class MyNeoClimate(ClimateEntity):
             )
 
         self._attr_hvac_mode = new_hvac_mode
-        if preset_mode != "standby":
+        if preset_mode != STANDBY_PRESET:
             self._last_preset_mode = preset_mode
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
@@ -268,15 +308,15 @@ class MyNeoClimate(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
         if hvac_mode == HVACMode.OFF:
-            if self._attr_preset_mode and self._attr_preset_mode != "standby":
+            if self._attr_preset_mode and self._attr_preset_mode != STANDBY_PRESET:
                 self._last_preset_mode = self._attr_preset_mode
 
-            ok = await self._set_device_mode("standby")
+            ok = await self._set_device_mode(STANDBY_PRESET)
             if not ok:
                 raise HomeAssistantError(
                     f"Failed to set standby mode for {self.entity_id}"
                 )
-            self._attr_preset_mode = "standby"
+            self._attr_preset_mode = STANDBY_PRESET
         else:
             preset_to_restore = None
             if (
@@ -288,8 +328,8 @@ class MyNeoClimate(ClimateEntity):
 
             if not preset_to_restore:
                 preset_to_restore = next(
-                    (p for p in (self._attr_preset_modes or []) if p != "standby"),
-                    "comfort",
+                    (p for p in (self._attr_preset_modes or []) if p != STANDBY_PRESET),
+                    Preset.COMFORT.key,
                 )
 
             ok = await self._set_device_mode(preset_to_restore)
@@ -305,7 +345,7 @@ class MyNeoClimate(ClimateEntity):
     async def _set_device_mode(self, mode: str) -> bool:
         """Set the device mode via API."""
         try:
-            mode_value = PRESET_MODE_MAP.get(mode)
+            mode_value = self._preset_mode_map.get(mode)
             if mode_value is None:
                 _LOGGER.error(
                     "Attempt to set unknown mode %s for %s", mode, self.entity_id
@@ -313,18 +353,18 @@ class MyNeoClimate(ClimateEntity):
                 return False
 
             if self._is_sub_device:
-                gateway = self._parents.get("gateway")
+                parents = self._parents if isinstance(self._parents, str) else None
                 rfid = self._device.get("rfid")
-                if not gateway or not rfid:
+                if not parents or not rfid:
                     _LOGGER.error(
-                        "Missing gateway or rfid for sub-device %s, cannot set mode",
+                        "Missing parents or rfid for sub-device %s, cannot set mode",
                         self._attr_unique_id,
                     )
                     return False
-                await self._api.set_sub_device_mode(gateway, str(rfid), mode_value)
+                await self._api.set_sub_device_mode(parents, str(rfid), mode_value)
             else:
                 await self._api.set_device_mode(self._device_id, mode_value)
-        except (TimeoutError, ConnectionError) as err:
+        except (aiohttp.ClientError, TimeoutError, ConnectionError) as err:
             _LOGGER.error("Error setting device mode for %s: %s", self._device_id, err)
             return False
 
@@ -334,20 +374,20 @@ class MyNeoClimate(ClimateEntity):
         """Set the device temperature via API."""
         try:
             if self._is_sub_device:
-                gateway = self._parents.get("gateway")
+                parents = self._parents if isinstance(self._parents, str) else None
                 rfid = self._device.get("rfid")
-                if not gateway or not rfid:
+                if not parents or not rfid:
                     _LOGGER.error(
-                        "Missing gateway or rfid for sub-device %s, cannot set temperature",
+                        "Missing parents or rfid for sub-device %s, cannot set temperature",
                         self._attr_unique_id,
                     )
                     return False
                 await self._api.set_sub_device_temperature(
-                    gateway, str(rfid), temperature
+                    parents, str(rfid), temperature
                 )
             else:
                 await self._api.set_device_temperature(self._device_id, temperature)
-        except (TimeoutError, ConnectionError) as err:
+        except (aiohttp.ClientError, TimeoutError, ConnectionError) as err:
             _LOGGER.error(
                 "Error setting device temperature for %s: %s",
                 self._device_id,
