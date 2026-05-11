@@ -1,6 +1,5 @@
 """The my-PV integration for Home Assistant."""
 
-from datetime import timedelta
 import logging
 
 from my_pv import MyPVLocalDevice
@@ -23,7 +22,6 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Set up my-PV from a config entry."""
 
-    update_interval = timedelta(seconds=5)
     device = await MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
 
     try:
@@ -43,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
         ) from exc
 
     # Setup coordinator
-    coordinator = MyPVCoordinator(hass, entry, device, update_interval)
+    coordinator = MyPVCoordinator(hass, entry, device)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
