@@ -21,10 +21,6 @@ from .entity import MyPVBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-CURRENT_TEMPERATURE_KEY = "temp1"
-TARGET_TEMPERATURE_KEY = "ww1target"
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyPVConfigEntry,
@@ -106,16 +102,6 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         self._attr_max_temp = entity_description.max_temp
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if not self.coordinator.connected:
-            return False
-        if self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY) is None:
-            return False
-
-        return super().available
-
-    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
         return STATE_ELECTRIC if self.coordinator.device.is_on else STATE_OFF
@@ -123,21 +109,19 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY)
-        return float(current_temperature) if current_temperature is not None else None
+        return self.coordinator.device.current_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.coordinator.get_setup_value(TARGET_TEMPERATURE_KEY)
-        return float(target_temperature) if target_temperature is not None else None
+        return self.coordinator.device.target_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        if temperature is not None and await self.coordinator.set_setup_value(
-            TARGET_TEMPERATURE_KEY, float(temperature)
+        if temperature is not None and await self.coordinator.set_target_temperature(
+            float(temperature)
         ):
             self.async_write_ha_state()
         else:
