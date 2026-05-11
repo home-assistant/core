@@ -40,14 +40,14 @@ async def async_migrate_entry(
     if config_entry.version < 2:
         site_id = extract_site_id(config_entry.unique_id)
         if site_id is None:
-            return False
+            return True
 
         try:
             api = await get_unifi_api(hass, config_entry.data)
             await api.system_information.update()
 
         except AuthenticationRequired, CannotConnect:
-            return False
+            return True
 
         controller_info = next(iter(api.system_information.values()), None)
         controller_key = (
@@ -56,7 +56,7 @@ async def async_migrate_entry(
             else None
         )
         if controller_key is None:
-            return False
+            return True
 
         hass.config_entries.async_update_entry(
             config_entry,

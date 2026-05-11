@@ -143,38 +143,43 @@ async def test_migrate_entry_rejects_future_version(hass: HomeAssistant) -> None
     assert not await async_migrate_entry(hass, existing_entry)
 
 
-async def test_migrate_entry_rejects_entry_without_unique_id(
+async def test_migrate_entry_skips_entry_without_unique_id(
     hass: HomeAssistant,
 ) -> None:
-    """Migration needs an existing site unique ID to preserve site identity."""
+    """Migration should not block setup when site identity is unavailable."""
     existing_entry = MockConfigEntry(domain=DOMAIN, unique_id=None, version=1)
     existing_entry.add_to_hass(hass)
 
-    assert not await async_migrate_entry(hass, existing_entry)
+    assert await async_migrate_entry(hass, existing_entry)
+    assert existing_entry.version == 1
+    assert existing_entry.unique_id is None
 
 
-async def test_migrate_entry_rejects_connection_error(
+async def test_migrate_entry_skips_connection_error(
     hass: HomeAssistant,
 ) -> None:
-    """Migration should fail if the controller cannot be queried."""
+    """Migration should not block setup if the controller cannot be queried."""
     existing_entry = MockConfigEntry(domain=DOMAIN, unique_id="default", version=1)
     existing_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.unifi.get_unifi_api", side_effect=CannotConnect
     ):
-        assert not await async_migrate_entry(hass, existing_entry)
+        assert await async_migrate_entry(hass, existing_entry)
+
+    assert existing_entry.version == 1
+    assert existing_entry.unique_id == "default"
 
 
 @pytest.mark.parametrize(
     "system_information_payload",
     [[{}]],
 )
-async def test_migrate_entry_rejects_missing_controller_key(
+async def test_migrate_entry_skips_missing_controller_key(
     hass: HomeAssistant,
     mock_default_requests: None,
 ) -> None:
-    """Migration needs a stable controller key to build the new unique ID."""
+    """Migration should retry later if no stable controller key is available."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="default",
@@ -190,7 +195,9 @@ async def test_migrate_entry_rejects_missing_controller_key(
     )
     existing_entry.add_to_hass(hass)
 
-    assert not await async_migrate_entry(hass, existing_entry)
+    assert await async_migrate_entry(hass, existing_entry)
+    assert existing_entry.version == 1
+    assert existing_entry.unique_id == "default"
 
 
 @pytest.mark.parametrize(
