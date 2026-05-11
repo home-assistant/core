@@ -77,6 +77,7 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_operation_list = [STATE_OFF, STATE_ELECTRIC]
     _attr_supported_features = (
         WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -103,7 +104,6 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         self._attr_temperature_unit = entity_description.temperature_unit
         self._attr_min_temp = entity_description.min_temp
         self._attr_max_temp = entity_description.max_temp
-        self._attr_operation_list = [STATE_OFF, STATE_ELECTRIC]
 
     @property
     def available(self) -> bool:
