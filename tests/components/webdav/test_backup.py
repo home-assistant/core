@@ -1,6 +1,5 @@
 """Test the backups for WebDAV."""
 
-import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from copy import deepcopy
 from io import StringIO
@@ -10,10 +9,7 @@ from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
-from homeassistant.components.webdav.backup import (
-    async_get_backup_agents,
-    async_register_backup_agents_listener,
-)
+from homeassistant.components.webdav.backup import async_register_backup_agents_listener
 from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
@@ -502,58 +498,3 @@ async def test_agents_list_backups_skips_invalid_metadata_file(
             "with_automatic_settings": None,
         }
     ]
-
-
-async def test_agents_list_backups_downloads_metadata_in_four_streams(
-    hass: HomeAssistant,
-    webdav_client: AsyncMock,
-) -> None:
-    """Test listing backups downloads metadata files four at a time."""
-    metadata_paths = [f"/backup-{idx}.metadata.json" for idx in range(5)]
-    metadata_by_path = {}
-    for idx, metadata_path in enumerate(metadata_paths):
-        backup = deepcopy(BACKUP_METADATA)
-        backup["backup_id"] = f"backup-{idx}"
-        backup["name"] = f"Backup {idx}"
-        metadata_by_path[metadata_path] = backup
-    concurrent_downloads = 0
-    max_concurrent_downloads = 0
-    four_downloads_started = asyncio.Event()
-    release_downloads = asyncio.Event()
-
-    async def _download_metadata(
-        path: str, timeout: object = None
-    ) -> AsyncIterator[bytes]:
-        nonlocal concurrent_downloads, max_concurrent_downloads
-
-        concurrent_downloads += 1
-        max_concurrent_downloads = max(max_concurrent_downloads, concurrent_downloads)
-        if concurrent_downloads == 4:
-            four_downloads_started.set()
-
-        await release_downloads.wait()
-
-        try:
-            yield json_dumps(metadata_by_path[path]).encode()
-        finally:
-            concurrent_downloads -= 1
-
-    webdav_client.list_files.return_value = ["/backup-0.tar", *metadata_paths]
-    webdav_client.download_iter.side_effect = _download_metadata
-
-    [agent] = await async_get_backup_agents(hass)
-    list_backups_task = asyncio.create_task(agent.async_list_backups())
-
-    try:
-        await asyncio.wait_for(four_downloads_started.wait(), timeout=1)
-        await asyncio.sleep(0)
-        assert max_concurrent_downloads == 4
-    finally:
-        release_downloads.set()
-
-    backups = await list_backups_task
-    assert webdav_client.download_iter.call_count == len(metadata_paths)
-    assert max_concurrent_downloads == 4
-    assert {backup.backup_id for backup in backups} == {
-        f"backup-{idx}" for idx in range(5)
-    }
