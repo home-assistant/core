@@ -706,11 +706,22 @@
       "inverter_output_power": {
         "name": "Inverter output power"
       },
+      "irrigation_status": {
+        "name": "Status",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "idle": "[%key:common::state::idle%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
       "last_amount": {
         "name": "Last amount"
       },
       "last_operation_duration": {
         "name": "Last operation duration"
+      },
+      "last_watering_time": {
+        "name": "Last watering time"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
