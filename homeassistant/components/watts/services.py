@@ -1,7 +1,5 @@
 """Services for Watts Vision integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import voluptuous as vol
