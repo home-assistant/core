@@ -102,7 +102,8 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         now = datetime.now()
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
-        # Use end of next month for bills so pay_dates includes future dates
+        # Extend bills range: one month before for last paid, one month ahead for next expected
+        bills_start_date = (start_date - timedelta(days=1)).replace(day=1)
         if now.month == 12:
             bills_end_date = now.replace(year=now.year + 1, month=1, day=31)
         else:
@@ -126,7 +127,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),
-                self.firefly.get_bills(start=start_date, end=bills_end_date),
+                self.firefly.get_bills(start=bills_start_date, end=bills_end_date),
             )
 
             category_details = await asyncio.gather(
