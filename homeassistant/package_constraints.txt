@@ -63,7 +63,7 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.33.1
 securetar==2026.4.1
-serialx==1.7.1
+serialx==1.7.2
 SQLAlchemy==2.0.49
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
@@ -126,9 +126,6 @@ pandas==2.3.3
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
-
-# Version 2.0 added typing, prevent accidental fallbacks
-backoff>=2.0
 
 # Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
 Brotli>=1.2.0
@@ -235,6 +232,11 @@ auth0-python<5.0
 
 # Setuptools >=82.0.0 doesn't contain pkg_resources anymore
 setuptools<82.0.0
+
+# backoff and python-backoff share the same package name
+# pin versions which are mostly compatible to each other
+backoff==2.2.1
+python-backoff<2.4.0
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

@@ -188,6 +188,15 @@ def mock_job_api_paused(
 
 
 @pytest.fixture
+def mock_job_api_attention(
+    mock_get_status_printing: dict[str, Any], mock_job_api_printing: dict[str, Any]
+) -> None:
+    """Mock PrusaLink printing in ATTENTION state (e.g. timelapse capture)."""
+    mock_job_api_printing["state"] = "ATTENTION"
+    mock_get_status_printing["printer"]["state"] = "ATTENTION"
+
+
+@pytest.fixture
 def mock_api(
     mock_version_api: dict[str, str],
     mock_info_api: dict[str, Any],

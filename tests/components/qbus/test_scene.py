@@ -35,7 +35,11 @@ async def test_scene(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_SCENE_SET_STATE, _PAYLOAD_SCENE_ACTIVATE, 0, False
+        _TOPIC_SCENE_SET_STATE,
+        _PAYLOAD_SCENE_ACTIVATE,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response

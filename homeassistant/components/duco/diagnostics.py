@@ -3,7 +3,7 @@
 from dataclasses import asdict
 from typing import Any
 
-from duco.exceptions import DucoConnectionError
+from duco_connectivity.exceptions import DucoConnectionError
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
@@ -45,7 +45,7 @@ async def async_get_config_entry_diagnostics(
         api_info_obj = await coordinator.client.async_get_api_info()
         lan_info = await coordinator.client.async_get_lan_info()
         duco_diags = await coordinator.client.async_get_diagnostics()
-        write_remaining = await coordinator.client.async_get_write_req_remaining()
+        write_remaining = await coordinator.client.async_get_write_requests_remaining()
     except DucoConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

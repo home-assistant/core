@@ -54,7 +54,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_ON, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_ON,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -76,7 +80,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_BRIGHTNESS, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_BRIGHTNESS,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -97,7 +105,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_OFF, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_OFF,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
