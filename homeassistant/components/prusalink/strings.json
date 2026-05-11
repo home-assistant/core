@@ -26,6 +26,9 @@
       "cancel_job": {
         "name": "Cancel job"
       },
+      "continue_job": {
+        "name": "Continue job"
+      },
       "pause_job": {
         "name": "Pause job"
       },
