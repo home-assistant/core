@@ -113,16 +113,6 @@ SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
 SERVICE_SET_LOCK_CONFIGURATION = "set_lock_configuration"
 SERVICE_SET_VALUE = "set_value"
 
-# credential management service constants
-SERVICE_DELETE_ALL_CREDENTIALS = "delete_all_credentials"
-SERVICE_DELETE_ALL_USERS = "delete_all_users"
-SERVICE_DELETE_CREDENTIAL = "delete_credential"
-SERVICE_DELETE_USER = "delete_user"
-SERVICE_GET_CREDENTIAL_CAPABILITIES = "get_credential_capabilities"
-SERVICE_GET_USERS = "get_users"
-SERVICE_SET_CREDENTIAL = "set_credential"
-SERVICE_SET_USER = "set_user"
-
 # credential management attribute constants
 ATTR_USER_ACTIVE = "active"
 ATTR_CREDENTIAL_DATA = "credential_data"
