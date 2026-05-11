@@ -46,15 +46,18 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=account.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/accounts/show/{account.id}",
+            name="Accounts",
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/accounts",
             identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_account_{account.id}")
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_accounts")
             },
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
         )
+        self._attr_translation_placeholders = {
+            "name": account.attributes.name or ""
+        }
 
     @property
     def _account(self) -> Account:

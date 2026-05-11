@@ -4,12 +4,6 @@
       "account_balance": {
         "default": "mdi:currency-usd"
       },
-      "account_role": {
-        "default": "mdi:account-circle"
-      },
-      "account_type": {
-        "default": "mdi:bank"
-      },
       "budget": {
         "default": "mdi:chart-pie"
       },
@@ -27,6 +21,12 @@
       },
       "subscription_last_paid": {
         "default": "mdi:calendar-check"
+      },
+      "subscription_total_expected": {
+        "default": "mdi:cash-multiple"
+      },
+      "subscription_already_paid": {
+        "default": "mdi:cash-check"
       },
       "category": {
         "default": "mdi:label"
