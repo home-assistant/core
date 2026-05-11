@@ -10,14 +10,13 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import MyPVCoordinator
+from . import MyPVConfigEntry, MyPVCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,11 +28,11 @@ TARGET_TEMPERATURE_KEY = "ww1target"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyPVConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the my-PV water heater."""
-    coordinator: MyPVCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     entities = []
 
     if (

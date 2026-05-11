@@ -6,21 +6,18 @@ import logging
 from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
-from .coordinator import MyPVCoordinator
+from .coordinator import MyPVConfigEntry, MyPVCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
-
-type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
@@ -58,9 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator: MyPVCoordinator = entry.runtime_data
-    await coordinator.async_disconnect()
+    await entry.runtime_data.async_disconnect()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

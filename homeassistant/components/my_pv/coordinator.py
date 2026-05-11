@@ -237,3 +237,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             ) from exc
         else:
             return result
+
+
+type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
