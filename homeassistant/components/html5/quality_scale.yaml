@@ -76,7 +76,7 @@ rules:
     status: exempt
     comment: Nothing to reconfigure
   repair-issues: done
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
