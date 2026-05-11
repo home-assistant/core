@@ -1,0 +1,10 @@
+set_fan_timer:
+  target:
+    entity:
+      domain: climate
+      integration: nest
+  fields:
+    duration:
+      required: true
+      selector:
+        duration:

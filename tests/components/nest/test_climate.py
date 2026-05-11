@@ -44,6 +44,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from .common import (
     DEVICE_COMMAND,
     DEVICE_ID,
+    DOMAIN,
     CreateDevice,
     PlatformSetup,
     create_nest_event,
@@ -1083,6 +1084,83 @@ async def test_thermostat_set_fan(
             "timerMode": "ON",
         },
     }
+
+
+async def test_set_fan_timer(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test the set_fan_timer service."""
+    create_device.create(
+        {
+            "sdm.devices.traits.Fan": {
+                "timerMode": "OFF",
+            },
+            "sdm.devices.traits.ThermostatHvac": {"status": "HEATING"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.TemperatureTrait": {"ambientTemperatureCelsius": 20.0},
+        }
+    )
+    await setup_platform()
+
+    # Call the set_fan_timer service
+    await hass.services.async_call(
+        DOMAIN,
+        "set_fan_timer",
+        {
+            "entity_id": "climate.my_thermostat",
+            "duration": {"minutes": 15},
+        },
+        blocking=True,
+    )
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {
+            "duration": "900s",
+            "timerMode": "ON",
+        },
+    }
+
+
+async def test_set_fan_timer_hvac_off(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test the set_fan_timer service when HVAC is off."""
+    create_device.create(
+        {
+            "sdm.devices.traits.Fan": {
+                "timerMode": "OFF",
+            },
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "OFF",
+            },
+        }
+    )
+    await setup_platform()
+
+    with pytest.raises(HomeAssistantError, match="Cannot turn on fan"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_fan_timer",
+            {
+                "entity_id": "climate.my_thermostat",
+                "duration": {"minutes": 15},
+            },
+            blocking=True,
+        )
 
 
 async def test_thermostat_set_fan_when_off(
