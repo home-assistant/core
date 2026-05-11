@@ -231,6 +231,7 @@ async def test_query_climate_request(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 20.0,
@@ -247,6 +248,7 @@ async def test_query_climate_request(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 21,
@@ -295,6 +297,7 @@ async def test_query_climate_request_f(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.7,
@@ -311,6 +314,7 @@ async def test_query_climate_request_f(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.1,

@@ -191,18 +191,24 @@ async def setup_attributes_state_vacuum(
     )
 
 
+@pytest.mark.parametrize(
+    ("count", "state_template", "style"),
+    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
+)
+@pytest.mark.usefixtures("setup_state_vacuum")
+async def test_legacy_template_creates_warning(
+    hass: HomeAssistant, caplog_setup_text
+) -> None:
+    """Test legacy YAML configuration logs a warning."""
+    assert len(hass.states.async_all("vacuum")) == 0
+    assert "entities can only be configured under template:" in caplog_setup_text
+
+
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("style", "state_template", "extra_config", "parm1", "parm2"),
     [
         (
-            ConfigurationStyle.LEGACY,
-            None,
-            {"start": {"service": "script.vacuum_start"}},
-            STATE_UNKNOWN,
-            None,
-        ),
-        (
             ConfigurationStyle.MODERN,
             None,
             {"start": {"service": "script.vacuum_start"}},
@@ -215,16 +221,6 @@ async def setup_attributes_state_vacuum(
             {"start": {"service": "script.vacuum_start"}},
             STATE_UNKNOWN,
             None,
-        ),
-        (
-            ConfigurationStyle.LEGACY,
-            "{{ 'cleaning' }}",
-            {
-                "battery_level_template": "{{ 100 }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            VacuumActivity.CLEANING,
-            100,
         ),
         (
             ConfigurationStyle.MODERN,
@@ -247,16 +243,6 @@ async def setup_attributes_state_vacuum(
             100,
         ),
         (
-            ConfigurationStyle.LEGACY,
-            "{{ 'abc' }}",
-            {
-                "battery_level_template": "{{ 101 }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            STATE_UNKNOWN,
-            None,
-        ),
-        (
             ConfigurationStyle.MODERN,
             "{{ 'abc' }}",
             {
@@ -274,17 +260,6 @@ async def setup_attributes_state_vacuum(
                 "start": {"service": "script.vacuum_start"},
             },
             STATE_UNKNOWN,
-            None,
-        ),
-        (
-            ConfigurationStyle.LEGACY,
-            "{{ this_function_does_not_exist() }}",
-            {
-                "battery_level_template": "{{ this_function_does_not_exist() }}",
-                "fan_speed_template": "{{ this_function_does_not_exist() }}",
-                "start": {"service": "script.vacuum_start"},
-            },
-            STATE_UNAVAILABLE,
             None,
         ),
         (
@@ -326,7 +301,7 @@ async def test_valid_legacy_configs(hass: HomeAssistant, count, parm1, parm2) ->
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "extra_config"),
@@ -348,7 +323,6 @@ async def test_invalid_configs(hass: HomeAssistant, count) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "battery_level_template"),
         (ConfigurationStyle.MODERN, "battery_level"),
         (ConfigurationStyle.TRIGGER, "battery_level"),
     ],
@@ -379,7 +353,6 @@ async def test_battery_level_template(
 @pytest.mark.parametrize(
     ("style", "attribute", "issue_count"),
     [
-        (ConfigurationStyle.LEGACY, "battery_level_template", 2),
         (ConfigurationStyle.MODERN, "battery_level", 1),
         (ConfigurationStyle.TRIGGER, "battery_level", 1),
     ],
@@ -420,7 +393,6 @@ async def test_battery_level_template_repair(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
         (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
@@ -519,7 +491,6 @@ async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -557,7 +528,6 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -573,9 +543,7 @@ async def test_invalid_availability_template_keeps_component_available(
     assert err in caplog_setup_text or err in caplog.text
 
 
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
-)
+@pytest.mark.parametrize("style", [ConfigurationStyle.MODERN])
 @pytest.mark.parametrize(
     ("count", "state_template", "attributes"),
     [
@@ -601,7 +569,7 @@ async def test_attribute_templates(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("count", "state_template", "attributes"),
@@ -630,7 +598,7 @@ async def test_invalid_attribute_template(
 @pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
@@ -660,7 +628,7 @@ async def test_nested_unique_id(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_base_vacuum")
 async def test_unused_services(hass: HomeAssistant) -> None:
@@ -704,7 +672,7 @@ async def test_unused_services(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "action",
@@ -751,7 +719,6 @@ async def test_state_services(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
         (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
@@ -796,7 +763,6 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "fan_speed_template"),
         (ConfigurationStyle.MODERN, "fan_speed"),
         (ConfigurationStyle.TRIGGER, "fan_speed"),
     ],
@@ -825,7 +791,7 @@ async def test_set_invalid_fan_speed(
 @pytest.mark.parametrize(("count", "vacuum_config"), [(1, {"start": []})])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("extra_config", "supported_features"),

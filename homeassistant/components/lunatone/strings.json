@@ -14,7 +14,7 @@
     },
     "step": {
       "discovery_confirm": {
-        "description": "Do you want to setup the Lunatone device with {url}?"
+        "description": "Do you want to set up the Lunatone device at {url}?"
       },
       "reconfigure": {
         "data": {
