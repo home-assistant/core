@@ -1699,10 +1699,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.sensor_wrapper
 
-        if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = (
-                definition.sensor_wrapper.native_unit
-            )
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = (
                 definition.sensor_wrapper.suggested_unit
@@ -1722,13 +1718,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-        self._validate_device_class_unit()
+        self._validate_device_class_unit(definition.sensor_wrapper.native_unit)
 
-    def _validate_device_class_unit(self) -> None:
+    def _validate_device_class_unit(self, tuya_uom: str | None) -> None:
         """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
+        if self.entity_description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = tuya_uom
         if (
             (device_class := self.device_class) is None
             or device_class is SensorDeviceClass.ENUM

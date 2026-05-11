@@ -516,18 +516,16 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_native_max_value = definition.number_wrapper.max_value
         self._attr_native_min_value = definition.number_wrapper.min_value
         self._attr_native_step = definition.number_wrapper.value_step
-        if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = (
-                definition.number_wrapper.native_unit
-            )
 
-        self._validate_device_class_unit()
+        self._validate_device_class_unit(definition.number_wrapper.native_unit)
 
-    def _validate_device_class_unit(self) -> None:
+    def _validate_device_class_unit(self, tuya_uom: str | None) -> None:
         """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
+        if self.entity_description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = tuya_uom
         if (
             (device_class := self.device_class) is None
             or device_class.startswith(DOMAIN)
