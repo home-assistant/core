@@ -68,6 +68,7 @@ async def test_humidifier_triggers_gated_by_labs_flag(
         ("humidifier.started_humidifying", {}, True, True),
         ("humidifier.turned_on", {}, True, True),
         ("humidifier.turned_off", {}, True, True),
+        ("humidifier.mode_changed", {"mode": ["normal"]}, True, True),
     ],
 )
 async def test_humidifier_trigger_options_validation(

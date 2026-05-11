@@ -27,8 +27,14 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -50,6 +56,11 @@ PERGOLA = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
     "io://1234-5678-3293/7614902",
     "cover.garden_pergola",
+)
+UP_DOWN_BIOCLIMATIC_PERGOLA = FixtureDevice(
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "rts://1234-5678-3293/16757826",
+    "cover.kitchen_pergola",
 )
 RTS = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
@@ -75,7 +86,7 @@ TILTED_WINDOW = FixtureDevice(
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
     "io://1234-5678-6508/4877511",
-    "cover.dining_room_blinds",
+    "cover.office_blinds",
 )
 # Device with ClosureState=124
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
@@ -87,6 +98,36 @@ POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
     "io://1234-5678-5010/12931361",
     "cover.basement_roller_shutter",
+)
+TILT_ONLY_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730044",
+    "cover.jaloezie",
+)
+UP_DOWN_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16747291",
+    "cover.office_venetian_blind",
+)
+DYNAMIC_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730050",
+    "cover.garage_door",
+)
+DYNAMIC_GARAGE_DOOR_OGP = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/6632544",
+    "cover.ogp_garage_door",
+)
+PARTIAL_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/7433515",
+    "cover.partial_garage_door",
+)
+DYNAMIC_GATE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/10410217",
+    "cover.ogp_gate",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -128,28 +169,148 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("device", "service", "command_name", "expected_state"),
+    ("device", "service", "command_name", "parameters", "expected_state"),
     [
-        (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
-        (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
-        (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
-        (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
+        (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_OPEN_COVER,
+            "open",
+            [0],
+            CoverState.OPENING,
+        ),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
+        (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            DYNAMIC_GARAGE_DOOR_OGP,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
+        (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER,
+            "close",
+            [0],
+            CoverState.CLOSING,
+        ),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
+        (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (
+            UP_DOWN_BIOCLIMATIC_PERGOLA,
+            SERVICE_STOP_COVER,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [1, 0],
+            CoverState.OPENING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [1, 0],
+            CoverState.CLOSING,
+        ),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [15, 1],
+            CoverState.OPENING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [15, 1],
+            CoverState.CLOSING,
+        ),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-dynamic-garage-door",
+        "open-dynamic-garage-door-ogp",
+        "open-dynamic-gate",
+        "open-partial-garage-door",
+        "open-up-down-bioclimatic-pergola",
+        "open-tilt-only-venetian-blind",
+        "open-venetian-blind-rts",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-dynamic-garage-door",
+        "close-dynamic-garage-door-ogp",
+        "close-dynamic-gate",
+        "close-partial-garage-door",
+        "close-up-down-bioclimatic-pergola",
+        "close-tilt-only-venetian-blind",
+        "close-venetian-blind-rts",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-dynamic-garage-door",
+        "stop-dynamic-garage-door-ogp",
+        "stop-dynamic-gate",
+        "stop-partial-garage-door",
+        "stop-up-down-bioclimatic-pergola",
+        "stop-tilt-only-venetian-blind",
+        "open-tilt-tilt-only-venetian-blind",
+        "close-tilt-tilt-only-venetian-blind",
+        "stop-tilt-tilt-only-venetian-blind",
+        "stop-venetian-blind-rts",
+        "open-tilt-venetian-blind-rts",
+        "close-tilt-venetian-blind-rts",
+        "stop-tilt-venetian-blind-rts",
     ],
 )
 async def test_cover_service_actions(
@@ -159,9 +320,10 @@ async def test_cover_service_actions(
     device: FixtureDevice,
     service: str,
     command_name: str,
-    expected_state: CoverState,
+    parameters: list[Any] | None,
+    expected_state: CoverState | str,
 ) -> None:
-    """Test open, close, and stop cover services."""
+    """Test open, close, and stop cover and tilt services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
@@ -178,6 +340,7 @@ async def test_cover_service_actions(
         mock_client,
         device_url=device.device_url,
         command_name=command_name,
+        parameters=parameters,
     )
 
 
@@ -800,3 +963,120 @@ async def test_low_speed_cover_open_close(
         command_name="setClosureAndLinearSpeed",
         parameters=[100, OverkizCommandParam.LOWSPEED],
     )
+
+
+async def test_set_cover_position_and_tilt_service_is_registered(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """The overkiz.set_cover_position_and_tilt service must be registered."""
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    assert hass.services.has_service("overkiz", "set_cover_position_and_tilt")
+
+
+async def test_set_cover_position_and_tilt_executes_single_command(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Position+tilt must be sent as one atomic setClosureAndOrientation call.
+
+    Replaces two sequential set_cover_position + set_cover_tilt_position calls,
+    which cause Somfy motors to stop mid-movement between commands.
+    """
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    await hass.services.async_call(
+        "overkiz",
+        "set_cover_position_and_tilt",
+        {
+            ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+            ATTR_POSITION: 30,
+            ATTR_TILT_POSITION: 80,
+        },
+        blocking=True,
+    )
+
+    # Home Assistant position 30 -> Overkiz closure 70 (inverted),
+    # tilt 80 -> orientation 20 (inverted).
+    assert_command_call(
+        mock_client,
+        device_url=DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url,
+        command_name="setClosureAndOrientation",
+        parameters=[70, 20],
+    )
+
+
+@pytest.mark.parametrize(
+    ("position", "tilt_position", "expected_parameters"),
+    [
+        (0, 100, [100, 0]),
+        (100, 0, [0, 100]),
+        (50, 50, [50, 50]),
+    ],
+    ids=["closed-tilt-open", "open-tilt-closed", "midpoint"],
+)
+async def test_set_cover_position_and_tilt_inverts_boundaries(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    position: int,
+    tilt_position: int,
+    expected_parameters: list[int],
+) -> None:
+    """Boundary and midpoint values must invert consistently."""
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    await hass.services.async_call(
+        "overkiz",
+        "set_cover_position_and_tilt",
+        {
+            ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+            ATTR_POSITION: position,
+            ATTR_TILT_POSITION: tilt_position,
+        },
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=DYNAMIC_EXTERIOR_VENETIAN_BLIND.device_url,
+        command_name="setClosureAndOrientation",
+        parameters=expected_parameters,
+    )
+
+
+async def test_set_cover_position_and_tilt_unsupported_command_raises(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """ServiceValidationError must be raised when SET_CLOSURE_AND_ORIENTATION is missing.
+
+    Defence-in-depth: even when a cover advertises both SET_POSITION and
+    SET_TILT_POSITION (so it passes the ``required_features`` filter), the
+    handler still checks the atomic command and aborts cleanly if it is
+    missing.
+    """
+    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+
+    with (
+        patch(
+            "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
+            return_value=False,
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            "overkiz",
+            "set_cover_position_and_tilt",
+            {
+                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+                ATTR_POSITION: 50,
+                ATTR_TILT_POSITION: 50,
+            },
+            blocking=True,
+        )
+
+    assert mock_client.execute_command.await_count == 0

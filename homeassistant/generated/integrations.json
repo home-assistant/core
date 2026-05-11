@@ -1014,6 +1014,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "cielo_home": {
+      "name": "Cielo Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cisco": {
       "name": "Cisco",
       "integrations": {
@@ -1249,6 +1255,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "data_grand_lyon": {
+      "name": "Data Grand Lyon",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "datadog": {
       "name": "Datadog",
       "integration_type": "service",
@@ -1327,7 +1339,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "Denon RS232"
+          "name": "Denon RS-232"
         },
         "heos": {
           "integration_type": "hub",
@@ -4303,6 +4315,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "mitsubishi_comfort": {
+      "name": "Mitsubishi Comfort",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mjpeg": {
       "name": "MJPEG IP Camera",
       "integration_type": "hub",
@@ -5164,6 +5182,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "paj_gps": {
+      "name": "PAJ GPS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "palazzetti": {
       "name": "Palazzetti",
       "integration_type": "device",
@@ -5500,6 +5524,12 @@
       "name": "Public Service Company of Oklahoma (PSO)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "ptdevices": {
+      "name": "PTDevices",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "pterodactyl": {
       "name": "Pterodactyl",
@@ -6133,6 +6163,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sensereo": {
+      "name": "Sensereo",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "sensibo": {
       "name": "Sensibo",
@@ -8228,6 +8264,12 @@
       "name": "Zooz",
       "iot_standards": [
         "zwave"
+      ]
+    },
+    "zunzunbee": {
+      "name": "Zunzunbee",
+      "iot_standards": [
+        "zigbee"
       ]
     },
     "zwave_js": {

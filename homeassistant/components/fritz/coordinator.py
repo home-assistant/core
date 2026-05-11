@@ -8,6 +8,7 @@ from functools import partial
 import logging
 import re
 from typing import Any, TypedDict, cast
+from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzActionError
@@ -24,7 +25,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -226,7 +227,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         self.fritz_call = FritzCall(fc=self.connection)
-        info = self.fritz_status.get_device_info()
+        try:
+            info = self.fritz_status.get_device_info()
+        except ParseError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="error_parse_device_info",
+            ) from ex
 
         _LOGGER.debug(
             "gathered device info of %s %s",
