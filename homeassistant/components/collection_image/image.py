@@ -1,7 +1,5 @@
 """Support for Collection Image image."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 import random
@@ -18,9 +16,9 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
@@ -137,12 +135,7 @@ class CollectionImageImageEntity(ImageEntity):
         async def get_next_image_on_start(_event=None) -> None:
             await self.get_next_image()
 
-        if self.hass.state != CoreState.running:
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, get_next_image_on_start
-            )
-        else:
-            await get_next_image_on_start()
+        self.async_on_remove(async_at_started(self.hass, get_next_image_on_start))
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
