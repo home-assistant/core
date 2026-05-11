@@ -39,10 +39,10 @@
       },
       "user": {
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Host"
+          "host": "The IP address or hostname of your my-PV device."
         },
         "title": "my-PV Device"
       }
