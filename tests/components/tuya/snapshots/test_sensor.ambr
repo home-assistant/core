@@ -3928,7 +3928,7 @@
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'tuya.6tbtkuv3tal1aesfjxquv_index',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-state]
@@ -3936,7 +3936,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit UV index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
@@ -4264,7 +4263,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.igkrtodqg14xvfxlqswwcfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cat_feeder_last_amount-state]
@@ -4272,7 +4271,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cat Feeder Last amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cat_feeder_last_amount',
@@ -5008,7 +5006,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.iomszlsve0yyzkfwqswwcfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cleverio_pf100_last_amount-state]
@@ -5016,7 +5014,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cleverio PF100 Last amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cleverio_pf100_last_amount',
@@ -5931,7 +5928,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.o4hpbl5uarjfbzhepswireless_electricity',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.dolni_vchod_zapad_battery-state]
@@ -5939,7 +5936,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dolní vchod - západ Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dolni_vchod_zapad_battery',
@@ -9767,7 +9763,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkpm25',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hl400_pm2_5-state]
@@ -9775,7 +9771,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL400 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl400_pm2_5',
@@ -10283,7 +10278,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.ZgXzZULP6dDp4Atvgcdswva_battery',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.humy_bain_battery-state]
@@ -10291,7 +10286,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Humy bain Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humy_bain_battery',
@@ -11330,7 +11324,7 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_current',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_temperature-state]
@@ -11338,7 +11332,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inverter Pool Heat Pump Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_temperature',
@@ -11384,7 +11377,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.owozxdzgbibizu4sjkpm25',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ion1000pro_pm2_5-state]
@@ -11392,7 +11385,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'ION1000PRO PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ion1000pro_pm2_5',
@@ -12559,7 +12551,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': 'tuya.btpss2f6kwfi294rqsjhumidity_current',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.klarta_humea_humidity-state]
@@ -12567,7 +12559,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'KLARTA HUMEA Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.klarta_humea_humidity',
@@ -15157,7 +15148,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.i6xywcsymer1kmb6pswireless_electricity',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.mirilla_puerta_battery-state]
@@ -15165,7 +15156,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mirilla puerta Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mirilla_puerta_battery',
@@ -22147,7 +22137,7 @@
     'supported_features': 0,
     'translation_key': 'air_pressure',
     'unique_id': 'tuya.ai9swgb6tyinbwbxjxqatmospheric_pressture',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_air_pressure-state]
@@ -22155,7 +22145,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'SWS 16600 WiFi SH Air pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sws_16600_wifi_sh_air_pressure',
@@ -23111,7 +23100,7 @@
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'tuya.ai9swgb6tyinbwbxjxquv_index',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_uv_index-state]
@@ -23119,7 +23108,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'SWS 16600 WiFi SH UV index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sws_16600_wifi_sh_uv_index',

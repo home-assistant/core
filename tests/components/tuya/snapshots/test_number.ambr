@@ -160,7 +160,7 @@
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': 'tuya.bfpewgk8r6fhmissdyzbvolume_set',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.blissradia_volume-state]
@@ -171,7 +171,6 @@
       'min': 5.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.blissradia_volume',
@@ -220,7 +219,7 @@
     'supported_features': 0,
     'translation_key': 'temp_correction',
     'unique_id': 'tuya.zgiyrxflahjowpcckwtemp_correction',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-state]
@@ -231,7 +230,6 @@
       'min': -9.9,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.boiler_temperature_controller_temperature_correction',
@@ -280,7 +278,7 @@
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_device_volume',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.c9_volume-state]
@@ -291,7 +289,6 @@
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.c9_volume',
@@ -340,7 +337,7 @@
     'supported_features': 0,
     'translation_key': 'feed',
     'unique_id': 'tuya.igkrtodqg14xvfxlqswwcmanual_feed',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_feed-state]
@@ -351,7 +348,6 @@
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.cat_feeder_feed',
@@ -400,7 +396,7 @@
     'supported_features': 0,
     'translation_key': 'voice_times',
     'unique_id': 'tuya.igkrtodqg14xvfxlqswwcvoice_times',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-state]
@@ -411,7 +407,6 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.cat_feeder_voice_times',
@@ -581,7 +576,7 @@
     'supported_features': 0,
     'translation_key': 'feed',
     'unique_id': 'tuya.iomszlsve0yyzkfwqswwcmanual_feed',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-state]
@@ -592,7 +587,6 @@
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.cleverio_pf100_feed',
@@ -1307,7 +1301,7 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_set',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.inverter_pool_heat_pump_temperature-state]
@@ -1318,7 +1312,6 @@
       'min': -22.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.inverter_pool_heat_pump_temperature',
@@ -2762,7 +2755,7 @@
     'supported_features': 0,
     'translation_key': 'time',
     'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_time',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.siren_veranda_time-state]
@@ -2773,7 +2766,6 @@
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.siren_veranda_time',
@@ -2943,7 +2935,7 @@
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': 'tuya.ri7eegdifufzdi54dyzbvolume_set',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-state]
@@ -2954,7 +2946,6 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.smart_white_noise_machine_volume',
@@ -3305,7 +3296,7 @@
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': 'tuya.c9nbmrweturkgqktdyzbvolume_set',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[number.white_noise_machine_volume-state]
@@ -3316,7 +3307,6 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'number.white_noise_machine_volume',
