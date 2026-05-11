@@ -11,9 +11,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import check_availability_follows_ir_entity
 
-from tests.components.infrared.common import MockInfraredEntity
-
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared.common import MockInfraredEntity
 
 
 @pytest.fixture
