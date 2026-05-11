@@ -1,13 +1,14 @@
 """Support for WebDav Calendar."""
 
-from datetime import date, datetime, time, timedelta, UTC
-from functools import partial
+from datetime import UTC, date, datetime, time, timedelta
 import logging
 from typing import Any
 
 import caldav
+from caldav.lib.error import DAVError
 from ical.types import Range
 from icalendar import vDDDTypes, vRecur, vText
+import requests
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -29,6 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -262,7 +264,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         def save_event() -> caldav.Event:
             return self.coordinator.calendar.save_event(**kwargs)
 
-        return await self.hass.async_add_executor_job(save_event)
+        try:
+            return await self.hass.async_add_executor_job(save_event)
+        except (requests.ConnectionError, DAVError) as err:
+            raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
@@ -286,7 +291,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         - an occurrence and all future occurrences of a recurring event.
         """
 
-        # Home Assistant currently supportsyonly THIS_AND_FUTURE. In this case we need to delete the event specified by the recurrence_id and all future events in the series
+        # Home Assistant currently supports only THIS_AND_FUTURE. In this case we need to delete the event specified by the recurrence_id and all future events in the series
         # We'll realiize this by updating the RRULE attribute UNTIL attribute to the datetime of the given recurrence.
         # With nextcloud the recurrence_id is already a date or datetime so we can use this directly as the cutoff date(-time) for the RRULE.
         if recurrence_range == Range.THIS_AND_FUTURE:
@@ -300,10 +305,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
             # Validate recurrence_id is provided
             if not recurrence_id:
-                _LOGGER.error(
+                raise HomeAssistantError(
                     "The recurrence_id must be provided when recurrence_range is THIS_AND_FUTURE"
                 )
-                return
 
             # Parse recurrence_id
             recurrence_datetime = self.coordinator.parse_recurrence_id(recurrence_id)
@@ -331,7 +335,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                     master_event.delete()
 
                 # Delete the master event, which will delete the entire series
-                await self.hass.async_add_executor_job(delete_event)
+                try:
+                    await self.hass.async_add_executor_job(delete_event)
+                except (requests.ConnectionError, DAVError) as err:
+                    raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
             # Otherwise, modify the RRULE of the master event to set the UNTIL
             # attribute to before the recurrence_datetime to only delete the
@@ -347,8 +354,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 if not rrule:
                     _LOGGER.error("The event with uid %s is not a recurring event", uid)
                     return
-                # Change the UNTIL attribute to the recurrence_datetime - 1 day to exclude the recurrence itself
-                rrule["until"] = recurrence_datetime - timedelta(days=1)
+                # Change the UNTIL attribute to the recurrence_datetime - 1 second to exclude the recurrence itself
+                rrule["until"] = recurrence_datetime - timedelta(seconds=1)
                 rrule.pop("count")  # Remove COUNT if present
                 master_event.icalendar_component[EVENT_RRULE] = rrule
 
@@ -357,7 +364,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                     master_event.save()
 
                 # Write updated master event back to the calendar
-                await self.hass.async_add_executor_job(update_event)
+                try:
+                    await self.hass.async_add_executor_job(update_event)
+                except (requests.ConnectionError, DAVError) as err:
+                    raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
         # Delete only the specified occurrence of the series
         # This is done by adding an EXDATE to the master event
@@ -371,18 +381,22 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             assert hasattr(master_event, "icalendar_component")  # for mypy
 
             # Create an Exception date (EXDATE) for the given recurrence_id
+            v = self.coordinator.parse_recurrence_id(recurrence_id)
+            if isinstance(v, datetime):
+                v = v.astimezone(UTC)
             master_event.icalendar_component.add(
                 "EXDATE",
-                vDDDTypes(
-                    self.coordinator.parse_recurrence_id(recurrence_id).astimezone(UTC)
-                ),
+                vDDDTypes(v),
             )
 
             def update_master_event() -> None:
                 master_event.save()
 
             # Delete the event by updating the master event with the newly added EXDATE
-            await self.hass.async_add_executor_job(update_master_event)
+            try:
+                await self.hass.async_add_executor_job(update_master_event)
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
         # No recurrence, delete the event by uid
         else:
@@ -395,7 +409,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 event.delete()
 
             # Delete the event
-            await self.hass.async_add_executor_job(delete_event)
+            try:
+                await self.hass.async_add_executor_job(delete_event)
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
         await self.async_update_ha_state(force_refresh=True)
 
@@ -438,14 +455,13 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
             # Validate recurrence_id is provided
             if not recurrence_id:
-                _LOGGER.error(
+                raise HomeAssistantError(
                     "The recurrence_id must be provided when recurrence_range is THIS_AND_FUTURE"
                 )
-                return
 
             assert hasattr(master_event, "icalendar_component")  # for mypy
             assert hasattr(master_event.vobject_instance, "vevent")  # for mypy
-
+            assert hasattr(master_event.icalendar_component, EVENT_RRULE)  # for mypy
             # Parse recurrence_id
             recurrence_datetime = self.coordinator.to_local(
                 self.coordinator.parse_recurrence_id(recurrence_id)
@@ -502,9 +518,12 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
                 # Add relation between master event and new event.
                 # Note: this will also save the changes to the master_event's RRULE.
-                await self.hass.async_add_executor_job(
-                    update_event_relations, new_event, master_event
-                )
+                try:
+                    await self.hass.async_add_executor_job(
+                        update_event_relations, new_event, master_event
+                    )
+                except (requests.ConnectionError, DAVError) as err:
+                    raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
                 # If the master event has related-to links, we need to update those events as well
                 if hasattr(master_event.vobject_instance.vevent, "related-to"):
@@ -535,9 +554,14 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                             missing_uids.append(related_uid)
                             continue
 
-                        await self.hass.async_add_executor_job(
-                            update_event_relations, new_event, related_event
-                        )
+                        try:
+                            await self.hass.async_add_executor_job(
+                                update_event_relations, new_event, related_event
+                            )
+                        except (requests.ConnectionError, DAVError) as err:
+                            raise HomeAssistantError(
+                                f"CalDAV save error: {err}"
+                            ) from err
 
                 # Reminder: no need to save the new_event, it was already saved by set_relation
 
@@ -561,7 +585,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                     master_event.save()
 
                 # Update the master event, which will update the entire series
-                await self.hass.async_add_executor_job(update_event)
+                try:
+                    await self.hass.async_add_executor_job(update_event)
+                except (requests.ConnectionError, DAVError) as err:
+                    raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
         elif recurrence_id is not None:
             # Update only the specified occurrence of the series
@@ -601,7 +628,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 recurrence.save()
 
             # Save changes to the event
-            await self.hass.async_add_executor_job(update_event)
+            try:
+                await self.hass.async_add_executor_job(update_event)
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
         else:
             # Update a non-recurring event by uid
@@ -628,7 +658,11 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 non_recurring_event.save()
 
             # Save changes to the event
-            await self.hass.async_add_executor_job(update_event)
+            try:
+                await self.hass.async_add_executor_job(update_event)
+            except (requests.ConnectionError, DAVError) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
+            await self.coordinator.async_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -33,8 +33,7 @@
     "step": {
       "init": {
         "data": {
-          "read_only": "Read Only",
-          "scan_interval": "Scan Interval"
+          "read_only": "Read Only"
         },
         "description": "Entry Options",
         "title": "CalDAV Integration Options for Entry"

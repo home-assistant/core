@@ -17,7 +17,6 @@ import icalendar
 import voluptuous as vol
 
 from homeassistant.components.calendar import VALID_FREQS, CalendarEvent, extract_offset
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -54,11 +53,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             _LOGGER,
             config_entry=entry,
             name=f"CalDAV {calendar.name}",
-            update_interval=timedelta(
-                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                if entry
-                else DEFAULT_SCAN_INTERVAL
-            ),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.calendar = calendar
         self.days = days
@@ -198,7 +193,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "Getting events between %s and %s from %s (%s)",
             start_date,
             end_date,
@@ -239,7 +234,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
     ################################################################################
     # The following code is mostly copied from caldav/collection.py to work around
-    # some limitations in the caldav library (1.6.0).
+    # some limitations in the caldav library (2.1.0).
     # It has been modified to better handle recurring events. Expanding recurring
     # events on the server side is not always possible, so we do it on the client
     # side.
@@ -537,7 +532,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Convert a recurrence_id string to a datetime or date object."""
         dt = dt_util.parse_datetime(recurrence_id) or dt_util.parse_date(recurrence_id)
         if not dt:
-            raise ValueError("Unable to parse recurrence_id %s")
+            raise ValueError("Unable to parse recurrence_id {recurrence_id}")
         return dt
 
     @staticmethod

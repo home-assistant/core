@@ -1,6 +1,6 @@
 """Configuration flow for CalDav."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 import logging
 import re
 from typing import Any
@@ -17,24 +17,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_LEGACY_ENTITY_NAMES,
-    CONF_READ_ONLY,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MAX_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-    SCAN_INTERVAL_OPTIONS,
-)
+from .const import CONF_LEGACY_ENTITY_NAMES, CONF_READ_ONLY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,44 +228,19 @@ class CalDAVOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             # copy existing data so we don't lose anything not in the options form
             for key in self.config_entry.data:
-                if key not in (
-                    CONF_READ_ONLY,
-                    CONF_SCAN_INTERVAL,
-                ):  # exclude keys managed by options flow
+                if key != CONF_READ_ONLY:  # exclude keys managed by options flow
                     user_input[key] = self.config_entry.data[key]
             # update the config entry data with new read_only value
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data=user_input, options=self.config_entry.options
             )
 
-            raw = str(user_input.get(CONF_SCAN_INTERVAL))
-            # UI returns strings for custom_value, so coerce
-            try:
-                interval = self.parse_interval(raw)
-            except (TypeError, ValueError):
-                errors["scan_interval"] = "invalid_interval"
-            else:
-                if not (MIN_SCAN_INTERVAL <= interval <= MAX_SCAN_INTERVAL):
-                    errors["scan_interval"] = "out_of_range"
-                else:
-                    _LOGGER.info("Config option set: scan_interval raw value: %s", raw)
-                    # save integer seconds into options
-                    # also we need to save read_only in options so it triggers reload
-                    # when changed, as it's used in calendar entity init.
-                    # Alternatively we could also trigger reload: await self.hass.config_entries.async_reload
-                    return self.async_create_entry(
-                        title="",
-                        data={
-                            CONF_SCAN_INTERVAL: interval,
-                            CONF_READ_ONLY: user_input[CONF_READ_ONLY],
-                        },
-                    )
-
-        # Build options list for the select; values are strings so user can type as well
-        scan_interval_default_values: Sequence[selector.SelectOptionDict] = [
-            {"value": str(val), "label": self.format_interval(val)}
-            for val in SCAN_INTERVAL_OPTIONS
-        ]
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_READ_ONLY: user_input[CONF_READ_ONLY],
+                },
+            )
 
         data_schema = vol.Schema(
             {
@@ -288,20 +249,6 @@ class CalDAVOptionsFlowHandler(OptionsFlowWithReload):
                     CONF_READ_ONLY,
                     default=self.config_entry.data[CONF_READ_ONLY],
                 ): cv.boolean,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=self.format_interval(
-                        self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        )
-                    ),
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=scan_interval_default_values,
-                        custom_value=True,  # allow typing a custom value in the combobox
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    )
-                ),
             }
         )
 

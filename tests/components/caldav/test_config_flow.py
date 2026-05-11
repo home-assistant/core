@@ -62,8 +62,8 @@ async def test_form(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_VERIFY_SSL: False,
-        "legacy_entity_names": ANY,
-        "read_only": ANY,
+        CONF_LEGACY_ENTITY_NAMES: ANY,
+        CONF_READ_ONLY: ANY,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

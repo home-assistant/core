@@ -1223,6 +1223,7 @@ async def test_config_entry_supported_components(
                 ),
                 "location": "Test Location",
                 "summary": "Test Event",
+                "entity_id": [TEST_ENTITY],
             },
         ),
         # Event with only required fields
@@ -1240,6 +1241,8 @@ async def test_config_entry_supported_components(
                 "dtend": datetime.datetime(
                     2025, 8, 7, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
+                "entity_id": [TEST_ENTITY],
+                "description": "",
             },
         ),
         # All-day event (date only)
@@ -1253,6 +1256,8 @@ async def test_config_entry_supported_components(
                 "summary": "All Day Event",
                 "dtstart": datetime.date(2025, 8, 8),
                 "dtend": datetime.date(2025, 8, 9),
+                "entity_id": [TEST_ENTITY],
+                "description": "",
             },
         ),
         # Event with different timezone
@@ -1270,6 +1275,8 @@ async def test_config_entry_supported_components(
                 "dtend": datetime.datetime(
                     2025, 8, 7, 8, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
                 ),
+                "entity_id": [TEST_ENTITY],
+                "description": "",
             },
         ),
         # Rrule is not supported in API (async_call) calls.
@@ -1285,7 +1292,7 @@ async def test_add_vevent(
     """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
 
-    calendars[0].add_event = MagicMock(return_value=[])
+    calendars[0].save_event = MagicMock(return_value=[])
     await hass.services.async_call(
         "calendar",
         "create_event",
@@ -1295,6 +1302,7 @@ async def test_add_vevent(
     )
     await hass.async_block_till_done()
 
-    calendars[0].add_event.assert_called_once()
-    assert calendars[0].add_event.call_args
-    assert calendars[0].add_event.call_args[1] == expected_ics_fields
+    calendars[0].save_event.assert_called_once()
+    assert calendars[0].save_event.call_args
+    actual_ics_fields = calendars[0].save_event.call_args[1]
+    assert actual_ics_fields == expected_ics_fields
