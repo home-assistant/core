@@ -1000,7 +1000,12 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Ignore sqlalchemy pool errors that can leak in from prior tests when
+    # a recorder connection is finalized on a different thread.
+    assert not any(
+        record.levelno == logging.ERROR and not record.name.startswith("sqlalchemy.")
+        for record in caplog.records
+    )
 
     return entry
 
