@@ -3,11 +3,12 @@
 import logging
 from typing import Any
 
-from visionpluspython.models import ThermostatDevice
+from visionpluspython.models import ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -17,13 +18,25 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
-from .const import DOMAIN, HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
+from .const import (
+    DOMAIN,
+    HVAC_ACTION_TO_HA,
+    HVAC_MODE_TO_THERMOSTAT,
+    PRESET_MODE_TO_THERMOSTAT,
+    PRESET_MODES,
+    THERMOSTAT_MODE_TO_HVAC,
+    THERMOSTAT_MODE_TO_PRESET,
+)
 from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+
+def _parse_thermostat_mode(mode: str) -> ThermostatMode:
+    return ThermostatMode[mode.upper()]
 
 
 async def async_setup_entry(
@@ -79,9 +92,13 @@ async def async_setup_entry(
 class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     """Representation of a Watts Vision heater as a climate entity."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
+    _attr_preset_modes = PRESET_MODES
     _attr_name = None
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self,
@@ -112,7 +129,44 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
+        return THERMOSTAT_MODE_TO_HVAC.get(
+            _parse_thermostat_mode(self.device.thermostat_mode)
+        )
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        return HVAC_ACTION_TO_HA.get(self.device.hvac_action)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return THERMOSTAT_MODE_TO_PRESET.get(
+            _parse_thermostat_mode(self.device.thermostat_mode)
+        )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        mode = PRESET_MODE_TO_THERMOSTAT[preset_mode]
+
+        try:
+            await self.coordinator.client.set_thermostat_mode(self.device_id, mode)
+        except (ValueError, RuntimeError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_error",
+            ) from err
+
+        _LOGGER.debug(
+            "Successfully set preset mode to %s (ThermostatMode.%s) for %s",
+            preset_mode,
+            mode.name,
+            self.device_id,
+        )
+
+        self.coordinator.trigger_fast_polling()
+
+        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
