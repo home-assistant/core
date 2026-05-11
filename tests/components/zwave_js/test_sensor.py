@@ -505,7 +505,7 @@ async def test_node_status_sensor_not_ready(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert f"There is no value to refresh for {node_status_entity_id}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1125,7 +1125,7 @@ async def test_statistics_sensors(
                 blocking=True,
             )
     await hass.async_block_till_done()
-    assert caplog.text.count("There is no value to refresh for this entity") == len(
+    assert caplog.text.count("There is no value to refresh for") == len(
         [
             *CONTROLLER_STATISTICS_SUFFIXES,
             *CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,
