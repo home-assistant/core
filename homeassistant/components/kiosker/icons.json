@@ -27,6 +27,11 @@
       "last_motion": {
         "default": "mdi:motion-sensor"
       }
+    },
+    "switch": {
+      "disable_screensaver": {
+        "default": "mdi:power-sleep"
+      }
     }
   }
 }

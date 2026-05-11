@@ -2613,7 +2613,9 @@ async def help_test_publishing_with_custom_encoding(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "cmd/test1", str(payload), 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # 2) test with utf-16 encoding
@@ -2624,7 +2626,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test2", str(payload).encode("utf-16"), 0, False
+        "cmd/test2",
+        str(payload).encode("utf-16"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2663,7 +2669,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
+        "cmd/test5",
+        tpl_output or str(payload)[0].encode("utf-8"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
