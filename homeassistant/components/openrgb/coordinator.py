@@ -112,7 +112,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             device.metadata.vendor or "none",
             device.metadata.description or "none",
             device.metadata.serial or "none",
-            device.metadata.location or "none",
+            "none" if device.metadata.serial else (device.metadata.location or "none"),
         )
         # Double pipe is readable and is unlikely to appear in metadata
         return UID_SEPARATOR.join(parts)
