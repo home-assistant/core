@@ -1,8 +1,9 @@
 """Tests for the Alexa Devices integration."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -124,20 +125,96 @@ async def test_migrate_entry(
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
 
 
-async def test_http2_task_exception_is_logged(
+async def test_http2_task_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test HTTP2 task callback logs failures."""
+    """Test HTTP2 auth failure triggers reauth flow."""
+    failed_task: asyncio.Future[None] = hass.loop.create_future()
+    failed_task.set_exception(CannotAuthenticate("auth failed"))
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: failed_task
+    )
+
+    with (
+        patch("homeassistant.components.alexa_devices._LOGGER.error") as mock_error,
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+    mock_error.assert_called_once_with(
+        "HTTP2 auth failure", exc_info=(CannotAuthenticate, ANY, ANY)
+    )
+    mock_reauth.assert_called_once_with(hass)
+
+
+async def test_http2_task_connection_failure_triggers_reload(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HTTP2 connection failure schedules reload."""
+    failed_task: asyncio.Future[None] = hass.loop.create_future()
+    failed_task.set_exception(CannotConnect("connection failed"))
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: failed_task
+    )
+
+    with (
+        patch("homeassistant.components.alexa_devices._LOGGER.warning") as mock_warning,
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+    mock_warning.assert_called_once_with(
+        "HTTP2 connection failure, scheduling reload",
+        exc_info=(CannotConnect, ANY, ANY),
+    )
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+async def test_http2_task_unexpected_failure_triggers_reload(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unexpected HTTP2 failure schedules reload."""
     failed_task: asyncio.Future[None] = hass.loop.create_future()
     failed_task.set_exception(RuntimeError("boom"))
     mock_amazon_devices_client.start_http2_processing.side_effect = (
         lambda *_args, **_kwargs: failed_task
     )
 
-    with patch("homeassistant.components.alexa_devices._LOGGER.exception") as mock_exc:
+    with (
+        patch("homeassistant.components.alexa_devices._LOGGER.error") as mock_error,
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
-    mock_exc.assert_called_once_with("HTTP2 task failed")
+    mock_error.assert_called_once_with(
+        "Unexpected HTTP2 failure, scheduling reload", exc_info=(RuntimeError, ANY, ANY)
+    )
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+async def test_http2_task_exception_group_is_unwrapped(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test ExceptionGroup from TaskGroup is correctly unwrapped."""
+    failed_task: asyncio.Future[None] = hass.loop.create_future()
+    failed_task.set_exception(ExceptionGroup("tg", [CannotAuthenticate("auth failed")]))
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: failed_task
+    )
+
+    with patch.object(mock_config_entry, "async_start_reauth") as mock_reauth:
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+    mock_reauth.assert_called_once_with(hass)

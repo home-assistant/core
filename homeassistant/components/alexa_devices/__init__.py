@@ -3,6 +3,8 @@
 import asyncio
 import contextlib
 
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
+
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
@@ -48,13 +50,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     http2_task = await coordinator.api.start_http2_processing(alexa_httpx_client)
 
     def _on_http2_task_done(task: asyncio.Task) -> None:
-        if not task.cancelled() and task.exception():
-            _LOGGER.exception("HTTP2 task failed")
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is None:
+            return
+
+        # TaskGroup wraps exceptions in ExceptionGroup — unwrap if needed
+        exceptions = exc.exceptions if isinstance(exc, ExceptionGroup) else [exc]
+
+        for e in exceptions:
+            if isinstance(e, CannotAuthenticate):
+                _LOGGER.error(
+                    "HTTP2 auth failure", exc_info=(type(e), e, e.__traceback__)
+                )
+                entry.async_start_reauth(hass)
+            elif isinstance(e, CannotConnect):
+                _LOGGER.warning(
+                    "HTTP2 connection failure, scheduling reload",
+                    exc_info=(type(e), e, e.__traceback__),
+                )
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+            else:
+                _LOGGER.error(
+                    "Unexpected HTTP2 failure, scheduling reload",
+                    exc_info=(type(e), e, e.__traceback__),
+                )
+                hass.config_entries.async_schedule_reload(entry.entry_id)
 
     http2_task.add_done_callback(_on_http2_task_done)
 
     async def _cancel_http2_task() -> None:
         # needed to avoid typing issues with async_on_unload
+        if http2_task.done():
+            return
         http2_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await http2_task
