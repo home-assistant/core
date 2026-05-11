@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from kiosker import (
@@ -25,8 +24,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import KioskerConfigEntry
 from .coordinator import KioskerData
 from .entity import KioskerEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
