@@ -239,10 +239,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 ):
                     raise ConfigEntryAuthFailed from err
 
+                log_err = (
+                    err.__cause__.__cause__
+                    if err.__cause__ is not None and err.__cause__.__cause__ is not None
+                    else err.__cause__ or err
+                )
                 LOGGER.warning(
                     "Skipping Tesla energy site %s because initial setup failed: %s",
                     site_id,
-                    err,
+                    log_err,
                 )
                 continue
 
