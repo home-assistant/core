@@ -12,7 +12,7 @@ from homeassistant.components.nobo_hub.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -174,7 +174,10 @@ async def test_migrate_data_drops_auto_discovered(
     await hass.async_block_till_done()
 
     assert entry.minor_version == 3
-    assert entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: STORED_IP}
+    assert entry.data == {
+        CONF_SERIAL: SERIAL,
+        CONF_IP_ADDRESS: STORED_IP,
+    }
     assert entry.options == {}
 
 
@@ -198,3 +201,33 @@ async def test_setup_registers_hub_device(
     assert device.serial_number == SERIAL
     assert device.sw_version == "115"
     assert device.hw_version == "hw"
+    assert device.connections == set()
+
+
+async def test_setup_registers_hub_device_with_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_nobo_class: MagicMock,
+) -> None:
+    """An entry with a stored MAC surfaces it via DeviceInfo.connections."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Eco Hub",
+        unique_id=SERIAL,
+        data={
+            CONF_SERIAL: SERIAL,
+            CONF_IP_ADDRESS: STORED_IP,
+            CONF_MAC: "7C8306011192",
+        },
+        version=1,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "7c:83:06:01:11:92"),
+    }

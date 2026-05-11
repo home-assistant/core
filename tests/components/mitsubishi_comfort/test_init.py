@@ -1,7 +1,5 @@
 """Tests for the Mitsubishi Comfort integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from mitsubishi_comfort import DeviceInfo

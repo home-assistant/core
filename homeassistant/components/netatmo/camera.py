@@ -42,6 +42,7 @@ from .const import (
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +103,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         Camera.__init__(self)
         super().__init__(netatmo_device)
 
-        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{netatmo_device.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
         self._light_state = None
 
         self._publishers.extend(

@@ -742,6 +742,71 @@
       }
     },
     {
+      "deviceURL": "rts://1234-5678-3293/16757826",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [],
+      "label": "Kitchen Pergola",
+      "subsystemId": 0,
+      "attributes": [],
+      "enabled": true,
+      "controllableName": "rts:BioclimaticPergolaRTSComponent",
+      "definition": {
+        "states": [],
+        "widgetName": "UpDownBioclimaticPergola",
+        "type": "ACTUATOR",
+        "attributes": [],
+        "commands": [
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltPositive",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "my",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stop",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltNegative",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "down",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "open",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "up",
+            "paramsSig": "*p1"
+          }
+        ],
+        "uiClass": "Pergola"
+      }
+    },
+    {
       "creationTime": 1686173907452,
       "deviceURL": "rts://1234-5678-3293/16757362",
       "available": true,
