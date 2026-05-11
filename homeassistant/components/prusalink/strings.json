@@ -26,6 +26,9 @@
       "cancel_job": {
         "name": "Cancel job"
       },
+      "continue_job": {
+        "name": "Continue job"
+      },
       "pause_job": {
         "name": "Pause job"
       },
@@ -53,9 +56,6 @@
       },
       "heatbed_temperature": {
         "name": "Heatbed temperature"
-      },
-      "location": {
-        "name": "Location"
       },
       "material": {
         "name": "Material"
