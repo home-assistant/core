@@ -1,7 +1,5 @@
 """Binary Sensor entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from mozart_api.models import BatteryState
 
 from homeassistant.components.binary_sensor import (

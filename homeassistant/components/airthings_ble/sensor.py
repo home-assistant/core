@@ -1,7 +1,5 @@
 """Support for airthings ble sensors."""
 
-from __future__ import annotations
-
 import dataclasses
 import logging
 

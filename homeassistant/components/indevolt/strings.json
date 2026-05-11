@@ -35,6 +35,32 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_pack_1_electric_heating_state": {
+        "name": "Battery pack 1 electric heating"
+      },
+      "battery_pack_2_electric_heating_state": {
+        "name": "Battery pack 2 electric heating"
+      },
+      "battery_pack_3_electric_heating_state": {
+        "name": "Battery pack 3 electric heating"
+      },
+      "battery_pack_4_electric_heating_state": {
+        "name": "Battery pack 4 electric heating"
+      },
+      "battery_pack_5_electric_heating_state": {
+        "name": "Battery pack 5 electric heating"
+      },
+      "electric_heating_state": {
+        "name": "Electric heating"
+      },
+      "main_electric_heating_state": {
+        "name": "Main electric heating"
+      },
+      "meter_connected": {
+        "name": "Meter connected"
+      }
+    },
     "button": {
       "stop": {
         "name": "Enable standby mode"
@@ -223,6 +249,9 @@
       "dc_output_power": {
         "name": "DC output power"
       },
+      "discharge_limit": {
+        "name": "[%key:component::indevolt::entity::number::discharge_limit::name%]"
+      },
       "energy_mode": {
         "name": "Energy mode",
         "state": {
@@ -237,6 +266,9 @@
       },
       "grid_voltage": {
         "name": "Grid voltage"
+      },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
       },
       "main_current": {
         "name": "Main current"
@@ -307,6 +339,62 @@
     },
     "failed_to_switch_energy_mode": {
       "message": "Failed to switch to requested energy mode"
+    },
+    "multi_device_errors": {
+      "message": "One or more devices reported errors: {errors}"
+    },
+    "no_matching_target_entries": {
+      "message": "No matching Indevolt devices found in the selected targets"
+    },
+    "power_exceeds_max": {
+      "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
+    },
+    "soc_below_emergency": {
+      "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
+    },
+    "soc_below_minimum": {
+      "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    },
+    "write_error": {
+      "message": "Cannot update value for {name}"
+    }
+  },
+  "services": {
+    "charge": {
+      "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
+      "fields": {
+        "device_id": {
+          "description": "The Indevolt device(s) to start charging.",
+          "name": "Device(s)"
+        },
+        "power": {
+          "description": "Maximum charging power in watts.",
+          "name": "Max. power"
+        },
+        "target_soc": {
+          "description": "Target state of charge percentage.",
+          "name": "Target SOC"
+        }
+      },
+      "name": "Charge"
+    },
+    "discharge": {
+      "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
+      "fields": {
+        "device_id": {
+          "description": "The Indevolt device(s) to start discharging.",
+          "name": "[%key:component::indevolt::services::charge::fields::device_id::name%]"
+        },
+        "power": {
+          "description": "Maximum discharging power in watts.",
+          "name": "Max. power"
+        },
+        "target_soc": {
+          "description": "[%key:component::indevolt::services::charge::fields::target_soc::description%]",
+          "name": "[%key:component::indevolt::services::charge::fields::target_soc::name%]"
+        }
+      },
+      "name": "Discharge"
     }
   }
 }

@@ -1,11 +1,9 @@
 """Support for Tuya switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.definition.switch import (
-    TuyaSwitchDefinition,
+    SwitchDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -20,8 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -719,6 +717,16 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="motion_alarm",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SZ: (
         SwitchEntityDescription(
@@ -945,7 +953,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        definition: TuyaSwitchDefinition,
+        definition: SwitchDefinition,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager, description)

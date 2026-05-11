@@ -149,7 +149,7 @@ async def test_device_unavailable(
     mock_rtsp_event(
         topic="tns1:AudioSource/tnsaxis:TriggerLevel",
         data_type="triggered",
-        data_value="10",
+        data_value="0",
         source_name="channel",
         source_idx="1",
     )

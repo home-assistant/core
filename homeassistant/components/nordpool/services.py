@@ -1,7 +1,5 @@
 """Services for Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import date, datetime
 from functools import partial
@@ -38,6 +36,22 @@ if TYPE_CHECKING:
     from . import NordPoolConfigEntry
 from .const import ATTR_RESOLUTION, DOMAIN
 
+
+def _validate_areas(areas: list[str]) -> list[str]:
+    """Validate the areas."""
+    validated_areas: list[str] = []
+
+    for area in areas:
+        validated_area = cv.string(area)
+        validated_area = validated_area.upper()
+        if validated_area not in AREAS:
+            raise vol.Invalid(f"Area {area} is not valid")
+
+        validated_areas.append(validated_area)
+
+    return validated_areas
+
+
 _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_AREAS = "areas"
@@ -49,9 +63,11 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AREAS): vol.All(vol.In(list(AREAS)), cv.ensure_list, [str]),
+        vol.Optional(ATTR_AREAS, default=[]): vol.All(cv.ensure_list, _validate_areas),
         vol.Optional(ATTR_CURRENCY): vol.All(
-            cv.string, vol.In([currency.value for currency in Currency])
+            cv.string,
+            vol.Upper,
+            vol.In([currency.value for currency in Currency]),
         ),
     }
 )
@@ -78,20 +94,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         client = entry.runtime_data.client
         asked_date: date = call.data[ATTR_DATE]
 
-        areas: list[str] = entry.data[ATTR_AREAS]
-        if _areas := call.data.get(ATTR_AREAS):
-            areas = _areas
+        areas = call.data.get(ATTR_AREAS)
+        areas = areas or entry.data[ATTR_AREAS]
 
-        currency: str = entry.data[ATTR_CURRENCY]
-        if _currency := call.data.get(ATTR_CURRENCY):
-            currency = _currency
+        currency = call.data.get(ATTR_CURRENCY)
+        currency = currency or entry.data[ATTR_CURRENCY]
 
-        resolution: int = 60
-        if _resolution := call.data.get(ATTR_RESOLUTION):
-            resolution = _resolution
-
-        areas = [area.upper() for area in areas]
-        currency = currency.upper()
+        resolution = call.data.get(ATTR_RESOLUTION)
+        resolution = resolution or 60
 
         return (client, asked_date, currency, areas, resolution)
 

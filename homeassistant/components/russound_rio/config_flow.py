@@ -1,7 +1,5 @@
 """Config flow to configure russound_rio component."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import Any
@@ -24,7 +22,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
-    SerialSelector,
+    SerialPortSelector,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -58,7 +56,7 @@ TCP_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialSelector(),
+        vol.Required(CONF_DEVICE): SerialPortSelector(),
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
             vol.Coerce(int),
             vol.Range(min=1),

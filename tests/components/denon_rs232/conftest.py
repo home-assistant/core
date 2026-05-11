@@ -1,6 +1,4 @@
-"""Test fixtures for the Denon RS232 integration."""
-
-from __future__ import annotations
+"""Test fixtures for the Denon RS-232 integration."""
 
 from typing import Literal
 from unittest.mock import AsyncMock, patch

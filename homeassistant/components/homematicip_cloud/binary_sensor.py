@@ -1,10 +1,13 @@
 """Support for HomematicIP Cloud binary sensor."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from homematicip.base.enums import LockState, SmokeDetectorAlarmType, WindowState
+from homematicip.base.enums import (
+    BinaryBehaviorType,
+    LockState,
+    SmokeDetectorAlarmType,
+    WindowState,
+)
 from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
@@ -179,7 +182,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
-        super().__init__(hap, hap.home)
+        super().__init__(hap, hap.home, feature_id="cloud_connection")
 
     @property
     def name(self) -> str:
@@ -245,9 +248,17 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
 class HomematicipAccelerationSensor(HomematicipBaseActionSensor):
     """Representation of the HomematicIP acceleration sensor."""
 
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the acceleration sensor."""
+        super().__init__(hap, device, feature_id="acceleration")
+
 
 class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
     """Representation of the HomematicIP tilt vibration sensor."""
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the tilt vibration sensor."""
+        super().__init__(hap, device, feature_id="tilt_vibration")
 
 
 class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEntity):
@@ -262,6 +273,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         channel=1,
         is_multi_channel=True,
         channel_real_index=None,
+        feature_id: str = "contact",
     ) -> None:
         """Initialize the multi contact entity."""
         super().__init__(
@@ -270,6 +282,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
             channel=channel,
             is_multi_channel=is_multi_channel,
             channel_real_index=channel_real_index,
+            feature_id=feature_id,
         )
 
     @property
@@ -286,7 +299,7 @@ class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensor
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the multi contact entity."""
-        super().__init__(hap, device, is_multi_channel=False)
+        super().__init__(hap, device, is_multi_channel=False, feature_id="contact")
 
 
 class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEntity):
@@ -298,7 +311,9 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         self, hap: HomematicipHAP, device, has_additional_state: bool = False
     ) -> None:
         """Initialize the shutter contact."""
-        super().__init__(hap, device, is_multi_channel=False)
+        super().__init__(
+            hap, device, is_multi_channel=False, feature_id="shutter_contact"
+        )
         self.has_additional_state = has_additional_state
 
     @property
@@ -319,6 +334,10 @@ class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the motion detector."""
+        super().__init__(hap, device, feature_id="motion")
+
     @property
     def is_on(self) -> bool:
         """Return true if motion is detected."""
@@ -334,11 +353,26 @@ class HomematicipFullFlushLockControllerLocked(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the full flush lock controller lock sensor."""
-        super().__init__(hap, device, post="Locked")
+        super().__init__(hap, device, post="Locked", feature_id="lock_locked")
 
     @property
     def is_on(self) -> bool:
-        """Return true if the controlled lock is locked."""
+        """Return true if the controlled lock is unlocked.
+
+        Per HA's BinarySensorDeviceClass.LOCK contract, ON means
+        unlocked / open and OFF means locked / closed.
+
+        The mapping from the firmware-reported ``lockState`` depends on
+        the channel's ``binaryBehaviorType``. With the default
+        ``NORMALLY_OPEN`` wiring, the input goes ACTIVE (and lockState
+        flips to ``LOCKED``) when the contact closes — i.e. when a
+        magnetic door contact registers the door as closed. With
+        ``NORMALLY_CLOSE`` the same physical event puts the input into
+        the IDLE state (lockState ``UNLOCKED``). To present the same
+        HA semantics regardless of which way the user wired the
+        contact, ``lockState`` is interpreted relative to the
+        configured behavior.
+        """
         channel = _get_channel_by_role(
             self._device,
             "MULTI_MODE_LOCK_INPUT_CHANNEL",
@@ -347,7 +381,15 @@ class HomematicipFullFlushLockControllerLocked(
         if channel is None:
             return False
         lock_state = getattr(channel, "lockState", None)
-        return getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        is_locked_state = (
+            getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        )
+        binary_behavior = getattr(channel, "binaryBehaviorType", None)
+        normally_close = (
+            getattr(binary_behavior, "name", binary_behavior)
+            == BinaryBehaviorType.NORMALLY_CLOSE.name
+        )
+        return is_locked_state if normally_close else not is_locked_state
 
 
 class HomematicipFullFlushLockControllerGlassBreak(
@@ -359,7 +401,7 @@ class HomematicipFullFlushLockControllerGlassBreak(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the full flush lock controller glass break sensor."""
-        super().__init__(hap, device, post="Glass break")
+        super().__init__(hap, device, post="Glass break", feature_id="glass_break")
 
     @property
     def is_on(self) -> bool:
@@ -379,6 +421,10 @@ class HomematicipPresenceDetector(HomematicipGenericEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the presence detector."""
+        super().__init__(hap, device, feature_id="presence")
+
     @property
     def is_on(self) -> bool:
         """Return true if presence is detected."""
@@ -389,6 +435,10 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP smoke detector."""
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the smoke detector."""
+        super().__init__(hap, device, feature_id="smoke")
 
     @property
     def is_on(self) -> bool:
@@ -410,7 +460,9 @@ class HomematicipSmokeDetectorChamberDegraded(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize smoke detector chamber health sensor."""
-        super().__init__(hap, device, post="Chamber Degraded")
+        super().__init__(
+            hap, device, post="Chamber Degraded", feature_id="chamber_degraded"
+        )
 
     @property
     def is_on(self) -> bool:
@@ -423,6 +475,10 @@ class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the water detector."""
+        super().__init__(hap, device, feature_id="water")
+
     @property
     def is_on(self) -> bool:
         """Return true, if moisture or waterlevel is detected."""
@@ -434,7 +490,7 @@ class HomematicipStormSensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize storm sensor."""
-        super().__init__(hap, device, "Storm")
+        super().__init__(hap, device, "Storm", feature_id="storm")
 
     @property
     def icon(self) -> str:
@@ -454,7 +510,7 @@ class HomematicipRainSensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize rain sensor."""
-        super().__init__(hap, device, "Raining")
+        super().__init__(hap, device, "Raining", feature_id="rain")
 
     @property
     def is_on(self) -> bool:
@@ -469,7 +525,7 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize sunshine sensor."""
-        super().__init__(hap, device, post="Sunshine")
+        super().__init__(hap, device, post="Sunshine", feature_id="sunshine")
 
     @property
     def is_on(self) -> bool:
@@ -495,7 +551,7 @@ class HomematicipBatterySensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize battery sensor."""
-        super().__init__(hap, device, post="Battery")
+        super().__init__(hap, device, post="Battery", channel=0, feature_id="battery")
 
     @property
     def is_on(self) -> bool:
@@ -512,7 +568,7 @@ class HomematicipPluggableMainsFailureSurveillanceSensor(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize pluggable mains failure surveillance sensor."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="mains_failure")
 
     @property
     def is_on(self) -> bool:
@@ -525,10 +581,16 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
-    def __init__(self, hap: HomematicipHAP, device, post: str = "SecurityZone") -> None:
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        post: str = "SecurityZone",
+        feature_id: str = "security_zone",
+    ) -> None:
         """Initialize security zone group."""
         device.modelType = f"HmIP-{post}"
-        super().__init__(hap, device, post=post)
+        super().__init__(hap, device, post=post, feature_id=feature_id)
 
     @property
     def available(self) -> bool:
@@ -578,7 +640,7 @@ class HomematicipSecuritySensorGroup(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize security group."""
-        super().__init__(hap, device, post="Sensors")
+        super().__init__(hap, device, post="Sensors", feature_id="security")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

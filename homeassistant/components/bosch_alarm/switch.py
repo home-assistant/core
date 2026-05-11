@@ -1,7 +1,5 @@
 """Support for Bosch Alarm Panel outputs and doors as switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any

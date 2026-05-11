@@ -1,7 +1,5 @@
 """Support EZVIZ last motion image."""
 
-from __future__ import annotations
-
 import logging
 
 from propcache.api import cached_property

@@ -1,8 +1,6 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Collection, Generator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
@@ -126,7 +124,7 @@ class EventProcessor:
     def __init__(
         self,
         hass: HomeAssistant,
-        event_types: tuple[EventType[Any] | str, ...],
+        event_types: Collection[EventType[Any] | str],
         entity_ids: list[str] | None = None,
         device_ids: list[str] | None = None,
         context_id: str | None = None,

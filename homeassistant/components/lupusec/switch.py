@@ -1,7 +1,5 @@
 """Support for Lupusec Security System switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import partial
 from typing import Any

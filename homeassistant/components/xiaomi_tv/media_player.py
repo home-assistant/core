@@ -1,7 +1,5 @@
 """Add support for the Xiaomi TVs."""
 
-from __future__ import annotations
-
 import logging
 
 import pymitv

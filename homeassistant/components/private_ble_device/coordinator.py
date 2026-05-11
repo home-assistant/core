@@ -1,7 +1,5 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import cast
@@ -242,6 +240,8 @@ def async_get_coordinator(hass: HomeAssistant) -> PrivateDevicesCoordinator:
     if existing := hass.data.get(DOMAIN):
         return cast(PrivateDevicesCoordinator, existing)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     pdm = hass.data[DOMAIN] = PrivateDevicesCoordinator(hass)
 
     return pdm

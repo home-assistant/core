@@ -1,6 +1,4 @@
-"""Media player platform for the Denon RS232 integration."""
-
-from __future__ import annotations
+"""Media player platform for the Denon RS-232 integration."""
 
 from typing import Literal, cast
 
@@ -79,7 +77,7 @@ async def async_setup_entry(
     config_entry: DenonRS232ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Denon RS232 media player."""
+    """Set up the Denon RS-232 media player."""
     receiver = config_entry.runtime_data
     entities = [DenonRS232MediaPlayer(receiver, receiver.main, config_entry, "main")]
 
@@ -96,7 +94,7 @@ async def async_setup_entry(
 
 
 class DenonRS232MediaPlayer(MediaPlayerEntity):
-    """Representation of a Denon receiver controlled over RS232."""
+    """Representation of a Denon receiver controlled over RS-232."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_has_entity_name = True

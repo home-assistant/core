@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
+PARALLEL_UPDATES = 0
+
 ECOWITT_BINARYSENSORS_MAPPING: Final = {
     EcoWittSensorTypes.LEAK: BinarySensorEntityDescription(
         key="LEAK", device_class=BinarySensorDeviceClass.MOISTURE
