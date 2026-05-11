@@ -1,6 +1,6 @@
 """Support for WebDav Calendar."""
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, UTC
 from functools import partial
 import logging
 from typing import Any
@@ -372,7 +372,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
             # Create an Exception date (EXDATE) for the given recurrence_id
             master_event.icalendar_component.add(
-                "EXDATE", vDDDTypes(self.coordinator.parse_recurrence_id(recurrence_id))
+                "EXDATE",
+                vDDDTypes(
+                    self.coordinator.parse_recurrence_id(recurrence_id).astimezone(UTC)
+                ),
             )
 
             def update_master_event() -> None:
