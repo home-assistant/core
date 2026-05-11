@@ -114,8 +114,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         if not self._device.connected and not await self._device.connect():
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
             )
 
         try:
@@ -139,7 +137,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
             )
 
         try:
@@ -162,7 +159,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
             )
 
         try:
@@ -189,7 +185,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
             )
 
         try:
@@ -235,7 +230,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
             )
 
         try:

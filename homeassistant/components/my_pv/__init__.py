@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"uri": device.uri},
             )
     except MyPVAuthenticationError as exc:
         raise ConfigEntryAuthFailed from exc
@@ -37,7 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"uri": device.uri},
         ) from exc
 
     # Setup coordinator
