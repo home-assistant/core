@@ -88,8 +88,11 @@ def _valid_folder(value: Any) -> str:
     return value
 
 
-def _normalize_partial_backup_data(data: dict[str, Any]) -> dict[str, Any]:
-    """Translate folders to Folder enum and handle legacy homeassistant folder."""
+def _normalize_partial_options_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Translate folders to Folder enum and handle legacy homeassistant folder.
+
+    Shared by both partial backup and partial restore service handlers.
+    """
     if ATTR_APPS in data:
         data[ATTR_ADDONS] = data.pop(ATTR_APPS)
     if ATTR_FOLDERS in data:
@@ -376,7 +379,7 @@ def async_register_backup_restore_services(
         service: ServiceCall,
     ) -> ServiceResponse:
         """Handler for create partial backup service. Returns the new backup's ID."""
-        data = _normalize_partial_backup_data(service.data.copy())
+        data = _normalize_partial_options_data(service.data.copy())
         options = PartialBackupOptions(**data)
 
         try:
@@ -423,7 +426,7 @@ def async_register_backup_restore_services(
         """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(ATTR_SLUG)
-        data = _normalize_partial_backup_data(data)
+        data = _normalize_partial_options_data(data)
         options = PartialRestoreOptions(**data)
 
         try:
