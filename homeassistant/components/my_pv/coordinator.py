@@ -10,11 +10,7 @@ from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -55,7 +51,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         connections = set()
 
         if device.mac_address:
-            connections.add((CONNECTION_NETWORK_MAC, format_mac(device.mac_address)))
+            connections.add((CONNECTION_NETWORK_MAC, device.mac_address))
 
         name = f"my-PV {device.model}"
 
