@@ -572,7 +572,7 @@ async def test_async_step_reauth_confirm_show_form(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_reauth_confirm_restart_oauth(hass: HomeAssistant) -> None:
-    """Test async_step_reauth_confirm restarts OAuth flow (line 153)."""
+    """Test async_step_reauth_confirm restarts the user OAuth step."""
     flow = HeimanConfigFlow()
     flow.hass = hass
 
@@ -587,7 +587,7 @@ async def test_async_step_reauth_confirm_restart_oauth(hass: HomeAssistant) -> N
 async def test_async_step_select_home_reauth_wrong_account(
     hass: HomeAssistant,
 ) -> None:
-    """Test select_home reauth aborts on wrong account (line 97)."""
+    """Test select_home reauth aborts on wrong account."""
     flow = HeimanConfigFlow()
     flow.hass = hass
     # Set source via context
@@ -630,7 +630,7 @@ async def test_async_step_select_home_reauth_wrong_account(
 async def test_async_step_select_home_reauth_success(
     hass: HomeAssistant,
 ) -> None:
-    """Test select_home reauth updates and reloads entry (lines 98-105)."""
+    """Test select_home reauth updates and reloads entry."""
     flow = HeimanConfigFlow()
     flow.hass = hass
     # Set source via context with entry_id

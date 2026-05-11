@@ -586,10 +586,10 @@ async def test_token_request_without_client_secret_pkce(hass: HomeAssistant) -> 
 
 
 async def test_token_request_oauth2_error_inner_reraise(hass: HomeAssistant) -> None:
-    """Test that OAuth2 errors from _parse_token_response are re-raised at line 102.
+    """Test that token parsing OAuth2 errors are propagated unchanged.
 
-    This specifically tests the inner try-except block where OAuth2TokenRequestError
-    is caught and re-raised (line 102).
+    This covers the branch where parsing the token response raises
+    OAuth2TokenRequestError and _token_request re-raises that same error.
     """
     credential = MagicMock()
     credential.client_id = "test-client-id"
@@ -642,12 +642,12 @@ async def test_token_request_oauth2_error_inner_reraise(hass: HomeAssistant) -> 
         ),
         pytest.raises(OAuth2TokenRequestError),
     ):
-        # The OAuth2TokenRequestError should be re-raised at line 102
+        # The OAuth2TokenRequestError should be re-raised
         await impl._token_request({"grant_type": "refresh_token"})
 
 
 async def test_token_request_parse_returns_none_assertion(hass: HomeAssistant) -> None:
-    """Test assertion when _parse_token_response returns None (line 110).
+    """Test assertion when _parse_token_response returns None.
 
     This tests the defensive check that should never trigger in normal operation.
     We use mocking to force _parse_token_response to return None.
@@ -696,5 +696,5 @@ async def test_token_request_parse_returns_none_assertion(hass: HomeAssistant) -
         ),
         pytest.raises(AssertionError, match="Unexpected"),
     ):
-        # This should trigger the assertion at line 110
+        # This should trigger the assertion
         await impl._token_request({"grant_type": "refresh_token"})

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 
 
 async def test_coordinator_get_device(hass: HomeAssistant) -> None:
-    """Test getting device by ID (line 466)."""
+    """Test getting device by ID."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -51,7 +51,7 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
         last_update=None,
     )
 
-    # Test getting existing device (line 466)
+    # Test getting existing device
     device = coordinator.get_device("device-1")
     assert device is not None
     assert device.device_id == "device-1"
@@ -62,7 +62,7 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
-    """Test getting devices by type (line 485)."""
+    """Test getting devices by type."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -108,7 +108,7 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
         last_update=None,
     )
 
-    # Test get_devices_by_type (line 485)
+    # Test get_devices_by_type
     sensors = coordinator.get_devices_by_type("sensor")
     assert len(sensors) == 1
     assert sensors[0].device_type == "sensor"
@@ -122,7 +122,7 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
-    """Test MQTT init when no token available (lines 534-536)."""
+    """Test MQTT init when no token available."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -155,7 +155,7 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
     )
     coordinator.oauth_session = mock_session
 
-    # Initialize MQTT - should handle exception gracefully (lines 534-536)
+    # Initialize MQTT - should handle exception gracefully
     await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created due to missing token
@@ -163,7 +163,7 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -> None:
-    """Test MQTT init when user display name unavailable (lines 557-558)."""
+    """Test MQTT init when user display name unavailable."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -207,7 +207,7 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
         mock_mqtt_instance.connect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        # This should handle the None user_info gracefully (lines 557-558)
+        # This should handle the None user_info gracefully
         await coordinator.async_init_mqtt_client()
 
         # Verify MQTT client was created despite missing user display name
@@ -219,7 +219,7 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
 async def test_coordinator_mqtt_init_cloud_client_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init handles cloud_client access exception (lines 566-567)."""
+    """Test MQTT init handles cloud_client access exception."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -264,7 +264,7 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
         mock_mqtt_instance.connect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        # This should handle cloud_client exception gracefully (lines 566-567)
+        # This should handle cloud_client exception gracefully
         await coordinator.async_init_mqtt_client()
 
         # Verify MQTT client was still created with cloud_client=None
@@ -276,7 +276,7 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
 async def test_coordinator_read_device_properties_with_returned_properties(
     hass: HomeAssistant,
 ) -> None:
-    """Test reading device properties with returned data (lines 655-676)."""
+    """Test reading device properties with returned data."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -337,7 +337,7 @@ async def test_coordinator_read_device_properties_with_returned_properties(
 
 
 async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> None:
-    """Test MQTT init re-raises general exceptions after cleanup (lines 356-374)."""
+    """Test MQTT init re-raises general exceptions after cleanup."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -391,7 +391,7 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
 
 
 async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) -> None:
-    """Test MQTT init when already initialized (line 514)."""
+    """Test MQTT init when already initialized."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -419,7 +419,7 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
     # Set mqtt_client to simulate already initialized
     coordinator.mqtt_client = MagicMock()
 
-    # Call async_init_mqtt_client - should return early (line 514)
+    # Call async_init_mqtt_client - should return early
     await coordinator.async_init_mqtt_client()
 
     # Verify it returned early without doing anything
@@ -429,7 +429,7 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
 async def test_coordinator_mqtt_init_token_none_after_validation(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init when token is None after validation (lines 533-534)."""
+    """Test MQTT init when token is None after validation."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -460,7 +460,7 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
     mock_session.async_ensure_token_valid = AsyncMock()
     coordinator.oauth_session = mock_session
 
-    # Initialize MQTT - should log debug message and return (lines 533-534)
+    # Initialize MQTT - should log debug message and return
     await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created

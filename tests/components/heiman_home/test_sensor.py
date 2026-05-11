@@ -916,7 +916,7 @@ async def test_sensor_creation_readable_without_entity_marker(
     mock_device.hardware_version = "1.0"
     mock_device.online = True
 
-    # Property without entity attribute at all (tests else branch at line 65)
+    # Property without entity attribute at all (tests else branch)
     no_entity_prop = DeviceProperty(
         identifier="signal_strength",
         name="Signal Strength",

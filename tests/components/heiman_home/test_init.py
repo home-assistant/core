@@ -566,7 +566,7 @@ async def test_unload_returns_false_when_platforms_unload_fails(
 async def test_setup_mqtt_init_failure_with_cleanup(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
-    """Test setup handles MQTT initialization failure with proper cleanup (lines 116-130).
+    """Test setup handles MQTT initialization failure with proper cleanup.
 
     When MQTT initialization fails, the integration should:
     1. Disconnect any partially connected MQTT client

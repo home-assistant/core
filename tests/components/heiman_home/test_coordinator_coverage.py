@@ -45,7 +45,7 @@ async def test_async_call_cleanup_method_sync_method(hass: HomeAssistant) -> Non
 
 
 async def test_coordinator_async_update_data_no_home_id(hass: HomeAssistant) -> None:
-    """Test _async_update_data raises UpdateFailed when home_id missing (lines 118-120)."""
+    """Test _async_update_data raises UpdateFailed when home_id missing."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {}  # No CONF_HOME_ID
     config_entry.entry_id = "test-entry"
@@ -68,7 +68,7 @@ async def test_coordinator_async_update_data_no_home_id(hass: HomeAssistant) -> 
 async def test_coordinator_fetch_user_info_connection_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info handles connection error (lines 144-145)."""
+    """Test _fetch_user_and_home_info handles connection error."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -100,7 +100,7 @@ async def test_coordinator_fetch_user_info_connection_error(
 async def test_coordinator_fetch_user_info_general_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info handles general exception (lines 146-148)."""
+    """Test _fetch_user_and_home_info handles general exception."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -130,7 +130,7 @@ async def test_coordinator_fetch_user_info_general_exception(
 
 
 async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> None:
-    """Test _fetch_user_and_home_info handles home info exception (lines 160-162)."""
+    """Test _fetch_user_and_home_info handles home info exception."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -166,7 +166,7 @@ async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> Non
 async def test_coordinator_fetch_devices_connection_error_no_previous_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_and_process_devices with connection error and no previous data (lines 190-193)."""
+    """Test _fetch_and_process_devices with connection error and no previous data."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -198,7 +198,7 @@ async def test_coordinator_fetch_devices_connection_error_no_previous_data(
 async def test_coordinator_fetch_devices_general_exception_no_previous_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_and_process_devices with general exception and no previous data (lines 194-199)."""
+    """Test _fetch_and_process_devices with general exception and no previous data."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -228,7 +228,7 @@ async def test_coordinator_fetch_devices_general_exception_no_previous_data(
 
 
 async def test_coordinator_update_device_details(hass: HomeAssistant) -> None:
-    """Test _update_device_details calls SDK method (lines 207-215)."""
+    """Test _update_device_details calls SDK method."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -258,7 +258,7 @@ async def test_coordinator_update_device_details(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_merge_device_states(hass: HomeAssistant) -> None:
-    """Test _merge_device_states merges old device states (lines 219-225)."""
+    """Test _merge_device_states merges old device states."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -356,7 +356,7 @@ async def test_coordinator_mqtt_init_oauth2_token_path(hass: HomeAssistant) -> N
 
 
 async def test_coordinator_mqtt_init_no_user_id(hass: HomeAssistant) -> None:
-    """Test MQTT init returns early when user_id missing (lines 294-296)."""
+    """Test MQTT init returns early when user_id missing."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -478,7 +478,7 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
 
 
 async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> None:
-    """Test MQTT init re-raises HeimanMQTTError after cleanup (lines 340-357)."""
+    """Test MQTT init re-raises HeimanMQTTError after cleanup."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -532,7 +532,7 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
 async def test_coordinator_on_device_property_update_new_property(
     hass: HomeAssistant,
 ) -> None:
-    """Test _on_device_property_update adds new property (lines 386-396)."""
+    """Test _on_device_property_update adds new property."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -570,7 +570,7 @@ async def test_coordinator_on_device_property_update_new_property(
 async def test_coordinator_read_device_properties_no_properties_returned(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_read_device_properties when no properties returned (lines 449-452)."""
+    """Test async_read_device_properties when no properties returned."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -644,7 +644,7 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_get_device_property_not_found(hass: HomeAssistant) -> None:
-    """Test get_device_property returns None when device or property not found (lines 476-484)."""
+    """Test get_device_property returns None when device or property not found."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -677,7 +677,7 @@ async def test_coordinator_get_device_property_not_found(hass: HomeAssistant) ->
 
 
 async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> None:
-    """Test _async_update_data successful execution (lines 123-134)."""
+    """Test _async_update_data successful execution."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -727,7 +727,7 @@ async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> Non
 async def test_coordinator_fetch_home_info_with_matching_home(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info finds matching home by ID (lines 154-159)."""
+    """Test _fetch_user_and_home_info finds matching home by ID."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "target-home-id"}
     config_entry.entry_id = "test-entry"
@@ -768,7 +768,7 @@ async def test_coordinator_fetch_home_info_with_matching_home(
 async def test_coordinator_fetch_home_info_home_not_found(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info raises UpdateFailed when home_id not found (lines 175-178)."""
+    """Test _fetch_user_and_home_info raises UpdateFailed when home_id not found."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "non-existent-home-id"}
     config_entry.entry_id = "test-entry"
@@ -878,7 +878,7 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
 
 
 async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> None:
-    """Test _fetch_and_process_devices applies device filtering (lines 172-188)."""
+    """Test _fetch_and_process_devices applies device filtering."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -931,7 +931,7 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
 async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init logs debug when OAuth2 token is None (lines 284-286)."""
+    """Test MQTT init logs debug when OAuth2 token is None."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -969,7 +969,7 @@ async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
 async def test_coordinator_mqtt_init_no_access_token_warning(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init warns when no access_token available (lines 289-292)."""
+    """Test MQTT init warns when no access_token available."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -1074,7 +1074,7 @@ async def test_coordinator_on_device_property_update_existing_property(
 async def test_coordinator_read_device_properties_mqtt_not_initialized(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_read_device_properties warns when MQTT not initialized (lines 408-409)."""
+    """Test async_read_device_properties warns when MQTT not initialized."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -1101,7 +1101,7 @@ async def test_coordinator_read_device_properties_mqtt_not_initialized(
 async def test_coordinator_read_device_properties_device_not_found(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_read_device_properties warns when device not found (lines 413-414)."""
+    """Test async_read_device_properties warns when device not found."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -1130,7 +1130,7 @@ async def test_coordinator_read_device_properties_device_not_found(
 async def test_coordinator_read_device_properties_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_read_device_properties handles exception (lines 451-452)."""
+    """Test async_read_device_properties handles exception."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"

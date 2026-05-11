@@ -1,7 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "battery_percentage": {
+      "battery": {
         "default": "mdi:battery",
         "state": {
           "0-10": "mdi:battery-alert-variant-outline",
@@ -16,50 +16,26 @@
           "91-100": "mdi:battery-charging"
         }
       },
-      "current_temperature": {
-        "default": "mdi:thermometer"
+      "co_concentration": {
+        "default": "mdi:molecule-co"
       },
-      "device_mac": {
-        "default": "mdi:dharmachakra"
-      },
-      "deviceinfo_dbm": {
-        "default": "mdi:signal"
-      },
-      "deviceinfo_dbm_level": {
-        "default": "mdi:signal",
-        "state": {
-          "medium": "mdi:signal-distance-variant",
-          "strong": "mdi:signal-strong",
-          "very_weak": "mdi:signal-off",
-          "weak": "mdi:signal-2g"
-        }
-      },
-      "deviceinfo_ip": {
-        "default": "mdi:ip"
-      },
-      "deviceinfo_mac": {
-        "default": "mdi:dharmachakra"
+      "energy": {
+        "default": "mdi:transmission-tower-export"
       },
       "humidity": {
         "default": "mdi:water-percent"
       },
-      "rssi": {
-        "default": "mdi:signal"
-      },
-      "rssi_level": {
-        "default": "mdi:signal",
-        "state": {
-          "medium": "mdi:signal-distance-variant",
-          "strong": "mdi:signal-strong",
-          "very_weak": "mdi:signal-off",
-          "weak": "mdi:signal-2g"
-        }
+      "power": {
+        "default": "mdi:flash"
       },
       "signal_strength": {
         "default": "mdi:signal"
       },
       "temperature": {
         "default": "mdi:thermometer"
+      },
+      "voltage": {
+        "default": "mdi:sine-wave"
       }
     }
   }
