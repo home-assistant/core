@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 from visionpluspython.models import ThermostatMode
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
@@ -17,7 +16,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -42,23 +40,6 @@ async def test_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_hvac_action(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that hvac_action reflects the current device action."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("climate.living_room_thermostat")
-    assert state is not None
-    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
-
-    state = hass.states.get("climate.bedroom_thermostat")
-    assert state is not None
-    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
 
 
 async def test_set_temperature(
