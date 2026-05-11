@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set Up Kaku RC 32-bit Device",
+        "description": "Choose the transmitter and configure your device settings.",
+        "data": {
+          "transmitter": "RF Transmitter",
+          "device_id": "Device ID",
+          "channel": "Channel",
+          "group": "Group",
+          "dim": "Dimming"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Kaku RC device",
+        "description": "Update transmitter and device settings.",
+        "data": {
+          "transmitter": "RF Transmitter",
+          "device_id": "Device ID",
+          "channel": "Channel",
+          "group": "Group",
+          "dim": "Dimming"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The selected device does not match this entry.",
+      "no_transmitters": "No RF transmitter integration is set up.",
+      "no_compatible_transmitters": "No compatible RF transmitter found (requires 433.92 MHz OOK)."
+    },
+    "error": {
+      "invalid_device_id": "Device ID must be between 0 and 67108863.",
+      "invalid_channel": "Channel must be between 1 and 16."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reconfigure Kaku Device",
+        "description": "Update transmitter and device settings.",
+        "data": {
+          "transmitter": "RF Transmitter",
+          "device_id": "Device ID",
+          "channel": "Channel",
+          "group": "Group",
+          "dim": "Dimming"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Device ID must be between 0 and 67108863.",
+      "invalid_channel": "Channel must be between 1 and 16."
+    }
+  },
+  "entity": {
+    "button": {
+      "learn": {
+        "name": "Learn"
+      },
+      "unlearn": {
+        "name": "Unlearn"
+      }
+    }
+  }
+}
