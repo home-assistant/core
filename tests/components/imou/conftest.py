@@ -12,6 +12,19 @@ from .util import CONFIG_ENTRY_DATA, async_init_integration
 
 from tests.common import MockConfigEntry
 
+_BUTTON_PRESS_SERVICE_IGNORE = "component.button.services.press."
+
+
+@pytest.fixture
+def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
+    """Ignore button.press translations only when that service is registered.
+
+    Config flow tests do not load the button platform; failed setup skips it too.
+    """
+    if request.node.name in ("test_setup_entry_success", "test_unload_entry"):
+        return [_BUTTON_PRESS_SERVICE_IGNORE]
+    return []
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
