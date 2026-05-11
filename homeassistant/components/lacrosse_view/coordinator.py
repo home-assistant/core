@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for LaCrosse View."""
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from time import time
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
@@ -54,9 +54,9 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         """Get the data for LaCrosse View."""
         now = int(time())
 
-        if now - self.last_login > 59 * 60:
+        if now - self.last_update > 59 * 60:
             _LOGGER.debug("Refreshing LaCrosse View token")
-            self.last_login = now
+            self.last_update= now
             try:
                 await self.api.login(self.username, self.password)
             except LoginError as error:
