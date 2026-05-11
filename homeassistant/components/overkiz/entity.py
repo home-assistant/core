@@ -48,14 +48,14 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             return super().available
 
         # Workaround: local API may incorrectly report available=False (Somfy-TaHoma-Developer-Mode#217)
-        if self.coordinator.client.api_type == APIType.LOCAL:
-            if status_state := self.device.states.get(OverkizState.CORE_STATUS):
-                return (
-                    status_state.value == OverkizCommandParam.AVAILABLE
-                    and super().available
-                )
+        if self.coordinator.client.api_type != APIType.LOCAL:
+            return False
 
-        return False
+        if status_state := self.device.states.get(OverkizState.CORE_STATUS):
+            return (
+                status_state.value == OverkizCommandParam.AVAILABLE
+                and super().available
+            )
 
     @property
     def is_sub_device(self) -> bool:
