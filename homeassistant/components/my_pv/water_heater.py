@@ -105,12 +105,6 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         self._attr_max_temp = entity_description.max_temp
         self._attr_operation_list = [STATE_OFF, STATE_ELECTRIC]
 
-    async def async_added_to_hass(self) -> None:
-        """Called when entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        self._handle_coordinator_update()
-
     @property
     def available(self) -> bool:
         """Return if entity is available."""
