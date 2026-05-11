@@ -3,7 +3,7 @@
 ## Overview
 
 Use this integration to connect an Elk E27 Alarm Engine panel to Home Assistant. It
-exposes alarm areas, zones, outputs, and diagnostic panel state.
+exposes alarm areas for the core alarm-engine use case.
 
 ## Supported devices
 
@@ -67,8 +67,8 @@ If setup fails, check the error message:
 - **No panels found**: Confirm the panel is online, then retry discovery or use
   manual setup.
 
-If arm or output actions fail with a PIN prompt, enter your alarm code in the
-Home Assistant dialog.
+If arm actions fail with a PIN prompt, enter your alarm code in the Home Assistant
+dialog.
 
 ## Removal
 
