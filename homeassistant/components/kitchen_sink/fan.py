@@ -34,6 +34,8 @@ async def async_setup_entry(
     for subentry_id, subentry in config_entry.subentries.items():
         if subentry.subentry_type != "infrared_fan":
             continue
+        if subentry.data.get(CONF_INFRARED_ENTITY_ID) is None:
+            continue
         async_add_entities(
             [
                 DemoInfraredFan(
