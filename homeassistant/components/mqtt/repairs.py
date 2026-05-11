@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -29,13 +28,13 @@ class MQTTDeviceEntryMigration(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             device_registry = dr.async_get(self.hass)
@@ -67,13 +66,13 @@ class MQTTProtocolV5Migration(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(self.entry_id)
