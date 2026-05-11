@@ -196,6 +196,7 @@ async def test_form_already_configured(
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
 ) -> None:
     """Test the reconfigure flow updates credentials and preserves subentries."""
     mock_config_entry.add_to_hass(hass)
@@ -205,14 +206,10 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -236,6 +233,7 @@ async def test_reconfigure_flow(
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -244,27 +242,23 @@ async def test_reconfigure_flow_errors(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
-        )
+    mock_get_tcl_passages.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": error}
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
-        )
+    mock_get_tcl_passages.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
