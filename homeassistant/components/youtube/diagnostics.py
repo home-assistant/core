@@ -14,7 +14,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
     sensor_data: dict[str, Any] = {}
-    for channel_id, channel_data in coordinator.data.items():
+    for channel_id, channel_data in dict(coordinator.data).items():
         channel_data.get(ATTR_LATEST_VIDEO, {}).pop(ATTR_DESCRIPTION)
         sensor_data[channel_id] = channel_data
     return sensor_data
