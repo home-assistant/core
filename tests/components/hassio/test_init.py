@@ -810,6 +810,22 @@ async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_backup_legacy_homeassistant_folder_conflict(
+    hass: HomeAssistant,
+) -> None:
+    """Reject combining homeassistant=False with the legacy "homeassistant" folder."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    with pytest.raises(ServiceValidationError, match="conflicts"):
+        await hass.services.async_call(
+            "hassio",
+            "backup_partial",
+            {"homeassistant": False, "folders": ["homeassistant"]},
+            blocking=True,
+        )
+
+
 @pytest.mark.usefixtures("addon_installed")
 async def test_entry_load_and_unload(hass: HomeAssistant) -> None:
     """Test loading and unloading config entry."""

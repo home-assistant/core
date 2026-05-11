@@ -99,6 +99,11 @@ def _normalize_partial_options_data(data: dict[str, Any]) -> dict[str, Any]:
         folders = set(data[ATTR_FOLDERS])
         if LEGACY_FOLDER_HOMEASSISTANT in folders:
             folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
+            if data.get(ATTR_HOMEASSISTANT) is False:
+                raise ServiceValidationError(
+                    f"{ATTR_HOMEASSISTANT}=False conflicts with the legacy "
+                    f"{LEGACY_FOLDER_HOMEASSISTANT!r} entry in {ATTR_FOLDERS}"
+                )
             data[ATTR_HOMEASSISTANT] = True
         if folders:
             data[ATTR_FOLDERS] = {Folder(folder) for folder in folders}
