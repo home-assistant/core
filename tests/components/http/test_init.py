@@ -688,16 +688,24 @@ async def test_ssl_issue_urls_configured(
         "expected_issues",
     ),
     [
-        (False, {}, ["0.0.0.0", "::"], set()),
-        (False, {"server_host": "0.0.0.0"}, ["0.0.0.0"], set()),
-        (True, {}, ["0.0.0.0", "::"], set()),
+        (False, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
+        (
+            False,
+            {"server_host": "0.0.0.0"},
+            ["0.0.0.0"],
+            {("http", "deprecated_yaml")},
+        ),
+        (True, {}, ["0.0.0.0", "::"], {("http", "deprecated_yaml")}),
         (
             True,
             {"server_host": "0.0.0.0"},
             [
                 "0.0.0.0",
             ],
-            {("http", "server_host_deprecated_hassio")},
+            {
+                ("http", "server_host_deprecated_hassio"),
+                ("http", "deprecated_yaml"),
+            },
         ),
     ],
 )

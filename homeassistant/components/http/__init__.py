@@ -65,10 +65,16 @@ from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
 from .headers import setup_headers
+from .issue import (
+    async_create_deprecated_yaml_issue,
+    async_create_failed_to_start_issue,
+)
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
+from .storage import async_get_store, to_stored
 from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
+from .websocket_api import async_register_websocket_api
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -201,10 +207,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we import aiohttp_fast_zlib
     (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
-    conf: ConfData | None = config.get(DOMAIN)
+    yaml_conf: ConfData | None = config.get(DOMAIN)
+    store = async_get_store(hass)
+    stored = await store.async_load()
 
-    if conf is None:
+    if stored is None:
+        if yaml_conf is not None:
+            stored = to_stored(dict(yaml_conf))
+            await store.async_save(stored)
+            async_create_deprecated_yaml_issue(hass)
+        else:
+            stored = to_stored(cast(dict[str, Any], HTTP_SCHEMA({})))
+            await store.async_save(stored)
+    elif yaml_conf is not None:
+        async_create_deprecated_yaml_issue(hass)
+
+    try:
+        conf = cast(ConfData, HTTP_SCHEMA(dict(stored)))
+    except vol.Invalid as err:
+        _LOGGER.error(
+            "Stored HTTP config is invalid: %s. Falling back to defaults", err
+        )
+        async_create_failed_to_start_issue(hass, error=str(err))
         conf = cast(ConfData, HTTP_SCHEMA({}))
+
+    async_register_websocket_api(hass)
 
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
