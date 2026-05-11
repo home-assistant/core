@@ -25,3 +25,293 @@
     }),
   })
 # ---
+# name: test_vacuum_state[vacuum.roborock_q10_s5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.roborock_q10_s5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 13116>,
+    'translation_key': 'roborock',
+    'unique_id': 'q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_q10_s5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_speed': 'balanced',
+      'fan_speed_list': list([
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+      ]),
+      'friendly_name': 'Roborock Q10 S5+',
+      'supported_features': <VacuumEntityFeature: 13116>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.roborock_q10_s5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docked',
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_q7-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.roborock_q7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 13116>,
+    'translation_key': 'roborock',
+    'unique_id': 'q7_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_q7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_speed': None,
+      'fan_speed_list': list([
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+      ]),
+      'friendly_name': 'Roborock Q7',
+      'supported_features': <VacuumEntityFeature: 13116>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.roborock_q7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cleaning',
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_s7_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'gentle',
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+        'off_raise_main_brush',
+        'custom',
+        'smart_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.roborock_s7_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 30524>,
+    'translation_key': 'roborock',
+    'unique_id': 'device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_s7_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_speed': 'balanced',
+      'fan_speed_list': list([
+        'gentle',
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+        'off_raise_main_brush',
+        'custom',
+        'smart_mode',
+      ]),
+      'friendly_name': 'Roborock S7 2',
+      'supported_features': <VacuumEntityFeature: 30524>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.roborock_s7_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docked',
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_s7_maxv-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'gentle',
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+        'off_raise_main_brush',
+        'custom',
+        'smart_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.roborock_s7_maxv',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <VacuumEntityFeature: 30524>,
+    'translation_key': 'roborock',
+    'unique_id': 'abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_state[vacuum.roborock_s7_maxv-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_speed': 'balanced',
+      'fan_speed_list': list([
+        'gentle',
+        'off',
+        'quiet',
+        'balanced',
+        'turbo',
+        'max',
+        'max_plus',
+        'off_raise_main_brush',
+        'custom',
+        'smart_mode',
+      ]),
+      'friendly_name': 'Roborock S7 MaxV',
+      'supported_features': <VacuumEntityFeature: 30524>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.roborock_s7_maxv',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docked',
+  })
+# ---

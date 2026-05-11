@@ -1,7 +1,5 @@
 """Support for sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -133,6 +131,14 @@ HEALTH_CONCERN = {
     "unhealthy": "unhealthy",
     "veryUnhealthy": "very_unhealthy",
     "hazardous": "hazardous",
+}
+
+STICK_CLEANER_STATUS = {
+    "ready": "ready",
+    "usingVacuum": "using_vacuum",
+    "emptyingDustbin": "emptying_dustbin",
+    "UVCleaning": "uv_cleaning",
+    "UVPaused": "uv_paused",
 }
 
 WASHER_OPTIONS = ["pause", "run", "stop"]
@@ -1221,12 +1227,65 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_OPERATING_STATE: {
+        Attribute.MICROFIBER_FILTER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MICROFIBER_FILTER_JOB_STATE,
+                translation_key="microfiber_filter_job_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_JOB_STATES,
+            )
+        ],
+        Attribute.OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OPERATING_STATE,
+                translation_key="microfiber_filter_operating_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_OPERATING_STATES,
+            )
+        ],
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUST_BAG: {
+        Attribute.USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.USAGE,
+                translation_key="stick_cleaner_dust_bag_usage",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                component_fn=lambda component: component == "station",
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_STATUS: {
+        Attribute.OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OPERATING_STATE,
+                name=None,
+                translation_key="stick_cleaner_operating_state",
+                options=list(STICK_CLEANER_STATUS.values()),
+                device_class=SensorDeviceClass.ENUM,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: {
+        Attribute.LAST_EMPTIED_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.LAST_EMPTIED_TIME,
+                translation_key="stick_cleaner_dustbin_last_emptied",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
+            )
+        ]
+    },
 }
 
 
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "Celsius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[button.mock_title_reset_filters_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

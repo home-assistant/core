@@ -1,7 +1,5 @@
 """The tests for the MQTT text platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -339,7 +337,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "some other state", 2, False
+        "command-topic", "some other state", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("text.test")
@@ -348,7 +346,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_set_value(hass, "text.test", "some new state")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "some new state", 2, False
+        "command-topic", "some new state", 2, False, message_expiry_interval=None
     )
     state = hass.states.get("text.test")
     assert state.state == "some new state"

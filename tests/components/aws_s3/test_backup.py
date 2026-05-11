@@ -21,7 +21,12 @@ from homeassistant.components.aws_s3.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    UploadBackupEvent,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -330,6 +335,65 @@ async def test_agents_upload_network_failure(
 
     assert resp.status == 201
     assert "Upload failed for aws_s3" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "backup_size", [MULTIPART_MIN_PART_SIZE_BYTES * 2], ids=["large"]
+)
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: UploadBackupEvent) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=mock_agent_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=mock_agent_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * mock_agent_backup.size,
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    agent_events = [e for e in events if e.agent_id == agent_id]
+    assert len(agent_events) >= 2
+    assert all(e.total_bytes == mock_agent_backup.size for e in agent_events)
+    # Verify events report distinct increasing byte counts
+    uploaded_bytes = [e.uploaded_bytes for e in agent_events]
+    assert uploaded_bytes == sorted(uploaded_bytes)
+    assert len(set(uploaded_bytes)) == len(uploaded_bytes)
+    # Verify at least one intermediate event (uploaded_bytes < total_bytes)
+    assert agent_events[0].uploaded_bytes < agent_events[0].total_bytes
 
 
 async def test_agents_download(

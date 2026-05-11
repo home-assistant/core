@@ -1,13 +1,11 @@
 """Provides functionality to interact with infrared devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import final
 
-from infrared_protocols import Command as InfraredCommand
+from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
@@ -61,13 +59,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def async_get_emitters(hass: HomeAssistant) -> list[InfraredEntity]:
-    """Get all infrared emitters."""
+def async_get_emitters(hass: HomeAssistant) -> list[str]:
+    """Get all infrared emitter entity IDs."""
     component = hass.data.get(DATA_COMPONENT)
     if component is None:
         return []
 
-    return list(component.entities)
+    return [entity.entity_id for entity in component.entities]
 
 
 async def async_send_command(

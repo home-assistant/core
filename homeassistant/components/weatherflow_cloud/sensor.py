@@ -1,7 +1,5 @@
 """Sensors for cloud based weatherflow."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,10 +18,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfLength,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -34,9 +32,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
-from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
-from .const import DOMAIN
-from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
+from .coordinator import (
+    WeatherFlowCloudConfigEntry,
+    WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowObservationCoordinator,
+    WeatherFlowWindCoordinator,
+)
 from .entity import WeatherFlowCloudEntity
 
 PRECIPITATION_TYPE = {
@@ -235,42 +236,47 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_last_1hr",
         translation_key="precip_accum_last_1hr",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_last_1hr,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day",
         translation_key="precip_accum_local_day",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day_final",
         translation_key="precip_accum_local_day_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday",
         translation_key="precip_accum_local_yesterday",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday_final",
         translation_key="precip_accum_local_yesterday_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_analysis_type_yesterday",
@@ -350,15 +356,15 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WeatherFlowCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
-    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
     rest_coordinator = coordinators.rest
-    wind_coordinator = coordinators.wind  # Now properly typed
-    observation_coordinator = coordinators.observation  # Now properly typed
+    wind_coordinator = coordinators.wind
+    observation_coordinator = coordinators.observation
 
     entities: list[SensorEntity] = [
         WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)

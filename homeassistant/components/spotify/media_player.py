@@ -1,7 +1,5 @@
 """Support for interacting with Spotify Connect."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import datetime as dt
@@ -9,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
 from spotifyaio import (
-    Device,
     Episode,
     Item,
     ItemType,
@@ -32,7 +29,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .browse_media import async_browse_media_internal
 from .const import (
@@ -40,7 +36,11 @@ from .const import (
     MEDIA_TYPE_USER_SAVED_TRACKS,
     PLAYABLE_MEDIA_TYPES,
 )
-from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
+from .coordinator import (
+    SpotifyConfigEntry,
+    SpotifyCoordinator,
+    SpotifyDeviceCoordinator,
+)
 from .entity import SpotifyEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     def __init__(
         self,
         coordinator: SpotifyCoordinator,
-        device_coordinator: DataUpdateCoordinator[list[Device]],
+        device_coordinator: SpotifyDeviceCoordinator,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)

@@ -1,7 +1,5 @@
 """Static file handling for HTTP component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Final

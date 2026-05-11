@@ -1,7 +1,5 @@
 """The Voice over IP integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -73,6 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool
     )
     _LOGGER.debug("Listening for VoIP calls on port %s", sip_port)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN] = DomainData(transport, protocol, devices)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

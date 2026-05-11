@@ -1,7 +1,5 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Collection
 from functools import cache
@@ -41,6 +39,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
+    "serialx": "SemVer",
     "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
@@ -78,6 +77,7 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },
@@ -92,8 +92,13 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 FORBIDDEN_PACKAGES = {
     # Not longer needed, as we could use the standard library
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # backoff is archived / unmaintained
+    # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Coloredlogs is unmaintained and contains a '.pth' file
+    "coloredlogs": "be replaced with colorlog",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
@@ -117,12 +122,14 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
+    "aseko_pool_live": {"gql": {"backoff"}},
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
+    "bsblan": {"python-bsblan": {"backoff"}},
+    "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -136,6 +143,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "pyefergy": {"codecov", "types-pytz"}
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "energyid": {"energyid-webhooks": {"backoff"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
@@ -149,16 +157,24 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
+    "geocaching": {"geocachingapi": {"backoff"}},
+    "github": {"aiogithubapi": {"backoff"}},
+    "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
+    "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
+    "ipp": {"pyipp": {"backoff"}},
+    "iqvia": {"pyiqvia": {"backoff"}},
     "izone": {"python-izone": {"async-timeout"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
@@ -181,16 +197,16 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "modern_forms": {"aiomodernforms": {"backoff"}},
+    "monarch_money": {"gql": {"backoff"}},
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
+    "overkiz": {"pyoverkiz": {"backoff"}},
+    "prosegur": {"pyprosegur": {"backoff"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
+    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
@@ -198,10 +214,17 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
+    "roku": {"rokuecp": {"backoff"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
+    "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
+    "tailwind": {"gotailwind": {"backoff"}},
+    "technove": {"python-technove": {"backoff"}},
+    "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
+    "tibber": {"gql": {"backoff"}},
+    "toon": {"toonapi": {"backoff"}},
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -210,13 +233,16 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
+    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
+    "wled": {"wled": {"backoff"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
+        "zigpy-znp": {"coloredlogs"},
     },
 }
 
@@ -236,16 +262,48 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # - reasonX should be the name of the invalid dependency
     # https://github.com/jaraco/jaraco.net
     "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/Azure/azure-kusto-python/
+    "azure_data_explorer": {
+        # Legacy namespace packages, resolved with >=5.0.5
+        # azure_kusto_data-*-nspkg.pth
+        # azure_kusto_ingest-*-nspkg.pth
+        "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+        "azure-kusto-ingest": {"azure-kusto-data"},
+    },
     # https://github.com/coinbase/coinbase-advanced-py
+    "cmus": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "fitbit": {
+        # Setuptools - distutils-precedence.pth
+        "fitbit": {"setuptools"}
+    },
     "flume": {"homeassistant": {"pyflume"}},
     # https://github.com/fortinet-solutions-cse/fortiosapi
     "fortios": {"homeassistant": {"fortiosapi"}},
     # https://github.com/manzanotti/geniushub-client
     "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/costastf/locationsharinglib
+    "google_maps": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "locationsharinglib": {"coloredlogs"},
+    },
+    # https://github.com/NabuCasa/universal-silabs-flasher
+    "homeassistant_hardware": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "universal-silabs-flasher": {"coloredlogs"},
+    },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
     # https://github.com/danifus/pyzipper
@@ -257,11 +315,22 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # https://github.com/timmo001/aiolyric
     "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
-    "microbees": {"homeassistant": {"microbeespy"}},
+    "microbees": {
+        "homeassistant": {"microbeespy"},
+        "microbeespy": {"setuptools"},
+    },
+    "mochad": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    "remote_rpi_gpio": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"}
+    },
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},
@@ -273,6 +342,14 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client
     "xs1": {"homeassistant": {"xs1-api-client"}},
+    # https://github.com/zigpy/zigpy-znp
+    "zha": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"},
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        # https://github.com/xolox/python-coloredlogs/blob/15.0.1/coloredlogs.pth
+        "zigpy-znp": {"coloredlogs"},
+    },
 }
 
 PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
@@ -448,6 +525,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> dict:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -496,7 +579,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):
@@ -670,8 +753,10 @@ def check_dependency_files(
         for file in files(pkg) or ():
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
-            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES:
-                file_names.add(name)
+            if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
+            ):
+                file_names.add(str(file))
         results = _PackageFilesCheckResult(
             top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
             file_names=file_names,
@@ -687,7 +772,8 @@ def check_dependency_files(
             f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
-        integration.add_error(
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
             "requirements",
             f"Package {pkg} has a forbidden file '{file_name}' in {package}",
         )

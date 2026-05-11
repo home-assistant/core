@@ -1,7 +1,5 @@
 """Platform providing event entities for UniFi Protect."""
 
-from __future__ import annotations
-
 import dataclasses
 from typing import Any
 
@@ -9,6 +7,7 @@ from uiprotect.data import ModelType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -20,7 +19,6 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
-    EVENT_TYPE_DOORBELL_RING,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -96,7 +94,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
             and not self._event_already_ended(prev_event, prev_event_end)
             and event.type is EventType.RING
         ):
-            self._trigger_event(EVENT_TYPE_DOORBELL_RING, {ATTR_EVENT_ID: event.id})
+            self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 
 
@@ -367,7 +365,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         device_class=EventDeviceClass.DOORBELL,
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
-        event_types=[EVENT_TYPE_DOORBELL_RING],
+        event_types=[DoorbellEventType.RING],
         entity_class=ProtectDeviceRingEventEntity,
     ),
     ProtectEventEntityDescription(

@@ -1,14 +1,11 @@
 """Repairs implementation for the cloud integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 import voluptuous as vol
 
 from homeassistant.components.assist_satellite import DOMAIN as ASSIST_SATELLITE_DOMAIN
-from homeassistant.components.repairs import RepairsFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.helpers import entity_registry as er
 
 REQUIRED_KEYS = ("entity_id", "entity_uuid", "integration_name")
@@ -23,14 +20,14 @@ class AssistInProgressDeprecatedRepairFlow(RepairsFlow):
             raise ValueError("Missing data")
         self._data = data
 
-    async def async_step_init(self, _: None = None) -> FlowResult:
+    async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm_disable_entity()
 
     async def async_step_confirm_disable_entity(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             entity_registry = er.async_get(self.hass)

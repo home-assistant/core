@@ -87,3 +87,24 @@ async def test_source_type_gps(
         hass.states.get("device_tracker.test_pet_tracker").attributes["source_type"]
         is SourceType.GPS
     )
+
+
+async def test_device_tracker_with_empty_hw_info(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the device tracker sets up correctly when hw_info is empty."""
+    mock_tractive_client.tracker.return_value.hw_info = AsyncMock(return_value={})
+
+    with patch(
+        "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
+    ):
+        await init_integration(hass, mock_config_entry)
+
+        mock_tractive_client.send_position_event(mock_config_entry)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.test_pet_tracker")
+    assert state is not None
+    assert state.attributes.get("battery_level") is None
