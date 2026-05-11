@@ -2808,7 +2808,7 @@ pyxeoma==1.4.2
 pyyardian==1.1.1
 
 # homeassistant.components.qrcode
-pyzbar==0.1.7
+pyzbar==0.1.9
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
