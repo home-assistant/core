@@ -53,13 +53,9 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: exempt
-    comment: No entity required translations.
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Thermostat entities use standard HA Climate entity.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
