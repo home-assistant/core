@@ -69,8 +69,7 @@ rules:
   stale-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
-
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

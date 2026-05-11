@@ -1,7 +1,7 @@
 """Sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, cast
 
 from indevolt_api import (
     IndevoltBattery,
@@ -768,4 +768,4 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.ENUM:
             return self.entity_description.state_mapping.get(raw_value)
 
-        return raw_value
+        return cast(str | int | float, raw_value)
