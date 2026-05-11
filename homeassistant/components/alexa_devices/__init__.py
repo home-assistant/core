@@ -1,6 +1,7 @@
 """Alexa Devices integration."""
 
 import asyncio
+import contextlib
 
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
@@ -55,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     async def _cancel_http2_task() -> None:
         # needed to avoid typing issues with async_on_unload
         http2_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await http2_task
 
     entry.async_on_unload(_cancel_http2_task)
 
