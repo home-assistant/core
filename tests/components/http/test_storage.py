@@ -32,6 +32,14 @@ def test_to_stored_serializes_trusted_proxies() -> None:
     assert stored["trusted_proxies"] == ["10.0.0.0/24", "172.16.0.5/32"]
 
 
+def test_to_stored_drops_deprecated_base_url() -> None:
+    """The deprecated base_url key is not persisted."""
+    conf = {"server_port": 8123, "base_url": "https://old.example"}
+    stored = to_stored(conf)
+    assert "base_url" not in stored
+    assert stored["server_port"] == 8123
+
+
 async def test_first_boot_imports_yaml(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

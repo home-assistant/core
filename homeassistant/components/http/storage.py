@@ -50,7 +50,7 @@ def async_get_store(hass: HomeAssistant) -> HttpConfigStore:
 
 def to_stored(conf: dict[str, Any]) -> HttpUserConfig:
     """Convert a validated ``HTTP_SCHEMA`` dict into a JSON-serializable form."""
-    out: dict[str, Any] = dict(conf)
+    out: dict[str, Any] = {k: v for k, v in conf.items() if k != "base_url"}
     if "trusted_proxies" in out:
         out["trusted_proxies"] = [
             str(cast(IPv4Network | IPv6Network, n)) for n in out["trusted_proxies"]
