@@ -129,8 +129,9 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
             "some-payload",
             0,
             False,
-            ANY,
+            ANY,  # Properties object
         )
+        assert mqtt_client.publish.call_args[0][4].json() == {}
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
@@ -155,6 +156,8 @@ async def test_publish(
     await hass.async_block_till_done()
     assert publish_mock.called
     assert publish_mock.call_args[0] == ("test-topic", "test-payload", 0, False, ANY)
+    # Asset Properties JSON is empty
+    assert publish_mock.call_args[0][4].json() == {}
     publish_mock.reset_mock()
 
     await mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
@@ -179,12 +182,14 @@ async def test_publish(
         False,
         ANY,
     )
+    assert publish_mock.call_args[0][4].json() == {}
     publish_mock.reset_mock()
 
     mqtt.publish(hass, "test-topic2", "test-payload2", 2, True)
     await hass.async_block_till_done()
     assert publish_mock.called
     assert publish_mock.call_args[0] == ("test-topic2", "test-payload2", 2, True, ANY)
+    assert publish_mock.call_args[0][4].json() == {}
     publish_mock.reset_mock()
 
     # test binary pass-through
@@ -198,6 +203,7 @@ async def test_publish(
         False,
         ANY,
     )
+    assert publish_mock.call_args[0][4].json() == {}
     publish_mock.reset_mock()
 
     # test null payload
@@ -220,6 +226,7 @@ async def test_publish(
     assert publish_mock.call_args[0][3] is True
     properties = publish_mock.call_args[0][4]
     assert properties.MessageExpiryInterval == 60
+    assert publish_mock.call_args[0][4].json() == {"MessageExpiryInterval": 60}
 
 
 @pytest.mark.parametrize(

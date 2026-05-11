@@ -10,7 +10,7 @@ from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from paho.mqtt.client import MQTTMessage
+from paho.mqtt.client import MQTTMessage, Properties
 import pytest
 import voluptuous as vol
 
@@ -28,6 +28,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    CONF_PROTOCOL,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -1707,15 +1708,43 @@ async def test_subscribe_connection_status(
     assert mqtt_connected_calls_async[1] is False
 
 
+@pytest.mark.parametrize(
+    (
+        "topic",
+        "payload",
+        "qos",
+        "retain",
+        "message_expiry_interval",
+        "expected_properties_json",
+    ),
+    [
+        ("just_in_time", "published", 0, False, None, {}),
+        (
+            "also_just_in_time",
+            "just_published",
+            1,
+            False,
+            30,
+            {"MessageExpiryInterval": 30},
+        ),
+    ],
+)
 async def test_unload_config_entry(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
+    topic: str,
+    payload: str,
+    qos: int,
+    retain: bool,
+    message_expiry_interval: int | None,
+    expected_properties_json: dict[str, Any],
 ) -> None:
     """Test unloading the MQTT entry."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker"},
+        data={mqtt.CONF_BROKER: "test-broker", CONF_PROTOCOL: "5"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
@@ -1724,18 +1753,37 @@ async def test_unload_config_entry(
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
     assert hass.services.has_service(mqtt.DOMAIN, "publish")
+    # Make sure the debouncer finishes
+    await mock_debouncer.wait()
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
     # Publish just before unloading to test await cleanup
     mqtt_client_mock.reset_mock()
-    mqtt.publish(hass, "just_in_time", "published", qos=0, retain=False)
+    mqtt.publish(
+        hass,
+        topic,
+        payload,
+        qos=qos,
+        retain=retain,
+        message_expiry_interval=message_expiry_interval,
+    )
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
     new_mqtt_config_entry = mqtt_config_entry
-    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False, ANY)
+
+    assert len(mqtt_client_mock.publish.mock_calls) == 1
+    mock_call = mqtt_client_mock.publish.mock_calls[0]
+    mock_call_args = mock_call[1]
+    assert mock_call_args[0] == topic
+    assert mock_call_args[1] == payload
+    assert mock_call_args[2] == qos
+    assert mock_call_args[3] is retain
+    assert isinstance(mock_call_args[4], Properties)
+    assert mock_call_args[4].json() == expected_properties_json
+
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
