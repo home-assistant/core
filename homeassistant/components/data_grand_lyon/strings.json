@@ -93,5 +93,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_all_stops": {
+      "message": "Error fetching Data Grand Lyon data: all requests failed."
+    }
   }
 }

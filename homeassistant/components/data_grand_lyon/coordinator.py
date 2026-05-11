@@ -64,7 +64,8 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]
                     403,
                 ):
                     raise ConfigEntryAuthFailed(
-                        "Authentication failed for Data Grand Lyon"
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
                     ) from result
                 LOGGER.warning(
                     "Error fetching departures for stop %s: %s",
@@ -75,5 +76,8 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]
             stops[subentry.subentry_id] = result
 
         if stop_subentries and not stops:
-            raise UpdateFailed("Error fetching DataGrandLyon data: all requests failed")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_all_stops",
+            )
         return stops
