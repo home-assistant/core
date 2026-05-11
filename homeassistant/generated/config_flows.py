@@ -121,6 +121,7 @@ FLOWS = {
         "casper_glow",
         "cast",
         "ccm15",
+        "centriconnect",
         "cert_expiry",
         "chacon_dio",
         "chess_com",
