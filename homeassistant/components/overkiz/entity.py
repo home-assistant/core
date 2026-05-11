@@ -57,6 +57,8 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
                 and super().available
             )
 
+        return False
+
     @property
     def is_sub_device(self) -> bool:
         """Return True if device is a sub device."""
