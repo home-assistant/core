@@ -27,6 +27,10 @@ from homeassistant.components.mqtt.discovery import (
     async_start,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt.schemas import (
+    DEVICE_DISCOVERY_SCHEMA,
+    SHARED_OPTIONS,
+)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
@@ -3242,3 +3246,154 @@ async def test_discovery_with_late_via_device_update(
     assert via_device_entry.name == "My Switch"
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+async def test_shared_options_in_sync_with_device_schema() -> None:
+    """Test shared options in device discovery schema are in sync.
+
+    The SHARED_OPTIONS should be in sync with the device discovery schema.
+    """
+    # Check if shared options are present in the device discovery schema and vice versa.
+    for option in SHARED_OPTIONS:
+        assert option in DEVICE_DISCOVERY_SCHEMA.schema
+
+    for option in set(DEVICE_DISCOVERY_SCHEMA.schema) - {
+        "device",
+        "origin",
+        "components",
+    }:
+        assert option in SHARED_OPTIONS
+
+
+@pytest.mark.parametrize(
+    ("device_config", "shared_option", "platform_values"),
+    [
+        (
+            TEST_DEVICE_CONFIG | {"encoding": "utf-16"},
+            "encoding",
+            {
+                "device_automation": "utf-16",
+                "sensor": "utf-16",
+                "tag": "utf-16",
+            },
+        ),
+        (
+            TEST_DEVICE_CONFIG | {"state_topic": "blabla"},
+            "state_topic",
+            {
+                "device_automation": "blabla",
+                "sensor": "foobar/sensors/bla2/state",
+                "tag": "blabla",
+            },
+        ),
+        (
+            TEST_DEVICE_CONFIG | {"qos": 1},
+            "qos",
+            {"device_automation": 1, "sensor": 1, "tag": 1},
+        ),
+    ],
+    ids=["encoding", "state_topic", "qos"],
+)
+async def test_shared_options_with_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    device_config: dict[str, Any],
+    shared_option: str,
+    platform_values: dict[str, str | int],
+) -> None:
+    """Test shared options are passed forward to component configs.
+
+    Shared options should not be overridden. They can exist as extra options,
+    and these extra options are ignored if they are not part of the component
+    discovery schema.
+    Possible shared options are:
+        CONF_AVAILABILITY,
+        CONF_AVAILABILITY_MODE,
+        CONF_AVAILABILITY_TEMPLATE,
+        CONF_AVAILABILITY_TOPIC,
+        CONF_COMMAND_TOPIC,
+        CONF_ENCODING,
+        CONF_PAYLOAD_AVAILABLE,
+        CONF_PAYLOAD_NOT_AVAILABLE,
+        CONF_STATE_TOPIC,
+        CONF_QOS.
+
+    Note that not all options are tested.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock.reset_mock()
+
+    # Listen to discovery handler to catch the component discovery payloads
+    # that are being processed.
+    discovery_payloads: dict[str, MQTTDiscoveryPayload] = {}
+
+    async def async_discovery_handler(discovery_payload: MQTTDiscoveryPayload) -> None:
+        component = discovery_payload.discovery_data["discovery_hash"][0]
+        discovery_payloads[component] = discovery_payload
+
+    handler_handles = [
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), async_discovery_handler
+        )
+        for component in platform_values
+    ]
+
+    async_fire_mqtt_message(
+        hass, TEST_DEVICE_DISCOVERY_TOPIC, json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+
+    assert len(handler_handles) == 3
+
+    # Check if shared options are being passed to the component configs
+    assert discovery_payloads.keys() == platform_values.keys()
+    for component, discovery_payload in discovery_payloads.items():
+        assert (
+            discovery_payload.discovery_data["discovery_payload"][shared_option]
+            == platform_values[component]
+        )
+
+    # Cleanup dispatcher handlers
+    for handle in handler_handles:
+        handle()
+
+    # Verify device and registry entries are created
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    # Check if the MQTT items are all available
+    await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+@pytest.mark.usefixtures("tag_mock")
+@pytest.mark.parametrize(
+    ("device_config", "qos"),
+    [(TEST_DEVICE_CONFIG | {"qos": 1}, 1), (TEST_DEVICE_CONFIG | {"qos": 2}, 2)],
+)
+async def test_shared_qos_with_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_config: dict[str, Any],
+    qos: int,
+) -> None:
+    """Test shared qos options are passed forward to component configs."""
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock.reset_mock()
+    async_fire_mqtt_message(
+        hass, TEST_DEVICE_DISCOVERY_TOPIC, json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    # Verify device and registry entries are created
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    # Check the subscriptions for tag and sensor were done with shared QoS
+    mqtt_mock.async_subscribe.assert_has_calls(
+        [call("foobar/tags/bla3/see", ANY, qos, "utf-8", ANY)]
+    )
+    mqtt_mock.async_subscribe.assert_has_calls(
+        [call("foobar/sensors/bla2/state", ANY, qos, "utf-8", ANY)]
+    )
