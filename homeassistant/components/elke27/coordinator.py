@@ -1,7 +1,5 @@
 """Data update coordinator for the Elke27 integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging

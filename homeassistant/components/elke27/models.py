@@ -1,7 +1,5 @@
 """Models for the Elke27 integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 

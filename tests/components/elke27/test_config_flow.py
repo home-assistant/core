@@ -1,7 +1,5 @@
 """Test the Elke27 config flow."""
 
-from __future__ import annotations
-
 import builtins
 from dataclasses import dataclass
 import importlib
@@ -981,9 +979,7 @@ async def test_discover_no_panel_selected_no_panel_input(
     flow.hass = hass
     flow._discovered_panels = []
     flow._selected_panel = None
-    result = await flow.async_step_discover(
-        {"access_code": "1", "passphrase": "2"}
-    )
+    result = await flow.async_step_discover({"access_code": "1", "passphrase": "2"})
     assert result["errors"]["base"] == "no_panels_found"
 
 

@@ -77,27 +77,27 @@
       }
     }
   },
-  "services": {
-    "alarm_arm_automatic": {
-      "name": "Arm automatically",
-      "description": "Arm an Elk E27 area using automatic panel behavior for stay and exit-delay handling.",
-      "fields": {
-        "mode": {
-          "name": "Arming mode",
-          "description": "Arm mode to use for the automatic arming request."
-        },
-        "code": {
-          "name": "Code",
-          "description": "Alarm code to arm the area."
-        }
-      }
-    }
-  },
   "entity": {
     "alarm_control_panel": {
       "area": {
         "name": "Area"
       }
+    }
+  },
+  "services": {
+    "alarm_arm_automatic": {
+      "description": "Arm an Elk E27 area using automatic panel behavior for stay and exit-delay handling.",
+      "fields": {
+        "code": {
+          "description": "Alarm code to arm the area.",
+          "name": "Code"
+        },
+        "mode": {
+          "description": "Arm mode to use for the automatic arming request.",
+          "name": "Arming mode"
+        }
+      },
+      "name": "Arm automatically"
     }
   }
 }

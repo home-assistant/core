@@ -1,7 +1,5 @@
 """Tests for the Elke27 integration setup."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -405,12 +403,16 @@ async def test_alarm_arm_automatic_service_calls_hub(hass: HomeAssistant) -> Non
     )
     entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    entity_id = er.async_get(hass).async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        "aa:bb:cc:dd:ee:ff:area:1",
-        config_entry=entry,
-    ).entity_id
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+            config_entry=entry,
+        )
+        .entity_id
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -453,12 +455,16 @@ async def test_alarm_arm_automatic_home_also_uses_automatic_flags(
     )
     entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    entity_id = er.async_get(hass).async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        "aa:bb:cc:dd:ee:ff:area:1",
-        config_entry=entry,
-    ).entity_id
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+            config_entry=entry,
+        )
+        .entity_id
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -489,12 +495,16 @@ async def test_alarm_arm_automatic_rejects_non_elke27_entity(
     other_entry = MockConfigEntry(domain="test", data={CONF_HOST: "192.168.1.32"})
     other_entry.add_to_hass(hass)
     other_entry.mock_state(hass, ConfigEntryState.LOADED)
-    entity_id = er.async_get(hass).async_get_or_create(
-        "alarm_control_panel",
-        "test",
-        "other-alarm-1",
-        config_entry=other_entry,
-    ).entity_id
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            "test",
+            "other-alarm-1",
+            config_entry=other_entry,
+        )
+        .entity_id
+    )
 
     with pytest.raises(
         ServiceValidationError,

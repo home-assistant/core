@@ -5,8 +5,6 @@ alarm_arm_automatic:
       integration: elke27
   fields:
     mode:
-      name: Arming mode
-      description: Arm mode to use for the automatic arming request.
       required: true
       selector:
         select:
@@ -14,8 +12,6 @@ alarm_arm_automatic:
             - away
             - home
     code:
-      name: Code
-      description: Alarm code to arm the area.
       required: true
       selector:
         text:

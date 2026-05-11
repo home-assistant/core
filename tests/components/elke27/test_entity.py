@@ -1,7 +1,5 @@
 """Tests for Elke27 entity helpers."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator

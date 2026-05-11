@@ -1,22 +1,20 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling:
-    status: done
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: Integration does not register custom service actions.
-  docs-high-level-description:
-    status: done
+  docs-actions: done
+  docs-high-level-description: done
   docs-installation-instructions:
     status: done
+    comment: Installation instructions are covered in the integration documentation.
   docs-removal-instructions:
     status: done
+    comment: Removal instructions are covered in the integration documentation.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -42,20 +40,13 @@ rules:
   diagnostics: done
   discovery: todo
   discovery-update-info: todo
-  docs-data-update:
-    status: todo
-  docs-examples:
-    status: todo
-  docs-known-limitations:
-    status: todo
-  docs-supported-devices:
-    status: todo
-  docs-supported-functions:
-    status: todo
-  docs-troubleshooting:
-    status: todo
-  docs-use-cases:
-    status: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
