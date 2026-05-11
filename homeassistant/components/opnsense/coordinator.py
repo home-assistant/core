@@ -61,7 +61,6 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         """Fetch data from OPNsense."""
         try:
             devices = await self.client.get_arp_table(True)
-            return self._get_mac_addrs(devices)
         except (
             OPNsenseConnectionError,
             OPNsenseInvalidAuth,
@@ -75,3 +74,5 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
             ) from err
+
+        return self._get_mac_addrs(devices)
