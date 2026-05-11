@@ -9,7 +9,12 @@ import pytest
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
 from homeassistant.components.alexa.resources import AlexaGlobalCatalog
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    UnitOfLength,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 
 from .test_common import TEST_URL, get_default_config
@@ -522,10 +527,10 @@ async def test_send_delete_message(
     )
 
 
-async def test_doorbell_event(
+async def test_doorbell_event_binary_sensor(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test doorbell press reports."""
+    """Test doorbell press via bionary sensor reports."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
@@ -547,6 +552,16 @@ async def test_doorbell_event(
             "friendly_name": "Test Doorbell Sensor",
             "device_class": "occupancy",
             "linkquality": 42,
+        },
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        STATE_UNAVAILABLE,
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+            "linkquality": 99,
         },
     )
 
@@ -582,6 +597,77 @@ async def test_doorbell_event(
         "binary_sensor.test_doorbell",
         "on",
         {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+
+async def test_doorbell_event_for_event_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test doorbell event reports."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "event.test_doorbell",
+        "unknown",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
+
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:50:47.647427",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    hass.states.async_set(
+        "event.test_doorbell",
+        STATE_UNAVAILABLE,
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:50:47.647427",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa.DoorbellEventSource"
+    assert call_json["event"]["header"]["name"] == "DoorbellPress"
+    assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
+    assert call_json["event"]["endpoint"]["endpointId"] == "event#test_doorbell"
+
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T20:10:30.369985",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
     )
 
     await hass.async_block_till_done()

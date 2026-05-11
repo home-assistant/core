@@ -11,7 +11,12 @@ from uuid import uuid4
 import aiohttp
 
 from homeassistant.components import event
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -315,9 +320,16 @@ async def async_enable_proactive_mode(
 
         if should_doorbell:
             old_state = data["old_state"]
-            if new_state.domain == event.DOMAIN or (
+            if (
+                new_state.domain == event.DOMAIN
+                and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                and (old_state is None or old_state.state != STATE_UNAVAILABLE)
+            ) or (
                 new_state.state == STATE_ON
-                and (old_state is None or old_state.state != STATE_ON)
+                and (
+                    old_state is None
+                    or old_state.state not in (STATE_ON, STATE_UNAVAILABLE)
+                )
             ):
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity
