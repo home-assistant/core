@@ -14,6 +14,7 @@ from aiohasupervisor.models import (
     AddonStage,
     AddonState,
     CIFSMountResponse,
+    Folder,
     FullBackupOptions,
     HomeAssistantOptions,
     InstalledAddon,
@@ -528,7 +529,7 @@ async def test_service_calls(
             name="2021-11-13 03:48:00",
             homeassistant=True,
             addons={"test"},
-            folders={"ssl"},
+            folders={Folder.SSL},
             password="123456",
         )
     )
@@ -552,7 +553,10 @@ async def test_service_calls(
     supervisor_client.backups.partial_restore.assert_called_once_with(
         "test",
         PartialRestoreOptions(
-            homeassistant=False, addons={"test"}, folders={"ssl"}, password="123456"
+            homeassistant=False,
+            addons={"test"},
+            folders={Folder.SSL},
+            password="123456",
         ),
     )
 
@@ -767,6 +771,42 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "restore_partial", {"folders": ["ssl", "ssl"]}
+        )
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_partial_backup_legacy_homeassistant_folder(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test that the legacy "homeassistant" folder is translated to homeassistant=True."""
+    assert await async_setup_component(hass, "hassio", {})
+    supervisor_client.backups.partial_backup.return_value = NewBackup(
+        job_id=uuid4(), slug="partial"
+    )
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_partial",
+        {"folders": ["homeassistant", "ssl"], "name": "test"},
+        blocking=True,
+    )
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        PartialBackupOptions(
+            name="test",
+            homeassistant=True,
+            folders={Folder.SSL},
+        )
+    )
+
+
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
+    """Test that an unknown folder name is rejected."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    with pytest.raises(Invalid, match="Not a valid folder"):
+        await hass.services.async_call(
+            "hassio", "backup_partial", {"folders": ["bogus"]}
         )
 
 
