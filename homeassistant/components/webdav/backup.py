@@ -20,6 +20,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import WebDavConfigEntry
@@ -29,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 4
 
 
 async def async_get_backup_agents(
@@ -237,11 +239,18 @@ class WebDavBackupAgent(BackupAgent):
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
             files = await self._client.list_files(self._backup_path)
+            metadata_contents = await gather_with_limited_concurrency(
+                METADATA_DOWNLOAD_CONCURRENCY,
+                *(
+                    _download_metadata(file_name)
+                    for file_name in files
+                    if file_name.endswith(".metadata.json")
+                ),
+            )
             return {
                 metadata_content.backup_id: metadata_content
-                for file_name in files
-                if file_name.endswith(".metadata.json")
-                if (metadata_content := await _download_metadata(file_name))
+                for metadata_content in metadata_contents
+                if metadata_content
             }
 
         self._cache_metadata_files = await _list_metadata_files()
