@@ -30,6 +30,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
 STEP_STOP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_LINE): str,
@@ -111,9 +117,11 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
-
-            if error := await self._test_connection(user_input):
+            creds = {
+                CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            if error := await self._test_connection(creds):
                 errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
@@ -123,7 +131,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA,
+                STEP_RECONFIGURE_SCHEMA,
                 user_input or reconfigure_entry.data,
             ),
             errors=errors,

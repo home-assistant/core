@@ -208,13 +208,13 @@ async def test_reconfigure_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        {CONF_PASSWORD: "new-pass"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {
-        CONF_USERNAME: "new-user",
+        CONF_USERNAME: "user",
         CONF_PASSWORD: "new-pass",
     }
     assert dict(mock_config_entry.subentries) == original_subentries
@@ -246,7 +246,7 @@ async def test_reconfigure_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        {CONF_PASSWORD: "new-pass"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -257,40 +257,15 @@ async def test_reconfigure_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+        {CONF_PASSWORD: "new-pass"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {
-        CONF_USERNAME: "new-user",
+        CONF_USERNAME: "user",
         CONF_PASSWORD: "new-pass",
     }
-
-
-async def test_reconfigure_flow_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure aborts when changing to a username already used by another entry."""
-    mock_config_entry.add_to_hass(hass)
-    other_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: "other-user", CONF_PASSWORD: "other-pass"},
-    )
-    other_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "other-user", CONF_PASSWORD: "new-pass"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 # Stop subentry tests
