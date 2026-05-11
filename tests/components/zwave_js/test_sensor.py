@@ -505,7 +505,7 @@ async def test_node_status_sensor_not_ready(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for" in caplog.text
+    assert f"There is no value to refresh for {node_status_entity_id}" in caplog.text
 
 
 @pytest.mark.parametrize(
