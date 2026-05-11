@@ -524,16 +524,17 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
-        if self.entity_description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = tuya_uom
         if (
             (device_class := self.device_class) is None
             or device_class.startswith(DOMAIN)
             # we do not need to check mappings if the API UOM is allowed
-            or self.native_unit_of_measurement
-            in NUMBER_DEVICE_CLASS_UNITS[device_class]
+            or tuya_uom in NUMBER_DEVICE_CLASS_UNITS[device_class]
         ):
+            self._attr_native_unit_of_measurement = tuya_uom
             return
+
+        if self.entity_description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = tuya_uom
 
         # We cannot have a device class, if the UOM isn't set or the
         # device class cannot be found in the validation mapping.
