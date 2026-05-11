@@ -1,6 +1,7 @@
 """Support for control of ElkM1 outputs (relays)."""
 
 from datetime import timedelta
+from math import ceil
 from typing import Any
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
@@ -76,7 +77,7 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
 
     async def async_switch_output_turn_on_for(self, duration: timedelta) -> None:
         """Turn on an output for specified length of time."""
-        self._element.turn_on(int(duration.total_seconds()))
+        self._element.turn_on(ceil(duration.total_seconds()))
 
 
 class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
