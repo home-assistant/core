@@ -88,6 +88,9 @@ INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
                 dict.fromkeys(_holiday.type.name for _holiday in info.holidays)
             ),
         },
+        next_update_fn=lambda zmanim: (
+            zmanim.candle_lighting or zmanim.havdalah or zmanim.shkia.local
+        ),
     ),
     JewishCalendarSensorDescription(
         key="omer_count",
