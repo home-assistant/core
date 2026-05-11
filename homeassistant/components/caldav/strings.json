@@ -1,5 +1,9 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
