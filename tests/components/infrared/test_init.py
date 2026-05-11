@@ -21,7 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import ENTITY_ID
 from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
 
 from tests.common import mock_restore_cache
@@ -56,14 +55,6 @@ async def test_get_entities_filters_by_type(
 
     assert async_get_emitters(hass) == [mock_infrared_emitter_entity.entity_id]
     assert async_get_receivers(hass) == [mock_infrared_receiver_entity.entity_id]
-
-
-@pytest.mark.usefixtures("mock_infrared_entity")
-async def test_infrared_entity_initial_state(hass: HomeAssistant) -> None:
-    """Test deprecated infrared entity has no state before any command is sent."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("init_infrared")

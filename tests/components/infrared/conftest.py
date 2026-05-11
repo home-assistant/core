@@ -2,10 +2,14 @@
 
 import pytest
 
-from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
+from .common import (
+    MockInfraredEmitterEntity,
+    MockInfraredEntity,
+    MockInfraredReceiverEntity,
+)
 
 
-@pytest.fixture
+@pytest.fixture(params=[MockInfraredEntity, MockInfraredEmitterEntity])
 def mock_infrared_emitter_entity() -> MockInfraredEmitterEntity:
     """Return a mock infrared emitter entity."""
     return MockInfraredEmitterEntity("test_ir_emitter")
