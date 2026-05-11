@@ -3,6 +3,7 @@
 from typing import Any
 
 from rf_protocols import RadioFrequencyCommand
+from rf_protocols.codes.honeywell.string_lights import CODES
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import async_get_transmitters
@@ -11,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import CONF_TRANSMITTER, DOMAIN
-from .light import COMMANDS
 
 
 class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -24,7 +24,7 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         sample_command: RadioFrequencyCommand = await self.hass.async_add_executor_job(
-            COMMANDS.load_command, "turn_on"
+            CODES.load_command, "turn_on"
         )
         try:
             transmitters = async_get_transmitters(
