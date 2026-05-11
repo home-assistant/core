@@ -214,6 +214,9 @@
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       },
+      "irrigation_duration": {
+        "name": "Irrigation duration"
+      },
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
