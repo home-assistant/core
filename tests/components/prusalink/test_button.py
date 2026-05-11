@@ -116,3 +116,59 @@ async def test_button_resume_cancel(
             {"entity_id": entity_id},
             blocking=True,
         )
+
+
+async def test_button_continue(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    hass_client: ClientSessionGenerator,
+    mock_job_api_attention,
+) -> None:
+    """Test continue button is enabled in ATTENTION state and calls continue_job."""
+    entity_id = "button.mock_title_continue_job"
+    assert await async_setup_component(hass, "prusalink", {})
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    with (
+        patch("pyprusalink.PrusaLink.continue_job") as mock_meth,
+        patch(
+            "homeassistant.components.prusalink.coordinator.PrusaLinkUpdateCoordinator._fetch_data"
+        ),
+    ):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    assert len(mock_meth.mock_calls) == 1
+
+    # Verify error handling — Conflict raised by API surfaces as HomeAssistantError
+    with (
+        pytest.raises(HomeAssistantError),
+        patch("pyprusalink.PrusaLink.continue_job", side_effect=Conflict),
+    ):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+
+async def test_button_continue_unavailable_when_printing(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_job_api_printing,
+    mock_get_status_printing,
+) -> None:
+    """Continue button is unavailable when printer is not in ATTENTION state."""
+    assert await async_setup_component(hass, "prusalink", {})
+    state = hass.states.get("button.mock_title_continue_job")
+    assert state is not None
+    assert state.state == "unavailable"
