@@ -114,21 +114,21 @@ class SomfyRTSCover(CoverEntity, RestoreEntity):
     async def _async_send_command(
         self, button: SomfyRTSButton, *, frame_repeats: int = 3
     ) -> None:
-        """Increment the rolling code, persist it, and transmit the command."""
+        """Transmit the command and persist the rolling code after success."""
         data = self._entry.runtime_data
         async with data.lock:
-            data.rolling_code += 1
+            rolling_code = data.rolling_code + 1
+            command = SomfyRTSCommand(
+                address=self._address,
+                rolling_code=rolling_code,
+                button=button,
+                frame_repeats=frame_repeats,
+            )
+            await async_send_command(
+                self.hass, self._transmitter, command, context=self._context
+            )
+            data.rolling_code = rolling_code
             await data.store.async_save({"rolling_code": data.rolling_code})
-            rolling_code = data.rolling_code
-        command = SomfyRTSCommand(
-            address=self._address,
-            rolling_code=rolling_code,
-            button=button,
-            frame_repeats=frame_repeats,
-        )
-        await async_send_command(
-            self.hass, self._transmitter, command, context=self._context
-        )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
