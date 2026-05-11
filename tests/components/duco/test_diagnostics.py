@@ -4,8 +4,7 @@ from dataclasses import replace
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError
-from duco.models import ApiInfo
+from duco_connectivity import ApiInfo, DucoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,7 +39,7 @@ async def test_diagnostics(
         "async_get_api_info",
         "async_get_lan_info",
         "async_get_diagnostics",
-        "async_get_write_req_remaining",
+        "async_get_write_requests_remaining",
     ],
 )
 async def test_diagnostics_connection_error(

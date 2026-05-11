@@ -991,6 +991,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "centriconnect": {
+      "name": "CentriConnect/MyPropane",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cert_expiry": {
       "integration_type": "service",
       "config_flow": true,
@@ -1011,6 +1017,12 @@
     "chess_com": {
       "name": "Chess.com",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "cielo_home": {
+      "name": "Cielo Home",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1249,6 +1261,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "data_grand_lyon": {
+      "name": "Data Grand Lyon",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "datadog": {
       "name": "Datadog",
       "integration_type": "service",
@@ -1327,7 +1345,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "Denon RS232"
+          "name": "Denon RS-232"
         },
         "heos": {
           "integration_type": "hub",
@@ -4089,12 +4107,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "melcloud": {
-      "name": "MELCloud",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "melissa": {
       "name": "Melissa",
       "integration_type": "hub",
@@ -4303,11 +4315,22 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "mitsubishi_comfort": {
-      "name": "Mitsubishi Comfort",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+    "mitsubishi": {
+      "name": "Mitsubishi",
+      "integrations": {
+        "melcloud": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud"
+        },
+        "mitsubishi_comfort": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Mitsubishi Comfort"
+        }
+      }
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
@@ -5169,6 +5192,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "paj_gps": {
+      "name": "PAJ GPS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "palazzetti": {
       "name": "Palazzetti",
@@ -6145,6 +6174,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sensereo": {
+      "name": "Sensereo",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "sensibo": {
       "name": "Sensibo",
@@ -8240,6 +8275,12 @@
       "name": "Zooz",
       "iot_standards": [
         "zwave"
+      ]
+    },
+    "zunzunbee": {
+      "name": "Zunzunbee",
+      "iot_standards": [
+        "zigbee"
       ]
     },
     "zwave_js": {

@@ -30,6 +30,20 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "defrost": "Defrost",
+              "timer": "Timer"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "activate_timer_mode_error": {
       "message": "An error occurred while activating timer mode"
@@ -60,6 +74,9 @@
     },
     "set_hvac_mode_error": {
       "message": "An error occurred while setting the HVAC mode"
+    },
+    "set_preset_mode_error": {
+      "message": "An error occurred while setting the preset mode"
     },
     "set_switch_state_error": {
       "message": "An error occurred while setting the switch state"
