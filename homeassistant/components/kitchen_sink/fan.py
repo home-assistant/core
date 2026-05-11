@@ -13,16 +13,18 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
+from .const import (
+    CONF_INFRARED_ENTITY_ID,
+    DOMAIN,
+    INFRARED_CMD_POWER_OFF,
+    INFRARED_CMD_POWER_ON,
+    INFRARED_CMD_SPEED_HIGH,
+    INFRARED_CMD_SPEED_LOW,
+    INFRARED_CMD_SPEED_MEDIUM,
+    INFRARED_FAN_ADDRESS,
+)
 
 PARALLEL_UPDATES = 0
-
-DUMMY_FAN_ADDRESS = 0x1234
-DUMMY_CMD_POWER_ON = 0x01
-DUMMY_CMD_POWER_OFF = 0x02
-DUMMY_CMD_SPEED_LOW = 0x03
-DUMMY_CMD_SPEED_MEDIUM = 0x04
-DUMMY_CMD_SPEED_HIGH = 0x05
 
 
 async def async_setup_entry(
@@ -105,7 +107,7 @@ class DemoInfraredFan(FanEntity):
     async def _send_command(self, command_code: int) -> None:
         """Send an IR command using the NEC protocol."""
         command = NECCommand(
-            address=DUMMY_FAN_ADDRESS,
+            address=INFRARED_FAN_ADDRESS,
             command=command_code,
             modulation=38000,
         )
@@ -123,13 +125,13 @@ class DemoInfraredFan(FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._send_command(DUMMY_CMD_POWER_ON)
+        await self._send_command(INFRARED_CMD_POWER_ON)
         self._attr_percentage = 33
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self._send_command(DUMMY_CMD_POWER_OFF)
+        await self._send_command(INFRARED_CMD_POWER_OFF)
         self._attr_percentage = 0
         self.async_write_ha_state()
 
@@ -140,11 +142,10 @@ class DemoInfraredFan(FanEntity):
             return
 
         if percentage <= 33:
-            await self._send_command(DUMMY_CMD_SPEED_LOW)
+            await self._send_command(INFRARED_CMD_SPEED_LOW)
         elif percentage <= 66:
-            await self._send_command(DUMMY_CMD_SPEED_MEDIUM)
+            await self._send_command(INFRARED_CMD_SPEED_MEDIUM)
         else:
-            await self._send_command(DUMMY_CMD_SPEED_HIGH)
-
+            await self._send_command(INFRARED_CMD_SPEED_HIGH)
         self._attr_percentage = percentage
         self.async_write_ha_state()

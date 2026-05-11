@@ -1,5 +1,7 @@
 """Demo platform that offers a fake infrared receiver event entity."""
 
+from infrared_protocols.commands.nec import NECCommand
+
 from homeassistant.components.event import EventEntity
 from homeassistant.components.infrared import (
     InfraredReceivedSignal,
@@ -18,9 +20,26 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
+from .const import (
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DOMAIN,
+    INFRARED_CMD_POWER_OFF,
+    INFRARED_CMD_POWER_ON,
+    INFRARED_CMD_SPEED_HIGH,
+    INFRARED_CMD_SPEED_LOW,
+    INFRARED_CMD_SPEED_MEDIUM,
+    INFRARED_FAN_ADDRESS,
+)
 
 PARALLEL_UPDATES = 0
+
+COMMAND_EVENTS = {
+    INFRARED_CMD_POWER_ON: "power_on",
+    INFRARED_CMD_POWER_OFF: "power_off",
+    INFRARED_CMD_SPEED_LOW: "speed_low",
+    INFRARED_CMD_SPEED_MEDIUM: "speed_medium",
+    INFRARED_CMD_SPEED_HIGH: "speed_high",
+}
 
 
 async def async_setup_entry(
@@ -54,7 +73,7 @@ class DemoInfraredEvent(EventEntity):
     _attr_has_entity_name = True
     _attr_name = "Received IR Event"
     _attr_should_poll = False
-    _attr_event_types = ["unknown"]
+    _attr_event_types = list(COMMAND_EVENTS.values())
 
     def __init__(
         self, subentry_id: str, device_name: str, infrared_receiver_entity_id: str
@@ -73,7 +92,13 @@ class DemoInfraredEvent(EventEntity):
         @callback
         def _handle_signal(signal: InfraredReceivedSignal) -> None:
             """Handle a received IR signal."""
-            self._trigger_event("unknown", {"raw_code": signal.timings})
+            command = NECCommand.from_raw_timings(signal.timings)
+            if command is None or command.address != INFRARED_FAN_ADDRESS:
+                return
+            event_type = COMMAND_EVENTS.get(command.command)
+            if event_type is None:
+                return
+            self._trigger_event(event_type, {"raw_code": signal.timings})
             self.async_write_ha_state()
 
         remove_signal_subscription: CALLBACK_TYPE | None = None
