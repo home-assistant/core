@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
+from duco_connectivity import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion

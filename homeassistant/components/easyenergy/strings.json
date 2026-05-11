@@ -47,6 +47,9 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with the easyEnergy API."
+    },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
     }
