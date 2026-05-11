@@ -407,6 +407,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -415,6 +416,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -431,6 +433,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -439,6 +442,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -455,6 +459,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -463,6 +468,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1511,6 +1517,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1519,6 +1526,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1535,6 +1543,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1543,6 +1552,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1559,6 +1569,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1567,6 +1578,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
@@ -1691,10 +1703,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = (
                 definition.sensor_wrapper.native_unit
-            )
-        if description.suggested_unit_of_measurement is None:
-            self._attr_suggested_unit_of_measurement = (
-                definition.sensor_wrapper.suggested_unit
             )
         if (
             description.device_class is None
