@@ -50,9 +50,7 @@ def mock_aquarite_auth() -> Generator[MagicMock]:
     auth.is_token_expiring = MagicMock(return_value=False)
     auth.calculate_sleep_duration = MagicMock(return_value=3600)
     with (
-        patch(
-            "homeassistant.components.aquarite.AquariteAuth", return_value=auth
-        ),
+        patch("homeassistant.components.aquarite.AquariteAuth", return_value=auth),
         patch(
             "homeassistant.components.aquarite.config_flow.AquariteAuth",
             return_value=auth,
@@ -76,9 +74,7 @@ def mock_aquarite_client(
     # `(client, refreshed)`.
     mock_aquarite_auth.get_client = AsyncMock(return_value=(client, False))
     with (
-        patch(
-            "homeassistant.components.aquarite.AquariteClient", return_value=client
-        ),
+        patch("homeassistant.components.aquarite.AquariteClient", return_value=client),
         patch(
             "homeassistant.components.aquarite.config_flow.AquariteClient",
             return_value=client,
