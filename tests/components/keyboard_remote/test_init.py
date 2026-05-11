@@ -1,7 +1,5 @@
 """Tests for the Keyboard Remote integration init."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 from unittest.mock import AsyncMock, MagicMock, patch

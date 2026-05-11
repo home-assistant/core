@@ -1,7 +1,5 @@
 """Fixtures for Keyboard Remote tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import sys
 from types import SimpleNamespace

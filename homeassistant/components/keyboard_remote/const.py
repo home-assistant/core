@@ -1,7 +1,5 @@
 """Constants for the Keyboard Remote integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 DOMAIN: Final = "keyboard_remote"
