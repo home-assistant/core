@@ -8,6 +8,11 @@
         "default": "mdi:led-on"
       }
     },
+    "select": {
+      "charge_mode": {
+        "default": "mdi:ev-plug-type2"
+      }
+    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
