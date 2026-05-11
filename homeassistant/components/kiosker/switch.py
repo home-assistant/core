@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KioskerConfigEntry
+from .const import REFRESH_DELAY
 from .coordinator import KioskerData
 from .entity import KioskerEntity
 
@@ -86,7 +87,7 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         except BadRequestError as exc:
             raise ServiceValidationError(f"Bad request: {exc}") from exc
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(REFRESH_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **_kwargs: Any) -> None:

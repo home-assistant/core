@@ -79,7 +79,7 @@ async def test_turn_on(
     mock_kiosker_api.screensaver_get_state.return_value = ScreensaverState(
         visible=True, disabled=True
     )
-    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+    with patch("homeassistant.components.kiosker.switch.REFRESH_DELAY", 0):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -104,7 +104,7 @@ async def test_turn_off(
     mock_kiosker_api.screensaver_get_state.return_value = ScreensaverState(
         visible=True, disabled=False
     )
-    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+    with patch("homeassistant.components.kiosker.switch.REFRESH_DELAY", 0):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -127,7 +127,7 @@ async def test_state_reflects_coordinator_data(
     )
 
     # API still reports disabled=False (device hasn't updated yet)
-    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+    with patch("homeassistant.components.kiosker.switch.REFRESH_DELAY", 0):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
