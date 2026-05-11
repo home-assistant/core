@@ -602,6 +602,56 @@ async def test_removing_clean_segments_command_topic_resets_feature(
     )
 
 
+async def test_clean_area_feature_preserved_on_config_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the clean area feature is preserved when config is updated with the same topic.
+
+    When a new config arrives that still has `clean_segments_command_topic` and
+    segments were previously received from state, the CLEAN_AREA feature should
+    be preserved without needing another state message.
+    """
+    await mqtt_mock_entry()
+
+    config = CONFIG_CLEAN_SEGMENTS[mqtt.DOMAIN][vacuum.DOMAIN]
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    message = """{
+        "battery_level": 54,
+        "state": "idle",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
+    updated_config = config.copy()
+    updated_config["name"] = "renamed"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(updated_config),
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
+
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
 async def test_status(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator

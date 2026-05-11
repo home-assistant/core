@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import DeviceFeature, LetPotDeviceStatus
+from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -21,15 +21,17 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSwitchEntityDescription(LetPotEntityDescription, SwitchEntityDescription):
+class LetPotSwitchEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, SwitchEntityDescription
+):
     """Describes a LetPot switch entity."""
 
-    value_fn: Callable[[LetPotDeviceStatus], bool | None]
+    value_fn: Callable[[_DataT], bool | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, bool], Coroutine[Any, Any, None]]
 
 
-SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
-    LetPotSwitchEntityDescription(
+SWITCHES: tuple[LetPotSwitchEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotSwitchEntityDescription[LetPotGardenStatus](
         key="alarm_sound",
         translation_key="alarm_sound",
         value_fn=lambda status: status.system_sound,
@@ -39,7 +41,7 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         supported_fn=lambda coordinator: coordinator.data.system_sound is not None,
     ),
-    LetPotSwitchEntityDescription(
+    LetPotSwitchEntityDescription[LetPotGardenStatus](
         key="auto_mode",
         translation_key="auto_mode",
         value_fn=lambda status: status.water_mode == 1,
@@ -58,7 +60,7 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
             )
         ),
     ),
-    LetPotSwitchEntityDescription(
+    LetPotSwitchEntityDescription[LetPotGardenStatus](
         key="power",
         translation_key="power",
         value_fn=lambda status: status.system_on,
@@ -67,7 +69,7 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotSwitchEntityDescription(
+    LetPotSwitchEntityDescription[LetPotGardenStatus](
         key="pump_cycling",
         translation_key="pump_cycling",
         value_fn=lambda status: status.pump_mode == 1,
@@ -87,7 +89,7 @@ async def async_setup_entry(
     """Set up LetPot switch entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
     entities: list[SwitchEntity] = [
-        LetPotSwitchEntity(coordinator, description)
+        LetPotSwitchEntity[LetPotGardenStatus](coordinator, description)
         for description in SWITCHES
         for coordinator in coordinators
         if description.supported_fn(coordinator)
@@ -95,15 +97,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LetPotSwitchEntity(LetPotEntity, SwitchEntity):
+class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], SwitchEntity
+):
     """Defines a LetPot switch entity."""
 
-    entity_description: LetPotSwitchEntityDescription
+    entity_description: LetPotSwitchEntityDescription[_DataT]
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
-        description: LetPotSwitchEntityDescription,
+        coordinator: LetPotDeviceCoordinator[_DataT],
+        description: LetPotSwitchEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot switch entity."""
         super().__init__(coordinator)
