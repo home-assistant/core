@@ -102,7 +102,9 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host}, reload_on_update=True
+        )
         self._async_abort_entries_match({CONF_HOST: host})
 
         self.context["title_placeholders"] = {"name": device_data[CONF_MODEL]}
