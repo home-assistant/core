@@ -21,7 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockInfraredEmitterEntity, MockInfraredReceiverEntity
+from . import ENTITY_ID
+from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
 
 from tests.common import mock_restore_cache
 
@@ -34,14 +35,14 @@ async def test_get_entities_component_not_loaded(hass: HomeAssistant) -> None:
     assert async_get_receivers(hass) == []
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_get_entities_empty(hass: HomeAssistant) -> None:
     """Test getting entities when none are registered."""
     assert async_get_emitters(hass) == []
     assert async_get_receivers(hass) == []
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_get_entities_filters_by_type(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -57,7 +58,15 @@ async def test_get_entities_filters_by_type(
     assert async_get_receivers(hass) == [mock_infrared_receiver_entity.entity_id]
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("mock_infrared_entity")
+async def test_infrared_entity_initial_state(hass: HomeAssistant) -> None:
+    """Test deprecated infrared entity has no state before any command is sent."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_infrared")
 async def test_infrared_entities_initial_state(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -75,7 +84,7 @@ async def test_infrared_entities_initial_state(
     assert receiver_state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_send_command_success(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -98,7 +107,7 @@ async def test_async_send_command_success(
     assert state.state == now.isoformat(timespec="milliseconds")
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_send_command_error_does_not_update_state(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -125,7 +134,7 @@ async def test_async_send_command_error_does_not_update_state(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when entity not found."""
     with pytest.raises(
@@ -135,7 +144,7 @@ async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
         await async_send_command(hass, "infrared.nonexistent_entity", TEST_COMMAND)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_send_command_rejects_receiver(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -196,7 +205,7 @@ async def test_infrared_entity_state_restore(
     assert receiver_state.state == expected_state
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_subscribe_receiver_success(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -229,7 +238,7 @@ async def test_async_subscribe_receiver_success(
     assert signal_callback.call_count == 1
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_handle_received_signal_isolates_callback_errors(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -256,7 +265,7 @@ async def test_handle_received_signal_isolates_callback_errors(
     assert "Error in signal callback" in caplog.text
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_handle_received_signal_unsubscribe_during_dispatch(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -289,7 +298,7 @@ async def test_handle_received_signal_unsubscribe_during_dispatch(
     assert other_callback.call_count == 2
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 @pytest.mark.parametrize(
     "entity_id_or_uuid",
     ["infrared.nonexistent_entity", "invalid-id"],
@@ -305,7 +314,7 @@ async def test_async_subscribe_receiver_not_found(
         async_subscribe_receiver(hass, entity_id_or_uuid, lambda _: None)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_infrared")
 async def test_async_subscribe_receiver_rejects_emitter(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,

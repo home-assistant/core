@@ -184,20 +184,23 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_create_entry(data=user_input, title=title)
 
         emitter_entities = async_get_emitters(self.hass)
-        if not emitter_entities:
-            return self.async_abort(reason="no_emitters")
+        receiver_entities = async_get_receivers(self.hass)
+
+        if not emitter_entities and not receiver_entities:
+            return self.async_abort(reason="no_infrared_entities")
 
         schema_dict: dict[vol.Marker, Any] = {
             vol.Required("name"): str,
-            vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+        }
+
+        if emitter_entities:
+            schema_dict[vol.Optional(CONF_INFRARED_ENTITY_ID)] = EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=emitter_entities,
                 )
-            ),
-        }
+            )
 
-        receiver_entities = async_get_receivers(self.hass)
         if receiver_entities:
             schema_dict[vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID)] = (
                 EntitySelector(

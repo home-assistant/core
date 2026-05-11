@@ -251,8 +251,10 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("no_platforms")
-async def test_infrared_fan_subentry_flow_no_emitters(hass: HomeAssistant) -> None:
-    """Test infrared fan subentry flow aborts when no emitters are available."""
+async def test_infrared_fan_subentry_flow_no_infrared_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test infrared fan subentry flow aborts when no infrared entities are available."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -264,4 +266,4 @@ async def test_infrared_fan_subentry_flow_no_emitters(hass: HomeAssistant) -> No
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_entities"
