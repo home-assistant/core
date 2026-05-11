@@ -1,7 +1,5 @@
 """Alexa capabilities."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import logging
 from typing import Any

@@ -1,7 +1,5 @@
 """Switcher integration Climate platform."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aioswitcher.api.remotes import SwitcherBreezeRemote

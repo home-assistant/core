@@ -1,7 +1,5 @@
 """Set up some common test helper things."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
@@ -1059,9 +1057,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.mid = mid
             self.rc = 0
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
         # callbacks to simulate the behavior of the real MQTT client which will
         # not be synchronous.
@@ -1142,7 +1138,10 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # noqa: PLC0415
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_PROTOCOL: "5",
+        }
     if mqtt_config_entry_options is None:
         mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 

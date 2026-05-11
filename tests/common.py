@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -31,6 +29,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
+from paho.mqtt.client import MQTTMessage
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -455,11 +454,6 @@ def async_fire_mqtt_message(
     retain: bool = False,
 ) -> None:
     """Fire the MQTT message."""
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
-
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):

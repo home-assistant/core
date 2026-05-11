@@ -1,7 +1,5 @@
 """Helpers to execute scripts."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
@@ -137,7 +135,7 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 
-DATA_SCRIPTS: HassKey[list[ScriptData]] = HassKey("helpers.script")
+DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
     "helpers.script_breakpoints"
 )
@@ -514,6 +512,7 @@ class _ScriptRun:
                             enabled = enabled.async_render(limited=True)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
+                                trace_element,
                                 ex,
                                 continue_on_error,
                                 self._log_exceptions or log_exceptions,
@@ -531,7 +530,10 @@ class _ScriptRun:
                     await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
-                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                        trace_element,
+                        ex,
+                        continue_on_error,
+                        self._log_exceptions or log_exceptions,
                     )
                 finally:
                     trace_element.update_variables(self._variables.non_parallel_scope)
@@ -554,7 +556,11 @@ class _ScriptRun:
             await self._stopped.wait()
 
     def _handle_exception(
-        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+        self,
+        trace_element: TraceElement,
+        exception: Exception,
+        continue_on_error: bool,
+        log_exceptions: bool,
     ) -> None:
         if not isinstance(exception, _HaltScript) and log_exceptions:
             self._log_exception(exception)
@@ -584,6 +590,9 @@ class _ScriptRun:
         # Only Home Assistant errors can be ignored.
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
+
+        # Mark the step as having an error, but continue running the script.
+        trace_element.set_error(exception)
 
     def _log_exception(self, exception: Exception) -> None:
         action_type = cv.determine_script_action(self._action)
@@ -1356,7 +1365,9 @@ async def _async_stop_scripts_after_shutdown(
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
-        script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
+        script
+        for script in hass.data[DATA_SCRIPTS].values()
+        if script["instance"].is_running
     ]
     if running_scripts:
         names = ", ".join([script["instance"].name for script in running_scripts])
@@ -1375,7 +1386,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
 
     running_scripts = [
         script
-        for script in hass.data[DATA_SCRIPTS]
+        for script in hass.data[DATA_SCRIPTS].values()
         if script["instance"].is_running and script["started_before_shutdown"]
     ]
     if running_scripts:
@@ -1456,16 +1467,17 @@ class Script:
 
         enabled attribute is only used for non-top-level scripts.
         """
-        if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
-            all_scripts = hass.data[DATA_SCRIPTS] = []
+        if (all_scripts := hass.data.get(DATA_SCRIPTS)) is None:
+            all_scripts = hass.data[DATA_SCRIPTS] = {}
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
         self.top_level = top_level
         if top_level:
-            all_scripts.append(
-                {"instance": self, "started_before_shutdown": not hass.is_stopping}
-            )
+            all_scripts[id(self)] = {
+                "instance": self,
+                "started_before_shutdown": not hass.is_stopping,
+            }
         if DATA_SCRIPT_BREAKPOINTS not in hass.data:
             hass.data[DATA_SCRIPT_BREAKPOINTS] = {}
 
@@ -1507,7 +1519,7 @@ class Script:
         if self._unloaded:
             return
         try:
-            self.async_unload()
+            self._async_unload()
         except Exception:
             _LOGGER.exception("Error while unloading script")
 
@@ -1775,16 +1787,22 @@ class Script:
         started_action: Callable[..., Any] | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
+        if self._unloaded:
+            raise RuntimeError(
+                f"Cannot run script '{self.name}' after it has been unloaded"
+            )
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return None
+        # The fences above rely on there being no await between these checks
+        # and the _runs.append below, so that setting either flag is
+        # sufficient to block new runs from being added.
+
         if context is None:
             self._log(
                 "Running script requires passing in a context", level=logging.WARNING
             )
             context = Context()
-
-        # Prevent spawning new script runs when Home Assistant is shutting down
-        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
-            self._log("Home Assistant is shutting down, starting script blocked")
-            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1895,7 +1913,20 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
-    def async_unload(self) -> None:
+    async def async_unload(self) -> None:
+        """Unload the script, stopping any in-flight runs first.
+
+        Blocks new runs immediately, stops any in-flight runs, then cleans
+        up all resources.
+        """
+        if self._unloaded:
+            return
+        # Set the flag before stopping so async_run rejects new runs.
+        self._unloaded = True
+        await self.async_stop()
+        self._async_unload()
+
+    def _async_unload(self) -> None:
         """Unload the script, cleaning up all resources.
 
         Unloads cached conditions, and recursively unloads sub-scripts.
@@ -1908,36 +1939,40 @@ class Script:
             )
         self._unloaded = True
 
+        # Remove from global script registry
+        if self.top_level:
+            del self._hass.data[DATA_SCRIPTS][id(self)]
+
         for cond in self._condition_cache.values():
             cond.async_unload()
         self._condition_cache.clear()
 
         for sub_script in self._repeat_script.values():
-            sub_script.async_unload()
+            sub_script._async_unload()  # noqa: SLF001
         self._repeat_script.clear()
 
         # Conditions in _choose_data and _if_data are the same objects as in
         # _condition_cache, so they're already unloaded above. Only unload scripts.
         for choose_data in self._choose_data.values():
             for _conditions, sub_script in choose_data["choices"]:
-                sub_script.async_unload()
+                sub_script._async_unload()  # noqa: SLF001
             if choose_data["default"] is not None:
-                choose_data["default"].async_unload()
+                choose_data["default"]._async_unload()  # noqa: SLF001
         self._choose_data.clear()
 
         for if_data in self._if_data.values():
-            if_data["if_then"].async_unload()
+            if_data["if_then"]._async_unload()  # noqa: SLF001
             if if_data["if_else"] is not None:
-                if_data["if_else"].async_unload()
+                if_data["if_else"]._async_unload()  # noqa: SLF001
         self._if_data.clear()
 
         for scripts in self._parallel_scripts.values():
             for sub_script in scripts:
-                sub_script.async_unload()
+                sub_script._async_unload()  # noqa: SLF001
         self._parallel_scripts.clear()
 
         for sub_script in self._sequence_scripts.values():
-            sub_script.async_unload()
+            sub_script._async_unload()  # noqa: SLF001
         self._sequence_scripts.clear()
 
     async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:

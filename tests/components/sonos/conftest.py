@@ -1,7 +1,5 @@
 """Configuration for Sonos tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
