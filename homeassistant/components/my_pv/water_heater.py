@@ -141,7 +141,6 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         _LOGGER.debug("Turning on %s", self.name)
 
         if await self.coordinator.turn_on():
-            self._attr_current_operation = STATE_ELECTRIC
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(
@@ -153,7 +152,6 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         _LOGGER.debug("Turning off %s", self.name)
 
         if await self.coordinator.turn_off():
-            self._attr_current_operation = STATE_OFF
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(
