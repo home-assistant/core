@@ -125,7 +125,7 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
