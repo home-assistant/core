@@ -1,7 +1,7 @@
 {
   "common": {
     "discovery_description": "Do you want to set up {name}?",
-    "password_description": "The password of your my-PV device. When no custom password is set you have to use the **devicekey** which can be found under the ⓘ info menu of your my-PV device. For the HEA•THOR IoT you can find the **devicekey** on the device label."
+    "password_description": "The password of your my-PV device. If no custom password is set you have to use the **devicekey** which can be found under the ⓘ info menu of your my-PV device. For the HEA•THOR IoT you can find the **devicekey** on the device label."
   },
   "config": {
     "abort": {
