@@ -29,7 +29,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         device: MyPVDevice,
-        update_interval: timedelta,
     ) -> None:
         """Initialize my-PV Data Update Coordinator."""
         super().__init__(
@@ -39,7 +38,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             name=__name__,
             config_entry=config_entry,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=5),
             always_update=True,
         )
 
