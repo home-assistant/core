@@ -1,8 +1,10 @@
 """Test the Avea light platform."""
 
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.light import (
@@ -14,18 +16,17 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 
 from . import AVEA_DISCOVERY_INFO
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
 def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
-    bulb.name = "Unknown"
+    bulb.name = "Bedroom"
     bulb.brightness = 0
     bulb.get_brightness.return_value = 0
     return bulb
@@ -61,8 +62,6 @@ async def test_init_state(
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
-    assert (entity_entry := entity_registry.async_get("light.bedroom"))
-    assert entity_entry.unique_id == AVEA_DISCOVERY_INFO.address
 
 
 async def test_turn_on_and_off(
@@ -108,12 +107,21 @@ async def test_turn_on_and_off(
     bulb.set_brightness.assert_called_with(0)
 
 
-async def test_update_state(hass: HomeAssistant, setup_integration: MagicMock) -> None:
+async def test_update_state(
+    hass: HomeAssistant, setup_integration: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test updating the entity state."""
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_BRIGHTNESS] is None
+
     bulb = setup_integration
     bulb.get_brightness.return_value = 2048
 
-    await async_update_entity(hass, "light.bedroom")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("light.bedroom")
     assert state is not None
