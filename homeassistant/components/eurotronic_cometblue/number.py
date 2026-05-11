@@ -1,7 +1,5 @@
 """Comet Blue number integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -25,18 +23,11 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class CometBlueRequiredKeysMixin:
-    """Mixin for required keys."""
+class CometBlueNumberEntityDescription(NumberEntityDescription):
+    """Describes a Comet Blue number entity."""
 
     cometblue_key: str
     set_fn: Callable[[AsyncCometBlue], Any]
-
-
-@dataclass(frozen=True, kw_only=True)
-class CometBlueNumberEntityDescription(
-    NumberEntityDescription, CometBlueRequiredKeysMixin
-):
-    """Describes a Comet Blue number entity."""
 
 
 DESCRIPTIONS = [
