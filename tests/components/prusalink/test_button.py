@@ -39,7 +39,7 @@ def press_button_and_verify(hass: HomeAssistant):
                 {"entity_id": entity_id},
                 blocking=True,
             )
-        assert len(mock_meth.mock_calls) == 1
+        mock_meth.assert_awaited_once()
 
         with (
             pytest.raises(HomeAssistantError),
