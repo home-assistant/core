@@ -1,4 +1,4 @@
-"""Test fixtures for the Denon RS232 integration."""
+"""Test fixtures for the Denon RS-232 integration."""
 
 from typing import Literal
 from unittest.mock import AsyncMock, patch
