@@ -90,6 +90,7 @@ class SomfyRTSConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input or {},
             ),
             errors=errors,
+      last_step = False,
         )
 
     async def async_step_prog(
