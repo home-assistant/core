@@ -323,7 +323,7 @@ class InfraredEntityDescription(InfraredEmitterEntityDescription):
 
 @deprecated_class(
     "homeassistant.components.infrared.InfraredEmitterEntity",
-    breaks_in_ha_version="2027.5",
+    breaks_in_ha_version="2027.6",
 )
 class InfraredEntity(InfraredEmitterEntity):
     """Deprecated alias for InfraredEmitterEntity."""
