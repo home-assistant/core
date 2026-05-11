@@ -11,6 +11,7 @@ from yolink.const import (
     ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_SMOKE_ALARM,
+    ATTR_DEVICE_SPRINKLER_V2,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
@@ -49,6 +50,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_WATER_METER_CONTROLLER,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_SMOKE_ALARM,
+    ATTR_DEVICE_SPRINKLER_V2,
 ]
 
 
@@ -165,6 +167,29 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: (
             state.get("waterFlowing")
+            if (state := data.get("state")) is not None
+            else None
+        ),
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="sprinkler_water_flowing",
+        translation_key="sprinkler_water_flowing",
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            bool(data.get("waterFlowing"))
+            if data.get("waterFlowing") is not None
+            else None
+        ),
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="sprinkler_no_water",
+        translation_key="sprinkler_no_water",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            state.get("noWaterWhenRunning")
             if (state := data.get("state")) is not None
             else None
         ),

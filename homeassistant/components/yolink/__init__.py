@@ -4,7 +4,11 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
+from yolink.const import (
+    ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_SPRINKLER_V2,
+    ATTR_DEVICE_SWITCH,
+)
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -72,7 +76,32 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinator.dev_online = True
         if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
             device_coordinator.dev_net_type = loraInfo.get("devNetType")
-        device_coordinator.async_set_updated_data(msg_data)
+        if (
+            device_coordinator.device.device_type == ATTR_DEVICE_SPRINKLER_V2
+            and device_coordinator.data
+        ):
+            previous_running = bool(
+                device_coordinator.data.get("state", {}).get("running")
+            )
+            new_running = False
+            if (state := msg_data.get("state")) is not None:
+                new_running = bool(state.get("running"))
+            merged = {**device_coordinator.data, **msg_data}
+            if isinstance(device_coordinator.data.get("state"), dict) and isinstance(
+                msg_data.get("state"), dict
+            ):
+                merged["state"] = {
+                    **device_coordinator.data["state"],
+                    **msg_data["state"],
+                }
+            device_coordinator.adjust_sprinkler_interval(merged)
+            device_coordinator.async_set_updated_data(merged)
+            if new_running and not previous_running:
+                self._hass.async_create_task(
+                    device_coordinator.async_request_refresh()
+                )
+        else:
+            device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
             device_coordinator.device.device_type

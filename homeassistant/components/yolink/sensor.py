@@ -414,6 +414,58 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
             state.get("co") if (state := data.get("state")) is not None else None
         ),
     ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_progress",
+        translation_key="sprinkler_progress",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            round(running.get("progress", 0) / attrs.get("meterStepFactor", 10), 2)
+            if (running := data.get("running")) is not None
+            and (attrs := data.get("attributes")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_target",
+        translation_key="sprinkler_target",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            round(total.get("value", 0) / attrs.get("meterStepFactor", 10), 2)
+            if (running := data.get("running")) is not None
+            and (total := running.get("total")) is not None
+            and (attrs := data.get("attributes")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_target_type",
+        translation_key="sprinkler_target_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["duration", "amount"],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            total.get("type")
+            if (running := data.get("running")) is not None
+            and (total := running.get("total")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_water_mode",
+        translation_key="sprinkler_water_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["manual", "schedule"],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: data.get("waterMode"),
+    ),
 )
 
 
