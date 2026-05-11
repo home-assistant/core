@@ -799,6 +799,28 @@ async def test_partial_backup_legacy_homeassistant_folder(
     )
 
 
+@pytest.mark.usefixtures("hassio_env")
+async def test_partial_restore_legacy_homeassistant_folder(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test that the legacy "homeassistant" folder is translated for restore too."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    await hass.services.async_call(
+        "hassio",
+        "restore_partial",
+        {"slug": "test", "folders": ["homeassistant", "ssl"]},
+        blocking=True,
+    )
+    supervisor_client.backups.partial_restore.assert_called_once_with(
+        "test",
+        PartialRestoreOptions(
+            homeassistant=True,
+            folders={Folder.SSL},
+        ),
+    )
+
+
 @pytest.mark.usefixtures("hassio_env", "supervisor_client")
 async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
     """Test that an unknown folder name is rejected."""
