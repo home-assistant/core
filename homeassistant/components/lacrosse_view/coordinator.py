@@ -1,8 +1,6 @@
 """DataUpdateCoordinator for LaCrosse View."""
 
-from __future__ import annotations
-
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 import logging
 from time import time
 
@@ -28,8 +26,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     name: str
     id: str
     hass: HomeAssistant
-    devices: list[Sensor] | None
-    last_login: float
+    devices: list[Sensor] | None = None
     config_entry: LaCrosseConfigEntry
 
     def __init__(
@@ -40,14 +37,11 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
+        self.last_update = time()
         self.username = entry.data["username"]
         self.password = entry.data["password"]
         self.name = entry.data["name"]
         self.id = entry.data["id"]
-
-        self.last_login = time()
-        self.devices = None
-
         super().__init__(
             hass,
             _LOGGER,
@@ -60,16 +54,14 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         """Get the data for LaCrosse View."""
         now = int(time())
 
-        # Refresh auth token once per hour
         if now - self.last_login > 59 * 60:
-            _LOGGER.debug("Refreshing token")
+            _LOGGER.debug("Refreshing LaCrosse View token")
             self.last_login = now
             try:
                 await self.api.login(self.username, self.password)
             except LoginError as error:
                 raise ConfigEntryAuthFailed from error
 
-        # Fetch devices once
         if self.devices is None:
             _LOGGER.debug("Getting devices")
             try:
@@ -79,80 +71,28 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             except HTTPError as error:
                 raise UpdateFailed from error
 
-        utc_now = datetime.now(tz=UTC)
-
-        # Fetch last hour of data
         for sensor in self.devices:
             try:
-                response = await self.api.get_sensor_status(
+                sensor.data = await self.api.get_sensor_status_filtered(
                     sensor=sensor,
                     tz=self.hass.config.time_zone,
+                    stale_threshold=STALE_DATA_THRESHOLD,
+                    previous_data=sensor.data,
                 )
             except HTTPError as error:
                 error_data = error.args[1] if len(error.args) > 1 else None
-
                 if (
                     isinstance(error_data, dict)
                     and error_data.get("error") == "no_readings"
                 ):
-                    sensor.data = None
                     _LOGGER.debug("No readings for %s", sensor.name)
+                    sensor.data = None
                     continue
-
                 raise UpdateFailed(
-                    translation_domain=DOMAIN, translation_key="update_error"
+                    translation_domain=DOMAIN,
+                    translation_key="update_error",
                 ) from error
 
-            _LOGGER.debug("Got data: %s", response)
-
-            if data_error := response.get("error"):
-                if data_error == "no_readings":
-                    sensor.data = None
-                    _LOGGER.debug("No readings for %s", sensor.name)
-                    continue
-                _LOGGER.debug("Error: %s", data_error)
-                raise UpdateFailed(
-                    translation_domain=DOMAIN, translation_key="update_error"
-                )
-
-            current_data = response.get("data", {}).get("current")
-            if not current_data:
-                _LOGGER.debug("No current data payload for %s", sensor.name)
-                continue
-
-            previous_data = sensor.data or {}
-            filtered_data: dict[str, dict | None] = {}
-
-            for field, field_data in current_data.items():
-                spot = field_data.get("spot") if field_data else None
-                if not spot:
-                    filtered_data[field] = field_data
-                    continue
-
-                timestamp = spot.get("time")
-                # Only check for stale data if timestamp exists; data without timestamp is fresh
-                if timestamp is not None:
-                    try:
-                        spot_time = datetime.fromtimestamp(timestamp, tz=UTC)
-                    except TypeError, ValueError, OSError:
-                        continue
-
-                    age = utc_now - spot_time
-                    if age > STALE_DATA_THRESHOLD:
-                        _LOGGER.debug(
-                            "Stale spot reading ignored: %s / %s (%.1f hours old), retaining old value",
-                            sensor.name,
-                            field,
-                            age.total_seconds() / 3600,
-                        )
-                        filtered_data[field] = previous_data.get(field)
-                        continue
-
-                filtered_data[field] = field_data
-
-            sensor.data = filtered_data
-
-        # Ensure read permission exists
         for sensor in self.devices:
             if not sensor.permissions.get("read", False):
                 raise ConfigEntryAuthFailed(
