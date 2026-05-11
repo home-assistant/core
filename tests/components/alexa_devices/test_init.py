@@ -218,3 +218,53 @@ async def test_http2_task_exception_group_is_unwrapped(
         await hass.async_block_till_done()
 
     mock_reauth.assert_called_once_with(hass)
+
+
+async def test_http2_task_cancelled_exits_early(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cancelled HTTP2 task exits callback early."""
+    cancelled_task: asyncio.Future[None] = hass.loop.create_future()
+    cancelled_task.cancel()
+
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: cancelled_task
+    )
+
+    with (
+        patch("homeassistant.components.alexa_devices._LOGGER.error") as mock_error,
+        patch("homeassistant.components.alexa_devices._LOGGER.warning") as mock_warning,
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+    mock_error.assert_not_called()
+    mock_warning.assert_not_called()
+    mock_reload.assert_not_called()
+    mock_reauth.assert_not_called()
+
+
+async def test_http2_task_is_cancelled_on_unload(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HTTP2 task is cancelled during unload."""
+    http2_task = hass.loop.create_task(asyncio.sleep(3600))
+
+    mock_amazon_devices_client.start_http2_processing.side_effect = (
+        lambda *_args, **_kwargs: http2_task
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert not http2_task.cancelled()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert http2_task.cancelled()
