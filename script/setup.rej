@@ -1,0 +1,10 @@
+***************
+*** 21
+-     uv venv .venv
+--- 23 -----
++     uv venv .venv --copies
+***************
+*** 23
+-     python3 -m venv .venv
+--- 25 -----
++     python3 -m venv .venv --copies
