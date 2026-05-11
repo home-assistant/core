@@ -21,9 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 class MyPVCoordinator(DataUpdateCoordinator[None]):
     """my-PV Data Update Coordinator."""
 
-    _device: MyPVDevice
-    _device_info: DeviceInfo
-
     def __init__(
         self,
         hass: HomeAssistant,
