@@ -131,67 +131,6 @@
     'state': '30',
   })
 # ---
-# name: test_sensor[sensor.fenix_door_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'closed',
-        'open',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fenix_door_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Door state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:door',
-    'original_name': 'Door state',
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'door_state',
-    'unique_id': '900412569_00:43319382-443E0748CCD4_door_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.fenix_door_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Fenix Door state',
-      'icon': 'mdi:door',
-      'options': list([
-        'closed',
-        'open',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fenix_door_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
 # name: test_sensor[sensor.fenix_food_probe_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -507,67 +446,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
-  })
-# ---
-# name: test_sensor[sensor.pux_pizza_oven_door_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'closed',
-        'open',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pux_pizza_oven_door_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Door state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:door',
-    'original_name': 'Door state',
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'door_state',
-    'unique_id': '949288049_00:11112225-443E076A37D6_door_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.pux_pizza_oven_door_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'PUX pizza oven Door state',
-      'icon': 'mdi:door',
-      'options': list([
-        'closed',
-        'open',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pux_pizza_oven_door_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
   })
 # ---
 # name: test_sensor[sensor.pux_pizza_oven_remote_control-entry]

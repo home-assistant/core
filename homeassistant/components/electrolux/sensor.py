@@ -16,7 +16,6 @@ from electrolux_group_developer_sdk.feature_constants import (
     DISPLAY_FOOD_PROBE_TEMPERATURE_F,
     DISPLAY_TEMPERATURE_C,
     DISPLAY_TEMPERATURE_F,
-    DOOR_STATE,
     FOOD_PROBE_STATE,
     REMOTE_CONTROL,
 )
@@ -86,19 +85,6 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         known_values={
             "inserted",
             "not_inserted",
-        },
-    ),
-    ElectroluxSensorDescription(
-        key="door_state",
-        translation_key="door_state",
-        icon="mdi:door",
-        value_fn=lambda appliance: appliance.get_current_door_state(),
-        device_class=SensorDeviceClass.ENUM,
-        feature_name=DOOR_STATE,
-        exists_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
-        known_values={
-            "closed",
-            "open",
         },
     ),
     ElectroluxSensorDescription(
@@ -216,7 +202,7 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
                 in description.known_values
             ]
 
-            if len(snake_case_options) > 1:
+            if len(snake_case_options) > 0:
                 self._attr_options = snake_case_options
 
         self.entity_description = description
@@ -225,10 +211,11 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         new_value = self._get_value()
         if isinstance(new_value, str):
             new_value = _convert_to_snake_case(new_value)
-            if self.translation_key and self.entity_description.known_values:
+
+            if self.entity_description.known_values:
                 new_value = _map_to_known_value(
                     self.entity_description.known_values,
-                    self.translation_key,
+                    self.entity_description.key,
                     new_value,
                 )
 
@@ -258,10 +245,12 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
 
     def _get_value(self) -> StateType:
         temp_unit = self._get_temperature_unit()
-        temp_value: float = cast(
-            float,
+        temp_value: float | None = cast(
+            float | None,
             self.entity_description.value_fn(self._appliance_data, temp_unit=temp_unit),
         )
+        if temp_value is None:
+            return None
         return TemperatureConverter.convert(
             temp_value, temp_unit, UnitOfTemperature.CELSIUS
         )
@@ -278,28 +267,28 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
 
 
 def _convert_to_snake_case(x: str) -> str:
-    "Converts a string to snake case."
+    """Converts a string to snake case."""
     lower_case = x.lower()
     return "".join([_convert_char_to_snake_case(char) for char in lower_case])
 
 
-def _convert_char_to_snake_case(char: str):
+def _convert_char_to_snake_case(char: str) -> str:
     if char.isspace():
         return "_"
     return char
 
 
 def _map_to_known_value(
-    known_values: set[str], entity_name: str, value: str
+    known_values: set[str], entity_key: str, value: str
 ) -> str | None:
     """Return provided value if it is known, otherwise log warn message and return None."""
     if value not in known_values:
         _LOGGER.warning(
-            "An unknown value %s was reported for an sensor of the Electrolux integration. "
+            "An unknown value %s was reported for a sensor of the Electrolux integration. "
             "Please report it for the integration, and include the following information: "
-            'entity name="%s", reported value="%s"',
+            'entity key="%s", reported value="%s"',
             value,
-            entity_name,
+            entity_key,
             value,
         )
         return None

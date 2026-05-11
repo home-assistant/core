@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
     except FailedConnectionException as e:
         raise ConfigEntryNotReady("Connection with client failed.") from e
 
-    appliances: list[ApplianceData]
     try:
         appliances = await fetch_appliance_data(client)
     except ApplianceClientException as e:
@@ -145,7 +144,7 @@ def create_token_manager(
 
     if access_token and refresh_token and api_key:
         return TokenManager(access_token, refresh_token, api_key, save_tokens)
-    raise ConfigEntryAuthFailed
+    raise ConfigEntryAuthFailed("Missing access token, refresh token or API key")
 
 
 async def _check_for_new_devices(
@@ -156,10 +155,8 @@ async def _check_for_new_devices(
 ) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
-    device_registry = dr.async_get(hass)
 
     coordinators = entry.runtime_data.coordinators
-    appliances: list[ApplianceData]
     appliances = await fetch_appliance_data(client)
     entry.runtime_data.appliances = appliances
 
@@ -188,6 +185,7 @@ async def _check_for_new_devices(
     # Detect MISSING appliances
     discovered_ids = {appliance.appliance.applianceId for appliance in appliances}
     missing_ids = existing_ids - discovered_ids
+    device_registry = dr.async_get(hass)
     for missing_id in missing_ids:
         _LOGGER.warning("Appliance %s no longer found, removing", missing_id)
 
@@ -196,7 +194,6 @@ async def _check_for_new_devices(
         coordinator.remove_client_listeners()
         on_livestream_opening_callback_list.remove(coordinator.async_refresh)
 
-        device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, missing_id)}
         )

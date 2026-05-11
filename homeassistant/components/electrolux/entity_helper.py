@@ -23,7 +23,7 @@ async def async_setup_entities_helper(
         [ApplianceData, dict[str, ElectroluxDataUpdateCoordinator]],
         list[ElectroluxBaseEntity],
     ],
-):
+) -> None:
     """Provide async_setup_entry helper."""
 
     appliances: list[ApplianceData] = entry.runtime_data.appliances

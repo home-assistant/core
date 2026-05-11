@@ -42,13 +42,6 @@
       "display_temperature": {
         "name": "Current temperature"
       },
-      "door_state": {
-        "name": "Door state",
-        "state": {
-          "closed": "[%key:common::state::closed%]",
-          "open": "[%key:common::state::open%]"
-        }
-      },
       "food_probe_state": {
         "name": "Food probe state",
         "state": {

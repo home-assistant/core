@@ -29,6 +29,7 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the Electrolux integration."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,14 +47,13 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
                     token_manager=token_manager, external_user_agent=USER_AGENT
                 )
                 email = (await client.get_user_email()).email
-                # Don't allow the same user to be able to be set up twice
-                await self.async_set_unique_id(token_manager.get_user_id())
             except InvalidCredentialsException, BadCredentialsException:
                 errors["base"] = "invalid_auth"
             except FailedConnectionException:
                 errors["base"] = "cannot_connect"
-
-            self._abort_if_unique_id_configured()
+            else:
+                await self.async_set_unique_id(token_manager.get_user_id())
+                self._abort_if_unique_id_configured()
 
             if not errors:
                 return self.async_create_entry(

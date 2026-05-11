@@ -41,16 +41,16 @@ async def test_user_flow_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == "form"
-    assert result.get("errors") == {}
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=valid_user_input
     )
 
-    assert result2.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Electrolux for mock@email.com"
-    assert result2.get("data") == valid_user_input
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Electrolux for mock@email.com"
+    assert result2["data"] == valid_user_input
 
 
 async def test_user_flow_invalid_auth(
@@ -61,7 +61,7 @@ async def test_user_flow_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     mock_token_manager.ensure_credentials.side_effect = InvalidCredentialsException
 
@@ -70,8 +70,8 @@ async def test_user_flow_invalid_auth(
         user_input=invalid_user_input,
     )
 
-    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("errors") == {"base": "invalid_auth"}
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
     mock_token_manager.ensure_credentials.side_effect = None
 
@@ -79,9 +79,9 @@ async def test_user_flow_invalid_auth(
         result2["flow_id"], user_input=valid_user_input
     )
 
-    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Electrolux for mock@email.com"
-    assert result3.get("data") == valid_user_input
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Electrolux for mock@email.com"
+    assert result3["data"] == valid_user_input
 
 
 async def test_user_flow_bad_credentials(
@@ -93,7 +93,7 @@ async def test_user_flow_bad_credentials(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     appliances.test_connection.side_effect = BadCredentialsException()
 
@@ -102,8 +102,8 @@ async def test_user_flow_bad_credentials(
         user_input=invalid_user_input,
     )
 
-    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("errors") == {"base": "invalid_auth"}
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
     appliances.test_connection.side_effect = None
 
@@ -111,9 +111,9 @@ async def test_user_flow_bad_credentials(
         result2["flow_id"], user_input=valid_user_input
     )
 
-    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Electrolux for mock@email.com"
-    assert result3.get("data") == valid_user_input
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Electrolux for mock@email.com"
+    assert result3["data"] == valid_user_input
 
 
 async def test_user_flow_failed_connection(
@@ -125,7 +125,7 @@ async def test_user_flow_failed_connection(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == "form"
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     appliances.test_connection.side_effect = FailedConnectionException()
 
@@ -134,8 +134,8 @@ async def test_user_flow_failed_connection(
         user_input=invalid_user_input,
     )
 
-    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("errors") == {"base": "cannot_connect"}
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
     appliances.test_connection.side_effect = None
 
@@ -143,9 +143,9 @@ async def test_user_flow_failed_connection(
         result2["flow_id"], user_input=valid_user_input
     )
 
-    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Electrolux for mock@email.com"
-    assert result3.get("data") == valid_user_input
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Electrolux for mock@email.com"
+    assert result3["data"] == valid_user_input
 
 
 async def test_user_flow_duplicate_entry(
@@ -161,12 +161,12 @@ async def test_user_flow_duplicate_entry(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=valid_user_input,
     )
 
-    assert result2.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result2.get("reason") == "already_configured"
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
