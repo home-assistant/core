@@ -3216,7 +3216,7 @@ async def test_discovery_with_late_via_device_update(
 
 
 async def test_shared_options_in_sync_with_device_schema() -> None:
-    """Test shared option in device discovery schema are in sync.
+    """Test shared options in device discovery schema are in sync.
 
     The SHARED_OPTIONS should be in sync with the device discovery schema.
     """
@@ -3345,7 +3345,7 @@ async def test_shared_qos_with_device_discovery(
     device_config: dict[str, Any],
     qos: int,
 ) -> None:
-    """Test shared qos option are passed forward to component configs."""
+    """Test shared qos options are passed forward to component configs."""
     mqtt_mock = await mqtt_mock_entry()
     mqtt_mock.reset_mock()
     async_fire_mqtt_message(
