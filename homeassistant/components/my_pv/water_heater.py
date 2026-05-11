@@ -13,10 +13,10 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyPVConfigEntry, MyPVCoordinator
 from .const import DOMAIN
+from .entity import MyPVBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def async_setup_entry(
         )
     ):
         entity_description = MyPVWaterHeaterEntityDescription(
-            key="boiler",
+            key="temp1",
             temperature_unit=target_temperature_config["unit"],
             target_temperature_step=target_temperature_config["step"],
             max_temp=target_temperature_config["max"],
@@ -72,7 +72,7 @@ class MyPVWaterHeaterEntityDescription(
     temperature_unit: str
 
 
-class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
+class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
     """Base my-PV WaterHeater."""
 
     _attr_has_entity_name = True
