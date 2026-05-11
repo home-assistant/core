@@ -39,6 +39,12 @@ async def async_setup_entry(
     )
     config_entry.async_on_unload(cb)
 
+    # The manager may have already connected (and dispatched SIGNAL_CONNECTED)
+    # before this platform was forwarded, in which case the signal above was
+    # missed — handle that case directly.
+    if manager.atv is not None:
+        setup_entities(manager.atv)
+
 
 class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener):
     """Binary sensor for Text input focused."""
