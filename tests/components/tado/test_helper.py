@@ -1,5 +1,7 @@
 """Helper method tests."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from unittest.mock import MagicMock, patch
 
 from PyTado.interface import Tado

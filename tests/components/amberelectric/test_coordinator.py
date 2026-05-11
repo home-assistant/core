@@ -1,5 +1,7 @@
 """Tests for the Amber Electric Data Coordinator."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from collections.abc import Generator
 from datetime import date
 from unittest.mock import Mock, patch

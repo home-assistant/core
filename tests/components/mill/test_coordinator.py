@@ -1,5 +1,7 @@
 """Test adding external statistics from Mill."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from unittest.mock import AsyncMock
 
 from mill import Heater, Mill, Sensor

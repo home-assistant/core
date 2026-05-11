@@ -1,5 +1,7 @@
 """Tests for Fritz!Tools coordinator."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from collections.abc import Generator
 from copy import deepcopy
 from typing import cast

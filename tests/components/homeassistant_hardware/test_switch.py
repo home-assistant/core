@@ -1,5 +1,7 @@
 """Test Home Assistant Hardware beta firmware switch entity."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, call, patch
 

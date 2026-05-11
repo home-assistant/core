@@ -1,5 +1,7 @@
 """Test adding external statistics from Tibber."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.recorder import Recorder

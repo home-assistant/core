@@ -1,5 +1,7 @@
 """Tests for the Opower coordinator."""
 
+# pylint: disable=hass-no-coordinator-instantiation-in-tests
+
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
