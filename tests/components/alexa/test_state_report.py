@@ -530,7 +530,7 @@ async def test_send_delete_message(
 async def test_doorbell_event_binary_sensor(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test doorbell press via bionary sensor reports."""
+    """Test doorbell press via binary sensor reports."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
