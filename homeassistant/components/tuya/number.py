@@ -228,7 +228,7 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.SFKZQ: (
-        # Controls the irrigation duration for the water valve
+        # Controls the irrigation duration for indexed water valves
         NumberEntityDescription(
             key=DPCode.COUNTDOWN_1,
             translation_key="indexed_irrigation_duration",
