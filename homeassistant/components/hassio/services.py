@@ -76,27 +76,12 @@ VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 LEGACY_FOLDER_HOMEASSISTANT = "homeassistant"
 
 
-def _valid_folder(value: Any) -> str:
-    """Validate value is a known folder name (including legacy homeassistant)."""
-    value = cv.string(value)
-    if value == LEGACY_FOLDER_HOMEASSISTANT:
-        return value
-    try:
-        Folder(value)
-    except ValueError as err:
-        raise vol.Invalid(f"Not a valid folder: {value}") from err
-    return value
-
-
 def _normalize_partial_options_data(data: dict[str, Any]) -> dict[str, Any]:
-    """Translate folders to Folder enum and handle legacy homeassistant folder.
-
-    Shared by both partial backup and partial restore service handlers.
-    """
+    """Map legacy aliases used by both partial backup and partial restore handlers."""
     if ATTR_APPS in data:
         data[ATTR_ADDONS] = data.pop(ATTR_APPS)
     if ATTR_FOLDERS in data:
-        folders = set(data[ATTR_FOLDERS])
+        folders: set[Any] = set(data[ATTR_FOLDERS])
         if LEGACY_FOLDER_HOMEASSISTANT in folders:
             folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
             if data.get(ATTR_HOMEASSISTANT) is False:
@@ -106,7 +91,7 @@ def _normalize_partial_options_data(data: dict[str, Any]) -> dict[str, Any]:
                 )
             data[ATTR_HOMEASSISTANT] = True
         if folders:
-            data[ATTR_FOLDERS] = {Folder(folder) for folder in folders}
+            data[ATTR_FOLDERS] = folders
         else:
             data.pop(ATTR_FOLDERS)
     return data
@@ -154,7 +139,10 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [_valid_folder], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
@@ -177,7 +165,10 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [_valid_folder], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)

@@ -826,7 +826,7 @@ async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
     """Test that an unknown folder name is rejected."""
     assert await async_setup_component(hass, "hassio", {})
 
-    with pytest.raises(Invalid, match="Not a valid folder"):
+    with pytest.raises(Invalid, match="not a valid value"):
         await hass.services.async_call(
             "hassio", "backup_partial", {"folders": ["bogus"]}
         )
