@@ -7,7 +7,7 @@ from typing import Any
 
 import caldav
 from ical.types import Range
-from icalendar import vDDDTypes, vRecur
+from icalendar import vDDDTypes, vRecur, vText
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -471,7 +471,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 master_event.icalendar_component[EVENT_RRULE].pop(
                     "count", None
                 )  # use pop to avoid KeyError
-                until = recurrence_datetime - timedelta(days=1)
+                until = recurrence_datetime - timedelta(seconds=1)
                 master_event.icalendar_component[EVENT_RRULE]["until"] = until
 
                 # Create a new event in the calendar and retrieve its uid
@@ -510,6 +510,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 if hasattr(master_event.vobject_instance.vevent, "related-to"):
                     # UIDs of related events
                     related_uids = master_event.icalendar_component["related-to"]
+                    if isinstance(related_uids, (str, vText)):
+                        related_uids = [related_uids]
                     missing_uids = []
                     for related_uid in related_uids:
                         if related_uid == new_event_uid:
