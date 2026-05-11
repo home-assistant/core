@@ -21,6 +21,7 @@ from homeassistant.components.mqtt.config_flow import (
     PWD_NOT_CHANGED,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
+from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -1133,7 +1134,7 @@ async def test_option_flow(
         }
         assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_QOS: 2,
+            CONF_DISCOVERY_QOS: 2,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
@@ -1392,7 +1393,7 @@ async def test_disable_birth_will(
         user_input={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
-            mqtt.CONF_DISCOVERY_QOS: 0,
+            CONF_DISCOVERY_QOS: 0,
             "birth_enable": False,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -1416,7 +1417,7 @@ async def test_disable_birth_will(
     assert config_entry.data == {mqtt.CONF_BROKER: "test-broker", CONF_PORT: 1234}
     assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_QOS: 0,
+        CONF_DISCOVERY_QOS: 0,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
@@ -1512,7 +1513,7 @@ async def test_option_flow_default_suggested_values(
         },
         options={
             mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_QOS: 1,
+            CONF_DISCOVERY_QOS: 1,
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
                 mqtt.ATTR_PAYLOAD: "online",
