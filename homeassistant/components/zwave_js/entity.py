@@ -465,8 +465,9 @@ class ZWaveNodeBaseEntity(Entity):
         # and we don't want to raise the exception in that separate task because
         # it is confusing to the user.
         LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
+            "There is no value to refresh for %s so the zwave_js.refresh_value"
+            " service won't work for it",
+            self.entity_id,
         )
 
     async def async_added_to_hass(self) -> None:
