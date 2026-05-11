@@ -501,6 +501,23 @@ def test_scan_input_devices_oserror_on_device() -> None:
     assert result == []
 
 
+def test_scan_input_devices_scandir_oserror() -> None:
+    """Test scan returns empty list when scandir raises OSError."""
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            side_effect=OSError("Permission denied"),
+        ),
+    ):
+        result = _scan_input_devices_sync()
+
+    assert result == []
+
+
 # --- _resolve_yaml_device tests ---
 
 
@@ -577,6 +594,31 @@ def test_resolve_yaml_descriptor_oserror() -> None:
 
     # Returns descriptor with None name and None unique_id
     assert result == (FAKE_DEVICE_REAL_PATH, None, None)
+
+
+def test_resolve_yaml_scandir_oserror() -> None:
+    """Test resolve continues when scandir on /dev/input/by-id raises OSError."""
+    mock_dev = MagicMock()
+    mock_dev.name = FAKE_DEVICE_NAME
+
+    with (
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.isdir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.scandir",
+            side_effect=OSError("Permission denied"),
+        ),
+        patch(
+            "homeassistant.components.keyboard_remote.config_flow.os.path.realpath",
+            return_value=FAKE_DEVICE_REAL_PATH,
+        ),
+        patch("evdev.InputDevice", return_value=mock_dev),
+    ):
+        result = _resolve_yaml_device({"device_descriptor": FAKE_DEVICE_REAL_PATH})
+
+    assert result == (FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, None)
 
 
 def test_resolve_yaml_name_with_by_id() -> None:
