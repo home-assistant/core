@@ -69,9 +69,12 @@ class SomfyRTSConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 registry = er.async_get(self.hass)
                 entity_entry = registry.async_get(user_input[CONF_TRANSMITTER])
-                self._address = address
-                self._transmitter_id = entity_entry.id
-                return await self.async_step_prog()
+                if entity_entry is None:
+                    errors[CONF_TRANSMITTER] = "invalid_entity"
+                else:
+                    self._address = address
+                    self._transmitter_id = entity_entry.id
+                    return await self.async_step_prog()
 
         return self.async_show_form(
             step_id="user",
