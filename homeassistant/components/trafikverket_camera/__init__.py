@@ -1,7 +1,5 @@
 """The trafikverket_camera component."""
 
-from __future__ import annotations
-
 import logging
 
 from pytrafikverket import TrafikverketCamera

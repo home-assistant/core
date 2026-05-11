@@ -1,7 +1,5 @@
 """Helpers for media source."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia

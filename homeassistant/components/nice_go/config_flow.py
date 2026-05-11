@@ -1,7 +1,5 @@
 """Config flow for Nice G.O. integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime
 import logging

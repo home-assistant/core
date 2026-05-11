@@ -1,7 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

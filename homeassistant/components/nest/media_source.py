@@ -16,8 +16,6 @@ For additional background on Nest Camera events see:
 https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 import datetime

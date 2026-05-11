@@ -1,7 +1,5 @@
 """Shelly entity helper."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from functools import wraps

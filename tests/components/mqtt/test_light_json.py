@@ -573,6 +573,63 @@ async def test_single_color_mode_turn_on(
                 light.DOMAIN: {
                     "schema": "json",
                     "name": "test",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["brightness"],
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["color_temp"],
+                }
+            }
+        },
+    ],
+)
+async def test_restore_state_with_none_color_mode(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test restoring state with a None color_mode does not break turn_on.
+
+    Regression test: When an optimistic light was off at the time the state
+    was last saved, `state_attributes` stores `color_mode: None`. On restart,
+    the restore path would overwrite the correctly initialized color_mode with
+    None, causing turn_on to raise "does not report a color mode".
+    """
+    fake_state = State(
+        "light.test",
+        STATE_OFF,
+        {"color_mode": None, "brightness": None},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    # This should not raise "does not report a color mode"
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", '{"state":"ON"}', 0, False
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("color_mode") is not None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
                     "state_topic": "test_light_rgb",
                     "command_topic": "test_light_rgb/set",
                     "supported_color_modes": ["color_temp"],

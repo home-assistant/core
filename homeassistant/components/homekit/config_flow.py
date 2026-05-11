@@ -1,7 +1,5 @@
 """Config flow for HomeKit integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from copy import deepcopy
 from operator import itemgetter

@@ -1,7 +1,5 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs
@@ -338,6 +336,7 @@ def _convert_content(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
@@ -345,6 +344,19 @@ async def _transform_stream(
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
+
+            if (usage := response.usage_metadata) is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": usage.prompt_token_count,
+                            "cached_input_tokens": (
+                                usage.cached_content_token_count or 0
+                            ),
+                            "output_tokens": usage.candidates_token_count,
+                        }
+                    }
+                )
 
             if new_message:
                 if part_details:
@@ -623,7 +635,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            _transform_stream(chat_response_generator),
+                            _transform_stream(chat_log, chat_response_generator),
                         )
                         if isinstance(content, conversation.ToolResultContent)
                     ]

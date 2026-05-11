@@ -1,7 +1,5 @@
 """Analytics helper class for the analytics integration."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping

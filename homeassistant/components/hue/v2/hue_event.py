@@ -1,7 +1,5 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

@@ -1,7 +1,5 @@
 """Adds config flow for Scrape integration."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 import logging
 from typing import Any

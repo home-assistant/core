@@ -1,7 +1,5 @@
 """Coordinator to fetch data from the Picnic API."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import copy

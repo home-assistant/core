@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt
@@ -43,6 +41,8 @@ from .const import (
 )
 from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+type ONVIFConfigEntry = ConfigEntry[ONVIFDevice]
 
 
 class ONVIFDevice:
@@ -165,7 +165,7 @@ class ONVIFDevice:
         # Bind the listener to the ONVIFDevice instance since
         # async_update_listener only creates a weak reference to the listener
         # and we need to make sure it doesn't get garbage collected since only
-        # the ONVIFDevice instance is stored in hass.data
+        # the ONVIFDevice instance is stored in config_entry.runtime_data
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(self._async_update_listener)
         )

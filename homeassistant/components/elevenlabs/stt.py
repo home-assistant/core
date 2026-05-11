@@ -1,7 +1,5 @@
 """Support for the ElevenLabs speech-to-text service."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 from io import BytesIO
 import logging

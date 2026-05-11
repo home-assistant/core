@@ -1,10 +1,8 @@
 """Text to speech support for OpenAI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from openai import OpenAIError
 from propcache.api import cached_property
@@ -166,14 +164,15 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         client = self.entry.runtime_data
 
         response_format = options[ATTR_PREFERRED_FORMAT]
-        if response_format not in self._supported_formats:
-            # common aliases
-            if response_format == "ogg":
-                response_format = "opus"
-            elif response_format == "raw":
-                response_format = "pcm"
-            else:
-                response_format = self.default_options[ATTR_PREFERRED_FORMAT]
+        if response_format in ("ogg", "oga"):
+            codec: Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] = "opus"
+        elif response_format == "raw":
+            response_format = codec = "pcm"
+        elif response_format not in self._supported_formats:
+            response_format = self.default_options[ATTR_PREFERRED_FORMAT]
+            codec = response_format
+        else:
+            codec = response_format
 
         try:
             async with client.audio.speech.with_streaming_response.create(
@@ -182,7 +181,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 input=message,
                 instructions=str(options.get(CONF_PROMPT)),
                 speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
-                response_format=response_format,
+                response_format=codec,
             ) as response:
                 response_data = bytearray()
                 async for chunk in response.iter_bytes():

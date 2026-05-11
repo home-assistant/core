@@ -7146,7 +7146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '53',
+    'state': '53.0',
   })
 # ---
 # name: test_all_entities[sensor.model7_temperature-entry]
@@ -7259,7 +7259,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '52',
+    'state': '52.0',
   })
 # ---
 # name: test_all_entities[sensor.model8_temperature-entry]
