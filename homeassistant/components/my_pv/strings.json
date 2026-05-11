@@ -48,11 +48,6 @@
       }
     }
   },
-  "device": {
-    "my_pv": {
-      "name": "{device_name}"
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
