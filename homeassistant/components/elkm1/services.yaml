@@ -169,7 +169,7 @@ switch_output_turn_on_for:
       domain: switch
   fields:
     duration:
-      example: "18:00"
+      example: 42
       required: true
       selector:
         duration:
