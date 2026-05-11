@@ -1329,7 +1329,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             device="/dev/ttyAMA1",
             serial_number=None,
             manufacturer=None,
-            description=None,
+            description="ttyAMA1",
         ),
         USBDevice(
             device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
@@ -1337,7 +1337,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             pid="4001",
             serial_number="10B41DE589FC",
             manufacturer="Nabu Casa",
-            description="ZBT-2",
+            description="ZBT-2 - Nabu Casa ZBT-2",
             bcd_device=257,
             interface_description="Nabu Casa ZBT-2",
             interface_num=0,
