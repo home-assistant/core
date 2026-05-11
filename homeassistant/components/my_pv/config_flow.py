@@ -126,7 +126,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = self._host
-            password = user_input.get(CONF_PASSWORD)
+            password = user_input[CONF_PASSWORD]
 
             # Check if we can connect to the device
             device = await MyPVLocalDevice(host, password)
@@ -221,7 +221,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = self._host
-            password = user_input.get(CONF_PASSWORD)
+            password = user_input[CONF_PASSWORD]
 
             # Check if we can connect to the device
             device = await MyPVLocalDevice(host, password)
