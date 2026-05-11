@@ -2861,7 +2861,7 @@ reolink-aio==0.19.1
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==2.2.0
+rf-protocols==3.0.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
