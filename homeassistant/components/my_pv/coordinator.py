@@ -156,6 +156,29 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         else:
             return result
 
+    async def set_target_temperature(self, temperature: float) -> bool:
+        """Set setup value for the given key."""
+        if not self._device.connected and not await self._device.connect():
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"uri": self._device.uri},
+            )
+
+        try:
+            result = await self._device.set_target_temperature(temperature)
+            self.async_update_listeners()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+        else:
+            return result
+
     def get_data_value(self, key: str) -> bool | float | int | str | None:
         """Get the data value for the given key."""
         return self._device.get_data_value(key)
