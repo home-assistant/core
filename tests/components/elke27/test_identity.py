@@ -174,6 +174,7 @@ async def test_integration_serial_no_source_ip(
     async def _get_source_ip(*_args, **_kwargs):
         return None
 
+    monkeypatch.setattr(identity_module, "_resolve_host", lambda host: "1.2.3.4")
     monkeypatch.setattr(identity_module.network, "async_get_source_ip", _get_source_ip)
     serial = await identity_module.async_get_integration_serial(hass, "host")
     assert len(serial) == identity_module.INTEGRATION_SERIAL_LENGTH

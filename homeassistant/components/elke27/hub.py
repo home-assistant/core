@@ -85,10 +85,7 @@ class Elke27Hub:
             link_keys = LinkKeys.from_json(self._link_keys_json)
             client = Elke27Client(ClientConfig())
             client_identity = build_client_identity(self._integration_serial)
-            # Elke27Client v2 does not expose a public identity setter yet.
-            coerce_identity = getattr(client, "_coerce_identity", None)
-            if callable(coerce_identity):
-                client._v2_client_identity = coerce_identity(client_identity)  # noqa: SLF001
+            await _async_set_client_identity(client, client_identity)
             self._client = client
 
             def _raise_not_ready() -> None:
@@ -140,7 +137,7 @@ class Elke27Hub:
             await self._client.async_disconnect()
         self._client = None
         self._clear_typed_subscriptions()
-        if was_connected:
+        if was_connected and not self._stopping:
             self._log_unavailable()
 
     async def _async_discover_panel_name(self, client: Elke27Client) -> str | None:
@@ -395,10 +392,9 @@ class Elke27Hub:
             msg = "Code must be numeric."
             raise HomeAssistantError(msg) from err
         _LOGGER.debug(
-            "Sending zone bypass request: zone_id=%s bypassed=%s pin=%s",
+            "Sending zone bypass request: zone_id=%s bypassed=%s",
             zone_id,
             bypassed,
-            pin_value,
         )
         timeout_s = 15.0
         start = self._hass.loop.time()
@@ -652,6 +648,16 @@ def _event_type(event: Any) -> str | None:
                 return str(value.value).upper()
             return str(value).upper()
     return None
+
+
+async def _async_set_client_identity(
+    client: Elke27Client, client_identity: dict[str, str]
+) -> None:
+    set_client_identity = getattr(client, "set_client_identity", None)
+    if callable(set_client_identity):
+        result = set_client_identity(client_identity)
+        if inspect.isawaitable(result):
+            await result
 
 
 def _connection_state(event: Any) -> bool | None:

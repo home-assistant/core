@@ -12,9 +12,6 @@ exposes alarm areas, zones, outputs, and diagnostic panel state.
 ## Supported features
 
 - Alarm control panel entities for each area (arm away, arm home, arm night, disarm).
-- Zone binary sensors.
-- Output entities as lights and switches (on/off).
-- Diagnostic sensors for panel name and connection state.
 
 ## Requirements
 
@@ -46,7 +43,9 @@ details, remove the integration and add it again.
 
 ## Actions
 
-This integration does not provide custom actions.
+The integration provides the `elke27.alarm_arm_automatic` action for supported
+alarm control panel entities. It arms an area in `away` or `home` mode while
+requesting automatic panel behavior for stay/exit-delay handling.
 
 ## Data updates
 

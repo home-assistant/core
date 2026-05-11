@@ -410,6 +410,7 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow.async_get_integration_serial",
             AsyncMock(return_value="112233445566"),
         ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -452,6 +453,7 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow.async_get_integration_serial",
             AsyncMock(return_value="112233445566"),
         ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -597,6 +599,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow.async_get_integration_serial",
             AsyncMock(return_value="112233445566"),
         ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -667,6 +670,7 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
             "homeassistant.components.elke27.config_flow.async_get_integration_serial",
             AsyncMock(return_value="112233445566"),
         ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
