@@ -139,15 +139,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "fjaraskupan",
-        "manufacturer_data_start": [
-            79,
-            68,
-            70,
-            74,
-            65,
-            82,
-        ],
-        "manufacturer_id": 20296,
+        "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b",
     },
     {
         "connectable": True,
