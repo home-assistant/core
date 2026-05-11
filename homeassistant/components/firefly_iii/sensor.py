@@ -375,18 +375,29 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the total expected amount across all active bills."""
+        """Return the total expected amount for bills due this month."""
+        now = datetime.now(tz=UTC)
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if now.month == 12:
+            month_end = now.replace(year=now.year + 1, month=1, day=1)
+        else:
+            month_end = now.replace(month=now.month + 1, day=1)
         total = 0.0
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
             if not attrs.active:
                 continue
-            if attrs.amount_min is not None and attrs.amount_max is not None:
-                total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
-            elif attrs.amount_min is not None:
-                total += float(attrs.amount_min)
-            elif attrs.amount_max is not None:
-                total += float(attrs.amount_max)
+            pay_dates = attrs.pay_dates
+            if pay_dates and any(
+                _parse_timestamp(d) and month_start <= _parse_timestamp(d) < month_end
+                for d in pay_dates
+            ):
+                if attrs.amount_min is not None and attrs.amount_max is not None:
+                    total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
+                elif attrs.amount_min is not None:
+                    total += float(attrs.amount_min)
+                elif attrs.amount_max is not None:
+                    total += float(attrs.amount_max)
         return total
 
 
@@ -422,14 +433,20 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return total expected amount of bills that have been paid this period."""
+        """Return total expected amount of bills that have been paid this month."""
+        now = datetime.now(tz=UTC)
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         total = 0.0
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
             if not attrs.active:
                 continue
             paid_dates = attrs.paid_dates
-            if paid_dates and any(pd.date for pd in paid_dates):
+            if paid_dates and any(
+                _parse_timestamp(pd.date) and _parse_timestamp(pd.date) >= month_start
+                for pd in paid_dates
+                if pd.date
+            ):
                 if attrs.amount_min is not None and attrs.amount_max is not None:
                     total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
                 elif attrs.amount_min is not None:
