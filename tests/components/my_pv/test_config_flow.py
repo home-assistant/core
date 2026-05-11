@@ -132,7 +132,7 @@ async def test_step_auth(hass: HomeAssistant) -> None:
 
 
 async def test_step_dhcp(hass: HomeAssistant) -> None:
-    """Test for DHCP discovery that does not requires a password."""
+    """Test for DHCP discovery that does not require a password."""
 
     with (
         patch(
