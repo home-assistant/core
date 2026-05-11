@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.monitor_1_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,42 +56,44 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -130,36 +133,37 @@
       'friendly_name': 'Monitor 1 Monitor type',
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -172,8 +176,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -221,8 +226,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -278,8 +284,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -338,8 +345,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -398,8 +406,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -458,8 +467,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -521,8 +531,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -575,8 +586,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -631,8 +643,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -687,8 +700,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -743,42 +757,44 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -818,36 +834,37 @@
       'friendly_name': 'Monitor 2 Monitor type',
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -860,8 +877,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_hostname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -909,8 +927,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_port-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -958,8 +977,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1015,8 +1035,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1075,8 +1096,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1135,8 +1157,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1195,8 +1218,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1258,8 +1282,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1312,8 +1337,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1368,8 +1394,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1424,8 +1451,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1480,8 +1508,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1534,42 +1563,44 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1609,36 +1640,37 @@
       'friendly_name': 'Monitor 3 Monitor type',
       'options': list([
         'http',
+        'keyword',
         'port',
         'ping',
-        'keyword',
         'dns',
-        'push',
-        'steam',
-        'mqtt',
-        'sqlserver',
-        'json_query',
-        'group',
         'docker',
-        'grpc_keyword',
+        'system_service',
         'real_browser',
-        'gamedig',
+        'group',
+        'push',
+        'manual',
+        'globalping',
+        'grpc_keyword',
+        'json_query',
         'kafka_producer',
-        'postgres',
-        'mysql',
-        'mongodb',
-        'radius',
-        'redis',
-        'tailscale_ping',
+        'mqtt',
+        'rabbit_mq',
+        'sip_options',
         'smtp',
         'snmp',
-        'rabbit_mq',
-        'manual',
-        'unknown',
+        'tailscale_ping',
         'websocket_upgrade',
-        'system_service',
-        'globalping',
-        'sip_options',
+        'sqlserver',
+        'mongodb',
+        'mysql',
+        'oracledb',
+        'postgres',
+        'redis',
+        'radius',
+        'gamedig',
+        'steam',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -1651,8 +1683,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1700,8 +1733,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1757,8 +1791,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1817,8 +1852,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1877,8 +1913,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1937,8 +1974,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2000,8 +2038,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2051,8 +2090,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2107,8 +2147,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2163,8 +2204,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

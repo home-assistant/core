@@ -203,7 +203,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
@@ -423,7 +423,7 @@ async def test_cost_sensor_price_entity_total(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=0.17)
+                hass, session, now, now + timedelta(seconds=0.17), {}
             ).platform_stats
 
     energy_attributes = {
@@ -645,7 +645,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
@@ -1427,6 +1427,92 @@ async def test_power_sensor_manager_creation(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     assert float(state.state) == -100.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+
+
+async def test_power_sensor_inverted_propagates_unit(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test inverted power sensor copies unit from the source state."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Use a non-default unit to prove we copy from the source rather than
+    # hard-coding Watts.
+    hass.states.async_set(
+        "sensor.battery_power",
+        "1.5",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -1.5
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
+
+    # Source switches to Watts — the inverted sensor should follow.
+    hass.states.async_set(
+        "sensor.battery_power",
+        "200.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -200.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+
+
+async def test_power_sensor_inverted_source_without_unit(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test inverted sensor reports no unit when source has none."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set("sensor.battery_power", "100.0")
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -100.0
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
 
 async def test_power_sensor_manager_cleanup(

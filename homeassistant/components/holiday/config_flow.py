@@ -1,7 +1,5 @@
 """Config flow for Holiday integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from babel import Locale, UnknownLocaleError

@@ -1,7 +1,5 @@
 """Test Tuya siren platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -19,12 +17,18 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -59,14 +63,13 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -77,9 +80,9 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        notification_helper,
         freezer,
-        entity_id="siren.c9",
+        entity_id="siren.c9_siren",
         dpcode="siren_switch",
         initial_state="off",
         updates=updates,
@@ -88,7 +91,6 @@ async def test_selective_state_update(
     )
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sp_sdd5f5f2dl5wydjf"],
@@ -115,7 +117,7 @@ async def test_action(
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test siren action."""
-    entity_id = "siren.c9"
+    entity_id = "siren.c9_siren"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)

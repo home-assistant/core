@@ -1,7 +1,5 @@
 """Tests for the Homevolt switch platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError

@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud sirens."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -60,7 +58,14 @@ class HomematicipMP3Siren(HomematicipGenericEntity, SirenEntity):
         self, hap: HomematicipHAP, device: CombinationSignallingDevice
     ) -> None:
         """Initialize the siren entity."""
-        super().__init__(hap, device, post="Siren", channel=1, is_multi_channel=False)
+        super().__init__(
+            hap,
+            device,
+            post="Siren",
+            channel=1,
+            is_multi_channel=False,
+            feature_id="siren",
+        )
 
     @property
     def _func_channel(self) -> NotificationMp3SoundChannel:

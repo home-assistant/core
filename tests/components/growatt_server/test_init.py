@@ -19,8 +19,7 @@ from homeassistant.components.growatt_server.const import (
     DEFAULT_PLANT_ID,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
+    V1_API_ERROR_WRONG_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -67,7 +66,14 @@ async def test_device_info(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (growattServer.GrowattV1ApiError("API Error"), ConfigEntryState.SETUP_ERROR),
+        (
+            growattServer.GrowattV1ApiError(
+                message="API Error",
+                error_code=V1_API_ERROR_WRONG_DOMAIN,
+                error_msg="Invalid JSON",
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
         (
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
             ConfigEntryState.SETUP_ERROR,
@@ -102,7 +108,9 @@ async def test_coordinator_update_failed(
 
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     # Trigger coordinator refresh
@@ -148,8 +156,11 @@ async def test_coordinator_total_non_auth_api_error(
     """Test total coordinator handles non-auth V1 API errors as UpdateFailed."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    error = growattServer.GrowattV1ApiError("Rate limited")
-    error.error_code = V1_API_ERROR_RATE_LIMITED
+    error = growattServer.GrowattV1ApiError(
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
+    )
     mock_growatt_v1_api.plant_energy_overview.side_effect = error
 
     freezer.tick(timedelta(minutes=5))
@@ -168,8 +179,11 @@ async def test_setup_auth_failed_on_permission_denied(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that error 10011 (no privilege) from device_list triggers reauth during setup."""
-    error = growattServer.GrowattV1ApiError("Permission denied")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    error = growattServer.GrowattV1ApiError(
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
+    )
     mock_growatt_v1_api.device_list.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
@@ -194,8 +208,11 @@ async def test_coordinator_auth_failed_triggers_reauth(
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    error = growattServer.GrowattV1ApiError("Permission denied")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    error = growattServer.GrowattV1ApiError(
+        message="Permission denied",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="dummy error",
+    )
     mock_growatt_v1_api.min_detail.side_effect = error
 
     freezer.tick(timedelta(minutes=5))
@@ -254,7 +271,7 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
         and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
         for flow in flows
     )
-    assert hass.states.get("sensor.tlx123456_ac_frequency").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
 
 async def test_classic_api_setup(
@@ -563,8 +580,8 @@ async def test_v1_api_unsupported_device_type(
     # Return mix of MIN (type 7) and other device types
     mock_growatt_v1_api.device_list.return_value = {
         "devices": [
-            {"device_sn": "MIN123456", "type": 7},  # Supported
-            {"device_sn": "TLX789012", "type": 5},  # Unsupported
+            {"device_sn": "MIN123456", "type": 7},  # Supported (MIN)
+            {"device_sn": "UNK999999", "type": 3},  # Unsupported
         ]
     }
 
@@ -572,7 +589,7 @@ async def test_v1_api_unsupported_device_type(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Verify warning was logged for unsupported device
-    assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text
+    assert "Device UNK999999 with type 3 not supported in Open API V1" in caplog.text
 
 
 async def test_migrate_version_bump(

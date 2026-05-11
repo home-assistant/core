@@ -8,7 +8,7 @@
   },
   "services": {
     "dump_log_objects": {
-      "description": "Dumps the repr of all matching objects to the log.",
+      "description": "Lets the Profiler dump the repr of all matching objects to the log.",
       "fields": {
         "type": {
           "description": "The type of objects to dump to the log.",
@@ -18,37 +18,37 @@
       "name": "Dump log objects"
     },
     "dump_sockets": {
-      "description": "Logs information about all currently used sockets.",
+      "description": "Lets the Profiler log information about all currently used sockets.",
       "name": "Dump used sockets"
     },
     "log_current_tasks": {
-      "description": "Logs all the current asyncio tasks.",
+      "description": "Lets the Profiler log all the current asyncio tasks.",
       "name": "Log current asyncio tasks"
     },
     "log_event_loop_scheduled": {
-      "description": "Logs what is scheduled in the event loop.",
+      "description": "Lets the Profiler log what is scheduled in the event loop.",
       "name": "Log event loop scheduled"
     },
     "log_thread_frames": {
-      "description": "Logs the current frames for all threads.",
+      "description": "Lets the Profiler log the current frames for all threads.",
       "name": "Log thread frames"
     },
     "lru_stats": {
-      "description": "Logs the stats of all lru caches.",
+      "description": "Lets the Profiler log the stats of all LRU caches.",
       "name": "Log LRU stats"
     },
     "memory": {
-      "description": "Starts the Memory Profiler.",
+      "description": "Lets the Profiler create a memory profile for a specified number of seconds.",
       "fields": {
         "seconds": {
-          "description": "The number of seconds to run the memory profiler.",
-          "name": "Seconds"
+          "description": "[%key:component::profiler::services::start::fields::seconds::description%]",
+          "name": "[%key:component::profiler::services::start::fields::seconds::name%]"
         }
       },
-      "name": "Memory"
+      "name": "Create memory profile"
     },
     "set_asyncio_debug": {
-      "description": "Enable or disable asyncio debug.",
+      "description": "Lets the Profiler enable or disable asyncio debug.",
       "fields": {
         "enabled": {
           "description": "Whether to enable or disable asyncio debug.",
@@ -58,17 +58,17 @@
       "name": "Set asyncio debug"
     },
     "start": {
-      "description": "Starts the Profiler.",
+      "description": "Lets the Profiler create a system profile for a specified number of seconds.",
       "fields": {
         "seconds": {
-          "description": "The number of seconds to run the profiler.",
+          "description": "The number of seconds to run the Profiler.",
           "name": "Seconds"
         }
       },
-      "name": "[%key:common::action::start%]"
+      "name": "Create system profile"
     },
     "start_log_object_sources": {
-      "description": "Starts logging sources of new objects in memory.",
+      "description": "Starts the Profiler logging sources of new objects in memory.",
       "fields": {
         "max_objects": {
           "description": "The maximum number of objects to log.",
@@ -82,7 +82,7 @@
       "name": "Start logging object sources"
     },
     "start_log_objects": {
-      "description": "Starts logging growth of objects in memory.",
+      "description": "Starts the Profiler logging growth of objects in memory.",
       "fields": {
         "scan_interval": {
           "description": "The number of seconds between logging objects.",
@@ -92,11 +92,11 @@
       "name": "Start logging objects"
     },
     "stop_log_object_sources": {
-      "description": "Stops logging sources of new objects in memory.",
+      "description": "Stops the Profiler logging sources of new objects in memory.",
       "name": "Stop logging object sources"
     },
     "stop_log_objects": {
-      "description": "Stops logging growth of objects in memory.",
+      "description": "Stops the Profiler logging growth of objects in memory.",
       "name": "Stop logging objects"
     }
   }

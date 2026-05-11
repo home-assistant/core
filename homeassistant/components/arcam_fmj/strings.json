@@ -23,5 +23,121 @@
     "trigger_type": {
       "turn_on": "{entity_name} was requested to turn on"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "incoming_video_interlaced": {
+        "name": "Incoming video interlaced"
+      }
+    },
+    "sensor": {
+      "incoming_audio_config": {
+        "name": "Incoming audio configuration",
+        "state": {
+          "auro_10_1": "Auro 10.1",
+          "auro_11_1": "Auro 11.1",
+          "auro_13_1": "Auro 13.1",
+          "auro_2_2_2": "Auro 2.2.2",
+          "auro_5_0": "Auro 5.0",
+          "auro_5_1": "Auro 5.1",
+          "auro_8_0": "Auro 8.0",
+          "auro_9_1": "Auro 9.1",
+          "auro_quad": "Auro quad",
+          "dual_mono": "Dual mono",
+          "dual_mono_lfe": "Dual mono + LFE",
+          "mono": "Mono",
+          "mono_lfe": "Mono + LFE",
+          "stereo_center": "Stereo center",
+          "stereo_center_lfe": "Stereo center + LFE",
+          "stereo_center_surr_lr": "Stereo center surround L/R",
+          "stereo_center_surr_lr_back_lr": "Stereo center surround L/R back L/R",
+          "stereo_center_surr_lr_back_lr_lfe": "Stereo center surround L/R back L/R + LFE",
+          "stereo_center_surr_lr_back_matrix": "Stereo center surround L/R back matrix",
+          "stereo_center_surr_lr_back_matrix_lfe": "Stereo center surround L/R back matrix + LFE",
+          "stereo_center_surr_lr_back_mono": "Stereo center surround L/R back mono",
+          "stereo_center_surr_lr_back_mono_lfe": "Stereo center surround L/R back mono + LFE",
+          "stereo_center_surr_lr_lfe": "Stereo center surround L/R + LFE",
+          "stereo_center_surr_mono": "Stereo center surround mono",
+          "stereo_center_surr_mono_lfe": "Stereo center surround mono + LFE",
+          "stereo_downmix": "Stereo downmix",
+          "stereo_downmix_lfe": "Stereo downmix + LFE",
+          "stereo_lfe": "Stereo + LFE",
+          "stereo_only": "Stereo only",
+          "stereo_only_lo_ro": "Stereo only Lo/Ro",
+          "stereo_only_lo_ro_lfe": "Stereo only Lo/Ro + LFE",
+          "stereo_surr_lr": "Stereo surround L/R",
+          "stereo_surr_lr_back_lr": "Stereo surround L/R back L/R",
+          "stereo_surr_lr_back_lr_lfe": "Stereo surround L/R back L/R + LFE",
+          "stereo_surr_lr_back_matrix": "Stereo surround L/R back matrix",
+          "stereo_surr_lr_back_matrix_lfe": "Stereo surround L/R back matrix + LFE",
+          "stereo_surr_lr_back_mono": "Stereo surround L/R back mono",
+          "stereo_surr_lr_back_mono_lfe": "Stereo surround L/R back mono + LFE",
+          "stereo_surr_lr_lfe": "Stereo surround L/R + LFE",
+          "stereo_surr_mono": "Stereo surround mono",
+          "stereo_surr_mono_lfe": "Stereo surround mono + LFE",
+          "undetected": "Undetected",
+          "unknown": "Unknown"
+        }
+      },
+      "incoming_audio_format": {
+        "name": "Incoming audio format",
+        "state": {
+          "analogue_direct": "Analogue direct",
+          "auro_3d": "Auro-3D",
+          "dolby_atmos": "Dolby Atmos",
+          "dolby_digital": "Dolby Digital",
+          "dolby_digital_ex": "Dolby Digital EX",
+          "dolby_digital_plus": "Dolby Digital Plus",
+          "dolby_digital_surround": "Dolby Digital Surround",
+          "dolby_digital_true_hd": "Dolby TrueHD",
+          "dts": "DTS",
+          "dts_96_24": "DTS 96/24",
+          "dts_core": "DTS Core",
+          "dts_es_discrete": "DTS-ES Discrete",
+          "dts_es_discrete_96_24": "DTS-ES Discrete 96/24",
+          "dts_es_matrix": "DTS-ES Matrix",
+          "dts_es_matrix_96_24": "DTS-ES Matrix 96/24",
+          "dts_hd_high_res_audio": "DTS-HD High Resolution Audio",
+          "dts_hd_master_audio": "DTS-HD Master Audio",
+          "dts_low_bit_rate": "DTS Low Bit Rate",
+          "dts_x": "DTS:X",
+          "imax_enhanced": "IMAX Enhanced",
+          "pcm": "PCM",
+          "pcm_zero": "PCM zero",
+          "undetected": "Undetected",
+          "unsupported": "Unsupported"
+        }
+      },
+      "incoming_audio_sample_rate": {
+        "name": "Incoming audio sample rate"
+      },
+      "incoming_video_aspect_ratio": {
+        "name": "Incoming video aspect ratio",
+        "state": {
+          "aspect_16_9": "16:9",
+          "aspect_4_3": "4:3",
+          "undefined": "Undefined"
+        }
+      },
+      "incoming_video_colorspace": {
+        "name": "Incoming video colorspace",
+        "state": {
+          "dolby_vision": "Dolby Vision",
+          "hdr10": "HDR10",
+          "hdr10_plus": "HDR10+",
+          "hlg": "HLG",
+          "normal": "Normal"
+        }
+      },
+      "incoming_video_horizontal_resolution": {
+        "name": "Incoming video horizontal resolution"
+      },
+      "incoming_video_refresh_rate": {
+        "name": "Incoming video refresh rate"
+      },
+      "incoming_video_vertical_resolution": {
+        "name": "Incoming video vertical resolution"
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.portainer import PortainerSystemStatus
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -81,7 +82,7 @@ async def test_form_exceptions(
     reason: str,
 ) -> None:
     """Test we handle all exceptions."""
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -98,7 +99,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_portainer_client.get_endpoints.side_effect = None
+    mock_portainer_client.portainer_system_status.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -199,7 +200,7 @@ async def test_reauth_flow_exceptions(
     """Test we handle all exceptions in the reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -216,7 +217,7 @@ async def test_reauth_flow_exceptions(
     assert result["errors"] == {"base": reason}
 
     # Now test that we can recover from the error
-    mock_portainer_client.get_endpoints.side_effect = None
+    mock_portainer_client.portainer_system_status.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -255,23 +256,17 @@ async def test_full_flow_reconfigure(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_full_flow_reconfigure_unique_id(
+async def test_full_flow_reconfigure_unique_id_mismatch(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the full flow of the config flow, this time with a known unique ID."""
+    """Test reconfigure aborts when credentials point to a different Portainer instance."""
     mock_config_entry.add_to_hass(hass)
-
-    other_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Portainer other",
-        data=USER_INPUT_RECONFIGURE,
-        unique_id=USER_INPUT_RECONFIGURE[CONF_API_TOKEN],
+    mock_portainer_client.portainer_system_status.return_value = PortainerSystemStatus(
+        instance_id="different-instance-id", version="2.0.0"
     )
-    other_entry.add_to_hass(hass)
-
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -282,7 +277,7 @@ async def test_full_flow_reconfigure_unique_id(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_API_TOKEN] == "test_api_token"
     assert mock_config_entry.data[CONF_URL] == "https://127.0.0.1:9000/"
     assert len(mock_setup_entry.mock_calls) == 0
@@ -323,7 +318,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=USER_INPUT_RECONFIGURE,
@@ -332,7 +327,7 @@ async def test_full_flow_reconfigure_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_portainer_client.get_endpoints.side_effect = None
+    mock_portainer_client.portainer_system_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=USER_INPUT_RECONFIGURE,

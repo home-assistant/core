@@ -13,7 +13,7 @@
   "services": {
     "reload_resources": {
       "description": "Reloads dashboard resources from the YAML-configuration.",
-      "name": "Reload resources"
+      "name": "Reload dashboard resources"
     }
   },
   "system_health": {

@@ -1,6 +1,4 @@
-"""Tests for the dnsip integration."""
-
-from __future__ import annotations
+"""Tests for the DNS IP integration."""
 
 
 class QueryResult:

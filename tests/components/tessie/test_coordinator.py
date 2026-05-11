@@ -1,5 +1,6 @@
 """Test the Tessie sensor platform."""
 
+from copy import deepcopy
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -7,16 +8,24 @@ import pytest
 from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
 
 from homeassistant.components.tessie import PLATFORMS
+from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.components.tessie.coordinator import (
     TESSIE_ENERGY_HISTORY_INTERVAL,
     TESSIE_FLEET_API_SYNC_INTERVAL,
     TESSIE_SYNC_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import (
+    ENERGY_HISTORY,
+    ERROR_AUTH,
+    ERROR_CONNECTION,
+    ERROR_UNKNOWN,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -43,13 +52,17 @@ async def test_coordinator_clienterror(
     """Tests that the coordinator handles client errors."""
 
     mock_get_state.side_effect = ERROR_UNKNOWN
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
 
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_get_state.assert_called_once()
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 async def test_coordinator_auth(
@@ -72,57 +85,16 @@ async def test_coordinator_connection(
     """Tests that the coordinator handles connection errors."""
 
     mock_get_state.side_effect = ERROR_CONNECTION
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    coordinator = entry.runtime_data.vehicles[0].data_coordinator
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_get_state.assert_called_once()
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
-
-
-async def test_coordinator_battery_update(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests that the battery coordinator handles updates."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_called_once()
-
-
-async def test_coordinator_battery_auth(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests that the battery coordinator handles auth errors."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    mock_get_battery.side_effect = ERROR_AUTH
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_called_once()
-
-
-async def test_coordinator_battery_error(
-    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
-) -> None:
-    """Tests that the battery coordinator handles client errors."""
-
-    await setup_platform(hass, [Platform.SENSOR])
-
-    mock_get_battery.reset_mock()
-    mock_get_battery.side_effect = ERROR_UNKNOWN
-    freezer.tick(WAIT)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_get_battery.assert_called_once()
-    assert hass.states.get("sensor.test_phantom_drain").state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 async def test_coordinator_live_error(
@@ -130,7 +102,9 @@ async def test_coordinator_live_error(
 ) -> None:
     """Tests that the energy live coordinator handles fleet errors."""
 
-    await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].live_coordinator
+    assert coordinator is not None
 
     mock_live_status.reset_mock()
     mock_live_status.side_effect = Forbidden
@@ -139,6 +113,9 @@ async def test_coordinator_live_error(
     await hass.async_block_till_done()
     mock_live_status.assert_called_once()
     assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 async def test_coordinator_info_error(
@@ -146,7 +123,8 @@ async def test_coordinator_info_error(
 ) -> None:
     """Tests that the energy info coordinator handles fleet errors."""
 
-    await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].info_coordinator
 
     mock_site_info.reset_mock()
     mock_site_info.side_effect = Forbidden
@@ -158,6 +136,9 @@ async def test_coordinator_info_error(
         hass.states.get("sensor.energy_site_vpp_backup_reserve").state
         == STATE_UNAVAILABLE
     )
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -189,7 +170,9 @@ async def test_coordinator_energy_history_error(
 ) -> None:
     """Tests that the energy history coordinator handles fleet errors."""
 
-    await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].history_coordinator
+    assert coordinator is not None
 
     mock_energy_history.reset_mock()
     mock_energy_history.side_effect = Forbidden
@@ -200,14 +183,22 @@ async def test_coordinator_energy_history_error(
     assert (
         hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNAVAILABLE
     )
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 async def test_coordinator_energy_history_invalid_data(
     hass: HomeAssistant, mock_energy_history, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Tests that the energy history coordinator handles invalid data."""
+    """Tests that the energy history coordinator handles invalid data gracefully."""
 
-    await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].history_coordinator
+    assert coordinator is not None
+
+    # Capture state after successful initial load
+    state_before = hass.states.get("sensor.energy_site_grid_imported").state
 
     mock_energy_history.reset_mock()
     mock_energy_history.side_effect = lambda *a, **kw: {"response": {}}
@@ -215,6 +206,37 @@ async def test_coordinator_energy_history_invalid_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_energy_history.assert_called_once()
-    assert (
-        hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNAVAILABLE
-    )
+
+    # Sensor should retain last good state rather than becoming unavailable
+    assert hass.states.get("sensor.energy_site_grid_imported").state == state_before
+    assert coordinator.last_exception is None
+
+
+async def test_coordinator_energy_history_cold_start_invalid_data(
+    hass: HomeAssistant, mock_energy_history, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests cold-start fallback when the very first energy history fetch has invalid data."""
+
+    mock_energy_history.side_effect = lambda *a, **kw: {"response": {}}
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].history_coordinator
+    assert coordinator is not None
+
+    # Coordinator should not have raised an exception; data stays empty
+    assert coordinator.last_exception is None
+    assert coordinator.data == {}
+
+    # Sensor should be unknown until the first successful fetch
+    assert hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNKNOWN
+
+    # Now recover: restore valid energy history data and trigger an update
+    mock_energy_history.side_effect = lambda *a, **kw: deepcopy(ENERGY_HISTORY)
+    mock_energy_history.reset_mock()
+    freezer.tick(TESSIE_ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_energy_history.assert_called_once()
+
+    # Coordinator should have real data and no exception
+    assert coordinator.last_exception is None
+    assert coordinator.data["solar_energy_exported"] == 724

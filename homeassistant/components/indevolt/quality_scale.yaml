@@ -1,17 +1,13 @@
 rules:
   # Bronze (mandatory for core integrations)
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: Integration does not register custom actions
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -26,9 +22,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -52,20 +46,13 @@ rules:
   discovery:
     status: exempt
     comment: Integration does not support network discovery
-  docs-data-update:
-    status: todo
-  docs-examples:
-    status: todo
-  docs-known-limitations:
-    status: todo
-  docs-supported-devices:
-    status: todo
-  docs-supported-functions:
-    status: todo
-  docs-troubleshooting:
-    status: todo
-  docs-use-cases:
-    status: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
@@ -73,10 +60,8 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-  icon-translations:
-    status: todo
+  exception-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
@@ -84,9 +69,7 @@ rules:
   stale-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
-
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
+  strict-typing: done

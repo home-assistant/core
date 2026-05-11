@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -65,8 +66,9 @@
 # ---
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -129,8 +131,9 @@
 # ---
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -193,8 +196,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -257,8 +261,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -321,8 +326,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -385,8 +391,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -449,8 +456,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -513,8 +521,9 @@
 # ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -577,8 +586,9 @@
 # ---
 # name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -641,8 +651,9 @@
 # ---
 # name: test_events[ikea_bilresa_dual_button][event.bilresa_dual_button_button_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -705,8 +716,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -777,8 +789,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -849,8 +862,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -915,8 +929,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -987,8 +1002,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1059,8 +1075,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1125,8 +1142,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1197,8 +1215,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1269,8 +1288,9 @@
 # ---
 # name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1335,8 +1355,9 @@
 # ---
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_config-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1405,8 +1426,9 @@
 # ---
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_down-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1475,8 +1497,9 @@
 # ---
 # name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_up-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1545,8 +1568,9 @@
 # ---
 # name: test_events[inovelli_vtm31][event.inovelli_button_config-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1615,8 +1639,9 @@
 # ---
 # name: test_events[inovelli_vtm31][event.inovelli_button_down-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1685,8 +1710,9 @@
 # ---
 # name: test_events[inovelli_vtm31][event.inovelli_button_up-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1755,8 +1781,9 @@
 # ---
 # name: test_events[mock_generic_switch][event.mock_generic_switch_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1819,8 +1846,9 @@
 # ---
 # name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1881,10 +1909,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_2-entry]
+# name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_fancy_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -1903,7 +1932,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_button_2',
+    'entity_id': 'event.mock_generic_switch_button_fancy_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1911,12 +1940,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Button (2)',
+    'object_id_base': 'Button (Fancy Button)',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (2)',
+    'original_name': 'Button (Fancy Button)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1926,7 +1955,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_2-state]
+# name: test_events[mock_generic_switch_multi][event.mock_generic_switch_button_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1939,10 +1968,10 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (2)',
+      'friendly_name': 'Mock Generic Switch Button (Fancy Button)',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_button_2',
+    'entity_id': 'event.mock_generic_switch_button_fancy_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1951,8 +1980,9 @@
 # ---
 # name: test_events[silabs_light_switch][event.light_switch_example_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

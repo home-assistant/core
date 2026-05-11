@@ -42,6 +42,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "services": {
     "append_sheet": {
       "description": "Appends data to a worksheet in Google Sheets.",
@@ -63,7 +68,7 @@
           "name": "Worksheet"
         }
       },
-      "name": "Append to sheet"
+      "name": "Append data to Google sheet"
     },
     "get_sheet": {
       "description": "Gets data from a worksheet in Google Sheets.",
@@ -81,7 +86,7 @@
           "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]"
         }
       },
-      "name": "Get data from sheet"
+      "name": "Get data from Google sheet"
     }
   }
 }

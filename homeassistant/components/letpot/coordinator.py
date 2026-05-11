@@ -1,14 +1,14 @@
 """Coordinator for the LetPot integration."""
 
-from __future__ import annotations
-
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import cast
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
-from letpot.models import LetPotDevice, LetPotDeviceStatus
+from letpot.models import LetPotDevice, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,11 +19,13 @@ from .const import REQUEST_UPDATE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-type LetPotConfigEntry = ConfigEntry[list[LetPotDeviceCoordinator]]
+type LetPotConfigEntry = ConfigEntry[list[LetPotDeviceCoordinator[LetPotGardenStatus]]]
 
 
-class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
-    """Class to handle data updates for a specific garden."""
+class LetPotDeviceCoordinator[_DataT: LetPotDeviceStatus](
+    DataUpdateCoordinator[_DataT]
+):
+    """Class to handle data updates for a specific device."""
 
     config_entry: LetPotConfigEntry
 
@@ -48,7 +50,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         self.device = device
         self.device_client = device_client
 
-    def _handle_status_update(self, status: LetPotDeviceStatus) -> None:
+    def _handle_status_update(self, status: _DataT) -> None:
         """Distribute status update to entities."""
         self.async_set_updated_data(data=status)
 
@@ -56,12 +58,13 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         """Set up subscription for coordinator."""
         try:
             await self.device_client.subscribe(
-                self.device.serial_number, self._handle_status_update
+                self.device.serial_number,
+                cast(Callable[[LetPotDeviceStatus], None], self._handle_status_update),
             )
         except LetPotAuthenticationException as exc:
             raise ConfigEntryAuthFailed from exc
 
-    async def _async_update_data(self) -> LetPotDeviceStatus:
+    async def _async_update_data(self) -> _DataT:
         """Request an update from the device and wait for a status update or timeout."""
         try:
             async with asyncio.timeout(REQUEST_UPDATE_TIMEOUT):

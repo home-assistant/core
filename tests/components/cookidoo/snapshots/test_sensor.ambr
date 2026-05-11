@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.cookidoo_subscription-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -62,8 +63,9 @@
 # ---
 # name: test_setup[sensor.cookidoo_subscription_expiration_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,7 +1,5 @@
 """Sensor data of the Renson ventilation unit."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from renson_endura_delta.field_enum import (
@@ -34,7 +32,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -45,9 +42,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RensonData
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 
@@ -271,12 +266,12 @@ class RensonSensor(RensonEntity, SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
 
     entities = [
         RensonSensor(description, data.api, data.coordinator) for description in SENSORS

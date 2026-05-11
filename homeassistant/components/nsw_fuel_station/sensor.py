@@ -1,7 +1,5 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -65,10 +63,6 @@ def setup_platform(
 
     coordinator: NSWFuelStationCoordinator = hass.data[DATA_NSW_FUEL_STATION]
 
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
-
     entities = []
     for fuel_type in fuel_types:
         if coordinator.data.prices.get((station_id, fuel_type)) is None:
@@ -110,9 +104,6 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
-            return None
-
         prices = self.coordinator.data.prices
         return prices.get((self._station_id, self._fuel_type))
 
@@ -129,16 +120,13 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
-        default_name = f"station {self._station_id}"
-        if self.coordinator.data is None:
-            return default_name
+    def _get_station_name(self) -> str:
+        if (
+            station := self.coordinator.data.stations.get(self._station_id)
+        ) is not None:
+            return station.name
 
-        station = self.coordinator.data.stations.get(self._station_id)
-        if station is None:
-            return default_name
-
-        return station.name
+        return f"station {self._station_id}"
 
     @property
     def unique_id(self) -> str | None:

@@ -195,7 +195,7 @@ def _get_set_program_side_effect(
                                     value=str(option.key),
                                 )
                                 for option in cast(
-                                    list[Option], kwargs.get("options", [])
+                                    list[Option], kwargs.get("options") or []
                                 )
                             ],
                         ]

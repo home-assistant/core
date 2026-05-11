@@ -1,13 +1,18 @@
 """Coordinator for handling data fetching and updates."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 import aiohttp
-from lunatone_rest_api_client import DALIBroadcast, Device, Devices, Info
+from lunatone_rest_api_client import (
+    DALIBroadcast,
+    Device,
+    Devices,
+    Info,
+    Sensor,
+    Sensors,
+)
 from lunatone_rest_api_client.models import InfoData
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_INFO_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SENSORS_SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -28,6 +34,7 @@ class LunatoneData:
 
     coordinator_info: LunatoneInfoDataUpdateCoordinator
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
+    coordinator_sensors: LunatoneSensorsDataUpdateCoordinator
     dali_line_broadcasts: list[DALIBroadcast]
 
 
@@ -100,5 +107,40 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
 
         if self.devices_api.data is None:
             raise UpdateFailed("Did not receive devices data from Lunatone REST API")
-
         return {device.id: device for device in self.devices_api.devices}
+
+
+class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Sensor]]):
+    """Data update coordinator for Lunatone sensors."""
+
+    config_entry: LunatoneConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: LunatoneConfigEntry,
+        sensors_api: Sensors,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}-sensors",
+            always_update=False,
+            update_interval=DEFAULT_SENSORS_SCAN_INTERVAL,
+        )
+        self.sensors_api = sensors_api
+
+    async def _async_update_data(self) -> dict[int, Sensor]:
+        """Update sensor data."""
+        try:
+            await self.sensors_api.async_update()
+        except aiohttp.ClientConnectionError as ex:
+            raise UpdateFailed(
+                "Unable to retrieve sensors data from Lunatone REST API"
+            ) from ex
+
+        if self.sensors_api.data is None:
+            raise UpdateFailed("Did not receive sensors data from Lunatone REST API")
+        return {sensor.id: sensor for sensor in self.sensors_api.sensors}

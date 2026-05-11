@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate_entities[air_conditioner][climate.test_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
