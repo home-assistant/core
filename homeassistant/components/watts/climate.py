@@ -226,7 +226,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
             ) from err
 
         _LOGGER.debug(
-            "Successfully activated timer mode: %s°%s for %d min on %s",
+            "Successfully activated timer mode: %s%s for %d min on %s",
             temperature,
             self.temperature_unit,
             duration_minutes,
