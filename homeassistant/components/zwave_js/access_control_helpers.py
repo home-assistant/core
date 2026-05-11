@@ -7,6 +7,7 @@ auto-find logic, and validation.
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from typing import TypedDict
 
 from zwave_js_server.const.command_class.access_control import (
@@ -261,9 +262,9 @@ async def async_get_users(node: Node) -> UsersResult:
     users = await node.access_control.get_users_cached()
     all_credentials = await node.access_control.get_all_credentials_cached()
 
-    credentials_by_user: dict[int, list[Credential]] = {}
+    credentials_by_user: defaultdict[int, list[Credential]] = defaultdict(list)
     for cred in all_credentials:
-        credentials_by_user.setdefault(cred.user_id, []).append(
+        credentials_by_user[cred.user_id].append(
             Credential(
                 type=CREDENTIAL_TYPE_MAP.get(cred.type, str(cred.type)),
                 slot=cred.slot,
