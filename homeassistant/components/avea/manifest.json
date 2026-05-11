@@ -14,6 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["avea"],
-  "quality_scale": "legacy",
   "requirements": ["avea==1.6.1"]
 }
