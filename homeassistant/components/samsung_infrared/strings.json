@@ -21,17 +21,29 @@
   },
   "entity": {
     "button": {
-      "channel_down": {
-        "name": "Channel down"
+      "backward": {
+        "name": "Rewind"
       },
-      "channel_up": {
-        "name": "Channel up"
+      "blue": {
+        "name": "Blue"
+      },
+      "browser": {
+        "name": "Browser"
       },
       "down": {
         "name": "Down"
       },
+      "e_manual": {
+        "name": "E-Manual"
+      },
       "exit": {
         "name": "Exit"
+      },
+      "forward": {
+        "name": "Fast forward"
+      },
+      "green": {
+        "name": "Green"
       },
       "hdmi_1": {
         "name": "HDMI 1"
@@ -46,16 +58,13 @@
         "name": "HDMI 4"
       },
       "home": {
-        "name": "Home"
+        "name": "[%key:common::state::home%]"
       },
       "info": {
         "name": "Info"
       },
       "left": {
         "name": "Left"
-      },
-      "mute": {
-        "name": "Mute"
       },
       "num_0": {
         "name": "Number 0"
@@ -91,10 +100,16 @@
         "name": "OK"
       },
       "power": {
-        "name": "Power"
+        "name": "[%key:common::action::toggle%]"
       },
-      "power_off": {
-        "name": "Power off"
+      "previous_channel": {
+        "name": "Previous channel"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "red": {
+        "name": "Red"
       },
       "return": {
         "name": "Return"
@@ -108,14 +123,20 @@
       "source": {
         "name": "Source"
       },
+      "subtitle": {
+        "name": "Subtitle"
+      },
+      "tools": {
+        "name": "Tools"
+      },
+      "tv": {
+        "name": "TV"
+      },
       "up": {
         "name": "Up"
       },
-      "volume_down": {
-        "name": "Volume down"
-      },
-      "volume_up": {
-        "name": "Volume up"
+      "yellow": {
+        "name": "Yellow"
       }
     }
   },

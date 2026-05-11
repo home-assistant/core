@@ -9,10 +9,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockInfraredEntity
-from .utils import check_availability_follows_ir_entity
-
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared.conftest import MockInfraredEntity
 
 
 @pytest.fixture
@@ -47,8 +45,7 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.samsung_tv_power", SamsungTVCode.POWER),
-        ("button.samsung_tv_power_off", SamsungTVCode.POWER_OFF),
+        ("button.samsung_tv_toggle", SamsungTVCode.POWER),
         ("button.samsung_tv_hdmi_1", SamsungTVCode.HDMI_1),
         ("button.samsung_tv_hdmi_2", SamsungTVCode.HDMI_2),
         ("button.samsung_tv_hdmi_3", SamsungTVCode.HDMI_3),
@@ -64,11 +61,6 @@ async def test_entities(
         ("button.samsung_tv_home", SamsungTVCode.HOME),
         ("button.samsung_tv_settings", SamsungTVCode.SETTINGS),
         ("button.samsung_tv_source", SamsungTVCode.SOURCE),
-        ("button.samsung_tv_mute", SamsungTVCode.MUTE),
-        ("button.samsung_tv_volume_up", SamsungTVCode.VOLUME_UP),
-        ("button.samsung_tv_volume_down", SamsungTVCode.VOLUME_DOWN),
-        ("button.samsung_tv_channel_up", SamsungTVCode.CHANNEL_UP),
-        ("button.samsung_tv_channel_down", SamsungTVCode.CHANNEL_DOWN),
         ("button.samsung_tv_number_0", SamsungTVCode.NUM_0),
         ("button.samsung_tv_number_1", SamsungTVCode.NUM_1),
         ("button.samsung_tv_number_2", SamsungTVCode.NUM_2),
@@ -79,6 +71,19 @@ async def test_entities(
         ("button.samsung_tv_number_7", SamsungTVCode.NUM_7),
         ("button.samsung_tv_number_8", SamsungTVCode.NUM_8),
         ("button.samsung_tv_number_9", SamsungTVCode.NUM_9),
+        ("button.samsung_tv_red", SamsungTVCode.RED),
+        ("button.samsung_tv_green", SamsungTVCode.GREEN),
+        ("button.samsung_tv_yellow", SamsungTVCode.YELLOW),
+        ("button.samsung_tv_blue", SamsungTVCode.BLUE),
+        ("button.samsung_tv_fast_forward", SamsungTVCode.FAST_FORWARD),
+        ("button.samsung_tv_rewind", SamsungTVCode.REWIND),
+        ("button.samsung_tv_record", SamsungTVCode.RECORD),
+        ("button.samsung_tv_tools", SamsungTVCode.TOOLS),
+        ("button.samsung_tv_browser", SamsungTVCode.BROWSER),
+        ("button.samsung_tv_tv", SamsungTVCode.TV),
+        ("button.samsung_tv_previous_channel", SamsungTVCode.PREVIOUS_CHANNEL),
+        ("button.samsung_tv_subtitle", SamsungTVCode.AD_SUBTITLE),
+        ("button.samsung_tv_e_manual", SamsungTVCode.E_MANUAL),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -98,12 +103,3 @@ async def test_button_press_sends_correct_code(
 
     assert len(mock_infrared_entity.send_command_calls) == 1
     assert mock_infrared_entity.send_command_calls[0] == expected_code
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_button_availability_follows_ir_entity(
-    hass: HomeAssistant,
-) -> None:
-    """Test button becomes unavailable when IR entity is unavailable."""
-    entity_id = "button.samsung_tv_power"
-    await check_availability_follows_ir_entity(hass, entity_id)

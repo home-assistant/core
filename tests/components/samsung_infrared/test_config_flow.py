@@ -18,9 +18,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
-
 from tests.common import MockConfigEntry
+from tests.components.infrared.conftest import MockInfraredEntity
+
+MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
 
 
 @pytest.fixture

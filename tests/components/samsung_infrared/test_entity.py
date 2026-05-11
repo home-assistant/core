@@ -1,16 +1,20 @@
-"""Tests for the Samsung Infrared integration."""
+"""Tests for the Samsung Infrared base entity."""
+
+import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_INFRARED_ENTITY_ID
+MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
 
 
-async def check_availability_follows_ir_entity(
+@pytest.mark.usefixtures("init_integration")
+async def test_entity_availability_follows_ir_entity(
     hass: HomeAssistant,
-    entity_id: str,
 ) -> None:
-    """Check that entity becomes unavailable when IR entity is unavailable."""
+    """Test entity becomes unavailable when IR entity is unavailable."""
+    entity_id = "button.samsung_tv_toggle"
+
     # Initially available
     state = hass.states.get(entity_id)
     assert state is not None

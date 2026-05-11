@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[button.samsung_tv_channel_down-entry]
+# name: test_entities[button.samsung_tv_blue-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.samsung_tv_channel_down',
+    'entity_id': 'button.samsung_tv_blue',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,35 +21,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Channel down',
+    'object_id_base': 'Blue',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Channel down',
+    'original_name': 'Blue',
     'platform': 'samsung_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'channel_down',
-    'unique_id': '01JTEST0000000000000000000_channel_down',
+    'translation_key': 'blue',
+    'unique_id': '01JTEST0000000000000000000_blue',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.samsung_tv_channel_down-state]
+# name: test_entities[button.samsung_tv_blue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Channel down',
+      'friendly_name': 'Samsung TV Blue',
     }),
     'context': <ANY>,
-    'entity_id': 'button.samsung_tv_channel_down',
+    'entity_id': 'button.samsung_tv_blue',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.samsung_tv_channel_up-entry]
+# name: test_entities[button.samsung_tv_browser-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.samsung_tv_channel_up',
+    'entity_id': 'button.samsung_tv_browser',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,28 +71,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Channel up',
+    'object_id_base': 'Browser',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Channel up',
+    'original_name': 'Browser',
     'platform': 'samsung_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'channel_up',
-    'unique_id': '01JTEST0000000000000000000_channel_up',
+    'translation_key': 'browser',
+    'unique_id': '01JTEST0000000000000000000_browser',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.samsung_tv_channel_up-state]
+# name: test_entities[button.samsung_tv_browser-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Channel up',
+      'friendly_name': 'Samsung TV Browser',
     }),
     'context': <ANY>,
-    'entity_id': 'button.samsung_tv_channel_up',
+    'entity_id': 'button.samsung_tv_browser',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -149,6 +149,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_entities[button.samsung_tv_e_manual-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_e_manual',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-Manual',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-Manual',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_manual',
+    'unique_id': '01JTEST0000000000000000000_e_manual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_e_manual-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV E-Manual',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_e_manual',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[button.samsung_tv_exit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -193,6 +243,106 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_exit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_fast_forward-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_fast_forward',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fast forward',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fast forward',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'forward',
+    'unique_id': '01JTEST0000000000000000000_forward',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_fast_forward-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Fast forward',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_fast_forward',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_green-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_green',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Green',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Green',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'green',
+    'unique_id': '01JTEST0000000000000000000_green',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_green-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Green',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_green',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -543,56 +693,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_left',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.samsung_tv_mute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.samsung_tv_mute',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Mute',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mute',
-    'platform': 'samsung_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'mute',
-    'unique_id': '01JTEST0000000000000000000_mute',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.samsung_tv_mute-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Mute',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.samsung_tv_mute',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1149,7 +1249,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.samsung_tv_power-entry]
+# name: test_entities[button.samsung_tv_previous_channel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1163,7 +1263,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.samsung_tv_power',
+    'entity_id': 'button.samsung_tv_previous_channel',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1171,35 +1271,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Previous channel',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Previous channel',
     'platform': 'samsung_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '01JTEST0000000000000000000_power',
+    'translation_key': 'previous_channel',
+    'unique_id': '01JTEST0000000000000000000_previous_channel',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.samsung_tv_power-state]
+# name: test_entities[button.samsung_tv_previous_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Power',
+      'friendly_name': 'Samsung TV Previous channel',
     }),
     'context': <ANY>,
-    'entity_id': 'button.samsung_tv_power',
+    'entity_id': 'button.samsung_tv_previous_channel',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.samsung_tv_power_off-entry]
+# name: test_entities[button.samsung_tv_record-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1213,7 +1313,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.samsung_tv_power_off',
+    'entity_id': 'button.samsung_tv_record',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1221,28 +1321,78 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power off',
+    'object_id_base': 'Record',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power off',
+    'original_name': 'Record',
     'platform': 'samsung_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_off',
-    'unique_id': '01JTEST0000000000000000000_power_off',
+    'translation_key': 'record',
+    'unique_id': '01JTEST0000000000000000000_record',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.samsung_tv_power_off-state]
+# name: test_entities[button.samsung_tv_record-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Power off',
+      'friendly_name': 'Samsung TV Record',
     }),
     'context': <ANY>,
-    'entity_id': 'button.samsung_tv_power_off',
+    'entity_id': 'button.samsung_tv_record',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_red-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_red',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Red',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'red',
+    'unique_id': '01JTEST0000000000000000000_red',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_red-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Red',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_red',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1293,6 +1443,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.samsung_tv_return',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_rewind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_rewind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rewind',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rewind',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backward',
+    'unique_id': '01JTEST0000000000000000000_backward',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_rewind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Rewind',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_rewind',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1449,6 +1649,206 @@
     'state': 'unknown',
   })
 # ---
+# name: test_entities[button.samsung_tv_subtitle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_subtitle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Subtitle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Subtitle',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'subtitle',
+    'unique_id': '01JTEST0000000000000000000_subtitle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_subtitle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Subtitle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_subtitle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_toggle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_toggle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '01JTEST0000000000000000000_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_toggle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Toggle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_toggle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_tools-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_tools',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tools',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tools',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tools',
+    'unique_id': '01JTEST0000000000000000000_tools',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_tools-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV Tools',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_tools',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.samsung_tv_tv-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.samsung_tv_tv',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TV',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TV',
+    'platform': 'samsung_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tv',
+    'unique_id': '01JTEST0000000000000000000_tv_button',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.samsung_tv_tv-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung TV TV',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.samsung_tv_tv',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[button.samsung_tv_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1499,7 +1899,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.samsung_tv_volume_down-entry]
+# name: test_entities[button.samsung_tv_yellow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1513,7 +1913,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.samsung_tv_volume_down',
+    'entity_id': 'button.samsung_tv_yellow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1521,78 +1921,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Volume down',
+    'object_id_base': 'Yellow',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Volume down',
+    'original_name': 'Yellow',
     'platform': 'samsung_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'volume_down',
-    'unique_id': '01JTEST0000000000000000000_volume_down',
+    'translation_key': 'yellow',
+    'unique_id': '01JTEST0000000000000000000_yellow',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.samsung_tv_volume_down-state]
+# name: test_entities[button.samsung_tv_yellow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Volume down',
+      'friendly_name': 'Samsung TV Yellow',
     }),
     'context': <ANY>,
-    'entity_id': 'button.samsung_tv_volume_down',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[button.samsung_tv_volume_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.samsung_tv_volume_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Volume up',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume up',
-    'platform': 'samsung_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'volume_up',
-    'unique_id': '01JTEST0000000000000000000_volume_up',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[button.samsung_tv_volume_up-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Samsung TV Volume up',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.samsung_tv_volume_up',
+    'entity_id': 'button.samsung_tv_yellow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
