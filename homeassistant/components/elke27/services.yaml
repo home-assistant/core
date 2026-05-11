@@ -19,3 +19,4 @@ alarm_arm_automatic:
       required: true
       selector:
         text:
+          type: password

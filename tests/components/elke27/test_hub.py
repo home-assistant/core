@@ -38,7 +38,7 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
     client.async_discover = AsyncMock(
         return_value=[SimpleNamespace(panel_name="Panel A")]
     )
-    client._coerce_identity = lambda identity: identity
+    client.set_client_identity = Mock()
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     unsubscribe = Mock()
@@ -59,6 +59,9 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
         await hub.async_connect()
 
     client.async_connect.assert_awaited_once()
+    client.set_client_identity.assert_called_once_with(
+        {"mn": "222", "sn": "112233445566"}
+    )
     client.wait_ready.assert_awaited_once_with(timeout_s=READY_TIMEOUT)
     client.subscribe.assert_called_once()
 
@@ -74,7 +77,7 @@ async def test_connect_wait_ready_false_disconnects(
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
     client.async_discover = AsyncMock(return_value=[])
-    client._coerce_identity = lambda identity: identity
+    client.set_client_identity = Mock()
     client.wait_ready = AsyncMock(return_value=False)
     client.async_disconnect = AsyncMock(return_value=None)
 
@@ -147,7 +150,7 @@ async def test_connect_sets_panel_name_and_reconnect_log(hass: HomeAssistant) ->
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     client.subscribe = Mock(return_value=Mock())
-    client._coerce_identity = lambda identity: identity
+    client.set_client_identity = Mock()
 
     with patch(
         "homeassistant.components.elke27.hub.Elke27Client",

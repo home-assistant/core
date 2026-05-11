@@ -79,7 +79,7 @@ def _generate_serial_number() -> str:
 
 
 def _normalize_serial(serial: str) -> str:
-    """Return a digits-only serial string for provisioning."""
+    """Return a lowercased alphanumeric serial string for provisioning."""
     return "".join(ch for ch in serial if ch.isalnum()).lower()
 
 

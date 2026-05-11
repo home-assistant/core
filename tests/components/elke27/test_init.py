@@ -141,6 +141,10 @@ async def test_setup_transient_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [["component.homeassistant.issues.config_entry_reauth."]],
+)
 async def test_setup_missing_link_keys_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -155,6 +159,10 @@ async def test_setup_missing_link_keys_raises_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [["component.homeassistant.issues.config_entry_reauth."]],
+)
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -199,9 +207,9 @@ async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     registry = er.async_get(hass)
     base = "aa:bb:cc:dd:ee:ff"
-    old_unique_id = f"{base}_sensor_1"
+    old_unique_id = f"{base}_area_1"
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
         old_unique_id,
         config_entry=entry,
@@ -209,7 +217,9 @@ async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
 
     await _async_migrate_unique_ids(hass, entry, base)
 
-    entry_id = registry.async_get_entity_id("sensor", DOMAIN, f"{base}:sensor:1")
+    entry_id = registry.async_get_entity_id(
+        "alarm_control_panel", DOMAIN, f"{base}:area:1"
+    )
     assert entry_id is not None
 
 
@@ -220,9 +230,9 @@ async def test_migrate_unique_ids_skips_without_suffix(hass: HomeAssistant) -> N
     registry = er.async_get(hass)
     base = "aa:bb:cc"
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
-        f"{base}_sensor",
+        f"{base}_area",
         config_entry=entry,
     )
 
@@ -238,9 +248,9 @@ async def test_migrate_unique_ids_skips_other_entry(hass: HomeAssistant) -> None
     registry = er.async_get(hass)
     base = "aa:bb:cc"
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
-        f"{base}_sensor_1",
+        f"{base}_area_1",
         config_entry=other_entry,
     )
 
@@ -345,31 +355,31 @@ async def test_migrate_unique_ids_skips_unmatched(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     registry = er.async_get(hass)
     base = "aa:bb"
-    registry.async_get_or_create("sensor", DOMAIN, f"{base}_sensor")
+    registry.async_get_or_create("alarm_control_panel", DOMAIN, f"{base}_area")
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
-        f"{base}_sensor_2",
+        f"{base}_area_2",
         config_entry=entry,
     )
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
-        f"{base}:sensor:2",
+        f"{base}:area:2",
         config_entry=entry,
     )
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         "other",
-        f"{base}_sensor_3",
+        f"{base}_area_3",
         config_entry=entry,
     )
     other_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.21"})
     other_entry.add_to_hass(hass)
     registry.async_get_or_create(
-        "sensor",
+        "alarm_control_panel",
         DOMAIN,
-        f"{base}_sensor",
+        f"{base}_area",
         config_entry=other_entry,
     )
 
@@ -380,13 +390,19 @@ async def test_alarm_arm_automatic_service_calls_hub(hass: HomeAssistant) -> Non
     """Verify the automatic arm service forwards the extra arm options."""
     await async_setup(hass, {})
 
-    hub = SimpleNamespace(async_arm_area=AsyncMock(return_value=True))
+    hub = SimpleNamespace(
+        async_arm_area=AsyncMock(return_value=True),
+        async_disconnect=AsyncMock(return_value=None),
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.30"},
     )
     entry.add_to_hass(hass)
-    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=SimpleNamespace())
+    entry.runtime_data = Elke27RuntimeData(
+        hub=hub,
+        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
+    )
     entry.mock_state(hass, ConfigEntryState.LOADED)
 
     entity_id = er.async_get(hass).async_get_or_create(
@@ -422,13 +438,19 @@ async def test_alarm_arm_automatic_home_also_uses_automatic_flags(
     """Verify automatic arming always uses the built-in Elke27 flags."""
     await async_setup(hass, {})
 
-    hub = SimpleNamespace(async_arm_area=AsyncMock(return_value=True))
+    hub = SimpleNamespace(
+        async_arm_area=AsyncMock(return_value=True),
+        async_disconnect=AsyncMock(return_value=None),
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.31"},
     )
     entry.add_to_hass(hass)
-    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=SimpleNamespace())
+    entry.runtime_data = Elke27RuntimeData(
+        hub=hub,
+        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
+    )
     entry.mock_state(hass, ConfigEntryState.LOADED)
 
     entity_id = er.async_get(hass).async_get_or_create(

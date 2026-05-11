@@ -89,6 +89,7 @@ class Elke27AreaAlarmControlPanel(
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
         | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
