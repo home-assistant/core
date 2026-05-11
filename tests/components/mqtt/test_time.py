@@ -179,7 +179,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "10:12:00", 2, False
+        "command-topic", "10:12:00", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("time.test")
@@ -190,7 +190,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "10:12:01.000012", 2, False
+        "command-topic", "10:12:01.000012", 2, False, message_expiry_interval=None
     )
     state = hass.states.get("time.test")
     assert state.state == "10:12:01.000012"

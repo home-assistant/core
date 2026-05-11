@@ -72,7 +72,11 @@ async def test_climate(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_CLIMATE_SET_STATE, _PAYLOAD_CLIMATE_SET_TEMP, 0, False
+        _TOPIC_CLIMATE_SET_STATE,
+        _PAYLOAD_CLIMATE_SET_TEMP,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate a partial state response
@@ -119,7 +123,11 @@ async def test_climate(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_CLIMATE_SET_STATE, _PAYLOAD_CLIMATE_SET_PRESET, 0, False
+        _TOPIC_CLIMATE_SET_STATE,
+        _PAYLOAD_CLIMATE_SET_PRESET,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate a partial state response
@@ -223,6 +231,6 @@ def _wait_and_assert_state_request(
     mqtt_mock.reset_mock()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(STATE_REQUEST_DELAY))
     mqtt_mock.async_publish.assert_has_calls(
-        [call(_TOPIC_GET_STATE, '["UL20"]', 0, False)],
+        [call(_TOPIC_GET_STATE, '["UL20"]', 0, False, message_expiry_interval=None)],
         any_order=True,
     )

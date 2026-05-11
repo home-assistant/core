@@ -288,7 +288,11 @@ async def test_sending_mqtt_commands_and_optimistic(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "2025-12-01T10:12:00+00:00", 2, False
+        "command-topic",
+        "2025-12-01T10:12:00+00:00",
+        2,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("datetime.test")

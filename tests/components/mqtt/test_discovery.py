@@ -1771,7 +1771,10 @@ async def test_cleanup_device_manual(
 
     # Verify retained discovery topics have been cleared
     mqtt_mock.async_publish.assert_has_calls(
-        [call(discovery_topic, None, 0, True) for discovery_topic in discovery_payloads]
+        [
+            call(discovery_topic, None, 0, True, message_expiry_interval=None)
+            for discovery_topic in discovery_payloads
+        ]
     )
 
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -2081,9 +2084,27 @@ async def test_cleanup_device_multiple_config_entries(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", None, 0, True),
-            call("homeassistant/tag/bla/config", None, 0, True),
-            call("homeassistant/device_automation/bla/config", None, 0, True),
+            call(
+                "homeassistant/sensor/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
+            call(
+                "homeassistant/tag/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
+            call(
+                "homeassistant/device_automation/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2810,11 +2831,23 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", None, 0, True)
+        call(
+            "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+            None,
+            0,
+            True,
+            message_expiry_interval=None,
+        )
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", None, 0, True)
+        call(
+            "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+            None,
+            0,
+            True,
+            message_expiry_interval=None,
+        )
         in mqtt_mock.async_publish.mock_calls
     )
 

@@ -37,7 +37,7 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -128,9 +128,21 @@ def publish(
     qos: int = 0,
     retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
+    *,
+    message_expiry_interval: int | None = None,
 ) -> None:
     """Publish message to a MQTT topic."""
-    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
+    hass.create_task(
+        async_publish(
+            hass,
+            topic,
+            payload,
+            qos,
+            retain,
+            encoding,
+            message_expiry_interval=message_expiry_interval,
+        )
+    )
 
 
 async def async_publish(
@@ -140,6 +152,8 @@ async def async_publish(
     qos: int = 0,
     retain: bool = False,
     encoding: str | None = DEFAULT_ENCODING,
+    *,
+    message_expiry_interval: int | None = None,
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
@@ -193,7 +207,13 @@ async def async_publish(
         qos = qos or 0
         retain = retain or False
 
-    await mqtt_data.client.async_publish(topic, outgoing_payload, qos, retain)
+    await mqtt_data.client.async_publish(
+        topic,
+        outgoing_payload,
+        qos,
+        retain,
+        message_expiry_interval=message_expiry_interval,
+    )
 
 
 @callback
@@ -692,17 +712,37 @@ class MQTT:
         return topic in self._pending_subscriptions
 
     async def async_publish(
-        self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
+        self,
+        topic: str,
+        payload: PublishPayloadType,
+        qos: int,
+        retain: bool,
+        *,
+        message_expiry_interval: int | None = None,
     ) -> None:
         """Publish a MQTT message."""
-        msg_info = self._mqttc.publish(topic, payload, qos, retain)
+        properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)  # type: ignore[no-untyped-call]
+        if message_expiry_interval is not None:
+            if not self.is_mqttv5:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mqtt_message_expiry_interval_not_supported",
+                    translation_placeholders={
+                        "topic": topic,
+                        "protocol": self.conf.get(CONF_PROTOCOL, PROTOCOL_311),
+                    },
+                )
+            properties.MessageExpiryInterval = message_expiry_interval
+        msg_info = self._mqttc.publish(topic, payload, qos, retain, properties)
         _LOGGER.debug(
-            "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
+            "Transmitting%s message on %s: '%s', mid: %s, qos: %s,"
+            " message_expiry_interval: %s",
             " retained" if retain else "",
             topic,
             payload,
             msg_info.mid,
             qos,
+            message_expiry_interval,
         )
         await self._async_wait_for_mid_or_raise(msg_info.mid, msg_info.rc)
 

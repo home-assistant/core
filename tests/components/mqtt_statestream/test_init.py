@@ -80,7 +80,9 @@ async def test_setup_and_stop_waits_for_ha(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "off", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "off", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
     mqtt_mock.reset_mock()
 
@@ -143,7 +145,9 @@ async def test_state_changed_event_sends_message(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
     mqtt_mock.async_publish.reset_mock()
 
@@ -154,7 +158,11 @@ async def test_state_changed_event_sends_message(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_with(
-        "pub/test_domain/test_platform_1234/state", "unknown", 1, True
+        "pub/test_domain/test_platform_1234/state",
+        "unknown",
+        1,
+        True,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -192,9 +200,23 @@ async def test_state_changed_event_sends_message_and_timestamp(
 
     # Make sure 'on' was published to pub/fake/entity/state
     calls = [
-        call.async_publish("pub/another/entity/state", "on", 1, True),
-        call.async_publish("pub/another/entity/last_changed", ANY, 1, True),
-        call.async_publish("pub/another/entity/last_updated", ANY, 1, True),
+        call.async_publish(
+            "pub/another/entity/state", "on", 1, True, message_expiry_interval=None
+        ),
+        call.async_publish(
+            "pub/another/entity/last_changed",
+            ANY,
+            1,
+            True,
+            message_expiry_interval=None,
+        ),
+        call.async_publish(
+            "pub/another/entity/last_updated",
+            ANY,
+            1,
+            True,
+            message_expiry_interval=None,
+        ),
     ]
 
     mqtt_mock.async_publish.assert_has_calls(calls, any_order=True)
@@ -225,10 +247,22 @@ async def test_state_changed_attr_sends_message(
 
     # Make sure 'on' was published to pub/fake/entity/state
     calls = [
-        call.async_publish("pub/fake/entity/state", "off", 1, True),
-        call.async_publish("pub/fake/entity/testing", '"YES"', 1, True),
-        call.async_publish("pub/fake/entity/list", '["a", "b", "c"]', 1, True),
-        call.async_publish("pub/fake/entity/bool", "false", 1, True),
+        call.async_publish(
+            "pub/fake/entity/state", "off", 1, True, message_expiry_interval=None
+        ),
+        call.async_publish(
+            "pub/fake/entity/testing", '"YES"', 1, True, message_expiry_interval=None
+        ),
+        call.async_publish(
+            "pub/fake/entity/list",
+            '["a", "b", "c"]',
+            1,
+            True,
+            message_expiry_interval=None,
+        ),
+        call.async_publish(
+            "pub/fake/entity/bool", "false", 1, True, message_expiry_interval=None
+        ),
     ]
 
     mqtt_mock.async_publish.assert_has_calls(calls, any_order=True)
@@ -261,7 +295,9 @@ async def test_state_changed_event_include_domain(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -299,7 +335,9 @@ async def test_state_changed_event_include_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -337,7 +375,9 @@ async def test_state_changed_event_exclude_domain(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -375,7 +415,9 @@ async def test_state_changed_event_exclude_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -413,7 +455,9 @@ async def test_state_changed_event_exclude_domain_include_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -451,7 +495,9 @@ async def test_state_changed_event_include_domain_exclude_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -490,7 +536,7 @@ async def test_state_changed_event_include_globs(
 
     # Make sure 'on' was published to pub/fake2/included_entity/state
     mqtt_mock.async_publish.assert_called_with(
-        "pub/fake2/included_entity/state", "on", 1, True
+        "pub/fake2/included_entity/state", "on", 1, True, message_expiry_interval=None
     )
     assert mqtt_mock.async_publish.called
 
@@ -529,7 +575,9 @@ async def test_state_changed_event_exclude_globs(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -567,7 +615,9 @@ async def test_state_changed_event_exclude_domain_globs_include_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -578,7 +628,7 @@ async def test_state_changed_event_exclude_domain_globs_include_entity(
 
     # Make sure 'on' was published to pub/fake/entity/state
     mqtt_mock.async_publish.assert_called_with(
-        "pub/fake2/included_entity/state", "on", 1, True
+        "pub/fake2/included_entity/state", "on", 1, True, message_expiry_interval=None
     )
     assert mqtt_mock.async_publish.called
 
@@ -625,7 +675,9 @@ async def test_state_changed_event_include_domain_globs_exclude_entity(
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake/entity/state
-    mqtt_mock.async_publish.assert_called_with("pub/fake/entity/state", "on", 1, True)
+    mqtt_mock.async_publish.assert_called_with(
+        "pub/fake/entity/state", "on", 1, True, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
@@ -636,7 +688,7 @@ async def test_state_changed_event_include_domain_globs_exclude_entity(
 
     # Make sure 'on' was published to pub/fake/entity/state
     mqtt_mock.async_publish.assert_called_with(
-        "pub/fake/included_entity/state", "on", 1, True
+        "pub/fake/included_entity/state", "on", 1, True, message_expiry_interval=None
     )
     assert mqtt_mock.async_publish.called
 
