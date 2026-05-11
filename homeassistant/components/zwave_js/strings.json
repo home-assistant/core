@@ -310,9 +310,6 @@
     "credential_rejected_duplicate": {
       "message": "This credential is already registered on the device."
     },
-    "credential_rejected_duplicate_admin_pin": {
-      "message": "This credential matches the admin PIN code and cannot be reused."
-    },
     "credential_rejected_manufacturer_rules": {
       "message": "The credential violates the device's manufacturer security rules (for example, it is too short, too long, or uses a disallowed pattern)."
     },

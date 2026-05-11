@@ -308,7 +308,7 @@ async def test_get_users(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test get_users returns user list."""
+    """Test get_users returns user list without credential plaintext."""
     api = _mock_access_control(lock_schlage_be469)
 
     user = MagicMock()
@@ -318,7 +318,14 @@ async def test_get_users(
     user.user_type = UserCredentialUserType.GENERAL
     user.credential_rule = None
     api.get_users_cached.return_value = [user]
-    api.get_all_credentials_cached.return_value = []
+
+    credential = MagicMock()
+    credential.user_id = 1
+    credential.type = UserCredentialType.PIN_CODE
+    credential.slot = 3
+    credential.data = "1234"
+    api.get_all_credentials_cached.return_value = [credential]
+
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
     )
@@ -333,9 +340,13 @@ async def test_get_users(
 
     assert result[entity_id]["max_users"] == 20
     assert len(result[entity_id]["users"]) == 1
-    assert result[entity_id]["users"][0]["user_id"] == 1
-    assert result[entity_id]["users"][0]["user_name"] == "Alice"
-    assert result[entity_id]["users"][0]["active"] is True
+    user_entry = result[entity_id]["users"][0]
+    assert user_entry["user_id"] == 1
+    assert user_entry["user_name"] == "Alice"
+    assert user_entry["active"] is True
+    # Z-Wave supports reading back credentials, but we don't want to expose them
+    # Make sure the service does not return the credential data.
+    assert user_entry["credentials"] == [{"type": "pin_code", "slot": 3}]
 
 
 async def test_set_credential_auto_slot(
@@ -444,21 +455,27 @@ async def test_set_credential_multi_target(
     assert result[entity_2]["user_id"] == 1
 
 
-async def test_set_credential_rejection_raises(
+@pytest.mark.parametrize(
+    "result",
+    [
+        SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
+        SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE,
+    ],
+)
+async def test_set_duplicate_credential_rejection_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
+    result: SetCredentialResult,
 ) -> None:
-    """A device-reported rejection must surface as HomeAssistantError."""
+    """A device-reported duplicate credential rejection must surface as HomeAssistantError."""
     api = _mock_access_control(lock_schlage_be469)
-    api.set_credential = AsyncMock(
-        return_value=SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL
-    )
+    api.set_credential = AsyncMock(return_value=result)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -474,6 +491,9 @@ async def test_set_credential_rejection_raises(
             blocking=True,
             return_response=True,
         )
+    # While Z-Wave can report that a credential matches the admin code,
+    # we don't want to expose this information to the user.
+    assert exc.value.translation_key == "credential_rejected_duplicate"
 
 
 async def test_set_user_rejection_raises(

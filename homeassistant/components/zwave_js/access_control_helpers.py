@@ -108,9 +108,7 @@ _SET_CREDENTIAL_RESULT_KEYS: dict[SetCredentialResult, str] = {
     SetCredentialResult.ERROR_MANUFACTURER_SECURITY_RULES: (
         "credential_rejected_manufacturer_rules"
     ),
-    SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE: (
-        "credential_rejected_duplicate_admin_pin"
-    ),
+    SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE: "credential_rejected_duplicate",
     SetCredentialResult.ERROR_WRONG_USER_UNIQUE_IDENTIFIER: (
         "credential_rejected_wrong_uui"
     ),
@@ -168,7 +166,6 @@ class Credential(TypedDict):
 
     type: str
     slot: int
-    data: str | None
 
 
 class UserEntry(TypedDict):
@@ -268,7 +265,6 @@ async def async_get_users(node: Node) -> UsersResult:
             Credential(
                 type=CREDENTIAL_TYPE_MAP.get(cred.type, str(cred.type)),
                 slot=cred.slot,
-                data=cred.data if isinstance(cred.data, str) else None,
             )
         )
 
