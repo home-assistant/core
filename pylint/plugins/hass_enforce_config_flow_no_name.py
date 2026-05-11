@@ -1,15 +1,12 @@
 """Plugin for detecting name fields in config flow schemas.
 
 Config flows should not ask users to provide a name for the device or
-integration entry. The name is either automatically derived from the
-device (via discovery) or from the integration's manifest. Letting users
-set names leads to inconsistency and is a common review comment on new
-integration PRs.
+integration entry. The name is automatically derived from the device (via
+discovery) or set by the integration code itself. Letting users set names
+leads to inconsistency and is a common review comment on new integration PRs.
 
 Found in 7.6% of new-integration PRs across 1,100+ analyzed PRs, April 2026.
 """
-
-from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -36,7 +33,7 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
     """Checker for name fields in config flow schemas.
 
     Config flows should not include name fields (CONF_NAME, "name") -- names
-    come from discovery or the integration manifest.
+    come from discovery or are set by the integration code itself.
     """
 
     name = "hass_enforce_config_flow_no_name"
@@ -44,11 +41,11 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
     msgs = {
         "W7493": (
             "Config flow should not include a '%s' field -- names are derived "
-            "from discovery or the integration manifest",
+            "from discovery or set by the integration code",
             "hass-config-flow-name-field",
             "Used when a config flow schema includes a name field. Users "
             "should not set names in config flows; they come automatically "
-            "from the device (via discovery) or the integration manifest.",
+            "from the device (via discovery) or are set by the integration.",
         ),
     }
     options = ()
@@ -79,12 +76,11 @@ class HassEnforceConfigFlowNoNameChecker(BaseChecker):
         if _is_in_subentry_flow(node):
             return
 
-        if field_name in _NAME_FIELD_NAMES:
-            self.add_message(
-                "hass-config-flow-name-field",
-                node=node,
-                args=(field_name,),
-            )
+        self.add_message(
+            "hass-config-flow-name-field",
+            node=node,
+            args=(field_name,),
+        )
 
 
 def _is_helper_integration(integration: str, module: nodes.Module) -> bool:
@@ -120,31 +116,30 @@ def _is_in_subentry_flow(node: nodes.NodeNG) -> bool:
     while current is not None:
         if isinstance(current, nodes.ClassDef):
             for base in current.bases:
-                if isinstance(base, nodes.Name) and "SubentryFlow" in base.name:
-                    return True
-                if (
-                    isinstance(base, nodes.Attribute)
-                    and "SubentryFlow" in base.attrname
-                ):
-                    return True
+                match base:
+                    case nodes.Name(name=name) if "SubentryFlow" in name:
+                        return True
+                    case nodes.Attribute(attrname=attrname) if (
+                        "SubentryFlow" in attrname
+                    ):
+                        return True
         current = current.parent
     return False
 
 
 def _get_schema_field_name(node: nodes.Call) -> str | None:
     """Extract the field name from vol.Required(...) or vol.Optional(...)."""
-    if not isinstance(node.func, nodes.Attribute):
-        return None
-    if node.func.attrname not in {"Required", "Optional"}:
-        return None
-    if not node.args:
-        return None
-
-    first_arg = node.args[0]
-    if isinstance(first_arg, nodes.Const) and isinstance(first_arg.value, str):
-        return first_arg.value
-    if isinstance(first_arg, nodes.Name):
-        return str(first_arg.name)
+    match node:
+        case nodes.Call(
+            func=nodes.Attribute(attrname="Required" | "Optional"),
+            args=[nodes.Const(value=str(val)), *_],
+        ):
+            return val
+        case nodes.Call(
+            func=nodes.Attribute(attrname="Required" | "Optional"),
+            args=[nodes.Name(name=val), *_],
+        ):
+            return str(val)
     return None
 
 
