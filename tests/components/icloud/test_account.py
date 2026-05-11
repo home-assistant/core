@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pyicloud.exceptions import PyiCloudAuthRequiredException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -165,3 +166,138 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+
+
+def _make_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
+    """Build an IcloudAccount with mocked config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    return IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+
+async def test_setup_failed_login_with_2fa_logs_warning(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test setup logs a warning (not error) when the login failure is due to 2FA.
+
+    When requires_2fa is True, the code internally raises PyiCloudFailedLoginException.
+    The handler should log a warning directing the user to enter a code, not an error
+    telling them their password no longer works.
+    """
+    account = _make_account(hass, mock_store)
+
+    service_instance = MagicMock()
+    service_instance.requires_2fa = True
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            return_value=service_instance,
+        ),
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.setup()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()
+
+
+async def test_setup_auth_required_exception_calls_reauth(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test setup handles PyiCloudAuthRequiredException by calling reauth.
+
+    This covers the case where FMIP requires re-authentication even after the
+    main iCloud login succeeded (e.g. MFA required specifically for Find My).
+    Before this fix, the exception was unhandled and crashed setup.
+    """
+    account = _make_account(hass, mock_store)
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=PyiCloudAuthRequiredException("test@example.com", MagicMock()),
+        ),
+        patch.object(account, "_require_reauth") as mock_reauth,
+    ):
+        account.setup()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+
+
+async def test_setup_auth_required_exception_from_devices_calls_reauth(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test setup handles PyiCloudAuthRequiredException raised when reading devices.
+
+    This covers the case where auth is required when accessing device data
+    (e.g. api.devices.user_info) after service construction succeeded.
+    Before this fix, the exception was unhandled and crashed setup.
+    """
+    account = _make_account(hass, mock_store)
+
+    class _DevicesAuthError:
+        @property
+        def user_info(self):
+            raise PyiCloudAuthRequiredException("test@example.com", MagicMock())
+
+    service_instance = MagicMock()
+    service_instance.requires_2fa = False
+    service_instance.devices = _DevicesAuthError()
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            return_value=service_instance,
+        ),
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.setup()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+    mock_logger.error.assert_called_once()
+    mock_logger.warning.assert_not_called()
+
+
+def test_handle_auth_required_with_2fa_logs_warning(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test _handle_auth_required logs a warning (not error) when requires_2fa=True.
+
+    This covers the warning branch of the helper used by both
+    PyiCloudAuthRequiredException handlers when 2FA is required.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account._handle_auth_required(requires_2fa=True)
+
+    assert account.api is None
+    mock_reauth.assert_called_once()
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()

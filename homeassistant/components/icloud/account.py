@@ -7,6 +7,7 @@ from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -96,6 +97,7 @@ class IcloudAccount:
 
     def setup(self) -> None:
         """Set up an iCloud account."""
+        self.api = None  # ensure no stale reference if construction raises below
         try:
             self.api = PyiCloudService(
                 self._username,
@@ -109,8 +111,13 @@ class IcloudAccount:
                 raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            # Login failed, which can mean 2FA reauthentication is required or
+            # that credentials need to be updated.
+            if requires_2fa:
+                self._handle_auth_required(True)
+                return
             self.api = None
-            # Login failed which means credentials need to be updated.
             _LOGGER.error(
                 (
                     "Your password for '%s' is no longer working; Go to the "
@@ -119,13 +126,21 @@ class IcloudAccount:
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
-
             self._require_reauth()
+            return
+
+        except PyiCloudAuthRequiredException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            self._handle_auth_required(requires_2fa)
             return
 
         try:
             # Gets device owners infos
             user_info = self.api.devices.user_info
+        except PyiCloudAuthRequiredException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            self._handle_auth_required(requires_2fa)
+            return
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
@@ -150,6 +165,29 @@ class IcloudAccount:
 
         self._devices = {}
         self.update_devices()
+
+    def _handle_auth_required(self, requires_2fa: bool) -> None:
+        """Log an auth-required event and trigger reauth."""
+        self.api = None
+        if requires_2fa:
+            _LOGGER.warning(
+                (
+                    "2FA authentication required for '%s'; Go to the "
+                    "Integrations menu and click on Configure on the iCloud "
+                    "card to enter your verification code"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        else:
+            _LOGGER.error(
+                (
+                    "Re-authentication required for '%s'; Go to the "
+                    "Integrations menu and click on Configure on the iCloud "
+                    "card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+        self._require_reauth()
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
