@@ -1,7 +1,7 @@
 {
   "domain": "somfy_rts",
   "name": "Somfy RTS",
-  "codeowners": [],
+  "codeowners": ["@l-henke"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],
   "documentation": "https://www.home-assistant.io/integrations/somfy_rts",
