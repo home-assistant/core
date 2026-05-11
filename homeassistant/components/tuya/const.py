@@ -947,7 +947,7 @@ class DPCode(StrEnum):
     UP_DOWN = "up_down"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
-    USE_TIME_ONE = "use_time_one"  # Single use time of irrigation
+    USE_TIME_ONE = "use_time_one"
     UV = "uv"  # UV sterilization
     UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
@@ -980,7 +980,7 @@ class DPCode(StrEnum):
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
-    WORK_STATE = "work_state"  # Device work state
+    WORK_STATE = "work_state"
     WORK_STATE_E = "work_state_e"
 
 

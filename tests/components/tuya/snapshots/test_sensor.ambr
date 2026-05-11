@@ -2097,7 +2097,7 @@
     'supported_features': 0,
     'translation_key': 'last_watering_time',
     'unique_id': 'tuya.73ov8i8iedtylkzrqzkfsuse_time_one',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.balkonbewasserung_last_watering_time-state]
@@ -2105,7 +2105,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'balkonbewässerung Last watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.balkonbewasserung_last_watering_time',
@@ -8956,7 +8956,7 @@
     'supported_features': 0,
     'translation_key': 'last_watering_time',
     'unique_id': 'tuya.ggimpv4dqzkfsuse_time_one',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.garden_valve_yard_last_watering_time-state]
@@ -8964,7 +8964,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Garden Valve Yard Last watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_valve_yard_last_watering_time',
@@ -19732,7 +19732,7 @@
     'supported_features': 0,
     'translation_key': 'last_watering_time',
     'unique_id': 'tuya.bl5cuqxnqzkfsuse_time_one',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.smart_water_timer_last_watering_time-state]
@@ -19740,7 +19740,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Smart Water Timer Last watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_water_timer_last_watering_time',
@@ -23666,7 +23666,7 @@
     'supported_features': 0,
     'translation_key': 'last_watering_time',
     'unique_id': 'tuya.kx8dncf1qzkfsuse_time_one',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.valve_controller_2_last_watering_time-state]
@@ -23674,7 +23674,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Valve Controller 2 Last watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.valve_controller_2_last_watering_time',

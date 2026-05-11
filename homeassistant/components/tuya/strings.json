@@ -214,9 +214,6 @@
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
       },
-      "irrigation_duration": {
-        "name": "Irrigation duration"
-      },
       "maximum_brightness": {
         "name": "Maximum brightness"
       },
@@ -712,9 +709,9 @@
       "irrigation_status": {
         "name": "Status",
         "state": {
-          "auto": "Automatic",
+          "auto": "[%key:common::state::auto%]",
           "idle": "[%key:common::state::idle%]",
-          "manual": "Manual"
+          "manual": "[%key:common::state::manual%]"
         }
       },
       "last_amount": {
