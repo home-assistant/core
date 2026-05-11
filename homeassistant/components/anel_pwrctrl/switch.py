@@ -1,7 +1,5 @@
 """Support for ANEL PwrCtrl switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

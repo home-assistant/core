@@ -1,7 +1,5 @@
 """Data update coordinator for the Deluge integration."""
 
-from __future__ import annotations
-
 from collections import Counter
 from datetime import timedelta
 from ssl import SSLError

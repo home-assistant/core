@@ -1,11 +1,9 @@
 """Support for Tuya siren."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.definition.siren import (
-    TuyaSirenDefinition,
+    SirenDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -20,8 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
@@ -29,21 +27,25 @@ SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
+            translation_key="siren",
         ),
     ),
     DeviceCategory.DGNBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
+            translation_key="siren",
         ),
     ),
     DeviceCategory.SGBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
+            name=None,
         ),
     ),
     DeviceCategory.SP: (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
+            translation_key="siren",
         ),
     ),
 }
@@ -86,14 +88,13 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
-    _attr_name = None
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
-        definition: TuyaSirenDefinition,
+        definition: SirenDefinition,
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager, description)

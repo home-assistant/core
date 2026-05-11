@@ -1,7 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN

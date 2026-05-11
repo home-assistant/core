@@ -1,7 +1,5 @@
 """AdGuard Home base entity."""
 
-from __future__ import annotations
-
 from adguardhome import AdGuardHomeError
 
 from homeassistant.config_entries import SOURCE_HASSIO
