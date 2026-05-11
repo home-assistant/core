@@ -4,8 +4,6 @@ Provides business logic for user/credential CRUD, capability queries,
 auto-find logic, and validation.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from typing import TypedDict
