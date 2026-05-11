@@ -299,6 +299,21 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
+        NumberEntityDescription(
+            key=DPCode.IPC_BRIGHT,
+            translation_key="video_brightness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.IPC_CONTRAST,
+            translation_key="video_contrast",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.IPC_SHARP,
+            translation_key="video_sharpness",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SZJQR: (
         NumberEntityDescription(
