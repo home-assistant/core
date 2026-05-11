@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 """Creates Water Heater entities for the my-PV Home Assistant integration."""
 
 import logging
