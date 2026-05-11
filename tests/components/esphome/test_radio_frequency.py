@@ -8,7 +8,8 @@ from aioesphomeapi import (
     RadioFrequencyModulation,
 )
 import pytest
-from rf_protocols import ModulationType, OOKCommand
+from rf_protocols import ModulationType
+from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components import radio_frequency
 from homeassistant.const import STATE_UNAVAILABLE

@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 
+from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
@@ -17,7 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from .commands import COMMAND_LIGHT, get_codes_for_code
+from .commands import COMMAND_LIGHT
 from .const import (
     CODE_MAX,
     CODE_MIN,
