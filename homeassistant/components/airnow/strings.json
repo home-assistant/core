@@ -46,6 +46,9 @@
       "init": {
         "data": {
           "radius": "Station radius (miles)"
+        },
+        "data_description": {
+          "radius": "The radius in miles around your location to search for reporting stations."
         }
       }
     }
