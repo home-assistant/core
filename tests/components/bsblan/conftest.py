@@ -41,7 +41,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="00:80:41:19:69:90",
         version=1,
-        minor_version=2,
+        minor_version=3,
     )
 
 
@@ -61,7 +61,7 @@ def mock_config_entry_dual_circuit() -> MockConfigEntry:
         },
         unique_id="00:80:41:19:69:90",
         version=1,
-        minor_version=2,
+        minor_version=3,
     )
 
 

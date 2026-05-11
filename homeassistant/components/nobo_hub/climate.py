@@ -99,12 +99,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._read_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target HVAC mode, if it's supported."""
-        if hvac_mode not in self.hvac_modes:
-            raise ValueError(
-                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode"
-                f" '{hvac_mode}'"
-            )
+        """Set new target HVAC mode."""
         if hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_NONE)
         elif hvac_mode == HVACMode.HEAT:

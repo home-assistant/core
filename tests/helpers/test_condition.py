@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import io
 import logging
 from typing import Any
@@ -62,6 +62,7 @@ from homeassistant.helpers.condition import (
     CONDITIONS,
     Condition,
     ConditionChecker,
+    EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
     async_validate_condition_config,
@@ -5141,6 +5142,94 @@ async def test_state_condition_attr_duration_unrelated_attr_update(
     assert test.async_check() is True
 
 
+class _AttributeBackedStateCondition(EntityConditionBase):
+    """Test condition that reads an attribute directly in `is_valid_state`.
+
+    Used by `test_state_condition_state_valid_since_anchors_duration` to
+    drive the default `_state_valid_since` path (`last_changed`-anchored)
+    for an attribute-source condition.
+    """
+
+    _domain_specs = {"test": DomainSpec()}
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        return entity_state.attributes.get("flag") is True
+
+
+class _AttributeBackedStateConditionLastUpdated(_AttributeBackedStateCondition):
+    """Test condition that overrides `_state_valid_since` to use `last_updated`."""
+
+    def _state_valid_since(self, state: State) -> datetime:
+        return state.last_updated
+
+
+@pytest.mark.parametrize(
+    ("condition_cls", "duration_met_after_attr_flip"),
+    [
+        # Default `_state_valid_since` returns `last_changed` for the
+        # state-source domain. With `state.state` unchanged for 60s, the
+        # duration is satisfied as soon as the attribute flips —
+        # demonstrates the false-positive bug for attribute-reading
+        # conditions.
+        (_AttributeBackedStateCondition, True),
+        # Override returning `last_updated` resets the anchor on every
+        # state update (including attribute-only updates), so the `for:`
+        # window correctly starts at the moment of the flip.
+        (_AttributeBackedStateConditionLastUpdated, False),
+    ],
+)
+async def test_state_condition_state_valid_since_anchors_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    condition_cls: type[EntityConditionBase],
+    duration_met_after_attr_flip: bool,
+) -> None:
+    """Verify `_state_valid_since` is consulted to anchor the `for:` duration.
+
+    Drives a condition that becomes valid via an attribute flip while
+    `state.state` is unchanged, then checks whether the duration is
+    satisfied immediately after the flip. The result depends entirely on
+    which timestamp `_state_valid_since` returns: the default
+    (`last_changed`, far in the past) satisfies the duration immediately,
+    while an override returning `last_updated` anchors to the flip and
+    requires the full window to elapse.
+    """
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    # state.state is set well before the attribute flip — its
+    # last_changed will be far in the past by the time the attribute
+    # flips the condition true.
+    hass.states.async_set("test.entity_1", STATE_ON, {"flag": False})
+    await hass.async_block_till_done()
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_OPTIONS: {CONF_FOR: {"seconds": 5}},
+    }
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+
+    freezer.tick(timedelta(seconds=60))
+
+    hass.states.async_set("test.entity_1", STATE_ON, {"flag": True})
+    await hass.async_block_till_done()
+
+    # Just after the flip, well within the 5-second `for:` window.
+    freezer.tick(timedelta(seconds=1))
+    assert test.async_check() is duration_met_after_attr_flip
+
+
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
 async def test_state_condition_primary_entities_only(
     hass: HomeAssistant, primary_entities_only: bool
@@ -5166,12 +5255,12 @@ async def test_state_condition_primary_entities_only(
     await hass.async_block_till_done()
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both on - true regardless of flag
     hass.states.async_set(diagnostic_id, STATE_ON)
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5203,12 +5292,12 @@ async def test_numerical_condition_primary_entities_only(
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic value is below the threshold. If excluded, only the primary is
     # checked and it's above.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both above threshold — true regardless of flag
     hass.states.async_set(diagnostic_id, "75")
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5252,12 +5341,12 @@ async def test_state_condition_primary_entities_only_with_duration(
     # - primary_entities_only=False: diagnostic is included. Diagnostic has
     #   only been matching for 3s < 5s → behavior=all is False.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
     # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_async_from_config_calls_async_setup_on_checker(

@@ -90,5 +90,16 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "SwitchBot Cloud command failed: {error}"
+    },
+    "connection_error": {
+      "message": "Error communicating with SwitchBot Cloud: {error}"
+    },
+    "device_offline": {
+      "message": "SwitchBot Cloud device is offline."
+    }
   }
 }

@@ -121,6 +121,10 @@ class MockDeprecatedClass:
     """Mock class for deprecated testing."""
 
 
+class MockDeprecatedSubClass(MockDeprecatedClass):
+    """Mock subclass for deprecated testing."""
+
+
 @patch("logging.getLogger")
 def test_deprecated_class(mock_get_logger) -> None:
     """Test deprecated class."""
@@ -130,6 +134,9 @@ def test_deprecated_class(mock_get_logger) -> None:
     MockDeprecatedClass()
     assert mock_logger.warning.called
     assert len(mock_logger.warning.mock_calls) == 1
+
+    MockDeprecatedSubClass()
+    assert len(mock_logger.warning.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
