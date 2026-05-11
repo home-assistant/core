@@ -194,7 +194,7 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
     with (
@@ -242,7 +242,7 @@ async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
     with (
@@ -256,7 +256,7 @@ async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert result["errors"]["password"] == "invalid_password"
 
 
@@ -278,7 +278,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
     with (
@@ -326,7 +326,7 @@ async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
     with (
@@ -340,5 +340,5 @@ async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_auth"
     assert result["errors"]["password"] == "invalid_password"
