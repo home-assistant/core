@@ -296,6 +296,7 @@ homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
+homeassistant.components.indevolt.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*
