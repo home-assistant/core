@@ -13,6 +13,15 @@
       "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "title": "{name} password"
+      },
       "discovery_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -23,15 +32,6 @@
         "description": "Do you want to set up {name}?",
         "title": "{name}"
       },
-      "local_auth": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "[%key:component::my_pv::common::password_description%]"
-        },
-        "title": "{name} password"
-      },
       "user": {
         "data": {
           "host": "Host"
@@ -39,7 +39,7 @@
         "data_description": {
           "host": "Host"
         },
-        "title": "my-PV Local Device"
+        "title": "my-PV Device"
       }
     }
   },

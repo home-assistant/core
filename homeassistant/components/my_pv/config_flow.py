@@ -23,12 +23,12 @@ from .const import DOMAIN
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-LOCAL_HOST_SCHEMA: Final = vol.Schema(
+HOST_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_HOST): TextSelector(),
     }
 )
-LOCAL_AUTH_SCHEMA: Final = vol.Schema(
+AUTH_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
@@ -77,12 +77,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         password = None
-        if user_input:
-            password = user_input.get(CONF_PASSWORD)
-
         password_needed = False
         password_valid = False
-        if password:
+        if user_input and (password := user_input.get(CONF_PASSWORD)):
             password_needed = True
 
         # Check if we can connect to the device
@@ -104,22 +101,18 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         # Update host ip address when device is already configured and abort.
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        if user_input is None:
-            _LOGGER.debug("my-PV on %s is not yet configured", self._host)
-
         title = f"my-PV {device.model}"
 
-        if password_needed and password_valid:
+        if user_input is None:
+            _LOGGER.debug("my-PV on %s is not yet configured", self._host)
+        elif not password_needed or password_valid:
             data = {
                 CONF_HOST: self._host,
-                CONF_PASSWORD: password,
             }
-            return self.async_create_entry(title=title, data=data)
 
-        if user_input is not None and not password_needed:
-            data = {
-                CONF_HOST: self._host,
-            }
+            if password:
+                data[CONF_PASSWORD] = password
+
             return self.async_create_entry(title=title, data=data)
 
         self.context.update(
@@ -130,18 +123,16 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+        data_schema = None
         if password_needed:
-            return self.async_show_form(
-                step_id="discovery_confirm",
-                data_schema=LOCAL_AUTH_SCHEMA,
-                errors=errors,
-                description_placeholders=self.context["title_placeholders"],
-            )
-
-        self._set_confirm_only()
+            data_schema = AUTH_SCHEMA
+        else:
+            self._set_confirm_only()
 
         return self.async_show_form(
             step_id="discovery_confirm",
+            data_schema=data_schema,
+            errors=errors,
             description_placeholders=self.context["title_placeholders"],
         )
 
@@ -150,7 +141,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the local setup."""
         errors: dict[str, str] = {}
-        data_schema = LOCAL_HOST_SCHEMA
+        data_schema = HOST_SCHEMA
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -169,7 +160,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors and password_needed:
                 self._host = host
                 self._device_model = device.model
-                return await self.async_step_local_auth()
+                return await self.async_step_auth()
 
             if not errors:
                 await self.async_set_unique_id(device.serial_number)
@@ -190,10 +181,41 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_local_auth(
+    async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle local password authentication."""
+        """Handle password authentication."""
+        errors: dict[str, str] = {}
+        data_schema = AUTH_SCHEMA
+
+        if user_input is not None:
+            host = self._host
+            password = user_input.get(CONF_PASSWORD)
+
+            # Check if we can connect to the device
+            device = await MyPVLocalDevice(host, password)
+            try:
+                if not await device.connect():
+                    errors[CONF_BASE] = "cannot_connect"
+            except MyPVAuthenticationError:
+                errors[CONF_PASSWORD] = "invalid_password"
+            finally:
+                await device.disconnect()
+
+            if not errors:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_configured()
+
+                title = f"my-PV {device.model}"
+                data = {
+                    CONF_HOST: host,
+                    CONF_PASSWORD: password,
+                }
+                return self.async_create_entry(title=title, data=data)
+
+            # Combine user input with schema.
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+
         self.context.update(
             {
                 "title_placeholders": {
@@ -202,45 +224,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="local_auth",
-                data_schema=LOCAL_AUTH_SCHEMA,
-                description_placeholders=self.context["title_placeholders"],
-            )
-
-        errors: dict[str, str] = {}
-
-        host = self._host
-        password = user_input.get(CONF_PASSWORD)
-
-        # Check if we can connect to the device
-        device = await MyPVLocalDevice(host, password)
-        try:
-            if not await device.connect():
-                errors[CONF_BASE] = "cannot_connect"
-        except MyPVAuthenticationError:
-            errors[CONF_PASSWORD] = "invalid_password"
-        finally:
-            await device.disconnect()
-
-        if errors:
-            # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(
-                LOCAL_AUTH_SCHEMA, user_input
-            )
-            return self.async_show_form(
-                step_id="local_auth",
-                data_schema=data_schema,
-                errors=errors,
-            )
-
-        await self.async_set_unique_id(device.serial_number)
-        self._abort_if_unique_id_configured()
-
-        title = f"my-PV {device.model}"
-        data = {
-            CONF_HOST: host,
-            CONF_PASSWORD: password,
-        }
-        return self.async_create_entry(title=title, data=data)
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=self.context["title_placeholders"],
+        )
