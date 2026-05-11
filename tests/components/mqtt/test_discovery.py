@@ -3315,6 +3315,7 @@ async def test_shared_options_with_device_discovery(
     assert len(handler_handles) == 3
 
     # Check if shared options are being passed to the component configs
+    assert discovery_payloads.keys() == platform_values.keys()
     for component, discovery_payload in discovery_payloads.items():
         assert (
             discovery_payload.discovery_data["discovery_payload"][shared_option]
