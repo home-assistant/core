@@ -1093,6 +1093,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "aftership",
     "agent_dvr",
     "airly",
+    "airnow"
     "airq",
     "airthings",
     "airthings_ble",
