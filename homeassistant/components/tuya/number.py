@@ -516,13 +516,10 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_native_max_value = definition.number_wrapper.max_value
         self._attr_native_min_value = definition.number_wrapper.min_value
         self._attr_native_step = definition.number_wrapper.value_step
-        if (
-            description.native_unit_of_measurement is None
-            and definition.number_wrapper.native_unit
-        ):
+        if description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = (
                 definition.number_wrapper.native_unit
-            )
+            ) or None
 
         self._validate_device_class_unit()
 

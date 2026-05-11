@@ -1699,13 +1699,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.sensor_wrapper
 
-        if (
-            description.native_unit_of_measurement is None
-            and definition.sensor_wrapper.native_unit
-        ):
+        if description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = (
                 definition.sensor_wrapper.native_unit
-            )
+            ) or None
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = (
                 definition.sensor_wrapper.suggested_unit
