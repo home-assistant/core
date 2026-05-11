@@ -476,11 +476,26 @@ async def async_delete_all_credentials(node: Node, user_id: int) -> None:
         )
 
     credentials = await node.access_control.get_credentials_cached(user_id)
-    statuses = await asyncio.gather(
+    # Until Z-Wave JS exposes a bulk-delete API, we have to delete credentials one at a time.
+    # Use return_exceptions=True so a single failure does not cancel the remaining deletions
+    # and leave the user with a partially-deleted credential set.
+    results = await asyncio.gather(
         *(
             node.access_control.delete_credential(user_id, cred.type, cred.slot)
             for cred in credentials
-        )
+        ),
+        return_exceptions=True,
     )
-    for status in statuses:
-        _raise_on_set_credential_error(status)
+    first_error: BaseException | None = None
+    for result in results:
+        if isinstance(result, BaseException):
+            if first_error is None:
+                first_error = result
+            continue
+        try:
+            _raise_on_set_credential_error(result)
+        except HomeAssistantError as err:
+            if first_error is None:
+                first_error = err
+    if first_error is not None:
+        raise first_error
