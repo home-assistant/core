@@ -122,6 +122,7 @@ class Router:
     inflight_gets: set[str] = field(default_factory=set, init=False)
     client: Client = field(init=False)
     suspended: bool = field(default=False, init=False)
+    _polling_unsub: Callable[[], None] | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         """Set up internal state on init."""
@@ -201,7 +202,6 @@ class Router:
 
     def update(self) -> None:
         """Update router data."""
-
         if self.suspended:
             _LOGGER.debug("Integration suspended, not updating data")
             return
@@ -267,10 +267,29 @@ class Router:
         except Exception:  # noqa: BLE001
             _LOGGER.warning("Logout error", exc_info=True)
 
+    def start_polling(self) -> None:
+        """Start periodic polling if enabled."""
+        if not self.config_entry.pref_disable_polling and not self._polling_unsub:
+            _LOGGER.debug("Starting periodic polling")
+            self._polling_unsub = async_track_time_interval(
+                self.hass, self._update_router_callback, SCAN_INTERVAL
+            )
+
+    def stop_polling(self) -> None:
+        """Stop periodic polling."""
+        if self._polling_unsub:
+            _LOGGER.debug("Stopping periodic polling")
+            self._polling_unsub()
+            self._polling_unsub = None
+
+    def _update_router_callback(self, *_: Any) -> None:
+        """Update router data callback."""
+        self.update()
+
     def cleanup(self, *_: Any) -> None:
         """Clean up resources."""
-
         self.subscriptions.clear()
+        self.stop_polling()
 
         self.logout()
         self.connection.requests_session.close()
@@ -316,33 +335,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     # Check that we found required information
     router_info = router.data.get(KEY_DEVICE_INFORMATION)
     if not entry.unique_id:
-        # Transitional from < 2021.8: update None config entry and entity unique ids
-        if router_info and (serial_number := router_info.get("SerialNumber")):
-            hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = er.async_get(hass)
-            for entity_entry in er.async_entries_for_config_entry(
-                ent_reg, entry.entry_id
-            ):
-                if not entity_entry.unique_id.startswith("None-"):
-                    continue
-                new_unique_id = entity_entry.unique_id.removeprefix("None-")
-                new_unique_id = f"{serial_number}-{new_unique_id}"
-                ent_reg.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=new_unique_id
-                )
-        else:
-            await hass.async_add_executor_job(router.cleanup)
-            msg = (
-                "Could not resolve serial number to use as unique id for router at %s"
-                ", setup failed"
-            )
-            if not entry.data.get(CONF_PASSWORD):
-                msg += (
-                    ". Try setting up credentials for the router for one startup, "
-                    "unauthenticated mode can be enabled after that in integration "
-                    "settings"
-                )
-            _LOGGER.error(msg, url)
+        if not await _async_maybe_update_unique_id(hass, entry, router):
             return False
 
     # Store reference to router
@@ -358,7 +351,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
         wlan_settings = await hass.async_add_executor_job(
             router.client.wlan.multi_basic_settings
         )
-    except Exception:  # noqa: BLE001
+    except ResponseErrorException, Timeout, ExpatError:
         # Assume not supported, or authentication required but in unauthenticated mode
         wlan_settings = {}
     macs = get_device_macs(router_info or {}, wlan_settings)
@@ -370,33 +363,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
 
     # Set up device registry
     if router.device_identifiers or router.device_connections:
-        device_info = DeviceInfo(
-            configuration_url=router.url,
-            connections=router.device_connections,
-            identifiers=router.device_identifiers,
-            manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
-            name=router.device_name,
-        )
-        hw_version = None
-        sw_version = None
-        if router_info:
-            hw_version = router_info.get("HardwareVersion")
-            sw_version = router_info.get("SoftwareVersion")
-            if router_info.get("DeviceName"):
-                device_info[ATTR_MODEL] = router_info["DeviceName"]
-        if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
-            sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
-                "SoftwareVersion"
-            )
-        if hw_version:
-            device_info[ATTR_HW_VERSION] = hw_version
-        if sw_version:
-            device_info[ATTR_SW_VERSION] = sw_version
-        device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            **device_info,
-        )
+        _get_or_create_device(entry, router)
 
     # Forward config entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -414,17 +381,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
         hass.data[HUAWEI_LTE_CONFIG],
     )
 
-    def _update_router(*_: Any) -> None:
-        """Update router data.
+    async def _async_update_listener(
+        hass: HomeAssistant, entry: HuaweiLteConfigEntry
+    ) -> None:
+        """Handle option updates."""
+        if not entry.pref_disable_polling:
+            router.start_polling()
+        else:
+            router.stop_polling()
 
-        Separate passthrough function because lambdas don't work with track_time_interval.
-        """
-        router.update()
+    # Start polling initially
+    router.start_polling()
 
-    # Set up periodic update
-    entry.async_on_unload(
-        async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
-    )
+    # Register listener for option changes
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Clean up at end
     entry.async_on_unload(
@@ -434,11 +404,72 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     return True
 
 
+def _get_or_create_device(entry: HuaweiLteConfigEntry, router: Router) -> None:
+    """Get or create a device in the registry."""
+    device_info = DeviceInfo(
+        configuration_url=router.url,
+        connections=router.device_connections,
+        identifiers=router.device_identifiers,
+        manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
+        name=router.device_name,
+    )
+    router_info = router.data.get(KEY_DEVICE_INFORMATION)
+    hw_version = None
+    sw_version = None
+    if router_info:
+        hw_version = router_info.get("HardwareVersion")
+        sw_version = router_info.get("SoftwareVersion")
+        if router_info.get("DeviceName"):
+            device_info[ATTR_MODEL] = router_info["DeviceName"]
+    if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
+        sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get("SoftwareVersion")
+    if hw_version:
+        device_info[ATTR_HW_VERSION] = hw_version
+    if sw_version:
+        device_info[ATTR_SW_VERSION] = sw_version
+    device_registry = dr.async_get(router.hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **device_info,
+    )
+
+
+async def _async_maybe_update_unique_id(
+    hass: HomeAssistant, entry: HuaweiLteConfigEntry, router: Router
+) -> bool:
+    """Update None config entry and entity unique ids if serial number is found."""
+    router_info = router.data.get(KEY_DEVICE_INFORMATION)
+    if router_info and (serial_number := router_info.get("SerialNumber")):
+        hass.config_entries.async_update_entry(entry, unique_id=serial_number)
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+            if not entity_entry.unique_id.startswith("None-"):
+                continue
+            new_unique_id = entity_entry.unique_id.removeprefix("None-")
+            new_unique_id = f"{serial_number}-{new_unique_id}"
+            ent_reg.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+        return True
+
+    await hass.async_add_executor_job(router.cleanup)
+    msg = (
+        "Could not resolve serial number to use as unique id for router at %s"
+        ", setup failed"
+    )
+    if not entry.data.get(CONF_PASSWORD):
+        msg += (
+            ". Try setting up credentials for the router for one startup, "
+            "unauthenticated mode can be enabled after that in integration settings"
+        )
+    _LOGGER.error(msg, entry.data[CONF_URL])
+    return False
+
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
 ) -> bool:
     """Unload config entry."""
-
     # Forward config entry unload to platforms
     await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
@@ -450,7 +481,6 @@ async def async_unload_entry(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
-
     hass.data[HUAWEI_LTE_CONFIG] = config
 
     def service_handler(service: ServiceCall) -> None:
