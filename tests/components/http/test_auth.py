@@ -685,16 +685,13 @@ async def test_async_user_not_allowed_do_auth(
     user.is_active = False
 
     # User not active
-    assert async_user_not_allowed_do_auth(hass, user) == "User is not active"
+    assert async_user_not_allowed_do_auth(hass, user) == "user_not_active"
 
     user.is_active = True
     user.local_only = True
 
     # No current request
-    assert (
-        async_user_not_allowed_do_auth(hass, user)
-        == "No request available to validate local access"
-    )
+    assert async_user_not_allowed_do_auth(hass, user) == "no_request_available"
 
     trusted_request = Mock(remote="192.168.1.123")
     untrusted_request = Mock(remote=UNTRUSTED_ADDRESSES[0])
@@ -703,7 +700,7 @@ async def test_async_user_not_allowed_do_auth(
     assert async_user_not_allowed_do_auth(hass, user, trusted_request) is None
     assert (
         async_user_not_allowed_do_auth(hass, user, untrusted_request)
-        == "User cannot authenticate remotely"
+        == "user_cannot_authenticate_remotely"
     )
 
     # Mimic cloud loaded and validate local IP again
@@ -711,7 +708,7 @@ async def test_async_user_not_allowed_do_auth(
     assert async_user_not_allowed_do_auth(hass, user, trusted_request) is None
     assert (
         async_user_not_allowed_do_auth(hass, user, untrusted_request)
-        == "User cannot authenticate remotely"
+        == "user_cannot_authenticate_remotely"
     )
 
     # Is Cloud request and local only, even a local IP will fail
@@ -720,7 +717,7 @@ async def test_async_user_not_allowed_do_auth(
     ):
         assert (
             async_user_not_allowed_do_auth(hass, user, trusted_request)
-            == "User is local only"
+            == "user_local_only"
         )
 
 
