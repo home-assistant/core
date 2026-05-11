@@ -60,10 +60,59 @@
           }
         }
       }
+    },
+    "velov_station": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      },
+      "entry_type": "Vélo'v station",
+      "initiate_flow": {
+        "user": "Add Vélo'v station"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "station_id": "Station ID"
+          }
+        }
+      }
     }
   },
   "entity": {
     "sensor": {
+      "availability_level": {
+        "name": "Availability level",
+        "state": {
+          "blue": "Blue",
+          "green": "Green",
+          "grey": "Grey",
+          "orange": "Orange"
+        }
+      },
+      "available_bikes": {
+        "name": "Available bikes"
+      },
+      "available_electrical_bikes": {
+        "name": "Available electrical bikes"
+      },
+      "available_mechanical_bikes": {
+        "name": "Available mechanical bikes"
+      },
+      "available_stands": {
+        "name": "Available stands"
+      },
+      "capacity": {
+        "name": "Capacity"
+      },
+      "electrical_internal_battery_bikes": {
+        "name": "Electrical internal battery bikes"
+      },
+      "electrical_removable_battery_bikes": {
+        "name": "Electrical removable battery bikes"
+      },
+      "last_update": {
+        "name": "Last update"
+      },
       "next_departure_1": {
         "name": "Next departure 1"
       },
@@ -102,12 +151,22 @@
           "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::estimated%]",
           "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
+      },
+      "station_status": {
+        "name": "Station status",
+        "state": {
+          "closed": "Closed",
+          "open": "Open"
+        }
       }
     }
   },
   "exceptions": {
     "auth_failed": {
       "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_all": {
+      "message": "[%key:component::data_grand_lyon::exceptions::update_failed_all_stops::message%]"
     },
     "update_failed_all_stops": {
       "message": "Error fetching Data Grand Lyon data: all requests failed."

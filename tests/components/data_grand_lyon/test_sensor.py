@@ -10,16 +10,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
+    CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
+    SUBENTRY_TYPE_VELOV_STATION,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEPARTURES
+from .conftest import MOCK_DEPARTURES, MOCK_VELOV_STATION
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -177,5 +179,134 @@ async def test_coordinator_partial_failure(
 
     # stop_2 sensors should work
     state = hass.states.get("sensor.t1_stop_200_next_departure_1")
+    assert state is not None
+    assert state.state != "unavailable"
+
+
+# Vélo'v sensor tests
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_velov_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_velov_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test all Vélo'v sensor entities (state, attributes, registry)."""
+    with patch("homeassistant.components.data_grand_lyon.PLATFORMS", [Platform.SENSOR]):
+        mock_velov_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_velov_config_entry.entry_id
+    )
+
+
+async def test_velov_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_velov_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that secondary Vélo'v sensors are disabled by default."""
+    mock_velov_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id in (
+        "velov_1001-station_status",
+        "velov_1001-availability_level",
+        "velov_1001-capacity",
+        "velov_1001-electrical_internal_battery_bikes",
+        "velov_1001-electrical_removable_battery_bikes",
+        "velov_1001-last_update",
+    ):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for unique_id in (
+        "velov_1001-available_bikes",
+        "velov_1001-available_mechanical_bikes",
+        "velov_1001-available_electrical_bikes",
+        "velov_1001-available_stands",
+    ):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is None
+
+
+async def test_velov_sensor_no_data(
+    hass: HomeAssistant,
+    mock_velov_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that Vélo'v sensors return unknown when station not found."""
+    mock_tcl_client.get_velov_station.return_value = None
+    mock_velov_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.velo_v_1001_available_bikes")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_coordinator_velov_fetch_error(
+    hass: HomeAssistant,
+    mock_velov_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator handles Vélo'v fetch errors gracefully."""
+    mock_tcl_client.get_velov_station.side_effect = ConnectionError("API down")
+    mock_velov_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.velo_v_1001_available_bikes")
+    assert state is None
+
+
+async def test_coordinator_mixed_partial_failure(
+    hass: HomeAssistant,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator succeeds when stop fails but Vélo'v succeeds."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Data Grand Lyon",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LINE: "C3", CONF_STOP_ID: 100},
+                subentry_id="stop_1",
+                subentry_type=SUBENTRY_TYPE_STOP,
+                title="C3 - Stop 100",
+                unique_id="C3_100",
+            ),
+            ConfigSubentryData(
+                data={CONF_STATION_ID: 1001},
+                subentry_id="velov_1",
+                subentry_type=SUBENTRY_TYPE_VELOV_STATION,
+                title="Vélo'v 1001",
+                unique_id="velov_1001",
+            ),
+        ],
+    )
+    mock_tcl_client.get_tcl_passages.side_effect = ConnectionError("API down")
+    mock_tcl_client.get_velov_station.return_value = MOCK_VELOV_STATION
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.velo_v_1001_available_bikes")
     assert state is not None
     assert state.state != "unavailable"

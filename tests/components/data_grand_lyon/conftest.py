@@ -4,14 +4,23 @@ from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from data_grand_lyon_ha import TclPassage, TclPassageType
+from data_grand_lyon_ha import (
+    TclPassage,
+    TclPassageType,
+    VelovAvailabilityLevel,
+    VelovBikeStandAvailability,
+    VelovStation,
+    VelovStationStatus,
+)
 import pytest
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
+    CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
+    SUBENTRY_TYPE_VELOV_STATION,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -41,6 +50,31 @@ MOCK_DEPARTURES = [
     ),
 ]
 
+MOCK_VELOV_STATION = VelovStation(
+    number=1001,
+    name="Place Bellecour",
+    address="Place Bellecour",
+    commune="Lyon",
+    status=VelovStationStatus.OPEN,
+    availability=VelovAvailabilityLevel.GREEN,
+    lat=45.757,
+    lng=4.832,
+    bike_stands=20,
+    available_bikes=15,
+    available_bike_stands=5,
+    banking=True,
+    last_update=datetime(2026, 4, 10, 14, 0),
+    total_stands=VelovBikeStandAvailability(
+        bikes=15,
+        electrical_bikes=5,
+        electrical_internal_battery_bikes=3,
+        electrical_removable_battery_bikes=2,
+        mechanical_bikes=10,
+        stands=5,
+        capacity=20,
+    ),
+)
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -66,6 +100,20 @@ def mock_subentries() -> list[ConfigSubentryData]:
 
 
 @pytest.fixture
+def mock_velov_subentries() -> list[ConfigSubentryData]:
+    """Mock Vélo'v subentries."""
+    return [
+        ConfigSubentryData(
+            data={CONF_STATION_ID: 1001},
+            subentry_id="velov_1",
+            subentry_type=SUBENTRY_TYPE_VELOV_STATION,
+            title="Vélo'v 1001",
+            unique_id="velov_1001",
+        )
+    ]
+
+
+@pytest.fixture
 def mock_config_entry(
     mock_subentries: list[ConfigSubentryData],
 ) -> MockConfigEntry:
@@ -79,6 +127,19 @@ def mock_config_entry(
 
 
 @pytest.fixture
+def mock_velov_config_entry(
+    mock_velov_subentries: list[ConfigSubentryData],
+) -> MockConfigEntry:
+    """Create a mock config entry with Vélo'v subentries."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Data Grand Lyon",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        subentries_data=mock_velov_subentries,
+    )
+
+
+@pytest.fixture
 def mock_tcl_client() -> Generator[AsyncMock]:
     """Mock DataGrandLyonClient for coordinator."""
     with patch(
@@ -86,4 +147,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
     ) as mock_cls:
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
+        client.get_velov_station.return_value = MOCK_VELOV_STATION
         yield client

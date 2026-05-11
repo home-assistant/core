@@ -1,6 +1,33 @@
 {
   "entity": {
     "sensor": {
+      "availability_level": {
+        "default": "mdi:traffic-light"
+      },
+      "available_bikes": {
+        "default": "mdi:bike"
+      },
+      "available_electrical_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
+      "available_mechanical_bikes": {
+        "default": "mdi:bike"
+      },
+      "available_stands": {
+        "default": "mdi:parking"
+      },
+      "capacity": {
+        "default": "mdi:counter"
+      },
+      "electrical_internal_battery_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
+      "electrical_removable_battery_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
+      "last_update": {
+        "default": "mdi:clock-outline"
+      },
       "next_departure_1": {
         "default": "mdi:bus-clock"
       },
@@ -36,6 +63,9 @@
         "state": {
           "estimated": "mdi:clock-check-outline"
         }
+      },
+      "station_status": {
+        "default": "mdi:information-outline"
       }
     }
   }
