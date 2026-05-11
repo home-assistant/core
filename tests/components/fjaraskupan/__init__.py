@@ -9,7 +9,7 @@ COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
     manufacturer_data={},
-    service_uuids=[],
+    service_uuids=["77a2bd49-1e5a-4961-bba1-21f34fa4bc7b"],
     service_data={},
     source="local",
     device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="COOKERHOOD_FJAR"),

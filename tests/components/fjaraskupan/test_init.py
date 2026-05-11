@@ -18,7 +18,7 @@ from tests.typing import WebSocketGenerator
 MOCK_SERVICE_INFO = BluetoothServiceInfo(
     address="11:11:11:11:11:11",
     name=DEVICE_NAME,
-    service_uuids=[],
+    service_uuids=["77a2bd49-1e5a-4961-bba1-21f34fa4bc7b"],
     rssi=-60,
     manufacturer_data={ANNOUNCE_MANUFACTURER: b"ODFJAR\x01\x02\x00\x00\x00\x30\x04"},
     service_data={},
