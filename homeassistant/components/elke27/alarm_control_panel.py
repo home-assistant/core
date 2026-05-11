@@ -1,7 +1,5 @@
 """Alarm control panel platform for Elke27 areas."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any
@@ -179,14 +177,10 @@ class Elke27AreaAlarmControlPanel(
         code = _normalize_code(code)
         for zone_id, _ in _faulted_zones(self.coordinator.data):
             try:
-                await self._hub.async_set_zone_bypass(
-                    zone_id, bypassed=True, pin=code
-                )
+                await self._hub.async_set_zone_bypass(zone_id, bypassed=True, pin=code)
             except Elke27PinRequiredError as err:
                 msg = "PIN required to perform this action."
-                raise HomeAssistantError(
-                    msg
-                ) from err
+                raise HomeAssistantError(msg) from err
         await self._async_arm(ArmMode.ARMED_AWAY, code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

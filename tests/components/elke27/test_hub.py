@@ -1,7 +1,5 @@
 """Tests for the Elke27 hub."""
 
-from __future__ import annotations
-
 import asyncio
 from enum import Enum
 from types import SimpleNamespace

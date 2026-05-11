@@ -1,7 +1,5 @@
 """Live tests for the Elke27 integration."""
 
-from __future__ import annotations
-
 import asyncio
 import json
 import os

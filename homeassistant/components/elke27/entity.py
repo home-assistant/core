@@ -1,7 +1,5 @@
 """Shared entity helpers for the Elke27 integration."""
 
-from __future__ import annotations
-
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -30,9 +28,7 @@ def sanitize_name(name: str | None) -> str | None:
     return _NAME_SAFE_RE.sub("", name)
 
 
-def get_panel_field(
-    snapshot: Any | None, panel_name: str | None, field: str
-) -> Any:
+def get_panel_field(snapshot: Any | None, panel_name: str | None, field: str) -> Any:
     """Return a field from the current panel snapshot."""
     if field == "name" and panel_name:
         return sanitize_name(panel_name)

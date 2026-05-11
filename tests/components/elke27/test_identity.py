@@ -1,7 +1,5 @@
 """Tests for Elke27 identity helpers."""
 
-from __future__ import annotations
-
 import socket
 
 import pytest

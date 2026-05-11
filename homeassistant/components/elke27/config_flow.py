@@ -1,7 +1,5 @@
 """Config flow for the Elke27 integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, is_dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -321,7 +319,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except Elke27AuthError:
             errors["base"] = "cannot_connect"
-        except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError):
+        except Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError:
             errors["base"] = "cannot_connect"
         except Elke27LinkRequiredError:
             errors["base"] = "link_required"

@@ -1,7 +1,5 @@
 """Tests for the Elke27 data update coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace

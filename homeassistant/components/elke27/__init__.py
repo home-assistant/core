@@ -1,7 +1,5 @@
 """Set up the Elke27 integration."""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 from typing import TYPE_CHECKING
@@ -40,6 +38,8 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 SERVICE_ALARM_ARM_AUTOMATIC = "alarm_arm_automatic"
 ATTR_MODE = "mode"
@@ -214,6 +214,10 @@ async def _async_arm_automatic_entity(
         or entity_entry.domain != Platform.ALARM_CONTROL_PANEL
     ):
         msg = f"Entity {entity_id} is not an Elke27 alarm control panel"
+        raise ServiceValidationError(msg)
+
+    if entity_entry.config_entry_id is None:
+        msg = f"Config entry for {entity_id} was not found"
         raise ServiceValidationError(msg)
 
     config_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)

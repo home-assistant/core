@@ -1,7 +1,5 @@
 """Identity helpers for the Elke27 integration."""
 
-from __future__ import annotations
-
 import secrets
 import socket
 from typing import TYPE_CHECKING, Any
@@ -28,7 +26,7 @@ async def async_get_integration_serial(
     target_ip = await hass.async_add_executor_job(_resolve_host, host)
     try:
         source_ip = await network.async_get_source_ip(hass, target_ip=target_ip)
-    except (HomeAssistantError, OSError):
+    except HomeAssistantError, OSError:
         return _generate_serial_number()
     if not source_ip:
         return _generate_serial_number()
@@ -49,7 +47,7 @@ def _get_mac_for_source_ip(source_ip: str) -> str | None:
     try:
         psutil_wrapper = ha_psutil.PsutilWrapper()
         addresses = psutil_wrapper.psutil.net_if_addrs()
-    except (OSError, RuntimeError):
+    except OSError, RuntimeError:
         return None
 
     for addrs in addresses.values():
