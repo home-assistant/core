@@ -67,6 +67,7 @@ async def test_intent(hass: HomeAssistant, init_wyoming_intent: ConfigEntry) -> 
     assert client.transcript.context == {
         "conversation_id": conversation_id,
         "satellite_id": satellite_id,
+        "device_id": device_id,
     }
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -141,6 +142,7 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
     agent_id = "conversation.test_handle"
     conversation_id = "conversation-1234"
     satellite_id = "satellite-1234"
+    device_id = "device-1234"
 
     client = MockAsyncTcpClient([Handled(text="success").event()])
     with patch(
@@ -155,6 +157,7 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
             language=hass.config.language,
             agent_id=agent_id,
             satellite_id=satellite_id,
+            device_id=device_id,
         )
 
     # Ensure language and context are sent
@@ -163,6 +166,7 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
     assert client.transcript.context == {
         "conversation_id": conversation_id,
         "satellite_id": satellite_id,
+        "device_id": device_id,
     }
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE

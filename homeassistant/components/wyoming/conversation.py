@@ -105,6 +105,8 @@ class WyomingConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
 
         context = {"conversation_id": conversation_id}
+        if user_input.device_id:
+            context["device_id"] = user_input.device_id
         if user_input.satellite_id:
             context["satellite_id"] = user_input.satellite_id
 
