@@ -111,10 +111,7 @@ async def test_number_set_value_error(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
 
-    # Mock set_data to raise an error
-    mock_indevolt.set_data.side_effect = HomeAssistantError(
-        "Device communication failed"
-    )
+    mock_indevolt.set_data.return_value = False
 
     # Attempt to set value
     with pytest.raises(HomeAssistantError):

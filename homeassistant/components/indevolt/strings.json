@@ -354,6 +354,9 @@
     },
     "soc_below_minimum": {
       "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    },
+    "write_error": {
+      "message": "Cannot update value for {name}"
     }
   },
   "services": {

@@ -60,7 +60,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
@@ -69,6 +69,7 @@ rules:
   stale-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
+
   # Platinum
   async-dependency: done
   inject-websession: done
