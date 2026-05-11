@@ -1338,7 +1338,7 @@ imgw_pib==2.1.2
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.7.1
+indevolt-api==1.7.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2850,7 +2850,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.7
+renault-api==0.5.8
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2861,7 +2861,7 @@ reolink-aio==0.19.1
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==2.2.0
+rf-protocols==3.0.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
