@@ -4,7 +4,7 @@ This folder contains unit tests for the `elke27` integration plus opt-in live te
 
 ## Live tests
 
-Live tests are gated to avoid unexpected traffic to a panel. To run them, set the environment variables and use the `live` marker.
+Live tests are gated to avoid unexpected traffic to a panel. To run them, set the environment variables.
 
 ### Required environment variables
 
@@ -30,5 +30,5 @@ The bypass/unbypass test also requires:
 ### Run
 
 ```bash
-pytest -m live tests/components/elke27/test_live.py
+pytest tests/components/elke27/test_live.py
 ```

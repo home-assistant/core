@@ -63,7 +63,6 @@ async def _wait_for_bypass_state(
         remove()
 
 
-@pytest.mark.live
 @pytest.mark.skipif(
     os.environ.get("ELKE27_LIVE") != "1",
     reason="Set ELKE27_LIVE=1 to run live Elke27 tests",
@@ -93,7 +92,6 @@ async def test_live_setup_and_snapshot(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.live
 @pytest.mark.skipif(
     os.environ.get("ELKE27_LIVE") != "1",
     reason="Set ELKE27_LIVE=1 to run live Elke27 tests",
