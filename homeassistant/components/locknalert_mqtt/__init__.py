@@ -1,4 +1,4 @@
-"""Support for MQTT message handling."""
+"""Support for LocknAlert MQTT message handling."""
 
 from __future__ import annotations
 

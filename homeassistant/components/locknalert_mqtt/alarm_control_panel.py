@@ -1,4 +1,4 @@
-"""Control a MQTT alarm."""
+"""Control a LocknAlert MQTT Alarm."""
 
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-DEFAULT_NAME = "MQTT Alarm"
+DEFAULT_NAME = "LocknAlert MQTT Alarm"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
@@ -111,11 +111,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MQTT alarm control panel through YAML and through MQTT discovery."""
+    """Set up LocknAlert MQTT Alarm control panel through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
         hass,
         config_entry,
-        MqttAlarm,
+        LocknAlertMqttAlarm,
         alarm.DOMAIN,
         async_add_entities,
         DISCOVERY_SCHEMA,
@@ -123,8 +123,8 @@ async def async_setup_entry(
     )
 
 
-class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
-    """Representation of a MQTT alarm status."""
+class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
+    """Representation of a LocknAlert MQTT Alarm status."""
 
     _default_name = DEFAULT_NAME
     _entity_id_format = alarm.ENTITY_ID_FORMAT

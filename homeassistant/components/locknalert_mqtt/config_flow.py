@@ -89,7 +89,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 _LOGGER = logging.getLogger(__name__)
 
-from .bridgeapi import (
+from aiolocknalert import (
     LocknAlertBridgeApi,
     LocknAlertCannotConnect,
     LocknAlertInvalidResponse,
@@ -874,50 +874,36 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of LocknAlert bridge."""
-        # Extract bridge serial from discovery name
         serial = extract_serial_from_discovery(discovery_info)
 
         if not serial:
             return self.async_abort(reason="cannot_determine_serial")
 
-        # Set unique ID based on serial
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
 
-        # Extract API port from TXT properties (default 443)
-        api_port = int(
-            discovery_info.properties.get(DISCOVERY_ATTR_API_PORT, DEFAULT_API_PORT)
-        )
+        try:
+            api_port = int(
+                discovery_info.properties.get(DISCOVERY_ATTR_API_PORT, DEFAULT_API_PORT)
+            )
+        except (ValueError, TypeError):
+            api_port = DEFAULT_API_PORT
 
-        # Validate bridge is reachable
-        bridge_api = LocknAlertBridgeApi(
+        # Store discovery info — connectivity is validated on confirm submit.
+        self._selected_bridge = discovery_info
+        self._bridge_api = LocknAlertBridgeApi(
             host=discovery_info.host,
             port=api_port,
             verify_ssl=False,
         )
-
-        try:
-            async with ClientSession(connector=TCPConnector(ssl=False)) as session:
-                await bridge_api.async_get_info(session)
-        except LocknAlertCannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except LocknAlertInvalidResponse:
-            return self.async_abort(reason="invalid_response")
-
-        # Store for bootstrap
-        self._selected_bridge = discovery_info
-        self._bridge_api = bridge_api
         self._bridge_serial = serial
 
-        # Update context for UI
         self.context.update(
             {
                 "title_placeholders": {"serial": serial},
                 "configuration_url": f"https://{discovery_info.host}:{api_port}/api",
             }
         )
-
-        # Auto-confirm if onboarding (one-click add)
 
         return await self.async_step_zeroconf_confirm()
 
@@ -926,18 +912,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovered bridge."""
         if user_input is not None:
-            if user_input.get(CONF_BRIDGE_SERIAL):
-                self._bridge_serial = user_input[CONF_BRIDGE_SERIAL]
+            self._bridge_serial = user_input[CONF_BRIDGE_SERIAL]
             return await self._async_bootstrap_from_bridge()
 
         data_schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR}),
-            {CONF_BRIDGE_SERIAL: self._bridge_serial},
+            vol.Schema({vol.Required(CONF_BRIDGE_SERIAL): TEXT_SELECTOR}),
+            {CONF_BRIDGE_SERIAL: self._bridge_serial or ""},
         )
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=data_schema,
-            description_placeholders={"serial": str(self._bridge_serial)},
+            last_step=True,
         )
 
     async def _async_bootstrap_from_bridge(self) -> ConfigFlowResult:
@@ -947,6 +932,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             async with ClientSession(connector=TCPConnector(ssl=False)) as session:
+                await self._bridge_api.async_get_info(session)
                 mqtt_config = await self._bridge_api.async_bootstrap(session)
         except LocknAlertCannotConnect:
             return self.async_abort(reason="cannot_connect")
@@ -956,7 +942,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         # Build config from bootstrap response.
         # Prefer the bridge's discovered IP over the bootstrap hostname, since
         # .local mDNS names are not reliably resolvable from HA's environment.
-        mqtt_host = self._selected_bridge.host or mqtt_config["host"]
+        mqtt_host = self._selected_bridge.host or mqtt_config.get("host", "")
         config_data = {
             CONF_BROKER: mqtt_host,
             CONF_PORT: mqtt_config.get("port", DEFAULT_PORT),
@@ -967,7 +953,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         # Test MQTT connection before creating entry
-        if not await try_connection(config_data):
+        if not await self.hass.async_add_executor_job(try_connection, config_data):
             return self.async_abort(reason="cannot_connect_mqtt")
 
         return self.async_create_entry(
@@ -1092,7 +1078,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     step_id="broker", data_schema=vol.Schema(fields), errors=errors
                 )
 
-            can_connect = await try_connection(validated_user_input)
+            can_connect = await self.hass.async_add_executor_job(
+                try_connection, validated_user_input
+            )
 
             if can_connect:
                 if is_reconfigure:
@@ -2250,7 +2238,7 @@ async def async_get_broker_settings(  # noqa: C901
     return False
 
 
-async def try_connection(
+def try_connection(
     user_input: dict[str, Any],
 ) -> bool:
     """Test if we can connect to an MQTT broker."""

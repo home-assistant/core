@@ -82,19 +82,16 @@
         "title": "Re-authentication required with the MQTT broker"
       },
       "user": {
-        "description": "Please choose how you want to connect to the MQTT broker:",
-        "menu_options": {
-          "broker": "Manually enter the MQTT broker connection details"
-        }
+        "description": "Please enter the connection information of your MQTT broker."
       },
       "zeroconf_confirm": {
-        "description": "LocknAlert Bridge **{serial}** was discovered. Confirm the serial number below and submit to connect.",
+        "description": "A LocknAlert Bridge was discovered on your network. Enter the serial number printed on your bridge to confirm and connect.",
         "title": "LocknAlert Bridge discovered",
         "data": {
           "bridge_serial": "Bridge Serial Number"
         },
         "data_description": {
-          "bridge_serial": "Serial number of the discovered LocknAlert bridge. Edit only if the auto-detected value is incorrect."
+          "bridge_serial": "The serial number printed on your LocknAlert bridge (auto-detected from the network name, edit if incorrect)."
         }
       }
     }

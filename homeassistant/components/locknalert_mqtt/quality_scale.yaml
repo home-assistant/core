@@ -75,8 +75,8 @@ rules:
   discovery:
     status: done
     comment: >
-      When the Mosquitto MQTT broker add on is installed,
-      a MQTT config flow allows an automatic setup from its discovered settings.
+      When a LocknAlert bridge is present on the local network,
+      a Zeroconf config flow allows automatic setup from the discovered bridge.
   stale-devices:
     status: exempt
     comment: >
@@ -97,9 +97,9 @@ rules:
   discovery-update-info:
     status: done
     comment: >
-      If the Mosquitto broker add-on is used to set up MQTT from discovery,
-      and the broker add-on is re-installed,
-      MQTT will automatically update from the new brokers credentials.
+      If a LocknAlert bridge is re-discovered via Zeroconf,
+      the integration will automatically update broker credentials
+      from the bridge's new bootstrap response.
   repair-issues:
     status: done
     comment: >
