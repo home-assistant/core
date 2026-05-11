@@ -1,16 +1,24 @@
 """Tests for the Duco integration setup."""
 
-from ssl import SSLContext
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, DiagComponent, DiagStatus, LanInfo, Node
+from duco_connectivity import (
+    BoardInfo,
+    DiagComponent,
+    DiagStatus,
+    DucoConnectionError,
+    DucoError,
+    LanInfo,
+    Node,
+)
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_HOST
+from .conftest import TEST_HOST, TEST_MAC
 
 from tests.common import MockConfigEntry
 
@@ -74,25 +82,49 @@ async def test_unload_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_builds_ssl_context_in_executor(
+@pytest.mark.usefixtures("mock_duco_client")
+async def test_cleanup_orphaned_temperature_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that stale temperature entity entries from prior versions are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    old_unique_ids = [
+        f"{TEST_MAC}_1_box_temperature",
+        f"{TEST_MAC}_2_temperature",
+    ]
+    for unique_id in old_unique_ids:
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            "duco",
+            unique_id,
+            config_entry=mock_config_entry,
+        )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id in old_unique_ids:
+        assert (
+            entity_registry.async_get_entity_id(Platform.SENSOR, "duco", unique_id)
+            is None
+        )
+
+
+async def test_setup_entry_creates_http_client(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
 ) -> None:
-    """Test that build_ssl_context runs in an executor and its result is passed to DucoClient."""
-    mock_ssl_context = MagicMock(spec=SSLContext)
-    with (
-        patch(
-            "homeassistant.components.duco.build_ssl_context",
-            return_value=mock_ssl_context,
-        ) as mock_build,
-        patch(
-            "homeassistant.components.duco.DucoClient",
-            autospec=True,
-        ) as mock_client_class,
-    ):
+    """Test that setup creates the Duco client with the provided host."""
+    with patch(
+        "homeassistant.components.duco.DucoClient",
+        autospec=True,
+    ) as mock_client_class:
         mock_client_class.return_value.async_get_board_info.return_value = (
             mock_board_info
         )
@@ -101,14 +133,12 @@ async def test_setup_entry_builds_ssl_context_in_executor(
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status=DiagStatus.OK)
         ]
-        mock_client_class.return_value.async_get_write_req_remaining.return_value = 100
+        mock_client_class.return_value.async_get_write_requests_remaining.return_value = 100
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_build.assert_called_once()
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,
-        ssl_context=mock_ssl_context,
     )
