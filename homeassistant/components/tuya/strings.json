@@ -256,6 +256,15 @@
       "time": {
         "name": "Time"
       },
+      "video_brightness": {
+        "name": "Video brightness"
+      },
+      "video_contrast": {
+        "name": "Video contrast"
+      },
+      "video_sharpness": {
+        "name": "Video sharpness"
+      },
       "voice_times": {
         "name": "Voice times"
       },
@@ -706,11 +715,22 @@
       "inverter_output_power": {
         "name": "Inverter output power"
       },
+      "irrigation_status": {
+        "name": "Status",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "idle": "[%key:common::state::idle%]",
+          "manual": "[%key:common::state::manual%]"
+        }
+      },
       "last_amount": {
         "name": "Last amount"
       },
       "last_operation_duration": {
         "name": "Last operation duration"
+      },
+      "last_watering_time": {
+        "name": "Last watering time"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
@@ -917,6 +937,11 @@
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
     "switch": {
       "anion": {
         "name": "Anion"
@@ -926,6 +951,9 @@
       },
       "auto_clean": {
         "name": "Auto clean"
+      },
+      "auto_siren": {
+        "name": "Auto-trigger siren"
       },
       "battery_lock": {
         "name": "Battery lock"
@@ -980,6 +1008,9 @@
       },
       "motion_alarm": {
         "name": "Motion alarm"
+      },
+      "motion_detection_zone": {
+        "name": "Use motion detection zone"
       },
       "motion_recording": {
         "name": "Motion recording"

@@ -50,6 +50,7 @@
           "not_checked_yet": "Not checked yet",
           "pause": "[%key:common::action::pause%]",
           "seems_down": "Seems down",
+          "started": "Started",
           "up": "Up"
         }
       }

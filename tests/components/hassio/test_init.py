@@ -14,6 +14,7 @@ from aiohasupervisor.models import (
     AddonStage,
     AddonState,
     CIFSMountResponse,
+    Folder,
     FullBackupOptions,
     HomeAssistantOptions,
     InstalledAddon,
@@ -37,8 +38,18 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
+    get_addons_info,
+    get_addons_list,
+    get_addons_stats,
     get_core_info,
+    get_core_stats,
+    get_host_info,
+    get_info,
+    get_network_info,
+    get_os_info,
+    get_store,
     get_supervisor_info,
+    get_supervisor_stats,
     hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
@@ -518,7 +529,7 @@ async def test_service_calls(
             name="2021-11-13 03:48:00",
             homeassistant=True,
             addons={"test"},
-            folders={"ssl"},
+            folders={Folder.SSL},
             password="123456",
         )
     )
@@ -542,7 +553,10 @@ async def test_service_calls(
     supervisor_client.backups.partial_restore.assert_called_once_with(
         "test",
         PartialRestoreOptions(
-            homeassistant=False, addons={"test"}, folders={"ssl"}, password="123456"
+            homeassistant=False,
+            addons={"test"},
+            folders={Folder.SSL},
+            password="123456",
         ),
     )
 
@@ -757,6 +771,80 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
     with pytest.raises(Invalid, match="contains duplicate items"):
         await hass.services.async_call(
             "hassio", "restore_partial", {"folders": ["ssl", "ssl"]}
+        )
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_partial_backup_legacy_homeassistant_folder(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test that the legacy "homeassistant" folder is translated to homeassistant=True."""
+    assert await async_setup_component(hass, "hassio", {})
+    supervisor_client.backups.partial_backup.return_value = NewBackup(
+        job_id=uuid4(), slug="partial"
+    )
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_partial",
+        {"folders": ["homeassistant", "ssl"], "name": "test"},
+        blocking=True,
+    )
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        PartialBackupOptions(
+            name="test",
+            homeassistant=True,
+            folders={Folder.SSL},
+        )
+    )
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_partial_restore_legacy_homeassistant_folder(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test that the legacy "homeassistant" folder is translated for restore too."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    await hass.services.async_call(
+        "hassio",
+        "restore_partial",
+        {"slug": "test", "folders": ["homeassistant", "ssl"]},
+        blocking=True,
+    )
+    supervisor_client.backups.partial_restore.assert_called_once_with(
+        "test",
+        PartialRestoreOptions(
+            homeassistant=True,
+            folders={Folder.SSL},
+        ),
+    )
+
+
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
+    """Test that an unknown folder name is rejected."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    with pytest.raises(Invalid, match="not a valid value"):
+        await hass.services.async_call(
+            "hassio", "backup_partial", {"folders": ["bogus"]}
+        )
+
+
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_backup_legacy_homeassistant_folder_conflict(
+    hass: HomeAssistant,
+) -> None:
+    """Reject combining homeassistant=False with the legacy "homeassistant" folder."""
+    assert await async_setup_component(hass, "hassio", {})
+
+    with pytest.raises(ServiceValidationError, match="conflicts"):
+        await hass.services.async_call(
+            "hassio",
+            "backup_partial",
+            {"homeassistant": False, "folders": ["homeassistant"]},
+            blocking=True,
         )
 
 
@@ -1522,3 +1610,200 @@ async def test_get_supervisor_info(hass: HomeAssistant) -> None:
     assert "addons" in result
     assert isinstance(result["addons"], list)
     assert all(isinstance(addon, dict) for addon in result["addons"])
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_info(hass: HomeAssistant) -> None:
+    """Test get_info returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_info(hass)
+    assert isinstance(result, dict)
+    assert result["supervisor"] == "222"
+    assert result["homeassistant"] == "0.110.0"
+    assert result["hassos"] == "1.2.3"
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_host_info(hass: HomeAssistant) -> None:
+    """Test get_host_info returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_host_info(hass)
+    assert isinstance(result, dict)
+    assert result["chassis"] == "vm"
+    assert result["disk_total"] == 100.0
+    assert result["kernel"] == "4.19.0-6-amd64"
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_store(hass: HomeAssistant) -> None:
+    """Test get_store returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_store(hass)
+    assert isinstance(result, dict)
+    assert "addons" in result
+    assert "repositories" in result
+    assert isinstance(result["addons"], list)
+    assert isinstance(result["repositories"], list)
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_network_info(hass: HomeAssistant) -> None:
+    """Test get_network_info returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_network_info(hass)
+    assert isinstance(result, dict)
+    assert result["host_internet"] is True
+    assert result["supervisor_internet"] is True
+    assert isinstance(result["interfaces"], list)
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_addons_info(hass: HomeAssistant) -> None:
+    """Test get_addons_info returns serialized dicts, not model objects."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_addons_info(hass)
+    assert isinstance(result, dict)
+    assert "test" in result
+    assert isinstance(result["test"], dict)
+    assert result["test"]["slug"] == "test"
+    assert result["test"]["version"] == "1.0.0"
+    assert result["test"]["hassio_api"] is False
+    assert result["test"]["supervisor_api"] is False
+    assert result["test"]["hassio_role"] == "default"
+    assert result["test"]["supervisor_role"] == "default"
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_addons_list(hass: HomeAssistant) -> None:
+    """Test get_addons_list returns a list of serialized dicts."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_addons_list(hass)
+    assert isinstance(result, list)
+    assert all(isinstance(addon, dict) for addon in result)
+    slugs = {addon["slug"] for addon in result}
+    assert "test" in slugs
+    assert "test2" in slugs
+
+
+@pytest.mark.usefixtures("mock_all", "entity_registry_enabled_by_default")
+async def test_get_addons_stats(hass: HomeAssistant) -> None:
+    """Test get_addons_stats returns serialized dicts, not model objects.
+
+    Both test addons are STOPPED in mock_all so no addon stats are fetched;
+    the result is an empty dict which is the correct return type.
+    """
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_addons_stats(hass)
+    assert isinstance(result, dict)
+    # All values must be plain dicts, never AddonsStats model objects
+    for stats in result.values():
+        assert isinstance(stats, dict)
+
+
+@pytest.mark.usefixtures("mock_all", "entity_registry_enabled_by_default")
+async def test_get_core_stats(hass: HomeAssistant) -> None:
+    """Test get_core_stats returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Stats entities subscribe during setup and trigger a debounced refresh
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
+    result = get_core_stats(hass)
+    assert isinstance(result, dict)
+    assert result["cpu_percent"] == 0.99
+    assert result["memory_percent"] == 4.59
+
+
+@pytest.mark.usefixtures("mock_all", "entity_registry_enabled_by_default")
+async def test_get_supervisor_stats(hass: HomeAssistant) -> None:
+    """Test get_supervisor_stats returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Stats entities subscribe during setup and trigger a debounced refresh
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
+    result = get_supervisor_stats(hass)
+    assert isinstance(result, dict)
+    assert result["cpu_percent"] == 0.99
+    assert result["memory_percent"] == 4.59
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_os_info(hass: HomeAssistant) -> None:
+    """Test get_os_info returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_os_info(hass)
+    assert isinstance(result, dict)
+    assert result["version"] == "1.0.0"
+    assert result["version_latest"] == "1.0.0"
+    assert result["update_available"] is False
+
+
+@pytest.mark.usefixtures("mock_all")
+async def test_get_core_info(hass: HomeAssistant) -> None:
+    """Test get_core_info returns serialized dict with expected values."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = get_core_info(hass)
+    assert isinstance(result, dict)
+    assert result["version"] == "1.0.0"
+    assert result["version_latest"] == "1.0.0"
+    assert result["image"] == "homeassistant"
