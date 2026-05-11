@@ -44,3 +44,10 @@ disconnect_lte:
       example: 192.168.5.1
       selector:
         text:
+
+restart_modem:
+  fields:
+    host:
+      example: 192.168.5.1
+      selector:
+        text:

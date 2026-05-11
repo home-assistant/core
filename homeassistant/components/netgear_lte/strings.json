@@ -111,6 +111,16 @@
       },
       "name": "Disconnect LTE"
     },
+    "restart_modem": {
+      "description": "Restart the device.",
+      "fields": {
+        "host": {
+          "description": "The modem that should restart.",
+          "name": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "name": "Restart modem"
+    },
     "set_option": {
       "description": "Sets options on the modem.",
       "fields": {
