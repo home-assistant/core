@@ -256,6 +256,15 @@
       "time": {
         "name": "Time"
       },
+      "video_brightness": {
+        "name": "Video brightness"
+      },
+      "video_contrast": {
+        "name": "Video contrast"
+      },
+      "video_sharpness": {
+        "name": "Video sharpness"
+      },
       "voice_times": {
         "name": "Voice times"
       },
@@ -943,6 +952,9 @@
       "auto_clean": {
         "name": "Auto clean"
       },
+      "auto_siren": {
+        "name": "Auto-trigger siren"
+      },
       "battery_lock": {
         "name": "Battery lock"
       },
@@ -996,6 +1008,9 @@
       },
       "motion_alarm": {
         "name": "Motion alarm"
+      },
+      "motion_detection_zone": {
+        "name": "Use motion detection zone"
       },
       "motion_recording": {
         "name": "Motion recording"
