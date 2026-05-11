@@ -565,7 +565,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Return a datetime without tzinfo.
 
         If obj is a date, it is converted to a datetime with the default timezone.
-        If obj has a timezone, then it is connverted to UTC before the timezone info is removed.
+        If obj has a timezone, then it is converted to UTC before the timezone info is removed.
         """
         if not isinstance(obj, datetime):
             obj = datetime.combine(obj, time.min).replace(
