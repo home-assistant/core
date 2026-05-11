@@ -35,7 +35,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-async def test_step_setup_local(hass: HomeAssistant) -> None:
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test if we get the local setup form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +74,7 @@ async def test_step_setup_local(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
-async def test_step_local_auth(hass: HomeAssistant) -> None:
+async def test_step_auth(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,7 +98,7 @@ async def test_step_local_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "local_auth"
+    assert result["step_id"] == "auth"
     assert not result["errors"]
 
     with (
