@@ -61,8 +61,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize OPNsense config flow."""
         self.available_interfaces: list[str] | None = None
-        self._step_user_input: dict[str, Any] | None = None
-        self._unique_id: str | None = None
+        self._entry_data: dict[str, Any] = {}
 
     async def _show_setup_form(
         self,
@@ -116,7 +115,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input, None)
 
-        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+        self._abort_if_unique_id_configured()
 
         verify_ssl = user_input[CONF_VERIFY_SSL]
         session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
@@ -137,7 +136,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (name := ifinfo.get("name"))
             ]
             self.available_interfaces = list(known_interfaces)
-            self._unique_id = await client.get_device_unique_id()
+            unique_id = await client.get_device_unique_id()
+            await self.async_set_unique_id(unique_id)
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
@@ -156,36 +156,31 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            # Save credentials for next step
-            self._step_user_input = user_input
-            return await self.async_step_interfaces()
+            return await self.async_step_interfaces(user_input)
 
         return await self._show_setup_form(user_input, errors)
 
     async def async_step_interfaces(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle tracker interface selection step."""
-        if user_input is None:
+        if CONF_URL in user_input:
+            self._entry_data = dict(user_input)
+        if CONF_TRACKER_INTERFACES not in user_input:
             return await self._show_interfaces_form(user_input, None)
 
-        # Compose entry data from credentials and selected interfaces
-        step_user_input = self._step_user_input
-        if not isinstance(step_user_input, dict) or CONF_URL not in step_user_input:
-            return await self.async_step_user()
-
-        entry_data: dict[str, Any] = dict(step_user_input)
         if user_input.get(CONF_TRACKER_INTERFACES):
-            entry_data[CONF_TRACKER_INTERFACES] = user_input[CONF_TRACKER_INTERFACES]
+            self._entry_data[CONF_TRACKER_INTERFACES] = user_input[
+                CONF_TRACKER_INTERFACES
+            ]
 
-        if self._unique_id:
-            await self.async_set_unique_id(self._unique_id)
-
-        return self.async_create_entry(title=entry_data[CONF_URL], data=entry_data)
+        return self.async_create_entry(
+            title=self._entry_data[CONF_URL], data=self._entry_data
+        )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a Yaml config."""
-        self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
+        self._abort_if_unique_id_configured()
 
         # Test connection
         session = async_get_clientsession(
