@@ -146,9 +146,8 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
                 if invalid_stop_ids:
-                    invalid_stop_ids_message = (
-                        "\n\nInvalid stop IDs: "
-                        + ", ".join(f"`{stop_id}`" for stop_id in invalid_stop_ids)
+                    invalid_stop_ids_message = "\n\nInvalid stop IDs: " + ", ".join(
+                        f"`{stop_id}`" for stop_id in invalid_stop_ids
                     )
             else:
                 unique_id = "_".join(sorted(stop_ids))
