@@ -41,12 +41,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
     # Setup coordinator
     coordinator = MyPVCoordinator(hass, entry, device)
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        # Fetch initial data so we have data when entities subscribe
+        await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+        entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        await coordinator.async_disconnect()
+        raise
 
     return True
 
