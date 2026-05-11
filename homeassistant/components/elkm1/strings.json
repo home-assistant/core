@@ -202,10 +202,10 @@
       "name": "Speak word"
     },
     "switch_output_turn_on_for": {
-      "description": "Turns on an output for a specified length of time.",
+      "description": "Turns on an output for a specified length of time, or until turned off when the duration is 0.",
       "fields": {
         "duration": {
-          "description": "Length of time to turn the output on for.",
+          "description": "Length of time to turn the output on for. Set to 0 to leave it on until turned off.",
           "name": "Duration"
         }
       },
