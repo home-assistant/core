@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/collection_image",
   "integration_type": "service",
   "iot_class": "calculated",
-  "quality_scale": "bronze",
-  "requirements": []
+  "quality_scale": "bronze"
 }

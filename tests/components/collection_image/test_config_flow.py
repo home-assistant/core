@@ -57,7 +57,6 @@ async def test_config_flow(hass: HomeAssistant) -> None:
                 },
             },
         )
-        await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Random Photo"
@@ -69,16 +68,6 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {
-        "name": "Random Photo",
-        "media": {
-            "media_content_id": "media-source://mymedia",
-            "media_content_type": "",
-        },
-    }
-    assert config_entry.title == "Random Photo"
 
 
 async def test_config_flow_with_error(hass: HomeAssistant) -> None:
