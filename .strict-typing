@@ -139,6 +139,7 @@ homeassistant.components.cambridge_audio.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.casper_glow.*
+homeassistant.components.centriconnect.*
 homeassistant.components.cert_expiry.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
@@ -296,6 +297,7 @@ homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
+homeassistant.components.indevolt.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*
