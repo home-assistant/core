@@ -10,7 +10,7 @@ rules:
       This integration transmits RF commands and does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
