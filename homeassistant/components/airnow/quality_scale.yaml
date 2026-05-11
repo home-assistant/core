@@ -8,7 +8,7 @@ rules:
     comment: Reports are polled every 30 minutes so newly published hourly AirNow reports are picked up promptly.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -51,7 +51,9 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class:
+    status: todo
+    comment: The ozone sensor can still use the ozone device class.
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
@@ -60,6 +62,6 @@ rules:
   stale-devices: todo
   repair-issues: todo
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo
