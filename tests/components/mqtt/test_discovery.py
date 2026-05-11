@@ -3358,8 +3358,8 @@ async def test_shared_qos_with_device_discovery(
 
     # Check the subscriptions for tag and sensor were done with shared QoS
     mqtt_mock.async_subscribe.assert_has_calls(
-        [call("foobar/tags/bla3/see", ANY, qos, "utf-8")]
+        [call("foobar/tags/bla3/see", ANY, qos, "utf-8", ANY)]
     )
     mqtt_mock.async_subscribe.assert_has_calls(
-        [call("foobar/sensors/bla2/state", ANY, qos, "utf-8")]
+        [call("foobar/sensors/bla2/state", ANY, qos, "utf-8", ANY)]
     )
