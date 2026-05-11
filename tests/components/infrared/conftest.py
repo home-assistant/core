@@ -10,9 +10,11 @@ from .common import (
 
 
 @pytest.fixture(params=[MockInfraredEntity, MockInfraredEmitterEntity])
-def mock_infrared_emitter_entity() -> MockInfraredEmitterEntity:
+def mock_infrared_emitter_entity(
+    request: pytest.FixtureRequest,
+) -> MockInfraredEntity | MockInfraredEmitterEntity:
     """Return a mock infrared emitter entity."""
-    return MockInfraredEmitterEntity("test_ir_emitter")
+    return request.param("test_ir_emitter")
 
 
 @pytest.fixture
