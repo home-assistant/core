@@ -110,12 +110,10 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         """Return if entity is available."""
         if not self.coordinator.connected:
             return False
-        if self.coordinator.device.is_on is None:
-            return False
         if self.coordinator.get_data_value(CURRENT_TEMPERATURE_KEY) is None:
             return False
 
-        return self.coordinator.last_update_success
+        return super().available
 
     @property
     def current_operation(self) -> str | None:
@@ -141,7 +139,6 @@ class MyPVWaterHeater(CoordinatorEntity[MyPVCoordinator], WaterHeaterEntity):
         if temperature is not None and await self.coordinator.set_setup_value(
             TARGET_TEMPERATURE_KEY, float(temperature)
         ):
-            self._attr_target_temperature = temperature
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(
