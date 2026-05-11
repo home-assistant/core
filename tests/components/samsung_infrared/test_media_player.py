@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared.conftest import MockInfraredEntity
+from tests.components.infrared.common import MockInfraredEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.samsung_tv"
 

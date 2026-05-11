@@ -5,7 +5,7 @@ import pytest
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
+from tests.components.infrared import ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.mark.usefixtures("init_integration")

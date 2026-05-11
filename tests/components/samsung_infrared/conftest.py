@@ -5,9 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-# pylint: disable=hass-component-root-import
-from homeassistant.components.infrared import DATA_COMPONENT as INFRARED_DATA_COMPONENT
-from homeassistant.components.infrared.const import DOMAIN as INFRARED_DOMAIN
 from homeassistant.components.samsung_infrared import PLATFORMS
 from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -17,12 +14,9 @@ from homeassistant.components.samsung_infrared.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.infrared.conftest import MockInfraredEntity
-
-MOCK_INFRARED_ENTITY_ID = "infrared.test_ir_transmitter"
+from tests.components.infrared import ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.fixture
@@ -62,26 +56,14 @@ def mock_make_samsung_tv_command() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_infrared_entity() -> MockInfraredEntity:
-    """Return a mock infrared entity."""
-    return MockInfraredEntity("test_ir_transmitter")
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_entity,
     mock_make_samsung_tv_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Samsung Infrared integration for testing."""
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    infrared_component = hass.data[INFRARED_DATA_COMPONENT]
-    await infrared_component.async_add_entities([mock_infrared_entity])
-
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.samsung_infrared.PLATFORMS", platforms):
