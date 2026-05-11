@@ -78,12 +78,16 @@ async def test_turn_on(
         hass, mock_kiosker_api, mock_config_entry, screensaver_disabled=False
     )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
+    mock_kiosker_api.screensaver_get_state.return_value = ScreensaverState(
+        visible=True, disabled=True
     )
+    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
 
     mock_kiosker_api.screensaver_set_disabled_state.assert_called_once_with(True)
     assert hass.states.get(ENTITY_ID).state == "on"
@@ -99,46 +103,41 @@ async def test_turn_off(
         hass, mock_kiosker_api, mock_config_entry, screensaver_disabled=True
     )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
+    mock_kiosker_api.screensaver_get_state.return_value = ScreensaverState(
+        visible=True, disabled=False
     )
+    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
 
     mock_kiosker_api.screensaver_set_disabled_state.assert_called_once_with(False)
     assert hass.states.get(ENTITY_ID).state == "off"
 
 
-async def test_optimistic_state_cleared_on_coordinator_update(
+async def test_state_reflects_coordinator_data(
     hass: HomeAssistant,
     mock_kiosker_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that optimistic state is cleared when the coordinator updates."""
+    """Test that state reflects coordinator data with no optimistic override."""
     await _setup_switch(
         hass, mock_kiosker_api, mock_config_entry, screensaver_disabled=False
     )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
+    # API still reports disabled=False (device hasn't updated yet)
+    with patch("homeassistant.components.kiosker.switch.asyncio.sleep"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
 
-    # Optimistic state: on
-    assert hass.states.get(ENTITY_ID).state == "on"
-
-    # Simulate a coordinator poll where the API still reports disabled=False
-    mock_kiosker_api.screensaver_get_state.return_value = ScreensaverState(
-        visible=True, disabled=False
-    )
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    # Optimistic state cleared; real data shows off
+    # Coordinator is the sole source of truth — reports off since device hasn't updated
     assert hass.states.get(ENTITY_ID).state == "off"
 
 
@@ -150,7 +149,6 @@ async def test_optimistic_state_cleared_on_coordinator_update(
         (ConnectionError, HomeAssistantError),
         (TLSVerificationError, HomeAssistantError),
         (BadRequestError, ServiceValidationError),
-        (RuntimeError, HomeAssistantError),
     ],
 )
 async def test_turn_on_errors(
@@ -182,7 +180,6 @@ async def test_turn_on_errors(
         (ConnectionError, HomeAssistantError),
         (TLSVerificationError, HomeAssistantError),
         (BadRequestError, ServiceValidationError),
-        (RuntimeError, HomeAssistantError),
     ],
 )
 async def test_turn_off_errors(

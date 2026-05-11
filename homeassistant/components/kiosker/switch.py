@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -17,12 +18,12 @@ from kiosker import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KioskerConfigEntry
-from .coordinator import KioskerData, KioskerDataUpdateCoordinator
+from .coordinator import KioskerData
 from .entity import KioskerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,30 +67,17 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
 
     entity_description: KioskerSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: KioskerDataUpdateCoordinator,
-        description: KioskerSwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch entity."""
-        super().__init__(coordinator, description)
-        self._control_result: bool | None = None
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        if self._control_result is not None:
-            return self._control_result
-
         return self.entity_description.is_on_fn(self.coordinator.data)
 
-    async def _handle_method_call(self, state: bool, action: str) -> None:
-        """Handle method call with error handling and state management."""
+    async def _handle_method_call(self, state: bool) -> None:
+        """Handle method call with error handling."""
         try:
             await self.hass.async_add_executor_job(
                 self.entity_description.set_state_fn, self.coordinator.api, state
             )
-            await self.coordinator.async_request_refresh()
         except AuthenticationError as exc:
             raise HomeAssistantError("Authentication failed") from exc
         except IPAuthenticationError as exc:
@@ -100,23 +88,14 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
             raise HomeAssistantError(f"TLS verification failed: {exc}") from exc
         except BadRequestError as exc:
             raise ServiceValidationError(f"Bad request: {exc}") from exc
-        except Exception as exc:
-            _LOGGER.exception("Unexpected error %s switch", action)
-            raise HomeAssistantError(f"Unexpected error: {exc}") from exc
 
-        self._control_result = state
-        self.async_write_ha_state()
+        await asyncio.sleep(0.5)
+        await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._handle_method_call(True, "turning on")
+        await self._handle_method_call(True)
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._handle_method_call(False, "turning off")
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle coordinator update."""
-        self._control_result = None
-        super()._handle_coordinator_update()
+        await self._handle_method_call(False)
