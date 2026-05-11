@@ -10,15 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
-    """Test the config flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {}
-
+async def _assert_successful_configure(
+    hass: HomeAssistant, previous_step: config_entries.ConfigFlowResult
+):
     with (
         patch(
             "homeassistant.components.collection_image.async_setup_entry",
@@ -48,7 +42,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            previous_step["flow_id"],
             {
                 "name": "Random Photo",
                 "media": {
@@ -68,6 +62,18 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_config_flow(hass: HomeAssistant) -> None:
+    """Test the config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
+
+    await _assert_successful_configure(hass, result)
 
 
 async def test_config_flow_with_error(hass: HomeAssistant) -> None:
@@ -103,7 +109,7 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
             {
                 "name": "Random Photo",
                 "media": {
-                    "media_content_id": "media-source://mymedia",
+                    "media_content_id": "media-source://mymedia_empty",
                     "media_content_type": "",
                 },
             },
@@ -115,6 +121,9 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
     assert result.get("data") is None
     assert result.get("errors") == {"media": "selected_media_no_images"}
     assert len(mock_setup_entry.mock_calls) == 0
+
+    # Try again successfully to ensure we can recover from errors
+    await _assert_successful_configure(hass, result)
 
 
 async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
@@ -152,3 +161,5 @@ async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
         "error": "Media Source not loaded"
     }
     assert len(mock_setup_entry.mock_calls) == 0
+
+    await _assert_successful_configure(hass, result)
