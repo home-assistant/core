@@ -61,14 +61,14 @@ async def test_fan_services(
 
     entity_id = "fan.test_fan"
 
-    # Turn on (defaults to medium - 67%)
+    # Turn on (defaults to medium - 50%)
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert fan.level == 67
+    assert fan.level == 50
 
     # Turn off
     await hass.services.async_call(
