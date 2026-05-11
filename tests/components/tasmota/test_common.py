@@ -474,7 +474,9 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        poll_topic, poll_payload, 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Disconnected from MQTT server
@@ -502,7 +504,9 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        poll_topic, poll_payload, 0, False, message_expiry_interval=None
+    )
 
 
 async def help_test_discovery_removal(

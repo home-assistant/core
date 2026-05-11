@@ -1,7 +1,5 @@
 """Authentication for HTTP component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -180,6 +178,9 @@ async def async_setup_auth(  # noqa: C901
         refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
+            return False
+
+        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user

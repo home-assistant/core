@@ -1,7 +1,5 @@
 """Config flow for the html5 component."""
 
-from __future__ import annotations
-
 import binascii
 from typing import Any, cast
 

@@ -1,7 +1,5 @@
 """Support for control of ElkM1 tasks ("macros")."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.tasks import Task

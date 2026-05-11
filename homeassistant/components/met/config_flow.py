@@ -1,8 +1,6 @@
 """Config flow to configure Met component."""
 # pylint: disable=hass-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

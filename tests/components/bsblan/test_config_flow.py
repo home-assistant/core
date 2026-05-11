@@ -7,7 +7,11 @@ from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -144,13 +148,14 @@ async def test_full_user_flow_implementation(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -163,6 +168,87 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await _init_user_flow(hass)
     _assert_form_result(result, "user")
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [BSBLANError, TimeoutError],
+)
+async def test_circuit_discovery_failure_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: type[Exception],
+) -> None:
+    """Test that circuit discovery failure falls back to single circuit."""
+    mock_bsblan.initialize.side_effect = side_effect
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result,
+        "BSB-LAN",
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+
+async def test_circuit_discovery_empty_result_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that empty circuit discovery falls back to single circuit."""
+    mock_bsblan.get_available_circuits.return_value = []
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result,
+        "BSB-LAN",
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
 
 
 async def test_connection_error(
@@ -319,13 +405,14 @@ async def test_zeroconf_discovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -386,13 +473,14 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
 
     _assert_create_entry_result(
         result,
-        "00:80:41:19:69:90",  # MAC from fixture file
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
             CONF_PASSKEY: None,
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_HEATING_CIRCUITS: [1],
         },
         "00:80:41:19:69:90",
     )
@@ -418,13 +506,14 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
 
     _assert_create_entry_result(
         result,
-        "00:80:41:19:69:90",  # MAC from fixture file
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
             CONF_PASSKEY: None,
             CONF_USERNAME: None,
             CONF_PASSWORD: None,
+            CONF_HEATING_CIRCUITS: [1],
         },
         "00:80:41:19:69:90",
     )
@@ -562,13 +651,14 @@ async def test_zeroconf_discovery_connection_error_recovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "10.0.2.60",
             CONF_PORT: 80,
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -617,13 +707,14 @@ async def test_connection_error_recovery(
 
     _assert_create_entry_result(
         result,
-        format_mac("00:80:41:19:69:90"),
+        "BSB-LAN",
         {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         format_mac("00:80:41:19:69:90"),
     )
@@ -1094,6 +1185,39 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_reconfigure_flow_empty_circuit_discovery_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure stores single circuit when discovery returns no circuits."""
+    mock_config_entry.add_to_hass(hass)
+    mock_bsblan.get_available_circuits.return_value = []
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
 @pytest.mark.parametrize(
@@ -1107,7 +1231,7 @@ async def test_reconfigure_flow_error_recovery(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     error: str,
 ) -> None:
     """Test reconfigure flow can recover from errors."""
@@ -1155,6 +1279,7 @@ async def test_reconfigure_flow_error_recovery(
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
 async def test_reconfigure_flow_unique_id_mismatch(

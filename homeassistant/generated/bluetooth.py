@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
@@ -64,6 +62,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "aranet",
         "manufacturer_id": 1794,
         "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "avea",
+        "local_name": "Avea*",
+        "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
     },
     {
         "connectable": False,

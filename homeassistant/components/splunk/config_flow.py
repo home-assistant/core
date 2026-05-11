@@ -1,8 +1,6 @@
 """Config flow for Splunk integration."""
 # pylint: disable=hass-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any

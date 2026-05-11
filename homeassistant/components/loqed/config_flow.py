@@ -1,7 +1,5 @@
 """Config flow for loqed integration."""
 
-from __future__ import annotations
-
 import logging
 import re
 from typing import Any

@@ -1,7 +1,5 @@
 """Support for MQTT discovery."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from dataclasses import dataclass
@@ -344,9 +342,11 @@ def _merge_common_device_options(
         CONF_AVAILABILITY_TEMPLATE,
         CONF_AVAILABILITY_TOPIC,
         CONF_COMMAND_TOPIC,
+        CONF_ENCODING,
         CONF_PAYLOAD_AVAILABLE,
         CONF_PAYLOAD_NOT_AVAILABLE,
         CONF_STATE_TOPIC,
+        CONF_QOS
     Common options in the body of the device based config are inherited into
     the component. Unless the option is explicitly specified at component level,
     in that case the option at component level will override the common option.

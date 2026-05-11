@@ -1,7 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.components.select import SelectEntity
@@ -94,6 +92,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
+        """Read the current state from the hub. These are only local calls."""
         for override in self._nobo.overrides.values():
             if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
                 self._attr_current_option = self._modes[override["mode"]]
@@ -104,14 +103,14 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     """Week profile selector for Nobø zones."""
 
     _attr_translation_key = "week_profile"
-    _profiles: dict[int, str] = {}
-    _attr_options: list[str] = []
     _attr_current_option: str | None = None
 
     def __init__(self, zone_id: str, hub: nobo) -> None:
         """Initialize the week profile selector."""
         super().__init__(hub)
         self._id = zone_id
+        self._profiles: dict[str, str] = {}
+        self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
@@ -136,6 +135,12 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
+        """Read the current state from the hub. These are only local calls."""
+        if self._id not in self._nobo.zones:
+            # Zone removed via the Nobø app; mark unavailable.
+            self._attr_available = False
+            return
+        self._attr_available = True
         self._profiles = {
             profile["week_profile_id"]: profile["name"].replace("\xa0", " ")
             for profile in self._nobo.week_profiles.values()

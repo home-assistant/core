@@ -1,7 +1,5 @@
 """The GeoJSON events component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform

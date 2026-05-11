@@ -1,7 +1,5 @@
 """Tests for the LG Infrared media player platform."""
 
-from __future__ import annotations
-
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,10 +21,10 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockInfraredEntity
 from .utils import check_availability_follows_ir_entity
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared.common import MockInfraredEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.lg_tv"
 

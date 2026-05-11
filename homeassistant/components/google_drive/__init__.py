@@ -1,7 +1,5 @@
 """The Google Drive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from google_drive_api.exceptions import GoogleDriveApiError

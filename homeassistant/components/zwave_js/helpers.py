@@ -1,7 +1,5 @@
 """Helper functions for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass

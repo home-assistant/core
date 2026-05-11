@@ -1,13 +1,7 @@
 """Tests for the LG Infrared config flow."""
 
-from __future__ import annotations
-
 import pytest
 
-from homeassistant.components.infrared import (
-    DATA_COMPONENT as INFRARED_DATA_COMPONENT,
-    DOMAIN as INFRARED_DOMAIN,
-)
 from homeassistant.components.lg_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
@@ -18,26 +12,12 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-
-from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
 
 from tests.common import MockConfigEntry
+from tests.components.infrared import ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
-@pytest.fixture
-async def setup_infrared(
-    hass: HomeAssistant, mock_infrared_entity: MockInfraredEntity
-) -> None:
-    """Set up the infrared component with a mock entity."""
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    component = hass.data[INFRARED_DATA_COMPONENT]
-    await component.async_add_entities([mock_infrared_entity])
-
-
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_entity")
 async def test_user_flow_success(
     hass: HomeAssistant,
 ) -> None:
@@ -66,7 +46,7 @@ async def test_user_flow_success(
     assert result["result"].unique_id == f"lg_ir_tv_{MOCK_INFRARED_ENTITY_ID}"
 
 
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_entity")
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -91,11 +71,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("init_infrared")
 async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     """Test user flow aborts when no infrared emitters exist."""
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -104,7 +82,7 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_emitters"
 
 
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_entity")
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [

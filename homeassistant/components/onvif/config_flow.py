@@ -1,7 +1,5 @@
 """Config flow for ONVIF."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from pprint import pformat

@@ -1,7 +1,5 @@
 """PrusaLink binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
@@ -17,27 +15,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
-@dataclass(frozen=True)
-class PrusaLinkBinarySensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PrusaLinkBinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    PrusaLinkBinarySensorEntityDescriptionMixin[T],
+    PrusaLinkEntityDescription,
     Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
+    value_fn: Callable[[T], bool]
 
 
 BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = {

@@ -1,7 +1,5 @@
 """Matter ModeSelect Cluster Support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
@@ -559,11 +557,15 @@ DISCOVERY_SCHEMAS = [
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
     ),
+    # Keep the legacy vendor-specific select entities until HA 2026.11.0,
+    # so existing users can migrate before we remove them in favor of the
+    # generic number slider.
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
@@ -583,12 +585,14 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
         product_id=(8194,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -611,12 +615,14 @@ DISCOVERY_SCHEMAS = [
             8197,
             8195,
         ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
             device_to_ha={
@@ -636,6 +642,7 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,

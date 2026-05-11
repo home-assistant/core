@@ -1,7 +1,5 @@
 """SMLIGHT SLZB Zigbee device integration."""
 
-from __future__ import annotations
-
 from pysmlight import Api2
 
 from homeassistant.const import CONF_HOST, Platform

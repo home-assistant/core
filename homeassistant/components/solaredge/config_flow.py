@@ -1,7 +1,5 @@
 """Config flow for the SolarEdge platform."""
 
-from __future__ import annotations
-
 import socket
 from typing import TYPE_CHECKING, Any
 

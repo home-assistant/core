@@ -1,7 +1,5 @@
 """Config flow for One-Time Password (OTP) integration."""
 
-from __future__ import annotations
-
 import binascii
 import logging
 from re import sub

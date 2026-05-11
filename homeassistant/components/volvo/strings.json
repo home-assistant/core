@@ -281,6 +281,7 @@
         "name": "Charging power status",
         "state": {
           "fault": "[%key:common::state::fault%]",
+          "initialization": "Initialization",
           "no_power_available": "No power",
           "power_available_but_not_activated": "Power available",
           "providing_power": "Providing power"
