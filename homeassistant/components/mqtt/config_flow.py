@@ -22,6 +22,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
+import paho.mqtt.client as mqtt
 import voluptuous as vol
 import yaml
 
@@ -5479,10 +5480,6 @@ def try_connection(
     user_input: dict[str, Any],
 ) -> bool:
     """Test if we can connect to an MQTT broker."""
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # noqa: PLC0415
-
     mqtt_client_setup = MqttClientSetup(user_input)
     mqtt_client_setup.setup()
     client = mqtt_client_setup.client
