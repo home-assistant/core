@@ -110,7 +110,7 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the shade to a specific position."""
-        position = self._device.get_real_position(kwargs.get(ATTR_POSITION, 0))
+        position = self._device.get_real_position(kwargs[ATTR_POSITION])
         await self._device.send_set_position(position)
         _LOGGER.debug("Change position to a specific position")
         self._attr_is_closed = self._device.is_closed(position)
