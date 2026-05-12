@@ -6,6 +6,7 @@ import contextlib
 from functools import partial
 from itertools import chain
 import logging
+from logging import FileHandler, StreamHandler
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 import mimetypes
 from operator import contains, itemgetter
@@ -14,7 +15,7 @@ import platform
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TextIO
 
 # Import cryptography early since import openssl is not thread-safe
 # _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
@@ -656,22 +657,29 @@ async def async_enable_logging(
 
     if err_log_path:
         err_handler = await hass.async_add_executor_job(
-            _create_log_file, err_log_path, log_rotate_days
+            _create_log_handler, err_log_path, log_rotate_days
         )
 
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
         logger.addHandler(err_handler)
 
-        # Save the log file location for access by other components.
-        hass.data[DATA_LOGGING] = err_log_path
+        if isinstance(err_handler, FileHandler):
+            # Save the log file location for access by other components.
+            hass.data[DATA_LOGGING] = err_log_path
+        else:
+            # Stream handlers do not have a log file for the API to serve.
+            hass.data.pop(DATA_LOGGING, None)
 
     async_activate_log_queue_handler(hass)
 
 
-def _create_log_file(
+def _create_log_handler(
     err_log_path: str, log_rotate_days: int | None
-) -> RotatingFileHandler | TimedRotatingFileHandler:
-    """Create log file and do roll over."""
+) -> RotatingFileHandler | TimedRotatingFileHandler | StreamHandler:
+    """Create a log handler and do roll over for file handlers."""
+    if (stream := _get_stream_for_log_file(err_log_path)) is not None:
+        return StreamHandler(stream)
+
     err_handler: RotatingFileHandler | TimedRotatingFileHandler
     if log_rotate_days:
         err_handler = TimedRotatingFileHandler(
@@ -687,6 +695,23 @@ def _create_log_file(
             _LOGGER.error("Error rolling over log file: %s", err)
 
     return err_handler
+
+
+def _get_stream_for_log_file(log_file: str) -> TextIO | None:
+    """Return stdout or stderr if the log file points to a standard stream."""
+    try:
+        log_file_stat = os.stat(log_file)
+    except OSError:
+        return None
+
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            if os.path.samestat(log_file_stat, os.fstat(stream.fileno())):
+                return stream
+        except AttributeError, OSError, ValueError:
+            continue
+
+    return None
 
 
 class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):

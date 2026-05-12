@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator, Iterable
 import contextlib
 import glob
+import logging
 import os
 import sys
 from typing import Any
@@ -187,6 +188,71 @@ async def test_async_enable_logging_supervisor(
         assert len(glob.glob(ARG_LOG_FILE)) > 0
 
     cleanup_log_files()
+
+
+async def test_async_enable_logging_stream_handler_not_saved_as_log_file(
+    hass: HomeAssistant,
+) -> None:
+    """Test that stream log handlers are not exposed as log files."""
+    handler = logging.StreamHandler(Mock())
+    hass.data[bootstrap.DATA_LOGGING] = "old.log"
+
+    with (
+        patch(
+            "homeassistant.bootstrap.async_activate_log_queue_handler"
+        ) as mock_async_activate_log_queue_handler,
+        patch("logging.getLogger") as mock_get_logger,
+        patch("homeassistant.bootstrap._create_log_handler", return_value=handler),
+    ):
+        await bootstrap.async_enable_logging(hass)
+
+    mock_get_logger.return_value.addHandler.assert_called_once_with(handler)
+    mock_async_activate_log_queue_handler.assert_called_once()
+    assert bootstrap.DATA_LOGGING not in hass.data
+
+
+@pytest.mark.parametrize("stream_name", ["stdout", "stderr"])
+def test_get_stream_for_log_file_returns_standard_stream(stream_name: str) -> None:
+    """Test that standard streams are detected as log files."""
+    stdout = Mock()
+    stdout.fileno.return_value = 1
+    stderr = Mock()
+    stderr.fileno.return_value = 2
+
+    # os.path.samestat compares device and inode from stat results.
+    stdout_stat = os.stat_result((0, 1, 1, 0, 0, 0, 0, 0, 0, 0))
+    stderr_stat = os.stat_result((0, 2, 1, 0, 0, 0, 0, 0, 0, 0))
+    log_file_stat = stdout_stat if stream_name == "stdout" else stderr_stat
+
+    with (
+        patch("homeassistant.bootstrap.sys.stdout", stdout),
+        patch("homeassistant.bootstrap.sys.stderr", stderr),
+        patch("homeassistant.bootstrap.os.stat", return_value=log_file_stat),
+        patch(
+            "homeassistant.bootstrap.os.fstat",
+            side_effect=[stdout_stat, stderr_stat],
+        ),
+    ):
+        assert bootstrap._get_stream_for_log_file("home-assistant.log") is getattr(
+            bootstrap.sys, stream_name
+        )
+
+
+def test_create_log_handler_uses_stream_handler_for_standard_stream() -> None:
+    """Test that standard stream log files use stream handlers."""
+    stream = Mock()
+
+    with (
+        patch("homeassistant.bootstrap._get_stream_for_log_file", return_value=stream),
+        patch(
+            "homeassistant.bootstrap._RotatingFileHandlerWithoutShouldRollOver"
+        ) as mock_file_handler,
+    ):
+        handler = bootstrap._create_log_handler("home-assistant.log", None)
+
+    assert isinstance(handler, logging.StreamHandler)
+    assert handler.stream is stream
+    mock_file_handler.assert_not_called()
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
