@@ -38,7 +38,6 @@ class MatterSiren(MatterEntity, SirenEntity):
     """Representation of a Matter siren."""
 
     entity_description: MatterSirenEntityDescription
-    _platform_translation_key = "siren"
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -62,7 +61,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SIREN,
         entity_description=MatterSirenEntityDescription(
             key="HeimanSiren",
-            name=None,
+            translation_key="siren",
         ),
         entity_class=MatterSiren,
         required_attributes=(HeimanCluster.Attributes.SirenActive,),
