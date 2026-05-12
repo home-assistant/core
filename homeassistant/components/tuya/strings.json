@@ -676,6 +676,12 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
+      "coil_temperature": {
+        "name": "Coil temperature"
+      },
+      "compressor_strength": {
+        "name": "Compressor strength"
+      },
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
@@ -712,11 +718,17 @@
       "filter_utilization": {
         "name": "Filter utilization"
       },
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
       "gas": {
         "name": "Gas"
+      },
+      "heat_exchanger_temperature": {
+        "name": "Heat exchanger temperature"
       },
       "heat_index_temperature": {
         "name": "Heat index"
@@ -799,6 +811,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
       },
       "oxydo_reduction_potential": {
         "name": "Oxydo reduction potential"
