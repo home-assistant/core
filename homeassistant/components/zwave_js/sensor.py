@@ -116,8 +116,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplate,
     NumericSensorDataTemplateData,
 )
-from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
-from .helpers import get_device_info, get_valueless_base_unique_id
+from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity, ZWaveNodeBaseEntity
 from .migrate import async_migrate_statistics_sensors
 from .models import (
     NewZWaveDiscoverySchema,
@@ -1033,36 +1032,19 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         return {ATTR_VALUE: value}
 
 
-class ZWaveNodeStatusSensor(SensorEntity):
+class ZWaveNodeStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a node status sensor."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "node_status"
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
+        super().__init__(driver, node)
         self.config_entry = config_entry
-        self.node = node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1072,60 +1054,27 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        # Add value_changed callbacks.
+        await super().async_added_to_hass()
         for evt in ("wake up", "sleep", "dead", "alive"):
             self.async_on_remove(self.node.on(evt, self._status_changed))
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        # we don't listen for `remove_entity_on_ready_node` signal because this entity
-        # is created when the node is added which occurs before ready. It only needs to
-        # be removed if the node is removed from the network.
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
         self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()
 
 
-class ZWaveControllerStatusSensor(SensorEntity):
+class ZWaveControllerStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a controller status sensor."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "controller_status"
 
     def __init__(self, config_entry: ZwaveJSConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
-        self.config_entry = config_entry
         self.controller = driver.controller
         node = self.controller.own_node
         assert node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        super().__init__(driver, node)
+        self.config_entry = config_entry
         self._attr_unique_id = f"{self._base_unique_id}.controller_status"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1135,34 +1084,16 @@ class ZWaveControllerStatusSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        # Add value_changed callbacks.
+        await super().async_added_to_hass()
         self.async_on_remove(self.controller.on("status changed", self._status_changed))
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        # we don't listen for `remove_entity_on_ready_node` signal because this is not
-        # a regular node
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
         self._attr_native_value: str = self.controller.status.name.lower()
 
 
-class ZWaveStatisticsSensor(SensorEntity):
+class ZWaveStatisticsSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a node/controller statistics sensor."""
 
     entity_description: ZWaveJSStatisticsSensorEntityDescription
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -1172,8 +1103,6 @@ class ZWaveStatisticsSensor(SensorEntity):
         description: ZWaveJSStatisticsSensorEntityDescription,
     ) -> None:
         """Initialize a Z-Wave statistics entity."""
-        self.entity_description = description
-        self.config_entry = config_entry
         self.statistics_src = statistics_src
         node = (
             statistics_src.own_node
@@ -1181,22 +1110,10 @@ class ZWaveStatisticsSensor(SensorEntity):
             else statistics_src
         )
         assert node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        super().__init__(driver, node)
+        self.entity_description = description
+        self.config_entry = config_entry
         self._attr_unique_id = f"{self._base_unique_id}.statistics_{description.key}"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _statistics_updated(self, event_data: dict) -> None:
@@ -1226,20 +1143,7 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.statistics_src.on("statistics updated", self._statistics_updated)
         )

@@ -155,10 +155,15 @@ def assert_condition_trace(expected):
     ("config", "error"),
     [
         (
+            {"blabla": "not_a_condition"},
+            "Unexpected value for condition: 'None'. Expected a condition, "
+            "a list of conditions or a valid template",
+        ),
+        (
             {"condition": 123},
             "Unexpected value for condition: '123'. Expected a condition, "
             "a list of conditions or a valid template",
-        )
+        ),
     ],
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
@@ -5255,12 +5260,12 @@ async def test_state_condition_primary_entities_only(
     await hass.async_block_till_done()
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both on - true regardless of flag
     hass.states.async_set(diagnostic_id, STATE_ON)
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5292,12 +5297,12 @@ async def test_numerical_condition_primary_entities_only(
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic value is below the threshold. If excluded, only the primary is
     # checked and it's above.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both above threshold — true regardless of flag
     hass.states.async_set(diagnostic_id, "75")
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5341,12 +5346,12 @@ async def test_state_condition_primary_entities_only_with_duration(
     # - primary_entities_only=False: diagnostic is included. Diagnostic has
     #   only been matching for 3s < 5s → behavior=all is False.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
     # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_async_from_config_calls_async_setup_on_checker(

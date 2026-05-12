@@ -1099,6 +1099,9 @@
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
     },
+    "mqtt_message_expiry_interval_not_supported": {
+      "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
+    },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
     },
@@ -1545,6 +1548,10 @@
         "evaluate_payload": {
           "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
           "name": "Evaluate payload"
+        },
+        "message_expiry_interval": {
+          "description": "Expires a publish message after the interval in case the device subscriber was temporarily offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
+          "name": "Message Expiry Interval"
         },
         "payload": {
           "description": "The payload to publish. Publishes an empty message if not provided.",
