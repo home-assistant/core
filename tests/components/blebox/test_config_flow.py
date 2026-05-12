@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -97,6 +97,29 @@ def product_class_mock_fixture():
     """Return a mocked feature."""
     path = "homeassistant.components.blebox.config_flow.Box"
     return patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
+
+
+async def test_flow_with_credentials(
+    hass: HomeAssistant, valid_feature_mock, flow_feature_mock
+) -> None:
+    """Test that username and password provided in the manual step are persisted."""
+    result = await _async_start_manual_flow(
+        hass,
+        {
+            config_flow.CONF_HOST: "172.2.3.4",
+            config_flow.CONF_PORT: 80,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "secret",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        config_flow.CONF_HOST: "172.2.3.4",
+        config_flow.CONF_PORT: 80,
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "secret",
+    }
 
 
 async def test_flow_with_connection_failure(
