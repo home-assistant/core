@@ -33,6 +33,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AdaxConfigEntry
 ) -> bool:
     """Migrate old entry."""
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     # convert title and unique_id to string
     if config_entry.version == 1:
         if isinstance(config_entry.unique_id, int):

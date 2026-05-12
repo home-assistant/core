@@ -31,6 +31,10 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate old config entry."""
 
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1:
         new_options = entry.options.copy()
         new_options |= {

@@ -90,6 +90,10 @@ async def async_migrate_entry(
         Setup:     [reuse cached API] → device_list()
     This reduces to just 1 login() call during the migration+setup cycle and prevent account lockout.
     """
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     _LOGGER.debug(
         "Migrating config entry from version %s.%s",
         config_entry.version,

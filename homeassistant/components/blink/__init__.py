@@ -41,6 +41,11 @@ async def _reauth_flow_wrapper(
 
 async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> bool:
     """Handle migration of a previous version config entry."""
+
+    if entry.version > 3:
+        # This means the user has downgraded from a future version
+        return False
+
     _LOGGER.debug("Migrating from version %s", entry.version)
     data = {**entry.data}
     if entry.version == 1:

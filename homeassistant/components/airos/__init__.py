@@ -114,8 +114,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
 
-    # This means the user has downgraded from a future version
     if entry.version > 2:
+        # This means the user has downgraded from a future version
         return False
 
     # 1.1 Migrate config_entry to add advanced ssl settings

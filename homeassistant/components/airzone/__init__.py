@@ -119,6 +119,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Migrate an old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1 and entry.minor_version < 2:
         # Add missing CONF_ID
         system_id = entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID)

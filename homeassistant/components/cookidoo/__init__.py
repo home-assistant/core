@@ -46,6 +46,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: CookidooConfigEntry
 ) -> bool:
     """Migrate config entry."""
+
+    if config_entry.version > 1:
+        # Downgraded from a future version; cannot migrate.
+        return False
+
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1 and config_entry.minor_version == 1:

@@ -82,15 +82,16 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: EpsonConfigEntry
 ) -> bool:
     """Migrate old entry."""
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > 1 or config_entry.minor_version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         new_data = {**config_entry.data}

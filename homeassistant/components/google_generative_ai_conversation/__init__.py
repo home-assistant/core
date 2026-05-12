@@ -224,11 +224,12 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
 ) -> bool:
     """Migrate entry."""
-    LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
     if entry.version > 2:
         # This means the user has downgraded from a future version
         return False
+
+    LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
     if entry.version == 2 and entry.minor_version == 1:
         # Add TTS subentry which was missing in 2025.7.0b0

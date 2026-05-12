@@ -193,6 +193,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) 
     """Migrate an old config entry."""
     version = entry.version
 
+    if version > 3:
+        # This means the user has downgraded from a future version
+        return False
+
     LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: One geography per config entry

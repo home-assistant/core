@@ -168,6 +168,11 @@ async def async_connect_androidtv(
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )

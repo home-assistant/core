@@ -16,7 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import api
-from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
+from .const import CONFIG_FLOW_MINOR_VERSION, DOMAIN
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
@@ -76,13 +76,18 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AladdinConnectConfigEntry
 ) -> bool:
     """Migrate old config."""
-    if config_entry.version < CONFIG_FLOW_VERSION:
+
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version < 2:
         config_entry.async_start_reauth(hass)
         new_data = {**config_entry.data}
         hass.config_entries.async_update_entry(
             config_entry,
             data=new_data,
-            version=CONFIG_FLOW_VERSION,
+            version=2,
             minor_version=CONFIG_FLOW_MINOR_VERSION,
         )
 

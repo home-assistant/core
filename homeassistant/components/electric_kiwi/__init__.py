@@ -82,6 +82,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ElectricKiwiConfigEntry
 ) -> bool:
     """Migrate old entry."""
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if config_entry.version == 1 and config_entry.minor_version == 1:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(

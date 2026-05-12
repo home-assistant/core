@@ -63,6 +63,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
 ) -> bool:
     """Migrate to a new version."""
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
     # Migration for switching add-ons to apps
     if entry.version < 2:
         ent_reg = er.async_get(hass)

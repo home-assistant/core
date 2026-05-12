@@ -508,6 +508,10 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HuaweiLteConfigEntry
 ) -> bool:
     """Migrate config entry to new version."""
+    if config_entry.version > 3:
+        # This means the user has downgraded from a future version
+        return False
+
     if config_entry.version == 1:
         options = dict(config_entry.options)
         recipient = options.get(CONF_RECIPIENT)

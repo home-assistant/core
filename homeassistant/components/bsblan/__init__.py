@@ -224,15 +224,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Migrate old config entries to the latest schema."""
+
+    if entry.version > 1:
+        # Downgraded from a future version; cannot migrate.
+        return False
+
     LOGGER.debug(
         "Migrating BSB-LAN entry from version %s.%s",
         entry.version,
         entry.minor_version,
     )
-
-    if entry.version > 1:
-        # Downgraded from a future version; cannot migrate.
-        return False
 
     # 1.1 -> 1.2: Add CONF_HEATING_CIRCUITS. Attempt to discover available
     # heating circuits from the device; fall back to [1] (pre-multi-circuit
