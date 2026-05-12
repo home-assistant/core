@@ -89,6 +89,13 @@
       "wrong_account": "The credentials belong to a different Glutz system."
     }
   },
+  "entity": {
+    "lock": {
+      "access_point": {
+        "name": "[%key:component::lock::entity_component::_::name%]"
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed for access point {access_point_id}."

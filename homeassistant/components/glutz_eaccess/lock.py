@@ -70,6 +70,7 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
     _attr_has_entity_name = True
     _attr_assumed_state = True
     _attr_name = None
+    _attr_translation_key = "access_point"
     _attr_supported_features = LockEntityFeature.OPEN
 
     def __init__(

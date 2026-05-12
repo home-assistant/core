@@ -148,7 +148,9 @@ rules:
     comment: All entities represent physical doors and should be enabled by default.
   entity-translations:
     status: done
-    comment: Entity names use translation keys.
+    comment: >-
+      Lock entities use translation_key "access_point" with a name entry in
+      strings.json, resolving to the standard lock component name per locale.
   exception-translations:
     status: done
     comment: All raised exceptions use translated strings.
