@@ -118,6 +118,14 @@ class DateTimeExtension(BaseTemplateExtension):
                     limited_ok=False,
                 ),
                 TemplateFunction(
+                    "timedelta_string",
+                    self.timedelta_string,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
                     "today_at",
                     self.today_at,
                     as_global=True,
@@ -320,3 +328,19 @@ class DateTimeExtension(BaseTemplateExtension):
             return value
 
         return dt_util.get_time_remaining(value, precision)
+
+    def timedelta_string(self, value: Any, precision: int = 1) -> Any:
+        """Take a timedelta and return a human-readable string representation.
+
+        The result can be in seconds, minutes, hours, days, months and years.
+
+        precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
+
+        Negative timedeltas are formatted using their absolute value.
+
+        If the value is not a timedelta object the input will be returned unmodified.
+        """
+        if not isinstance(value, timedelta):
+            return value
+        return dt_util.timedelta_as_string(value, precision)

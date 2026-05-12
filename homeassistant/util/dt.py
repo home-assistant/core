@@ -365,6 +365,20 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
     return _get_timestring(rounded_delta, precision)
 
 
+def timedelta_as_string(delta: dt.timedelta, precision: int = 1) -> str:
+    """Return a string representation of a timedelta.
+
+    The result can be in seconds, minutes, hours, days, months and years.
+
+    precision is the number of units to return, with the last unit rounded.
+    precision=0 returns all units (no early rounding, except for sub-second values).
+
+    Negative timedeltas are treated as their absolute value.
+    """
+    rounded_delta = round(abs(delta.total_seconds()))
+    return _get_timestring(rounded_delta, precision)
+
+
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == "*":

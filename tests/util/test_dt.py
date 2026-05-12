@@ -279,6 +279,32 @@ def test_time_remaining() -> None:
     assert dt_util.get_time_remaining(diff) == "1 year"
 
 
+@pytest.mark.parametrize(
+    ("delta", "precision", "expected"),
+    [
+        (timedelta(seconds=0), 1, "0 seconds"),
+        (timedelta(seconds=1), 1, "1 second"),
+        (timedelta(seconds=30), 1, "30 seconds"),
+        (timedelta(minutes=1), 1, "1 minute"),
+        (timedelta(minutes=5), 1, "5 minutes"),
+        (timedelta(hours=1), 1, "1 hour"),
+        (timedelta(hours=5), 1, "5 hours"),
+        (timedelta(hours=1, minutes=30), 1, "2 hours"),
+        (timedelta(hours=1, minutes=30), 2, "1 hour 30 minutes"),
+        (timedelta(days=2), 1, "2 days"),
+        (timedelta(days=32), 1, "1 month"),
+        (timedelta(days=365), 1, "1 year"),
+        (timedelta(hours=1, minutes=54, seconds=33), 3, "1 hour 54 minutes 33 seconds"),
+        (timedelta(hours=1, minutes=54, seconds=33), 0, "1 hour 54 minutes 33 seconds"),
+        (timedelta(hours=-1), 1, "1 hour"),
+        (timedelta(hours=-1, minutes=-30), 2, "1 hour 30 minutes"),
+    ],
+)
+def test_timedelta_as_string(delta: timedelta, precision: int, expected: str) -> None:
+    """Test timedelta_as_string."""
+    assert dt_util.timedelta_as_string(delta, precision) == expected
+
+
 def test_parse_time_expression() -> None:
     """Test parse_time_expression."""
     assert list(range(60)) == dt_util.parse_time_expression("*", 0, 59)
