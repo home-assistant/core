@@ -1,0 +1,7 @@
+{
+  "services": {
+    "say": {
+      "service": "mdi:account-voice"
+    }
+  }
+}

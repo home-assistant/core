@@ -554,6 +554,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/firmata/ @DaAwesomeP
 /homeassistant/components/fish_audio/ @noambav
 /tests/components/fish_audio/ @noambav
+/homeassistant/components/flowspeech/ @hengyin1
+/tests/components/flowspeech/ @hengyin1
 /homeassistant/components/fitbit/ @allenporter
 /tests/components/fitbit/ @allenporter
 /homeassistant/components/fivem/ @Sander0542

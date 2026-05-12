@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up FlowSpeech",
+        "description": "Enter your FlowSpeech API key. You can create an account at {signup_url} and manage API keys at {api_keys_url}.",
+        "data": {
+          "api_key": "API key",
+          "voice": "Default voice"
+        },
+        "data_description": {
+          "api_key": "Your FlowSpeech API key.",
+          "voice": "The default FlowSpeech voice to use for text-to-speech."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "FlowSpeech is already configured"
+    }
+  }
+}
