@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 def _register_stale_firmware_issue(hass: HomeAssistant) -> None:
-    """Pre-register an unsupported_firmware issue to simulate one carried over from a prior setup."""
+    """Pre-register an unsupported_firmware issue from a prior setup."""
     ir.async_create_issue(
         hass,
         DOMAIN,

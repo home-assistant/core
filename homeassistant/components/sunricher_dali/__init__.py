@@ -136,21 +136,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
 def _async_check_firmware_version(
     hass: HomeAssistant, entry: DaliCenterConfigEntry
 ) -> None:
-    """Raise a repair issue if the gateway firmware is below supported minimums.
-
-    Version strings are populated asynchronously from the gateway's
-    ``getVersionRes`` MQTT response. If they are not yet available, the check
-    is skipped; the next setup attempt will retry.
-    """
+    """Raise a repair issue if the gateway firmware is below supported minimums."""
     gateway = entry.runtime_data.gateway
     sw_version = gateway.software_version
     fw_version = gateway.firmware_version
 
     if not sw_version or not fw_version:
-        _LOGGER.debug(
-            "Gateway %s firmware version not yet reported, skipping check",
-            gateway.gw_sn,
-        )
         return
 
     try:
