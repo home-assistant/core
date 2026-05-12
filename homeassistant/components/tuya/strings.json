@@ -45,14 +45,8 @@
       "defrost": {
         "name": "Defrost"
       },
-      "door": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
-      },
       "drop": {
         "name": "Drop"
-      },
-      "fault": {
-        "name": "[%key:component::binary_sensor::entity_component::problem::name%]"
       },
       "feeding": {
         "name": "Feeding"
@@ -75,17 +69,11 @@
       "methane": {
         "name": "Methane"
       },
-      "moisture": {
-        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]"
-      },
       "motor_fault": {
         "name": "Motor fault"
       },
       "pm25": {
         "name": "PM2.5"
-      },
-      "problem": {
-        "name": "[%key:component::binary_sensor::entity_component::problem::name%]"
       },
       "pressure": {
         "name": "Pressure"
@@ -98,9 +86,6 @@
       },
       "tilt": {
         "name": "Tilt"
-      },
-      "smoke": {
-        "name": "[%key:component::binary_sensor::entity_component::smoke::name%]"
       },
       "valve": {
         "name": "Valve"
