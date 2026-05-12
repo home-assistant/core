@@ -2292,7 +2292,7 @@ python-overseerr==0.9.0
 python-picnic-api2==1.3.4
 
 # homeassistant.components.pooldose
-python-pooldose==0.9.0
+python-pooldose==0.9.1
 
 # homeassistant.components.hr_energy_qube
 python-qube-heatpump==1.10.0
