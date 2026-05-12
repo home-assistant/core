@@ -53,7 +53,9 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
-        self._serial = discovery_info.properties["serial"]
+        if not (serial := discovery_info.properties.get("serial")):
+            return self.async_abort(reason="no_serial")
+        self._serial = serial
         await self.async_set_unique_id(self._serial)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
@@ -78,5 +80,9 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={"serial": self._serial},
+            description_placeholders={
+                "name": "EcoTracker",
+                "serial": self._serial,
+                "host": self._host,
+            },
         )

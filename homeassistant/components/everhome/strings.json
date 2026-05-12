@@ -2,12 +2,17 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_serial": "Device did not provide a serial number during discovery. It will be retried automatically.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "zeroconf_confirm": {
+        "description": "Do you want to add the everHome {name} at `{host}` to Home Assistant?",
+        "title": "Set up everHome {name}"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"

@@ -122,3 +122,26 @@ async def test_zeroconf_flow_error(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
+
+
+async def test_zeroconf_flow_no_serial(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf flow aborts when serial is missing from TXT record."""
+    discovery_without_serial = zeroconf.ZeroconfServiceInfo(
+        ip_address=ip_address(IP_ADDRESS),
+        ip_addresses=[ip_address(IP_ADDRESS)],
+        hostname="ecotracker-E80690E0F2B4.local.",
+        name="ecotracker-E80690E0F2B4",
+        port=80,
+        type="_everhome._tcp.",
+        properties={"productid": 1137, "ip": IP_ADDRESS},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_without_serial,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_serial"
