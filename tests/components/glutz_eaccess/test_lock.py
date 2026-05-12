@@ -303,13 +303,13 @@ async def test_service_api_returns_false_raises(
         )
 
 
-async def test_entity_unavailable_when_access_point_removed(
+async def test_entity_removed_when_access_point_removed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entity becomes unavailable when its AP is removed from coordinator data."""
+    """Test entity is removed when its AP is removed from coordinator data."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED
