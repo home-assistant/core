@@ -54,10 +54,9 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
-        uuid = import_data[CONF_UUID]
-        await self.async_set_unique_id(uuid)
+        await self.async_set_unique_id(import_data[CONF_UUID])
         self._abort_if_unique_id_configured()
-        title = import_data.get(CONF_NAME, uuid)
+        title = import_data.get(CONF_NAME, import_data[CONF_UUID])
         import_data.pop(CONF_NAME, None)
         return self.async_create_entry(title=title, data=import_data)
 
@@ -67,8 +66,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            uuid = user_input[CONF_UUID]
-            await self.async_set_unique_id(uuid)
+            await self.async_set_unique_id(user_input[CONF_UUID])
             self._abort_if_unique_id_configured()
             try:
                 await validate_input(self.hass, user_input)
@@ -80,7 +78,9 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=uuid, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_UUID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
