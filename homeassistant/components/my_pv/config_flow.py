@@ -122,7 +122,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery password authentication."""
         errors: dict[str, str] = {}
-        data_schema = AUTH_SCHEMA
 
         if user_input is not None:
             host = self._host
@@ -149,8 +148,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=title, data=data)
 
-            # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        # Combine user input with schema.
+        data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
 
         self.context.update(
             {
@@ -172,7 +171,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the local setup."""
         errors: dict[str, str] = {}
-        data_schema = HOST_SCHEMA
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -203,8 +201,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=title, data=data)
 
-            # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        # Combine user input with schema.
+        data_schema = self.add_suggested_values_to_schema(HOST_SCHEMA, user_input or {})
 
         return self.async_show_form(
             step_id="user",
@@ -217,7 +215,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle password authentication."""
         errors: dict[str, str] = {}
-        data_schema = AUTH_SCHEMA
 
         if user_input is not None:
             host = self._host
@@ -244,8 +241,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=title, data=data)
 
-            # Combine user input with schema.
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        # Combine user input with schema.
+        data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
 
         self.context.update(
             {
