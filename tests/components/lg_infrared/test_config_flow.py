@@ -15,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.infrared import (
-    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_ID,
+    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
 )
 
 
@@ -35,7 +35,7 @@ async def test_user_flow_success(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 
@@ -43,9 +43,9 @@ async def test_user_flow_success(
     assert result["title"] == "LG TV via Test IR emitter"
     assert result["data"] == {
         CONF_DEVICE_TYPE: LGDeviceType.TV,
-        CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_ID,
+        CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
     }
-    assert result["result"].unique_id == f"lg_ir_tv_{mock_infrared_emitter_entity_ID}"
+    assert result["result"].unique_id == f"lg_ir_tv_{mock_infrared_emitter_entity_id}"
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -65,7 +65,7 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 
@@ -100,7 +100,7 @@ async def test_user_flow_title_from_entity_name(
 ) -> None:
     """Test config entry title uses the entity name."""
     entity_registry.async_update_entity(
-        mock_infrared_emitter_entity_ID, name=entity_name
+        mock_infrared_emitter_entity_id, name=entity_name
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -110,7 +110,7 @@ async def test_user_flow_title_from_entity_name(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 
