@@ -1,7 +1,7 @@
 """Support for Wyoming intent recognition services."""
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
@@ -216,7 +216,7 @@ class WyomingConversationEntity(
                     if template.is_template_string(response_text):
                         # Render text as a template
                         response_text = self._render_speech_template(
-                            response_text, intent_response
+                            response_text, intent_response, intent_slots
                         )
 
                     intent_response.async_set_speech(response_text)
@@ -253,6 +253,7 @@ class WyomingConversationEntity(
         self,
         response_text: str,
         intent_response: intent.IntentResponse,
+        intent_slots: dict[str, Any],
     ) -> str:
         """Render speech template with similar behavior to the default agent."""
         state1: State | None = None
@@ -262,12 +263,15 @@ class WyomingConversationEntity(
             state1 = intent_response.unmatched_states[0]
 
         # Render response template
+        speech_slots = {name: value["value"] for name, value in intent_slots.items()}
+        speech_slots.update(intent_response.speech_slots)
+
         response_template = template.Template(response_text, self.hass)
         try:
             speech = response_template.async_render(
                 {
                     # Slots from intent recognizer and response
-                    "slots": intent_response.speech_slots,
+                    "slots": speech_slots,
                     # First matched or unmatched state
                     "state": (
                         template.TemplateState(self.hass, state1)

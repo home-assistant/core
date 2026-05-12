@@ -37,12 +37,14 @@ async def test_intent(
         entities=[Entity(name="entity", value="value")],
         text="""
         {# Verify template variables are present #}
+        {% if slots.entity == 'value' %}
         {% if slots.slot_name == 'slot_value' %}
         {% if state.entity_id == 'test.matched1' %}
         {% if query.matched[0].entity_id == 'test.matched1' %}
         {% if query.unmatched[0].entity_id == 'test.unmatched1' %}
         {% if query.unmatched[1].entity_id == 'test.unmatched2' %}
         success
+        {% endif %}
         {% endif %}
         {% endif %}
         {% endif %}
