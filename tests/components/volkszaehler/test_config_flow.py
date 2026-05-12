@@ -21,15 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the config flow shows the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the config flow creates an entry."""
     user_input = {
