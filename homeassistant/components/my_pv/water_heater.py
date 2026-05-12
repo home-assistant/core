@@ -39,33 +39,22 @@ async def async_setup_entry(
             )
         )
     ):
-        entity_description = MyPVWaterHeaterEntityDescription(
+        entity_description = WaterHeaterEntityDescription(
             key="temp1",
-            temperature_unit=target_temperature_config["unit"],
-            target_temperature_step=target_temperature_config["step"],
-            max_temp=target_temperature_config["max"],
-            min_temp=target_temperature_config["min"],
         )
         entities.append(
             MyPVWaterHeater(
                 coordinator,
                 entity_description,
                 coordinator.device.serial_number,
+                temperature_unit=target_temperature_config["unit"],
+                target_temperature_step=target_temperature_config["step"],
+                max_temp=target_temperature_config["max"],
+                min_temp=target_temperature_config["min"],
             )
         )
 
     async_add_entities(entities)
-
-
-class MyPVWaterHeaterEntityDescription(
-    WaterHeaterEntityDescription, frozen_or_thawed=True
-):
-    """A class that describes my-PV water heater entities."""
-
-    target_temperature_step: float
-    max_temp: float
-    min_temp: float
-    temperature_unit: str
 
 
 class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
@@ -79,21 +68,23 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 
-    entity_description: MyPVWaterHeaterEntityDescription
-
     def __init__(
         self,
         coordinator: MyPVCoordinator,
-        entity_description: MyPVWaterHeaterEntityDescription,
+        entity_description: WaterHeaterEntityDescription,
         serial_number: str,
+        target_temperature_step: float,
+        max_temp: float,
+        min_temp: float,
+        temperature_unit: str,
     ) -> None:
         """Initialize the water_heater."""
         super().__init__(coordinator, entity_description, serial_number)
 
-        self._attr_target_temperature_step = entity_description.target_temperature_step
-        self._attr_temperature_unit = entity_description.temperature_unit
-        self._attr_min_temp = entity_description.min_temp
-        self._attr_max_temp = entity_description.max_temp
+        self._attr_target_temperature_step = target_temperature_step
+        self._attr_temperature_unit = temperature_unit
+        self._attr_min_temp = min_temp
+        self._attr_max_temp = max_temp
 
     @property
     def current_operation(self) -> str | None:
