@@ -8,6 +8,7 @@ import math
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -2794,6 +2795,53 @@ async def test_test_condition(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["result"] is False
+
+
+async def test_subscribe_condition(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test subscribing to a condition."""
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set("hello.world", "frenck")
+    freezer.tick(1.1)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+    hass.states.async_remove("hello.world")
+    freezer.tick(1.1)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": subscription_id,
+        "type": "event",
+        "event": {
+            "error": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+        },
+    }
 
 
 async def test_execute_script(
