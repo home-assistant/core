@@ -44,18 +44,23 @@ SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
 )
 
 
-def __get_client(call: ServiceCall) -> OhmeApiClient:
-    """Get the client from the config entry."""
-    entry: OhmeConfigEntry = service.async_get_config_entry(
+def __get_entry(call: ServiceCall) -> OhmeConfigEntry:
+    """Get the config entry from the service call."""
+    return service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
     )
 
-    return entry.runtime_data.charge_session_coordinator.client
+
+def __get_client(call: ServiceCall) -> OhmeApiClient:
+    """Get the client from the config entry."""
+    return __get_entry(call).runtime_data.charge_session_coordinator.client
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
+    if hass.services.has_service(DOMAIN, SERVICE_LIST_CHARGE_SLOTS):
+        return
 
     async def list_charge_slots(
         service_call: ServiceCall,
@@ -68,7 +73,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def set_price_cap(
         service_call: ServiceCall,
     ) -> None:
-        """List of charge slots."""
+        """Update the configured price cap."""
         client = __get_client(service_call)
         price_cap = service_call.data[ATTR_PRICE_CAP]
         await client.async_change_price_cap(cap=price_cap)

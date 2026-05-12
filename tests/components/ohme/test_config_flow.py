@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from ohme import ApiException, AuthException
 import pytest
 
-from homeassistant.components.ohme.const import DOMAIN
+from homeassistant.components.ohme.const import (
+    CONF_BACKFILL_DAYS,
+    DEFAULT_BACKFILL_DAYS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -38,6 +42,7 @@ async def test_config_flow_success(
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "hunter2",
     }
+    assert result["options"] == {CONF_BACKFILL_DAYS: DEFAULT_BACKFILL_DAYS}
 
 
 @pytest.mark.parametrize(
@@ -84,6 +89,7 @@ async def test_config_flow_fail(
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "hunter1",
     }
+    assert result["options"] == {CONF_BACKFILL_DAYS: DEFAULT_BACKFILL_DAYS}
 
 
 async def test_already_configured(
@@ -263,3 +269,22 @@ async def test_reconfigure_fail(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the Ohme options flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_BACKFILL_DAYS: 600},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_BACKFILL_DAYS: 600}

@@ -7,5 +7,7 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["ohme==1.9.0"]
+  "requirements": [
+    "ohme @ git+https://github.com/tstordyallison/ohmepy.git@public-session-timestamps-and-summary-granularity"
+  ]
 }
