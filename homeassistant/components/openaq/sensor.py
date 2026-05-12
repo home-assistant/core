@@ -83,13 +83,11 @@ SENSOR_DESCRIPTIONS: dict[str, OpenAQSensorEntityDescription] = {
     ),
     "nox": OpenAQSensorEntityDescription(
         key="nox",
-        translation_key="nox",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
     "bc": OpenAQSensorEntityDescription(
         key="bc",
-        translation_key="bc",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
