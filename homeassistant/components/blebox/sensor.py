@@ -147,7 +147,7 @@ async def async_setup_entry(
         BleBoxSensorEntity(
             feature,
             description,
-            f"{feature.index}"
+            f" {feature.index}"
             if counts[feature.device_class] > 1 and feature.index
             else "",
         )

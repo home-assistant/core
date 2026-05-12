@@ -31,31 +31,31 @@
   },
   "entity": {
     "binary_sensor": {
-      "moisture": { "name": "Moisture {index}" }
+      "moisture": { "name": "Moisture{index}" }
     },
     "light": {
-      "channel": { "name": "Channel {index}" }
+      "channel": { "name": "Channel{index}" }
     },
     "sensor": {
-      "active_power": { "name": "Active power {index}" },
-      "apparent_power": { "name": "Apparent power {index}" },
-      "current": { "name": "Current {index}" },
-      "forward_active_energy": { "name": "Forward active energy {index}" },
-      "frequency": { "name": "Frequency {index}" },
-      "humidity": { "name": "Humidity {index}" },
-      "illuminance": { "name": "Illuminance {index}" },
-      "pm1": { "name": "PM 1 {index}" },
-      "pm10": { "name": "PM 10 {index}" },
-      "pm2_5": { "name": "PM 2.5 {index}" },
-      "power_consumption": { "name": "Energy (last 1 h) {index}" },
-      "reactive_power": { "name": "Reactive power {index}" },
-      "reverse_active_energy": { "name": "Reverse active energy {index}" },
-      "temperature": { "name": "Temperature {index}" },
-      "voltage": { "name": "Voltage {index}" },
-      "wind_speed": { "name": "Wind speed {index}" }
+      "active_power": { "name": "Active power{index}" },
+      "apparent_power": { "name": "Apparent power{index}" },
+      "current": { "name": "Current{index}" },
+      "forward_active_energy": { "name": "Forward active energy{index}" },
+      "frequency": { "name": "Frequency{index}" },
+      "humidity": { "name": "Humidity{index}" },
+      "illuminance": { "name": "Illuminance{index}" },
+      "pm1": { "name": "PM 1{index}" },
+      "pm10": { "name": "PM 10{index}" },
+      "pm2_5": { "name": "PM 2.5{index}" },
+      "power_consumption": { "name": "Energy (last 1 h){index}" },
+      "reactive_power": { "name": "Reactive power{index}" },
+      "reverse_active_energy": { "name": "Reverse active energy{index}" },
+      "temperature": { "name": "Temperature{index}" },
+      "voltage": { "name": "Voltage{index}" },
+      "wind_speed": { "name": "Wind speed{index}" }
     },
     "switch": {
-      "relay": { "name": "Relay {index}" }
+      "relay": { "name": "Relay{index}" }
     }
   }
 }
