@@ -236,32 +236,36 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
         }
         found_addresses = await async_scan_mdns(hass)
-        candidates = [
-            (host, port)
-            for host, port in found_addresses
-            if (host, port) not in current_addresses
-        ]
+        candidates = list(
+            dict.fromkeys(
+                (host, port)
+                for host, port in found_addresses
+                if (host, port) not in current_addresses
+            )
+        )
 
         websession = async_get_clientsession(hass)
+        semaphore = asyncio.Semaphore(10)
 
         async def _probe(host: str, port: int) -> DiscoveredDevice | None:
-            api_host = ApiHost(
-                host, port, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
-            )
-            try:
-                product = await Box.async_from_host(api_host)
-            except (
-                Error,
-                UnsupportedBoxVersion,
-                UnsupportedBoxResponse,
-                UnauthorizedRequest,
-                TimeoutError,
-            ) as ex:
-                _LOGGER.debug("Probe failed for %s:%d (%s)", host, port, ex)
-                return None
-            return DiscoveredDevice(
-                host=host, port=port, name=product.name, unique_id=product.unique_id
-            )
+            async with semaphore:
+                api_host = ApiHost(
+                    host, port, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
+                )
+                try:
+                    product = await Box.async_from_host(api_host)
+                except (
+                    Error,
+                    UnsupportedBoxVersion,
+                    UnsupportedBoxResponse,
+                    UnauthorizedRequest,
+                    TimeoutError,
+                ) as ex:
+                    _LOGGER.debug("Probe failed for %s:%d (%s)", host, port, ex)
+                    return None
+                return DiscoveredDevice(
+                    host=host, port=port, name=product.name, unique_id=product.unique_id
+                )
 
         results = await asyncio.gather(*(_probe(h, p) for h, p in candidates))
 
