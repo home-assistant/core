@@ -7,10 +7,12 @@ from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.alexa_devices import Http2Manager
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
     CONF_SITE,
     DOMAIN,
+    HTTP2_RECONNECT_DELAY,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
@@ -150,12 +152,12 @@ async def test_http2_task_auth_failure_triggers_reauth(
     mock_reauth.assert_called_once_with(hass)
 
 
-async def test_http2_task_connection_failure_triggers_reload(
+async def test_http2_task_connection_failure_triggers_restart(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test HTTP2 connection failure schedules reload."""
+    """Test HTTP2 connection failure schedules a restart."""
     failed_task: asyncio.Future[None] = hass.loop.create_future()
     failed_task.set_exception(CannotConnect("connection failed"))
     mock_amazon_devices_client.start_http2_processing.side_effect = (
@@ -164,24 +166,25 @@ async def test_http2_task_connection_failure_triggers_reload(
 
     with (
         patch("homeassistant.components.alexa_devices._LOGGER.warning") as mock_warning,
-        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch.object(Http2Manager, "_restart", new_callable=AsyncMock) as mock_restart,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
     mock_warning.assert_called_once_with(
-        "HTTP2 connection failure, scheduling reload",
+        "HTTP2 connection failure, restarting in %s seconds",
+        HTTP2_RECONNECT_DELAY,
         exc_info=(CannotConnect, ANY, ANY),
     )
-    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+    mock_restart.assert_called_once()
 
 
-async def test_http2_task_unexpected_failure_triggers_reload(
+async def test_http2_task_unexpected_failure_triggers_restart(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unexpected HTTP2 failure schedules reload."""
+    """Test unexpected HTTP2 failure schedules a restart."""
     failed_task: asyncio.Future[None] = hass.loop.create_future()
     failed_task.set_exception(RuntimeError("boom"))
     mock_amazon_devices_client.start_http2_processing.side_effect = (
@@ -190,15 +193,17 @@ async def test_http2_task_unexpected_failure_triggers_reload(
 
     with (
         patch("homeassistant.components.alexa_devices._LOGGER.error") as mock_error,
-        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch.object(Http2Manager, "_restart", new_callable=AsyncMock) as mock_restart,
     ):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
     mock_error.assert_called_once_with(
-        "Unexpected HTTP2 failure, scheduling reload", exc_info=(RuntimeError, ANY, ANY)
+        "Unexpected HTTP2 failure, restarting in %s seconds",
+        HTTP2_RECONNECT_DELAY,
+        exc_info=(RuntimeError, ANY, ANY),
     )
-    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+    mock_restart.assert_called_once()
 
 
 async def test_http2_task_exception_group_is_unwrapped(
@@ -225,7 +230,7 @@ async def test_http2_task_cancelled_exits_early(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cancelled HTTP2 task exits callback early."""
+    """Test cancelled HTTP2 task exits callback early without side effects."""
     cancelled_task: asyncio.Future[None] = hass.loop.create_future()
     cancelled_task.cancel()
 
@@ -236,7 +241,7 @@ async def test_http2_task_cancelled_exits_early(
     with (
         patch("homeassistant.components.alexa_devices._LOGGER.error") as mock_error,
         patch("homeassistant.components.alexa_devices._LOGGER.warning") as mock_warning,
-        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch.object(Http2Manager, "_restart", new_callable=AsyncMock) as mock_restart,
         patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
     ):
         await setup_integration(hass, mock_config_entry)
@@ -244,7 +249,7 @@ async def test_http2_task_cancelled_exits_early(
 
     mock_error.assert_not_called()
     mock_warning.assert_not_called()
-    mock_reload.assert_not_called()
+    mock_restart.assert_not_called()
     mock_reauth.assert_not_called()
 
 
@@ -268,3 +273,31 @@ async def test_http2_task_is_cancelled_on_unload(
     await hass.async_block_till_done()
 
     assert http2_task.cancelled()
+
+
+async def test_http2_task_connection_failure_restarts(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HTTP2 task actually restarts after a connection failure."""
+    failed_task: asyncio.Future[None] = hass.loop.create_future()
+    failed_task.set_exception(CannotConnect("connection failed"))
+
+    # Second call returns a long-running task so we can verify restart happened
+    restarted_task = hass.loop.create_task(asyncio.sleep(3600))
+
+    mock_amazon_devices_client.start_http2_processing.side_effect = [
+        failed_task,
+        restarted_task,
+    ]
+
+    with patch("homeassistant.components.alexa_devices.asyncio.sleep") as mock_sleep:
+        await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+    mock_sleep.assert_called_once_with(HTTP2_RECONNECT_DELAY)
+    assert mock_amazon_devices_client.start_http2_processing.call_count == 2
+
+    # Cleanup
+    restarted_task.cancel()
