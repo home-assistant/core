@@ -16,12 +16,6 @@
       "filter_rest": {
         "name": "Filter: Remaining capacity"
       },
-      "filter_remaining_volume": {
-        "name": "Filter: Remaining quantity"
-      },
-      "filter_remaining_days": {
-        "name": "Filter: Remaining time"
-      },
       "error_count": {
         "name": "Active errors"
       }
@@ -50,12 +44,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "issues": {
-    "device_error": {
-      "title": "BLANCO device reports an error",
-      "description": "The device **{device_name}** reports {error_count} active error(s). Please check the device or the BLANCO UNIT app."
     }
   }
 }

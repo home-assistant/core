@@ -77,8 +77,8 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[BlancoSensorEntityDescription, ...] = (
 _DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
     key="set_point_cooling",
     translation_key="set_point_cooling",
-    value_fn=lambda data: data.get("settings", {}).get("params", {}).get(
-        "set_point_cooling"
+    value_fn=lambda data: (
+        data.get("settings", {}).get("params", {}).get("set_point_cooling")
     ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
@@ -88,8 +88,8 @@ _DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
 _DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
     key="set_point_heating",
     translation_key="set_point_heating",
-    value_fn=lambda data: data.get("settings", {}).get("params", {}).get(
-        "set_point_heating"
+    value_fn=lambda data: (
+        data.get("settings", {}).get("params", {}).get("set_point_heating")
     ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
