@@ -50,7 +50,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volkszaehler."""
 
-    VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
