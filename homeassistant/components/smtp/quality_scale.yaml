@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: This integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-unique-id:
+    status: exempt
+    comment: This integration does not provide entities.
+  has-entity-name:
+    status: exempt
+    comment: This integration does not provide entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: This integration does not provide entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: This integration does not poll or maintain a persistent connection.
+  parallel-updates:
+    status: exempt
+    comment: This integration does not provide entities.
+  reauthentication-flow:
+    status: todo
+    comment: Reauthentication flow not yet implemented.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration does not provide devices.
+  diagnostics:
+    status: exempt
+    comment: This integration does not provide diagnostics.
+  discovery:
+    status: exempt
+    comment: SMTP servers are not discoverable on the network.
+  discovery-update-info:
+    status: exempt
+    comment: SMTP servers are not discoverable on the network.
+  docs-data-update:
+    status: exempt
+    comment: This integration does not poll or update data.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This integration is a service, not a device integration.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not provide devices.
+  entity-category:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-translations:
+    status: exempt
+    comment: This integration does not provide entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: This integration does not provide entities.
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: This integration does not provide devices.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: This integration uses smtplib which is a stdlib synchronous module.
+  inject-websession:
+    status: exempt
+    comment: This integration does not make HTTP requests.
+  strict-typing: todo
