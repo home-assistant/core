@@ -2844,6 +2844,62 @@ async def test_subscribe_condition(
     }
 
 
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Validated by the websocket command's schema
+        (
+            {"blaba": "invalid"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unexpected value for condition: 'None'. Expected a condition, "
+                    "a list of conditions or a valid template for dictionary value "
+                    "@ data['condition']. Got {'blaba': 'invalid'}"
+                ),
+            },
+        ),
+        (
+            {"condition": "state", "entity_id": "hello.world"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "required key not provided @ data['condition']['state']. Got None"
+                ),
+            },
+        ),
+        # Validated by async_validate_condition_config
+        (
+            {"condition": "sun"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "must contain at least one of before, after. for dictionary value "
+                    "@ data['options']. Got None"
+                ),
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test subscribing to a condition."""
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+
 async def test_execute_script(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
