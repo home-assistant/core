@@ -1,27 +1,4 @@
 {
-  "exceptions": {
-    "auth_error": {
-      "message": "Authentication failed for access point {access_point_id}."
-    },
-    "open_access_point_error": {
-      "message": "Error opening access point {access_point_id}."
-    },
-    "open_access_point_failed": {
-      "message": "Failed to open access point {access_point_id}."
-    },
-    "hold_open_access_point_error": {
-      "message": "Error holding open access point {access_point_id}."
-    },
-    "hold_open_access_point_failed": {
-      "message": "Failed to hold open access point {access_point_id}."
-    },
-    "close_access_point_error": {
-      "message": "Error locking access point {access_point_id}."
-    },
-    "close_access_point_failed": {
-      "message": "Failed to lock access point {access_point_id}."
-    }
-  },
   "config": {
     "step": {
       "user": {
@@ -110,6 +87,29 @@
       "reconfigure_successful": "Configuration updated successfully.",
       "unknown": "An unexpected error occurred.",
       "wrong_account": "The credentials belong to a different Glutz system."
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for access point {access_point_id}."
+    },
+    "open_access_point_error": {
+      "message": "Error opening access point {access_point_id}."
+    },
+    "open_access_point_failed": {
+      "message": "Failed to open access point {access_point_id}."
+    },
+    "hold_open_access_point_error": {
+      "message": "Error holding open access point {access_point_id}."
+    },
+    "hold_open_access_point_failed": {
+      "message": "Failed to hold open access point {access_point_id}."
+    },
+    "close_access_point_error": {
+      "message": "Error locking access point {access_point_id}."
+    },
+    "close_access_point_failed": {
+      "message": "Failed to lock access point {access_point_id}."
     }
   }
 }
