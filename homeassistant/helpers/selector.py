@@ -1702,8 +1702,9 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                 if field in _config:
                     field_selector = field_data["selector"]
                     if isinstance(field_selector, Selector):
-                        field_selector = field_selector.serialize()["selector"]
-                    selector(field_selector)(_config[field])  # type: ignore[operator]
+                        field_selector(_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
