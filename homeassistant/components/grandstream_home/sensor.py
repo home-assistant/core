@@ -1,7 +1,5 @@
 """Sensor platform for Grandstream integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

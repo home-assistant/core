@@ -1,11 +1,7 @@
 """Config flow for Grandstream Home."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
-
-import voluptuous as vol
 
 from grandstream_home_api import (
     DEFAULT_PORT,
@@ -17,6 +13,8 @@ from grandstream_home_api import (
     extract_mac_from_name,
     validate_port,
 )
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (

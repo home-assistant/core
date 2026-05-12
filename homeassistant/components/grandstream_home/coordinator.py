@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from grandstream_home_api import GDSPhoneAPI, GNSNasAPI, fetch_gds_status
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

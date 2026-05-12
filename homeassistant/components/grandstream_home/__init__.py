@@ -1,7 +1,5 @@
 """The Grandstream Home integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
@@ -13,6 +11,7 @@ from grandstream_home_api import (
     attempt_login,
     create_api_instance,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
