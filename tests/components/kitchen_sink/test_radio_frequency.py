@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from rf_protocols import OOKCommand
+from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.radio_frequency import async_send_command

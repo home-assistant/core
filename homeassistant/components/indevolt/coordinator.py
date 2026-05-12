@@ -33,14 +33,6 @@ SCAN_INTERVAL: Final = 30
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 
 
-class DeviceTimeoutError(HomeAssistantError):
-    """Raised when device push times out."""
-
-
-class DeviceConnectionError(HomeAssistantError):
-    """Raised when device push fails due to connection issues."""
-
-
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
@@ -96,12 +88,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""
-        try:
-            return await self.api.set_data(sensor_key, value)
-        except TimeoutError as err:
-            raise DeviceTimeoutError(f"Device push timed out: {err}") from err
-        except (ClientError, OSError) as err:
-            raise DeviceConnectionError(f"Device push failed: {err}") from err
+        return await self.api.set_data(sensor_key, value)
 
     async def async_switch_energy_mode(
         self, target_mode: IndevoltEnergyMode, refresh: bool = True
@@ -125,15 +112,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Switch energy mode if required
         if current_mode != target_mode:
-            try:
-                success = await self.async_push_data(
-                    IndevoltConfig.WRITE_ENERGY_MODE, target_mode
-                )
-            except (DeviceTimeoutError, DeviceConnectionError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_switch_energy_mode",
-                ) from err
+            success = await self.async_push_data(
+                IndevoltConfig.WRITE_ENERGY_MODE, target_mode
+            )
 
             if not success:
                 raise HomeAssistantError(
