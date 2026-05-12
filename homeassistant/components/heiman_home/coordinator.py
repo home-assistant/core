@@ -319,17 +319,18 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
 
-            if not access_token:
-                msg = (
-                    "Cannot initialize MQTT: access_token not available from any source"
-                )
-                _LOGGER.warning(msg)
-                raise HeimanMQTTError(msg)
+            def _raise_if_missing(value: Any, error_msg: str) -> None:
+                if not value:
+                    _LOGGER.warning(error_msg)
+                    raise HeimanMQTTError(error_msg)
 
-            if not user_id:
-                msg = "Cannot initialize MQTT: user_id not available"
-                _LOGGER.warning(msg)
-                raise HeimanMQTTError(msg)
+            _raise_if_missing(
+                access_token,
+                "Cannot initialize MQTT: access_token not available from any source",
+            )
+            _raise_if_missing(
+                user_id, "Cannot initialize MQTT: user_id not available"
+            )
 
             # Get user display name using SDK method
             user_display_name = None

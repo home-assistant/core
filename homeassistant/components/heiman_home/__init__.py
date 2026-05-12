@@ -120,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
                 )
         with contextlib.suppress(Exception):
             await _async_call_cleanup_method(api_client, ("async_close", "close"))
-        entry.runtime_data = None
+        object.__delattr__(entry, "runtime_data")
         raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
