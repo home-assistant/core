@@ -18,8 +18,6 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfTemperature,
-    UnitOfTime,
-    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,44 +37,10 @@ PARALLEL_UPDATES = 0
 class BlancoSensorEntityDescription(SensorEntityDescription):
     """Describes a BLANCO sensor entity."""
 
-    # Top-level key in coordinator.data (e.g. "settings", "status", "system")
-    data_key: str = ""
-    # Sub-section within data[data_key]: "params" or "info"
-    source: str = "params"
-    # Field name inside data[data_key][source] — used when value_fn is None
-    param_key: str = ""
-    # Optional computed value function — receives data[data_key][source] (dict or
-    # list depending on the source key) and returns the sensor value.
-    # Takes priority over param_key when set.
-    value_fn: Callable[[Any], Any] | None = field(default=None, compare=False)
-
-
-# ── AQUA computed helpers ─────────────────────────────────────────────────────
-
-
-def _aqua_filter_remaining_volume(params: dict[str, Any]) -> float | None:
-    """Filter remaining volume in litres: max(0, 2000 - filter_flow_total / 1000)."""
-    flow = params.get("filter_flow_total")
-    if flow is None:
-        return None
-    return round(max(0.0, 2000.0 - float(flow) / 1000.0), 1)
-
-
-def _aqua_filter_remaining_days(params: dict[str, Any]) -> float | None:
-    """Filter remaining runtime in days: max(0, 120 - filter_age / 24)."""
-    age = params.get("filter_age")
-    if age is None:
-        return None
-    return round(max(0.0, 120.0 - float(age) / 24.0), 1)
-
-
-def _aqua_filter_rest(params: dict[str, Any]) -> float | None:
-    """Filter remaining capacity in %: min(vol/2000, days/120) * 100."""
-    vol = _aqua_filter_remaining_volume(params)
-    days = _aqua_filter_remaining_days(params)
-    if vol is None or days is None:
-        return None
-    return round(min(vol / 2000.0, days / 120.0) * 100.0, 1)
+    # Receives the full coordinator.data dict and returns the sensor value.
+    value_fn: Callable[[dict[str, Any]], StateType | datetime] | None = field(
+        default=None, compare=False
+    )
 
 
 # ── Common sensors (all device types) ────────────────────────────────────────
@@ -84,9 +48,11 @@ def _aqua_filter_rest(params: dict[str, Any]) -> float | None:
 _DESC_ONLINE = BlancoSensorEntityDescription(
     key="online",
     translation_key="online",
-    data_key="system",
-    source="info",
-    param_key="online",
+    value_fn=lambda data: (
+        datetime.fromtimestamp(ts / 1000, tz=UTC)
+        if (ts := data.get("system", {}).get("info", {}).get("online")) is not None
+        else None
+    ),
     device_class=SensorDeviceClass.TIMESTAMP,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
@@ -94,16 +60,14 @@ _DESC_ONLINE = BlancoSensorEntityDescription(
 _DESC_ERROR_COUNT = BlancoSensorEntityDescription(
     key="error_count",
     translation_key="error_count",
-    data_key="errors",
-    source="errors",
+    value_fn=lambda data: sum(
+        1
+        for e in data.get("errors", {}).get("errors", [])
+        if e.get("err_type") in (BlancoErrorType.CRITICAL, BlancoErrorType.WARNING)
+    ),
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=0,
     entity_category=EntityCategory.DIAGNOSTIC,
-    value_fn=lambda data: sum(
-        1
-        for e in (data if isinstance(data, list) else [])
-        if e.get("err_type") in (BlancoErrorType.CRITICAL, BlancoErrorType.WARNING)
-    ),
 )
 
 SENSOR_DESCRIPTIONS_COMMON: tuple[BlancoSensorEntityDescription, ...] = (
@@ -117,8 +81,9 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[BlancoSensorEntityDescription, ...] = (
 _DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
     key="set_point_cooling",
     translation_key="set_point_cooling",
-    data_key="settings",
-    param_key="set_point_cooling",
+    value_fn=lambda data: data.get("settings", {}).get("params", {}).get(
+        "set_point_cooling"
+    ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 4–10 °C
@@ -127,8 +92,9 @@ _DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
 _DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
     key="set_point_heating",
     translation_key="set_point_heating",
-    data_key="settings",
-    param_key="set_point_heating",
+    value_fn=lambda data: data.get("settings", {}).get("params", {}).get(
+        "set_point_heating"
+    ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 65–100 °C
@@ -137,8 +103,7 @@ _DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
 _DESC_CO2_REST = BlancoSensorEntityDescription(
     key="co2_rest",
     translation_key="co2_rest",
-    data_key="status",
-    param_key="co2_rest",
+    value_fn=lambda data: data.get("status", {}).get("params", {}).get("co2_rest"),
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=PERCENTAGE,  # range: 0–100 %
     suggested_display_precision=0,
@@ -146,8 +111,7 @@ _DESC_CO2_REST = BlancoSensorEntityDescription(
 _DESC_FILTER_REST = BlancoSensorEntityDescription(
     key="filter_rest",
     translation_key="filter_rest",
-    data_key="status",
-    param_key="filter_rest",
+    value_fn=lambda data: data.get("status", {}).get("params", {}).get("filter_rest"),
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=PERCENTAGE,  # range: 0–100 %
     suggested_display_precision=0,
@@ -170,46 +134,6 @@ SENSOR_DESCRIPTIONS_SODA: tuple[BlancoSensorEntityDescription, ...] = (
 )
 """Sensor descriptions specific to the SODA (EVOL-S PRO) device type."""
 
-# ── AQUA — computed filter sensors ───────────────────────────────────────────
-
-_DESC_AQUA_FILTER_REMAINING_VOLUME = BlancoSensorEntityDescription(
-    key="filter_remaining_volume",
-    translation_key="filter_remaining_volume",
-    data_key="status",
-    source="params",
-    value_fn=_aqua_filter_remaining_volume,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_AQUA_FILTER_REMAINING_DAYS = BlancoSensorEntityDescription(
-    key="filter_remaining_days",
-    translation_key="filter_remaining_days",
-    data_key="status",
-    source="params",
-    value_fn=_aqua_filter_remaining_days,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTime.DAYS,
-    suggested_display_precision=0,
-)
-_DESC_AQUA_FILTER_REST = BlancoSensorEntityDescription(
-    key="filter_rest",
-    translation_key="filter_rest",
-    data_key="status",
-    source="params",
-    value_fn=_aqua_filter_rest,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
-    suggested_display_precision=0,
-)
-
-SENSOR_DESCRIPTIONS_AQUA: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_AQUA_FILTER_REMAINING_VOLUME,
-    _DESC_AQUA_FILTER_REMAINING_DAYS,
-    _DESC_AQUA_FILTER_REST,
-)
-"""Sensor descriptions specific to the AQUA device type (computed filter sensors)."""
-
 # ── Lookup: device type → descriptions (common + device-specific) ─────────────
 
 SENSOR_DESCRIPTIONS_BY_TYPE: dict[
@@ -223,7 +147,7 @@ SENSOR_DESCRIPTIONS_BY_TYPE: dict[
     BlancoDeviceType.SELECT: SENSOR_DESCRIPTIONS_COMMON,
     BlancoDeviceType.FLEXON: SENSOR_DESCRIPTIONS_COMMON,
     BlancoDeviceType.SEPURA: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.AQUA: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_AQUA,
+    BlancoDeviceType.AQUA: SENSOR_DESCRIPTIONS_COMMON,
     BlancoDeviceType.BIOSORT: SENSOR_DESCRIPTIONS_COMMON,
 }
 
@@ -265,7 +189,11 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             identifiers={(DOMAIN, coordinator.dev_id)},
             name=system_params.get("dev_name", "BLANCO"),
             manufacturer="BLANCO",
-            model=BLANCO_DEVICE_NAMES.get(coordinator.dev_type) if coordinator.dev_type is not None else None,
+            model=(
+                BLANCO_DEVICE_NAMES.get(coordinator.dev_type)
+                if coordinator.dev_type is not None
+                else None
+            ),
             serial_number=coordinator.serial,
             sw_version=system_params.get("sw_ver_main_con"),
         )
@@ -298,25 +226,6 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType | datetime:
         """Return the current sensor value."""
-        section: Any = self.coordinator.data.get(self.entity_description.data_key, {})
-        data: Any = (
-            section.get(self.entity_description.source, {})
-            if isinstance(section, dict)
-            else {}
-        )
-
-        if self.entity_description.value_fn is not None:
-            value = self.entity_description.value_fn(data)
-        else:
-            value = (
-                data.get(self.entity_description.param_key)
-                if isinstance(data, dict)
-                else None
-            )
-
-        if value is None:
+        if self.entity_description.value_fn is None:
             return None
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            # API delivers UNIX timestamp in milliseconds → convert to datetime
-            return datetime.fromtimestamp(value / 1000, tz=UTC)
-        return value
+        return self.entity_description.value_fn(self.coordinator.data)

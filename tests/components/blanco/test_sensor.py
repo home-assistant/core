@@ -1,10 +1,9 @@
-"""Tests for sensor.py — BlancoSensorEntity and AQUA computed helpers."""
+"""Tests for sensor.py — BlancoSensorEntity."""
 
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from blanco_smart_home_api_client import BlancoErrorType
-import pytest
 
 from homeassistant.components.blanco.definitions import BlancoDeviceType
 from homeassistant.components.blanco.sensor import (
@@ -13,9 +12,6 @@ from homeassistant.components.blanco.sensor import (
     _DESC_ONLINE,
     SENSOR_DESCRIPTIONS_BY_TYPE,
     BlancoSensorEntity,
-    _aqua_filter_remaining_days,
-    _aqua_filter_remaining_volume,
-    _aqua_filter_rest,
 )
 from homeassistant.helpers.entity import EntityCategory
 
@@ -53,65 +49,6 @@ SAMPLE_DATA: dict = {
         "info": {},
     },
 }
-
-
-# ── AQUA computed helpers ──────────────────────────────────────────────────────
-
-
-class TestAquaFilterRemainingVolume:
-    """Tests for _aqua_filter_remaining_volume."""
-
-    def test_normal_value(self) -> None:
-        """400 000 mL consumed → 2000 - 400 = 1600 L remaining."""
-        result = _aqua_filter_remaining_volume({"filter_flow_total": 400000})
-        assert result == pytest.approx(1600.0)
-
-    def test_clamps_to_zero_when_overused(self) -> None:
-        """A value beyond the 2000 L capacity is clamped to 0."""
-        result = _aqua_filter_remaining_volume({"filter_flow_total": 3000000})
-        assert result == pytest.approx(0.0)
-
-    def test_returns_none_when_key_absent(self) -> None:
-        """Returns None when the filter_flow_total key is missing."""
-        assert _aqua_filter_remaining_volume({}) is None
-
-
-class TestAquaFilterRemainingDays:
-    """Tests for _aqua_filter_remaining_days."""
-
-    def test_normal_value(self) -> None:
-        """480 hours of age → 120 - 480/24 = 120 - 20 = 100 days remaining."""
-        result = _aqua_filter_remaining_days({"filter_age": 480})
-        assert result == pytest.approx(100.0)
-
-    def test_clamps_to_zero_when_overused(self) -> None:
-        """An age beyond the 120-day limit is clamped to 0."""
-        result = _aqua_filter_remaining_days({"filter_age": 99999})
-        assert result == pytest.approx(0.0)
-
-    def test_returns_none_when_key_absent(self) -> None:
-        """Returns None when the filter_age key is missing."""
-        assert _aqua_filter_remaining_days({}) is None
-
-
-class TestAquaFilterRest:
-    """Tests for _aqua_filter_rest."""
-
-    def test_returns_minimum_of_volume_and_days_percentages(self) -> None:
-        """Result is min(vol/2000, days/120) * 100 for the given inputs."""
-        # vol_pct = 1600/2000 = 0.8 (80%)
-        # days_pct = 100/120 ≈ 0.833 (83.3%)
-        # min → 0.8 → 80.0%
-        result = _aqua_filter_rest({"filter_flow_total": 400000, "filter_age": 480})
-        assert result == pytest.approx(80.0)
-
-    def test_returns_none_when_volume_absent(self) -> None:
-        """Returns None when filter_flow_total is missing."""
-        assert _aqua_filter_rest({"filter_age": 480}) is None
-
-    def test_returns_none_when_days_absent(self) -> None:
-        """Returns None when filter_age is missing."""
-        assert _aqua_filter_rest({"filter_flow_total": 400000}) is None
 
 
 # ── BlancoSensorEntity helpers ─────────────────────────────────────────────────
@@ -241,14 +178,6 @@ class TestSensorDescriptionsByType:
     def test_soda_excludes_water_hot(self) -> None:
         """SODA descriptions do not include the water_hot sensor."""
         assert "water_hot" not in self._keys(BlancoDeviceType.SODA)
-
-    def test_aqua_includes_filter_remaining_volume(self) -> None:
-        """AQUA descriptions include the filter_remaining_volume sensor."""
-        assert "filter_remaining_volume" in self._keys(BlancoDeviceType.AQUA)
-
-    def test_aqua_includes_filter_remaining_days(self) -> None:
-        """AQUA descriptions include the filter_remaining_days sensor."""
-        assert "filter_remaining_days" in self._keys(BlancoDeviceType.AQUA)
 
     def test_all_device_types_include_online(self) -> None:
         """Every device type includes the online sensor."""
