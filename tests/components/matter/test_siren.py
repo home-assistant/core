@@ -36,7 +36,7 @@ async def test_turn_on(
     matter_node: MatterNode,
 ) -> None:
     """Test turning on the siren."""
-    state = hass.states.get("siren.smoke_sensor")
+    state = hass.states.get("siren.smoke_sensor_siren")
     assert state
     assert state.state == "on"
 
@@ -49,14 +49,14 @@ async def test_turn_on(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("siren.smoke_sensor")
+    state = hass.states.get("siren.smoke_sensor_siren")
     assert state
     assert state.state == "off"
 
     await hass.services.async_call(
         "siren",
         "turn_on",
-        {"entity_id": "siren.smoke_sensor"},
+        {"entity_id": "siren.smoke_sensor_siren"},
         blocking=True,
     )
 
@@ -78,14 +78,14 @@ async def test_turn_off(
     matter_node: MatterNode,
 ) -> None:
     """Test turning off the siren."""
-    state = hass.states.get("siren.smoke_sensor")
+    state = hass.states.get("siren.smoke_sensor_siren")
     assert state
     assert state.state == "on"
 
     await hass.services.async_call(
         "siren",
         "turn_off",
-        {"entity_id": "siren.smoke_sensor"},
+        {"entity_id": "siren.smoke_sensor_siren"},
         blocking=True,
     )
 
@@ -116,6 +116,6 @@ async def test_unknown_state(
     )
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("siren.smoke_sensor")
+    state = hass.states.get("siren.smoke_sensor_siren")
     assert state
     assert state.state == "unknown"
