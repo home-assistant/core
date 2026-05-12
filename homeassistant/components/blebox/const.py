@@ -13,3 +13,5 @@ UNKNOWN = "unknown"
 
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80
+
+ZEROCONF_TYPE = "_bbxsrv._tcp.local."

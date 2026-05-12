@@ -58,22 +58,30 @@ def flow_feature_mock_fixture():
     )
 
 
+async def _async_start_manual_flow(hass: HomeAssistant, data: dict) -> dict:
+    """Initialize the user flow, select manual entry, and submit the given data."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    return await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+
 async def test_flow_works(
     hass: HomeAssistant, valid_feature_mock, flow_feature_mock
 ) -> None:
     """Test that config flow works."""
 
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    result = await _async_start_manual_flow(
+        hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -100,10 +108,8 @@ async def test_flow_with_connection_failure(
             side_effect=blebox_uniapi.error.ConnectionError
         )
 
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        result = await _async_start_manual_flow(
+            hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -115,10 +121,8 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
             side_effect=blebox_uniapi.error.Error
         )
 
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        result = await _async_start_manual_flow(
+            hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -129,10 +133,8 @@ async def test_flow_with_unknown_failure(
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        result = await _async_start_manual_flow(
+            hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
         )
         assert result["errors"] == {"base": "unknown"}
 
@@ -146,10 +148,8 @@ async def test_flow_with_unsupported_version(
             side_effect=blebox_uniapi.error.UnsupportedBoxVersion
         )
 
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        result = await _async_start_manual_flow(
+            hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
         )
         assert result["errors"] == {"base": "unsupported_version"}
 
@@ -161,10 +161,8 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
             side_effect=blebox_uniapi.error.UnauthorizedRequest
         )
 
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        result = await _async_start_manual_flow(
+            hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
         )
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -184,10 +182,8 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.config_entries.async_setup(config.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    result = await _async_start_manual_flow(
+        hass, {config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
@@ -220,6 +216,83 @@ async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> No
 
     assert hass.config_entries.async_entries() == []
     assert config.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_scan_flow_works(
+    hass: HomeAssistant, valid_feature_mock, flow_feature_mock
+) -> None:
+    """Test that scan flow discovers devices and creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.blebox.config_flow.async_scan_mdns",
+        return_value=[("172.2.3.4", 80)],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "scan"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_device"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {config_flow.CONF_DEVICE: "172.2.3.4:80"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My gate controller"
+    assert result["data"] == {
+        config_flow.CONF_HOST: "172.2.3.4",
+        config_flow.CONF_PORT: 80,
+    }
+
+
+async def test_scan_flow_no_devices_found(hass: HomeAssistant) -> None:
+    """Test that scan flow aborts when no devices are found."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    with patch(
+        "homeassistant.components.blebox.config_flow.async_scan_mdns",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "scan"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_scan_flow_skips_already_configured(
+    hass: HomeAssistant, valid_feature_mock
+) -> None:
+    """Test that scan flow skips hosts that are already configured."""
+    config = mock_config("172.2.3.4")
+    config.add_to_hass(hass)
+    await hass.config_entries.async_setup(config.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    with patch(
+        "homeassistant.components.blebox.config_flow.async_scan_mdns",
+        return_value=[("172.2.3.4", 80)],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "scan"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
