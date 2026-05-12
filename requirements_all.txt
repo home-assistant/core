@@ -2210,7 +2210,7 @@ pyinsteon==1.6.4
 pyintelliclima==0.3.1
 
 # homeassistant.components.intesishome
-pyintesishome==1.8.0
+pyintesishome==1.8.7
 
 # homeassistant.components.ipma
 pyipma==3.0.9
