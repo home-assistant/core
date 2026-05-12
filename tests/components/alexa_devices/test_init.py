@@ -292,12 +292,75 @@ async def test_http2_task_connection_failure_restarts(
         restarted_task,
     ]
 
-    with patch("homeassistant.components.alexa_devices.asyncio.sleep") as mock_sleep:
+    async def immediate_restart(self: Http2Manager) -> None:
+        """Skip delay and restart immediately."""
+        await self.start()
+
+    with patch.object(Http2Manager, "_restart", immediate_restart):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
-    mock_sleep.assert_called_once_with(HTTP2_RECONNECT_DELAY)
     assert mock_amazon_devices_client.start_http2_processing.call_count == 2
 
-    # Cleanup
     restarted_task.cancel()
+
+
+async def test_http2_restart_waits_and_restarts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test _restart waits then starts HTTP2 processing."""
+    coordinator = AsyncMock()
+    client = AsyncMock()
+
+    manager = Http2Manager(
+        hass,
+        mock_config_entry,
+        coordinator,
+        client,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.alexa_devices.asyncio.sleep",
+            new_callable=AsyncMock,
+        ) as mock_sleep,
+        patch.object(manager, "start", new_callable=AsyncMock) as mock_start,
+    ):
+        await manager._restart()
+
+    mock_sleep.assert_awaited_once_with(HTTP2_RECONNECT_DELAY)
+    mock_start.assert_awaited_once()
+
+
+async def test_http2_cancel_cancels_pending_restart_task(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cancel() cancels pending restart task."""
+    coordinator = AsyncMock()
+    client = AsyncMock()
+
+    manager = Http2Manager(
+        hass,
+        mock_config_entry,
+        coordinator,
+        client,
+    )
+
+    restart_started = asyncio.Event()
+
+    async def pending_restart() -> None:
+        """Long-running restart task."""
+        restart_started.set()
+        await asyncio.Future()
+
+    manager._restart_task = hass.loop.create_task(pending_restart())
+
+    await restart_started.wait()
+
+    assert not manager._restart_task.done()
+
+    await manager.cancel()
+
+    assert manager._restart_task.cancelled()
