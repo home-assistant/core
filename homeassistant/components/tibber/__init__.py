@@ -55,11 +55,16 @@ class TibberRuntimeData:
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
         if self._client is None:
+
+            async def _on_reconnect() -> None:
+                await self.async_get_client(hass)
+
             self._client = tibber.Tibber(
                 access_token=access_token,
                 websession=async_get_clientsession(hass),
                 time_zone=dt_util.get_default_time_zone(),
                 ssl=ssl_util.get_default_context(),
+                on_reconnect=_on_reconnect,
             )
         await self._client.set_access_token(access_token)
         return self._client
