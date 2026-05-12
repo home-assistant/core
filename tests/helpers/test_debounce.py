@@ -633,7 +633,7 @@ async def test_concurrent_async_call_does_not_orphan_timer(
     assert first_timer is not None
     assert not first_timer.cancelled()
 
-    # Letting the in-flight call complete schedules T2 in its finally clause.
+    # Letting the in-flight call complete schedules T2.
     can_finish.set()
     await in_flight
     second_timer = debouncer._timer_task
