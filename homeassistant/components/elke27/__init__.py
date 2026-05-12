@@ -117,11 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_start()
     await coordinator.async_refresh_now()
 
-    snapshot = hub.get_snapshot() if hasattr(hub, "get_snapshot") else None
-    if hasattr(coordinator, "async_set_updated_data"):
-        coordinator.async_set_updated_data(snapshot)
-    else:
-        coordinator.data = snapshot
     await _async_migrate_unique_ids(hass, entry, unique_base(hub, coordinator, entry))
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

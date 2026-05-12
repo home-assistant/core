@@ -435,10 +435,17 @@ class Elke27Hub:
             msg = "Code must be numeric."
             raise HomeAssistantError(msg) from err
 
-        if mode is ArmMode.ARMED_STAY:
+        if mode is ArmMode.ARMED_STAY or (
+            isinstance(mode, str) and mode.upper() == "ARMED_STAY"
+        ):
             arm_state = "ARMED_STAY"
+        elif mode is ArmMode.ARMED_NIGHT or (
+            isinstance(mode, str) and mode.upper() == "ARMED_NIGHT"
+        ):
+            arm_state = "ARMED_NIGHT"
         elif (
             mode is ArmMode.ARMED_AWAY
+            or (isinstance(mode, str) and mode.upper() == "ARMED_AWAY")
             or (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
             or getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None) is mode
         ):

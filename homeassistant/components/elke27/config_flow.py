@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import selector
 
 from .const import (
@@ -476,7 +477,9 @@ def _normalize_panel_keys(panel: dict[str, Any]) -> dict[str, Any]:
 
 
 def _panel_mac(panel_info: dict[str, Any]) -> str | None:
-    return panel_info.get("mac") or panel_info.get("panel_mac")
+    if mac := panel_info.get("mac") or panel_info.get("panel_mac"):
+        return format_mac(str(mac))
+    return None
 
 
 def _panel_name(panel_info: dict[str, Any]) -> str | None:
