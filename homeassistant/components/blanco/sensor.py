@@ -1,7 +1,5 @@
 """Sensor platform for the BLANCO integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -14,11 +12,17 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -55,7 +59,7 @@ def _aqua_filter_remaining_volume(params: dict[str, Any]) -> float | None:
     flow = params.get("filter_flow_total")
     if flow is None:
         return None
-    return round(max(0.0, 2000.0 - flow / 1000.0), 1)
+    return round(max(0.0, 2000.0 - float(flow) / 1000.0), 1)
 
 
 def _aqua_filter_remaining_days(params: dict[str, Any]) -> float | None:
@@ -63,7 +67,7 @@ def _aqua_filter_remaining_days(params: dict[str, Any]) -> float | None:
     age = params.get("filter_age")
     if age is None:
         return None
-    return round(max(0.0, 120.0 - age / 24.0), 1)
+    return round(max(0.0, 120.0 - float(age) / 24.0), 1)
 
 
 def _aqua_filter_rest(params: dict[str, Any]) -> float | None:
@@ -261,7 +265,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             identifiers={(DOMAIN, coordinator.dev_id)},
             name=system_params.get("dev_name", "BLANCO"),
             manufacturer="BLANCO",
-            model=BLANCO_DEVICE_NAMES.get(coordinator.dev_type),
+            model=BLANCO_DEVICE_NAMES.get(coordinator.dev_type) if coordinator.dev_type is not None else None,
             serial_number=coordinator.serial,
             sw_version=system_params.get("sw_ver_main_con"),
         )
@@ -292,7 +296,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
         }
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType | datetime:
         """Return the current sensor value."""
         section: Any = self.coordinator.data.get(self.entity_description.data_key, {})
         data: Any = (

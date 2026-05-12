@@ -1,7 +1,5 @@
 """The blanco integration."""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 
@@ -42,7 +40,7 @@ async def _async_ensure_app_registered(
 ) -> str:
     """Return the stored app_id, registering with the API if not yet done."""
     if app_id := entry.data.get(CONF_APP_ID):
-        return app_id
+        return str(app_id)
 
     locale = hass.config.language.split("-")[0][:2]
     session = async_get_clientsession(hass)
@@ -56,7 +54,7 @@ async def _async_ensure_app_registered(
         entry,
         data={**entry.data, CONF_APP_ID: reg["app_id"], CONF_APP_LOCALE: locale},
     )
-    return reg["app_id"]
+    return str(reg["app_id"])
 
 
 async def _async_setup_language_listener(

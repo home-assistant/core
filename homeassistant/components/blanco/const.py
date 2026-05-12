@@ -1,7 +1,5 @@
 """Constants for the BLANCO integration."""
 
-from __future__ import annotations
-
 DOMAIN = "blanco"
 
 CONF_DEV_ID = "dev_id"

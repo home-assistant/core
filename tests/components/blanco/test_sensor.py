@@ -1,7 +1,5 @@
 """Tests for sensor.py — BlancoSensorEntity and AQUA computed helpers."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 

@@ -1,9 +1,7 @@
 {
   "domain": "blanco",
   "name": "BLANCO",
-  "codeowners": [
-    "@blancoGDPD"
-  ],
+  "codeowners": ["@blancoGDPD"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/blanco",
