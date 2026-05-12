@@ -1641,6 +1641,7 @@ class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     label_field: str
     description_field: str
     translation_key: str
+    overview_labels: bool
 
 
 @SELECTORS.register("object")
@@ -1662,6 +1663,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             vol.Optional("label_field"): str,
             vol.Optional("description_field"): str,
             vol.Optional("translation_key"): str,
+            vol.Optional("overview_labels", default=False): bool,
         }
     )
 
@@ -1691,13 +1693,17 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         if isinstance(data, list) and not self.config["multiple"]:
             raise vol.Invalid("Value should not be a list")
 
-        test_data = data if isinstance(data, list) else [data]
+        test_data = deepcopy(data if isinstance(data, list) else [data])
 
         for _config in test_data:
             for field, field_data in self.config["fields"].items():
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
+                    if isinstance(field_data["selector"], Selector):
+                        field_data["selector"] = field_data["selector"].serialize()[
+                            "selector"
+                        ]
                     selector(field_data["selector"])(_config[field])  # type: ignore[operator]
 
             for key in _config:

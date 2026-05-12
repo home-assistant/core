@@ -1360,6 +1360,7 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
         "multiple": True,
         "label_field": "name",
         "description_field": "percentage",
+        "overview_labels": True,
     }
 
     # Validate selector configuration
