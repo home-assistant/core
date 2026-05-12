@@ -5,8 +5,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import DOMAIN
 
-# Removing YAML support outright would lock out users mid-migration. HTTP
-# touches every installation, so we allow a full release cycle (12 months) for
+# HTTP touches every installation, so we allow at least a full 12 months for
 # users to migrate.
 BREAKS_IN_HA_VERSION = "2027.6.0"
 
