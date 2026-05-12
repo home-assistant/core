@@ -557,8 +557,11 @@ autoskope_client==1.4.1
 # homeassistant.components.stream
 av==16.0.1
 
+# homeassistant.components.avea
+avea==1.6.1
+
 # homeassistant.components.axis
-axis==70
+axis==71
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1202,7 +1205,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==4.0.0
+infrared-protocols==5.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1

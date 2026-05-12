@@ -606,7 +606,7 @@ avea==1.6.1
 # avion==0.10
 
 # homeassistant.components.axis
-axis==70
+axis==71
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1350,7 +1350,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==4.0.0
+infrared-protocols==5.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2808,7 +2808,7 @@ pyxeoma==1.4.2
 pyyardian==1.1.1
 
 # homeassistant.components.qrcode
-pyzbar==0.1.7
+pyzbar==0.1.9
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
