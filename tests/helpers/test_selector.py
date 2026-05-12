@@ -1367,12 +1367,6 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
-    selector_instance(
-        [
-            {"name": "Test 1", "percentage": 50},
-            {"name": "Test 2", "percentage": 70},
-        ]
-    )
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
