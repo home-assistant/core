@@ -40,7 +40,8 @@ async def async_setup_entry(
         new_ids = current_ids - known_ids
         if new_ids:
             async_add_entities(
-                GlutzLock(coordinator, coordinator.data[ap_id]) for ap_id in new_ids
+                GlutzLock(coordinator, coordinator.data[ap_id])
+                for ap_id in sorted(new_ids)
             )
             known_ids.update(new_ids)
 
