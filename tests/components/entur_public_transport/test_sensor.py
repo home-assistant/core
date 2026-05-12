@@ -19,7 +19,7 @@ from homeassistant.components.entur_public_transport.const import (
     DOMAIN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
@@ -63,6 +63,20 @@ async def test_sensor_unavailable_when_no_data(
     state = hass.states.get("sensor.entur_nsr_stopplace_548_bergen_stasjon")
     # No entities should be created if no stops are returned
     assert state is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sensor_has_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor gets a stable unique ID from the config entry."""
+    entity_entry = er.async_get(hass).async_get(
+        "sensor.entur_nsr_stopplace_548_bergen_stasjon"
+    )
+
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "NSR:StopPlace:548_NSR:StopPlace:548"
 
 
 async def test_sensor_with_multiple_departures(

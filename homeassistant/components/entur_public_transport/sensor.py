@@ -148,7 +148,9 @@ async def async_setup_entry(
             given_name = f"{name} {place}"
 
         entities.append(
-            EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
+            EnturPublicTransportSensor(
+                proxy, entry.unique_id, given_name, place, show_on_map
+            )
         )
 
     async_add_entities(entities, True)
@@ -160,13 +162,23 @@ class EnturPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by entur.org under NLOD"
 
     def __init__(
-        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
+        self,
+        api: EnturProxy,
+        config_entry_unique_id: str | None,
+        name: str,
+        stop: str,
+        show_on_map: bool,
     ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
+        self._attr_unique_id = (
+            f"{config_entry_unique_id}_{stop}"
+            if config_entry_unique_id is not None
+            else stop
+        )
         self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes: dict[str, str] = {}
