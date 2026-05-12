@@ -105,11 +105,6 @@ class WanIpSensor(SensorEntity):
         self.hostname = hostname
         self.port = port
         self.nameserver = nameserver
-        self.resolver = (
-            entry.runtime_data.resolver_ipv6
-            if ipv6
-            else entry.runtime_data.resolver_ipv4
-        )
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
@@ -124,31 +119,41 @@ class WanIpSensor(SensorEntity):
             name=name,
         )
 
+    @property
+    def _resolver(self) -> aiodns.DNSResolver:
+        """Return the active DNS resolver from runtime data."""
+        resolver = (
+            self.entry.runtime_data.resolver_ipv6
+            if self.ipv6
+            else self.entry.runtime_data.resolver_ipv4
+        )
+        assert resolver is not None
+        return resolver
+
     def create_dns_resolver(self) -> None:
-        """Create the DNS resolver."""
-        self.resolver = aiodns.DNSResolver(
+        """Create a new DNS resolver and store it on runtime data."""
+        new_resolver = aiodns.DNSResolver(
             nameservers=[self.nameserver], tcp_port=self.port, udp_port=self.port
         )
-
         if self.ipv6:
-            self.entry.runtime_data.resolver_ipv6 = self.resolver
+            self.entry.runtime_data.resolver_ipv6 = new_resolver
         else:
-            self.entry.runtime_data.resolver_ipv4 = self.resolver
+            self.entry.runtime_data.resolver_ipv4 = new_resolver
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
-        if self.resolver._closed:  # noqa: SLF001
+        if self._resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
         response = None
         try:
             async with asyncio.timeout(10):
-                response = await self.resolver.query(self.hostname, self.querytype)
+                response = await self._resolver.query(self.hostname, self.querytype)
         except TimeoutError as err:
             _LOGGER.debug("Timeout while resolving host: %s", err)
-            await self.resolver.close()
+            await self._resolver.close()
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
-            await self.resolver.close()
+            await self._resolver.close()
 
         if response:
             sorted_ips = sort_ips(

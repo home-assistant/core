@@ -6,6 +6,7 @@ import logging
 
 import aiodns
 from aiodns.error import DNSError
+from pycares import AresError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
@@ -14,6 +15,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_HOSTNAME,
+    CONF_IPV4,
+    CONF_IPV6,
     CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
@@ -28,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 class DnsIPRuntimeData:
     """Runtime data for DNS IP integration."""
 
-    resolver_ipv4: aiodns.DNSResolver
-    resolver_ipv6: aiodns.DNSResolver
+    resolver_ipv4: aiodns.DNSResolver | None
+    resolver_ipv6: aiodns.DNSResolver | None
 
 
 type DnsIPConfigEntry = ConfigEntry[DnsIPRuntimeData]
@@ -39,38 +42,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
     """Set up DNS IP from a config entry."""
 
     hostname = entry.data[CONF_HOSTNAME]
+    resolver_ipv4: aiodns.DNSResolver | None = None
+    resolver_ipv6: aiodns.DNSResolver | None = None
+    queries: list = []
 
-    resolver_ipv4 = aiodns.DNSResolver(
-        nameservers=[entry.options[CONF_RESOLVER]],
-        tcp_port=entry.options[CONF_PORT],
-        udp_port=entry.options[CONF_PORT],
-    )
-    resolver_ipv6 = aiodns.DNSResolver(
-        nameservers=[entry.options[CONF_RESOLVER_IPV6]],
-        tcp_port=entry.options[CONF_PORT_IPV6],
-        udp_port=entry.options[CONF_PORT_IPV6],
-    )
+    if entry.data[CONF_IPV4]:
+        resolver_ipv4 = aiodns.DNSResolver(
+            nameservers=[entry.options[CONF_RESOLVER]],
+            tcp_port=entry.options[CONF_PORT],
+            udp_port=entry.options[CONF_PORT],
+        )
+        queries.append(resolver_ipv4.query(hostname, "A"))
+
+    if entry.data[CONF_IPV6]:
+        resolver_ipv6 = aiodns.DNSResolver(
+            nameservers=[entry.options[CONF_RESOLVER_IPV6]],
+            tcp_port=entry.options[CONF_PORT_IPV6],
+            udp_port=entry.options[CONF_PORT_IPV6],
+        )
+        queries.append(resolver_ipv6.query(hostname, "AAAA"))
+
+    async def _close_resolvers() -> None:
+        if resolver_ipv4 is not None:
+            await resolver_ipv4.close()
+        if resolver_ipv6 is not None:
+            await resolver_ipv6.close()
 
     try:
         async with asyncio.timeout(10):
-            results = await asyncio.gather(
-                resolver_ipv4.query(hostname, "A"),
-                resolver_ipv6.query(hostname, "AAAA"),
-                return_exceptions=True,
-            )
+            results = await asyncio.gather(*queries, return_exceptions=True)
     except TimeoutError as err:
-        await resolver_ipv4.close()
-        await resolver_ipv6.close()
+        await _close_resolvers()
         raise ConfigEntryNotReady(
             f"DNS lookup timed out for {hostname}: {err}"
         ) from err
 
     errors = [
-        result for result in results if isinstance(result, (TimeoutError, DNSError))
+        result
+        for result in results
+        if isinstance(
+            result, (TimeoutError, DNSError, AresError, asyncio.CancelledError)
+        )
     ]
-    if errors and len(errors) == 2:
-        await resolver_ipv4.close()
-        await resolver_ipv6.close()
+    if errors and len(errors) == len(results):
+        await _close_resolvers()
         raise ConfigEntryNotReady(
             f"DNS lookup failed for {hostname}: {errors[0]}"
         ) from errors[0]
@@ -89,8 +104,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> bo
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.resolver_ipv4.close()
-        await entry.runtime_data.resolver_ipv6.close()
+        if entry.runtime_data.resolver_ipv4 is not None:
+            await entry.runtime_data.resolver_ipv4.close()
+        if entry.runtime_data.resolver_ipv6 is not None:
+            await entry.runtime_data.resolver_ipv6.close()
     return unload_ok
 
 
