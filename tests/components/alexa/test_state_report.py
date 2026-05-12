@@ -4,6 +4,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import core
@@ -605,9 +606,12 @@ async def test_doorbell_event_binary_sensor(
 
 
 async def test_doorbell_event_for_event_entity(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test doorbell event reports."""
+    freezer.move_to("2026-05-11T19:50:47.647427+0000")
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
@@ -622,9 +626,20 @@ async def test_doorbell_event_for_event_entity(
 
     await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
 
+    # Stale event (does not trigger)
     hass.states.async_set(
         "event.test_doorbell",
-        "2026-05-11T19:50:47.647427",
+        "2026-05-11T19:40:48.1265799+00:00",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    # Event within 30 sec
+    hass.states.async_set(
+        "event.test_doorbell",
+        "2026-05-11T19:50:30.647427+00:00",
         {
             "friendly_name": "Test Doorbell Sensor",
             "device_class": "doorbell",
@@ -640,9 +655,10 @@ async def test_doorbell_event_for_event_entity(
             "event_types": ["ring"],
         },
     )
+    # Same event after being unavailable
     hass.states.async_set(
         "event.test_doorbell",
-        "2026-05-11T19:50:47.647427",
+        "2026-05-11T19:50:30.647427+00:00",
         {
             "friendly_name": "Test Doorbell Sensor",
             "device_class": "doorbell",
@@ -660,9 +676,12 @@ async def test_doorbell_event_for_event_entity(
     assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
     assert call_json["event"]["endpoint"]["endpointId"] == "event#test_doorbell"
 
+    # Later event
+    freezer.tick(35000)
+    await hass.async_block_till_done()
     hass.states.async_set(
         "event.test_doorbell",
-        "2026-05-11T20:10:30.369985",
+        f"{freezer.time_to_freeze.isoformat()}+00:00",
         {
             "friendly_name": "Test Doorbell Sensor",
             "device_class": "doorbell",

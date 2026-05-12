@@ -2,6 +2,7 @@
 
 from asyncio import timeout
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 import logging
@@ -300,6 +301,18 @@ async def async_enable_proactive_mode(
         if TYPE_CHECKING:
             assert new_state is not None
 
+        def valid_doorbell_timestamp(event_state: str) -> bool:
+            if event_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                return False
+            try:
+                timestamp = datetime.fromisoformat(event_state)
+            except ValueError:
+                return False
+            else:
+                if (dt_util.utcnow() - timestamp) < timedelta(seconds=30):
+                    return True
+                return False
+
         alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
             hass, smart_home_config, new_state
         )
@@ -322,7 +335,7 @@ async def async_enable_proactive_mode(
             old_state = data["old_state"]
             if (
                 new_state.domain == event.DOMAIN
-                and new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                and valid_doorbell_timestamp(new_state.state)
                 and (old_state is None or old_state.state != STATE_UNAVAILABLE)
             ) or (
                 new_state.state == STATE_ON
