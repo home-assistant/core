@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Samsung device has already been configured with this transmitter.",
+      "already_configured": "This device has already been configured with this transmitter.",
       "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
     },
     "step": {
@@ -11,11 +11,11 @@
           "infrared_entity_id": "Infrared transmitter"
         },
         "data_description": {
-          "device_type": "The type of Samsung device to control.",
+          "device_type": "The type of device to control.",
           "infrared_entity_id": "The infrared transmitter entity to use for sending commands."
         },
-        "description": "Select the device type and the infrared transmitter entity to use for controlling your Samsung device.",
-        "title": "Set up Samsung IR Remote"
+        "description": "Select the device type and the infrared transmitter entity to use for controlling your device.",
+        "title": "Set up Infrared Remote"
       }
     }
   },
