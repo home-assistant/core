@@ -94,6 +94,9 @@ async def test_migrate_sensor_unique_id(
     assert (old_entity_id is None) is old_unique_id_removed
     assert (old_entity_id == entity_entry.entity_id) is not old_unique_id_removed
 
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+
 
 async def test_migrate_sensor_unique_id_missing_device(
     hass: HomeAssistant,
