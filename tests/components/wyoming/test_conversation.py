@@ -18,11 +18,13 @@ from homeassistant.helpers import intent
 
 from . import HANDLE_INFO, INTENT_INFO, MockAsyncTcpClient
 
-from tests.components.conversation import MockChatLog
+from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 
 async def test_intent(
-    hass: HomeAssistant, init_wyoming_intent: ConfigEntry, mock_chat_log: MockChatLog
+    hass: HomeAssistant,
+    init_wyoming_intent: ConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test when an intent is recognized."""
     agent_id = "conversation.test_intent"
