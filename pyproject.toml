@@ -131,6 +131,7 @@ load-plugins = [
   "hass_inheritance",
   "hass_imports",
   "hass_logger",
+  "hass_no_direct_init_calls_in_tests",
   "pylint_per_file_ignores",
 ]
 persistent = false

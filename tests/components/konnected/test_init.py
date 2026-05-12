@@ -401,7 +401,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_panel) -> None:
 
     assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
     assert hass.data[konnected.DOMAIN]["devices"].get("aabbccddeeff") is not None
-    assert await konnected.async_unload_entry(hass, entry)
+    assert await konnected.async_unload_entry(hass, entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     assert hass.data[konnected.DOMAIN]["devices"] == {}
 
 

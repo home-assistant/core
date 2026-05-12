@@ -81,7 +81,7 @@ async def test_config_exceptions(
         ),
         pytest.raises(config_error),
     ):
-        await async_setup_entry(hass, config_entry)
+        await async_setup_entry(hass, config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
 
 async def test_connect_websocket_error(

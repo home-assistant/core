@@ -19,7 +19,7 @@ async def test_async_new_device_discovery_no_entry(
     """Service should raise when no config entry exists."""
 
     # Ensure the integration is set up so the service is registered
-    assert await async_setup(hass, {})
+    assert await async_setup(hass, {})  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     # No entries for the domain, service should raise
     with pytest.raises(ServiceValidationError, match="Entry not found"):
@@ -34,7 +34,7 @@ async def test_async_new_device_discovery_entry_not_loaded(
     # Add a config entry but do not set it up (state is not LOADED)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     # Ensure the integration is set up so the service is registered
-    assert await async_setup(hass, {})
+    assert await async_setup(hass, {})  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     with pytest.raises(ServiceValidationError, match="Entry not loaded"):
         await hass.services.async_call("vesync", SERVICE_UPDATE_DEVS, {}, blocking=True)

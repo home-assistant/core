@@ -647,7 +647,7 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     # Run migration
-    result = await generic_thermostat.async_migrate_entry(hass, config_entry)
+    result = await generic_thermostat.async_migrate_entry(hass, config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     assert result is True
 
     # After migration, cooldown should be set to min_cycle_duration and minor version bumped

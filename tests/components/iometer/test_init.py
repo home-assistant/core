@@ -62,6 +62,6 @@ async def test_async_setup_entry_connection_error(
     )
 
     with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config_entry)
+        await async_setup_entry(hass, mock_config_entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
 
     assert mock_iometer_client.get_current_status.await_count == 1

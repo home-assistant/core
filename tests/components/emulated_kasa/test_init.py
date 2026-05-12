@@ -425,7 +425,7 @@ async def test_multiple_devices(hass: HomeAssistant) -> None:
         "sense_energy.SenseLink",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        assert await emulated_kasa.async_setup(hass, CONFIG) is True
+        assert await emulated_kasa.async_setup(hass, CONFIG) is True  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
     await emulated_kasa.validate_configs(hass, config)
 

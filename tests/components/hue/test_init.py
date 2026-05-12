@@ -62,7 +62,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
         return True
 
     mock_bridge_setup.async_reset = mock_reset
-    assert await hue.async_unload_entry(hass, entry)
+    assert await hue.async_unload_entry(hass, entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     assert not hasattr(entry, "runtime_data")
 
 

@@ -228,6 +228,6 @@ async def test_load_unload_entry(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await gpslogger.async_unload_entry(hass, entry)
+    assert await gpslogger.async_unload_entry(hass, entry)  # pylint: disable=hass-no-direct-init-calls-in-tests
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]
