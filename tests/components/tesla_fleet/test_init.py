@@ -19,7 +19,12 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
+from homeassistant.components.tesla_fleet import async_remove_entry
+from homeassistant.components.tesla_fleet.const import (
+    DOMAIN,
+    ENERGY_HISTORY_FIELDS,
+    SCOPES,
+)
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -73,6 +78,46 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def test_remove_entry_clears_statistics(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test remove entry clears external statistics for energy sites."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Get the energy site serial numbers from the device registry before unload
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, normal_config_entry.entry_id
+    )
+    site_serial_numbers = {
+        d.serial_number
+        for d in devices
+        if d.serial_number is not None and d.serial_number.isdigit()
+    }
+
+    # Unload first (like real removal flow), which deletes runtime_data
+    await hass.config_entries.async_unload(normal_config_entry.entry_id)
+    assert not hasattr(normal_config_entry, "runtime_data")
+
+    with patch(
+        "homeassistant.components.tesla_fleet.get_recorder_instance"
+    ) as mock_get_recorder:
+        await async_remove_entry(hass, normal_config_entry)
+
+    mock_get_recorder.return_value.async_clear_statistics.assert_called_once()
+    cleared_ids = set(
+        mock_get_recorder.return_value.async_clear_statistics.call_args.args[0]
+    )
+    expected_ids = {
+        f"tesla_fleet:{serial}_{field}"
+        for serial in site_serial_numbers
+        for field in ENERGY_HISTORY_FIELDS
+    }
+    assert cleared_ids == expected_ids
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
@@ -663,6 +708,9 @@ async def test_energy_history_refresh_ratelimited(
     """Test coordinator refresh handles 429."""
 
     await setup_platform(hass, normal_config_entry)
+
+    # No call during setup since async_config_entry_first_refresh is not called
+    assert mock_energy_history.call_count == 0
 
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}

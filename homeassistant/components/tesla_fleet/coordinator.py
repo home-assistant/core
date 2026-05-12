@@ -1,8 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
 from datetime import datetime, timedelta
-from random import randint
-from time import time
 from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -16,15 +14,26 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
-from homeassistant.const import CONF_TOKEN
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
+    StatisticsRow,
+    async_add_external_statistics,
+    get_last_statistics,
+)
+from homeassistant.const import CONF_TOKEN, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
-
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
@@ -44,6 +53,52 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_CONFIG,
     VehicleDataEndpoint.LOCATION_DATA,
 ]
+
+
+def _get_last_statistics_for_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: list[str],
+) -> dict[str, list[StatisticsRow]]:
+    """Return the latest long-term statistics for each statistic ID."""
+    return {
+        statistic_id: stats
+        for statistic_id in statistic_ids
+        if (
+            stats := get_last_statistics(
+                hass,
+                1,
+                statistic_id,
+                False,
+                {"state", "sum"},
+            ).get(statistic_id)
+        )
+    }
+
+
+def _aggregate_energy_history_by_hour(
+    time_series: list[dict[str, Any]],
+) -> list[tuple[datetime, dict[str, float]]]:
+    """Aggregate energy history samples into recorder-compatible hourly buckets."""
+    hourly_periods: dict[datetime, dict[str, float]] = {}
+
+    for period in time_series:
+        timestamp_str = period.get("timestamp")
+        if not timestamp_str:
+            continue
+
+        parsed_time = dt_util.parse_datetime(timestamp_str)
+        if parsed_time is None:
+            continue
+
+        start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
+        hour_values = hourly_periods.setdefault(start, {})
+
+        for key in ENERGY_HISTORY_FIELDS:
+            if (value := period.get(key)) is None:
+                continue
+            hour_values[key] = hour_values.get(key, 0.0) + float(value)
+
+    return sorted(hourly_periods.items())
 
 
 def _invalidate_access_token(
@@ -261,28 +316,16 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             LOGGER,
             config_entry=config_entry,
             name=f"Tesla Fleet Energy History {api.energy_site_id}",
-            update_interval=timedelta(seconds=300),
+            update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
         self.data = {}
         self.updated_once = False
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Set up the data coordinator."""
-        await super().async_config_entry_first_refresh()
-
-        # Calculate seconds until next 5 minute period plus a random delay
-        delta = randint(310, 330) - (int(time()) % 300)
-        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
-        self.update_interval = timedelta(seconds=delta)
-        self._schedule_refresh()
-        self.update_interval = ENERGY_HISTORY_INTERVAL
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
-
         try:
-            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+            response = await self.api.energy_history(TeslaEnergyPeriod.DAY)
         except RateLimited as e:
             if isinstance(e.data, dict) and "after" in e.data:
                 LOGGER.warning(
@@ -301,10 +344,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-        self.updated_once = True
 
         if (
-            not data
+            not isinstance(response, dict)
+            or not isinstance((data := response.get("response")), dict)
             or not isinstance((time_series := data.get("time_series")), list)
             or not time_series
             or not isinstance((first_period := time_series[0]), dict)
@@ -316,7 +359,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 translation_key="invalid_data",
             )
 
-        # Add all time periods together
+        # Insert external statistics with historical timestamps
+        await self._insert_statistics(time_series)
+
+        # Calculate daily sums for sensor entities
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in time_series:
             for key in ENERGY_HISTORY_FIELDS:
@@ -328,7 +374,98 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         output["_period_start"] = period_start
 
+        self.updated_once = True
         return output
+
+    async def _insert_statistics(self, time_series: list[dict[str, Any]]) -> None:
+        """Insert energy history statistics at their actual historical timestamps."""
+        if not (hourly_periods := _aggregate_energy_history_by_hour(time_series)):
+            return
+
+        site_id = self.api.energy_site_id
+        recorder = get_instance(self.hass)
+        statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
+
+        # Fetch all existing last statistics in a single executor call.
+        try:
+            last_stats = await recorder.async_add_executor_job(
+                _get_last_statistics_for_statistic_ids,
+                self.hass,
+                statistic_ids,
+            )
+        except HomeAssistantError as err:
+            LOGGER.warning(
+                "Unable to fetch existing statistics for energy site %s: %s",
+                site_id,
+                err,
+            )
+            return
+
+        for key in ENERGY_HISTORY_FIELDS:
+            statistic_id = f"{DOMAIN}:{site_id}_{key}"
+            metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"Tesla energy site {site_id} {key.replace('_', ' ')}",
+                source=DOMAIN,
+                statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
+                unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            )
+            existing_stats = last_stats.get(statistic_id)
+
+            if not existing_stats:
+                # First time - start from scratch
+                LOGGER.debug(
+                    "Inserting statistics for %s for the first time", statistic_id
+                )
+                last_stats_time = None
+                running_sum = 0.0
+            else:
+                latest_stat = existing_stats[0]
+                last_stats_time = latest_stat["start"]
+                latest_sum = latest_stat.get("sum", 0.0) or 0.0
+                if any(
+                    start.timestamp() == last_stats_time and key in hour_values
+                    for start, hour_values in hourly_periods
+                ):
+                    # Re-import the latest hour if new samples have appeared for it;
+                    # recorder updates the existing row in place for the same start.
+                    latest_state = latest_stat.get("state", 0.0) or 0.0
+                    running_sum = latest_sum - latest_state
+                else:
+                    running_sum = latest_sum
+
+            statistics: list[StatisticData] = []
+
+            for start, hour_values in hourly_periods:
+                start_ts = start.timestamp()
+                if last_stats_time is not None and start_ts < last_stats_time:
+                    continue
+
+                if (state := hour_values.get(key)) is None:
+                    continue
+
+                running_sum += state
+
+                statistics.append(
+                    StatisticData(start=start, state=state, sum=running_sum)
+                )
+
+            if statistics:
+                LOGGER.debug(
+                    "Adding %s statistics for %s",
+                    len(statistics),
+                    statistic_id,
+                )
+                try:
+                    async_add_external_statistics(self.hass, metadata, statistics)
+                except HomeAssistantError as err:
+                    LOGGER.warning(
+                        "Unable to add external statistics for %s: %s",
+                        statistic_id,
+                        err,
+                    )
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):

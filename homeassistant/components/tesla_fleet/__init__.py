@@ -15,6 +15,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleFleet
 
+from homeassistant.components.recorder import get_instance as get_recorder_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
@@ -269,3 +270,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    # Build statistic IDs for energy-site devices only (numeric serial_number).
+    # Vehicle devices have alphanumeric VINs as serial_number and don't have
+    # external statistics.
+    statistic_ids = [
+        f"{DOMAIN}:{device.serial_number}_{key}"
+        for device in devices
+        if device.serial_number and device.serial_number.isdigit()
+        for key in ENERGY_HISTORY_FIELDS
+    ]
+
+    if statistic_ids:
+        get_recorder_instance(hass).async_clear_statistics(statistic_ids)
