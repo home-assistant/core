@@ -1,7 +1,10 @@
 """Test Met weather entity."""
 
+from unittest.mock import MagicMock
+
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
+from homeassistant.components.met.const import DEFAULT_NAME
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_WEATHER_DEW_POINT,
@@ -13,6 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,7 +24,9 @@ from . import init_integration
 
 
 async def test_new_config_entry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_weather: MagicMock,
 ) -> None:
     """Test the expected entities are created."""
     await hass.config_entries.flow.async_init("met", context={"source": "onboarding"})
@@ -32,7 +38,9 @@ async def test_new_config_entry(
 
 
 async def test_legacy_config_entry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_weather: MagicMock,
 ) -> None:
     """Test the expected entities are created."""
     entity_registry.async_get_or_create(
@@ -48,7 +56,7 @@ async def test_legacy_config_entry(
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
-async def test_weather(hass: HomeAssistant, mock_weather) -> None:
+async def test_weather(hass: HomeAssistant, mock_weather: MagicMock) -> None:
     """Test states of the weather."""
 
     await init_integration(hass)
@@ -67,7 +75,19 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     assert state.attributes[ATTR_WEATHER_UV_INDEX] == 1.1
 
 
-async def test_tracking_home(hass: HomeAssistant, mock_weather) -> None:
+async def test_fixed_location_uses_entry_title_as_main_entity_name(
+    hass: HomeAssistant, mock_weather: MagicMock
+) -> None:
+    """Test fixed-location weather entity uses the entry title as the entity name."""
+    await init_integration(hass)
+
+    state = hass.states.get("weather.met_no_0_1_0")
+
+    assert state
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{DEFAULT_NAME} (0, 1.0)"
+
+
+async def test_tracking_home(hass: HomeAssistant, mock_weather: MagicMock) -> None:
     """Test we track home."""
     await hass.config_entries.flow.async_init("met", context={"source": "onboarding"})
     await hass.async_block_till_done()
@@ -91,13 +111,13 @@ async def test_tracking_home(hass: HomeAssistant, mock_weather) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
-async def test_not_tracking_home(hass: HomeAssistant, mock_weather) -> None:
+async def test_not_tracking_home(hass: HomeAssistant, mock_weather: MagicMock) -> None:
     """Test when we not track home."""
 
     await hass.config_entries.flow.async_init(
         "met",
         context={"source": config_entries.SOURCE_USER},
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids("weather")) == 1
@@ -116,7 +136,9 @@ async def test_not_tracking_home(hass: HomeAssistant, mock_weather) -> None:
 
 
 async def test_remove_hourly_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_weather: MagicMock,
 ) -> None:
     """Test removing the hourly entity."""
 
@@ -135,8 +157,8 @@ async def test_remove_hourly_entity(
     await hass.config_entries.flow.async_init(
         "met",
         context={"source": config_entries.SOURCE_USER},
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
-    assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+    assert hass.states.async_entity_ids("weather") == ["weather.met_no_10_20"]
+    assert list(entity_registry.entities.keys()) == ["weather.met_no_10_20"]

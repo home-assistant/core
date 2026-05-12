@@ -1,5 +1,6 @@
 """Config flow to configure Met component."""
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -29,9 +29,35 @@ from .const import (
     CONF_TRACK_HOME,
     DEFAULT_HOME_LATITUDE,
     DEFAULT_HOME_LONGITUDE,
+    DEFAULT_NAME,
     DOMAIN,
     HOME_LOCATION_NAME,
 )
+
+
+def _location_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return config entry data for a fixed location."""
+    return {
+        CONF_LATITUDE: user_input[CONF_LATITUDE],
+        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+        CONF_ELEVATION: user_input[CONF_ELEVATION],
+    }
+
+
+def _fixed_location_title(data: Mapping[str, Any]) -> str:
+    """Return the generated title for a fixed location."""
+    return f"{DEFAULT_NAME} ({data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]})"
+
+
+def _should_update_generated_title(config_entry: ConfigEntry) -> bool:
+    """Return if the entry title still matches an integration-generated title."""
+    if not config_entry.title:
+        return True
+
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        return config_entry.title == HOME_LOCATION_NAME
+
+    return config_entry.title == _fixed_location_title(config_entry.data)
 
 
 @callback
@@ -56,7 +82,6 @@ def _get_data_schema(
     if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
         return vol.Schema(
             {
-                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
                 vol.Required(CONF_LATITUDE, default=hass.config.latitude): cv.latitude,
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
@@ -74,7 +99,6 @@ def _get_data_schema(
     # Not tracking home, default values come from config entry
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=config_entry.data.get(CONF_NAME)): str,
             vol.Required(
                 CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
             ): cv.latitude,
@@ -97,6 +121,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -105,14 +130,15 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            data = _location_data(user_input)
             if (
-                f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
+                f"{data[CONF_LATITUDE]}-{data[CONF_LONGITUDE]}"
                 not in configured_instances(self.hass)
             ):
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=_fixed_location_title(data), data=data
                 )
-            errors[CONF_NAME] = "already_configured"
+            errors["base"] = "already_configured"
 
         return self.async_show_form(
             step_id="user",
@@ -154,13 +180,16 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
         """Configure options for Met."""
 
         if user_input is not None:
-            # Update config entry with data from user input
+            data = _location_data(user_input)
+            title = (
+                _fixed_location_title(data)
+                if _should_update_generated_title(self.config_entry)
+                else self.config_entry.title
+            )
             self.hass.config_entries.async_update_entry(
-                self.config_entry, data=user_input
+                self.config_entry, data=data, title=title
             )
-            return self.async_create_entry(
-                title=self.config_entry.title, data=user_input
-            )
+            return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="init",
