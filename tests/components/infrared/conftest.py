@@ -2,22 +2,23 @@
 
 import pytest
 
-from .common import (
-    MockInfraredEmitterEntity,
-    MockInfraredEntity,
-    MockInfraredReceiverEntity,
-)
+from homeassistant.components.infrared import DATA_COMPONENT
+from homeassistant.core import HomeAssistant
+
+from .common import MockInfraredEmitterEntity, MockInfraredEntity
 
 
 @pytest.fixture(params=[MockInfraredEntity, MockInfraredEmitterEntity])
-def mock_infrared_emitter_entity(
+async def mock_infrared_emitter_entity(
+    hass: HomeAssistant,
+    init_infrared: None,
     request: pytest.FixtureRequest,
 ) -> MockInfraredEntity | MockInfraredEmitterEntity:
-    """Return a mock infrared emitter entity."""
-    return request.param("test_ir_emitter")
+    """Return a mock infrared emitter entity.
 
-
-@pytest.fixture
-def mock_infrared_receiver_entity() -> MockInfraredReceiverEntity:
-    """Return a mock infrared receiver entity."""
-    return MockInfraredReceiverEntity("test_ir_receiver")
+    This overrides the default common fixture to also test the deprecated MockInfraredEntity.
+    """
+    entity = request.param("test_ir_emitter")
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([entity])
+    return entity
