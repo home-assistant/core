@@ -991,6 +991,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "centriconnect": {
+      "name": "CentriConnect/MyPropane",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cert_expiry": {
       "integration_type": "service",
       "config_flow": true,
@@ -1706,8 +1712,8 @@
       "name": "Elgato",
       "integrations": {
         "avea": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Elgato Avea"
         },
@@ -4107,12 +4113,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "melcloud": {
-      "name": "MELCloud",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "melissa": {
       "name": "Melissa",
       "integration_type": "hub",
@@ -4321,11 +4321,22 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "mitsubishi_comfort": {
-      "name": "Mitsubishi Comfort",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+    "mitsubishi": {
+      "name": "Mitsubishi",
+      "integrations": {
+        "melcloud": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud"
+        },
+        "mitsubishi_comfort": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Mitsubishi Comfort"
+        }
+      }
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
