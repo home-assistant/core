@@ -144,15 +144,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Volkszaehler sensors from a config entry."""
-    data = entry.data
-    host: str = data[CONF_HOST]
-    port: int = data[CONF_PORT]
-    uuid: str = data[CONF_UUID]
-    title = entry.title
     conditions = SENSOR_KEYS
 
     session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
+    vz_api = VolkszaehlerData(
+        Volkszaehler(
+            session,
+            entry.data[CONF_UUID],
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+        )
+    )
 
     await vz_api.async_update()
 
@@ -160,7 +162,7 @@ async def async_setup_entry(
         raise PlatformNotReady
 
     entities = [
-        VolkszaehlerSensor(vz_api, title, description)
+        VolkszaehlerSensor(vz_api, entry.title, description)
         for description in SENSOR_TYPES
         if description.key in conditions
     ]
