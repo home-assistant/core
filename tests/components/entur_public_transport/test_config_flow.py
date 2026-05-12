@@ -117,9 +117,6 @@ async def test_user_flow_invalid_stop_id(
     assert result["description_placeholders"]["invalid_stop_ids_message"] == (
         "\n\nInvalid stop IDs: `invalid_id`"
     )
-    assert result["description_placeholders"]["invalid_stop_ids_message"] == (
-        "\n\nInvalid stop IDs: `invalid_id`"
-    )
 
     # Recover with valid input
     result = await hass.config_entries.flow.async_configure(
@@ -376,7 +373,6 @@ async def test_import_flow_invalid_stop_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_stop_id"
-    assert result["description_placeholders"]["invalid_stop_ids"] == "`invalid_id`"
     assert result["description_placeholders"]["invalid_stop_ids"] == "`invalid_id`"
 
 
