@@ -949,9 +949,7 @@ async def test_options_use_wallclock_as_timestamps(
 ) -> None:
     """Test the use_wallclock_as_timestamps option flow."""
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
-    )
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
