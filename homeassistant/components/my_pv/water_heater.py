@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MyPVConfigEntry, MyPVCoordinator
 from .const import DOMAIN
-from .entity import MyPVBaseEntity
+from .entity import MyPVDataEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +68,9 @@ class MyPVWaterHeaterEntityDescription(
     temperature_unit: str
 
 
-class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
+class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
     """Base my-PV WaterHeater."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_operation_list = [STATE_OFF, STATE_ELECTRIC]
     _attr_supported_features = (
@@ -89,12 +88,7 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         serial_number: str,
     ) -> None:
         """Initialize the water_heater."""
-        super().__init__(coordinator, entity_description.key)
-
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{serial_number}-{entity_description.key}"
-
-        self.entity_description = entity_description
+        super().__init__(coordinator, entity_description, serial_number)
 
         self._attr_target_temperature_step = entity_description.target_temperature_step
         self._attr_temperature_unit = entity_description.temperature_unit
