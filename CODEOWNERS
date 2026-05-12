@@ -196,6 +196,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/autoskope/ @mcisk
 /tests/components/autoskope/ @mcisk
 /homeassistant/components/avea/ @pattyland
+/tests/components/avea/ @pattyland
 /homeassistant/components/awair/ @ahayworth @ricohageman
 /tests/components/awair/ @ahayworth @ricohageman
 /homeassistant/components/aws_s3/ @tomasbedrich
