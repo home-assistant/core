@@ -68,7 +68,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             self._attr_supported_features = LightEntityFeature.EFFECT
         if feature.index is not None:
             self._attr_translation_key = "channel"
-            self._attr_translation_placeholders = {"index": f" {feature.index + 1}"}
+            self._attr_translation_placeholders = {"index": f"{feature.index + 1}"}
         else:
             self._attr_name = None
 

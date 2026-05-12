@@ -40,7 +40,7 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
             self._attr_name = feature.name
         elif feature.index:
             self._attr_translation_key = "relay"
-            self._attr_translation_placeholders = {"index": f" {feature.index}"}
+            self._attr_translation_placeholders = {"index": f"{feature.index}"}
         else:
             self._attr_name = None
 
