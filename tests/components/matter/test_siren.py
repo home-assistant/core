@@ -98,3 +98,24 @@ async def test_turn_off(
         ),
         value=0,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+async def test_unknown_state(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that a None attribute value results in an unknown state."""
+    set_node_attribute(
+        matter_node,
+        1,
+        HeimanCluster.id,
+        HeimanCluster.Attributes.SirenActive.attribute_id,
+        None,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("siren.smoke_sensor")
+    assert state
+    assert state.state == "unknown"

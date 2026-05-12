@@ -53,7 +53,7 @@ class MatterSiren(MatterEntity, SirenEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        self._attr_is_on = bool(value)
+        self._attr_is_on = bool(value) if value is not None else None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
