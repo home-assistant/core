@@ -11,25 +11,16 @@ BREAKS_IN_HA_VERSION = "2027.6.0"
 
 
 @callback
-def async_create_deprecated_yaml_issue(
-    hass: HomeAssistant, *, error: str | None = None
-) -> None:
+def async_create_deprecated_yaml_issue(hass: HomeAssistant) -> None:
     """Create a repair issue for deprecated YAML configuration."""
-    if error is None:
-        issue_id = "deprecated_yaml"
-        severity = IssueSeverity.WARNING
-    else:
-        issue_id = f"deprecated_yaml_import_issue_{error}"
-        severity = IssueSeverity.ERROR
-
     async_create_issue(
         hass,
         DOMAIN,
-        issue_id,
+        "deprecated_yaml",
         is_fixable=False,
         breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-        severity=severity,
-        translation_key=issue_id,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
         translation_placeholders={"domain": DOMAIN},
     )
 

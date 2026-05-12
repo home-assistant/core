@@ -65,6 +65,33 @@ async def test_update_persists_valid_config(
     assert hass_storage[USER_CONFIG_STORAGE_KEY]["data"]["server_port"] == 8124
 
 
+async def test_update_merges_partial_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    setup_http: None,
+) -> None:
+    """A partial update keeps previously stored keys."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "http/config/update",
+            "config": {"cors_allowed_origins": ["https://first.example"]},
+        }
+    )
+    await client.receive_json()
+
+    await client.send_json_auto_id(
+        {"type": "http/config/update", "config": {"server_port": 8125}}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    stored = hass_storage[USER_CONFIG_STORAGE_KEY]["data"]
+    assert stored["server_port"] == 8125
+    assert stored["cors_allowed_origins"] == ["https://first.example"]
+
+
 async def test_update_rejects_inclusive_proxy_violation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

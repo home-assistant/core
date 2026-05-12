@@ -44,19 +44,22 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         connection: websocket_api.ActiveConnection,
         msg: dict[str, Any],
     ) -> None:
-        """Replace the user-managed HTTP config after validating it."""
+        """Merge the incoming patch into the stored HTTP config and save."""
         # Local import: HTTP_SCHEMA lives in __init__.py, which already imports
         # this module to wire up the commands.
         from . import HTTP_SCHEMA  # noqa: PLC0415
 
+        store = async_get_store(hass)
+        existing = await store.async_load() or {}
+        merged = {**existing, **msg["config"]}
+
         try:
-            validated = HTTP_SCHEMA(msg["config"])
+            validated = HTTP_SCHEMA(merged)
         except vol.Invalid as err:
             connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
             return
 
         stored = to_stored(cast(dict[str, Any], validated))
-        store = async_get_store(hass)
         await store.async_save(stored)
         connection.send_result(msg["id"], {"config": stored})
 

@@ -4,10 +4,6 @@
       "description": "Your existing HTTP configuration from `configuration.yaml` has been imported. The `http` integration is now configured from the UI under **Settings** > **System** > **Network**.\n\nPlease remove the `http:` block from your `configuration.yaml` and restart Home Assistant.",
       "title": "The HTTP YAML configuration is deprecated"
     },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "Home Assistant could not import the HTTP configuration from `configuration.yaml`. The integration started with default settings.\n\nReview the values under **Settings** > **System** > **Network** and remove the `http:` block from `configuration.yaml`.",
-      "title": "Could not import the HTTP YAML configuration"
-    },
     "http_failed_to_start": {
       "description": "The stored HTTP configuration is no longer valid (for example, an SSL certificate path may have moved). Home Assistant started with default HTTP settings so you can recover access.\n\nReview the values under **Settings** > **System** > **Network**.\n\nError: `{error}`",
       "title": "HTTP configuration was rejected on startup"
