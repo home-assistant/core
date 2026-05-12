@@ -99,7 +99,7 @@ rules:
   # Gold
   devices:
     status: done
-    comment: Each Glutz server is represented as a device grouping its access points.
+    comment: Each access point is represented as its own device.
   diagnostics:
     status: done
     comment: Diagnostics endpoint implemented, redacting sensitive fields.
