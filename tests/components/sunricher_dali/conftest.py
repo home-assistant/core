@@ -314,6 +314,8 @@ def mock_gateway(
         mock_gateway.name = "Test Gateway"
         mock_gateway.username = "gateway_user"
         mock_gateway.passwd = "gateway_pass"
+        mock_gateway.software_version = "3.59"
+        mock_gateway.firmware_version = "1.45"
         mock_gateway.connect = AsyncMock()
         mock_gateway.disconnect = AsyncMock()
         mock_gateway.discover_devices = AsyncMock(return_value=mock_devices)

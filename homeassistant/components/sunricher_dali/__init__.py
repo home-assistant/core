@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Sequence
 import logging
 
+from packaging.version import InvalidVersion, Version
 from PySrDaliGateway import DaliGateway, Device
 from PySrDaliGateway.exceptions import DaliGatewayError
 
@@ -19,10 +20,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
+from .const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    MANUFACTURER,
+    MIN_SUPPORTED_FW_VERSION,
+    MIN_SUPPORTED_SW_VERSION,
+)
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [
@@ -121,7 +128,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
+    _async_check_firmware_version(hass, entry)
+
     return True
+
+
+def _async_check_firmware_version(
+    hass: HomeAssistant, entry: DaliCenterConfigEntry
+) -> None:
+    """Raise a repair issue if the gateway firmware is below supported minimums.
+
+    Version strings are populated asynchronously from the gateway's
+    ``getVersionRes`` MQTT response. If they are not yet available, the check
+    is skipped; the next setup attempt will retry.
+    """
+    gateway = entry.runtime_data.gateway
+    sw_version = gateway.software_version
+    fw_version = gateway.firmware_version
+
+    if not sw_version or not fw_version:
+        _LOGGER.debug(
+            "Gateway %s firmware version not yet reported, skipping check",
+            gateway.gw_sn,
+        )
+        return
+
+    try:
+        sw_parsed = Version(sw_version)
+        fw_parsed = Version(fw_version)
+    except InvalidVersion:
+        _LOGGER.debug(
+            "Gateway %s reported unparsable firmware version (sw=%s, fw=%s)",
+            gateway.gw_sn,
+            sw_version,
+            fw_version,
+        )
+        return
+
+    if sw_parsed < Version(MIN_SUPPORTED_SW_VERSION) or fw_parsed < Version(
+        MIN_SUPPORTED_FW_VERSION
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_firmware",
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_firmware",
+            translation_placeholders={
+                "sw_version": sw_version,
+                "fw_version": fw_version,
+                "min_sw_version": MIN_SUPPORTED_SW_VERSION,
+                "min_fw_version": MIN_SUPPORTED_FW_VERSION,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, "unsupported_firmware")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
