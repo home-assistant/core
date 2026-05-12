@@ -76,27 +76,28 @@ class ConnectMotionGateway:
 
     async def async_get_interfaces(self):
         """Get list of interface to use."""
-        interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
-        enabled_interfaces = []
-        default_interface = DEFAULT_INTERFACE
+        concrete_interfaces = []
+        wildcard_interfaces = [DEFAULT_INTERFACE, "0.0.0.0"]
 
         adapters = await network.async_get_adapters(self._hass)
         for adapter in adapters:
             if ipv4s := adapter["ipv4"]:
                 ip4 = ipv4s[0]["address"]
-                interfaces.append(ip4)
                 if adapter["enabled"]:
-                    enabled_interfaces.append(ip4)
                     if adapter["default"]:
-                        default_interface = ip4
+                        concrete_interfaces.insert(0, ip4)
+                    else:
+                        concrete_interfaces.append(ip4)
+                else:
+                    concrete_interfaces.append(ip4)
 
-        if len(enabled_interfaces) == 1:
-            default_interface = enabled_interfaces[0]
-            interfaces.remove(default_interface)
-            interfaces.insert(0, default_interface)
+        # All concrete addresses first, wildcards last
+        interfaces = concrete_interfaces + wildcard_interfaces
 
+        # Stored interface gets highest priority
         if self._interface is not None:
-            interfaces.remove(self._interface)
+            if self._interface in interfaces:
+                interfaces.remove(self._interface)
             interfaces.insert(0, self._interface)
 
         return interfaces
@@ -108,7 +109,6 @@ class ConnectMotionGateway:
             _LOGGER.debug(
                 "Checking Motionblinds interface '%s' with host %s", interface, host
             )
-            # initialize multicast listener
             check_multicast = AsyncMotionMulticast(interface=interface)
             try:
                 await check_multicast.Start_listen()
@@ -117,20 +117,18 @@ class ConnectMotionGateway:
             except OSError:
                 continue
 
-            # trigger test multicast
             self._gateway_device = MotionGateway(
                 ip=host, key=key, multicast=check_multicast
             )
+
             result = await self._hass.async_add_executor_job(self.check_interface)
 
-            # close multicast listener again
             try:
                 check_multicast.Stop_listen()
             except socket.gaierror:
                 continue
 
             if result:
-                # successfully received multicast
                 _LOGGER.debug(
                     "Success using Motionblinds interface '%s' with host %s",
                     interface,
