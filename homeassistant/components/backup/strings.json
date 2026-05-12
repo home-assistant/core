@@ -24,7 +24,6 @@
               "invalid_backup_filename": "Invalid backup filename",
               "multiple_errors": "Multiple errors",
               "password_incorrect": "Password incorrect",
-              "unknown": "Unknown",
               "unknown_error": "Unknown error",
               "upload_failed": "Upload failed"
             }
