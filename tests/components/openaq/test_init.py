@@ -82,7 +82,7 @@ async def test_setup_fetches_location_data_concurrently(
         """Return a response after all location data requests have started."""
         started.add(name)
         started_event.set()
-        await release
+        await release.wait()
         return response
 
     async def get_location(_location_id: int) -> object:
