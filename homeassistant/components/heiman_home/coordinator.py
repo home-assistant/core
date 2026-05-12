@@ -320,14 +320,16 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
 
             if not access_token:
-                _LOGGER.warning(
+                msg = (
                     "Cannot initialize MQTT: access_token not available from any source"
                 )
-                return
+                _LOGGER.warning(msg)
+                raise HeimanMQTTError(msg)
 
             if not user_id:
-                _LOGGER.warning("Cannot initialize MQTT: user_id not available")
-                return
+                msg = "Cannot initialize MQTT: user_id not available"
+                _LOGGER.warning(msg)
+                raise HeimanMQTTError(msg)
 
             # Get user display name using SDK method
             user_display_name = None

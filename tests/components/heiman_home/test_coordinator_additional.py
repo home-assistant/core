@@ -11,6 +11,7 @@ from homeassistant.components.heiman_home.coordinator import (
     DeviceProperty,
     HeimanData,
     HeimanDataUpdateCoordinator,
+    HeimanMQTTError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -122,7 +123,7 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
 
 
 async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
-    """Test MQTT init when no token available."""
+    """Test MQTT init raises error when no token available."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -155,8 +156,9 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
     )
     coordinator.oauth_session = mock_session
 
-    # Initialize MQTT - should handle exception gracefully
-    await coordinator.async_init_mqtt_client()
+    # Initialize MQTT - should raise HeimanMQTTError
+    with pytest.raises(HeimanMQTTError, match="access_token not available"):
+        await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created due to missing token
     assert coordinator.mqtt_client is None
@@ -429,7 +431,7 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
 async def test_coordinator_mqtt_init_token_none_after_validation(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init when token is None after validation."""
+    """Test MQTT init raises error when token is None after validation."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -460,8 +462,9 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
     mock_session.async_ensure_token_valid = AsyncMock()
     coordinator.oauth_session = mock_session
 
-    # Initialize MQTT - should log debug message and return
-    await coordinator.async_init_mqtt_client()
+    # Initialize MQTT - should raise HeimanMQTTError
+    with pytest.raises(HeimanMQTTError, match="access_token not available"):
+        await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created
     assert coordinator.mqtt_client is None

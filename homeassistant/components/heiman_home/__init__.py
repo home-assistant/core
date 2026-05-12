@@ -101,13 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
     entry.runtime_data = coordinator
 
-    await coordinator.async_config_entry_first_refresh()
-
-    # Initialize MQTT client after successful first refresh
     try:
+        await coordinator.async_config_entry_first_refresh()
+
+        # Initialize MQTT client after successful first refresh
         await coordinator.async_init_mqtt_client()
     except Exception:
-        # Clean up resources if MQTT initialization fails
+        # Clean up resources if first refresh or MQTT initialization fails
         mqtt_client = getattr(coordinator, "mqtt_client", None)
         if mqtt_client is not None:
             with contextlib.suppress(Exception):
@@ -120,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
                 )
         with contextlib.suppress(Exception):
             await _async_call_cleanup_method(api_client, ("async_close", "close"))
+        entry.runtime_data = None
         raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

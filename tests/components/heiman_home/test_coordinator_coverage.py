@@ -356,7 +356,7 @@ async def test_coordinator_mqtt_init_oauth2_token_path(hass: HomeAssistant) -> N
 
 
 async def test_coordinator_mqtt_init_no_user_id(hass: HomeAssistant) -> None:
-    """Test MQTT init returns early when user_id missing."""
+    """Test MQTT init raises error when user_id missing."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -379,8 +379,10 @@ async def test_coordinator_mqtt_init_no_user_id(hass: HomeAssistant) -> None:
 
     coordinator.data = HeimanData()
 
-    # Should return early without creating MQTT client
-    await coordinator.async_init_mqtt_client()
+    # Should raise HeimanMQTTError
+    with pytest.raises(HeimanMQTTError, match="user_id not available"):
+        await coordinator.async_init_mqtt_client()
+
     assert coordinator.mqtt_client is None
 
 
@@ -931,7 +933,7 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
 async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init logs debug when OAuth2 token is None."""
+    """Test MQTT init raises error when OAuth2 token is None after validation."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -959,8 +961,9 @@ async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
     mock_session.async_ensure_token_valid = AsyncMock()
     coordinator.oauth_session = mock_session
 
-    # Initialize MQTT - should log debug and return
-    await coordinator.async_init_mqtt_client()
+    # Initialize MQTT - should raise HeimanMQTTError
+    with pytest.raises(HeimanMQTTError, match="access_token not available"):
+        await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created
     assert coordinator.mqtt_client is None
@@ -969,7 +972,7 @@ async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
 async def test_coordinator_mqtt_init_no_access_token_warning(
     hass: HomeAssistant,
 ) -> None:
-    """Test MQTT init warns when no access_token available."""
+    """Test MQTT init raises error when no access_token available."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
         CONF_HOME_ID: "test-home-id",
@@ -994,8 +997,9 @@ async def test_coordinator_mqtt_init_no_access_token_warning(
     # No token in config, no oauth_session
     coordinator.oauth_session = None
 
-    # Initialize MQTT - should warn and return
-    await coordinator.async_init_mqtt_client()
+    # Initialize MQTT - should raise HeimanMQTTError
+    with pytest.raises(HeimanMQTTError, match="access_token not available"):
+        await coordinator.async_init_mqtt_client()
 
     # MQTT client should not be created
     assert coordinator.mqtt_client is None
