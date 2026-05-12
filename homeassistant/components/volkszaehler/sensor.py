@@ -116,7 +116,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml_import_issue",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Volkszaehler",
+                "integration_title": DEFAULT_NAME,
             },
             breaks_in_ha_version="2026.12.0",
         )
@@ -132,7 +132,7 @@ async def async_setup_platform(
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Volkszaehler",
+            "integration_title": DEFAULT_NAME,
         },
         breaks_in_ha_version="2026.12.0",
     )
