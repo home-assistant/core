@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +11,26 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::data_grand_lyon::config::step::user::data_description::password%]",
+          "username": "[%key:component::data_grand_lyon::config::step::user::data_description::username%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::data_grand_lyon::config::step::user::data_description::password%]",
+          "username": "[%key:component::data_grand_lyon::config::step::user::data_description::username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -81,6 +103,14 @@
           "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_all_stops": {
+      "message": "Error fetching Data Grand Lyon data: all requests failed."
     }
   }
 }

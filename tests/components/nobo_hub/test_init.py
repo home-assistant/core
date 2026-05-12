@@ -1,20 +1,18 @@
 """Tests for the Nobø Ecohub integration setup."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pynobo import nobo as pynobo_nobo
 import pytest
 
-from homeassistant.components.nobo_hub import async_setup_entry
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import SERIAL, STORED_IP
@@ -22,25 +20,6 @@ from .conftest import SERIAL, STORED_IP
 from tests.common import MockConfigEntry
 
 NEW_IP = "192.168.1.55"
-
-
-def _spec_hub(connect_exc: BaseException | None = None) -> MagicMock:
-    """Build a minimal spec'd pynobo hub for rediscovery tests."""
-    hub = MagicMock(spec=pynobo_nobo)
-    if connect_exc is not None:
-        hub.connect.side_effect = connect_exc
-    hub.hub_serial = SERIAL
-    hub.hub_info = {
-        "name": "My Eco Hub",
-        "serial": SERIAL,
-        "software_version": "115",
-        "hardware_version": "hw",
-    }
-    hub.zones = {}
-    hub.components = {}
-    hub.week_profiles = {}
-    hub.overrides = {}
-    return hub
 
 
 async def test_setup_uses_stored_ip(
@@ -62,57 +41,71 @@ async def test_setup_uses_stored_ip(
 async def test_setup_rediscovery_updates_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_nobo_class: MagicMock,
 ) -> None:
     """A failed direct connect falls back to rediscovery and persists the new IP."""
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
-        mock_cls.side_effect = [
-            _spec_hub(connect_exc=OSError("Unreachable")),
-            _spec_hub(),
-        ]
-        mock_cls.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    failing_hub = MagicMock(spec=pynobo_nobo)
+    failing_hub.connect.side_effect = OSError("Unreachable")
+    mock_nobo_class.side_effect = [failing_hub, mock_nobo_class.return_value]
+    mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.data[CONF_IP_ADDRESS] == NEW_IP
-    assert mock_cls.call_count == 2
-    assert mock_cls.call_args_list[0].kwargs["ip"] == STORED_IP
-    assert mock_cls.call_args_list[1].kwargs["ip"] == NEW_IP
+    assert mock_nobo_class.call_count == 2
+    assert mock_nobo_class.call_args_list[0].kwargs["ip"] == STORED_IP
+    assert mock_nobo_class.call_args_list[1].kwargs["ip"] == NEW_IP
 
 
-@pytest.mark.parametrize(
-    ("discovered_hubs", "second_exc", "expected_placeholders"),
-    [
-        (set(), None, {"serial": SERIAL, "ip": STORED_IP}),
-        (
-            {(NEW_IP, SERIAL)},
-            OSError("Unreachable"),
-            {"serial": SERIAL, "ip": NEW_IP},
-        ),
-    ],
-    ids=["rediscovery_empty", "rediscovered_ip_fails"],
-)
-async def test_setup_rediscovery_failure(
+async def test_setup_retries_when_rediscovery_finds_nothing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    discovered_hubs: set[tuple[str, str]],
-    second_exc: BaseException | None,
-    expected_placeholders: dict[str, str],
+    mock_nobo_class: MagicMock,
 ) -> None:
-    """Setup raises cannot_connect when rediscovery can't recover."""
+    """Setup retries with cannot_connect when the stored IP fails and rediscovery is empty."""
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
-        mock_cls.side_effect = [
-            _spec_hub(connect_exc=OSError("Unreachable")),
-            _spec_hub(connect_exc=second_exc),
-        ]
-        mock_cls.async_discover_hubs.return_value = discovered_hubs
-        with pytest.raises(ConfigEntryNotReady) as exc_info:
-            await async_setup_entry(hass, mock_config_entry)
+    failing_hub = MagicMock(spec=pynobo_nobo)
+    failing_hub.connect.side_effect = OSError("Unreachable")
+    mock_nobo_class.side_effect = [failing_hub]
+    mock_nobo_class.async_discover_hubs.return_value = set()
 
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders == expected_placeholders
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "serial": SERIAL,
+        "ip": STORED_IP,
+    }
+
+
+async def test_setup_retries_when_rediscovered_ip_also_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nobo_class: MagicMock,
+) -> None:
+    """Setup retries with cannot_connect when both the stored and rediscovered IPs fail."""
+    mock_config_entry.add_to_hass(hass)
+    first_failing_hub = MagicMock(spec=pynobo_nobo)
+    first_failing_hub.connect.side_effect = OSError("Unreachable")
+    second_failing_hub = MagicMock(spec=pynobo_nobo)
+    second_failing_hub.connect.side_effect = OSError("Unreachable")
+    mock_nobo_class.side_effect = [first_failing_hub, second_failing_hub]
+    mock_nobo_class.async_discover_hubs.return_value = {(NEW_IP, SERIAL)}
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "serial": SERIAL,
+        "ip": NEW_IP,
+    }
 
 
 @pytest.mark.parametrize(
@@ -174,7 +167,10 @@ async def test_migrate_data_drops_auto_discovered(
     await hass.async_block_till_done()
 
     assert entry.minor_version == 3
-    assert entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: STORED_IP}
+    assert entry.data == {
+        CONF_SERIAL: SERIAL,
+        CONF_IP_ADDRESS: STORED_IP,
+    }
     assert entry.options == {}
 
 
@@ -198,3 +194,33 @@ async def test_setup_registers_hub_device(
     assert device.serial_number == SERIAL
     assert device.sw_version == "115"
     assert device.hw_version == "hw"
+    assert device.connections == set()
+
+
+async def test_setup_registers_hub_device_with_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_nobo_class: MagicMock,
+) -> None:
+    """An entry with a stored MAC surfaces it via DeviceInfo.connections."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Eco Hub",
+        unique_id=SERIAL,
+        data={
+            CONF_SERIAL: SERIAL,
+            CONF_IP_ADDRESS: STORED_IP,
+            CONF_MAC: "7C8306011192",
+        },
+        version=1,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "7c:83:06:01:11:92"),
+    }

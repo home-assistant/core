@@ -1,5 +1,6 @@
 """Config flow for the Data Grand Lyon integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -25,6 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+STEP_RECONFIGURE_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_PASSWORD): str,
     }
 )
@@ -69,6 +76,64 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with new credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            if error := await self._test_connection(user_input):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of credentials."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            creds = {
+                CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            if error := await self._test_connection(creds):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_RECONFIGURE_SCHEMA,
+                user_input or reconfigure_entry.data,
+            ),
             errors=errors,
         )
 

@@ -1,5 +1,6 @@
 """Test the Data Grand Lyon config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -18,27 +19,38 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+
+@pytest.fixture
+def mock_get_tcl_passages() -> Generator[AsyncMock]:
+    """Mock get_tcl_passages in config flow validation."""
+    with patch(
+        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ) as mock:
+        yield mock
+
+
 # Main config flow tests
 
 
-async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_full_user_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_get_tcl_passages: AsyncMock,
+) -> None:
     """Test we get the form and can create an entry with credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Data Grand Lyon"
@@ -60,41 +72,110 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     ids=["connection-error", "auth-401", "http-500", "unknown"],
 )
 async def test_form_error_recovers(
-    hass: HomeAssistant, side_effect: Exception, error: str
+    hass: HomeAssistant,
+    mock_get_tcl_passages: AsyncMock,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test we show an error on API failures and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
+    mock_get_tcl_passages.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     # Recover
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
+    mock_get_tcl_passages.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
+) -> None:
+    """Test the reauth flow updates credentials on success."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ClientConnectionError(), "cannot_connect"),
+        (ClientResponseError(None, None, status=401), "invalid_auth"),
+        (ClientResponseError(None, None, status=500), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+    ids=["connection-error", "auth-401", "http-500", "unknown"],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test the reauth flow shows errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_get_tcl_passages.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_get_tcl_passages.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+    }
 
 
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -104,16 +185,87 @@ async def test_form_already_configured(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
+) -> None:
+    """Test the reconfigure flow updates credentials and preserves subentries."""
+    mock_config_entry.add_to_hass(hass)
+    original_subentries = dict(mock_config_entry.subentries)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "new-pass",
+    }
+    assert dict(mock_config_entry.subentries) == original_subentries
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ClientConnectionError(), "cannot_connect"),
+        (ClientResponseError(None, None, status=401), "invalid_auth"),
+        (ClientResponseError(None, None, status=500), "cannot_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+    ids=["connection-error", "auth-401", "http-500", "unknown"],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_tcl_passages: AsyncMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test the reconfigure flow shows errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_get_tcl_passages.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_get_tcl_passages.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "new-pass",
+    }
 
 
 # Stop subentry tests

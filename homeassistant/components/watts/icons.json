@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "mdi:weather-sunny",
+              "defrost": "mdi:snowflake",
+              "eco": "mdi:moon-waning-crescent",
+              "timer": "mdi:timer"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "activate_timer_mode": {
+      "service": "mdi:timer"
+    }
+  }
+}

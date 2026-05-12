@@ -37,20 +37,12 @@ def _departure_time(departure: TclPassage) -> datetime:
     return dt
 
 
-def _departure_icon(departure: TclPassage) -> str:
-    """Return icon based on departure type."""
-    if departure.type == TclPassageType.ESTIMATED:
-        return "mdi:clock-check-outline"
-    return "mdi:clock-outline"
-
-
 @dataclass(frozen=True, kw_only=True)
 class DataGrandLyonStopSensorEntityDescription(SensorEntityDescription):
     """Describes a Data Grand Lyon stop departure sensor entity."""
 
     departure_index: int
     value_fn: Callable[[TclPassage], StateType | datetime]
-    icon_fn: Callable[[TclPassage], str] | None = None
 
 
 STOP_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonStopSensorEntityDescription, ...] = (
@@ -60,7 +52,6 @@ STOP_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonStopSensorEntityDescription, ...] =
         device_class=SensorDeviceClass.TIMESTAMP,
         departure_index=0,
         value_fn=_departure_time,
-        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
         key="next_departure_1_direction",
@@ -82,7 +73,6 @@ STOP_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonStopSensorEntityDescription, ...] =
         device_class=SensorDeviceClass.TIMESTAMP,
         departure_index=1,
         value_fn=_departure_time,
-        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
         key="next_departure_2_direction",
@@ -106,7 +96,6 @@ STOP_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonStopSensorEntityDescription, ...] =
         device_class=SensorDeviceClass.TIMESTAMP,
         departure_index=2,
         value_fn=_departure_time,
-        icon_fn=_departure_icon,
     ),
     DataGrandLyonStopSensorEntityDescription(
         key="next_departure_3_direction",
@@ -189,13 +178,3 @@ class DataGrandLyonStopSensor(
         if departure is None:
             return None
         return self.entity_description.value_fn(departure)
-
-    @property
-    def icon(self) -> str | None:
-        """Return a dynamic icon when the description provides one."""
-        if self.entity_description.icon_fn is None:
-            return None
-        departure = self._get_departure()
-        if departure is None:
-            return None
-        return self.entity_description.icon_fn(departure)
