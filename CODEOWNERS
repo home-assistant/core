@@ -840,6 +840,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/indevolt/ @xirt
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
+/homeassistant/components/inepro_metering/ @khaledemam
+/tests/components/inepro_metering/ @khaledemam
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221
 /tests/components/influxdb/ @mdegat01 @Robbie1221
 /homeassistant/components/infrared/ @home-assistant/core

@@ -366,6 +366,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "00467768-6228-2272-4663-277478268000",
     },
     {
+        "connectable": True,
+        "domain": "inepro_metering",
+        "local_name": "IM-*",
+    },
+    {
         "connectable": False,
         "domain": "inkbird",
         "local_name": "sps",
