@@ -46,7 +46,11 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
         client = await runtime.async_get_client(hass)
 
         mock_client_cls.assert_called_once_with(
-            access_token="access-token", websession=ANY, time_zone=ANY, ssl=ANY
+            access_token="access-token",
+            websession=ANY,
+            time_zone=ANY,
+            ssl=ANY,
+            on_reconnect=ANY,
         )
         session.async_ensure_token_valid.assert_awaited_once()
         mock_client.set_access_token.assert_awaited_once_with("access-token")
