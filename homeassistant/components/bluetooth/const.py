@@ -1,7 +1,5 @@
 """Constants for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from habluetooth import (  # noqa: F401

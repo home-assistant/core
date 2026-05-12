@@ -1,7 +1,5 @@
 """Sensor platform for Miele integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -1091,7 +1089,11 @@ class MieleStatusSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return StateStatus(self.device.state_status).name
+        return (
+            StateStatus(self.device.state_status).name
+            if self._device_id in self.coordinator.data.devices
+            else None
+        )
 
     @property
     def available(self) -> bool:

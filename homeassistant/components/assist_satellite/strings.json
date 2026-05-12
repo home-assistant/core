@@ -72,19 +72,6 @@
         "id": "Answer ID",
         "sentences": "Sentences"
       }
-    },
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "services": {

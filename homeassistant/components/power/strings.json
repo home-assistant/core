@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
@@ -13,26 +14,14 @@
         "behavior": {
           "name": "[%key:component::power::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::power::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::power::common::condition_threshold_name%]"
         }
       },
       "name": "Power value"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "title": "Power",

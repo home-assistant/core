@@ -1,7 +1,5 @@
 """The SSDP integration server."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import ExitStack
 from ipaddress import IPv6Address

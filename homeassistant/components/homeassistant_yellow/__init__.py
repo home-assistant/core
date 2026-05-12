@@ -1,7 +1,5 @@
 """The Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

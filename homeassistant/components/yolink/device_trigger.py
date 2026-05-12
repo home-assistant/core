@@ -1,7 +1,5 @@
 """Provides device triggers for YoLink."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

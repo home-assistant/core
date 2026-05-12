@@ -1,7 +1,5 @@
 """Test the backups for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import ANY, Mock, patch

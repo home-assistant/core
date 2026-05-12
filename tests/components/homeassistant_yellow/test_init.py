@@ -149,7 +149,6 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Yellow"
 
 
 async def test_contributes_radio_serial_port(

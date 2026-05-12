@@ -205,31 +205,38 @@ async def test_chain_history(
 async def test_source_state_none(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
 
-    config = {
-        "sensor": [
-            {
-                "platform": "template",
-                "sensors": {
-                    "template_test": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "filter",
+                    "name": "test",
+                    "entity_id": "sensor.template_test",
+                    "filters": [
+                        {
+                            "filter": "time_simple_moving_average",
+                            "window_size": "00:01",
+                            "precision": "2",
+                        }
+                    ],
                 },
-            },
-            {
-                "platform": "filter",
-                "name": "test",
-                "entity_id": "sensor.template_test",
-                "filters": [
-                    {
-                        "filter": "time_simple_moving_average",
-                        "window_size": "00:01",
-                        "precision": "2",
-                    }
-                ],
-            },
-        ]
-    }
-    await async_setup_component(hass, "sensor", config)
+            ],
+        },
+    )
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "template_test",
+                    "state": "{{ states.sensor.test_state.state }}",
+                }
+            }
+        },
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.test_state", 0)

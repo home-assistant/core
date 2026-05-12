@@ -1,7 +1,5 @@
 """Sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, cast
@@ -467,7 +465,6 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="last_restart",
         value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
         device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
@@ -1243,7 +1240,6 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="last_restart",
         device_class=SensorDeviceClass.UPTIME,
         value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,

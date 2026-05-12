@@ -1,7 +1,5 @@
 """Support for Broadlink device time."""
 
-from __future__ import annotations
-
 from datetime import time
 from typing import Any
 

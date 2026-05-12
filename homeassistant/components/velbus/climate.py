@@ -1,7 +1,5 @@
 """Support for Velbus thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from velbusaio.channels import Temperature as VelbusTemp

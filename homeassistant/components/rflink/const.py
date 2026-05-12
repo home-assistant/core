@@ -1,7 +1,5 @@
 """Support for Rflink devices."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
