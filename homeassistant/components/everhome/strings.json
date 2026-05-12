@@ -9,7 +9,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "discovery_confirm": {
+      "zeroconf_confirm": {
         "description": "Do you want to add the everHome {name} with Serial `{serial}` to Home Assistant?",
         "title": "Set up {name}"
       },
