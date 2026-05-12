@@ -302,11 +302,18 @@ async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(
+    client = SimpleNamespace(
         async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
     )
+    hub._client = client
     assert await hub.async_arm_area(1, ArmMode.ARMED_STAY, "1234") is True
+    assert await hub.async_arm_area(1, ArmMode.ARMED_NIGHT, "1234") is True
     assert await hub.async_arm_area(1, "ARMED_CUSTOM_BYPASS", "1234") is True
+    assert await hub.async_arm_area(1, "ARMED_NIGHT", "1234") is True
+    assert any(
+        call.kwargs["arm_state"] == "ARMED_NIGHT"
+        for call in client.async_execute.await_args_list
+    )
 
     error = RuntimeError("nope")
     hub._client = SimpleNamespace(
@@ -634,7 +641,16 @@ async def test_arm_and_disarm_area_errors(
     with pytest.raises(HomeAssistantError, match="Code must be numeric"):
         await hub.async_arm_area(1, "ARMED_AWAY", pin="aa")
     with pytest.raises(HomeAssistantError, match="Arm mode is not supported"):
-        await hub.async_arm_area(1, "ARMED_NIGHT", pin="1234")
+        await hub.async_arm_area(1, "UNKNOWN_MODE", pin="1234")
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
+    )
+    assert await hub.async_arm_area(1, "ARMED_NIGHT", pin="1234") is False
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(
+            return_value=SimpleNamespace(ok=False, error=ValueError("nope"))
+        )
+    )
     with pytest.raises(HomeAssistantError):
         await hub.async_disarm_area(1, pin="1234")
 
