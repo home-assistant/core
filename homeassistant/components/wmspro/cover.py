@@ -26,7 +26,6 @@ from homeassistant.util.percentage import (
 )
 
 from . import WebControlProConfigEntry
-from .const import DOMAIN
 from .entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -145,7 +144,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_drive = self._dest.action(self._drive_action_desc)
         action_list = action_drive.prep(percentage=0)
         action_tilt = self._dest.action(self._tilt_action_desc)
-        action_list += action_tilt.prep(rotation=self._min_rotation)
+        action_list += action_tilt.prep(rotation=action_tilt.minValue)
         await action_list()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -153,7 +152,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_drive = self._dest.action(self._drive_action_desc)
         action_list = action_drive.prep(percentage=100)
         action_tilt = self._dest.action(self._tilt_action_desc)
-        action_list += action_tilt.prep(rotation=self._max_rotation)
+        action_list += action_tilt.prep(rotation=action_tilt.maxValue)
         await action_list()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -173,7 +172,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         if action["rotation"] is None:
             return None
         return 100 - ranged_value_to_percentage(
-            (self._min_rotation, self._max_rotation),
+            (action.minValue, action.maxValue),
             action["rotation"],
         )
 
@@ -181,7 +180,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
         rotation = percentage_to_ranged_value(
-            (self._min_rotation, self._max_rotation),
+            (action.minValue, action.maxValue),
             100 - kwargs[ATTR_TILT_POSITION],
         )
         await action(rotation=rotation)
@@ -189,33 +188,9 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=0)
+        await action(rotation=0)  # do NOT use minValue here!
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=self._max_rotation)
-
-    @property
-    def _min_rotation(self) -> float:
-        """Return the minimum rotation value."""
-        number_unique_id = f"{self._attr_unique_id}-rotation-min"
-        domain_data = self.hass.data.get(DOMAIN)
-        if isinstance(domain_data, dict):
-            config_entry_data = domain_data.get(self._config_entry_id, {})
-            if number_unique_id in config_entry_data:
-                return config_entry_data[number_unique_id].native_value
-        action = self._dest.action(self._tilt_action_desc)
-        return action.minValue
-
-    @property
-    def _max_rotation(self) -> float:
-        """Return the maximum rotation value."""
-        number_unique_id = f"{self._attr_unique_id}-rotation-max"
-        domain_data = self.hass.data.get(DOMAIN)
-        if isinstance(domain_data, dict):
-            config_entry_data = domain_data.get(self._config_entry_id, {})
-            if number_unique_id in config_entry_data:
-                return config_entry_data[number_unique_id].native_value
-        action = self._dest.action(self._tilt_action_desc)
-        return action.maxValue
+        await action(rotation=action.maxValue)
