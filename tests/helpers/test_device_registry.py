@@ -4914,6 +4914,61 @@ async def test_device_info_configuration_url_validation(
         )
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        "hw_version",
+        "manufacturer",
+        "model",
+        "model_id",
+        "serial_number",
+        "sw_version",
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "stored_value", "expected_log"),
+    [
+        (1.0, "1.0", "passes a non-string value of type float as {field}"),
+        ((1, 2), "(1, 2)", "passes a non-string value of type tuple as {field}"),
+        ("hw-1", "hw-1", ""),
+        (None, None, ""),
+    ],
+)
+async def test_device_info_string_field_validation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    field: str,
+    value: Any,
+    stored_value: str | None,
+    expected_log: str,
+) -> None:
+    """Test string device info fields are validated and coerced."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        identifiers={("something", "1234")},
+        name="name",
+        **{field: value},
+    )
+    assert getattr(entry, field) == stored_value
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    updated = device_registry.async_update_device(update_device.id, **{field: value})
+    assert updated is not None
+    assert getattr(updated, field) == stored_value
+
+    assert expected_log.format(field=field) in caplog.text
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_invalid_configuration_url_from_storage(
     hass: HomeAssistant,

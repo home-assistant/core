@@ -1350,7 +1350,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==4.0.0
+infrared-protocols==5.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2966,7 +2966,7 @@ sentry-sdk==2.48.0
 # homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.7.2
+serialx==1.7.3
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
