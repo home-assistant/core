@@ -1028,8 +1028,6 @@ class MQTT:
         #
         # Since we do not know if a published value is retained we need to
         # (re)subscribe, to ensure retained messages are replayed
-        import paho.mqtt.client as mqtt  # noqa: PLC0415
-
         if not self._pending_subscriptions:
             return
 
