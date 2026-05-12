@@ -68,7 +68,7 @@ FAN_MODE_MAP = {
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
-MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
+MAX_FAN_DURATION = 43200  # 12 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
 MIN_TEMP_RANGE = 1.66667
@@ -348,7 +348,7 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_set_fan_timer(self, duration: timedelta) -> None:
         """Set a short term fan timer."""
-        if FanTrait.NAME not in self._device.traits:
+        if not self.supported_features & ClimateEntityFeature.FAN_MODE:
             raise HomeAssistantError(f"Entity {self.entity_id} does not support fan")
 
         if self.hvac_mode == HVACMode.OFF:

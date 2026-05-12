@@ -2,7 +2,10 @@
 
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
@@ -23,4 +26,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vol.Required("duration"): cv.time_period,
         },
         func="async_set_fan_timer",
+        required_features=[ClimateEntityFeature.FAN_MODE],
     )

@@ -39,7 +39,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 
 from .common import (
     DEVICE_COMMAND,
@@ -1180,7 +1184,7 @@ async def test_set_fan_timer_no_fan(
     )
     await setup_platform()
 
-    with pytest.raises(HomeAssistantError, match="does not support fan"):
+    with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
             DOMAIN,
             "set_fan_timer",
@@ -1246,7 +1250,7 @@ async def test_set_fan_timer_invalid_duration(
     )
     await setup_platform()
 
-    # Duration too long (over 15 hours)
+    # Duration too long (over 12 hours)
     with pytest.raises(ValueError, match="must be between 1 and 43200 seconds"):
         await hass.services.async_call(
             DOMAIN,
