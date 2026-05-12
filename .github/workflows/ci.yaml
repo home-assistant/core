@@ -853,7 +853,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant pylint
+          mypy --num-workers=4 homeassistant pylint
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -862,7 +862,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
+          mypy --num-workers=4 $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   prepare-pytest-full:
     name: Split tests for full run

@@ -11,6 +11,7 @@ from homeassistant.exceptions import TemplateError
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
+ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
