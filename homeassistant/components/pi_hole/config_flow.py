@@ -1,7 +1,5 @@
 """Config flow to configure the Pi-hole integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any

@@ -1,7 +1,5 @@
 """The Samsung TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine, Mapping
 from functools import partial
 from typing import Any

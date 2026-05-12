@@ -1,7 +1,5 @@
 """Tests for Vizio config flow."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Generator
 from contextlib import asynccontextmanager
 from datetime import timedelta

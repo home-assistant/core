@@ -1,7 +1,5 @@
 """Test the UniFi Protect binary_sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 

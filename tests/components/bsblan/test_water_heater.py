@@ -28,7 +28,7 @@ from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "water_heater.bsb_lan"
+ENTITY_ID = "water_heater.water_heater"
 
 
 @pytest.fixture
@@ -181,7 +181,7 @@ async def test_set_invalid_operation_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: off, performance, eco",
+        match=r"Operation mode invalid_mode is not valid for water_heater\.water_heater\. Valid operation modes are: off, performance, eco",
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,

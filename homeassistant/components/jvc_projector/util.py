@@ -1,7 +1,5 @@
 """Utility helpers for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform

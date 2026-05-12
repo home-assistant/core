@@ -1,6 +1,4 @@
-"""Tests for the Denon RS232 media player platform."""
-
-from __future__ import annotations
+"""Tests for the Denon RS-232 media player platform."""
 
 from pathlib import Path
 from typing import Literal

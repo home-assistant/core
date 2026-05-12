@@ -281,6 +281,7 @@ async def test_microwave_oven(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["aqara_door_window_p2"])
 async def test_aqara_door_window_p2(
     hass: HomeAssistant,

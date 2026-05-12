@@ -1,7 +1,5 @@
 """The WebDAV integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiowebdav2.client import Client

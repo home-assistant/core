@@ -517,6 +517,26 @@ MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
         "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
     },
 }
+MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT = {
+    "a9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Purifier",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "device_class": "aqi",
+        "unit_of_measurement": "None",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/a9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SELECT_COMPONENT = {
     "fa261f6feed443e7b7d5f3fbe2a47414": {
         "platform": "select",
@@ -542,6 +562,20 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "expire_after": 30,
         "value_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
+MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL = {
+    "b0f85790a95d4889924602effff06b6e": {
+        "platform": "sensor",
+        "name": "Air quality",
+        "device_class": "aqi",
+        "entity_category": None,
+        "state_class": "measurement",
+        "state_topic": "test-topic",
+        # `unit_of_measurement` is stored as a string;
+        # it will be filtered from the config when exported or when set up.
+        "unit_of_measurement": "None",
+        "entity_picture": "https://example.com/b0f85790a95d4889924602effff06b6e",
     },
 }
 MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
@@ -793,6 +827,10 @@ MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
 }
+MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT,
+}
 MOCK_SELECT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SELECT_COMPONENT,
@@ -804,6 +842,10 @@ MOCK_SENSOR_SUBENTRY_DATA = {
 MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
+}
+MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
 }
 MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -842,7 +884,8 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
-    | MOCK_SUBENTRY_SWITCH_COMPONENT,
+    | MOCK_SUBENTRY_SWITCH_COMPONENT
+    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 
@@ -2570,7 +2613,9 @@ async def help_test_publishing_with_custom_encoding(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "cmd/test1", str(payload), 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # 2) test with utf-16 encoding
@@ -2581,7 +2626,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test2", str(payload).encode("utf-16"), 0, False
+        "cmd/test2",
+        str(payload).encode("utf-16"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2620,7 +2669,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
+        "cmd/test5",
+        tpl_output or str(payload)[0].encode("utf-8"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 

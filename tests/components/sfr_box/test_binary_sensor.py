@@ -24,10 +24,6 @@ def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with (
         patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.BINARY_SENSOR]),
-        patch(
-            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH",
-            [Platform.BINARY_SENSOR],
-        ),
         patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
     ):
         yield

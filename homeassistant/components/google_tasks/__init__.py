@@ -1,7 +1,5 @@
 """The Google Tasks integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from aiohttp import ClientError, ClientResponseError

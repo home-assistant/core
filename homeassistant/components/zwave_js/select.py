@@ -1,7 +1,5 @@
 """Support for Z-Wave controls using the select platform."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass

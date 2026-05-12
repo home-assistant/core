@@ -1,6 +1,5 @@
 """Support for Traccar device tracking."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
