@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,30 +27,44 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     DOMAIN = DOMAIN
     _host: str | None = None
+    _locks: list[dict[str, Any]]
+    _api_token: str | None = None
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._locks = []
 
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect."""
 
-        # 1. Checking loqed-connection
-        try:
-            session = async_get_clientsession(hass)
+        session = async_get_clientsession(hass)
+        if self._locks and not self._host:
+            # Reuse the lock list already fetched during manual setup to
+            # avoid a duplicate cloud request.
+            lock_data = {"data": self._locks}
+        else:
+            # 1. Checking loqed-connection
             cloud_api_client = cloud_loqed.CloudAPIClient(
                 session,
                 data[CONF_API_TOKEN],
             )
             cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
-            lock_data = await cloud_client.async_get_locks()
-        except aiohttp.ClientError as err:
-            _LOGGER.error("HTTP Connection error to loqed API")
-            raise CannotConnect from err
+
+            try:
+                lock_data = await cloud_client.async_get_locks()
+            except aiohttp.ClientError as err:
+                _LOGGER.error("HTTP Connection error to loqed API")
+                raise CannotConnect from err
 
         try:
+            match_key, match_value = (
+                ("bridge_ip", self._host) if self._host else ("id", data.get("lock_id"))
+            )
             selected_lock = next(
-                lock
-                for lock in lock_data["data"]
-                if lock["bridge_ip"] == self._host or lock["name"] == data.get("name")
+                lock for lock in lock_data["data"] if lock[match_key] == match_value
             )
 
             apiclient = loqed.APIClient(session, f"http://{selected_lock['bridge_ip']}")
@@ -73,11 +87,11 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": selected_lock["name"],
                 "id": selected_lock["id"],
             }
-        except StopIteration:
-            raise InvalidAuth from StopIteration
-        except aiohttp.ClientError:
+        except StopIteration as err:
+            raise InvalidAuth from err
+        except aiohttp.ClientError as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
-            raise CannotConnect from aiohttp.ClientError
+            raise CannotConnect from err
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -101,19 +115,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show userform to user."""
-        user_data_schema = (
-            vol.Schema(
-                {
-                    vol.Required(CONF_API_TOKEN): str,
-                }
-            )
-            if self._host
-            else vol.Schema(
-                {
-                    vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_API_TOKEN): str,
-                }
-            )
+        user_data_schema = vol.Schema(
+            {
+                vol.Required(CONF_API_TOKEN): str,
+            }
         )
 
         if user_input is None:
@@ -126,6 +131,39 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+
+        # If no Zeroconf discovery and no selected lock, we need to fetch locks and show picker
+        if not self._host and not user_input.get("lock_id"):
+            session = async_get_clientsession(self.hass)
+            cloud_api_client = cloud_loqed.CloudAPIClient(
+                session,
+                user_input[CONF_API_TOKEN],
+            )
+            cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
+
+            try:
+                lock_data = await cloud_client.async_get_locks()
+                self._locks = lock_data["data"]
+                self._api_token = user_input[CONF_API_TOKEN]
+            except aiohttp.ClientError:
+                errors["base"] = "cannot_connect"
+            else:
+                if not self._locks:
+                    errors["base"] = "no_locks"
+                elif len(self._locks) == 1:
+                    user_input["lock_id"] = self._locks[0]["id"]
+                else:
+                    return await self.async_step_pick_lock()
+
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=user_data_schema,
+                errors=errors,
+                description_placeholders={
+                    "config_url": "https://integrations.loqed.com/personal-access-tokens",
+                },
+            )
 
         try:
             info = await self.validate_input(self.hass, user_input)
@@ -143,10 +181,12 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title="LOQED Touch Smart Lock",
-                data=(
-                    user_input | {CONF_WEBHOOK_ID: webhook.async_generate_id()} | info
-                ),
+                title=info["name"],
+                data={
+                    CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    CONF_WEBHOOK_ID: webhook.async_generate_id(),
+                    **info,
+                },
             )
 
         return self.async_show_form(
@@ -156,6 +196,25 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "config_url": "https://integrations.loqed.com/personal-access-tokens",
             },
+        )
+
+    async def async_step_pick_lock(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle lock selection when multiple locks are available."""
+        if user_input is not None:
+            user_input[CONF_API_TOKEN] = self._api_token
+            return await self.async_step_user(user_input)
+
+        lock_options = {lock["id"]: lock["name"] for lock in self._locks}
+
+        return self.async_show_form(
+            step_id="pick_lock",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("lock_id"): vol.In(lock_options),
+                }
+            ),
         )
 
 
