@@ -1,19 +1,11 @@
-"""Common fixtures for the Infrared tests."""
+"""Common test tools for the Infrared integration."""
 
 from infrared_protocols.commands import Command as InfraredCommand
-import pytest
 
-from homeassistant.components.infrared import InfraredEntity
+from homeassistant.components.infrared import DATA_COMPONENT, InfraredEntity
 from homeassistant.components.infrared.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-
-@pytest.fixture
-async def init_integration(hass: HomeAssistant) -> None:
-    """Set up the Infrared integration for testing."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
 
 class MockInfraredEntity(InfraredEntity):
@@ -32,7 +24,17 @@ class MockInfraredEntity(InfraredEntity):
         self.send_command_calls.append(command)
 
 
-@pytest.fixture
-def mock_infrared_entity() -> MockInfraredEntity:
-    """Return a mock infrared entity."""
-    return MockInfraredEntity("test_ir_transmitter")
+async def init_infrared_fixture_helper(hass: HomeAssistant) -> None:
+    """Set up the Infrared integration for testing."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
+async def mock_infrared_entity_fixture_helper(
+    hass: HomeAssistant,
+) -> MockInfraredEntity:
+    """Add a mock infrared entity to the running integration."""
+    entity = MockInfraredEntity("test_ir_transmitter")
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([entity])
+    return entity

@@ -141,25 +141,33 @@ async def test_all_commands(
     await hass.services.async_call(
         vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
-    mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "start", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        COMMAND_TOPIC, "start", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
         vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
-    mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "stop", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        COMMAND_TOPIC, "stop", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
         vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
-    mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "pause", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        COMMAND_TOPIC, "pause", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
         vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
-    mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "locate", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        COMMAND_TOPIC, "locate", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -169,7 +177,7 @@ async def test_all_commands(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        COMMAND_TOPIC, "clean_spot", 0, False
+        COMMAND_TOPIC, "clean_spot", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -180,19 +188,19 @@ async def test_all_commands(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        COMMAND_TOPIC, "return_to_base", 0, False
+        COMMAND_TOPIC, "return_to_base", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_set_fan_speed(hass, "medium", "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_called_once_with(
-        "vacuum/set_fan_speed", "medium", 0, False
+        "vacuum/set_fan_speed", "medium", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_send_command(hass, "44 FE 93", entity_id="vacuum.mqtttest")
     mqtt_mock.async_publish.assert_called_once_with(
-        "vacuum/send_command", "44 FE 93", 0, False
+        "vacuum/send_command", "44 FE 93", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -399,7 +407,9 @@ async def test_clean_segments_command(
 
     await common.async_clean_area(hass, ["Nabu Casa"], entity_id="vacuum.test")
     assert (
-        call("vacuum/clean_segment", '["1","2"]', 0, False)
+        call(
+            "vacuum/clean_segment", '["1","2"]', 0, False, message_expiry_interval=None
+        )
         in mqtt_mock.async_publish.mock_calls
     )
     await hass.async_block_till_done()
@@ -481,7 +491,7 @@ async def test_clean_segments_command_template(
         hass, ["Livingroom", "Kitchen"], entity_id="vacuum.test"
     )
     assert (
-        call("vacuum/clean_segment", "1;2", 0, False)
+        call("vacuum/clean_segment", "1;2", 0, False, message_expiry_interval=None)
         in mqtt_mock.async_publish.mock_calls
     )
 
