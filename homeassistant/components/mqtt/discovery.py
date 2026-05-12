@@ -708,7 +708,7 @@ async def async_start(  # noqa: C901
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),
-                0,
+                discovery_qos,
                 job_type=HassJobType.Coroutinefunction,
             )
             for integration, topics in mqtt_integrations.items()
