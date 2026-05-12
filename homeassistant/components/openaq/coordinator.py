@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import Any, cast
 
 import httpx
-from openaq import AsyncOpenAQ
+from openaq import ApiKeyMissingError, AsyncOpenAQ, ForbiddenError, NotAuthorizedError
 from openaq.shared.exceptions import APIError, OpenAQError
 from openaq.shared.responses import (
     Coordinates,
@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location as location_util
@@ -120,16 +121,16 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     return parameter.name.lower().replace(".", "").replace("_", "")
 
 
-def _as_float(value: object) -> float | None:
+def _as_float(value: float | None) -> float | None:
     """Return value as a float when it is a numeric sensor value."""
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if value is None or isinstance(value, bool):
         return None
     return float(value)
 
 
-def _normalize_unit(unit: object) -> str | None:
+def _normalize_unit(unit: str | None) -> str | None:
     """Normalize an OpenAQ unit string to Home Assistant's canonical unit."""
-    if not isinstance(unit, str):
+    if unit is None:
         return None
     return OPENAQ_UNIT_ALIASES.get(unit, unit)
 
@@ -235,6 +236,10 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 location = self._location
                 sensors = self._sensors
                 latest_response = await self.client.locations.latest(self.location_id)
+        except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
+            raise ConfigEntryError(
+                f"Authentication failed for location {self.location_id}: {err}"
+            ) from err
         except (APIError, OpenAQError, httpx.HTTPError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
