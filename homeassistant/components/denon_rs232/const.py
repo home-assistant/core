@@ -1,4 +1,4 @@
-"""Constants for the Denon RS232 integration."""
+"""Constants for the Denon RS-232 integration."""
 
 import logging
 

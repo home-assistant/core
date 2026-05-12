@@ -30,7 +30,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.helpers.typing import VolDictType
 
 from .bridge import AsusWrtBridge
 from .const import (
@@ -142,20 +141,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input = self._config_data
 
-        add_schema: VolDictType
-        if self.show_advanced_options:
-            add_schema = {
-                vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
-                vol.Optional(CONF_PORT): cv.port,
-                vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
-            }
-        else:
-            add_schema = {vol.Required(CONF_PASSWORD): str}
-
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            **add_schema,
+            vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
+            vol.Optional(CONF_PORT): cv.port,
+            vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
             vol.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),

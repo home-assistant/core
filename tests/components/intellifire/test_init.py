@@ -1,8 +1,10 @@
 """Test the IntelliFire config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from intellifire4py.const import IntelliFireApiMode
+import pytest
 
 from homeassistant.components.intellifire import CONF_USER_ID
 from homeassistant.components.intellifire.const import (
@@ -159,22 +161,28 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_connectivity_bad(
+@pytest.mark.parametrize(
+    "setup_error",
+    [aiohttp.ClientConnectionError, ConnectionError, TimeoutError],
+)
+async def test_connectivity_error_during_setup_retries(
     hass: HomeAssistant,
-    mock_config_entry_current,
-    mock_apis_single_fp,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
+    setup_error: type[Exception],
 ) -> None:
-    """Test a timeout error on the setup flow."""
+    """Test a connection error during setup retries the config entry."""
 
     with patch(
         "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
         new_callable=AsyncMock,
-        side_effect=TimeoutError,
+        side_effect=setup_error,
     ):
         mock_config_entry_current.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
 
         await hass.async_block_till_done()
+        assert mock_config_entry_current.state is ConfigEntryState.SETUP_RETRY
         assert len(hass.states.async_all()) == 0
 
 

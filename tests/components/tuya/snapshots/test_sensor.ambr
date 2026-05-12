@@ -963,7 +963,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'charge',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -982,7 +987,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -997,7 +1002,12 @@
 # name: test_platform_setup_and_discovery[sensor.aqi_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'AQI Battery state',
+      'options': list([
+        'normal',
+        'charge',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqi_battery_state',
@@ -2050,6 +2060,123 @@
     'state': '90.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_last_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.balkonbewasserung_last_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last watering time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Last watering time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_watering_time',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfsuse_time_one',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_last_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'balkonbewässerung Last watering time',
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.balkonbewasserung_last_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '52.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.balkonbewasserung_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_status',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfswork_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'balkonbewässerung Status',
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.balkonbewasserung_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.basement_temperature_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2801,7 +2928,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2820,7 +2952,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -2835,7 +2967,12 @@
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Battery state',
+      'options': list([
+        'low',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state',
@@ -8024,7 +8161,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8043,7 +8186,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -8058,7 +8201,13 @@
 # name: test_platform_setup_and_discovery[sensor.frysen_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Frysen Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.frysen_battery_state',
@@ -8770,6 +8919,123 @@
     'state': '100.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.garden_valve_yard_last_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garden_valve_yard_last_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last watering time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Last watering time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_watering_time',
+    'unique_id': 'tuya.ggimpv4dqzkfsuse_time_one',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garden_valve_yard_last_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Garden Valve Yard Last watering time',
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_valve_yard_last_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '237.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garden_valve_yard_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garden_valve_yard_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_status',
+    'unique_id': 'tuya.ggimpv4dqzkfswork_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garden_valve_yard_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Garden Valve Yard Status',
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_valve_yard_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.garden_valve_yard_total_watering_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -8884,7 +9150,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8903,7 +9175,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -8918,7 +9190,13 @@
 # name: test_platform_setup_and_discovery[sensor.greenhouse_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Greenhouse Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.greenhouse_battery_state',
@@ -9683,7 +9961,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -9702,7 +9986,7 @@
     'object_id_base': 'Liquid state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Liquid state',
     'platform': 'tuya',
@@ -9717,7 +10001,13 @@
 # name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'House Water Level Liquid state',
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.house_water_level_liquid_state',
@@ -9788,7 +10078,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -9807,7 +10103,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -9822,7 +10118,13 @@
 # name: test_platform_setup_and_discovery[sensor.humid_pelargonia_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'humid pelargonia Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humid_pelargonia_battery_state',
@@ -10527,7 +10829,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10546,7 +10854,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -10561,7 +10869,13 @@
 # name: test_platform_setup_and_discovery[sensor.ifs_std002_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'IFS-STD002 Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ifs_std002_battery_state',
@@ -10980,6 +11294,60 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_pool_heat_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_current',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverter Pool Heat Pump Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_pool_heat_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-22.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.ion1000pro_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -11394,7 +11762,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -11413,7 +11787,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -11428,7 +11802,13 @@
 # name: test_platform_setup_and_discovery[sensor.jie_hashui_fa_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': '接HA水阀 Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.jie_hashui_fa_battery_state',
@@ -11444,7 +11824,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'great',
+        'good',
+        'medium',
+        'severe',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -11463,7 +11850,7 @@
     'object_id_base': 'Air quality',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Air quality',
     'platform': 'tuya',
@@ -11478,7 +11865,14 @@
 # name: test_platform_setup_and_discovery[sensor.kalado_air_purifier_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Kalado Air Purifier Air quality',
+      'options': list([
+        'great',
+        'good',
+        'medium',
+        'severe',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kalado_air_purifier_air_quality',
@@ -11770,7 +12164,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'sleep',
+        'uv',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -11789,7 +12189,7 @@
     'object_id_base': 'Status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -11804,7 +12204,13 @@
 # name: test_platform_setup_and_discovery[sensor.kattenbak_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Kattenbak Status',
+      'options': list([
+        'standby',
+        'sleep',
+        'uv',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kattenbak_status',
@@ -12061,7 +12467,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -12080,7 +12492,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -12095,7 +12507,13 @@
 # name: test_platform_setup_and_discovery[sensor.kippenluik_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Kippenluik Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kippenluik_battery_state',
@@ -14818,7 +15236,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14837,7 +15261,7 @@
     'object_id_base': 'Air quality index',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Air quality index',
     'platform': 'tuya',
@@ -14852,7 +15276,13 @@
 # name: test_platform_setup_and_discovery[sensor.mt15_mt29_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'MT15/MT29 Air quality index',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mt15_mt29_air_quality_index',
@@ -16555,7 +16985,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16574,7 +17010,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16589,7 +17025,13 @@
 # name: test_platform_setup_and_discovery[sensor.patates_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Patates Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patates_battery_state',
@@ -16886,7 +17328,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16905,7 +17353,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16920,7 +17368,13 @@
 # name: test_platform_setup_and_discovery[sensor.pir_outside_stairs_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'PIR outside stairs Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pir_outside_stairs_battery_state',
@@ -17052,7 +17506,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17071,7 +17531,7 @@
     'object_id_base': 'Water level',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Water level',
     'platform': 'tuya',
@@ -17086,7 +17546,13 @@
 # name: test_platform_setup_and_discovery[sensor.pixi_smart_drinking_fountain_water_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'PIXI Smart Drinking Fountain Water level',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_level',
@@ -17385,7 +17851,11 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'sleep',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17404,7 +17874,7 @@
     'object_id_base': 'Status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -17419,7 +17889,11 @@
 # name: test_platform_setup_and_discovery[sensor.poopy_nano_2_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Poopy Nano 2 Status',
+      'options': list([
+        'sleep',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poopy_nano_2_status',
@@ -17943,7 +18417,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17962,7 +18442,7 @@
     'object_id_base': 'Liquid state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Liquid state',
     'platform': 'tuya',
@@ -17977,7 +18457,13 @@
 # name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rainwater Tank Level Liquid state',
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rainwater_tank_level_liquid_state',
@@ -18234,7 +18720,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18253,7 +18745,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -18268,7 +18760,13 @@
 # name: test_platform_setup_and_discovery[sensor.rat_trap_hedge_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'rat trap hedge Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rat_trap_hedge_battery_state',
@@ -18284,7 +18782,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18303,7 +18807,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -18318,7 +18822,13 @@
 # name: test_platform_setup_and_discovery[sensor.rauchmelder_alexsandro_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rauchmelder Alexsandro  Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rauchmelder_alexsandro_battery_state',
@@ -18334,7 +18844,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18353,7 +18869,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -18368,7 +18884,13 @@
 # name: test_platform_setup_and_discovery[sensor.rauchmelder_drucker_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rauchmelder Drucker Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rauchmelder_drucker_battery_state',
@@ -19060,7 +19582,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'work',
+        'standby',
+        'charging',
+        'charge_done',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19079,7 +19608,7 @@
     'object_id_base': 'Status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -19094,7 +19623,14 @@
 # name: test_platform_setup_and_discovery[sensor.smart_odor_eliminator_pro_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Smart Odor Eliminator-Pro Status',
+      'options': list([
+        'work',
+        'standby',
+        'charging',
+        'charge_done',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_odor_eliminator_pro_status',
@@ -19153,6 +19689,123 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_water_timer_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smart_water_timer_last_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_water_timer_last_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last watering time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Last watering time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_watering_time',
+    'unique_id': 'tuya.bl5cuqxnqzkfsuse_time_one',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smart_water_timer_last_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Smart Water Timer Last watering time',
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_water_timer_last_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smart_water_timer_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_water_timer_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_status',
+    'unique_id': 'tuya.bl5cuqxnqzkfswork_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smart_water_timer_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Smart Water Timer Status',
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_water_timer_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -19387,7 +20040,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19406,7 +20065,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -19421,7 +20080,13 @@
 # name: test_platform_setup_and_discovery[sensor.smoke_alarm_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Smoke Alarm Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smoke_alarm_battery_state',
@@ -19545,7 +20210,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19564,7 +20235,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -19579,7 +20250,13 @@
 # name: test_platform_setup_and_discovery[sensor.smoke_detector_upstairs_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': ' Smoke detector upstairs  Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smoke_detector_upstairs_battery_state',
@@ -20129,7 +20806,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20148,7 +20831,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -20163,7 +20846,13 @@
 # name: test_platform_setup_and_discovery[sensor.solar_zijpad_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Solar zijpad Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solar_zijpad_battery_state',
@@ -20465,7 +21154,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'cooking',
+        'done',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20484,7 +21179,7 @@
     'object_id_base': 'Status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -20499,7 +21194,13 @@
 # name: test_platform_setup_and_discovery[sensor.sous_vide_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Sous Vide Status',
+      'options': list([
+        'standby',
+        'cooking',
+        'done',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sous_vide_status',
@@ -20750,13 +21451,617 @@
     'state': '238.1',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_a_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase A current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase A current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_current',
+    'unique_id': 'tuya.ifiw20mpsqldphase_aelectriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'SPM02_WiFi Phase A current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_a_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.255',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_a_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase A power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase A power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_power',
+    'unique_id': 'tuya.ifiw20mpsqldphase_apower',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'SPM02_WiFi Phase A power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_a_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.006',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_a_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase A voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase A voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_voltage',
+    'unique_id': 'tuya.ifiw20mpsqldphase_avoltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_a_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'SPM02_WiFi Phase A voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_a_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '227.1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_b_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase B current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase B current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_current',
+    'unique_id': 'tuya.ifiw20mpsqldphase_belectriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'SPM02_WiFi Phase B current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_b_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.952',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_b_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase B power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase B power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_power',
+    'unique_id': 'tuya.ifiw20mpsqldphase_bpower',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'SPM02_WiFi Phase B power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_b_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.16',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_b_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase B voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase B voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_voltage',
+    'unique_id': 'tuya.ifiw20mpsqldphase_bvoltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_b_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'SPM02_WiFi Phase B voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_b_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '232.5',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_c_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase C current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase C current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_current',
+    'unique_id': 'tuya.ifiw20mpsqldphase_celectriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'SPM02_WiFi Phase C current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_c_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.388',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_c_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase C power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase C power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_power',
+    'unique_id': 'tuya.ifiw20mpsqldphase_cpower',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'SPM02_WiFi Phase C power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_c_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.94',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_phase_c_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase C voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase C voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_voltage',
+    'unique_id': 'tuya.ifiw20mpsqldphase_cvoltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_phase_c_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'SPM02_WiFi Phase C voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_phase_c_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '225.6',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spm02_wifi_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy',
+    'unique_id': 'tuya.ifiw20mpsqldtotal_forward_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.spm02_wifi_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'SPM02_WiFi Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spm02_wifi_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22018.77',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.steel_cage_door_battery_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20775,7 +22080,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -20790,7 +22095,13 @@
 # name: test_platform_setup_and_discovery[sensor.steel_cage_door_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Steel cage door Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.steel_cage_door_battery_state',
@@ -22916,6 +24227,123 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_last_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.valve_controller_2_last_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last watering time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Last watering time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_watering_time',
+    'unique_id': 'tuya.kx8dncf1qzkfsuse_time_one',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_last_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Valve Controller 2 Last watering time',
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_controller_2_last_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.valve_controller_2_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_status',
+    'unique_id': 'tuya.kx8dncf1qzkfswork_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Valve Controller 2 Status',
+      'options': list([
+        'auto',
+        'manual',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_controller_2_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.valve_controller_2_total_watering_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -25005,7 +26433,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -25024,7 +26458,7 @@
     'object_id_base': 'Battery state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -25039,7 +26473,13 @@
 # name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'WiFi Temperature & Humidity Sensor Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery_state',
