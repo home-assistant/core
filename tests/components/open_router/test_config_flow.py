@@ -1,9 +1,10 @@
 """Test the OpenRouter config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+import httpx
+from openrouter.errors import OpenRouterError
 import pytest
-from python_open_router import OpenRouterError
 
 from homeassistant.components.open_router.const import (
     CONF_PROMPT,
@@ -18,6 +19,15 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import get_subentry_id, setup_integration
 
 from tests.common import MockConfigEntry
+
+
+def _make_openrouter_error(message: str) -> OpenRouterError:
+    """Create an OpenRouterError with a mock response."""
+    response = MagicMock(spec=httpx.Response)
+    response.status_code = 400
+    response.text = message
+    response.headers = httpx.Headers()
+    return OpenRouterError(message, response)
 
 
 async def test_full_flow(
@@ -69,7 +79,7 @@ async def test_second_account(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (OpenRouterError("exception"), "cannot_connect"),
+        (_make_openrouter_error("exception"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -85,7 +95,7 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_open_router_client.get_key_data.side_effect = exception
+    mock_open_router_client.api_keys.get_current_key_metadata.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -95,7 +105,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_open_router_client.get_key_data.side_effect = None
+    mock_open_router_client.api_keys.get_current_key_metadata.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -230,6 +240,7 @@ async def test_create_ai_task(
     assert result["step_id"] == "init"
 
     assert result["data_schema"].schema["model"].config["options"] == [
+        {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
     ]
 
@@ -248,7 +259,7 @@ async def test_create_ai_task(
 )
 @pytest.mark.parametrize(
     ("exception", "reason"),
-    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+    [(_make_openrouter_error("exception"), "cannot_connect"), (Exception, "unknown")],
 )
 async def test_subentry_exceptions(
     hass: HomeAssistant,
@@ -262,7 +273,7 @@ async def test_subentry_exceptions(
     """Test subentry flow exceptions."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_open_router_client.get_models.side_effect = exception
+    mock_open_router_client.models.list.side_effect = exception
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, subentry_type),
@@ -359,7 +370,7 @@ async def test_reconfigure_entry_not_loaded(
 
 @pytest.mark.parametrize(
     ("exception", "reason"),
-    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+    [(_make_openrouter_error("exception"), "cannot_connect"), (Exception, "unknown")],
 )
 async def test_reconfigure_conversation_agent_abort(
     hass: HomeAssistant,
@@ -374,7 +385,7 @@ async def test_reconfigure_conversation_agent_abort(
 
     subentry_id = get_subentry_id(mock_config_entry, "conversation")
 
-    mock_open_router_client.get_models.side_effect = exception
+    mock_open_router_client.models.list.side_effect = exception
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.ABORT
@@ -383,7 +394,7 @@ async def test_reconfigure_conversation_agent_abort(
 
 @pytest.mark.parametrize(
     ("exception", "reason"),
-    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+    [(_make_openrouter_error("exception"), "cannot_connect"), (Exception, "unknown")],
 )
 async def test_reconfigure_ai_task_abort(
     hass: HomeAssistant,
@@ -399,7 +410,7 @@ async def test_reconfigure_ai_task_abort(
     subentry_id = get_subentry_id(mock_config_entry, "ai_task_data")
 
     # Trigger an error during reconfiguration
-    mock_open_router_client.get_models.side_effect = exception
+    mock_open_router_client.models.list.side_effect = exception
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.ABORT
