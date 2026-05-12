@@ -128,6 +128,7 @@ class RyseCoverEntity(CoverEntity):
                     _LOGGER.debug("Failed to pair with device, skipping update")
                 self._attr_available = False
                 return
+            self._attr_available = True
         else:
             self._attr_available = True
 
