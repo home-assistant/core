@@ -26,9 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_UUID): str,
+        vol.Required(CONF_UUID): cv.string,
     }
 )
 
