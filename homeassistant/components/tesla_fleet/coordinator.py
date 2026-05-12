@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    InternalServerError,
     InvalidToken,
     LoginRequired,
     NotFound,
@@ -49,6 +50,18 @@ def _retry_after_from_rate_limit(err: RateLimited) -> float | None:
         return float(retry_after)
     except TypeError, ValueError:
         return None
+
+
+def _is_stale_site_info_error(err: TeslaFleetError) -> bool:
+    """Return whether a site_info error indicates a stale energy site."""
+    if isinstance(err, NotFound):
+        return True
+    if not isinstance(err, InternalServerError) or not isinstance(err.data, dict):
+        return False
+    return (
+        err.data.get("response") is None
+        and err.data.get("error") == "upstream internal error"
+    )
 
 
 ENDPOINTS = [
@@ -374,7 +387,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.updated_once = False
 
     async def async_config_entry_first_refresh_or_skip(self) -> bool:
-        """Refresh site info during setup, skipping site-specific API failures."""
+        """Refresh site info during setup, skipping known stale-site failures."""
         try:
             data = flatten((await self.api.site_info())["response"])
         except RateLimited as err:
@@ -384,14 +397,14 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise ConfigEntryNotReady from err
         except LoginRequired as err:
             raise ConfigEntryAuthFailed from err
-        except NotFound as err:
-            LOGGER.warning(
-                "Skipping Tesla energy site %s because info setup failed: %s",
-                self.site_id,
-                err,
-            )
-            return False
         except TeslaFleetError as err:
+            if _is_stale_site_info_error(err):
+                LOGGER.warning(
+                    "Skipping Tesla energy site %s because info setup failed: %s",
+                    self.site_id,
+                    err,
+                )
+                return False
             raise ConfigEntryNotReady from err
         except Exception as err:
             self.last_exception = err

@@ -9,6 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    InternalServerError,
     InvalidRegion,
     InvalidToken,
     LibraryError,
@@ -535,6 +536,7 @@ async def test_setup_retries_on_initial_energy_site_bad_response(
     "side_effect",
     [
         RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}),
+        InternalServerError({"response": None, "error": "temporary internal error"}),
         TeslaFleetError,
     ],
 )
@@ -610,26 +612,43 @@ async def test_energy_site_refresh_error(
     assert state.state == "unavailable"
 
 
+@pytest.mark.parametrize(
+    "site_info_error",
+    [
+        NotFound(),
+        InternalServerError(
+            {
+                "response": None,
+                "error": "upstream internal error",
+                "error_description": "",
+                "txid": "ea5ffd8832ec468efd54cd6cbd81a449",
+            }
+        ),
+    ],
+)
 async def test_setup_skips_stale_energy_site(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
     mock_site_info: AsyncMock,
+    site_info_error: TeslaFleetError,
 ) -> None:
     """Test setup skips one stale energy site and keeps the entry loaded."""
     products = deepcopy(mock_products.return_value)
     active_site = products["response"][1]
     stale_site = deepcopy(active_site)
     stale_site["energy_site_id"] = 654321
-    stale_site["site_name"] = "Old Solar Site"
+    stale_site["resource_type"] = "solar"
+    stale_site["site_name"] = None
+    stale_site["gateway_id"] = None
     products["response"].insert(1, stale_site)
     mock_products.return_value = products
 
     # Some Tesla accounts keep an old/deactivated solar system in /products after
     # a replacement system is installed. The stale site can return live_status
-    # successfully but fail site_info, so it should not block setup of the
-    # vehicle and the healthy energy site.
-    mock_site_info.side_effect = [NotFound(), deepcopy(SITE_INFO)]
+    # successfully but fail site_info with a site-specific error, so it
+    # should not block setup of the vehicle and the healthy energy site.
+    mock_site_info.side_effect = [site_info_error, deepcopy(SITE_INFO)]
 
     await setup_platform(hass, normal_config_entry)
 
