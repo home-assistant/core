@@ -1188,3 +1188,29 @@ async def test_reconfigure_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_v1_none_path(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure flow starts correctly when CONF_PATH is None."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_VERSION: DEFAULT_API_VERSION,
+            CONF_HOST: "localhost",
+            CONF_PORT: 8086,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_DB_NAME: "home_assistant",
+            CONF_SSL: False,
+            CONF_PATH: None,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_v1"
