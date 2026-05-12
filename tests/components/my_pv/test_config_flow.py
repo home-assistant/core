@@ -139,6 +139,14 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.model",
+            "AC ELWA 2",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -156,14 +164,6 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             return_value=True,
-        ),
-        patch(
-            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
-            "1601500000000000",
-        ),
-        patch(
-            "homeassistant.components.my_pv.MyPVLocalDevice.model",
-            "AC ELWA 2",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
