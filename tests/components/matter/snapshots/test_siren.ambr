@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sirens[heiman_smoke_detector][siren.smoke_sensor-entry]
+# name: test_sirens[heiman_smoke_detector][siren.smoke_sensor_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.smoke_sensor',
+    'entity_id': 'siren.smoke_sensor_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Siren',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sirens[heiman_smoke_detector][siren.smoke_sensor-state]
+# name: test_sirens[heiman_smoke_detector][siren.smoke_sensor_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke sensor',
+      'friendly_name': 'Smoke sensor Siren',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.smoke_sensor',
+    'entity_id': 'siren.smoke_sensor_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
