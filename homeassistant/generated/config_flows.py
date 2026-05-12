@@ -84,6 +84,7 @@ FLOWS = {
         "aussie_broadband",
         "autarco",
         "autoskope",
+        "avea",
         "awair",
         "aws_s3",
         "axis",
