@@ -14,11 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -159,8 +155,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up BLANCO sensors from a config entry."""
     coordinator = entry.runtime_data
-    descriptions = SENSOR_DESCRIPTIONS_BY_TYPE.get(
-        coordinator.dev_type, SENSOR_DESCRIPTIONS_COMMON
+    dev_type = coordinator.dev_type
+    descriptions = (
+        SENSOR_DESCRIPTIONS_BY_TYPE.get(dev_type, SENSOR_DESCRIPTIONS_COMMON)
+        if dev_type is not None
+        else SENSOR_DESCRIPTIONS_COMMON
     )
     async_add_entities(
         BlancoSensorEntity(coordinator, description) for description in descriptions
