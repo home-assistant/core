@@ -1417,7 +1417,6 @@ async def test_object_oriented_network_configs(
     # Updating the value for Policy Engine rules will make another call to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(config)
-    expected_disable_call["_id"] = config["id"]
     expected_disable_call["enabled"] = False
 
     assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
@@ -1433,7 +1432,6 @@ async def test_object_oriented_network_configs(
     )
 
     expected_enable_call = deepcopy(config)
-    expected_enable_call["_id"] = config["id"]
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 1
