@@ -218,11 +218,9 @@ async def test_velov_sensor_disabled_by_default(
 
     for unique_id in (
         "velov_1001-station_status",
-        "velov_1001-availability_level",
         "velov_1001-capacity",
         "velov_1001-electrical_internal_battery_bikes",
         "velov_1001-electrical_removable_battery_bikes",
-        "velov_1001-last_update",
     ):
         entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
         assert entry is not None, unique_id
@@ -248,7 +246,7 @@ async def test_velov_sensor_no_data(
     mock_velov_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that Vélo'v sensors return unknown when station not found."""
+    """Test that Vélo'v sensors is unavailable when station not found."""
     mock_tcl_client.get_velov_station.return_value = None
     mock_velov_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
@@ -256,7 +254,7 @@ async def test_velov_sensor_no_data(
 
     state = hass.states.get("sensor.velo_v_1001_available_bikes")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == "unavailable"
 
 
 async def test_coordinator_velov_fetch_error(

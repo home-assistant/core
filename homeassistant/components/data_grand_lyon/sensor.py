@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 from data_grand_lyon_ha import (
     TclPassage,
     TclPassageType,
-    VelovAvailabilityLevel,
     VelovStation,
     VelovStationStatus,
 )
@@ -35,8 +34,6 @@ _TZ_PARIS = ZoneInfo("Europe/Paris")
 _DEPARTURE_TYPE_OPTIONS = [t.name.lower() for t in TclPassageType]
 
 _STATION_STATUS_OPTIONS = [s.name.lower() for s in VelovStationStatus]
-
-_AVAILABILITY_LEVEL_OPTIONS = [a.name.lower() for a in VelovAvailabilityLevel]
 
 
 def _departure_time(departure: TclPassage) -> datetime:
@@ -163,14 +160,6 @@ VELOV_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonVelovSensorEntityDescription, ...]
         entity_registry_enabled_default=False,
     ),
     DataGrandLyonVelovSensorEntityDescription(
-        key="availability_level",
-        translation_key="availability_level",
-        device_class=SensorDeviceClass.ENUM,
-        options=_AVAILABILITY_LEVEL_OPTIONS,
-        value_fn=lambda s: s.availability.name.lower(),
-        entity_registry_enabled_default=False,
-    ),
-    DataGrandLyonVelovSensorEntityDescription(
         key="capacity",
         translation_key="capacity",
         value_fn=lambda s: s.total_stands.capacity,
@@ -186,17 +175,6 @@ VELOV_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonVelovSensorEntityDescription, ...]
         key="electrical_removable_battery_bikes",
         translation_key="electrical_removable_battery_bikes",
         value_fn=lambda s: s.total_stands.electrical_removable_battery_bikes,
-        entity_registry_enabled_default=False,
-    ),
-    DataGrandLyonVelovSensorEntityDescription(
-        key="last_update",
-        translation_key="last_update",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda s: (
-            s.last_update
-            if s.last_update.tzinfo
-            else s.last_update.replace(tzinfo=_TZ_PARIS)
-        ),
         entity_registry_enabled_default=False,
     ),
 )
@@ -305,9 +283,16 @@ class DataGrandLyonVelovSensor(
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if the station data is available."""
+        return (
+            super().available
+            and self._subentry_id in self.coordinator.data.velov_stations
+        )
+
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
-        station = self.coordinator.data.velov_stations.get(self._subentry_id)
-        if station is None:
-            return None
-        return self.entity_description.value_fn(station)
+        return self.entity_description.value_fn(
+            self.coordinator.data.velov_stations[self._subentry_id]
+        )
