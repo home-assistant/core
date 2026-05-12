@@ -1735,6 +1735,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
+        # Check mappings for compatible units of measurement for the device class
+        if (
+            tuya_uom is not None
+            and (uoms := DEVICE_CLASS_UNITS.get(device_class))
+            and (uom := uoms.get(tuya_uom) or uoms.get(tuya_uom.lower()))
+        ):
+            self._attr_native_unit_of_measurement = uom.unit
+            return
+
         if self.entity_description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = tuya_uom
 
