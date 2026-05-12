@@ -27,11 +27,17 @@
             "state": {
               "cd": "CD",
               "coax": "Coax",
+              "laserdisc": "LaserDisc",
+              "md": "MD",
               "network": "Network",
               "optical": "Optical",
               "phono": "Phono",
               "recorder": "Recorder",
-              "tuner": "Tuner"
+              "satellite": "Satellite",
+              "tape": "Tape",
+              "tuner": "Tuner",
+              "tv": "TV",
+              "vcr": "VCR"
             }
           }
         }

@@ -24,11 +24,17 @@ PARALLEL_UPDATES = 1
 SOURCE_TO_CODE: dict[str, MarantzAudioCode] = {
     "cd": MarantzAudioCode.SOURCE_CD,
     "coax": MarantzAudioCode.SOURCE_COAX,
+    "laserdisc": MarantzAudioCode.SOURCE_LD,
+    "md": MarantzAudioCode.SOURCE_MD,
     "network": MarantzAudioCode.SOURCE_NETWORK,
     "optical": MarantzAudioCode.SOURCE_OPTICAL,
     "phono": MarantzAudioCode.SOURCE_PHONO,
     "recorder": MarantzAudioCode.SOURCE_CDR,
+    "satellite": MarantzAudioCode.SOURCE_SAT,
+    "tape": MarantzAudioCode.SOURCE_TAPE,
     "tuner": MarantzAudioCode.SOURCE_TUNER,
+    "tv": MarantzAudioCode.SOURCE_TV,
+    "vcr": MarantzAudioCode.SOURCE_VCR1,
 }
 
 
