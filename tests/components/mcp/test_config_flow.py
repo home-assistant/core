@@ -331,11 +331,18 @@ async def perform_oauth_flow(
     scope_param = ""
     if scopes:
         scope_param = "&scope=" + "+".join(scopes)
-    assert result["url"] == (
+    # The MCP OAuth 2.1 profile requires PKCE S256 — the authorize URL
+    # carries `code_challenge` + `code_challenge_method=S256` (added by
+    # `LocalOAuth2ImplementationWithPkce`). The challenge value is
+    # randomly generated per-implementation, so use a prefix check.
+    expected_prefix = (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={OAUTH_CALLBACK_URL}"
         f"&state={state}{scope_param}"
+        f"&code_challenge="
     )
+    assert result["url"].startswith(expected_prefix)
+    assert "&code_challenge_method=S256" in result["url"]
 
     client = await hass_client_no_auth()
     resp = await client.get(f"{CALLBACK_PATH}?code={OAUTH_CODE}&state={state}")
