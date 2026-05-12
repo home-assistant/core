@@ -74,6 +74,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle discovery confirmation."""
+        if user_input is not None:
+            data = {
+                CONF_HOST: self._host,
+            }
+            return self.async_create_entry(
+                title=f"my-PV {self._device_model}", data=data
+            )
+
         password_needed = False
 
         # Check if we can connect to the device
@@ -90,23 +98,15 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         # Update host ip address when device is already configured and abort.
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
+        self._device_model = device.model
         if password_needed:
-            self._device_model = device.model
             return await self.async_step_discovery_auth()
-
-        title = f"my-PV {device.model}"
-
-        if user_input is not None:
-            data = {
-                CONF_HOST: self._host,
-            }
-            return self.async_create_entry(title=title, data=data)
 
         _LOGGER.debug("my-PV on %s is not yet configured", self._host)
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": title,
+                    "name": f"my-PV {device.model}",
                 }
             }
         )
