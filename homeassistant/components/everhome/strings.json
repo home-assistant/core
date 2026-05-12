@@ -10,8 +10,8 @@
     },
     "step": {
       "zeroconf_confirm": {
-        "description": "Do you want to add the everHome {name} with Serial `{serial}` to Home Assistant?",
-        "title": "Set up {name}"
+        "description": "Do you want to add the everHome {name} at `{host}` to Home Assistant?",
+        "title": "Set up everHome {name}"
       },
       "reconfigure": {
         "data": {
