@@ -135,7 +135,8 @@ rules:
     comment: >-
       A coordinator listener registered in async_setup_entry adds new lock
       entities whenever new access points appear in the coordinator data.
-      Removed access points are marked unavailable via the available property.
+      Removed access points are deleted from the entity registry via
+      er.async_remove(), which also removes them from the state machine.
   entity-category:
     status: exempt
     comment: All entities are primary lock entities.
