@@ -6112,6 +6112,12 @@
         }
       }
     },
+    "samsung_infrared": {
+      "name": "Samsung Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "sanix": {
       "name": "Sanix",
       "integration_type": "device",
