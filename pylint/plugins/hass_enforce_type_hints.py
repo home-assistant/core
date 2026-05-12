@@ -655,6 +655,8 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
+    ],
+    "repairs": [
         ClassTypeHintMatch(
             base_class="RepairsFlow",
             matches=[
