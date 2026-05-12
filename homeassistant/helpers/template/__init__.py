@@ -50,6 +50,7 @@ from .extensions import (
     DateTimeExtension,
     DeviceExtension,
     EntityExtension,
+    ExposedEntitiesExtension,
     FloorExtension,
     FunctionalExtension,
     IssuesExtension,
@@ -773,6 +774,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(DateTimeExtension)
         self.add_extension(DeviceExtension)
         self.add_extension(EntityExtension)
+        self.add_extension(ExposedEntitiesExtension)
         self.add_extension(FloorExtension)
         self.add_extension(FunctionalExtension)
         self.add_extension(IssuesExtension)
@@ -784,6 +786,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(StringExtension)
         self.add_extension(TypeCastExtension)
         self.add_extension(VersionExtension)
+
 
         if hass is not None:
             # This environment has access to hass, attach its loader

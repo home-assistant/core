@@ -8,6 +8,7 @@ from .crypto import CryptoExtension
 from .datetime import DateTimeExtension
 from .devices import DeviceExtension
 from .entities import EntityExtension
+from .exposed_entities import ExposedEntitiesExtension
 from .floors import FloorExtension
 from .functional import FunctionalExtension
 from .issues import IssuesExtension
@@ -29,6 +30,7 @@ __all__ = [
     "DateTimeExtension",
     "DeviceExtension",
     "EntityExtension",
+    "ExposedEntitiesExtension",
     "FloorExtension",
     "FunctionalExtension",
     "IssuesExtension",
