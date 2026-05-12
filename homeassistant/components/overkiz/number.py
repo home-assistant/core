@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -243,6 +244,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         command=OverkizCommand.SET_BOOST_MODE_DURATION,
         native_min_value=0,
         native_max_value=7,
+        mode=NumberMode.BOX,
         set_native_value=_async_set_native_value_boost_mode_duration,
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -258,6 +260,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         command=OverkizCommand.SET_AWAY_MODE_DURATION,
         native_min_value=0,
         native_max_value=99,
+        mode=NumberMode.BOX,
         set_native_value=_async_set_native_value_away_mode_duration,
         overkiz_value_fn=_overkiz_value_fn_away_mode_duration,
         entity_category=EntityCategory.CONFIG,
