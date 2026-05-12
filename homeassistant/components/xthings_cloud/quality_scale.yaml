@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No service actions implemented.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No service actions implemented.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No event-based entity setup.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable:
+    status: done
+    comment: Offloaded to coordinator.
+  entity-unavailable:
+    status: done
+    comment: Offloaded to coordinator.
+  action-exceptions:
+    status: exempt
+    comment: No service actions implemented.
+  reauthentication-flow: todo
+  parallel-updates: todo
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow.
+
+  # Gold
+  entity-translations:
+    status: exempt
+    comment: Entity uses has_entity_name with name set to None.
+  entity-device-class:
+    status: exempt
+    comment: No platform with device classes.
+  devices: done
+  entity-category:
+    status: exempt
+    comment: No diagnostic or configuration entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entities disabled by default.
+  discovery: todo
+  stale-devices:
+    status: exempt
+    comment: Single config entry, devices managed by coordinator.
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: exempt
+    comment: Devices are fetched from cloud on each update.
+  discovery-update-info:
+    status: exempt
+    comment: No discoverable entities.
+  repair-issues:
+    status: exempt
+    comment: No repair issues implemented.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples:
+    status: exempt
+    comment: No automation examples needed.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
