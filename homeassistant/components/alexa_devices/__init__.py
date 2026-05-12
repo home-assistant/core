@@ -51,6 +51,7 @@ class Http2Manager:
         self._coordinator = coordinator
         self._client = client
         self._task: asyncio.Task | None = None
+        self._restart_task: asyncio.Task | None = None
 
     async def start(self) -> None:
         """Start the HTTP2 task."""
@@ -58,7 +59,12 @@ class Http2Manager:
         self._task.add_done_callback(self._on_task_done)
 
     async def cancel(self) -> None:
-        """Cancel the HTTP2 task on unload."""
+        """Cancel the HTTP2 task and any pending restart on unload."""
+        if self._restart_task is not None and not self._restart_task.done():
+            self._restart_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._restart_task
+
         if self._task is None or self._task.done():
             return
         self._task.cancel()
@@ -80,26 +86,34 @@ class Http2Manager:
 
         exceptions = exc.exceptions if isinstance(exc, ExceptionGroup) else [exc]
 
+        start_reauth = False
+        restart_http2 = False
+
         for e in exceptions:
             if isinstance(e, CannotAuthenticate):
                 _LOGGER.error(
                     "HTTP2 auth failure", exc_info=(type(e), e, e.__traceback__)
                 )
-                self._entry.async_start_reauth(self._hass)
+                start_reauth = True
             elif isinstance(e, CannotConnect):
                 _LOGGER.warning(
                     "HTTP2 connection failure, restarting in %s seconds",
                     HTTP2_RECONNECT_DELAY,
                     exc_info=(type(e), e, e.__traceback__),
                 )
-                self._hass.async_create_task(self._restart())
+                restart_http2 = True
             else:
                 _LOGGER.error(
                     "Unexpected HTTP2 failure, restarting in %s seconds",
                     HTTP2_RECONNECT_DELAY,
                     exc_info=(type(e), e, e.__traceback__),
                 )
-                self._hass.async_create_task(self._restart())
+                restart_http2 = True
+
+        if start_reauth:
+            self._entry.async_start_reauth(self._hass)
+        elif restart_http2:
+            self._restart_task = self._hass.async_create_task(self._restart())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
