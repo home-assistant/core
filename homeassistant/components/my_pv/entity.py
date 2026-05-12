@@ -6,8 +6,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import MyPVCoordinator
 
 
-class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
-    """The my-PV base entity."""
+class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
+    """The my-PV data entity."""
 
     _attr_has_entity_name = True
     _attr_available = False
@@ -26,9 +26,11 @@ class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
 
         self.entity_description = entity_description
 
+    async def async_added_to_hass(self) -> None:
+        """Called when sensor is added to Home Assistant."""
+        await super().async_added_to_hass()
 
-class MyPVDataEntity(MyPVBaseEntity):
-    """The my-PV data entity."""
+        self._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
