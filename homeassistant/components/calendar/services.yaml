@@ -36,6 +36,10 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
+    geo:
+      example: '{"latitude": "50.1", "longitude": "30.2"}'
+      selector:
+        location:
 get_events:
   target:
     entity:

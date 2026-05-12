@@ -53,6 +53,9 @@ from .const import (
     EVENT_END,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
+    EVENT_GEO,
+    EVENT_GEO_LAT,
+    EVENT_GEO_LONG,
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
@@ -229,6 +232,12 @@ CREATE_EVENT_SCHEMA = vol.All(
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Optional(EVENT_GEO): vol.All(
+                {
+                    vol.Required(EVENT_GEO_LAT): cv.latitude,
+                    vol.Required(EVENT_GEO_LONG): cv.longitude,
+                }
+            ),
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -369,11 +378,27 @@ def get_date(date: dict[str, Any]) -> datetime.datetime:
 class CalendarEvent:
     """An event on a calendar."""
 
+    @dataclasses.dataclass
+    class Geolocation:
+        """The geolocation associated with a calendar event."""
+
+        latitude: str
+        longitude: str
+
+        @property
+        def state_attributes(self) -> dict[str, Any]:
+            """Return the nested entity state attributes."""
+            return {
+                "latitude": self.latitude,
+                "longitude": self.longitude,
+            }
+
     start: datetime.date | datetime.datetime
     end: datetime.date | datetime.datetime
     summary: str
     description: str | None = None
     location: str | None = None
+    geo: Geolocation | None = None
 
     uid: str | None = None
     recurrence_id: str | None = None
@@ -425,14 +450,14 @@ class CalendarEvent:
             self.end = self.start + datetime.timedelta(days=1)
 
 
-def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, JsonValueType]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    result: dict[str, str] = {}
+    result: dict[str, JsonValueType] = {}
     for name, value in obj:
         if isinstance(value, (datetime.datetime, datetime.date)):
             result[name] = value.isoformat()
         elif value is not None:
-            result[name] = str(value)
+            result[name] = value
     return result
 
 
@@ -570,7 +595,7 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return None
 
-        return {
+        attributes = {
             "message": event.summary,
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
@@ -578,6 +603,10 @@ class CalendarEntity(Entity):
             "location": event.location or "",
             "description": event.description or "",
         }
+        if event.geo:
+            attributes["geo"] = event.geo.state_attributes
+
+        return attributes
 
     @final
     @property

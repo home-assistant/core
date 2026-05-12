@@ -14,6 +14,7 @@
       'end': dict({
         'date': '2022-01-07',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
