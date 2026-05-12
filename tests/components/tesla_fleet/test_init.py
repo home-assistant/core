@@ -13,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     LibraryError,
     LoginRequired,
+    NotFound,
     OAuthExpired,
     RateLimited,
     TeslaFleetError,
@@ -530,6 +531,27 @@ async def test_setup_retries_on_initial_energy_site_bad_response(
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}),
+        TeslaFleetError,
+    ],
+)
+async def test_setup_retries_on_initial_energy_site_retryable_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+    side_effect: BaseException | type[BaseException],
+) -> None:
+    """Test setup retries when initial site info returns a retryable error."""
+    mock_site_info.side_effect = side_effect
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_energy_live_refresh_bad_response(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -607,7 +629,7 @@ async def test_setup_skips_stale_energy_site(
     # a replacement system is installed. The stale site can return live_status
     # successfully but fail site_info, so it should not block setup of the
     # vehicle and the healthy energy site.
-    mock_site_info.side_effect = [TeslaFleetError(), deepcopy(SITE_INFO)]
+    mock_site_info.side_effect = [NotFound(), deepcopy(SITE_INFO)]
 
     await setup_platform(hass, normal_config_entry)
 

@@ -9,6 +9,7 @@ from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
+    NotFound,
     OAuthExpired,
     RateLimited,
     TeslaFleetError,
@@ -35,6 +36,20 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
+
+
+def _retry_after_from_rate_limit(err: RateLimited) -> float | None:
+    """Return retry-after seconds from a rate limit error."""
+    if not isinstance(err.data, dict):
+        return None
+    retry_after = err.data.get("after")
+    if retry_after is None:
+        return None
+    try:
+        return float(retry_after)
+    except TypeError, ValueError:
+        return None
+
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -362,29 +377,24 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Refresh site info during setup, skipping site-specific API failures."""
         try:
             data = flatten((await self.api.site_info())["response"])
-        except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    e.data["after"],
-                )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return True
+        except RateLimited as err:
+            raise ConfigEntryNotReady from UpdateFailed(
+                err.message, retry_after=_retry_after_from_rate_limit(err)
+            )
         except (InvalidToken, OAuthExpired) as err:
             _invalidate_access_token(self.hass, self.config_entry)
             raise ConfigEntryNotReady from err
         except LoginRequired as err:
             raise ConfigEntryAuthFailed from err
-        except TeslaFleetError as err:
+        except NotFound as err:
             LOGGER.warning(
                 "Skipping Tesla energy site %s because info setup failed: %s",
                 self.site_id,
                 err,
             )
             return False
+        except TeslaFleetError as err:
+            raise ConfigEntryNotReady from err
         except Exception as err:
             self.last_exception = err
             self.last_update_success = False
@@ -403,16 +413,9 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    e.data["after"],
-                )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return self.data
+            raise UpdateFailed(
+                e.message, retry_after=_retry_after_from_rate_limit(e)
+            ) from e
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
