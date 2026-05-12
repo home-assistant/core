@@ -8,6 +8,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["bitvis-protobuf==0.2.3"],
+  "requirements": ["bitvis-protobuf==0.2.4"],
   "zeroconf": ["_powerhub._udp.local."]
 }

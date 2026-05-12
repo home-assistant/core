@@ -1,7 +1,5 @@
 """The Bitvis Power Hub integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform

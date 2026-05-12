@@ -1,22 +1,23 @@
 """Config flow for the Bitvis Power Hub integration."""
 
-from __future__ import annotations
-
-import asyncio
 import logging
 import socket
 from typing import Any
 
-from bitvis_protobuf.utils import format_unique_id, normalize_host
+from bitvis_protobuf.utils import (
+    async_verify_udp_port_bindable,
+    format_unique_id,
+    normalize_host,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, MODEL_NAME
 from .coordinator import async_get_listener_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,30 +34,7 @@ async def _async_test_port(hass: HomeAssistant, port: int) -> None:
     if async_get_listener_registry(hass).has_listener(port):
         return
 
-    loop = asyncio.get_running_loop()
-    transports: list[asyncio.DatagramTransport] = []
-    bind_errors: list[Exception] = []
-    for family, local_addr in (
-        (socket.AF_INET6, ("::", port)),
-        (socket.AF_INET, ("0.0.0.0", port)),
-    ):
-        try:
-            transport, _ = await loop.create_datagram_endpoint(
-                asyncio.DatagramProtocol,
-                local_addr=local_addr,
-                family=family,
-            )
-        except (OSError, ValueError) as err:
-            bind_errors.append(err)
-        else:
-            assert isinstance(transport, asyncio.DatagramTransport)
-            transports.append(transport)
-
-    if not transports:
-        raise OSError("UDP port is unavailable or invalid") from bind_errors[0]
-
-    for transport in transports:
-        transport.close()
+    await async_verify_udp_port_bindable(port)
 
 
 def _resolve_host(host: str) -> str:
@@ -117,7 +95,7 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=MODEL_NAME,
                     data={
                         CONF_HOST: host,
                         CONF_PORT: port,
@@ -128,7 +106,6 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             }
         )
 
