@@ -18,6 +18,26 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from tests.common import MockConfigEntry
 
 
+def _register_stale_firmware_issue(hass: HomeAssistant) -> None:
+    """Pre-register an unsupported_firmware issue to simulate one carried over from a prior setup."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "unsupported_firmware",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="unsupported_firmware",
+        translation_placeholders={
+            "sw_version": "3.50",
+            "fw_version": "1.30",
+            "min_sw_version": MIN_SUPPORTED_SW_VERSION,
+            "min_fw_version": MIN_SUPPORTED_FW_VERSION,
+        },
+    )
+
+
 async def test_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -196,22 +216,7 @@ async def test_firmware_check_deletes_issue_when_versions_ok(
     fw_version: str,
 ) -> None:
     """Existing repair issue is cleared once the gateway reports supported versions."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "unsupported_firmware",
-        is_fixable=False,
-        is_persistent=True,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="unsupported_firmware",
-        translation_placeholders={
-            "sw_version": "3.50",
-            "fw_version": "1.30",
-            "min_sw_version": MIN_SUPPORTED_SW_VERSION,
-            "min_fw_version": MIN_SUPPORTED_FW_VERSION,
-        },
-    )
+    _register_stale_firmware_issue(hass)
     assert issue_registry.async_get_issue(DOMAIN, "unsupported_firmware") is not None
 
     mock_gateway.software_version = sw_version
@@ -242,22 +247,7 @@ async def test_firmware_check_skips_when_version_unavailable(
     fw_version: str,
 ) -> None:
     """Empty or unparsable versions skip the check without touching existing issues."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "unsupported_firmware",
-        is_fixable=False,
-        is_persistent=True,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="unsupported_firmware",
-        translation_placeholders={
-            "sw_version": "3.50",
-            "fw_version": "1.30",
-            "min_sw_version": MIN_SUPPORTED_SW_VERSION,
-            "min_fw_version": MIN_SUPPORTED_FW_VERSION,
-        },
-    )
+    _register_stale_firmware_issue(hass)
 
     mock_gateway.software_version = sw_version
     mock_gateway.firmware_version = fw_version
