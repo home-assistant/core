@@ -1,6 +1,6 @@
 """Support for Tuya sensors."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 from tuya_device_handlers.definition.sensor import (
     SensorDefinition,
@@ -49,7 +49,6 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
-    FAHRENHEIT_ALIASES,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -1629,7 +1628,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_COILER,
-            translation_key="coiler_temperature",
+            translation_key="coil_temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -1638,6 +1637,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_EFFLUENT,
@@ -1679,19 +1679,6 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
 
-def _get_temp_unit_from_device(
-    device: CustomerDevice,
-) -> UnitOfTemperature | None:
-    """Return the temperature unit reported by the device via TEMP_UNIT_CONVERT, or None."""
-    unit_value = device.status.get(DPCode.TEMP_UNIT_CONVERT)
-    if unit_value is None:
-        return None
-    unit_str = str(unit_value).lower()
-    if unit_str in FAHRENHEIT_ALIASES:
-        return UnitOfTemperature.FAHRENHEIT
-    return UnitOfTemperature.CELSIUS
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -1707,27 +1694,17 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
-                temp_unit = _get_temp_unit_from_device(device)
-                for description in descriptions:
-                    if not (
+                entities.extend(
+                    TuyaSensorEntity(device, manager, description, definition)
+                    for description in descriptions
+                    if (
                         definition := get_default_definition(
                             device,
                             description.dpcode or description.key,
                             description.wrapper_class,
                         )
-                    ):
-                        continue
-                    if (
-                        temp_unit is not None
-                        and description.device_class == SensorDeviceClass.TEMPERATURE
-                        and description.native_unit_of_measurement is None
-                    ):
-                        description = replace(
-                            description, native_unit_of_measurement=temp_unit
-                        )
-                    entities.append(
-                        TuyaSensorEntity(device, manager, description, definition)
                     )
+                )
 
         async_add_entities(entities)
 

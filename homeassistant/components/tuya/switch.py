@@ -905,6 +905,7 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,

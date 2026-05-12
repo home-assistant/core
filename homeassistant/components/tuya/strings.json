@@ -655,8 +655,8 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
-      "coiler_temperature": {
-        "name": "Coiler temperature"
+      "coil_temperature": {
+        "name": "Coil temperature"
       },
       "compressor_strength": {
         "name": "Compressor strength"

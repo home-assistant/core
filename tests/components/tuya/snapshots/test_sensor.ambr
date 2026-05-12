@@ -11348,7 +11348,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_coiler_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11364,7 +11364,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_pool_heat_pump_coiler_temperature',
+    'entity_id': 'sensor.inverter_pool_heat_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11372,34 +11372,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Coiler temperature',
+    'object_id_base': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Coiler temperature',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'coiler_temperature',
+    'translation_key': 'coil_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_coiler',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_coiler_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Inverter Pool Heat Pump Coiler temperature',
+      'friendly_name': 'Inverter Pool Heat Pump',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_pool_heat_pump_coiler_temperature',
+    'entity_id': 'sensor.inverter_pool_heat_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -11486,11 +11482,8 @@
     'name': None,
     'object_id_base': 'Flow temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flow temperature',
     'platform': 'tuya',
@@ -11499,16 +11492,15 @@
     'supported_features': 0,
     'translation_key': 'flow_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_effluent',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': '',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_flow_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Flow temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_flow_temperature',
@@ -11544,11 +11536,8 @@
     'name': None,
     'object_id_base': 'Heat exchanger temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heat exchanger temperature',
     'platform': 'tuya',
@@ -11557,16 +11546,15 @@
     'supported_features': 0,
     'translation_key': 'heat_exchanger_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_venting',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': '',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_heat_exchanger_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Heat exchanger temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_heat_exchanger_temperature',
@@ -11602,11 +11590,8 @@
     'name': None,
     'object_id_base': 'Outside temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Outside temperature',
     'platform': 'tuya',
@@ -11615,16 +11600,15 @@
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_around',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': '',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_outside_temperature',
@@ -19615,11 +19599,8 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -19628,16 +19609,15 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.3kdnp0ajo7zdolfxgcdswva_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': 'Ôäâ',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sensor_t_h_server_home_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Sensor T & H Server Home Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'Ôäâ',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sensor_t_h_server_home_temperature',
@@ -23897,11 +23877,8 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -23910,16 +23887,15 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.kkcwqzlvgcdswva_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': 'Ôäâ',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.temperature_humidity_sensor_abelhas_pasillo_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Temperature Humidity Sensor abelhas pasillo Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'Ôäâ',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.temperature_humidity_sensor_abelhas_pasillo_temperature',
