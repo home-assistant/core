@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -28,7 +29,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockInfraredEntity
+from .conftest import MockInfraredEntity, media_player_entity_id
 from .utils import check_availability_follows_ir_entity
 
 from tests.common import (
@@ -46,6 +47,11 @@ def platforms() -> list[Platform]:
     return [Platform.MEDIA_PLAYER]
 
 
+@pytest.mark.parametrize(
+    "model",
+    ["pm6006_integrated_amplifier", "sr_7000_receiver"],
+    indirect=True,
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -66,6 +72,27 @@ async def test_entities(
     )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("model", "has_select_source"),
+    [
+        ("pm6006_integrated_amplifier", True),
+        ("sr_7000_receiver", False),
+    ],
+    indirect=["model"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_select_source_feature_matches_model(
+    hass: HomeAssistant,
+    model: str,
+    has_select_source: bool,
+) -> None:
+    """SELECT_SOURCE is advertised only when the model has source codes."""
+    state = hass.states.get(media_player_entity_id(model))
+    assert state is not None
+    features = state.attributes["supported_features"]
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) is has_select_source
 
 
 @pytest.mark.parametrize(

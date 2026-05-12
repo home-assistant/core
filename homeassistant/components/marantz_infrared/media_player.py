@@ -62,9 +62,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Marantz IR media player from config entry."""
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
-    lib_model = MODELS[entry.data[CONF_MODEL]]
-    if MarantzAudioCode.POWER in lib_model.codes:
-        async_add_entities([MarantzIrAmplifierMediaPlayer(entry, infrared_entity_id)])
+    async_add_entities([MarantzIrAmplifierMediaPlayer(entry, infrared_entity_id)])
 
 
 class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreEntity):
@@ -74,13 +72,6 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
     _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_translation_key = "receiver"
-    _attr_supported_features = (
-        MediaPlayerEntityFeature.TURN_ON
-        | MediaPlayerEntityFeature.TURN_OFF
-        | MediaPlayerEntityFeature.VOLUME_STEP
-        | MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.SELECT_SOURCE
-    )
 
     def __init__(self, entry: MarantzIrConfigEntry, infrared_entity_id: str) -> None:
         """Initialize Marantz IR amplifier media player."""
@@ -90,6 +81,15 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
             source: code for source, code in SOURCE_TO_CODE.items() if code in codes
         }
         self._attr_source_list = list(self._source_to_code)
+        features = (
+            MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+        )
+        if self._source_to_code:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        self._attr_supported_features = features
 
     @property
     def extra_restore_state_data(self) -> ExtraStoredData:

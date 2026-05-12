@@ -17,10 +17,12 @@ from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
+    MODELS,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 
@@ -45,18 +47,32 @@ class MockInfraredEntity(InfraredEntity):
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def model(request: pytest.FixtureRequest) -> str:
+    """Return the Marantz model slug to use for the config entry.
+
+    Override with ``@pytest.mark.parametrize("model", [...], indirect=True)``.
+    """
+    return getattr(request, "param", MOCK_MODEL)
+
+
+@pytest.fixture
+def mock_config_entry(model: str) -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
-        title="PM6006 Integrated Amplifier",
+        title=MODELS[model].name,
         data={
-            CONF_MODEL: MOCK_MODEL,
+            CONF_MODEL: model,
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
-        unique_id=f"{MOCK_MODEL}_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"{model}_{MOCK_INFRARED_ENTITY_ID}",
     )
+
+
+def media_player_entity_id(model: str) -> str:
+    """Return the expected media_player entity_id for a model slug."""
+    return f"media_player.marantz_{slugify(MODELS[model].name)}"
 
 
 @pytest.fixture
