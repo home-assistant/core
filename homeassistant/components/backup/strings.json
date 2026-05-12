@@ -12,7 +12,13 @@
               "in_progress": "In progress"
             }
           },
-          "failed_reason": { "name": "Failure reason" }
+          "failed_reason": {
+            "name": "Failure reason",
+            "state": {
+              "unknown_error": "Unknown error",
+              "upload_failed": "Upload failed"
+            }
+          }
         }
       }
     },
