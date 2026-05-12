@@ -489,19 +489,27 @@ async def test_setup_retries_on_initial_energy_live_refresh_error(
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("side_effect", [InvalidToken, OAuthExpired, LoginRequired])
+@pytest.mark.parametrize(
+    ("side_effect", "state"),
+    [
+        (InvalidToken, ConfigEntryState.SETUP_ERROR),
+        (OAuthExpired, ConfigEntryState.SETUP_ERROR),
+        (LoginRequired, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_setup_does_not_skip_initial_energy_site_auth_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
-    side_effect: type[Exception],
+    side_effect: type[BaseException],
+    state: ConfigEntryState,
 ) -> None:
     """Test site info auth failures still fail setup."""
     mock_site_info.side_effect = side_effect
 
     await setup_platform(hass, normal_config_entry)
 
-    assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert normal_config_entry.state is state
 
 
 async def test_energy_live_refresh_bad_response(

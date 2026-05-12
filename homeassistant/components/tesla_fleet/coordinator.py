@@ -85,9 +85,9 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
-def _get_root_exception(err: Exception) -> Exception:
+def _get_root_exception(err: BaseException) -> BaseException:
     """Unwrap nested exception causes to the original error."""
-    while err.__cause__ is not None and isinstance(err.__cause__, Exception):
+    while err.__cause__ is not None and isinstance(err.__cause__, BaseException):
         err = err.__cause__
     return err
 
