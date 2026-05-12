@@ -89,7 +89,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="tankfull",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_full",
+            key=f"{DPCode.FAULT}_FULL",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -105,7 +105,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="defrost",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_coil",
+            key=f"{DPCode.FAULT}_COIL",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -121,7 +121,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="wet",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_cleaning",
+            key=f"{DPCode.FAULT}_Cleaning",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -129,7 +129,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="filter_cleaning",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_e1",
+            key=f"{DPCode.FAULT}_E1",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -137,7 +137,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="temp_error",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_cl",
+            key=f"{DPCode.FAULT}_CL",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -145,7 +145,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="low_temp",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_ch",
+            key=f"{DPCode.FAULT}_CH",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -153,7 +153,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="high_temp",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_lo",
+            key=f"{DPCode.FAULT}_LO",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -161,7 +161,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="low_humidity",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.FAULT}_motor",
+            key=f"{DPCode.FAULT}_MOTOR",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,

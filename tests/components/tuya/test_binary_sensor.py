@@ -126,3 +126,62 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_u0wirz487erb0eka"],
+)
+@pytest.mark.parametrize(
+    ("fault_value", "tankfull", "cleaning", "e1", "cl", "ch", "lo", "coil", "motor"),
+    [
+        (0, "off", "off", "off", "off", "off", "off", "off", "off"),
+        (0x1, "on", "off", "off", "off", "off", "off", "off", "off"),
+        (0x2, "off", "on", "off", "off", "off", "off", "off", "off"),
+        (0x4, "off", "off", "on", "off", "off", "off", "off", "off"),
+        (0x8, "off", "off", "off", "on", "off", "off", "off", "off"),
+        (0x10, "off", "off", "off", "off", "on", "off", "off", "off"),
+        (0x20, "off", "off", "off", "off", "off", "on", "off", "off"),
+        (0x40, "off", "off", "off", "off", "off", "off", "on", "off"),
+        (0x80, "off", "off", "off", "off", "off", "off", "off", "on"),
+        (0xFF, "on", "on", "on", "on", "on", "on", "on", "on"),
+    ],
+)
+async def test_bitmap_probreeze(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    fault_value: int,
+    tankfull: str,
+    cleaning: str,
+    e1: str,
+    cl: str,
+    ch: str,
+    lo: str,
+    coil: str,
+    motor: str,
+) -> None:
+    """Test BITMAP fault sensor on cs_u0wirz487erb0eka."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    
+    await notification_helper.async_send_device_update(
+        mock_device, {"fault": fault_value}
+    )
+    
+    ent_reg = er.async_get(hass)
+    def get_state(bitmap_key: str):
+        entity_id = ent_reg.async_get_entity_id(
+            "binary_sensor", "tuya", f"tuya.{mock_device.id}fault_{bitmap_key}"
+        )
+        return hass.states.get(entity_id).state
+
+    assert get_state("FULL") == tankfull
+    assert get_state("Cleaning") == cleaning
+    assert get_state("E1") == e1
+    assert get_state("CL") == cl
+    assert get_state("CH") == ch
+    assert get_state("LO") == lo
+    assert get_state("COIL") == coil
+    assert get_state("MOTOR") == motor
