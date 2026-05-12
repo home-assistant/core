@@ -587,7 +587,7 @@ async def test_schedule_timer_cancels_previous_handle(hass: HomeAssistant) -> No
     debouncer = debounce.Debouncer(
         hass,
         _LOGGER,
-        cooldown=1.0,
+        cooldown=3600.0,
         immediate=True,
         function=AsyncMock(),
     )
@@ -622,7 +622,7 @@ async def test_concurrent_async_call_does_not_orphan_timer(
     debouncer = debounce.Debouncer(
         hass,
         _LOGGER,
-        cooldown=1.0,
+        cooldown=3600.0,
         immediate=True,
         function=slow_function,
     )
