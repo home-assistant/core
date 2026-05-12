@@ -1693,18 +1693,17 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         if isinstance(data, list) and not self.config["multiple"]:
             raise vol.Invalid("Value should not be a list")
 
-        test_data = deepcopy(data if isinstance(data, list) else [data])
+        test_data = data if isinstance(data, list) else [data]
 
         for _config in test_data:
             for field, field_data in self.config["fields"].items():
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
-                    if isinstance(field_data["selector"], Selector):
-                        field_data["selector"] = field_data["selector"].serialize()[
-                            "selector"
-                        ]
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    field_selector = field_data["selector"]
+                    if isinstance(field_selector, Selector):
+                        field_selector = field_selector.serialize()["selector"]
+                    selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
