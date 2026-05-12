@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aidot.client import AidotClient
-from aidot.const import DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
+from aidot.const import DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES, CONF_ID
 from aidot.exceptions import AidotUserOrPassIncorrect
 from aiohttp import ClientError
 import voluptuous as vol
@@ -42,7 +42,6 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             client = AidotClient(
                 session=async_get_clientsession(self.hass),
                 country_code=user_input[CONF_COUNTRY_CODE],
@@ -53,11 +52,12 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
+            except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
-                await self.async_set_unique_id(client.get_identifier())
+                await self.async_set_unique_id(login_info[CONF_ID])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"{user_input[CONF_USERNAME]} {user_input[CONF_COUNTRY_CODE]}",
                     data=login_info,

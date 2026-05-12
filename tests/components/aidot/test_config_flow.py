@@ -40,7 +40,7 @@ async def test_config_flow_cloud_login_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_EMAIL} {TEST_COUNTRY}"
     assert result["data"] == TEST_LOGIN_RESP
-    assert result["result"].unique_id == f"{TEST_REGION}-{TEST_EMAIL}"
+    assert result["result"].unique_id == TEST_LOGIN_RESP["id"]
 
 
 async def test_config_flow_login_user_password_incorrect(

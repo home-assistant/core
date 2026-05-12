@@ -43,7 +43,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{TEST_REGION}-{TEST_EMAIL}",
+        unique_id=TEST_LOGIN_RESP["id"],
         title=TEST_EMAIL,
         data=TEST_LOGIN_RESP.copy(),
     )
@@ -111,7 +111,6 @@ def patch_aidot_client(
         mock_instance.get_device_client = get_device_client
         mock_instance.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
         mock_instance.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
-        mock_instance.get_identifier.return_value = f"{TEST_REGION}-{TEST_EMAIL}"
         mock_instance.login_info = {
             CONF_ACCESS_TOKEN: "123456789",
         }
