@@ -268,6 +268,7 @@ FLOWS = {
         "gios",
         "github",
         "glances",
+        "glutz_eaccess",
         "goalzero",
         "gogogate2",
         "goodwe",

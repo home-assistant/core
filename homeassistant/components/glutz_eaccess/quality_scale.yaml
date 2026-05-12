@@ -1,0 +1,170 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register any custom actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      Polls every 5 minutes to keep the access point list up to date.
+      Lock state (locked/unlocked) cannot be read from the API and is
+      simulated via assumed state (async_assumed_state = True).
+  brands:
+    status: done
+    comment: Brand assets submitted via the home-assistant/brands repository.
+  common-modules:
+    status: done
+    comment: Coordinator and constants follow the common module structure.
+  config-flow:
+    status: done
+    comment: Full config flow with credentials and invitation link methods.
+  config-flow-test-coverage:
+    status: done
+    comment: Config flow fully covered by tests.
+  dependency-transparency:
+    status: done
+    comment: Uses pyglutz-eaccess, a dedicated open-source library.
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide any actions.
+  docs-high-level-description:
+    status: done
+    comment: Documentation describes what the integration does and its deployment options.
+  docs-installation-instructions:
+    status: done
+    comment: Documentation covers prerequisites and both setup methods.
+  docs-removal-instructions:
+    status: done
+    comment: Documentation includes a removal section using the standard include.
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events in async_added_to_hass.
+  entity-unique-id:
+    status: done
+    comment: Each access point entity uses the access point ID as unique ID.
+  has-entity-name:
+    status: done
+    comment: All entities use has_entity_name = True.
+  runtime-data:
+    status: done
+    comment: Config entry runtime data used for coordinator access.
+  test-before-configure:
+    status: done
+    comment: Connection and authentication are tested before the entry is created.
+  test-before-setup:
+    status: done
+    comment: Integration raises ConfigEntryNotReady if the server is unreachable on setup.
+  unique-config-entry:
+    status: done
+    comment: Prevents duplicate entries for the same server and username.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: Service calls raise HomeAssistantError with translated messages on failure.
+  config-entry-unloading:
+    status: done
+    comment: Integration correctly unloads the coordinator and entities.
+  docs-configuration-parameters:
+    status: done
+    comment: Documentation describes host, username, password and invitation link parameters.
+  docs-installation-parameters:
+    status: done
+    comment: Documentation covers prerequisites and setup parameters.
+  entity-unavailable:
+    status: done
+    comment: Entities are marked unavailable when the coordinator update fails.
+  integration-owner:
+    status: done
+    comment: Codeowner defined in manifest and CODEOWNERS.
+  log-when-unavailable:
+    status: done
+    comment: Coordinator logs a warning when the server is unreachable.
+  parallel-updates:
+    status: done
+    comment: PARALLEL_UPDATES set to limit concurrent service calls.
+  reauthentication-flow:
+    status: done
+    comment: Reauthentication flow implemented and tested.
+  test-coverage:
+    status: done
+    comment: Integration has comprehensive test coverage.
+
+  # Gold
+  devices:
+    status: done
+    comment: Each Glutz server is represented as a device grouping its access points.
+  diagnostics:
+    status: done
+    comment: Diagnostics endpoint implemented, redacting sensitive fields.
+  discovery:
+    status: exempt
+    comment: The Glutz eAccess system does not support any discovery protocol.
+  discovery-update-info:
+    status: exempt
+    comment: The Glutz eAccess system does not support any discovery protocol.
+  docs-data-update:
+    status: done
+    comment: Documentation describes the 5-minute polling interval and simulated lock state.
+  docs-examples:
+    status: done
+    comment: Documentation includes use case examples for automations and dashboards.
+  docs-known-limitations:
+    status: done
+    comment: Documentation notes that lock state is simulated and not read from the API.
+  docs-supported-devices:
+    status: done
+    comment: Documentation states all Glutz eAccess-compatible hardware is supported.
+  docs-supported-functions:
+    status: done
+    comment: Documentation lists lock, unlock and open actions with descriptions.
+  docs-troubleshooting:
+    status: done
+    comment: Documentation includes troubleshooting steps for common issues.
+  docs-use-cases:
+    status: done
+    comment: Documentation includes use case examples.
+  dynamic-devices:
+    status: done
+    comment: Access points are fetched from the API and added/removed dynamically.
+  entity-category:
+    status: exempt
+    comment: All entities are primary lock entities.
+  entity-device-class:
+    status: exempt
+    comment: The lock platform does not use device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities represent physical doors and should be enabled by default.
+  entity-translations:
+    status: done
+    comment: Entity names use translation keys.
+  exception-translations:
+    status: done
+    comment: All raised exceptions use translated strings.
+  icon-translations:
+    status: done
+    comment: Icons defined in icons.json with translation support.
+  reconfiguration-flow:
+    status: done
+    comment: Reconfiguration flow allows updating server address and credentials.
+  repair-issues:
+    status: exempt
+    comment: >-
+      The current API does not expose battery status. If a low-battery flag
+      becomes available in a future API version, a repair issue should be raised
+      to prompt the user to recharge the lock.
+  stale-devices:
+    status: done
+    comment: Access points removed from the server are cleaned up from the device registry.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: Uses pyglutz-eaccess which is fully async.
+  inject-websession:
+    status: done
+    comment: aiohttp ClientSession is injected via async_get_clientsession.
+  strict-typing:
+    status: done
+    comment: Integration is listed in .strict-typing for full mypy strict checks.

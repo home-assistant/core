@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'access_points': list([
+      dict({
+        'accessPointId': 'ap-1',
+        'location': list([
+          'Building A',
+          'Floor 1',
+          'Main Door',
+        ]),
+      }),
+      dict({
+        'accessPointId': 'ap-2',
+        'location': list([
+        ]),
+      }),
+    ]),
+    'config_entry': dict({
+      'host': 'https://example.com',
+      'password': '**REDACTED**',
+      'username': 'user@example.com',
+    }),
+  })
+# ---

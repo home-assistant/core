@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "lock": {
+      "access_point": {
+        "default": "mdi:lock",
+        "state": {
+          "locked": "mdi:lock",
+          "unlocked": "mdi:lock-open-variant"
+        }
+      }
+    }
+  }
+}

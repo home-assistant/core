@@ -2176,6 +2176,9 @@ pyfttt==0.3
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
+# homeassistant.components.glutz_eaccess
+pyglutz-eaccess==0.2.2
+
 # homeassistant.components.gtfs
 pygtfs==0.1.9
 

@@ -236,6 +236,7 @@ homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*
 homeassistant.components.glances.*
+homeassistant.components.glutz_eaccess.*
 homeassistant.components.go2rtc.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*

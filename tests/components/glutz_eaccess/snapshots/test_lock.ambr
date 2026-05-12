@@ -1,0 +1,105 @@
+# serializer version: 1
+# name: test_all_entities[lock.door_ap_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.door_ap_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'glutz_eaccess',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LockEntityFeature: 1>,
+    'translation_key': 'access_point',
+    'unique_id': 'glutz_ap-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[lock.door_ap_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'Door ap-2',
+      'supported_features': <LockEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.door_ap_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'locked',
+  })
+# ---
+# name: test_all_entities[lock.main_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.main_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'glutz_eaccess',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LockEntityFeature: 1>,
+    'translation_key': 'access_point',
+    'unique_id': 'glutz_ap-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[lock.main_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'Main Door',
+      'supported_features': <LockEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.main_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'locked',
+  })
+# ---

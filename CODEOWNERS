@@ -643,6 +643,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/github/ @timmo001 @ludeeus
 /homeassistant/components/glances/ @engrbm87
 /tests/components/glances/ @engrbm87
+/homeassistant/components/glutz_eaccess/ @miitchpls
+/tests/components/glutz_eaccess/ @miitchpls
 /homeassistant/components/go2rtc/ @home-assistant/core
 /tests/components/go2rtc/ @home-assistant/core
 /homeassistant/components/goalzero/ @tkdrob
