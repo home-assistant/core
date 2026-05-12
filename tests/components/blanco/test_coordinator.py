@@ -1,7 +1,5 @@
 """Tests for coordinator.py — BlancoDataUpdateCoordinator and helpers."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from blanco_smart_home_api_client import BlancoApiClient

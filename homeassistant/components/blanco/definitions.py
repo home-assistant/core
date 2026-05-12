@@ -5,8 +5,6 @@ device types, device names, and time ranges.  API-side enums (BlancoErrorType,
 BlancoActionType, BlancoWaterType) live in blanco_smart_home_api_client.models.
 """
 
-from __future__ import annotations
-
 from enum import IntEnum
 
 

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the blanco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
@@ -19,7 +17,7 @@ from blanco_smart_home_api_client import (
     HttpStatus,
 )
 
-from homeassistant.config_entries import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,7 +44,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: BlancoConfigEntry,
+        entry: "BlancoConfigEntry",
         token: str,
         token_type: str,
         dev_id: str,
@@ -87,7 +85,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Returns True if the token was successfully renewed, False otherwise.
         """
-        _LOGGER.debug("Attempting token renewal...")
+        assert self.config_entry is not None
+        _LOGGER.debug("Attempting token renewal")
         try:
             auth = await self._api.renew_token(self.config_entry.data[CONF_DEV_ID])
         except BlancoApiError as err:
@@ -119,7 +118,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await api_method(*args)
         except BlancoTokenExpiredError:
-            _LOGGER.warning("Token expired, attempting renewal...")
+            _LOGGER.warning("Token expired, attempting renewal")
             if not await self._async_renew_token():
                 raise ConfigEntryAuthFailed(
                     "Token renewal failed — reauthentication required"
@@ -128,6 +127,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch system, status, settings, and errors from the BLANCO API."""
+        assert self.config_entry is not None
         prev: dict[str, Any] = self.data or {}
 
         # ── /system ───────────────────────────────────────────────────────────

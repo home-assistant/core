@@ -1,7 +1,5 @@
 """Common fixtures and helpers for the blanco tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,6 +16,7 @@ from homeassistant.components.blanco.const import (
 )
 from homeassistant.components.blanco.coordinator import BlancoDataUpdateCoordinator
 from homeassistant.components.blanco.definitions import BlancoDeviceType
+from homeassistant.core import HomeAssistant
 
 # ── Shared test constants ──────────────────────────────────────────────────────
 
@@ -44,13 +43,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_hass() -> MagicMock:
+def mock_hass() -> HomeAssistant:
     """Return a minimal HomeAssistant-like mock sufficient for coordinator tests."""
-    hass = MagicMock()
+    hass = MagicMock(spec=HomeAssistant)
     hass.config.components = set()
     hass.config_entries.async_update_entry = MagicMock()
     hass.config.time_zone = "UTC"
-    return hass
+    return hass  # type: ignore[return-value]
 
 
 # ── Non-fixture helpers ────────────────────────────────────────────────────────
@@ -77,7 +76,7 @@ def make_mock_entry(data: dict | None = None) -> MagicMock:
 
 
 def make_coordinator(
-    hass: MagicMock,
+    hass: HomeAssistant,
     entry: MagicMock | None = None,
     dev_type: BlancoDeviceType = BlancoDeviceType.AIO,
     session: MagicMock | None = None,

@@ -1,14 +1,14 @@
 {
   "entity": {
     "sensor": {
+      "co2_rest": { "default": "mdi:molecule-co2" },
+      "error_count": { "default": "mdi:alert-outline" },
+      "filter_remaining_days": { "default": "mdi:calendar-clock" },
+      "filter_remaining_volume": { "default": "mdi:cup-water" },
+      "filter_rest": { "default": "mdi:air-filter" },
       "online": { "default": "mdi:clock-outline" },
       "set_point_cooling": { "default": "mdi:thermometer" },
-      "set_point_heating": { "default": "mdi:thermometer" },
-      "co2_rest": { "default": "mdi:molecule-co2" },
-      "filter_rest": { "default": "mdi:air-filter" },
-      "filter_remaining_volume": { "default": "mdi:cup-water" },
-      "filter_remaining_days": { "default": "mdi:calendar-clock" },
-      "error_count": { "default": "mdi:alert-outline" }
+      "set_point_heating": { "default": "mdi:thermometer" }
     }
   }
 }
