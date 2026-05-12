@@ -372,6 +372,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         config_entry: TeslaFleetConfigEntry,
         api: EnergySite,
         product: dict,
+        setup_data: dict[str, Any] | None = None,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""
         super().__init__(
@@ -382,18 +383,26 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             update_interval=timedelta(seconds=15),
         )
         self.api = api
-        self.data = flatten(product)
+        self.data = setup_data if setup_data is not None else flatten(product)
         self.site_id = product["energy_site_id"]
-        self.updated_once = False
+        self.updated_once = setup_data is not None
+        if setup_data is not None:
+            self.update_interval = ENERGY_INTERVAL
 
-    async def async_config_entry_first_refresh_or_skip(self) -> bool:
-        """Refresh site info during setup, skipping known stale-site failures."""
+    @staticmethod
+    async def async_setup_data_or_skip(
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySite,
+        site_id: int,
+    ) -> dict[str, Any] | None:
+        """Fetch site info during setup, skipping known stale-site failures."""
         try:
-            data = flatten((await self.api.site_info())["response"])
+            return flatten((await api.site_info())["response"])
         except RateLimited as err:
             raise ConfigEntryNotReady(str(err)) from err
         except (InvalidToken, OAuthExpired) as err:
-            _invalidate_access_token(self.hass, self.config_entry)
+            _invalidate_access_token(hass, config_entry)
             raise ConfigEntryNotReady from err
         except LoginRequired as err:
             raise ConfigEntryAuthFailed from err
@@ -401,20 +410,13 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             if _is_stale_site_info_error(err):
                 LOGGER.warning(
                     "Skipping Tesla energy site %s because info setup failed: %s",
-                    self.site_id,
+                    site_id,
                     err,
                 )
-                return False
+                return None
             raise ConfigEntryNotReady from err
         except Exception as err:
-            self.last_exception = err
-            self.last_update_success = False
             raise ConfigEntryNotReady from err
-
-        self.data = data
-        self.update_interval = ENERGY_INTERVAL
-        self.updated_once = True
-        return True
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""

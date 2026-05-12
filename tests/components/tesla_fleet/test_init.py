@@ -630,6 +630,7 @@ async def test_setup_skips_stale_energy_site(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
+    mock_live_status: AsyncMock,
     mock_site_info: AsyncMock,
     site_info_error: TeslaFleetError,
 ) -> None:
@@ -657,6 +658,7 @@ async def test_setup_skips_stale_energy_site(
     assert [site.id for site in normal_config_entry.runtime_data.energysites] == [
         123456
     ]
+    assert mock_live_status.call_count == 1
     assert mock_site_info.call_count == 2
 
 

@@ -210,6 +210,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
             api_energy = tesla.energySites.create(site_id)
 
+            # Tesla may keep deactivated energy sites in the products API after an
+            # old solar system is removed or replaced. Those stale sites can
+            # still return live status while the info endpoint returns an error.
+            # Probe site info before creating the live/history coordinators so a
+            # skipped site does not leave unused unload callbacks attached.
+            if (
+                setup_data
+                := await TeslaFleetEnergySiteInfoCoordinator.async_setup_data_or_skip(
+                    hass, entry, api_energy, site_id
+                )
+            ) is None:
+                continue
+
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
                 hass, entry, api_energy
             )
@@ -217,19 +230,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 hass, entry, api_energy
             )
             info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
-                hass, entry, api_energy, product
+                hass, entry, api_energy, product, setup_data
             )
 
             await live_coordinator.async_config_entry_first_refresh()
-
-            # Tesla may keep deactivated energy sites in the products API after an
-            # old solar system is removed or replaced. Those stale sites can
-            # still return live status while the info endpoint returns an error.
-            # Only the site info refresh can be skipped here. Live status
-            # failures may be transient and should keep the config entry in
-            # setup retry.
-            if not await info_coordinator.async_config_entry_first_refresh_or_skip():
-                continue
 
             # Create energy site model
             model = None
