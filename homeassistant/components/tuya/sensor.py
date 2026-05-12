@@ -1747,7 +1747,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if self.entity_description.native_unit_of_measurement is not None:
             if tuya_uom:
                 # We can trust the entity description UOM
-                LOGGER.debug(
+                LOGGER.warning(
                     "Incompatible unit %s replaced by entity description unit %s "
                     "for device class %s in sensor entity %s; this will stop working "
                     "in 2026.12; use a quirk "
@@ -1763,7 +1763,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         self._attr_native_unit_of_measurement = tuya_uom
         self._attr_device_class = None
         self._attr_suggested_unit_of_measurement = None
-        LOGGER.debug(
+        LOGGER.warning(
             "Device class %s ignored for incompatible unit %s in sensor entity %s; "
             "use a quirk (https://github.com/home-assistant-libs/tuya-device-handlers)"
             " to override",

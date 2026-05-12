@@ -545,7 +545,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         if self.entity_description.native_unit_of_measurement is not None:
             if tuya_uom:
                 # We can trust the entity description UOM
-                LOGGER.debug(
+                LOGGER.warning(
                     "Incompatible unit %s replaced by entity description unit %s "
                     "for device class %s in number entity %s; this will stop working "
                     "in 2026.12; use a quirk "
@@ -560,7 +560,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         self._attr_native_unit_of_measurement = tuya_uom
         self._attr_device_class = None
-        LOGGER.debug(
+        LOGGER.warning(
             "Device class %s ignored for incompatible unit %s in number entity %s; "
             "use a quirk (https://github.com/home-assistant-libs/tuya-device-handlers)"
             " to override",

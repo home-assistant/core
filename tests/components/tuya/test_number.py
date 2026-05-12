@@ -15,7 +15,8 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, json
+from homeassistant.util import json as json_util
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -119,3 +120,56 @@ async def test_set_value(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "delay_set", "value": 18}]
     )
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "dpcode", "tuya_uom", "expected_msg"),
+    [
+        (
+            "co2bj_yrr3eiyiacm31ski",
+            "number.aqi_alarm_duration",
+            "alarm_time",
+            "invalid_uom",
+            (
+                "Incompatible unit invalid_uom replaced by entity description "
+                "unit s for device class duration in number entity "
+                "tuya.iks13mcaiyie3rryjb2ocalarm_time; this will stop working "
+                "in 2026.12; use a quirk (https://github.com/home-assistant-libs"
+                "/tuya-device-handlers) to override"
+            ),
+        ),
+        (
+            "znrb_gpzittzfnzhduquz",
+            "number.inverter_pool_heat_pump_temperature",
+            "temp_set",
+            "",
+            (
+                "Device class temperature ignored for incompatible unit  in "
+                "number entity tuya.zuqudhznfzttizpgbrnztemp_set; use a quirk "
+                "(https://github.com/home-assistant-libs/tuya-device-handlers) "
+                "to override"
+            ),
+        ),
+    ],
+)
+async def test_invalid_uom(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    dpcode: str,
+    tuya_uom: str,
+    expected_msg: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid unit of measurement."""
+    values = json_util.json_loads_object(mock_device.status_range[dpcode].values)
+    values["unit"] = tuya_uom
+    mock_device.function[dpcode].values = json.json_dumps(values)
+    mock_device.status_range[dpcode].values = json.json_dumps(values)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert expected_msg in caplog.text
