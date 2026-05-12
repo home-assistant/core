@@ -32,13 +32,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=user_input
         )
-        if result["type"] == FlowResultType.FORM:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "test-uuid"
-        assert result["data"] == user_input
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-uuid"
+    assert result["data"] == user_input
 
 
 @pytest.mark.parametrize(
@@ -85,24 +81,23 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_NAME: "2.8.0",
         CONF_PLATFORM: "volkszaehler",
     }
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
 
-        async def dummy_add_entities():
-            pass
+    async def dummy_add_entities():
+        pass
 
-        await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
+    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        entry = entries[0]
-        assert entry.data == {
-            CONF_UUID: "import-uuid",
-            CONF_HOST: "importhost",
-            CONF_PORT: 80,
-        }
-        assert entry.title == "2.8.0"
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.data == {
+        CONF_UUID: "import-uuid",
+        CONF_HOST: "importhost",
+        CONF_PORT: 80,
+    }
+    assert entry.title == "2.8.0"
 
 
 async def test_import_once(hass: HomeAssistant) -> None:
@@ -113,15 +108,14 @@ async def test_import_once(hass: HomeAssistant) -> None:
         CONF_PORT: 8080,
         CONF_PLATFORM: "volkszaehler",
     }
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
 
-        async def dummy_add_entities():
-            pass
+    async def dummy_add_entities():
+        pass
 
-        await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
-        await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
+    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
+    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
