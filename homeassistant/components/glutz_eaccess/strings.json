@@ -1,80 +1,5 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to Glutz eAccess",
-        "menu_options": {
-          "credentials": "Sign in with credentials",
-          "invitation": "Use an invitation link"
-        }
-      },
-      "credentials": {
-        "title": "Sign in with credentials",
-        "description": "Enter the URL of your Glutz eAccess instance and your credentials.",
-        "data": {
-          "host": "Server name or URL",
-          "username": "Username or email",
-          "password": "Password"
-        },
-        "data_description": {
-          "host": "Full URL of your Glutz eAccess server.",
-          "username": "The username or email address of your Glutz eAccess account.",
-          "password": "The password for your Glutz eAccess account."
-        }
-      },
-      "invitation": {
-        "title": "Use an invitation link",
-        "description": "Paste the invitation link you received by email.",
-        "data": {
-          "invite_url": "Invitation link"
-        },
-        "data_description": {
-          "invite_url": "The invitation link sent to you by email from Glutz."
-        }
-      },
-      "invitation_confirm": {
-        "title": "Set your password",
-        "description": "Review the host and email, then choose a password with at least 8 characters including uppercase, lowercase, a digit and a special character.",
-        "data": {
-          "host": "Server name or URL",
-          "username": "Username or email",
-          "password": "Password"
-        },
-        "data_description": {
-          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
-          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]",
-          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate with Glutz eAccess",
-        "description": "Your stored credentials are no longer valid. Review the server and username, then enter your current password.",
-        "data": {
-          "host": "Server name or URL",
-          "username": "Username or email",
-          "password": "Password"
-        },
-        "data_description": {
-          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
-          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]",
-          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]"
-        }
-      },
-      "reconfigure": {
-        "title": "Update Glutz eAccess connection",
-        "description": "Update the server address or credentials for this Glutz eAccess instance.",
-        "data": {
-          "host": "Server name or URL",
-          "username": "Username or email",
-          "password": "Password"
-        },
-        "data_description": {
-          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
-          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]",
-          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]"
-        }
-      }
-    },
     "abort": {
       "already_configured": "This Glutz instance is already configured.",
       "reauth_successful": "Re-authentication was successful.",
@@ -87,6 +12,81 @@
       "invalid_auth": "Invalid credentials. Check your username and password.",
       "invalid_invitation": "The invitation link is not valid. Make sure you pasted the full URL from the email.",
       "invalid_password": "Password must be at least 8 characters and include uppercase, lowercase, a digit and a special character."
+    },
+    "step": {
+      "credentials": {
+        "data": {
+          "host": "Server name or URL",
+          "password": "Password",
+          "username": "Username or email"
+        },
+        "data_description": {
+          "host": "Full URL of your Glutz eAccess server.",
+          "password": "The password for your Glutz eAccess account.",
+          "username": "The username or email address of your Glutz eAccess account."
+        },
+        "description": "Enter the URL of your Glutz eAccess instance and your credentials.",
+        "title": "Sign in with credentials"
+      },
+      "invitation": {
+        "data": {
+          "invite_url": "Invitation link"
+        },
+        "data_description": {
+          "invite_url": "The invitation link sent to you by email from Glutz."
+        },
+        "description": "Paste the invitation link you received by email.",
+        "title": "Use an invitation link"
+      },
+      "invitation_confirm": {
+        "data": {
+          "host": "Server name or URL",
+          "password": "Password",
+          "username": "Username or email"
+        },
+        "data_description": {
+          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
+          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]"
+        },
+        "description": "Review the host and email, then choose a password with at least 8 characters including uppercase, lowercase, a digit and a special character.",
+        "title": "Set your password"
+      },
+      "reauth_confirm": {
+        "data": {
+          "host": "Server name or URL",
+          "password": "Password",
+          "username": "Username or email"
+        },
+        "data_description": {
+          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
+          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]"
+        },
+        "description": "Your stored credentials are no longer valid. Review the server and username, then enter your current password.",
+        "title": "Re-authenticate with Glutz eAccess"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Server name or URL",
+          "password": "Password",
+          "username": "Username or email"
+        },
+        "data_description": {
+          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
+          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]"
+        },
+        "description": "Update the server address or credentials for this Glutz eAccess instance.",
+        "title": "Update Glutz eAccess connection"
+      },
+      "user": {
+        "menu_options": {
+          "credentials": "Sign in with credentials",
+          "invitation": "Use an invitation link"
+        },
+        "title": "Connect to Glutz eAccess"
+      }
     }
   },
   "entity": {
@@ -100,11 +100,11 @@
     "auth_error": {
       "message": "Authentication failed for access point {access_point_id}."
     },
-    "open_access_point_error": {
-      "message": "Error opening access point {access_point_id}."
+    "close_access_point_error": {
+      "message": "Error locking access point {access_point_id}."
     },
-    "open_access_point_failed": {
-      "message": "Failed to open access point {access_point_id}."
+    "close_access_point_failed": {
+      "message": "Failed to lock access point {access_point_id}."
     },
     "hold_open_access_point_error": {
       "message": "Error holding open access point {access_point_id}."
@@ -112,11 +112,11 @@
     "hold_open_access_point_failed": {
       "message": "Failed to hold open access point {access_point_id}."
     },
-    "close_access_point_error": {
-      "message": "Error locking access point {access_point_id}."
+    "open_access_point_error": {
+      "message": "Error opening access point {access_point_id}."
     },
-    "close_access_point_failed": {
-      "message": "Failed to lock access point {access_point_id}."
+    "open_access_point_failed": {
+      "message": "Failed to open access point {access_point_id}."
     }
   }
 }
