@@ -15,7 +15,6 @@ from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 from zeroconf import BadTypeInNameException, DNSPointer, IPVersion
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
-from zeroconf.const import _CLASS_IN, _TYPE_PTR
 
 from homeassistant.components import zeroconf as zeroconf_component
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,6 +51,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MDNS_SCAN_TIMEOUT = 1
+_TYPE_PTR = 12
+_CLASS_IN = 1
 
 
 def create_schema(previous_input=None):
