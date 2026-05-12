@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "Already configured",
-      "no_devices_found": "No RYSE BLE device found in pairing mode. Please Press PAIR button and retry"
+      "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and try again."
     },
     "error": {
       "bluetooth_error": "Bluetooth error occurred during pairing. Please ensure the device is in range and try again.",
