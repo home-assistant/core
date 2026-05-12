@@ -19,5 +19,11 @@
         "title": "Set up Volkszaehler"
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Importing Volkszaehler sensor configuration from YAML is deprecated or failed. Remove the YAML configuration and set up the integration through the Home Assistant UI.",
+      "title": "YAML import is deprecated"
+    }
   }
 }
