@@ -29,7 +29,7 @@
     'object_id_base': 'Comfort setpoint',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Comfort setpoint',
     'platform': 'eurotronic_cometblue',
@@ -44,7 +44,7 @@
 # name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_comfort_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
+      'device_class': 'temperature',
       'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Comfort setpoint',
       'max': 28.5,
       'min': 7.5,
@@ -151,7 +151,7 @@
     'object_id_base': 'Setpoint offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Setpoint offset',
     'platform': 'eurotronic_cometblue',
@@ -166,7 +166,7 @@
 # name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_setpoint_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      'device_class': 'temperature_delta',
       'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Setpoint offset',
       'max': 5.0,
       'min': -5.0,
