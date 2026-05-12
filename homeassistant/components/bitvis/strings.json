@@ -11,12 +11,10 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "Hostname or IP address of your Bitvis Power Hub device.",
-          "name": "Name for this Bitvis Power Hub device.",
           "port": "UDP port the Bitvis Power Hub sends data to."
         },
         "description": "Enter the network details for your Bitvis Power Hub device",

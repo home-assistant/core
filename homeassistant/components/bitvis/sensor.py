@@ -1,10 +1,9 @@
 """Sensor platform for Bitvis Power Hub."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from bitvis_protobuf.han_port_pb2 import HanPortSample
 from bitvis_protobuf.powerhub_pb2 import Diagnostic
@@ -415,7 +414,7 @@ SENSOR_DESCRIPTIONS: tuple[BitvisSensorEntityDescription, ...] = (
 UPTIME_DESCRIPTION = SensorEntityDescription(
     key="uptime",
     translation_key="uptime",
-    device_class=SensorDeviceClass.TIMESTAMP,
+    device_class=SensorDeviceClass.UPTIME,
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
 )
@@ -488,7 +487,8 @@ class BitvisBaseSensorEntity(
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        assert entry.unique_id is not None
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
         self._device_identifier = entry.unique_id
         self._attr_unique_id = f"{self._device_identifier}_{description.key}"
 

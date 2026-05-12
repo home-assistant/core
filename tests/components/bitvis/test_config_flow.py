@@ -9,7 +9,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bitvis.config_flow import _async_test_port
-from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from homeassistant.components.bitvis.const import (
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    MODEL_NAME,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -62,7 +67,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
+    assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 5000,
@@ -265,6 +270,7 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == MODEL_NAME
     assert result["data"] == {
         CONF_HOST: "2001:db8::10",
         CONF_PORT: 5000,
@@ -340,6 +346,7 @@ async def test_user_form_resolve_host_gaierror_fallback(
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == "my-powerhub.local"
 
 
@@ -370,6 +377,7 @@ async def test_user_form_normalize_bracketed_ipv6(
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == "2001:db8::10"
 
 
@@ -486,7 +494,7 @@ async def test_async_test_port_binds_and_closes(hass: HomeAssistant) -> None:
             "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
         ) as mock_registry,
         patch.object(
-            asyncio.get_running_loop(),
+            hass.loop,
             "create_datagram_endpoint",
             new_callable=AsyncMock,
             return_value=(mock_transport, MagicMock()),
@@ -508,7 +516,7 @@ async def test_async_test_port_raises_when_all_binds_fail(
         mock_registry.return_value.has_listener.return_value = False
         with (
             patch.object(
-                asyncio.get_running_loop(),
+                hass.loop,
                 "create_datagram_endpoint",
                 new_callable=AsyncMock,
                 side_effect=OSError("bind failed"),

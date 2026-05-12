@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.bitvis.const import DOMAIN
+from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -19,7 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PORT: 5000},
         unique_id="192.168.1.100:5000",
-        title="Bitvis Power Hub",
+        title=MODEL_NAME,
     )
 
 

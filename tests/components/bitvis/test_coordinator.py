@@ -9,7 +9,7 @@ from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.const import DOMAIN, WATCHDOG_INTERVAL
+from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME, WATCHDOG_INTERVAL
 from homeassistant.components.bitvis.coordinator import (
     BitvisDataUpdateCoordinator,
     BitvisListenerRegistry,
@@ -30,7 +30,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={"host": "192.168.1.100", "port": 5000},
         unique_id="192.168.1.100:5000",
-        title="Bitvis Power Hub",
+        title=MODEL_NAME,
     )
 
 
