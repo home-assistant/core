@@ -12,7 +12,12 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
+    FAHRENHEIT_ALIASES,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -554,6 +560,19 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 self.unique_id,
             )
 
+            return
+
+        # If the device provides TEMP_UNIT_CONVERT, use it to determine the unit.
+        if (
+                self.device_class == NumberDeviceClass.TEMPERATURE
+                and (unit_value := self.device.status.get(DPCode.TEMP_UNIT_CONVERT))
+                is not None
+        ):
+            self._attr_native_unit_of_measurement = (
+                UnitOfTemperature.FAHRENHEIT
+                if str(unit_value).lower() in FAHRENHEIT_ALIASES
+                else UnitOfTemperature.CELSIUS
+            )
             return
 
         self._attr_native_unit_of_measurement = tuya_uom
