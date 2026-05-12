@@ -20,7 +20,7 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -123,6 +123,7 @@ async def test_unlock_auto_relocks_after_duration(
     assert hass.states.get(ENTITY_AP1).state == LockState.UNLOCKED
 
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED
@@ -322,7 +323,7 @@ async def test_entity_unavailable_when_access_point_removed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_AP1).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_AP1) is None
 
 
 async def test_unlock_twice_cancels_first_relock(
@@ -354,6 +355,7 @@ async def test_unlock_twice_cancels_first_relock(
 
     # After the relock duration the door should lock (new relock task is active)
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED
