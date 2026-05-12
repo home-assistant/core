@@ -1618,7 +1618,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.COMPRESSOR_STRENGTH,
             translation_key="compressor_strength",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_AROUND,
