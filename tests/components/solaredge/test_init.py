@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
+import pytest
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
@@ -10,6 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry
@@ -158,35 +160,27 @@ async def test_web_login_config_not_ready(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_missing_details_key(
-    recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
+@pytest.mark.parametrize(
+    ("get_details_response", "expected_state"),
+    [
+        # Missing 'details' key → ConfigEntryNotReady → SETUP_RETRY
+        ({}, ConfigEntryState.SETUP_RETRY),
+        # Site status is not 'active' → setup returns False → SETUP_ERROR
+        ({"details": {"status": "Disabled"}}, ConfigEntryState.SETUP_ERROR),
+    ],
+    ids=["missing_details_key", "site_not_active"],
+)
+async def test_setup_api_key_failure(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+    get_details_response: dict,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup raises ConfigEntryNotReady when API response has no 'details' key."""
-    solaredge_api.get_details.return_value = {}
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
-    )
-    entry.add_to_hass(hass)
+    """Test the API-key setup failure paths in async_setup_entry."""
+    solaredge_api.get_details.return_value = get_details_response
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_site_not_active(
-    recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
-) -> None:
-    """Test setup fails when the site status is not 'active'."""
-    solaredge_api.get_details.return_value = {"details": {"status": "Disabled"}}
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state

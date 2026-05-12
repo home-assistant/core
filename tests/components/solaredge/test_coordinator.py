@@ -425,15 +425,12 @@ async def test_modules_coordinator_no_energy_data(
 async def test_modules_coordinator_api_failure(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    mock_config_entry_web_login: MockConfigEntry,
     solaredge_web_api: AsyncMock,
 ) -> None:
     """Test the modules coordinator surfaces API failures via the config entry state."""
     solaredge_web_api.async_get_equipment.side_effect = ClientError("boom")
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
 
-    await setup_integration(hass, entry)
+    await setup_integration(hass, mock_config_entry_web_login)
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry_web_login.state is ConfigEntryState.SETUP_RETRY
