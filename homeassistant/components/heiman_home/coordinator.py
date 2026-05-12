@@ -328,9 +328,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 access_token,
                 "Cannot initialize MQTT: access_token not available from any source",
             )
-            _raise_if_missing(
-                user_id, "Cannot initialize MQTT: user_id not available"
-            )
+            _raise_if_missing(user_id, "Cannot initialize MQTT: user_id not available")
 
             # Get user display name using SDK method
             user_display_name = None
