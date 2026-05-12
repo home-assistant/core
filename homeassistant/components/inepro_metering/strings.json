@@ -1,0 +1,551 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose what to add",
+        "description": "Add one energy meter, or add a TCP gateway and then scan the meters behind it.",
+        "data": {
+          "device_kind": "What do you want to add?"
+        },
+        "data_description": {
+          "device_kind": "Choose whether to add one meter or a shared TCP gateway with downstream meters."
+        }
+      },
+      "family": {
+        "title": "Choose meter family",
+        "description": "Choose the inepro energy meter family.",
+        "data": {
+          "family": "Meter family"
+        },
+        "data_description": {
+          "family": "Choose the inepro meter family."
+        }
+      },
+      "setup_method": {
+        "title": "Choose setup method",
+        "description": "Choose whether to configure one meter manually or scan for supported meters on a Modbus RTU bus, a Modbus TCP gateway, or Bluetooth.",
+        "data": {
+          "setup_method": "Setup method"
+        },
+        "data_description": {
+          "setup_method": "Choose whether to configure one meter manually or scan for supported meters."
+        }
+      },
+      "gateway_setup_method": {
+        "title": "Choose gateway method",
+        "description": "Search for inepro gateways is recommended. The Ambition Gateway does not advertise over mDNS yet, so discovery uses a user-triggered Modbus TCP scan. You can still enter an IP address manually.",
+        "data": {
+          "gateway_setup_method": "Gateway method"
+        },
+        "data_description": {
+          "gateway_setup_method": "Choose whether to search for an inepro gateway or enter the gateway address manually."
+        }
+      },
+      "gateway_discover": {
+        "title": "Scan network for gateways",
+        "description": "Search for verified inepro gateways. Leave the target empty for local auto-discovery, or enter the gateway IP/subnet when Home Assistant runs in WSL, Docker, a VM, or another routed network. The scan checks Modbus TCP candidates and validates the inepro gateway identity.",
+        "data": {
+          "gateway_discovery_target": "Gateway scan target (optional)"
+        },
+        "data_description": {
+          "gateway_discovery_target": "Leave empty to try local auto-discovery. Enter a single IP such as 192.168.68.85, a hostname, or an IPv4 subnet such as 192.168.68.0/24 when the gateway is reachable through routing but not local broadcast."
+        }
+      },
+      "gateway_discovered": {
+        "title": "Verified gateway found",
+        "description": "{gateway}\n\nFound {count} verified inepro gateway device(s). Choose the gateway to add, then scan for downstream meters.",
+        "data": {
+          "discovered_gateway": "Gateway"
+        },
+        "data_description": {
+          "discovered_gateway": "Choose the verified gateway to add."
+        }
+      },
+      "gateway_no_meters": {
+        "title": "Gateway verified",
+        "description": "Found verified inepro gateway at {host}:{port}. No downstream meters were detected in the selected Modbus address range. The gateway entry can still be added now; you can rescan for connected meters later from options."
+      },
+      "model": {
+        "title": "Choose model",
+        "description": "Choose the model and basic polling settings for the selected family.",
+        "data": {
+          "name": "Name",
+          "variant": "Meter model",
+          "slave_id": "Modbus address",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "name": "The display name to use for this entry.",
+          "variant": "Choose the exact meter model.",
+          "slave_id": "The Modbus address of the meter.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "transport": {
+        "title": "Select transport",
+        "description": "Choose how this meter is connected to Home Assistant.",
+        "data": {
+          "transport": "Connection type"
+        },
+        "data_description": {
+          "transport": "Choose the physical connection Home Assistant will use to reach this meter."
+        }
+      },
+      "serial_scan": {
+        "title": "Scan serial bus",
+        "description": "Enter the serial settings and slave range to scan for new supported meters on the wired Modbus RTU bus.",
+        "data": {
+          "serial_port": "Serial port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "timeout": "Timeout (seconds)",
+          "slave_id_start": "First Modbus address",
+          "slave_id_end": "Last Modbus address",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "serial_port": "For example COM1 on Windows or /dev/ttyUSB0 on Linux.",
+          "slave_id_start": "Usually start from 1 unless your site uses a higher address range.",
+          "slave_id_end": "Use a smaller range for faster scans. You can widen it if needed.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "gateway_scan": {
+        "title": "Scan gateway meters",
+        "description": "Enter the gateway endpoint and the Modbus address range to scan for downstream supported meters on the RS485 bus behind the gateway. The gateway is validated using Modbus TCP first; setup can continue even if no downstream meters are found.",
+        "data": {
+          "host": "Gateway host",
+          "port": "TCP port",
+          "timeout": "Timeout (seconds)",
+          "slave_id_start": "First Modbus address",
+          "slave_id_end": "Last Modbus address",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Modbus TCP gateway.",
+          "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
+          "slave_id_start": "Usually start from 1 unless your site uses a higher address range.",
+          "slave_id_end": "Defaults to the first 8 downstream Modbus addresses for a faster scan. Increase it if the site uses higher meter addresses.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "discovered": {
+        "title": "Choose discovered meters",
+        "description": "Found {count} new supported meter(s) on this Modbus bus. Choose which meters to add.",
+        "data": {
+          "discovered_meters": "Discovered meters",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "discovered_meters": "Choose the discovered meters to add.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "bluetooth_scan": {
+        "title": "Scan Bluetooth",
+        "description": "No connectable GROW Bluetooth meters are currently visible through Home Assistant Bluetooth. Set the meter Bluetooth mode to ON or open INFO -> BLE on the meter, then submit to scan again."
+      },
+      "bluetooth_discovered": {
+        "title": "Choose Bluetooth meter",
+        "description": "Found {count} connectable GROW Bluetooth meter(s). Choose which meter is already paired and trusted with this Home Assistant host. Setup will validate Device Information and the live Modbus serial number before creating the entry.",
+        "data": {
+          "discovered_bluetooth_meter": "Bluetooth meter",
+          "slave_id": "Modbus address",
+          "timeout": "Timeout (seconds)",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "discovered_bluetooth_meter": "Choose the discovered Bluetooth meter to add.",
+          "slave_id": "The Modbus address of the meter.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Add Bluetooth meter",
+        "description": "Add paired Bluetooth meter {bluetooth_name}. The meter must already be paired and trusted with the Home Assistant host. Setup will validate Device Information and the live Modbus serial number before creating the entry.",
+        "data": {
+          "slave_id": "Modbus address",
+          "timeout": "Timeout (seconds)",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "slave_id": "The Modbus address of the meter.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Add GROW meter",
+        "description": "Add the GROW meter discovered by mDNS at {host}:{port}. Choose whether this endpoint is the meter's Wi-Fi or Ethernet connection. The meter serial number from the TXT record will be used as the stable identity.",
+        "data": {
+          "transport": "Connection type"
+        },
+        "data_description": {
+          "transport": "Choose whether the discovered endpoint is the meter's Ethernet or Wi-Fi connection."
+        }
+      },
+      "connection": {
+        "title": "Connection details",
+        "description": "Enter the Modbus settings for the selected transport. For Ethernet or Wi-Fi, the meter must already be reachable on the network. For a gateway, enter the gateway endpoint and the downstream meter Modbus address. For Bluetooth, use the BLE address from a discovered IM- serial device.",
+        "data": {
+          "serial_port": "Serial port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "bluetooth_address": "Bluetooth address",
+          "bluetooth_name": "Bluetooth name",
+          "host": "Host",
+          "port": "TCP port",
+          "timeout": "Timeout (seconds)"
+        },
+        "data_description": {
+          "serial_port": "For example COM1 on Windows or /dev/ttyUSB0 on Linux.",
+          "host": "IP address or hostname of the meter. For Wi-Fi, the meter must already have been provisioned onto the WLAN.",
+          "port": "Usually Modbus TCP port 502. The meter display shows this as Modbus TCP.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "bluetooth_address": "The Bluetooth address of the paired meter.",
+          "bluetooth_name": "An optional friendly Bluetooth name for the meter.",
+          "timeout": "How long to wait for each Modbus response."
+        }
+      },
+      "edit_serial_bus": {
+        "title": "Update shared bus connection",
+        "description": "Change the shared {bus_type} settings and the Modbus address for each configured meter on this bus.",
+        "data": {
+          "name": "Bus name",
+          "serial_port": "Serial port",
+          "host": "Gateway host",
+          "port": "TCP port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "timeout": "Timeout (seconds)",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "name": "This renames the Home Assistant shared-bus entry. Meter device names remain based on their serial numbers.",
+          "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
+          "host": "IP address or hostname of the Modbus TCP gateway.",
+          "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
+          "timeout": "How long to wait for each Modbus response on this shared bus.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      }
+    },
+    "progress": {
+      "gateway_discover": "Searching {target}, checking Modbus TCP candidates, and validating inepro gateway identity."
+    },
+    "error": {
+      "already_configured_via_gateway": "This meter is already configured through a shared Modbus bus or gateway.",
+      "cannot_connect": "Could not validate this Modbus endpoint. Check that the device is online and the connection details are correct.",
+      "bluetooth_not_available": "Home Assistant Bluetooth is not available. Check the Bluetooth integration, adapter, or Bluetooth proxy.",
+      "bluetooth_device_not_found": "Home Assistant cannot currently see this connectable Bluetooth meter. Move it closer to an adapter or Bluetooth proxy and try again.",
+      "bluetooth_cannot_connect": "Could not connect to the Bluetooth meter. Check range, adapter/proxy placement, and that Bluetooth is enabled on the meter.",
+      "bluetooth_services_missing": "The Bluetooth device is visible but does not expose the expected inepro Modbus service.",
+      "bluetooth_timeout": "Timed out waiting for the Bluetooth meter. Pairing may not have completed on the Home Assistant host. Keep the meter on INFO -> BLE and try again near a local Bluetooth adapter.",
+      "bluetooth_pairing_failed": "Bluetooth pairing failed. Keep the meter on INFO -> BLE and try again. If no prompt appears on the Home Assistant host, pre-pair the meter from that host's Bluetooth settings or test with a local Home Assistant Bluetooth adapter. Pairing through Bluetooth proxies may not be supported for encrypted GROW writes yet.",
+      "bluetooth_pairing_unsupported": "This Bluetooth adapter or proxy does not support the pairing needed for encrypted GROW writes. Try a local Bluetooth adapter on the Home Assistant host.",
+      "bluetooth_not_paired": "The meter is not paired with the Home Assistant host. Pair and trust it with bluetoothctl, then retry.",
+      "cannot_validate": "Connected to the meter, but could not read its serial number.",
+      "invalid_identity": "The live meter serial number does not match the discovered or configured meter.",
+      "unsupported_device": "This Bluetooth device does not look like a supported inepro GROW meter.",
+      "transport_required": "Choose a connection type before continuing.",
+      "invalid_scan_range": "The first Modbus address must be lower than or equal to the last address.",
+      "invalid_scan_target": "Enter one gateway IP, hostname, or an IPv4 subnet such as 10.5.2.0/24.",
+      "no_gateways_found": "No verified inepro gateway was found. The scan checked Modbus TCP candidates. The gateway may be offline, on another subnet, using a non-default port, blocked by firewall/VLAN rules, or hidden from the network namespace Home Assistant is running in. Retry with the gateway IP or subnet, or enter the IP address manually.",
+      "no_bluetooth_devices_found": "No connectable GROW Bluetooth meters were found.",
+      "no_new_devices_found": "No new supported meters were found on that Modbus bus. If this is a gateway setup, the gateway can still be valid with no detected downstream meters."
+    },
+    "abort": {
+      "already_configured": "This meter is already configured.",
+      "already_configured_via_gateway": "This meter is already configured through a shared Modbus bus or gateway.",
+      "not_supported": "This discovery does not match a supported inepro GROW meter.",
+      "meter_added_to_existing_bus": "The selected meters were added to the existing Modbus bus entry.",
+      "reconfigure_successful": "The entry was updated. Home Assistant is reloading it now."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure entry",
+        "description": "Choose whether to update this entry's connection settings, rescan a shared Modbus bus, or only update the polling interval.",
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Choose which settings or routes to update for this entry."
+        }
+      },
+      "update_connection": {
+        "title": "Update connection details",
+        "description": "Change the active route connection details, Modbus address, timeout, or polling interval for this meter. The meter serial number remains the stable identity.",
+        "data": {
+          "serial_port": "Serial port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "bluetooth_address": "Bluetooth address",
+          "bluetooth_name": "Bluetooth name",
+          "host": "Host",
+          "slave_id": "Modbus address",
+          "port": "TCP port",
+          "timeout": "Timeout (seconds)",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
+          "bluetooth_address": "Use the BLE address shown during discovery for the target meter.",
+          "bluetooth_name": "Optional friendly Bluetooth name remembered in Home Assistant.",
+          "host": "IP address or hostname of the meter.",
+          "port": "Usually Modbus TCP port 502.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "slave_id": "The Modbus address of the meter.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "add_route": {
+        "title": "Add route",
+        "description": "Choose another connection route for this meter.",
+        "data": {
+          "transport": "Connection type"
+        },
+        "data_description": {
+          "transport": "Choose the physical connection Home Assistant will use to reach this meter."
+        }
+      },
+      "add_route_purpose": {
+        "title": "Route purpose",
+        "description": "Choose whether this route should be used for normal polling or kept as a helper route.",
+        "data": {
+          "route_purpose": "Route purpose"
+        },
+        "data_description": {
+          "route_purpose": "Choose whether this route should be used for normal polling or kept as a helper route."
+        }
+      },
+      "add_route_connection": {
+        "title": "Add route details",
+        "description": "Enter the connection details for this route.",
+        "data": {
+          "serial_port": "Serial port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "bluetooth_address": "Bluetooth address",
+          "bluetooth_name": "Bluetooth name",
+          "host": "Host",
+          "slave_id": "Modbus address",
+          "port": "TCP port",
+          "timeout": "Timeout (seconds)"
+        },
+        "data_description": {
+          "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
+          "bluetooth_address": "Only needed for developer/legacy Bluetooth routes. Normal Bluetooth routes are discovered automatically.",
+          "bluetooth_name": "Optional friendly Bluetooth name remembered in Home Assistant.",
+          "host": "IP address or hostname for this route.",
+          "port": "Usually Modbus TCP port 502.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "slave_id": "The Modbus address of the meter.",
+          "timeout": "How long to wait for each Modbus response."
+        }
+      },
+      "add_route_bluetooth_scan": {
+        "title": "Find Bluetooth route",
+        "description": "Home Assistant will use its Bluetooth adapters and proxies to find {meter}. Open INFO -> BLE on the meter, then submit to scan again."
+      },
+      "add_route_bluetooth_discovered": {
+        "title": "Choose Bluetooth route",
+        "description": "Found {count} connectable Bluetooth route candidate(s) for {meter}. Choose the route that is already paired and trusted with this Home Assistant host. The Bluetooth address and name will be saved automatically after validation.",
+        "data": {
+          "discovered_bluetooth_meter": "Bluetooth meter",
+          "slave_id": "Modbus address",
+          "timeout": "Timeout (seconds)"
+        },
+        "data_description": {
+          "discovered_bluetooth_meter": "Choose the discovered Bluetooth meter to add.",
+          "slave_id": "The Modbus address of the meter.",
+          "timeout": "How long to wait for each Modbus response."
+        }
+      },
+      "edit_serial_bus": {
+        "title": "Edit Modbus bus",
+        "description": "Change the shared {bus_type} settings and the Modbus address for each configured meter on this bus.",
+        "data": {
+          "name": "Bus name",
+          "serial_port": "Serial port",
+          "host": "Gateway host",
+          "port": "TCP port",
+          "baudrate": "Baud rate",
+          "bytesize": "Data bits",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "timeout": "Timeout (seconds)",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "name": "This renames the Home Assistant shared-bus entry. Meter device names remain based on their serial numbers.",
+          "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
+          "host": "IP address or hostname of the Modbus TCP gateway.",
+          "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
+          "baudrate": "The Modbus RTU baud rate for this serial bus.",
+          "bytesize": "The number of data bits for this serial bus.",
+          "parity": "The parity setting for this serial bus.",
+          "stopbits": "The number of stop bits for this serial bus.",
+          "timeout": "How long to wait for each Modbus response.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "update_polling": {
+        "title": "Update polling interval",
+        "description": "Change how often Home Assistant polls this inepro Metering entry.",
+        "data": {
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "serial_bus_scan": {
+        "title": "Scan current Modbus bus",
+        "description": "Scan {bus_endpoint} for additional supported meters that are not yet part of this shared bus entry.",
+        "data": {
+          "slave_id_start": "First Modbus address",
+          "slave_id_end": "Last Modbus address",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "slave_id_start": "The first Modbus address to scan.",
+          "slave_id_end": "The last Modbus address to scan.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "serial_bus_discovered": {
+        "title": "Choose discovered meters",
+        "description": "Found {count} additional supported meter(s) on this Modbus bus. Choose which meters to append to the existing bus entry.",
+        "data": {
+          "discovered_meters": "Discovered meters",
+          "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "discovered_meters": "Choose the discovered meters to add.",
+          "scan_interval": "How often Home Assistant polls the meter or bus."
+        }
+      },
+      "select_meter": {
+        "title": "Choose meter",
+        "description": "Choose which meter on this shared bus to manage.",
+        "data": {
+          "selected_meter": "Meter"
+        },
+        "data_description": {
+          "selected_meter": "Choose the meter whose routes or connection details you want to manage."
+        }
+      },
+      "manage_meter_routes": {
+        "title": "Manage meter routes",
+        "description": "Choose what to update for {meter}.",
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Choose whether to update, add, or switch a route for this meter."
+        }
+      },
+      "switch_route": {
+        "title": "Switch active route",
+        "description": "Choose which saved route Home Assistant should use for polling this meter.",
+        "data": {
+          "selected_route": "Route"
+        },
+        "data_description": {
+          "selected_route": "Choose the configured route to make active for this meter."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device.",
+      "bluetooth_device_not_found": "Home Assistant cannot currently see this connectable Bluetooth meter.",
+      "bluetooth_cannot_connect": "Could not connect to the Bluetooth meter.",
+      "bluetooth_services_missing": "The Bluetooth device does not expose the expected inepro Modbus service.",
+      "bluetooth_timeout": "Timed out waiting for the Bluetooth meter. Pairing may not have completed on the Home Assistant host.",
+      "bluetooth_pairing_failed": "Bluetooth pairing failed. Keep the meter on INFO -> BLE and try again. If no prompt appears on the Home Assistant host, pre-pair the meter from that host's Bluetooth settings or test with a local Home Assistant Bluetooth adapter. Pairing through Bluetooth proxies may not be supported for encrypted GROW writes yet.",
+      "bluetooth_pairing_unsupported": "This Bluetooth adapter or proxy does not support the required pairing. Try a local Bluetooth adapter on the Home Assistant host.",
+      "bluetooth_not_paired": "The meter is not paired with the Home Assistant host. Pair and trust it with bluetoothctl, then retry.",
+      "cannot_validate": "Connected to the meter, but could not read its serial number.",
+      "transport_required": "Choose a connection type before continuing.",
+      "invalid_identity": "The updated connection points to a different meter than this entry.",
+      "invalid_scan_range": "The first Modbus address must be lower than or equal to the last address.",
+      "no_bluetooth_devices_found": "No connectable GROW Bluetooth meters were found.",
+      "no_new_devices_found": "No additional supported meters were found on that Modbus bus.",
+      "route_not_found": "The selected route is no longer available. Reopen the flow and try again."
+    }
+  },
+  "exceptions": {
+    "wifi_credentials_invalid": {
+      "message": "Invalid Wi-Fi credential data: {error}"
+    },
+    "wifi_credentials_meter_not_found": {
+      "message": "No configured inepro meter with serial number {serial_number} was found"
+    },
+    "wifi_credentials_not_loaded": {
+      "message": "inepro meter {serial_number} is configured, but its config entry is not loaded"
+    },
+    "wifi_credentials_unsupported": {
+      "message": "{serial_number} ({model}) does not support Wi-Fi provisioning"
+    },
+    "wifi_credentials_write_failed": {
+      "message": "Failed to write Wi-Fi credentials to {serial_number}"
+    }
+  },
+  "services": {
+    "set_wifi_credentials": {
+      "name": "Set Wi-Fi credentials",
+      "description": "Write Wi-Fi credentials to a configured GROW meter through the currently loaded Modbus route. This enables Wi-Fi support, writes the SSID and password registers, then optionally applies the settings with the Wi-Fi apply command.",
+      "fields": {
+        "serial_number": {
+          "description": "The immutable 12-digit GROW serial number of the target meter.",
+          "name": "Serial number"
+        },
+        "password": {
+          "description": "The Wi-Fi password to write to the meter.",
+          "name": "Wi-Fi password"
+        },
+        "apply": {
+          "description": "Send the Wi-Fi settings apply command after writing the credentials.",
+          "name": "Apply settings"
+        },
+        "ssid": {
+          "description": "The Wi-Fi network name to write to the meter.",
+          "name": "Wi-Fi SSID"
+        }
+      }
+    }
+  }
+}

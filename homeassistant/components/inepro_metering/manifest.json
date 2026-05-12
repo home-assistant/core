@@ -1,0 +1,32 @@
+{
+  "domain": "inepro_metering",
+  "name": "inepro Metering",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "local_name": "IM-*"
+    }
+  ],
+  "codeowners": [
+    "@khaledemam"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/inepro_metering",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": [
+    "bleak",
+    "inepro_metering",
+    "pymodbus"
+  ],
+  "quality_scale": "bronze",
+  "requirements": [
+    "inepro-metering==0.1.0"
+  ],
+  "zeroconf": [
+    "_modbus._tcp.local."
+  ]
+}
