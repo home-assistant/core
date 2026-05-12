@@ -1701,10 +1701,9 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
                     if isinstance(field_data["selector"], Selector):
-                        field_data["selector"] = field_data["selector"].serialize()[
-                            "selector"
-                        ]
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                        field_data["selector"](_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_data["selector"])(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
