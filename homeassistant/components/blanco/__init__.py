@@ -112,9 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bo
         app_build="",
     )
     await coordinator.async_config_entry_first_refresh()
-    dev_name = coordinator.data.get("system", {}).get("params", {}).get("dev_name")
-    if dev_name and entry.title != dev_name:
-        hass.config_entries.async_update_entry(entry, title=dev_name)
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

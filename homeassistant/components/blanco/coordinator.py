@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from . import BlancoConfigEntry
 
 from blanco_smart_home_api_client import (
     BlancoApiClient,
@@ -16,7 +19,7 @@ from blanco_smart_home_api_client import (
     HttpStatus,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryAuthFailed
+from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,7 +46,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: BlancoConfigEntry,
         token: str,
         token_type: str,
         dev_id: str,
@@ -59,8 +62,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name="blanco",
             update_interval=UPDATE_INTERVAL,
+            config_entry=entry,
         )
-        self._entry = entry
         self.dev_id = dev_id
         self.serial = serial
         try:
@@ -86,7 +89,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         _LOGGER.debug("Attempting token renewal...")
         try:
-            auth = await self._api.renew_token(self._entry.data[CONF_DEV_ID])
+            auth = await self._api.renew_token(self.config_entry.data[CONF_DEV_ID])
         except BlancoApiError as err:
             _LOGGER.error("Token renewal failed: %s", err)
             return False
@@ -95,9 +98,9 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         new_token_type = auth["token_type"]
         # Persist renewed token in entry.data.
         self.hass.config_entries.async_update_entry(
-            self._entry,
+            self.config_entry,
             data={
-                **self._entry.data,
+                **self.config_entry.data,
                 CONF_TOKEN: new_token,
                 CONF_TOKEN_TYPE: new_token_type,
             },
@@ -112,12 +115,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api_method: Callable[..., Coroutine[Any, Any, Any]],
         *args: Any,
     ) -> Any:
-        """Call an api client GET method; retry once after token renewal on 401.
-
-        Raises:
-            ConfigEntryAuthFailed: When a 401 is received and token renewal fails.
-            BlancoConnectionError: Propagated from the api method on network failure.
-        """
+        """Call an api client GET method; retry once after token renewal on 401."""
         try:
             return await api_method(*args)
         except BlancoTokenExpiredError:
@@ -203,7 +201,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if e.get("err_type") in (BlancoErrorType.CRITICAL, BlancoErrorType.WARNING)
         ]
         repair_issue_id = f"device_error_{self.dev_id}"
-        device_name = system_data.get("params", {}).get("dev_name") or self._entry.title
+        device_name = system_data.get("params", {}).get("dev_name") or self.config_entry.title
         if active_errors:
             async_create_issue(
                 self.hass,
@@ -235,8 +233,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     except ValueError:
                         self.dev_type = BlancoDeviceType.UNDEF
                     self.hass.config_entries.async_update_entry(
-                        self._entry,
-                        data={**self._entry.data, CONF_DEV_TYPE: raw},
+                        self.config_entry,
+                        data={**self.config_entry.data, CONF_DEV_TYPE: raw},
                     )
                     break
 
