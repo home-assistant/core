@@ -14,6 +14,9 @@
       "user": {
         "data": {
           "license_plate": "License plate"
+        },
+        "data_description": {
+          "license_plate": "The license plate (kenteken) of the vehicle, for example 11ZKZ3."
         }
       }
     }

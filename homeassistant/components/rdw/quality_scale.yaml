@@ -1,0 +1,105 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration do not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it connects to a government
+      service using a license plate number.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it connects to a government
+      service using a license plate number.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This is a service integration, it does not integrate with any devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device which represents the service.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      In the Netherlands, license plates (kentekens) are permanently tied to
+      the vehicle, not the owner. A plate is assigned to a vehicle at first
+      registration and stays with it for its entire lifecycle. Because the
+      license plate is the sole configuration parameter and also serves as the
+      unique identity of the config entry, there is nothing to reconfigure.
+      A different plate means a different vehicle and thus a new config entry.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device which represents the service.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
