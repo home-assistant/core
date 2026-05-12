@@ -12,7 +12,6 @@ from blanco_smart_home_api_client import (
     BlancoApiClient,
     BlancoApiError,
     BlancoConnectionError,
-    BlancoErrorType,
     BlancoTokenExpiredError,
     HttpStatus,
 )
@@ -21,11 +20,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN, CONF_TOKEN_TYPE, DOMAIN
@@ -193,30 +187,6 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except BlancoConnectionError as err:
             _LOGGER.warning("GET /errors failed: %s, using previous data", err)
             errors_data = prev.get("errors", {"errors": [], "info": {}})
-
-        # ── repair issues ─────────────────────────────────────────────────────
-        active_errors = [
-            e
-            for e in errors_data.get("errors", [])
-            if e.get("err_type") in (BlancoErrorType.CRITICAL, BlancoErrorType.WARNING)
-        ]
-        repair_issue_id = f"device_error_{self.dev_id}"
-        device_name = system_data.get("params", {}).get("dev_name") or self.config_entry.title
-        if active_errors:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                repair_issue_id,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="device_error",
-                translation_placeholders={
-                    "device_name": device_name,
-                    "error_count": str(len(active_errors)),
-                },
-            )
-        else:
-            async_delete_issue(self.hass, DOMAIN, repair_issue_id)
 
         # ── dev_type discovery ────────────────────────────────────────────────
         if self.dev_type is None:
