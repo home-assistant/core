@@ -58,6 +58,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TIMER_DATA
 from .timers import (
+    EVENT_TIMER_FINISHED,
     CancelAllTimersIntentHandler,
     CancelTimerIntentHandler,
     DecreaseTimerIntentHandler,
@@ -72,6 +73,7 @@ from .timers import (
     async_device_supports_timers,
     async_register_timer_handler,
 )
+from .timers_api import async_register_timers_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +81,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
     "DOMAIN",
+    "EVENT_TIMER_FINISHED",
     "TimerEventType",
     "TimerInfo",
     "async_device_supports_timers",
@@ -156,6 +159,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, GetCurrentTimeIntentHandler())
     intent.async_register(hass, RespondIntentHandler())
     intent.async_register(hass, GetTemperatureIntent())
+
+    # Websocket API for voice timers
+    async_register_timers_api(hass)
 
     return True
 
