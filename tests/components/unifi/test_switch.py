@@ -873,7 +873,7 @@ FIREWALL_POLICY = {
 }
 
 OBJECT_ORIENTED_NETWORK_CONFIG = {
-    "_id": "69f6b0a5e0e3ee2d4614cb5c",
+    "id": "69f6b0a5e0e3ee2d4614cb5c",
     "enabled": True,
     "name": "Nintendo Switch - Block Internet",
     "target_type": "CLIENTS",
@@ -890,7 +890,7 @@ OBJECT_ORIENTED_NETWORK_CONFIG = {
 }
 
 OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG = {
-    "_id": "69f6b0eae0e3ee2d4614cb91",
+    "id": "69f6b0eae0e3ee2d4614cb91",
     "enabled": True,
     "name": "VPN traffic route",
     "target_type": "NETWORKS",
@@ -1405,7 +1405,7 @@ async def test_object_oriented_network_configs(
     aioclient_mock.put(
         f"https://{config_entry_setup.data[CONF_HOST]}:1234"
         f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
-        f"/object-oriented-network-config/{config['_id']}",
+        f"/object-oriented-network-config/{config['id']}",
     )
 
     call_count = aioclient_mock.call_count
@@ -1419,6 +1419,7 @@ async def test_object_oriented_network_configs(
     # Updating the value for Policy Engine rules will make another call to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(config)
+    expected_disable_call["_id"] = config["id"]
     expected_disable_call["enabled"] = False
 
     assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
@@ -1434,6 +1435,7 @@ async def test_object_oriented_network_configs(
     )
 
     expected_enable_call = deepcopy(config)
+    expected_enable_call["_id"] = config["id"]
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 1
