@@ -5,7 +5,7 @@ from typing import Any, Final
 from ecotracker import EcoTracker
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -50,7 +50,7 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
         self._serial = discovery_info.properties["serial"]
@@ -69,7 +69,7 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
