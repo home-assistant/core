@@ -1,58 +1,61 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Configuration flow is already in progress",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "missing_data": "Missing required data",
       "not_grandstream_device": "Not a Grandstream device"
     },
     "error": {
-      "cannot_connect": "Connection failed",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ha_control_disabled": "Failed to add. Please enable Home Assistant control in the device web interface",
-      "invalid_auth": "Authentication failed",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "Invalid host address",
       "invalid_port": "Invalid port number",
-      "unknown": "Unknown Error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
       "auth": {
         "data": {
-          "password": "Admin Password",
-          "port": "Port",
-          "verify_ssl": "Verify SSL Certificate"
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "password": "Device Administrator Password",
+          "password": "Device administrator password",
           "port": "Port number for device communication",
           "verify_ssl": "Enable SSL certificate verification (recommended for devices with valid certificates)"
         },
         "description": "Please enter authentication information for {model} ({host})",
-        "title": "Device Authentication"
+        "title": "Device authentication"
       },
       "user": {
         "data": {
-          "host": "IP Address",
-          "name": "Device Name"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "IP address or hostname of the device",
-          "name": "Friendly name for the device"
+          "host": "IP address or hostname of the device"
         },
-        "description": "Please enter your device information.",
-        "title": "Add Grandstream Device"
+        "description": "Please enter your device information",
+        "title": "Add Grandstream device"
       }
     }
   },
   "entity": {
     "sensor": {
       "device_status": {
-        "name": "Device Status",
+        "name": "Device status",
         "state": {
-          "account_locked": "Account Locked",
-          "auth_failed": "Authentication Failed",
-          "ha_control_disabled": "HA Control Disabled",
-          "offline": "Offline"
+          "account_locked": "Account locked",
+          "auth_failed": "Authentication failed",
+          "available": "Available",
+          "busy": "Busy",
+          "ha_control_disabled": "HA control disabled",
+          "no_available_account": "No available account",
+          "offline": "Offline",
+          "preview": "Preview",
+          "ringing": "Ringing"
         }
       }
     }

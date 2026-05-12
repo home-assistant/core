@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,6 +35,18 @@ DEVICE_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
         key="phone_status",
         key_path="phone_status",
         translation_key="device_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "available",
+            "no_available_account",
+            "busy",
+            "preview",
+            "ringing",
+            "offline",
+            "auth_failed",
+            "ha_control_disabled",
+            "account_locked",
+        ],
         icon="mdi:account-badge",
     ),
 )
@@ -77,4 +93,18 @@ class GrandstreamDeviceSensor(CoordinatorEntity[GrandstreamCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data
+        value = self.coordinator.data
+
+        # Strip whitespace from value
+        if isinstance(value, str):
+            value = value.strip()
+
+        # Map unavailable to no_available_account (unavailable is entity state)
+        if value == "unavailable":
+            return "no_available_account"
+
+        # Return None for unknown (not in options)
+        if value == "unknown":
+            return None
+
+        return value

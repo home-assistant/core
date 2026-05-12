@@ -53,7 +53,6 @@ async def test_coordinator_init(
     assert coordinator._api == mock_api
     assert coordinator._unique_id == "ec:74:d7:97:53:c5"
     assert coordinator._discovery_version == "1.0.1.6"
-    assert coordinator._error_count == 0
 
 
 async def test_coordinator_update_data_success(

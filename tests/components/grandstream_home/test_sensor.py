@@ -7,12 +7,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components.grandstream_home import GrandstreamRuntimeData
 from homeassistant.components.grandstream_home.sensor import (
     DEVICE_SENSORS,
     GrandstreamDeviceSensor,
     GrandstreamSensorEntityDescription,
+    async_setup_entry,
 )
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -78,9 +82,84 @@ def test_sensor_entity_description() -> None:
     """Test sensor entity description."""
     description = GrandstreamSensorEntityDescription(
         key="test_sensor",
+        key_path="test_path",
         translation_key="test_translation",
     )
 
     assert description.key == "test_sensor"
+    assert description.key_path == "test_path"
     assert description.translation_key == "test_translation"
-    assert description.key_path is None
+
+
+async def test_sensor_unavailable_mapping(
+    hass: HomeAssistant, mock_coordinator: MagicMock, mock_device_info: MagicMock
+) -> None:
+    """Test sensor maps unavailable to no_available_account."""
+    description = DEVICE_SENSORS[0]
+    mock_coordinator.data = "unavailable"
+
+    sensor = GrandstreamDeviceSensor(
+        mock_coordinator, mock_device_info, "test_unique_id", description
+    )
+
+    assert sensor.native_value == "no_available_account"
+
+
+async def test_sensor_unknown_returns_none(
+    hass: HomeAssistant, mock_coordinator: MagicMock, mock_device_info: MagicMock
+) -> None:
+    """Test sensor returns None for unknown state."""
+    description = DEVICE_SENSORS[0]
+    mock_coordinator.data = "unknown"
+
+    sensor = GrandstreamDeviceSensor(
+        mock_coordinator, mock_device_info, "test_unique_id", description
+    )
+
+    assert sensor.native_value is None
+
+
+async def test_sensor_strips_whitespace(
+    hass: HomeAssistant, mock_coordinator: MagicMock, mock_device_info: MagicMock
+) -> None:
+    """Test sensor strips whitespace from value."""
+    description = DEVICE_SENSORS[0]
+    mock_coordinator.data = "idle "
+
+    sensor = GrandstreamDeviceSensor(
+        mock_coordinator, mock_device_info, "test_unique_id", description
+    )
+
+    assert sensor.native_value == "idle"
+
+
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
+    """Test async_setup_entry creates sensors."""
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = "idle"
+
+    mock_device_info = MagicMock()
+
+    entry = MockConfigEntry(
+        domain="grandstream_home",
+        data={},
+        unique_id="test_id",
+    )
+    entry.runtime_data = GrandstreamRuntimeData(
+        api=MagicMock(),
+        coordinator=mock_coordinator,
+        device_info=mock_device_info,
+        device_model="gds",
+        product_model=None,
+        unique_id="test_unique_id",
+    )
+
+    entities = []
+
+    def mock_add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, mock_add_entities)
+
+    assert len(entities) == 1
+    assert entities[0].unique_id == "test_unique_id_phone_status"

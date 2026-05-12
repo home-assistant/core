@@ -3,8 +3,7 @@
 from datetime import timedelta
 import logging
 
-from grandstream_home_api import GDSPhoneAPI, fetch_gds_status
-
+from grandstream_home_api import GDSPhoneAPI, GNSNasAPI, fetch_gds_status
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -22,7 +21,7 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        api: GDSPhoneAPI,
+        api: GDSPhoneAPI | GNSNasAPI,
         unique_id: str,
         discovery_version: str | None = None,
     ) -> None:
@@ -37,7 +36,6 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
         self.entry_id = entry.entry_id
         self._api = api
         self._unique_id = unique_id
-        self._error_count = 0
         self._max_errors = COORDINATOR_ERROR_THRESHOLD
         self._discovery_version = discovery_version
 
@@ -60,17 +58,13 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
         try:
             # Fetch data from device (GDS and GSC use same API)
             result = await self.hass.async_add_executor_job(fetch_gds_status, self._api)
-            if result is None:
-                raise UpdateFailed("Failed to fetch device status")
-
-            self._error_count = 0
-            _LOGGER.debug("Device status updated: %s", result["phone_status"])
-
-            self._update_firmware_version(
-                result.get("version") or self._discovery_version
-            )
-
-            return result["phone_status"]
-
         except (RuntimeError, ValueError, OSError, KeyError) as e:
             raise UpdateFailed(f"Error communicating with device: {e}") from e
+
+        if result is None:
+            raise UpdateFailed("Failed to fetch device status")
+
+        # Update firmware version (doesn't raise exceptions)
+        self._update_firmware_version(result.get("version") or self._discovery_version)
+
+        return result["phone_status"]

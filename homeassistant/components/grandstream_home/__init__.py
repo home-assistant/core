@@ -7,13 +7,20 @@ import logging
 
 from grandstream_home_api import (
     DEFAULT_PORT,
+    DEFAULT_USERNAME,
     GDSPhoneAPI,
+    GNSNasAPI,
     attempt_login,
     create_api_instance,
 )
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
@@ -36,7 +43,7 @@ PLATFORMS = [Platform.SENSOR]
 class GrandstreamRuntimeData:
     """Runtime data for Grandstream config entry."""
 
-    api: GDSPhoneAPI
+    api: GDSPhoneAPI | GNSNasAPI
     coordinator: GrandstreamCoordinator
     device_info: DeviceInfo
     device_model: str
@@ -84,10 +91,12 @@ def _create_device_info(
     )
 
 
-async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
+async def _setup_api(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> GDSPhoneAPI | GNSNasAPI:
     """Set up and initialize API with error handling."""
-    host = entry.data.get("host", "")
-    username = entry.data.get(CONF_USERNAME, "")
+    host = entry.data.get(CONF_HOST, "")
+    username = entry.data.get(CONF_USERNAME, DEFAULT_USERNAME)
     password = entry.data.get(CONF_PASSWORD, "")
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     verify_ssl = entry.data.get(CONF_VERIFY_SSL, False)
@@ -107,15 +116,14 @@ async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
     try:
         success, error_type = await hass.async_add_executor_job(attempt_login, api)
     except (OSError, RuntimeError) as e:
-        _LOGGER.error("Error during API setup: %s", e)
         raise ConfigEntryNotReady(f"API setup failed: {e}") from e
 
     if success:
-        return api  # type: ignore[return-value]
+        return api
 
     if error_type == "offline":
         _LOGGER.debug("Device is offline or unreachable")
-        return api  # type: ignore[return-value]
+        return api
 
     if error_type == "ha_control_disabled":
         raise ConfigEntryNotReady(
@@ -125,14 +133,8 @@ async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
 
     if error_type == "account_locked":
         _LOGGER.debug("Account is temporarily locked, integration will retry later")
-        return api  # type: ignore[return-value]
+        return api
 
-    # Authentication failed - convert to NotReady to avoid reauth flow
-    _LOGGER.warning(
-        "Authentication failed for %s. "
-        "Please check credentials in the integration configuration",
-        entry.data.get("name", "Unknown device"),
-    )
     raise ConfigEntryNotReady("Authentication failed - invalid credentials")
 
 
@@ -147,12 +149,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     # 1. Set up API
     api = await _setup_api(hass, entry)
 
-    # 2. Use entry unique_id or fallback to host-based ID
-    unique_id = entry.unique_id or f"{device_model}_{entry.data.get('host', '')}"
+    # 2. Get unique_id from entry (should always be set by config_flow)
+    if not entry.unique_id:
+        raise ConfigEntryNotReady("Config entry missing unique_id")
+
+    unique_id = entry.unique_id
 
     # 3. Create device info
-    ip_address = api.host if api and api.host else entry.data.get("host")
-    mac_address = api.device_mac if api and api.device_mac else None
+    ip_address = api.host
+    mac_address = api.device_mac
     discovery_version = entry.data.get(CONF_FIRMWARE_VERSION)
 
     device_info = _create_device_info(
