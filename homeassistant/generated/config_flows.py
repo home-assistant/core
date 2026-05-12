@@ -347,6 +347,7 @@ FLOWS = {
         "incomfort",
         "indevolt",
         "inels",
+        "inepro_metering",
         "influxdb",
         "inkbird",
         "insteon",
