@@ -1,13 +1,23 @@
 """The Airtouch 5 integration."""
 
-from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
+import logging
+
+from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient, AirtouchDevice
+from airtouch5py.discovery import AirtouchDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+
+from .const import DOMAIN
+
+# device_registry as dr, Maybe needed in migration. If not can be removed later.
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
+
+_LOGGER = logging.getLogger(__name__)
 
 type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 
@@ -17,7 +27,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) ->
 
     # Create API instance
     host = entry.data[CONF_HOST]
+
+    # So for any device that is created using the old flow (AC_0) is the ID. So we just assume that.
+    device = AirtouchDevice(
+        host,
+        entry.data.get("console_id", ""),
+        entry.data.get("model", "AirTouch5"),
+        entry.data.get("system_id", 0),
+        entry.data.get("name", "Unknown Device"),
+    )
     client = Airtouch5SimpleClient(host)
+    client.device = device
 
     # Connect to the API
     try:
@@ -42,5 +62,105 @@ async def async_unload_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -
         client.connection_state_callbacks.clear()
         client.data_packet_callbacks.clear()
         client.zone_status_callbacks.clear()
-
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.minor_version == 1:
+        host = entry.data[CONF_HOST]
+        try:
+            identifier = entry.unique_id
+            assert identifier is not None
+            AirtouchDiscovery_instance = AirtouchDiscovery()
+            await AirtouchDiscovery_instance.establish_server()
+            airtouch_device = await AirtouchDiscovery_instance.discover_by_ip(host)
+            _LOGGER.info("Finished waiting for airtouch device")
+            assert airtouch_device is not None, "Device not found during migration"
+            # If for some reason the device is not found during migration, it will fail and will retry next time. This could leave a persistent error if the device cannout route UDP.
+            new_data = {
+                "system_id": airtouch_device.system_id,
+                "host": airtouch_device.ip,
+                "model": airtouch_device.model,
+                "console_id": airtouch_device.console_id,
+                "name": airtouch_device.name,
+            }
+        except TimeoutError as exception:
+            _LOGGER.error("Error while migrating: %s", exception)
+            return False
+        finally:
+            await AirtouchDiscovery_instance.close()
+        # looking for climate entities
+        entity_registry = er.async_get(hass)
+
+        for entity in list(entity_registry.entities.values()):
+            if entity.platform != DOMAIN:
+                continue
+
+            new_unique_id = build_new_unique_id(
+                entity.unique_id,
+                airtouch_device.system_id,
+            )
+
+            # nothing to do
+            if not new_unique_id:
+                continue
+
+            # already correct → skip
+            if entity.unique_id == new_unique_id:
+                continue
+
+            # optional safety check: prevent accidental overwrite
+            existing = entity_registry.async_get_entity_id(
+                entity.domain,
+                DOMAIN,
+                new_unique_id,
+            )
+
+            if existing and existing != entity.entity_id:
+                _LOGGER.warning(
+                    "Skipping %s → %s (already used)",
+                    entity.unique_id,
+                    new_unique_id,
+                )
+                continue
+
+            entity_registry.async_update_entity(
+                entity.entity_id,
+                new_unique_id=new_unique_id,
+            )
+            _LOGGER.info(
+                "Found entity: %s (unique_id=%s) new ID=%s",
+                entity.entity_id,
+                entity.unique_id,
+                new_unique_id,
+            )
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            minor_version=2,
+        )
+
+    return True
+
+
+def build_new_unique_id(old_uid: str, system_id: str) -> str | None:
+    """Map legacy Airtouch IDs to new stable format."""
+
+    # already migrated → skip
+    if old_uid.startswith(f"{system_id}"):
+        return None
+
+    # legacy AC
+    if old_uid.startswith("ac_"):
+        return f"{system_id}"
+
+    # legacy zones
+    if old_uid.startswith("zone_"):
+        parts = old_uid.split("_")
+        if len(parts) < 2:
+            return None
+        zone = parts[1]
+        return f"{system_id}_{zone}"
+
+    return None
