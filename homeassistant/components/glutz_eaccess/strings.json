@@ -75,18 +75,18 @@
         }
       }
     },
-    "error": {
-      "cannot_connect": "Unable to connect to the Glutz server. Check the host URL and try again.",
-      "invalid_auth": "Invalid credentials. Check your username and password.",
-      "invalid_invitation": "The invitation link is not valid. Make sure you pasted the full URL from the email.",
-      "invalid_password": "Password must be at least 8 characters and include uppercase, lowercase, a digit and a special character."
-    },
     "abort": {
       "already_configured": "This Glutz instance is already configured.",
       "reauth_successful": "Re-authentication was successful.",
       "reconfigure_successful": "Configuration updated successfully.",
       "unknown": "An unexpected error occurred.",
       "wrong_account": "The credentials belong to a different Glutz system."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Glutz server. Check the host URL and try again.",
+      "invalid_auth": "Invalid credentials. Check your username and password.",
+      "invalid_invitation": "The invitation link is not valid. Make sure you pasted the full URL from the email.",
+      "invalid_password": "Password must be at least 8 characters and include uppercase, lowercase, a digit and a special character."
     }
   },
   "entity": {
