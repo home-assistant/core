@@ -2315,7 +2315,7 @@ pymeteoclimatic==0.1.1
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.6.1
+pymiele==0.6.2
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
