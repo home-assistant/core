@@ -130,26 +130,27 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_bills(start=bills_start_date, end=bills_end_date),
             )
 
-            category_details = await asyncio.gather(
-                *(
-                    self.firefly.get_category(
-                        category_id=int(category.id),
-                        start=start_date,
-                        end=end_date,
+            category_details_list, budget_limits_list = await asyncio.gather(
+                asyncio.gather(
+                    *(
+                        self.firefly.get_category(
+                            category_id=int(category.id),
+                            start=start_date,
+                            end=end_date,
+                        )
+                        for category in categories
                     )
-                    for category in categories
-                )
-            )
-
-            budget_limits_list = await asyncio.gather(
-                *(
-                    self.firefly.get_budget_limits(
-                        budget_id=int(budget.id),
-                        start=start_date,
-                        end=end_date,
+                ),
+                asyncio.gather(
+                    *(
+                        self.firefly.get_budget_limits(
+                            budget_id=int(budget.id),
+                            start=start_date,
+                            end=end_date,
+                        )
+                        for budget in budgets
                     )
-                    for budget in budgets
-                )
+                ),
             )
         except FireflyAuthenticationError as err:
             raise ConfigEntryAuthFailed(
@@ -173,7 +174,9 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         return FireflyCoordinatorData(
             accounts={account.id: account for account in accounts},
             categories=categories,
-            category_details={category.id: category for category in category_details},
+            category_details={
+                category.id: category for category in category_details_list
+            },
             budgets={budget.id: budget for budget in budgets},
             budget_limits={
                 budget.id: limits

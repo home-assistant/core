@@ -47,7 +47,7 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Accounts",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/accounts",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "accounts"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_accounts")
             },
@@ -80,7 +80,7 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Categories",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/categories",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "categories"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_categories")
             },
@@ -113,7 +113,7 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Budgets",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/budgets",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "budgets"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_budgets")
             },
@@ -144,7 +144,7 @@ class FireflyBillBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },

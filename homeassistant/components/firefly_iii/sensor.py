@@ -56,16 +56,14 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities: list[SensorEntity] = []
 
-    for account in coordinator.data.accounts.values():
-        entities.append(
-            FireflyAccountBalanceSensor(coordinator, account, ACCOUNT_BALANCE)
-        )
+    entities.extend(
+        FireflyAccountBalanceSensor(coordinator, account, ACCOUNT_BALANCE)
+        for account in coordinator.data.accounts.values()
+    )
 
     entities.extend(
-        [
-            FireflyCategorySensor(coordinator, category, CATEGORY)
-            for category in coordinator.data.category_details.values()
-        ]
+        FireflyCategorySensor(coordinator, category, CATEGORY)
+        for category in coordinator.data.category_details.values()
     )
 
     for budget in coordinator.data.budgets.values():
@@ -219,7 +217,7 @@ class FireflyBudgetLimitSensor(FireflyBudgetBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the budget limit amount for the current period."""
-        limits = self.coordinator.data.budget_limits.get(self._budget_id, [])
+        limits = self.coordinator.data.budget_limits[self._budget_id]
         if limits:
             total = sum(
                 float(limit.amount or limit.native_amount or 0)
@@ -255,7 +253,7 @@ class FireflyBudgetRemainingSensor(FireflyBudgetBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the remaining budget (limit + spent, since spent is negative)."""
-        limits = self.coordinator.data.budget_limits.get(self._budget_id, [])
+        limits = self.coordinator.data.budget_limits[self._budget_id]
         limit_total = 0.0
         if limits:
             limit_total = sum(
@@ -367,7 +365,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },
@@ -375,7 +373,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the total expected amount for bills due this month."""
+        """Return the total expected amount for bills due this month.""
         now = datetime.now(tz=UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
@@ -389,8 +387,9 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
                 continue
             pay_dates = attrs.pay_dates
             if pay_dates and any(
-                _parse_timestamp(d) and month_start <= _parse_timestamp(d) < month_end
+                month_start <= dt < month_end
                 for d in pay_dates
+                if (dt := _parse_timestamp(d))
             ):
                 if attrs.amount_min is not None and attrs.amount_max is not None:
                     total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
@@ -425,7 +424,7 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/subscriptions",
+            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },
@@ -443,9 +442,9 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
                 continue
             paid_dates = attrs.paid_dates
             if paid_dates and any(
-                _parse_timestamp(pd.date) and _parse_timestamp(pd.date) >= month_start
+                dt >= month_start
                 for pd in paid_dates
-                if pd.date
+                if pd.date and (dt := _parse_timestamp(pd.date))
             ):
                 if attrs.amount_min is not None and attrs.amount_max is not None:
                     total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
