@@ -8,8 +8,9 @@ from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,11 +26,34 @@ UNLOCK_DURATION = 3
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GlutzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create a GlutzLock per access point from the coordinator's snapshot."""
+    """Set up lock entities and register a listener to add new access points."""
     coordinator = entry.runtime_data
-    async_add_entities(GlutzLock(coordinator, ap) for ap in coordinator.data.values())
+    known_ids: set[str] = set()
+
+    def _async_update_entities() -> None:
+        current_ids = set(coordinator.data)
+
+        new_ids = current_ids - known_ids
+        if new_ids:
+            async_add_entities(
+                GlutzLock(coordinator, coordinator.data[ap_id]) for ap_id in new_ids
+            )
+            known_ids.update(new_ids)
+
+        removed_ids = known_ids - current_ids
+        if removed_ids:
+            ent_reg = er.async_get(hass)
+            for ap_id in removed_ids:
+                if entity_id := ent_reg.async_get_entity_id(
+                    "lock", DOMAIN, f"glutz_{ap_id}"
+                ):
+                    ent_reg.async_remove(entity_id)
+            known_ids.difference_update(removed_ids)
+
+    _async_update_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_entities))
 
 
 class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):

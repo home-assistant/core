@@ -56,7 +56,10 @@ rules:
     comment: Integration raises ConfigEntryNotReady if the server is unreachable on setup.
   unique-config-entry:
     status: done
-    comment: Prevents duplicate entries for the same server and username.
+    comment: >-
+      The config entry unique ID is set to the system ID returned by the API,
+      preventing duplicate entries for the same Glutz system regardless of
+      the host URL or credentials used.
 
   # Silver
   action-exceptions:
@@ -82,7 +85,10 @@ rules:
     comment: Coordinator logs a warning when the server is unreachable.
   parallel-updates:
     status: done
-    comment: PARALLEL_UPDATES set to limit concurrent service calls.
+    comment: >-
+      PARALLEL_UPDATES = 0 explicitly disables throttling. Data updates are
+      handled centrally by the coordinator; service calls (lock/unlock/open)
+      are independent and do not need to be serialized.
   reauthentication-flow:
     status: done
     comment: Reauthentication flow implemented and tested.
@@ -126,7 +132,10 @@ rules:
     comment: Documentation includes use case examples.
   dynamic-devices:
     status: done
-    comment: Access points are fetched from the API and added/removed dynamically.
+    comment: >-
+      A coordinator listener registered in async_setup_entry adds new lock
+      entities whenever new access points appear in the coordinator data.
+      Removed access points are marked unavailable via the available property.
   entity-category:
     status: exempt
     comment: All entities are primary lock entities.
@@ -156,7 +165,10 @@ rules:
       to prompt the user to recharge the lock.
   stale-devices:
     status: done
-    comment: Access points removed from the server are cleaned up from the device registry.
+    comment: >-
+      When the coordinator detects that an access point has been removed from
+      the server, the corresponding entity is removed from the entity registry.
+      The device is then automatically removed if no other entities remain.
 
   # Platinum
   async-dependency:
