@@ -1,39 +1,35 @@
-"""Test the init file code."""
+"""Test the Zeversolar integration setup."""
 
 from unittest.mock import patch
 
-from zeversolar import ZeverSolarData
 from zeversolar.exceptions import ZeverSolarTimeout
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_fails(
-    hass: HomeAssistant, config_entry: MockConfigEntry, zeversolar_data: ZeverSolarData
+async def test_setup_retries_when_inverter_unreachable(
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test to load/unload the integration."""
-
+    """Entry enters SETUP_RETRY when the inverter cannot be reached."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch("zeversolar.ZeverSolarClient.get_data", side_effect=ZeverSolarTimeout),
-    ):
+    with patch("zeversolar.ZeverSolarClient.get_data", side_effect=ZeverSolarTimeout):
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    with (
-        patch("homeassistant.components.zeversolar.PLATFORMS", []),
-        patch("zeversolar.ZeverSolarClient.get_data", return_value=zeversolar_data),
-    ):
-        hass.config_entries.async_schedule_reload(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.LOADED
 
-    with (
-        patch("homeassistant.components.zeversolar.PLATFORMS", []),
-    ):
-        result = await hass.config_entries.async_unload(config_entry.entry_id)
+async def test_setup_and_unload(hass: HomeAssistant) -> None:
+    """Entry loads successfully and can be unloaded."""
+    entry = await init_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.async_unload(entry.entry_id)
     assert result is True
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

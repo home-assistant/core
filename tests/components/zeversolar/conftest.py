@@ -1,47 +1,42 @@
-"""Define mocks and test objects."""
+"""Define fixtures for Zeversolar tests."""
 
 import pytest
 from zeversolar import StatusEnum, ZeverSolarData
 
 from homeassistant.components.zeversolar.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
-MOCK_HOST_ZEVERSOLAR = "zeversolar-fake-host"
-MOCK_PORT_ZEVERSOLAR = 10200
+MOCK_HOST = "192.168.1.1"
+MOCK_SERIAL_NUMBER = "123456778"
 
 
 @pytest.fixture
 def config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
-
     return MockConfigEntry(
-        data={
-            CONF_HOST: MOCK_HOST_ZEVERSOLAR,
-            CONF_PORT: MOCK_PORT_ZEVERSOLAR,
-        },
         domain=DOMAIN,
-        unique_id="my_id_2",
+        data={CONF_HOST: MOCK_HOST},
+        unique_id=MOCK_SERIAL_NUMBER,
     )
 
 
 @pytest.fixture
 def zeversolar_data() -> ZeverSolarData:
     """Create a ZeverSolarData structure for tests."""
-
     return ZeverSolarData(
         wifi_enabled=False,
-        serial_or_registry_id="1223",
-        registry_key="A-2",
+        serial_or_registry_id="EAB9615C0001",
+        registry_key="WSMQKHTQ3JVYQWA9",
         hardware_version="M10",
-        software_version="123-23",
-        reported_datetime="19900101 23:00",
+        software_version="19703-826R+17511-707R",
+        reported_datetime="19900101 23:01:45",
         communication_status=StatusEnum.OK,
         num_inverters=1,
-        serial_number="123456778",
+        serial_number=MOCK_SERIAL_NUMBER,
         pac=1234,
-        energy_today=123,
+        energy_today=123.4,
         status=StatusEnum.OK,
         meter_status=StatusEnum.OK,
     )

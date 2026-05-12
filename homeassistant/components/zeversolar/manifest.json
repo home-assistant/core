@@ -1,7 +1,7 @@
 {
   "domain": "zeversolar",
   "name": "Zeversolar",
-  "codeowners": ["@kvanzuijlen"],
+  "codeowners": ["@kvanzuijlen", "@mhuiskes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zeversolar",
   "integration_type": "device",
