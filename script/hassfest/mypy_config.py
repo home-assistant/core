@@ -38,6 +38,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     ),
     "show_error_codes": "true",
     "follow_imports": "normal",
+    "native_parser": "true",
+    "num_workers": "2",  # Use a conservative value here
     # "enable_incomplete_feature": ", ".join(
     #     []
     # ),

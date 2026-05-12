@@ -192,6 +192,14 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return self._last_media_position_updated_at
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return image of the media playing."""
+        if not self.available:
+            return None
+
+        return super().entity_picture
+
+    @property
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
         if (thumb := self._media_meta.get("thumb")) and thumb.startswith("http"):
