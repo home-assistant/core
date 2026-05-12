@@ -36,6 +36,9 @@
       "carbon_monoxide": {
         "name": "Carbon monoxide"
       },
+      "coil_freeze": {
+        "name": "Coil freeze/defrost"
+      },
       "cover_off": {
         "name": "Cover off"
       },
@@ -48,11 +51,26 @@
       "feeding": {
         "name": "Feeding"
       },
+      "filter_cleaning": {
+        "name": "Filter cleaning"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "low_humidity": {
+        "name": "Low humidity"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
       "methane": {
         "name": "Methane"
+      },
+      "motor_fault": {
+        "name": "Motor fault"
       },
       "pm25": {
         "name": "PM2.5"
@@ -62,6 +80,9 @@
       },
       "tankfull": {
         "name": "Tank full"
+      },
+      "temp_error": {
+        "name": "Temperature error"
       },
       "tilt": {
         "name": "Tilt"
