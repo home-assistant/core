@@ -582,10 +582,12 @@ async def test_shutdown_releases_parent_class(hass: HomeAssistant) -> None:
 
 async def test_schedule_timer_cancels_previous_handle(hass: HomeAssistant) -> None:
     """Ensure _schedule_timer cancels any previously-scheduled handle."""
+    # Use a large cooldown so the scheduled timer can't fire mid-test on a slow
+    # event loop; the timer is only inspected and cancelled, never awaited.
     debouncer = debounce.Debouncer(
         hass,
         _LOGGER,
-        cooldown=0.01,
+        cooldown=1.0,
         immediate=True,
         function=AsyncMock(),
     )
@@ -615,10 +617,12 @@ async def test_concurrent_async_call_does_not_orphan_timer(
         started.set()
         await can_finish.wait()
 
+    # Use a large cooldown so the T1 timer scheduled below can't fire before
+    # the in-flight call completes; cancellation is verified deterministically.
     debouncer = debounce.Debouncer(
         hass,
         _LOGGER,
-        cooldown=0.01,
+        cooldown=1.0,
         immediate=True,
         function=slow_function,
     )
