@@ -1,7 +1,5 @@
 """Lock platform for the Glutz eAccess integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 

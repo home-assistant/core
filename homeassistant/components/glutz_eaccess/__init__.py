@@ -1,7 +1,5 @@
 """The Glutz eAccess integration."""
 
-from __future__ import annotations
-
 from pyglutz_eaccess import GlutzAPI
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
