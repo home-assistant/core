@@ -1,0 +1,99 @@
+"""Config flow for Electrolux integration."""
+
+from collections.abc import Mapping
+import logging
+from typing import Any
+
+from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
+    InvalidCredentialsException,
+)
+from electrolux_group_developer_sdk.auth.token_manager import TokenManager
+from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
+from electrolux_group_developer_sdk.client.failed_connection_exception import (
+    FailedConnectionException,
+)
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
+
+from .const import CONF_REFRESH_TOKEN, DOMAIN, USER_AGENT
+
+_LOGGER: logging.Logger = logging.getLogger(__name__)
+
+
+class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for the Electrolux integration."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step of the config flow."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            token_manager: TokenManager
+            email: str
+            try:
+                token_manager = await _authenticate_user(user_input)
+                client = ApplianceClient(
+                    token_manager=token_manager, external_user_agent=USER_AGENT
+                )
+                email = (await client.get_user_email()).email
+            except InvalidCredentialsException, BadCredentialsException:
+                errors["base"] = "invalid_auth"
+            except FailedConnectionException:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(token_manager.get_user_id())
+                self._abort_if_unique_id_configured()
+
+            if not errors:
+                return self.async_create_entry(
+                    title=f"Electrolux for {email}",
+                    data=user_input,
+                )
+
+        return self._show_form(step_id="user", errors=errors)
+
+    def _show_form(self, step_id: str, errors: dict[str, str]) -> ConfigFlowResult:
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): str,
+                    vol.Required(CONF_ACCESS_TOKEN): str,
+                    vol.Required(CONF_REFRESH_TOKEN): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "portal_link": "https://developer.electrolux.one/generateToken"
+            },
+        )
+
+
+async def _authenticate_user(user_input: Mapping[str, Any]) -> TokenManager:
+    token_manager = TokenManager(
+        access_token=user_input[CONF_ACCESS_TOKEN],
+        refresh_token=user_input[CONF_REFRESH_TOKEN],
+        api_key=user_input[CONF_API_KEY],
+    )
+
+    token_manager.ensure_credentials()
+
+    appliance_client = ApplianceClient(
+        token_manager=token_manager, external_user_agent=USER_AGENT
+    )
+
+    # Test a connection in the config flow
+    await appliance_client.test_connection()
+
+    return token_manager
