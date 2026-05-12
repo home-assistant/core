@@ -41,7 +41,6 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
-        self.devices: list[dict[str, Any]] = []
         self.websocket: XthingsCloudWebSocket | None = None
 
     async def _async_ensure_token_valid(self) -> None:
@@ -72,14 +71,14 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch latest device data from cloud."""
         await self._async_ensure_token_valid()
         try:
-            self.devices = await self.client.async_get_devices()
+            devices = await self.client.async_get_devices()
         except XthingsCloudAuthError as err:
             raise ConfigEntryAuthFailed(
                 "Invalid token, re-authentication required"
             ) from err
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
-        return {device["id"]: device for device in self.devices}
+        return {device["id"]: device for device in devices}
 
     async def async_start_websocket(self) -> None:
         """Start WebSocket connection."""

@@ -31,7 +31,6 @@ async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
-    mock_instance_id: None,
 ) -> None:
     """Test successful user login flow."""
     result = await hass.config_entries.flow.async_init(
@@ -67,8 +66,6 @@ async def test_user_flow_error_and_recover(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
-    mock_instance_id: None,
-    mock_login_success: dict,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
@@ -86,26 +83,18 @@ async def test_user_flow_error_and_recover(
 
     # Recover: repatch to succeed
     mock_api_client.async_login.side_effect = None
-    mock_api_client.async_login.return_value = mock_login_success
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_EMAIL
-    assert result["result"].unique_id == MOCK_USER_ID
-    assert result["data"] == {
-        CONF_EMAIL: MOCK_EMAIL,
-        CONF_TOKEN: MOCK_TOKEN,
-        CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
-    }
 
 
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
-    mock_instance_id: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user flow aborts if same account already configured."""

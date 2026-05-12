@@ -14,7 +14,7 @@ from homeassistant.components.xthings_cloud.const import (
 
 from .const import MOCK_EMAIL, MOCK_REFRESH_TOKEN, MOCK_TOKEN, MOCK_USER_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -33,17 +33,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_login_success() -> dict:
-    """Return successful login response."""
-    return {
-        "token": MOCK_TOKEN,
-        "refresh_token": MOCK_REFRESH_TOKEN,
-        "user_id": MOCK_USER_ID,
-        "client_id": "mock_client_id",
-    }
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -53,19 +42,57 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_api_client(mock_login_success: dict) -> Generator[AsyncMock]:
+def device_fixtures() -> list[str]:
+    """Fixtures for Xthings Cloud devices."""
+    return [
+        "XT-LT050",
+        "XT-LT100",
+        "XT-LT200",
+    ]
+
+
+@pytest.fixture
+def mock_api_client(
+    device_fixtures: list[str], mock_websocket: AsyncMock
+) -> Generator[AsyncMock]:
     """Mock the XthingsCloudApiClient."""
-    with patch(
-        "homeassistant.components.xthings_cloud.config_flow.XthingsCloudApiClient",
-        autospec=True,
-    ) as mock_cls:
+    with (
+        patch(
+            "homeassistant.components.xthings_cloud.config_flow.XthingsCloudApiClient",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.xthings_cloud.XthingsCloudApiClient",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
-        client.async_login = AsyncMock(return_value=mock_login_success)
+        client.async_login.return_value = {
+            "token": MOCK_TOKEN,
+            "refresh_token": MOCK_REFRESH_TOKEN,
+            "user_id": MOCK_USER_ID,
+            "client_id": "mock_client_id",
+        }
+        client.async_get_devices.return_value = [
+            load_json_object_fixture(f"{device_fixture}.json", DOMAIN)
+            for device_fixture in device_fixtures
+        ]
+        client.is_token_expired.return_value = False
         yield client
 
 
 @pytest.fixture
-def mock_instance_id() -> Generator[AsyncMock]:
+def mock_websocket() -> Generator[AsyncMock]:
+    """Mock the XthingsCloudWebSocket."""
+    with patch(
+        "homeassistant.components.xthings_cloud.coordinator.XthingsCloudWebSocket",
+        autospec=True,
+    ) as mock_ws_cls:
+        yield mock_ws_cls
+
+
+@pytest.fixture(autouse=True)
+def mock_instance_id() -> Generator[None]:
     """Mock the instance ID."""
     with patch(
         "homeassistant.components.xthings_cloud.config_flow.async_get_instance_id",
