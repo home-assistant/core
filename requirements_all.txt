@@ -2684,7 +2684,7 @@ python-picnic-api2==1.3.4
 python-pooldose==0.9.0
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.8.0
+python-qube-heatpump==1.10.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
