@@ -69,6 +69,10 @@ async def test_load_unload(
 
     assert normal_config_entry.state is ConfigEntryState.LOADED
     assert isinstance(normal_config_entry.runtime_data, TeslaFleetData)
+    assert (
+        normal_config_entry.runtime_data.energysites[0].info_coordinator.update_interval
+        == ENERGY_INTERVAL
+    )
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED

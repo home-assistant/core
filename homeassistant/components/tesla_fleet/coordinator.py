@@ -391,6 +391,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise ConfigEntryNotReady from err
 
         self.data = data
+        self.update_interval = ENERGY_INTERVAL
         self.updated_once = True
         return True
 
