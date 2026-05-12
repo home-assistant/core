@@ -1091,7 +1091,7 @@ class MieleStatusSensor(MieleSensor):
         """Return the state of the sensor."""
         return (
             StateStatus(self.device.state_status).name
-            if self._device_id in self.coordinator.devices
+            if self._device_id in self.coordinator.data.devices
             else None
         )
 
