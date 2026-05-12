@@ -9,6 +9,10 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to add the everHome {name} with Serial `{serial}` to Home Assistant?",
+        "title": "Set up {name}"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"

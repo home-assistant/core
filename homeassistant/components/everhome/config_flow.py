@@ -80,5 +80,5 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={"serial": self._serial},
+            description_placeholders={"name": "EcoTracker", "serial": self._serial},
         )
