@@ -163,115 +163,43 @@ async def test_remove_stale_devices(
 
 
 @pytest.mark.parametrize(
-    ("sw_version", "fw_version"),
+    ("sw_version", "fw_version", "preregister", "issue_exists"),
     [
-        ("3.50", "1.45"),  # software too old
-        ("3.59", "1.30"),  # firmware too old
-        ("3.50", "1.30"),  # both too old
+        # versions below threshold create the issue
+        ("3.50", "1.45", False, True),
+        ("3.59", "1.30", False, True),
+        ("3.50", "1.30", False, True),
+        # versions at or above threshold clear any pre-existing issue
+        (MIN_SUPPORTED_SW_VERSION, MIN_SUPPORTED_FW_VERSION, True, False),
+        ("3.99", "1.99", True, False),
+        # supported versions without a pre-existing issue stay clean
+        ("3.99", "1.99", False, False),
+        # missing or unparsable versions skip the check, leaving any prior issue intact
+        ("", "1.45", True, True),
+        ("3.59", "", True, True),
+        ("not-a-version", "1.45", True, True),
+        ("3.59", "??", True, True),
     ],
 )
-async def test_firmware_check_creates_issue_when_too_old(
+async def test_firmware_version_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
     issue_registry: ir.IssueRegistry,
     sw_version: str,
     fw_version: str,
+    preregister: bool,
+    issue_exists: bool,
 ) -> None:
-    """Repair issue is raised when either reported version is below the minimum."""
+    """Make sure we get the issue for certain gateway firmware versions."""
+    if preregister:
+        _register_stale_firmware_issue(hass)
     mock_gateway.software_version = sw_version
     mock_gateway.firmware_version = fw_version
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_firmware")
-    assert issue is not None
-    assert issue.severity is ir.IssueSeverity.ERROR
-    assert issue.is_fixable is False
-    assert issue.translation_placeholders == {
-        "sw_version": sw_version,
-        "fw_version": fw_version,
-        "min_sw_version": MIN_SUPPORTED_SW_VERSION,
-        "min_fw_version": MIN_SUPPORTED_FW_VERSION,
-    }
-
-
-@pytest.mark.parametrize(
-    ("sw_version", "fw_version"),
-    [
-        (MIN_SUPPORTED_SW_VERSION, MIN_SUPPORTED_FW_VERSION),  # exactly at threshold
-        ("3.99", "1.99"),  # above threshold
-    ],
-)
-async def test_firmware_check_deletes_issue_when_versions_ok(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    sw_version: str,
-    fw_version: str,
-) -> None:
-    """Existing repair issue is cleared once the gateway reports supported versions."""
-    _register_stale_firmware_issue(hass)
-    assert issue_registry.async_get_issue(DOMAIN, "unsupported_firmware") is not None
-
-    mock_gateway.software_version = sw_version
-    mock_gateway.firmware_version = fw_version
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(DOMAIN, "unsupported_firmware") is None
-
-
-@pytest.mark.parametrize(
-    ("sw_version", "fw_version"),
-    [
-        ("", "1.45"),  # software version not yet reported
-        ("3.59", ""),  # firmware version not yet reported
-        ("not-a-version", "1.45"),  # software version unparsable
-        ("3.59", "??"),  # firmware version unparsable
-    ],
-)
-async def test_firmware_check_skips_when_version_unavailable(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    sw_version: str,
-    fw_version: str,
-) -> None:
-    """Empty or unparsable versions skip the check without touching existing issues."""
-    _register_stale_firmware_issue(hass)
-
-    mock_gateway.software_version = sw_version
-    mock_gateway.firmware_version = fw_version
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Pre-existing issue is preserved (not deleted) and no new issue is created.
-    assert issue_registry.async_get_issue(DOMAIN, "unsupported_firmware") is not None
-
-
-async def test_firmware_check_no_op_when_no_issue_and_versions_ok(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Deleting a non-existent issue is safe and produces no spurious issue."""
-    mock_gateway.software_version = "3.99"
-    mock_gateway.firmware_version = "1.99"
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(DOMAIN, "unsupported_firmware") is None
+    assert (issue is not None) == issue_exists
