@@ -107,4 +107,5 @@ set_fan_speed:
       required: true
       example: "low"
       selector:
-        text:
+        state:
+          attribute: fan_speed

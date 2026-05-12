@@ -27,7 +27,6 @@ from homeassistant.util import dt as dt_util
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -35,7 +34,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_changelog: AsyncMock,
@@ -51,13 +49,9 @@ def mock_all(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
 
     def mock_addon_info(slug: str):
         addon = Mock(
@@ -104,7 +98,6 @@ async def test_binary_sensor(
     entity_id: str,
     expected: str,
     addon_state: str,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     addon_installed: AsyncMock,
 ) -> None:
@@ -217,7 +210,7 @@ async def test_mount_refresh_after_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     supervisor_client: AsyncMock,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test hassio mount state is refreshed after an issue was send by the supervisor."""
     # Add a mount.
@@ -262,7 +255,7 @@ async def test_mount_refresh_after_issue(
 
     # Change mount state to failed, issue a repair, and verify entity's state.
     mock_mounts[0] = replace(mock_mounts[0], state=MountState.FAILED)
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     issue_uuid = uuid4().hex
     await client.send_json(
         {

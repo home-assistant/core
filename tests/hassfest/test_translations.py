@@ -166,6 +166,9 @@ SAMPLE_STRINGS = {
                     "name": "Field one",
                     "description": "Description of field one",
                 },
+                "field_two": {
+                    "name": "Field two",
+                },
             },
         },
         "field_old": {
@@ -346,7 +349,6 @@ SAMPLE_STRINGS = {
                 },
                 "target": {
                     "name": "Target",
-                    "description": "The target device",
                 },
             },
             "sections": {
@@ -371,6 +373,9 @@ SAMPLE_STRINGS = {
                     "description": "The entity to check",
                     "example": "light.living_room",
                 },
+                "some_option": {
+                    "name": "Some option",
+                },
             },
         },
     },
@@ -383,6 +388,9 @@ SAMPLE_STRINGS = {
                     "name": "Entity",
                     "description": "The entity to monitor",
                     "example": "light.living_room",
+                },
+                "some_option": {
+                    "name": "Some option",
                 },
             },
         },

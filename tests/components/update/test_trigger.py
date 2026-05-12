@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.update import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -14,6 +14,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -41,6 +42,30 @@ async def test_update_triggers_gated_by_labs_flag(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("update.update_became_available", {}, True, True),
+    ],
+)
+async def test_update_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that update triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
 )
@@ -56,7 +81,6 @@ async def test_update_triggers_gated_by_labs_flag(
 )
 async def test_update_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -68,7 +92,6 @@ async def test_update_state_trigger_behavior_any(
     """Test that the update state trigger fires when any update state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_updates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -96,7 +119,6 @@ async def test_update_state_trigger_behavior_any(
 )
 async def test_update_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -108,7 +130,6 @@ async def test_update_state_trigger_behavior_first(
     """Test that the update state trigger fires when the first update changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_updates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -136,7 +157,6 @@ async def test_update_state_trigger_behavior_first(
 )
 async def test_update_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_updates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -148,7 +168,6 @@ async def test_update_state_trigger_behavior_last(
     """Test that the update state trigger fires when the last update changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_updates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

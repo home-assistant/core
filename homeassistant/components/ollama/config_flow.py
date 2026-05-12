@@ -1,7 +1,5 @@
 """Config flow for Ollama integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -55,7 +53,6 @@ from .const import (
     DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    MAX_NUM_CTX,
     MIN_NUM_CTX,
     MODEL_NAMES,
 )
@@ -478,7 +475,6 @@ def ollama_config_option_schema(
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=MIN_NUM_CTX,
-                    max=MAX_NUM_CTX,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )

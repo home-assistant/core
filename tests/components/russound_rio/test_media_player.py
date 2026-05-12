@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiorussound.const import FeatureFlag
 from aiorussound.exceptions import CommandError
-from aiorussound.models import PlayStatus
+from aiorussound.rio.models import PlayStatus
 import pytest
 
 from homeassistant.components.media_player import (

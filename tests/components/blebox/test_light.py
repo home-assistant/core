@@ -48,7 +48,7 @@ def dimmer_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
     type(product).model = PropertyMock(return_value="dimmerBox")
-    return (feature, "light.dimmerbox_brightness")
+    return (feature, "light.my_dimmer_dimmerbox_brightness")
 
 
 async def test_dimmer_init(
@@ -61,7 +61,7 @@ async def test_dimmer_init(
     assert entry.unique_id == "BleBox-dimmerBox-1afe34e750b8-brightness"
 
     state = hass.states.get(entity_id)
-    assert state.name == "dimmerBox-brightness"
+    assert state.name == "My dimmer dimmerBox-brightness"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.BRIGHTNESS]
@@ -222,7 +222,7 @@ def wlightboxs_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
     type(product).model = PropertyMock(return_value="wLightBoxS")
-    return (feature, "light.wlightboxs_color")
+    return (feature, "light.my_wlightboxs_wlightboxs_color")
 
 
 async def test_wlightbox_s_init(
@@ -235,7 +235,7 @@ async def test_wlightbox_s_init(
     assert entry.unique_id == "BleBox-wLightBoxS-1afe34e750b8-color"
 
     state = hass.states.get(entity_id)
-    assert state.name == "wLightBoxS-color"
+    assert state.name == "My wLightBoxS wLightBoxS-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.BRIGHTNESS]
@@ -326,7 +326,7 @@ def wlightbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
-    return (feature, "light.wlightbox_color")
+    return (feature, "light.my_wlightbox_wlightbox_color")
 
 
 async def test_wlightbox_init(
@@ -339,7 +339,7 @@ async def test_wlightbox_init(
     assert entry.unique_id == "BleBox-wLightBox-1afe34e750b8-color"
 
     state = hass.states.get(entity_id)
-    assert state.name == "wLightBox-color"
+    assert state.name == "My wLightBox wLightBox-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.RGBW]

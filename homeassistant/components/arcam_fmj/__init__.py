@@ -2,8 +2,8 @@
 
 import asyncio
 from asyncio import timeout
+from contextlib import AsyncExitStack
 import logging
-from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
@@ -54,36 +54,31 @@ async def _run_client(
     client = runtime_data.client
     coordinators = runtime_data.coordinators
 
-    def _listen(_: Any) -> None:
-        for coordinator in coordinators.values():
-            coordinator.async_notify_data_updated()
-
     while True:
         try:
-            async with timeout(interval):
-                await client.start()
+            async with AsyncExitStack() as stack:
+                async with timeout(interval):
+                    await client.start()
+                stack.push_async_callback(client.stop)
 
-            _LOGGER.debug("Client connected %s", client.host)
+                _LOGGER.debug("Client connected %s", client.host)
 
-            try:
-                for coordinator in coordinators.values():
-                    await coordinator.state.start()
-
-                with client.listen(_listen):
+                try:
                     for coordinator in coordinators.values():
-                        coordinator.async_notify_connected()
-                    await client.process()
-            finally:
-                await client.stop()
+                        await stack.enter_async_context(
+                            coordinator.async_monitor_client()
+                        )
 
-                _LOGGER.debug("Client disconnected %s", client.host)
-                for coordinator in coordinators.values():
-                    coordinator.async_notify_disconnected()
+                    await client.process()
+                finally:
+                    _LOGGER.debug("Client disconnected %s", client.host)
 
         except ConnectionFailed:
-            await asyncio.sleep(interval)
+            pass
         except TimeoutError:
             continue
         except Exception:
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return
+
+        await asyncio.sleep(interval)

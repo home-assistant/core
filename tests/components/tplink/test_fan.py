@@ -1,7 +1,5 @@
 """Tests for fan platform."""
 
-from __future__ import annotations
-
 from freezegun.api import FrozenDateTimeFactory
 from kasa import Device, Module
 from syrupy.assertion import SnapshotAssertion

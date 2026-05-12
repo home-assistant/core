@@ -1,7 +1,5 @@
 """Shared schemas for MQTT discovery and YAML config items."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -67,9 +65,11 @@ SHARED_OPTIONS = [
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
     CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_STATE_TOPIC,
+    CONF_QOS,
 ]
 
 

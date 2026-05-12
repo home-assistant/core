@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil
@@ -201,6 +199,16 @@ def mock_subscriber() -> YieldFixture[AsyncMock]:
         return_value=mock_subscriber,
     ):
         yield mock_subscriber
+
+
+@pytest.fixture
+def mock_subscriber_refresh() -> YieldFixture[None]:
+    """Fixture for mocking subscriber refresh."""
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber._async_run_refresh",
+        new=AsyncMock(),
+    ):
+        yield
 
 
 @pytest.fixture

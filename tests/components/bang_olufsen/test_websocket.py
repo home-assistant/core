@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
-    TEST_NAME,
+    TEST_FRIENDLY_NAME,
     TEST_REMOTE_SERIAL,
     TEST_REMOTE_SERIAL_PAIRED,
     TEST_SERIAL_NUMBER,
@@ -62,7 +62,7 @@ async def test_connection(
     await hass.async_block_till_done()
 
     mock_connection_callback.assert_called_once_with(True)
-    assert f"Connected to the {TEST_NAME} notification channel" in caplog.text
+    assert f"Connected to the {TEST_FRIENDLY_NAME} notification channel" in caplog.text
 
 
 async def test_connection_lost(
@@ -87,7 +87,7 @@ async def test_connection_lost(
     await hass.async_block_till_done()
 
     mock_connection_lost_callback.assert_called_once_with(False)
-    assert f"Lost connection to the {TEST_NAME}" in caplog.text
+    assert f"Lost connection to the {TEST_FRIENDLY_NAME}" in caplog.text
 
 
 async def test_on_software_update_state(
@@ -130,7 +130,7 @@ async def test_on_remote_control_already_added(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
@@ -149,16 +149,16 @@ async def test_on_remote_control_already_added(
     await hass.async_block_till_done()
 
     # Check device and API call count (triggered once by the WebSocket notification)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 5
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
 
-    assert list(entity_registry.entities.keys()) == unordered(
+    assert entity_ids_available == unordered(
         [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_on_remote_control_paired(
@@ -176,7 +176,7 @@ async def test_on_remote_control_paired(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button and remote events and media_player)
@@ -217,7 +217,7 @@ async def test_on_remote_control_paired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 8
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 10
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
     assert device_registry.async_get_device(
         {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
@@ -239,7 +239,7 @@ async def test_on_remote_control_paired(
             *get_remote_entity_ids("66666666"),
         ]
     )
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 async def test_on_remote_control_unpaired(
@@ -257,7 +257,7 @@ async def test_on_remote_control_unpaired(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button and remote events and media_player)
@@ -280,7 +280,7 @@ async def test_on_remote_control_unpaired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 6
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 8
     assert (
         device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)}) is None
     )
@@ -295,7 +295,7 @@ async def test_on_remote_control_unpaired(
     entity_ids_available = list(entity_registry.entities.keys())
 
     assert entity_ids_available == unordered(get_balance_entity_ids())
-    assert entity_ids_available == snapshot
+    assert sorted(entity_ids_available) == snapshot
 
 
 # async def test_setup_entry_remote_unpaired(

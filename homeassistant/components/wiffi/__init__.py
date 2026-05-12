@@ -13,12 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CHECK_ENTITIES_SIGNAL,
-    CREATE_ENTITY_SIGNAL,
-    DOMAIN,
-    UPDATE_ENTITY_SIGNAL,
-)
+from .const import CHECK_ENTITIES_SIGNAL, CREATE_ENTITY_SIGNAL, UPDATE_ENTITY_SIGNAL
 from .entity import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,8 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
+type WiffiConfigEntry = ConfigEntry[WiffiIntegrationApi]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
 
     # create api object
@@ -35,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.async_setup(entry)
 
     # store api object
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
+    entry.runtime_data = api
 
     try:
         await api.server.start_server()
@@ -51,21 +48,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
     """Unload a config entry."""
-    api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
+    api = entry.runtime_data
     await api.server.close_server()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        api = hass.data[DOMAIN].pop(entry.entry_id)
         api.shutdown()
 
     return unload_ok
 
 
 class WiffiIntegrationApi:
-    """API object for wiffi handling. Stored in hass.data."""
+    """API object for wiffi handling."""
 
     def __init__(self, hass):
         """Initialize the instance."""

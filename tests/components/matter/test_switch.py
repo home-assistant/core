@@ -285,3 +285,55 @@ async def test_speaker_mute_uses_onoff_commands(
     state = hass.states.get("switch.mock_speaker_mute")
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_plug"])
+async def test_eve_child_lock(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the Eve child lock switch entity."""
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state
+    assert state.state == "off"
+    # test attribute changes
+    set_node_attribute(matter_node, 1, 319486977, 319422481, True)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state.state == "on"
+    set_node_attribute(matter_node, 1, 319486977, 319422481, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_energy_plug_child_lock")
+    assert state.state == "off"
+    # test switch service
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.eve_energy_plug_child_lock"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.EveCluster.Attributes.ChildLock,
+        ),
+        value=True,
+    )
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.eve_energy_plug_child_lock"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.EveCluster.Attributes.ChildLock,
+        ),
+        value=False,
+    )

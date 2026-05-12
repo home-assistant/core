@@ -1,7 +1,5 @@
 """Conftest for the KNX integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
@@ -97,6 +95,7 @@ class KNXTestKit:
                 state=XknxConnectionState.CONNECTED,
                 connection_type=XknxConnectionType.TUNNEL_TCP,
             )
+            await self.hass.async_block_till_done()
 
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""

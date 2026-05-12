@@ -9,12 +9,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_monitor_callbacks, setup_integration
+from . import get_monitor_callbacks, setup_integration, trigger_connection_status_update
 
 from tests.common import (
     MockConfigEntry,
@@ -81,13 +87,13 @@ async def test_binary_sensor_initial_state(
     """Test binary sensors have a correct initial state after initialization."""
 
     # Instantly call callback to ensure we have initial data set
-    async def mock_monitor_callback(
-        alarm_status_callback, zones_callback, outputs_callback
-    ):
-        outputs_callback({"outputs": violated_entries})
-        zones_callback({"zones": violated_entries})
+    async def mock_start(**_: object) -> None:
+        _, zones_callback, outputs_callback = get_monitor_callbacks(mock_satel)
 
-    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
+        outputs_callback(violated_entries)
+        zones_callback(violated_entries)
+
+    mock_satel.start = AsyncMock(side_effect=mock_start)
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -108,19 +114,19 @@ async def test_binary_sensor_callback(
 
     _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
 
-    output_update_method({"outputs": {1: 1}})
-    zone_update_method({"zones": {1: 1}})
+    output_update_method({1: 1})
+    zone_update_method({1: 1})
     assert hass.states.get("binary_sensor.zone").state == STATE_ON
     assert hass.states.get("binary_sensor.output").state == STATE_ON
 
-    output_update_method({"outputs": {1: 0}})
-    zone_update_method({"zones": {1: 0}})
+    output_update_method({1: 0})
+    zone_update_method({1: 0})
     assert hass.states.get("binary_sensor.zone").state == STATE_OFF
     assert hass.states.get("binary_sensor.output").state == STATE_OFF
 
     # The client library should always report all entries, but test that we set the status correctly if it doesn't
-    output_update_method({"outputs": {2: 1}})
-    zone_update_method({"zones": {2: 1}})
+    output_update_method({2: 1})
+    zone_update_method({2: 1})
     assert hass.states.get("binary_sensor.zone").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.output").state == STATE_UNKNOWN
 
@@ -145,8 +151,29 @@ async def test_binary_sensor_last_reported(
 
     # Run callbacks with same payload
     _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
-    output_update_method({"outputs": {1: 0}})
-    zone_update_method({"zones": {1: 0}})
+    output_update_method({1: 0})
+    zone_update_method({1: 0})
 
     assert first_reported != hass.states.get("binary_sensor.zone").last_reported
     assert len(events) == 2  # last_reported shall not fire state_changed
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "binary_sensor.zone"
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == STATE_OFF

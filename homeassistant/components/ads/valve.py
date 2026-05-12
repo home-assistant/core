@@ -1,7 +1,5 @@
 """Support for ADS valves."""
 
-from __future__ import annotations
-
 import pyads
 import voluptuous as vol
 

@@ -1,7 +1,5 @@
 """Support for govee-ble binary sensors."""
 
-from __future__ import annotations
-
 from govee_ble import (
     BinarySensorDeviceClass as GoveeBLEBinarySensorDeviceClass,
     SensorUpdate,

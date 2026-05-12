@@ -21,6 +21,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
     CONF_SERVICE_TIER,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -118,7 +119,7 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 2
-    assert result2["minor_version"] == 6
+    assert result2["minor_version"] == 7
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -271,14 +272,16 @@ async def test_subentry_unsupported_model(
         ("gpt-5.3-codex", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.4", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
+        ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
+        ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    model,
-    reasoning_effort_options,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    reasoning_effort_options: list[str],
 ) -> None:
     """Test the list reasoning effort options."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -313,6 +316,152 @@ async def test_subentry_reasoning_effort_list(
         subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
         == reasoning_effort_options
     )
+
+
+@pytest.mark.parametrize(
+    ("model", "has_reasoning_summary"),
+    [
+        ("o3", True),
+        ("o4-mini", True),
+        ("gpt-5", True),
+        ("gpt-5-mini", True),
+        ("gpt-5-pro", True),
+        ("gpt-4o", False),
+        ("gpt-4.1", False),
+    ],
+)
+async def test_subentry_reasoning_summary_visibility(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    has_reasoning_summary: bool,
+) -> None:
+    """Test that reasoning_summary option is shown for all reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (CONF_REASONING_SUMMARY in subentry_flow["data_schema"].schema) == (
+        has_reasoning_summary
+    )
+
+
+@pytest.mark.parametrize(
+    ("model", "reasoning_summary_options"),
+    [
+        ("o3", ["off", "auto", "detailed"]),
+        ("o4-mini", ["off", "auto", "detailed"]),
+        ("gpt-5", ["off", "auto", "concise", "detailed"]),
+        ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
+    ],
+)
+async def test_subentry_reasoning_summary_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    reasoning_summary_options: list[str],
+) -> None:
+    """Test the list of reasoning summary options for reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (
+        subentry_flow["data_schema"].schema[CONF_REASONING_SUMMARY].config["options"]
+        == reasoning_summary_options
+    )
+
+
+async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that a stored 'concise' default is sanitized to 'auto' for o* models."""
+    subentry = next(
+        s
+        for s in mock_config_entry.subentries.values()
+        if s.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_REASONING_SUMMARY: "concise"},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["step_id"] == "advanced"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {CONF_CHAT_MODEL: "o3"},
+    )
+    assert subentry_flow["step_id"] == "model"
+
+    schema = subentry_flow["data_schema"].schema
+    summary_key = next(k for k in schema if k == CONF_REASONING_SUMMARY)
+    assert summary_key.default() == RECOMMENDED_REASONING_SUMMARY
 
 
 @pytest.mark.parametrize(
@@ -539,7 +688,9 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "o1-pro",
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: 10000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -575,6 +726,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_STORE_RESPONSES: False,
                 CONF_SERVICE_TIER: "auto",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -592,6 +744,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: True,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -613,6 +766,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_CHAT_MODEL: "gpt-4o",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
+                    CONF_STORE_RESPONSES: True,
                 },
                 {
                     CONF_WEB_SEARCH: True,
@@ -630,6 +784,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: True,
                 CONF_SERVICE_TIER: "default",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -686,6 +841,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "minimal",
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
@@ -799,7 +955,9 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "o3-mini",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -813,6 +971,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: "auto",
                 CONF_SERVICE_TIER: "flex",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
@@ -844,6 +1003,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_SERVICE_TIER: "priority",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
@@ -896,6 +1056,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-5-pro",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_VERBOSITY: "medium",
                 CONF_WEB_SEARCH: True,
@@ -915,7 +1076,11 @@ async def test_subentry_switching(
     expected_options,
 ) -> None:
     """Test the subentry form."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry, subentry, data=current_options
     )
@@ -952,11 +1117,19 @@ async def test_subentry_switching(
     assert subentry.data == expected_options
 
 
+@pytest.mark.parametrize("store_responses", [False, True])
 async def test_subentry_web_search_user_location(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    store_responses: bool,
 ) -> None:
     """Test fetching user location."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
@@ -982,6 +1155,7 @@ async def test_subentry_web_search_user_location(
             CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
             CONF_TOP_P: RECOMMENDED_TOP_P,
             CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+            CONF_STORE_RESPONSES: store_responses,
         },
     )
     await hass.async_block_till_done()
@@ -1036,6 +1210,7 @@ async def test_subentry_web_search_user_location(
         mock_create.call_args.kwargs["input"][0]["content"] == "Where are the following"
         " coordinates located: (37.7749, -122.4194)?"
     )
+    assert mock_create.call_args.kwargs["store"] is store_responses
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
     assert subentry.data == {
@@ -1046,6 +1221,7 @@ async def test_subentry_web_search_user_location(
         CONF_TOP_P: RECOMMENDED_TOP_P,
         CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
         CONF_SERVICE_TIER: "auto",
+        CONF_STORE_RESPONSES: store_responses,
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
         CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -1149,6 +1325,7 @@ async def test_creating_ai_task_subentry_advanced(
         {
             CONF_CHAT_MODEL: "gpt-4o",
             CONF_MAX_TOKENS: 200,
+            CONF_STORE_RESPONSES: True,
             CONF_TEMPERATURE: 0.5,
             CONF_TOP_P: 0.9,
         },
@@ -1170,8 +1347,9 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-1.5",
+        CONF_IMAGE_MODEL: "gpt-image-2",
         CONF_MAX_TOKENS: 200,
+        CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,
         CONF_CODE_INTERPRETER: False,

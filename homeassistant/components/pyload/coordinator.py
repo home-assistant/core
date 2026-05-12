@@ -68,7 +68,9 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={CONF_USERNAME: self.pyload.username},
+                translation_placeholders={
+                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+                },
             ) from e
         except CannotConnect as e:
             raise UpdateFailed(

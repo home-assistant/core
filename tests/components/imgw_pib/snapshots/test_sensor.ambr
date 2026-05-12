@@ -70,6 +70,64 @@
     'state': 'rapid_water_level_rise',
   })
 # ---
+# name: test_sensor[sensor.river_name_station_name_ice_phenomena-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_name_station_name_ice_phenomena',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ice phenomena',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ice phenomena',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_phenomena',
+    'unique_id': '123_ice_phenomena',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.river_name_station_name_ice_phenomena-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'friendly_name': 'River Name (Station Name) Ice phenomena',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_name_station_name_ice_phenomena',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor[sensor.river_name_station_name_water_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

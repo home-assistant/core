@@ -1,7 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -238,15 +236,23 @@ DEFAULT_INTEGRATIONS = {
     "timer",
     #
     # Base platforms:
-    *BASE_PLATFORMS,
+    # Note: Calendar and todo are not included to prevent them from registering
+    # their frontend panels when there are no calendar or todo integrations.
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
     #
     # Integrations providing triggers and conditions for base platforms:
+    "air_quality",
+    "battery",
     "door",
     "garage_door",
     "gate",
     "humidity",
+    "illuminance",
+    "moisture",
     "motion",
     "occupancy",
+    "power",
+    "temperature",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
@@ -462,6 +468,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
     translation.async_setup(hass)
 
     recovery = hass.config.recovery_mode
+    device_registry.async_setup(hass)
     try:
         await asyncio.gather(
             create_eager_task(get_internal_store_manager(hass).async_initialize()),

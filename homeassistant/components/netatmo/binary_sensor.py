@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -38,7 +37,7 @@ from .const import (
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
-from .data_handler import SIGNAL_NAME, NetatmoDevice
+from .data_handler import SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,25 +67,11 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str | None, BinarySensorDeviceClass
 
 
 def get_opening_category(netatmo_device: NetatmoDevice) -> str:
-    """Helper function to get opening category from Netatmo API raw data."""
+    """Helper function to get opening category for doortag."""
 
-    # Iterate through each home in the raw data.
-    for home in netatmo_device.data_handler.account.raw_data["homes"]:
-        # Check if the modules list exists for the current home.
-        if "modules" in home:
-            # Iterate through each module to find a matching ID.
-            for module in home["modules"]:
-                if module["id"] == netatmo_device.device.entity_id:
-                    # We found the matching device. Get its category.
-                    if module.get("category") is not None:
-                        return cast(str, module["category"])
-                    raise ValueError(
-                        f"Device {netatmo_device.device.entity_id} found, "
-                        "but 'category' is missing in raw data."
-                    )
-
-    raise ValueError(
-        f"Device {netatmo_device.device.entity_id} not found in Netatmo raw data."
+    return (
+        getattr(netatmo_device.device, "doortag_category", None)
+        or DOORTAG_CATEGORY_OTHER
     )
 
 
@@ -180,7 +165,7 @@ DEVICE_CATEGORY_BINARY_PUBLISHERS: Final[list[NetatmoDeviceCategory]] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Netatmo weather binary sensors based on a config entry."""

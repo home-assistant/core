@@ -1,7 +1,5 @@
 """Viessmann ViCare ventilation device."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import enum
 import logging

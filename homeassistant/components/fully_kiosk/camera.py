@@ -1,7 +1,5 @@
 """Support for Fully Kiosk Browser camera."""
 
-from __future__ import annotations
-
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
