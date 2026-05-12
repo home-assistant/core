@@ -41,6 +41,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -1663,7 +1664,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(
-                    TuyaSensorEntity(device, manager, description, definition)
+                    TuyaSensorEntity(hass, device, manager, description, definition)
                     for description in descriptions
                     if (
                         definition := get_default_definition(
@@ -1690,6 +1691,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
@@ -1718,13 +1720,16 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-        self._validate_device_class_unit(definition.sensor_wrapper.native_unit)
+        self._validate_device_class_unit(hass, definition.sensor_wrapper.native_unit)
 
-    def _validate_device_class_unit(self, tuya_uom: str | None) -> None:
+    def _validate_device_class_unit(
+        self, hass: HomeAssistant, tuya_uom: str | None
+    ) -> None:
         """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
+        ir.async_delete_issue(hass, DOMAIN, f"{self.unique_id}_incompatible_unit")
         if (
             (device_class := self.device_class) is None
             or device_class is SensorDeviceClass.ENUM
@@ -1758,15 +1763,29 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                     device_class,
                     self.unique_id,
                 )
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"{self.unique_id}_incompatible_unit",
+                    breaks_in_ha_version="2026.12",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="incompatible_unit",
+                    translation_placeholders={
+                        "tuya_uom": tuya_uom,
+                        "entity_description_uom": self.entity_description.native_unit_of_measurement,
+                        "device_class": device_class,
+                        "entity_id": self.unique_id or "",
+                        "quirk_url": "https://github.com/home-assistant-libs/tuya-device-handlers",
+                    },
+                )
             return
 
         self._attr_native_unit_of_measurement = tuya_uom
         self._attr_device_class = None
         self._attr_suggested_unit_of_measurement = None
-        LOGGER.warning(
-            "Device class %s ignored for incompatible unit %s in sensor entity %s; "
-            "use a quirk (https://github.com/home-assistant-libs/tuya-device-handlers)"
-            " to override",
+        LOGGER.debug(
+            "Device class %s ignored for incompatible unit %s in sensor entity %s",
             device_class,
             tuya_uom,
             self.unique_id,

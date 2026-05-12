@@ -14,6 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -485,7 +486,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 entities.extend(
-                    TuyaNumberEntity(device, manager, description, definition)
+                    TuyaNumberEntity(hass, device, manager, description, definition)
                     for description in descriptions
                     if (definition := get_default_definition(device, description.key))
                 )
@@ -504,6 +505,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
@@ -517,13 +519,16 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_native_min_value = definition.number_wrapper.min_value
         self._attr_native_step = definition.number_wrapper.value_step
 
-        self._validate_device_class_unit(definition.number_wrapper.native_unit)
+        self._validate_device_class_unit(hass, definition.number_wrapper.native_unit)
 
-    def _validate_device_class_unit(self, tuya_uom: str | None) -> None:
+    def _validate_device_class_unit(
+        self, hass: HomeAssistant, tuya_uom: str | None
+    ) -> None:
         """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
+        ir.async_delete_issue(hass, DOMAIN, f"{self.unique_id}_incompatible_unit")
         if (
             (device_class := self.device_class) is None
             or device_class.startswith(DOMAIN)
@@ -544,7 +549,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         if self.entity_description.native_unit_of_measurement is not None:
             if tuya_uom:
-                # We can trust the entity description UOM
                 LOGGER.warning(
                     "Incompatible unit %s replaced by entity description unit %s "
                     "for device class %s in number entity %s; this will stop working "
@@ -556,14 +560,28 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                     device_class,
                     self.unique_id,
                 )
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"{self.unique_id}_incompatible_unit",
+                    breaks_in_ha_version="2026.12",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="incompatible_unit",
+                    translation_placeholders={
+                        "tuya_uom": tuya_uom,
+                        "entity_description_uom": self.entity_description.native_unit_of_measurement,
+                        "device_class": device_class,
+                        "entity_id": self.unique_id or "",
+                        "quirk_url": "https://github.com/home-assistant-libs/tuya-device-handlers",
+                    },
+                )
             return
 
         self._attr_native_unit_of_measurement = tuya_uom
         self._attr_device_class = None
-        LOGGER.warning(
-            "Device class %s ignored for incompatible unit %s in number entity %s; "
-            "use a quirk (https://github.com/home-assistant-libs/tuya-device-handlers)"
-            " to override",
+        LOGGER.debug(
+            "Device class %s ignored for incompatible unit %s in number entity %s",
             device_class,
             tuya_uom,
             self.unique_id,

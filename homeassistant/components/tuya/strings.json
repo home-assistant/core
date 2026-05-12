@@ -1150,6 +1150,12 @@
       "message": "Unable to parse meal plan data."
     }
   },
+  "issues": {
+    "incompatible_unit": {
+      "description": "Incompatible unit {tuya_uom} replaced by entity description unit {entity_description_uom} for device class {device_class} in number entity {entity_id}; use a quirk ({quirk_url}) to override.",
+      "title": "Incompatible unit on {entity_id}"
+    }
+  },
   "selector": {
     "days_of_week": {
       "options": {
