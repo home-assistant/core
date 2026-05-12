@@ -92,7 +92,19 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonCoordinatorDat
         for i, subentry in enumerate(stop_subentries):
             result = stop_results[i]
             if isinstance(result, BaseException):
-                self._handle_error(result, subentry.subentry_id)
+                if isinstance(result, ClientResponseError) and result.status in (
+                    401,
+                    403,
+                ):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                    ) from result
+                LOGGER.warning(
+                    "Error fetching data for subentry %s: %s",
+                    subentry.subentry_id,
+                    result,
+                )
                 continue
             stops[subentry.subentry_id] = result
             success_count += 1
@@ -101,7 +113,18 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonCoordinatorDat
         for i, subentry in enumerate(velov_subentries):
             velov_result = velov_results[i]
             if isinstance(velov_result, BaseException):
-                self._handle_error(velov_result, subentry.subentry_id)
+                if isinstance(
+                    velov_result, ClientResponseError
+                ) and velov_result.status in (401, 403):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="auth_failed",
+                    ) from velov_result
+                LOGGER.warning(
+                    "Error fetching data for subentry %s: %s",
+                    subentry.subentry_id,
+                    velov_result,
+                )
                 continue
             success_count += 1
             if velov_result is not None:
@@ -118,16 +141,3 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonCoordinatorDat
                 translation_key="update_failed_all",
             )
         return DataGrandLyonCoordinatorData(stops=stops, velov_stations=velov_stations)
-
-    def _handle_error(self, error: BaseException, subentry_id: str) -> None:
-        """Handle an error from a single subentry fetch."""
-        if isinstance(error, ClientResponseError) and error.status in (401, 403):
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed",
-            ) from error
-        LOGGER.warning(
-            "Error fetching data for subentry %s: %s",
-            subentry_id,
-            error,
-        )
