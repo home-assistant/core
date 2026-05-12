@@ -57,7 +57,7 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==47.0.0",
+  "cryptography==48.0.0",
   "Pillow==12.2.0",
   "propcache==0.4.1",
   "pyOpenSSL==26.2.0",
