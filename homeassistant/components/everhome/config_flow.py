@@ -62,8 +62,6 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         if not await client.async_update():
             return self.async_abort(reason="cannot_connect")
 
-        self._abort_if_unique_id_configured()
-
         self.context["title_placeholders"] = {"name": f"EcoTracker {self._serial}"}
         return await self.async_step_zeroconf_confirm()
 
