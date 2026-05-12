@@ -21,6 +21,7 @@ from homeassistant.components.inepro_metering.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -61,7 +62,7 @@ class RecordingSwitchModbusClient:
         return
 
 
-def _switch_entity_id(hass, entry_id: str) -> str:
+def _switch_entity_id(hass: HomeAssistant, entry_id: str) -> str:
     """Resolve the switch entity ID from the preserved unique ID pattern."""
     entity_id = er.async_get(hass).async_get_entity_id(
         "switch",
@@ -73,7 +74,7 @@ def _switch_entity_id(hass, entry_id: str) -> str:
 
 
 async def test_single_meter_wifi_switch_uses_shared_write_setting_model(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The HA switch wrapper should delegate write behavior to the shared setting model."""
     RecordingSwitchModbusClient.writes = []
@@ -120,7 +121,7 @@ async def test_single_meter_wifi_switch_uses_shared_write_setting_model(
 
 
 async def test_serial_bus_wifi_switch_writes_to_selected_slave(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A serial-bus switch should keep HA thin and target the shared library write route."""
     RecordingSwitchModbusClient.writes = []

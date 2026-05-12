@@ -1349,6 +1349,9 @@ influxdb-client==1.50.0
 # homeassistant.components.influxdb
 influxdb==5.3.1
 
+# homeassistant.components.inepro_metering
+inepro-metering==0.1.0
+
 # homeassistant.components.infrared
 infrared-protocols==5.1.0
 

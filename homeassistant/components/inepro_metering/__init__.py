@@ -10,6 +10,7 @@ from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ACTIVE_ROUTE,
@@ -49,12 +50,12 @@ from .modbus import IneproMeteringError
 from .models import get_profile
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.SELECT,
-    Platform.NUMBER,
     Platform.TEXT,
-    Platform.BUTTON,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -81,7 +82,7 @@ SET_WIFI_CREDENTIALS_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Inepro Metering domain."""
     _async_register_services(hass)
     return True
@@ -339,7 +340,7 @@ def _find_matching_meter(
     entry: ConfigEntry, serial_number: str
 ) -> ConfiguredMeter | None:
     """Return the configured meter matching a Wi-Fi service serial number."""
-    for meter in get_configured_meters(entry.data, title=entry.title):
+    for meter in get_configured_meters(dict(entry.data), title=entry.title):
         known_serials = {
             build_meter_key(meter),
             meter.name,
@@ -354,10 +355,13 @@ def _find_matching_meter(
 
 def _configured_device_identifiers(entry: ConfigEntry) -> set[tuple[str, str]]:
     """Return the device identifiers currently represented by one config entry."""
-    if not is_bus_entry(entry.data):
-        configured_meters = get_configured_meters(entry.data, title=entry.title)
+    if not is_bus_entry(dict(entry.data)):
+        configured_meters = get_configured_meters(
+            dict(entry.data),
+            title=entry.title,
+        )
         meter = configured_meters[0] if configured_meters else None
-        identifiers = {
+        entry_identifiers = {
             meter_device_identifier(
                 entry,
                 serial_number=(
@@ -368,11 +372,11 @@ def _configured_device_identifiers(entry: ConfigEntry) -> set[tuple[str, str]]:
             )
         }
         if entry_supports_gateway_management(entry):
-            identifiers.add(gateway_device_identifier(entry))
-        return identifiers
+            entry_identifiers.add(gateway_device_identifier(entry))
+        return entry_identifiers
 
     identifiers: set[tuple[str, str]] = set()
-    configured_meters = get_configured_meters(entry.data, title=entry.title)
+    configured_meters = get_configured_meters(dict(entry.data), title=entry.title)
     primary_meter = configured_meters[0] if configured_meters else None
     for meter in configured_meters:
         identifiers.add(

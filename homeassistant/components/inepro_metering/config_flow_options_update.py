@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from inepro_metering.routes import MeterRouteDefinition
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_RECONFIGURE
@@ -15,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 
 from .bluetooth import IneproBluetoothDeviceNotFound
+from .config_flow_protocols import IneproFlowProtocol
 from .config_flow_schemas import (
     build_action_schema,
     build_add_route_bluetooth_discovered_schema,
@@ -98,8 +100,10 @@ from .modbus import IneproConnectionError
 from .models import get_profile
 
 
-class OptionsUpdateFlowMixin:
+class OptionsUpdateFlowMixin(IneproFlowProtocol):
     """Options/update steps for existing Inepro Metering entries."""
+
+    _selected_meter_key: str | None
 
     async def _async_finish_entry_update(
         self,
@@ -254,7 +258,7 @@ class OptionsUpdateFlowMixin:
                     bus_entry_data=self._config_entry.data,
                 )
                 if transport is TransportType.SERIAL:
-                    updated_bus_route = ConfiguredRoute(
+                    updated_bus_route = MeterRouteDefinition(
                         transport=TransportType.SERIAL,
                         slave_id=int(user_input[meter_slave_id_field(meter)]),
                         timeout=int(user_input[CONF_TIMEOUT]),
@@ -266,7 +270,7 @@ class OptionsUpdateFlowMixin:
                         stopbits=int(user_input[CONF_STOPBITS]),
                     )
                 else:
-                    updated_bus_route = ConfiguredRoute(
+                    updated_bus_route = MeterRouteDefinition(
                         transport=TransportType.TCP_GATEWAY,
                         slave_id=int(user_input[meter_slave_id_field(meter)]),
                         timeout=int(user_input[CONF_TIMEOUT]),
@@ -582,7 +586,7 @@ class OptionsUpdateFlowMixin:
             if selected_route is None:
                 errors["base"] = "route_not_found"
             else:
-                promoted_route = ConfiguredRoute(
+                promoted_route = MeterRouteDefinition(
                     transport=selected_route.transport,
                     slave_id=selected_route.slave_id,
                     timeout=selected_route.timeout,

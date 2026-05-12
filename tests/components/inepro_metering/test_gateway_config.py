@@ -48,6 +48,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -59,7 +60,9 @@ def _encode_ipv4_words(value: str) -> tuple[int, int]:
     return ((address >> 16) & 0xFFFF, address & 0xFFFF)
 
 
-def _gateway_entity_id(hass, platform: str, entry_id: str, key: str) -> str:
+def _gateway_entity_id(
+    hass: HomeAssistant, platform: str, entry_id: str, key: str
+) -> str:
     """Resolve one gateway config entity ID from its preserved unique ID pattern."""
     entity_id = er.async_get(hass).async_get_entity_id(
         platform,
@@ -182,7 +185,7 @@ class FakeGatewayConfigModbusClient:
 
 
 async def test_tcp_gateway_entry_exposes_gateway_only_configuration_entities(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway-backed entries should expose the confirmed gateway config surfaces."""
     FakeGatewayConfigModbusClient.instances.clear()
@@ -275,7 +278,7 @@ async def test_tcp_gateway_entry_exposes_gateway_only_configuration_entities(
 
 
 async def test_gateway_text_entity_rejects_invalid_ipv4_before_write(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway IPv4 text writes should fail before any Modbus write is attempted."""
     FakeGatewayConfigModbusClient.instances.clear()
@@ -322,7 +325,7 @@ async def test_gateway_text_entity_rejects_invalid_ipv4_before_write(
 
 
 async def test_gateway_buttons_preserve_revert_apply_store_sequence(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway action buttons should route the confirmed ordered write plans."""
     FakeGatewayConfigModbusClient.instances.clear()
@@ -392,7 +395,7 @@ async def test_gateway_buttons_preserve_revert_apply_store_sequence(
 
 
 async def test_gateway_config_entities_are_created_once_for_the_gateway_device(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway config entities should attach once to the gateway, not downstream meters."""
     FakeGatewayConfigModbusClient.instances.clear()

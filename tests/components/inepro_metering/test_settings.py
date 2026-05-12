@@ -21,6 +21,7 @@ from homeassistant.components.inepro_metering.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -206,7 +207,7 @@ class FakeWritableSerialBusModbusClient:
 
 
 async def test_single_meter_display_settings_entities_expose_current_values(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Display settings should be shown through switches, selects, and sliders."""
     FakeWritableModbusClient.instances.clear()
@@ -257,7 +258,7 @@ async def test_single_meter_display_settings_entities_expose_current_values(
 
 
 async def test_single_meter_display_settings_write_registers_and_refresh(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Writes through HA setting entities should update the underlying registers."""
     FakeWritableModbusClient.instances.clear()
@@ -327,7 +328,7 @@ async def test_single_meter_display_settings_write_registers_and_refresh(
 
 
 async def test_single_meter_setting_write_ignores_one_stale_follow_up_poll(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A stale poll immediately after a verified write should not revert the UI value."""
     FakeStaleAfterWriteModbusClient.instances.clear()
@@ -377,7 +378,7 @@ async def test_single_meter_setting_write_ignores_one_stale_follow_up_poll(
 
 
 async def test_serial_bus_display_setting_write_targets_correct_slave(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Bus setting writes should go to the addressed RTU slave."""
     FakeWritableSerialBusModbusClient.instances.clear()

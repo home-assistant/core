@@ -1,12 +1,12 @@
 """Config flow for Inepro Metering."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .bluetooth import (
     DiscoveredGrowBluetoothMeter,
@@ -126,6 +126,8 @@ async def _async_validate_entry_identity(entry_data: dict[str, Any]) -> None:
 class _ConfigFlowDependencyBridge:
     """Bridge extracted mixins back to patchable config_flow module globals."""
 
+    hass: HomeAssistant
+
     def _runtime_entry_data_for_validation(
         self, entry_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -238,7 +240,7 @@ class IneproMeteringConfigFlow(
         """Return the options flow handler for this config entry."""
         return IneproMeteringOptionsFlow(config_entry)
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize the config flow."""
         self._config_entry: ConfigEntry | None = None
         self._meter_selection: dict[str, Any] = {}
@@ -258,7 +260,7 @@ class IneproMeteringConfigFlow(
     async def async_step_reconfigure(
         self,
         user_input: dict[str, Any] | None = None,
-    ):
+    ) -> ConfigFlowResult:
         """Update one existing entry without removing and recreating it."""
         del user_input
         self._config_entry = self._get_reconfigure_entry()
@@ -267,7 +269,10 @@ class IneproMeteringConfigFlow(
             self._abort_if_unique_id_mismatch()
 
         if CONF_METERS in self._config_entry.data:
-            return await self.async_step_edit_serial_bus()
+            return cast(
+                ConfigFlowResult,
+                await self.async_step_edit_serial_bus(),
+            )
 
         self._meter_selection = {
             CONF_FAMILY: str(self._config_entry.data[CONF_FAMILY]),
@@ -285,12 +290,18 @@ class IneproMeteringConfigFlow(
             )
 
         if len(self._available_transports_for_current_flow) > 1:
-            return await self.async_step_transport()
+            return cast(
+                ConfigFlowResult,
+                await self.async_step_transport(),
+            )
 
         self._meter_selection[CONF_TRANSPORT] = (
             self._available_transports_for_current_flow[0].value
         )
-        return await self.async_step_connection()
+        return cast(
+            ConfigFlowResult,
+            await self.async_step_connection(),
+        )
 
 
 class IneproMeteringOptionsFlow(
@@ -301,6 +312,7 @@ class IneproMeteringOptionsFlow(
 ):
     """Handle options for Inepro Metering entries."""
 
+    # pylint: disable-next=super-init-not-called
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow."""
         self._config_entry = config_entry
@@ -312,3 +324,5 @@ class IneproMeteringOptionsFlow(
         self._bus_scan_transport: TransportType | None = None
         self._route_selection: dict[str, Any] = {}
         self._selected_meter_key: str | None = None
+
+    hass: Any

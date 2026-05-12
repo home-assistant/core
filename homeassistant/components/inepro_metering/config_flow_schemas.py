@@ -1,6 +1,7 @@
 """Schema builders for the Inepro Metering config flow."""
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, cast
 
 from inepro_metering.routes import describe_route
 import voluptuous as vol
@@ -16,6 +17,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -99,6 +101,24 @@ from .entry_data import (
 from .models import MeterProfile
 
 
+def _select_selector_config(
+    *,
+    options: Any,
+    **kwargs: Any,
+) -> SelectSelectorConfig:
+    """Return a typed select-selector config for dynamic option mappings."""
+    return cast(
+        SelectSelectorConfig,
+        {
+            "options": cast(
+                Sequence[SelectOptionDict] | Sequence[str],
+                options,
+            ),
+            **kwargs,
+        },
+    )
+
+
 def build_device_kind_schema() -> vol.Schema:
     """Build the initial selection form for what to add."""
     return vol.Schema(
@@ -107,7 +127,7 @@ def build_device_kind_schema() -> vol.Schema:
                 CONF_DEVICE_KIND,
                 default=DEVICE_KIND_METER,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": device_kind,
@@ -131,7 +151,7 @@ def build_family_schema(
     return vol.Schema(
         {
             vol.Required(CONF_FAMILY, default=default_family.value): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": family_option.value,
@@ -154,7 +174,7 @@ def build_setup_method_schema() -> vol.Schema:
                 CONF_SETUP_METHOD,
                 default=SETUP_METHOD_MANUAL,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": SETUP_METHOD_MANUAL,
@@ -188,7 +208,7 @@ def build_gateway_setup_method_schema() -> vol.Schema:
                 CONF_GATEWAY_SETUP_METHOD,
                 default=GATEWAY_SETUP_METHOD_SCAN_NETWORK,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": GATEWAY_SETUP_METHOD_SCAN_NETWORK,
@@ -229,7 +249,7 @@ def build_model_schema(
                 TextSelectorConfig(type=TextSelectorType.TEXT)
             ),
             vol.Required(CONF_VARIANT, default=default_variant): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": variant,
@@ -297,7 +317,7 @@ def build_transport_schema(
                 CONF_TRANSPORT,
                 default=default_value,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": UNSELECTED_TRANSPORT,
@@ -356,7 +376,7 @@ def build_connection_schema(
                     CONF_PARITY,
                     default=user_value(user_input, CONF_PARITY, DEFAULT_PARITY),
                 ): SelectSelector(
-                    SelectSelectorConfig(
+                    _select_selector_config(
                         options=[
                             {"value": "N", "label": "None"},
                             {"value": "E", "label": "Even"},
@@ -513,7 +533,7 @@ def build_bluetooth_discovered_schema(
                     default_meter,
                 ),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": bluetooth_meter_key(discovered_meter),
@@ -547,7 +567,7 @@ def build_add_route_bluetooth_discovered_schema(
                     default_meter,
                 ),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": bluetooth_meter_key(discovered_meter),
@@ -668,7 +688,7 @@ def build_serial_scan_schema(user_input: dict[str, Any] | None) -> vol.Schema:
                 CONF_PARITY,
                 default=user_value(user_input, CONF_PARITY, DEFAULT_PARITY),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {"value": "N", "label": "None"},
                         {"value": "E", "label": "Even"},
@@ -753,7 +773,7 @@ def build_discovered_serial_schema(
                 CONF_DISCOVERED_METERS,
                 default=default_meter_keys,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": discovered_meter_key(discovered_meter),
@@ -791,7 +811,7 @@ def build_action_schema(
                 CONF_ACTION,
                 default=default_action,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=action_options,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
@@ -811,7 +831,7 @@ def build_select_meter_schema(
                 CONF_SELECTED_METER,
                 default=default_meter_key,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=meter_options,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
@@ -911,7 +931,7 @@ def build_discovered_gateway_schema(
                     default_gateway,
                 ),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": _discovered_gateway_key(discovered_gateway),
@@ -950,7 +970,7 @@ def build_add_route_schema(
                 CONF_TRANSPORT,
                 default=user_value(user_input, CONF_TRANSPORT, default_transport),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=route_options,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
@@ -971,7 +991,7 @@ def build_add_route_purpose_schema(
                     user_input, CONF_ROUTE_PURPOSE, ROUTE_PURPOSE_ONBOARDING
                 ),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": ROUTE_PURPOSE_ONBOARDING,
@@ -1042,7 +1062,7 @@ def build_add_route_connection_schema(
                     CONF_PARITY,
                     default=user_value(user_input, CONF_PARITY, DEFAULT_PARITY),
                 ): SelectSelector(
-                    SelectSelectorConfig(
+                    _select_selector_config(
                         options=[
                             {"value": "N", "label": "None"},
                             {"value": "E", "label": "Even"},
@@ -1158,7 +1178,7 @@ def build_switch_route_schema(
                 CONF_SELECTED_ROUTE,
                 default=default_route,
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {
                             "value": build_route_key(route),
@@ -1283,7 +1303,7 @@ def build_edit_serial_bus_schema(
                         user_input, CONF_PARITY, entry_data[CONF_PARITY]
                     ),
                 ): SelectSelector(
-                    SelectSelectorConfig(
+                    _select_selector_config(
                         options=[
                             {"value": "N", "label": "None"},
                             {"value": "E", "label": "Even"},
@@ -1465,7 +1485,7 @@ def build_update_connection_schema(
                     entry_data[CONF_PARITY],
                 ),
             ): SelectSelector(
-                SelectSelectorConfig(
+                _select_selector_config(
                     options=[
                         {"value": "N", "label": "None"},
                         {"value": "E", "label": "Even"},

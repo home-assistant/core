@@ -4,9 +4,10 @@ from inepro_metering.runtime import VERSION_CRC_KEYS, format_meter_version_value
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -62,7 +63,7 @@ TCP_GATEWAY_INFO_SENSORS = (
 
 def _grow_error_attributes(
     readings: dict[str, str | int | float],
-) -> dict[str, str | list[str]] | None:
+) -> dict[str, object] | None:
     """Return decoded GROW error details for the raw error-code entity."""
     error_code = readings.get("error_code")
     summary = format_grow_error_summary(error_code)
@@ -79,16 +80,16 @@ def _grow_error_attributes(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Inepro Metering sensors from a config entry."""
     coordinator = entry.runtime_data
     transport = TransportType(entry.data[CONF_TRANSPORT])
 
-    if is_bus_entry(entry.data):
+    if is_bus_entry(dict(entry.data)):
         bus_coordinator: IneproSerialBusCoordinator = coordinator
         entities: list[SensorEntity] = []
-        configured_meters = get_configured_meters(entry.data, title=entry.title)
+        configured_meters = get_configured_meters(dict(entry.data), title=entry.title)
         primary_meter = configured_meters[0] if configured_meters else None
 
         if entry_supports_gateway_management(entry):
@@ -284,7 +285,7 @@ class IneproBaseEntity(CoordinatorEntity[IneproMeteringCoordinator], SensorEntit
             None if meter is None else meter.identity.device_serial
         ) or configured_entry_serial(self._entry)
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={
                 meter_device_identifier(
                     self._entry,
@@ -306,8 +307,11 @@ class IneproBaseEntity(CoordinatorEntity[IneproMeteringCoordinator], SensorEntit
             serial_number=serial_number,
             sw_version=None if meter is None else meter.firmware.software_version,
             hw_version=None if meter is None else meter.firmware.hardware_version,
-            via_device=downstream_meter_via_device(self._entry),
         )
+        via_device = downstream_meter_via_device(self._entry)
+        if via_device is not None:
+            device_info["via_device"] = via_device
+        return device_info
 
 
 class IneproDiagnosticEntity(IneproBaseEntity):
@@ -603,7 +607,7 @@ class IneproBusBaseEntity(CoordinatorEntity[IneproSerialBusCoordinator], SensorE
             None if meter is None else meter.identity.device_serial
         ) or self._meter.serial_number
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={
                 meter_device_identifier(
                     self._entry,
@@ -626,8 +630,11 @@ class IneproBusBaseEntity(CoordinatorEntity[IneproSerialBusCoordinator], SensorE
             serial_number=serial_number,
             sw_version=None if meter is None else meter.firmware.software_version,
             hw_version=None if meter is None else meter.firmware.hardware_version,
-            via_device=downstream_meter_via_device(self._entry),
         )
+        via_device = downstream_meter_via_device(self._entry)
+        if via_device is not None:
+            device_info["via_device"] = via_device
+        return device_info
 
     @property
     def available(self) -> bool:

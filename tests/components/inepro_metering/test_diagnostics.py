@@ -41,6 +41,7 @@ from homeassistant.components.inepro_metering.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.components.inepro_metering.models import get_profile
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -64,7 +65,7 @@ class _FakeBusCoordinator:
 
 
 async def test_config_entry_diagnostics_redact_secrets_and_summarize_runtime(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Diagnostics should redact secrets and expose only summary runtime data."""
     entry = MockConfigEntry(
@@ -134,7 +135,7 @@ async def test_config_entry_diagnostics_redact_secrets_and_summarize_runtime(
 
 
 async def test_config_entry_diagnostics_include_bus_routes_and_snapshot(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Diagnostics should describe shared-bus routes without dumping raw values."""
     entry = MockConfigEntry(

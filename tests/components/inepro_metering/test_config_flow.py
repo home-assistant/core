@@ -109,6 +109,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -134,7 +135,7 @@ def _raise_identity_error_from(cause: BaseException) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_config_flow_entry_setup(request):
+def mock_config_flow_entry_setup(request: pytest.FixtureRequest):
     """Avoid real transport setup for entries created by config flows."""
     if "real_entry_setup" in request.fixturenames:
         yield
@@ -341,7 +342,7 @@ def _schema_selector(schema, field_name: str):
     return schema.schema[_schema_field(schema, field_name)]
 
 
-async def _finish_progress(hass, result):
+async def _finish_progress(hass: HomeAssistant, result):
     """Advance a progress result to the next visible flow step."""
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
@@ -352,7 +353,7 @@ async def _finish_progress(hass, result):
 
 
 async def test_zeroconf_with_serial_and_wago_vendor_creates_tcp_meter(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A GROW mDNS service with TXT serial and WAGO vendor should be accepted."""
     result = await hass.config_entries.flow.async_init(
@@ -417,7 +418,7 @@ async def test_zeroconf_with_serial_and_wago_vendor_creates_tcp_meter(
 
 
 async def test_zeroconf_confirm_can_store_discovered_endpoint_as_ethernet(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The mDNS endpoint should keep its host/port with the selected TCP transport."""
     result = await hass.config_entries.flow.async_init(
@@ -459,7 +460,7 @@ async def test_zeroconf_confirm_can_store_discovered_endpoint_as_ethernet(
 
 
 async def test_zeroconf_confirm_requires_ethernet_or_wifi_selection(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A discovered Modbus TCP endpoint should not silently become Wi-Fi."""
     result = await hass.config_entries.flow.async_init(
@@ -487,7 +488,7 @@ async def test_zeroconf_confirm_requires_ethernet_or_wifi_selection(
 
 
 async def test_zeroconf_with_serial_and_known_model_accepts_custom_hostname(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Hostname branding is only a hint; TXT serial plus known model is enough."""
     result = await hass.config_entries.flow.async_init(
@@ -508,7 +509,7 @@ async def test_zeroconf_with_serial_and_known_model_accepts_custom_hostname(
 
 
 async def test_zeroconf_uses_txt_serial_as_unique_id(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Duplicate protection should use the TXT serial, not IP or hostname."""
     entry = MockConfigEntry(
@@ -546,7 +547,7 @@ async def test_zeroconf_uses_txt_serial_as_unique_id(
 
 
 async def test_zeroconf_duplicate_with_changed_port_updates_direct_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A rediscovered direct TCP meter should refresh its endpoint before aborting."""
     entry = MockConfigEntry(
@@ -585,7 +586,7 @@ async def test_zeroconf_duplicate_with_changed_port_updates_direct_entry(
 
 
 async def test_zeroconf_rediscovery_updates_direct_route_data(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Zeroconf rediscovery should keep route data consistent with top-level data."""
     entry = MockConfigEntry(
@@ -658,7 +659,7 @@ async def test_zeroconf_rediscovery_updates_direct_route_data(
 
 
 async def test_zeroconf_rediscovery_preserves_active_alternate_tcp_route(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Zeroconf should not revert a manually selected active TCP route."""
     entry = MockConfigEntry(
@@ -728,7 +729,7 @@ async def test_zeroconf_rediscovery_preserves_active_alternate_tcp_route(
 
 
 async def test_zeroconf_rediscovery_collapses_direct_tcp_endpoint_conflict(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Zeroconf should not keep stale Wi-Fi/Ethernet labels for one endpoint."""
     entry = MockConfigEntry(
@@ -788,7 +789,7 @@ async def test_zeroconf_rediscovery_collapses_direct_tcp_endpoint_conflict(
 
 
 async def test_zeroconf_legacy_entry_updates_host_port(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Legacy direct entries should update by stored serial even with endpoint unique_id."""
     entry = MockConfigEntry(
@@ -847,7 +848,7 @@ async def test_zeroconf_legacy_entry_updates_host_port(
 
 
 async def test_zeroconf_duplicate_via_gateway_does_not_update_gateway_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A meter already behind a gateway should not become a direct TCP entry."""
     entry = MockConfigEntry(
@@ -902,7 +903,7 @@ async def test_zeroconf_duplicate_via_gateway_does_not_update_gateway_entry(
 
 
 async def test_zeroconf_rejects_modbus_service_without_serial(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """TXT serial is required even when the hostname looks like an inepro meter."""
     result = await hass.config_entries.flow.async_init(
@@ -918,7 +919,7 @@ async def test_zeroconf_rejects_modbus_service_without_serial(
 
 
 async def test_zeroconf_rejects_modbus_service_without_ownership_hint(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A serial on an unrelated Modbus mDNS service is not enough."""
     result = await hass.config_entries.flow.async_init(
@@ -940,7 +941,7 @@ async def test_zeroconf_rejects_modbus_service_without_ownership_hint(
 
 
 async def test_zeroconf_rejects_unrelated_service_type(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Only Modbus TCP mDNS services should enter the GROW discovery path."""
     result = await hass.config_entries.flow.async_init(
@@ -954,7 +955,7 @@ async def test_zeroconf_rejects_unrelated_service_type(
 
 
 async def test_zeroconf_accepts_case_insensitive_txt_keys(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """TXT keys should tolerate common case differences."""
     result = await hass.config_entries.flow.async_init(
@@ -975,7 +976,7 @@ async def test_zeroconf_accepts_case_insensitive_txt_keys(
 
 
 async def test_zeroconf_confirm_requires_live_identity_match(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Zeroconf setup should validate that Modbus identity matches TXT serial."""
     result = await hass.config_entries.flow.async_init(
@@ -1014,7 +1015,7 @@ async def test_zeroconf_confirm_requires_live_identity_match(
 
 
 async def test_zeroconf_confirm_rejects_live_identity_mismatch(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A TXT serial that does not match the live Modbus serial must not create an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -1045,7 +1046,7 @@ async def test_zeroconf_confirm_rejects_live_identity_mismatch(
 
 
 async def test_zeroconf_confirm_reports_identity_read_failure(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """If the endpoint connects but serial cannot be read, keep the flow open."""
     result = await hass.config_entries.flow.async_init(
@@ -1076,7 +1077,7 @@ async def test_zeroconf_confirm_reports_identity_read_failure(
 
 
 async def test_user_flow_can_choose_gateway_before_any_meter_details(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The first config step should allow starting from a TCP gateway."""
     result = await hass.config_entries.flow.async_init(
@@ -1096,7 +1097,7 @@ async def test_user_flow_can_choose_gateway_before_any_meter_details(
 
 
 async def test_user_flow_still_accepts_legacy_family_submission(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The first step should remain tolerant of the older family-first submission."""
     result = await hass.config_entries.flow.async_init(
@@ -1114,7 +1115,7 @@ async def test_user_flow_still_accepts_legacy_family_submission(
 
 
 async def test_gateway_manual_ip_path_opens_gateway_meter_scan(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Known gateway IPs should jump straight to the downstream meter scan form."""
     result = await hass.config_entries.flow.async_init(
@@ -1136,7 +1137,7 @@ async def test_gateway_manual_ip_path_opens_gateway_meter_scan(
 
 
 async def test_gateway_network_scan_allows_explicit_target_retry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway discovery should allow retrying with one explicit IP or subnet target."""
     discovered_gateway = DiscoveredTcpGateway(
@@ -1176,7 +1177,7 @@ async def test_gateway_network_scan_allows_explicit_target_retry(
 
 
 async def test_gateway_network_scan_shows_progress(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway discovery should use Home Assistant progress UI while scanning."""
     result = await hass.config_entries.flow.async_init(
@@ -1211,7 +1212,7 @@ async def test_gateway_network_scan_shows_progress(
 
 
 async def test_gateway_network_scan_no_verified_gateways_shows_retry_form(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway discovery failures should return to the target form with guidance."""
     result = await hass.config_entries.flow.async_init(
@@ -1243,7 +1244,7 @@ async def test_gateway_network_scan_no_verified_gateways_shows_retry_form(
 
 
 async def test_multiple_verified_gateways_can_be_selected(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway selections should include host and port for clear labels."""
     discovered_gateways = (
@@ -1296,7 +1297,7 @@ async def test_multiple_verified_gateways_can_be_selected(
 
 
 async def test_gateway_network_scan_rejects_invalid_explicit_target(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway discovery should surface validation errors for malformed scan targets."""
     result = await hass.config_entries.flow.async_init(
@@ -1329,7 +1330,7 @@ async def test_gateway_network_scan_rejects_invalid_explicit_target(
 
 
 async def test_gateway_can_be_added_when_no_downstream_meters_are_found(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A validated gateway should not fail setup only because no meters were found."""
     result = await hass.config_entries.flow.async_init(
@@ -1377,7 +1378,7 @@ async def test_gateway_can_be_added_when_no_downstream_meters_are_found(
 
 
 async def test_gateway_scan_skips_meter_already_configured_directly_by_serial(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Gateway scan must not offer a physical meter already configured directly."""
     entry = MockConfigEntry(
@@ -1454,7 +1455,7 @@ def test_gateway_scan_schema_defaults_to_fast_common_range() -> None:
 
 
 async def test_grow_850_gateway_support_still_allows_serial_manual_flow(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """GROW 850 should expose a transport choice while still allowing serial setup."""
     assert DEFAULT_PARITY == "E"
@@ -1539,7 +1540,7 @@ async def test_grow_850_gateway_support_still_allows_serial_manual_flow(
 
 
 async def test_grow_701_requires_transport_selection(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Models with multiple transports should show the transport step."""
     result = await hass.config_entries.flow.async_init(
@@ -1576,7 +1577,7 @@ async def test_grow_701_requires_transport_selection(
 
 
 async def test_grow_manual_flow_hides_windows_ble_proxy_transport(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Normal setup should not expose the developer-only Windows BLE proxy."""
     result = await hass.config_entries.flow.async_init(
@@ -1623,7 +1624,7 @@ async def test_grow_manual_flow_hides_windows_ble_proxy_transport(
 
 
 async def test_transport_step_requires_explicit_selection(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The transport step should not silently default to the first option."""
     result = await hass.config_entries.flow.async_init(
@@ -1745,7 +1746,7 @@ def test_update_bluetooth_connection_schema_requires_long_ble_timeout() -> None:
 
 
 async def test_pro_380_flow_includes_transport_step_and_can_use_serial(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """PRO models should expose a transport step for serial vs gateway access."""
     result = await hass.config_entries.flow.async_init(
@@ -1814,7 +1815,7 @@ async def test_pro_380_flow_includes_transport_step_and_can_use_serial(
 
 
 async def test_grow_serial_scan_discovers_and_creates_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A GROW serial bus scan should create one shared serial bus entry."""
     discovered_meters = (
@@ -1917,7 +1918,7 @@ async def test_grow_serial_scan_discovers_and_creates_entry(
 
 
 async def test_grow_bluetooth_scan_discovers_and_creates_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A GROW Bluetooth scan should create a single BLE-backed meter entry."""
     discovered_meter = DiscoveredGrowBluetoothMeter(
@@ -2014,7 +2015,7 @@ async def test_grow_bluetooth_scan_discovers_and_creates_entry(
 
 
 async def test_grow_bluetooth_scan_reports_not_paired(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Bluetooth validation should ask for host pairing when FFE9 needs encryption."""
     discovered_meter = DiscoveredGrowBluetoothMeter(
@@ -2078,7 +2079,7 @@ async def test_grow_bluetooth_scan_reports_not_paired(
 
 
 async def test_grow_bluetooth_scan_error_keeps_discovered_placeholders(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Post-GATT BLE setup errors should keep placeholders and ask for pairing."""
     discovered_meter = DiscoveredGrowBluetoothMeter(
@@ -2156,7 +2157,7 @@ async def test_grow_bluetooth_scan_error_keeps_discovered_placeholders(
 
 
 async def test_grow_bluetooth_scan_does_not_fallback_to_windows_proxy(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Normal Bluetooth scan should use HA Bluetooth only, not the developer proxy."""
     discovered_meter = DiscoveredGrowBluetoothMeter(
@@ -2202,7 +2203,7 @@ async def test_grow_bluetooth_scan_does_not_fallback_to_windows_proxy(
 
 
 async def test_bluetooth_rediscovery_updates_direct_bluetooth_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Bluetooth rediscovery should refresh address/name for the same serial."""
     entry = MockConfigEntry(
@@ -2253,7 +2254,7 @@ async def test_bluetooth_rediscovery_updates_direct_bluetooth_entry(
 
 
 async def test_bluetooth_rediscovery_does_not_update_gateway_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A Bluetooth rediscovery must not overwrite a shared gateway entry."""
     entry = MockConfigEntry(
@@ -2297,7 +2298,7 @@ async def test_bluetooth_rediscovery_does_not_update_gateway_entry(
 
 
 async def test_grow_bluetooth_scan_rejects_meter_already_on_gateway(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """User-triggered Bluetooth scan must not duplicate a gateway meter."""
     entry = MockConfigEntry(
@@ -2369,7 +2370,7 @@ async def test_grow_bluetooth_scan_rejects_meter_already_on_gateway(
 
 
 async def test_grow_bluetooth_scan_updates_legacy_direct_bluetooth_entry(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """User-triggered Bluetooth scan must not duplicate legacy serial entries."""
     entry = MockConfigEntry(
@@ -2445,7 +2446,7 @@ async def test_grow_bluetooth_scan_updates_legacy_direct_bluetooth_entry(
 
 
 async def test_grow_manual_flow_stores_detected_serial_number_even_when_renamed(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Manual GROW setup should persist the detected serial independent of the UI name."""
     result = await hass.config_entries.flow.async_init(
@@ -2503,7 +2504,7 @@ async def test_grow_manual_flow_stores_detected_serial_number_even_when_renamed(
 
 
 async def test_grow_manual_flow_rejects_duplicate_detected_serial(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Manual setup must not create another entry for an existing meter serial."""
     existing_entry = MockConfigEntry(
@@ -2574,7 +2575,7 @@ async def test_grow_manual_flow_rejects_duplicate_detected_serial(
 
 
 async def test_grow_manual_bluetooth_rejects_meter_already_on_gateway(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Manual Bluetooth setup must not duplicate a gateway/shared-bus meter."""
     existing_entry = MockConfigEntry(
@@ -2662,7 +2663,9 @@ async def test_grow_manual_bluetooth_rejects_meter_already_on_gateway(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_migrate_single_entry_stores_top_level_serial_number(hass) -> None:
+async def test_migrate_single_entry_stores_top_level_serial_number(
+    hass: HomeAssistant,
+) -> None:
     """Legacy single-meter entries should persist their serial in entry data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2699,7 +2702,7 @@ async def test_migrate_single_entry_stores_top_level_serial_number(hass) -> None
 
 
 async def test_validate_entry_identity_uses_stored_serial_number(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Identity validation should use stored serial metadata instead of the entry name."""
     client = AsyncMock()
@@ -2734,7 +2737,7 @@ async def test_validate_entry_identity_uses_stored_serial_number(
 
 
 async def test_grow_serial_scan_appends_new_meter_to_existing_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Scanning an existing bus should append newly found meters to that bus entry."""
     existing_entry = MockConfigEntry(
@@ -2843,7 +2846,7 @@ async def test_grow_serial_scan_appends_new_meter_to_existing_bus(
 
 
 async def test_pro_manual_serial_flow_can_append_to_existing_grow_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Manual PRO setup should append to an existing shared serial bus entry."""
     existing_entry = MockConfigEntry(
@@ -2943,7 +2946,7 @@ async def test_pro_manual_serial_flow_can_append_to_existing_grow_bus(
 
 
 async def test_serial_bus_options_flow_can_append_new_meter(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow should let an existing serial bus entry grow with new meters."""
     entry = MockConfigEntry(
@@ -3046,7 +3049,7 @@ async def test_serial_bus_options_flow_can_append_new_meter(
 
 
 async def test_grow_gateway_scan_flow_can_create_shared_gateway_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Scanning a TCP gateway should create one shared Modbus bus entry."""
     discovered_meter = DiscoveredGrowMeter(
@@ -3124,7 +3127,7 @@ async def test_grow_gateway_scan_flow_can_create_shared_gateway_bus(
 
 
 async def test_gateway_device_scan_flow_can_create_pro_shared_gateway_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Adding a gateway directly should create a PRO shared-bus entry."""
     discovered_meter = DiscoveredGrowMeter(
@@ -3203,7 +3206,7 @@ async def test_gateway_device_scan_flow_can_create_pro_shared_gateway_bus(
 
 
 async def test_pro_manual_gateway_flow_can_append_to_existing_gateway_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Manual PRO setup should append to an existing shared TCP gateway bus entry."""
     existing_entry = MockConfigEntry(
@@ -3302,7 +3305,7 @@ async def test_pro_manual_gateway_flow_can_append_to_existing_gateway_bus(
     [EDIT_SERIAL_BUS_DYNAMIC_OPTIONS_FIELD_TRANSLATIONS],
 )
 async def test_serial_bus_options_flow_can_edit_bus_and_meter_addresses(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow should rename a bus and edit each meter's Modbus ID."""
     entry = MockConfigEntry(
@@ -3404,7 +3407,7 @@ async def test_serial_bus_options_flow_can_edit_bus_and_meter_addresses(
 
 
 async def test_serial_bus_manage_routes_action_selects_meter(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Shared serial-bus entries should allow choosing one meter for route management."""
     entry = MockConfigEntry(
@@ -3461,7 +3464,7 @@ async def test_serial_bus_manage_routes_action_selects_meter(
 
 
 async def test_shared_bus_meter_can_add_and_switch_routes(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Shared serial-bus meters should support their own stored routes and active route."""
     entry = MockConfigEntry(
@@ -3664,7 +3667,7 @@ async def test_shared_bus_meter_can_add_and_switch_routes(
 
 
 async def test_tcp_options_flow_can_edit_host_port_and_modbus_address(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow should update TCP route details without changing identity."""
     entry = MockConfigEntry(
@@ -3730,7 +3733,7 @@ async def test_tcp_options_flow_can_edit_host_port_and_modbus_address(
 
 
 async def test_bluetooth_options_flow_can_edit_address_name_and_polling(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow should update Bluetooth route details without changing identity."""
     entry = MockConfigEntry(
@@ -3810,7 +3813,7 @@ async def test_bluetooth_options_flow_can_edit_address_name_and_polling(
 
 
 async def test_bluetooth_proxy_options_flow_can_edit_proxy_and_ble_details(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow should update Windows BLE proxy route details safely."""
     entry = MockConfigEntry(
@@ -3882,7 +3885,7 @@ async def test_bluetooth_proxy_options_flow_can_edit_proxy_and_ble_details(
 
 @pytest.mark.usefixtures("real_entry_setup")
 async def test_options_submit_preserves_active_route_and_deduplicates_routes(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Submitting options should preserve the selected route and clean duplicates."""
     entry = MockConfigEntry(
@@ -3989,7 +3992,7 @@ async def test_options_submit_preserves_active_route_and_deduplicates_routes(
 
 
 async def test_options_flow_can_add_onboarding_route_and_switch_active_route(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Single-meter entries should store extra routes and allow switching the active one."""
     entry = MockConfigEntry(
@@ -4157,7 +4160,7 @@ async def test_options_flow_can_add_onboarding_route_and_switch_active_route(
 
 
 async def test_add_serial_route_skips_helper_only_purpose_step(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Serial routes should skip the helper-only purpose chooser."""
     entry = MockConfigEntry(
@@ -4209,7 +4212,7 @@ async def test_add_serial_route_skips_helper_only_purpose_step(
 
 
 async def test_tcp_options_flow_rejects_connection_update_to_different_meter(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The options flow must reject route changes that point to another meter."""
     entry = MockConfigEntry(
@@ -4270,7 +4273,7 @@ async def test_tcp_options_flow_rejects_connection_update_to_different_meter(
 
 
 async def test_reconfigure_flow_can_switch_single_meter_transport(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Reconfigure should update one single-meter entry in place."""
     entry = MockConfigEntry(
@@ -4360,7 +4363,7 @@ async def test_reconfigure_flow_can_switch_single_meter_transport(
 
 
 async def test_reconfigure_flow_rejects_identity_mismatch(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Reconfigure must keep the existing physical meter identity stable."""
     entry = MockConfigEntry(
@@ -4433,7 +4436,7 @@ async def test_reconfigure_flow_rejects_identity_mismatch(
     [EDIT_SERIAL_BUS_DYNAMIC_CONFIG_FIELD_TRANSLATIONS],
 )
 async def test_reconfigure_flow_can_edit_shared_serial_bus(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Reconfigure should reuse the shared-bus edit flow for bus entries."""
     entry = MockConfigEntry(

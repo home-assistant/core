@@ -19,6 +19,7 @@ from homeassistant.components.inepro_metering.modbus import (
     CONF_BLUETOOTH_FORCE_REPAIR,
     CONF_BLUETOOTH_PAIRING_MODE,
 )
+from homeassistant.core import HomeAssistant
 
 
 def test_grow_bluetooth_meter_from_service_info_returns_library_model() -> None:
@@ -51,7 +52,9 @@ def test_grow_bluetooth_meter_from_service_info_rejects_unknown_names() -> None:
     assert meter is None
 
 
-def test_async_discover_grow_bluetooth_meters_prefers_strongest_rssi(hass) -> None:
+def test_async_discover_grow_bluetooth_meters_prefers_strongest_rssi(
+    hass: HomeAssistant,
+) -> None:
     """The HA adapter should deduplicate cache hits by serial number and keep the best RSSI."""
     service_infos = [
         SimpleNamespace(
@@ -90,7 +93,7 @@ def test_async_discover_grow_bluetooth_meters_prefers_strongest_rssi(hass) -> No
     assert meters[0].transport is TransportType.BLUETOOTH
 
 
-def test_entry_data_uses_pairing_never_by_default(hass) -> None:
+def test_entry_data_uses_pairing_never_by_default(hass: HomeAssistant) -> None:
     """Normal setup and runtime validation should not start pairing in HA."""
     ble_device = SimpleNamespace(name="IM-075625480002", address="80:F1:B2:58:DD:5A")
     entry_data = {

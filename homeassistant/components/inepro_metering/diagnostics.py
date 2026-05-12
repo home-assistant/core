@@ -160,7 +160,7 @@ def _build_runtime_diagnostics(
 
     if isinstance(coordinator.data, SerialBusCoordinatorData):
         configured_meters = get_configured_meters(
-            config_entry.data, title=config_entry.title
+            dict(config_entry.data), title=config_entry.title
         )
         return {
             "meters": [

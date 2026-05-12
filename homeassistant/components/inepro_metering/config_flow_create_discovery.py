@@ -1,10 +1,12 @@
 """Discovery-oriented creation workflow steps for the Inepro Metering config flow."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -13,8 +15,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .bluetooth import IneproBluetoothDeviceNotFound
+from .config_flow_protocols import IneproFlowProtocol
 from .config_flow_schemas import (
     UNSELECTED_TRANSPORT,
     build_bluetooth_confirm_schema,
@@ -145,13 +149,13 @@ def _exception_chain_summary(err: BaseException) -> str:
     return " <- ".join(parts)
 
 
-class CreateDiscoveryFlowMixin:
+class CreateDiscoveryFlowMixin(IneproFlowProtocol):
     """Discovery-driven creation steps for new Inepro Metering entries."""
 
     async def async_step_zeroconf(
         self,
-        discovery_info: Any,
-    ) -> FlowResult:
+        discovery_info: ZeroconfServiceInfo,
+    ) -> ConfigFlowResult:
         """Handle a GROW Modbus TCP discovery from Home Assistant Zeroconf."""
         _LOGGER.debug(
             "Zeroconf candidate received: type=%s name=%s hostname=%s address=%s port=%s",
@@ -283,7 +287,10 @@ class CreateDiscoveryFlowMixin:
         self.context["title_placeholders"] = {
             CONF_NAME: serial_number,
         }
-        return await self.async_step_zeroconf_confirm()
+        return cast(
+            ConfigFlowResult,
+            await self.async_step_zeroconf_confirm(),
+        )
 
     async def async_step_zeroconf_confirm(
         self,
@@ -391,7 +398,7 @@ class CreateDiscoveryFlowMixin:
                 return await self.async_step_gateway_discover()
 
             self._selected_discovered_gateway = None
-            self._gateway_scan_form_defaults = {}
+            self._gateway_scan_form_defaults: dict[str, Any] = {}
             return await self.async_step_gateway_scan()
 
         return self.async_show_form(
@@ -401,8 +408,8 @@ class CreateDiscoveryFlowMixin:
 
     async def async_step_bluetooth(
         self,
-        discovery_info,
-    ) -> FlowResult:
+        discovery_info: BluetoothServiceInfoBleak,
+    ) -> ConfigFlowResult:
         """Handle a GROW Bluetooth discovery from Home Assistant."""
         discovered_meter = self._grow_bluetooth_meter_from_service_info(discovery_info)
         if discovered_meter is None:
@@ -469,7 +476,10 @@ class CreateDiscoveryFlowMixin:
         self.context["title_placeholders"] = {
             CONF_NAME: discovered_meter.serial_number,
         }
-        return await self.async_step_bluetooth_confirm()
+        return cast(
+            ConfigFlowResult,
+            await self.async_step_bluetooth_confirm(),
+        )
 
     async def async_step_bluetooth_scan(
         self,

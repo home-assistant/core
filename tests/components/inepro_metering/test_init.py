@@ -30,6 +30,7 @@ from homeassistant.components.inepro_metering.const import (
     DEFAULT_STOPBITS,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -45,7 +46,7 @@ class _FakeCoordinator:
 
 
 async def test_setup_entry_uses_runtime_data_and_service_survives_unload(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Config entries should keep runtime data on the entry and keep services loaded."""
     entry = MockConfigEntry(
@@ -114,7 +115,7 @@ async def test_setup_entry_uses_runtime_data_and_service_survives_unload(
 
 
 async def test_async_remove_config_entry_device_allows_only_stale_bus_devices(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Device removal should stay blocked for current meters and allow stale leftovers."""
     entry = MockConfigEntry(

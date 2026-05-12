@@ -41,6 +41,7 @@ from homeassistant.components.inepro_metering.coordinator import (
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -276,6 +277,7 @@ class FakeModbusClientUnknownCrc(FakeModbusClient):
 
     def __init__(self, config) -> None:
         """Initialize the fake client."""
+        super().__init__(config)
         self._registers = _register_map_unknown_crc()
 
 
@@ -284,6 +286,7 @@ class FakeModbusClientFault(FakeModbusClient):
 
     def __init__(self, config) -> None:
         """Initialize the fake client."""
+        super().__init__(config)
         self._registers = _register_map_faulted()
 
 
@@ -459,7 +462,7 @@ class FakeUnsupportedDeviceIdentificationModbusClient(FakeModbusClient):
 
 
 async def test_setup_entry_creates_expected_sensor_entities(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A config entry should create coordinator-backed GROW entities."""
     entry = MockConfigEntry(
@@ -541,7 +544,7 @@ async def test_setup_entry_creates_expected_sensor_entities(
 
 
 async def test_setup_entry_creates_expected_pro_sensor_entities(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A PRO config entry should create coordinator-backed serial Modbus entities."""
     entry = MockConfigEntry(
@@ -593,7 +596,7 @@ async def test_setup_entry_creates_expected_pro_sensor_entities(
 
 
 async def test_unknown_crc_is_reflected_in_version_strings(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Unknown CRCs should remain visible in firmware version strings."""
     entry = MockConfigEntry(
@@ -639,7 +642,7 @@ async def test_unknown_crc_is_reflected_in_version_strings(
 
 
 async def test_tcp_gateway_entry_exposes_gateway_diagnostic_sensors(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A TCP gateway route should expose the gateway metadata as diagnostic sensors."""
     entry = MockConfigEntry(
@@ -704,7 +707,7 @@ async def test_tcp_gateway_entry_exposes_gateway_diagnostic_sensors(
 
 
 async def test_grow_fault_error_summary_decodes_bitfield(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The GROW error summary sensor should decode active fault bits."""
     entry = MockConfigEntry(
@@ -749,7 +752,7 @@ async def test_grow_fault_error_summary_decodes_bitfield(
 
 
 async def test_serial_bus_entry_creates_multiple_meter_devices(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """One serial bus entry should expose multiple configured Inepro devices."""
     entry = MockConfigEntry(
@@ -838,7 +841,7 @@ async def test_serial_bus_entry_creates_multiple_meter_devices(
 
 
 async def test_tcp_gateway_bus_entry_exposes_bus_level_gateway_device(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A shared TCP gateway bus should expose one separate gateway device and sensors."""
     entry = MockConfigEntry(
@@ -916,7 +919,7 @@ async def test_tcp_gateway_bus_entry_exposes_bus_level_gateway_device(
 
 
 async def test_tcp_gateway_bus_keeps_meter_online_when_status_blocks_fail(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A gateway meter should stay online when only optional status blocks fail."""
     entry = MockConfigEntry(
@@ -960,7 +963,7 @@ async def test_tcp_gateway_bus_keeps_meter_online_when_status_blocks_fail(
 
 
 async def test_tcp_gateway_bus_entry_with_no_meters_loads_gateway_device(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """A verified TCP gateway with no meters should still load as a device."""
     entry = MockConfigEntry(
@@ -1007,7 +1010,7 @@ async def test_tcp_gateway_bus_entry_with_no_meters_loads_gateway_device(
 
 
 async def test_coordinator_skips_unsupported_modbus_device_identification(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Unsupported 43/14 metadata reads should not poison later polls."""
     entry = MockConfigEntry(
@@ -1043,7 +1046,7 @@ async def test_coordinator_skips_unsupported_modbus_device_identification(
 
 
 async def test_bluetooth_proxy_coordinator_keeps_last_data_on_transient_failures(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Transient Bluetooth proxy failures should reuse the last successful data."""
     entry = MockConfigEntry(
@@ -1087,7 +1090,7 @@ async def test_bluetooth_proxy_coordinator_keeps_last_data_on_transient_failures
 
 
 async def test_bluetooth_proxy_coordinator_keeps_last_data_on_short_payloads(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Short malformed BLE payloads should not immediately blank a working meter."""
     entry = MockConfigEntry(
@@ -1124,7 +1127,7 @@ async def test_bluetooth_proxy_coordinator_keeps_last_data_on_short_payloads(
 
 
 async def test_set_wifi_credentials_service_writes_grow_register_sequence(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The Wi-Fi service should write SSID, password, then the apply command."""
     FakeWritableSerialBusModbusClient.instances.clear()
@@ -1191,7 +1194,7 @@ async def test_set_wifi_credentials_service_writes_grow_register_sequence(
 
 
 async def test_set_wifi_credentials_service_rejects_unknown_serial_before_write(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Unknown serials should fail service validation before any meter write."""
     FakeWritableSerialBusModbusClient.instances.clear()
@@ -1250,7 +1253,7 @@ async def test_set_wifi_credentials_service_rejects_unknown_serial_before_write(
 
 
 async def test_set_wifi_credentials_service_rejects_invalid_credentials_before_write(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """Invalid credential data should become a translated validation error."""
     FakeWritableSerialBusModbusClient.instances.clear()
@@ -1309,7 +1312,7 @@ async def test_set_wifi_credentials_service_rejects_invalid_credentials_before_w
 
 
 async def test_wifi_support_switch_toggles_confirmed_register(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The Wi-Fi support switch should write the confirmed enable register."""
     FakeWritableSerialBusModbusClient.instances.clear()
@@ -1374,7 +1377,7 @@ async def test_wifi_support_switch_toggles_confirmed_register(
 
 
 async def test_set_wifi_credentials_service_rejects_non_wifi_model(
-    hass,
+    hass: HomeAssistant,
 ) -> None:
     """The Wi-Fi service should reject GROW models without Wi-Fi support."""
     FakeWritableSerialBusModbusClient.instances.clear()

@@ -11,12 +11,14 @@ from inepro_metering.commands import (
 )
 from inepro_metering.gateway_settings import (
     GATEWAY_MANAGEMENT_SLAVE_ID,
+    GatewayConfiguration,
     GatewaySettingState,
     build_gateway_setting_states,
     get_gateway_action,
     get_gateway_setting,
     supports_gateway_management,
 )
+from inepro_metering.modbus import IneproTcpGatewayInfo
 from inepro_metering.reading import build_register_blocks, decode_sensor_value
 from inepro_metering.runtime import (
     MeterGatewayInfo,
@@ -126,7 +128,7 @@ class IneproMeteringCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.profile = get_profile(entry.data[CONF_FAMILY], entry.data[CONF_VARIANT])
         self._transport = TransportType(entry.data[CONF_TRANSPORT])
         self._client = IneproModbusClient(
-            _build_runtime_client_config(hass, entry.data)
+            _build_runtime_client_config(hass, dict(entry.data))
         )
         self._last_data: CoordinatorData | None = None
         self._last_gateway: MeterGatewayInfo | None = None
@@ -298,9 +300,9 @@ class IneproSerialBusCoordinator(DataUpdateCoordinator[SerialBusCoordinatorData]
         """Initialize the serial bus coordinator."""
         self.entry = entry
         self._client = IneproModbusClient(
-            _build_runtime_client_config(hass, entry.data)
+            _build_runtime_client_config(hass, dict(entry.data))
         )
-        self._meters = get_configured_meters(entry.data, title=entry.title)
+        self._meters = get_configured_meters(dict(entry.data), title=entry.title)
         self._profiles = {
             build_meter_key(meter): get_profile_for_variant(meter.variant)
             for meter in self._meters
@@ -494,7 +496,7 @@ def build_runtime_coordinator(
     entry: ConfigEntry,
 ) -> IneproMeteringCoordinator | IneproSerialBusCoordinator:
     """Build the runtime coordinator matching the entry shape."""
-    if is_bus_entry(entry.data):
+    if is_bus_entry(dict(entry.data)):
         return IneproSerialBusCoordinator(hass, entry)
     return IneproMeteringCoordinator(hass, entry)
 
@@ -560,7 +562,7 @@ async def _async_read_profile(
     if successful_blocks == 0 and last_error is not None:
         raise last_error
 
-    unsupported_slaves = getattr(
+    unsupported_slaves: set[int] = getattr(
         client,
         "_inepro_unsupported_device_identification_slaves",
         set(),
@@ -599,7 +601,7 @@ async def _async_read_profile(
 async def _async_read_gateway_metadata_if_supported(
     client: IneproModbusClient,
     transport: TransportType,
-) -> dict[str, str | int] | None:
+) -> IneproTcpGatewayInfo | None:
     """Read vendor-specific TCP gateway metadata for gateway-backed routes."""
     if not supports_gateway_management(transport):
         return None
@@ -616,7 +618,7 @@ async def _async_read_gateway_metadata_if_supported(
 async def _async_read_gateway_configuration_if_supported(
     client: IneproModbusClient,
     transport: TransportType,
-):
+) -> GatewayConfiguration | None:
     """Read shared-library TCP gateway configuration for gateway-backed routes."""
     if not supports_gateway_management(transport):
         return None

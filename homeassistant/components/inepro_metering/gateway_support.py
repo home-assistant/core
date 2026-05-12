@@ -6,8 +6,8 @@ from inepro_metering.gateway_settings import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.const import CONF_HOST, CONF_PORT, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SERIAL_NUMBER, CONF_TRANSPORT, MANUFACTURER, TransportType

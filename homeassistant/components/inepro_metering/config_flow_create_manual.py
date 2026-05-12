@@ -1,12 +1,13 @@
 """Manual creation workflow steps for the Inepro Metering config flow."""
 
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.config_entries import SOURCE_RECONFIGURE
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import FlowResult
 
 from .bluetooth import IneproBluetoothDeviceNotFound
+from .config_flow_protocols import IneproFlowProtocol
 from .config_flow_schemas import (
     UNSELECTED_TRANSPORT,
     build_connection_schema,
@@ -60,12 +61,12 @@ from .models import (
 )
 
 
-class CreateManualFlowMixin:
+class CreateManualFlowMixin(IneproFlowProtocol):
     """Manual creation steps for new Inepro Metering entries."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial meter-vs-gateway selection step."""
         if user_input is not None:
             if CONF_FAMILY in user_input:
@@ -73,13 +74,25 @@ class CreateManualFlowMixin:
                     CONF_FAMILY: MeterFamily(user_input[CONF_FAMILY]).value,
                 }
                 if self._selected_family is MeterFamily.GROW:
-                    return await self.async_step_setup_method()
-                return await self.async_step_model()
+                    return cast(
+                        ConfigFlowResult,
+                        await self.async_step_setup_method(),
+                    )
+                return cast(
+                    ConfigFlowResult,
+                    await self.async_step_model(),
+                )
 
             self._meter_selection = {}
             if user_input[CONF_DEVICE_KIND] == DEVICE_KIND_GATEWAY:
-                return await self.async_step_gateway_setup_method()
-            return await self.async_step_family()
+                return cast(
+                    ConfigFlowResult,
+                    await self.async_step_gateway_setup_method(),
+                )
+            return cast(
+                ConfigFlowResult,
+                await self.async_step_family(),
+            )
 
         return self.async_show_form(
             step_id="user",

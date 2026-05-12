@@ -1,7 +1,7 @@
 """Helpers for config-entry data shapes used by Inepro Metering."""
 
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from inepro_metering.routes import (
     MeterRouteDefinition,
@@ -35,6 +35,11 @@ from .const import (
 from .discovery import parse_grow_serial_number
 from .models import get_profile_for_variant
 
+if TYPE_CHECKING:
+    type ConfiguredRoute = MeterRouteDefinition
+else:
+    ConfiguredRoute = MeterRouteDefinition
+
 
 @dataclass(frozen=True, slots=True)
 class ConfiguredMeter:
@@ -48,9 +53,6 @@ class ConfiguredMeter:
     product_code: str | None = None
     routes: tuple[ConfiguredRoute, ...] = ()
     active_route: str | None = None
-
-
-ConfiguredRoute = MeterRouteDefinition
 
 
 BUS_TRANSPORTS = {
@@ -257,7 +259,7 @@ def build_bus_route(
     """Build the canonical bus route for one shared-bus meter."""
     transport = TransportType(bus_entry_data[CONF_TRANSPORT])
     if transport is TransportType.SERIAL:
-        return ConfiguredRoute(
+        return MeterRouteDefinition(
             transport=TransportType.SERIAL,
             slave_id=int(slave_id),
             timeout=int(bus_entry_data[CONF_TIMEOUT]),
@@ -270,7 +272,7 @@ def build_bus_route(
         )
 
     if transport is TransportType.TCP_GATEWAY:
-        return ConfiguredRoute(
+        return MeterRouteDefinition(
             transport=TransportType.TCP_GATEWAY,
             slave_id=int(slave_id),
             timeout=int(bus_entry_data[CONF_TIMEOUT]),
@@ -510,7 +512,7 @@ def build_route_from_entry_data(
 ) -> ConfiguredRoute:
     """Build one configured route from top-level entry connection data."""
     route = _configured_route_from_mapping(entry_data)
-    return ConfiguredRoute(
+    return MeterRouteDefinition(
         transport=route.transport,
         slave_id=route.slave_id,
         timeout=route.timeout,
@@ -835,7 +837,7 @@ def _configured_route_from_legacy_entry(data: dict[str, Any]) -> ConfiguredRoute
 
 def _configured_route_from_mapping(data: dict[str, Any]) -> ConfiguredRoute:
     """Normalize one serialized route mapping."""
-    return ConfiguredRoute(
+    return MeterRouteDefinition(
         transport=TransportType(data[CONF_TRANSPORT]),
         slave_id=int(data[CONF_SLAVE_ID]),
         timeout=int(data[CONF_TIMEOUT]),

@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.data_entry_flow import FlowResult
 
+from .config_flow_protocols import IneproFlowProtocol
 from .config_flow_shared import CONFIG_ENTRY_VERSION, discovered_meter_key
 from .const import (
     CONF_BAUDRATE,
@@ -41,7 +42,7 @@ def _meter_serials(
     return {meter.serial_number for meter in meters if meter.serial_number}
 
 
-class SerialBusFlowMixin:
+class SerialBusFlowMixin(IneproFlowProtocol):
     """Helpers for shared-bus-backed config flow steps."""
 
     def _filter_new_bus_devices(
@@ -60,10 +61,10 @@ class SerialBusFlowMixin:
             configured_slave_ids = {
                 get_bus_route_for_meter(
                     meter,
-                    bus_entry_data=config_entry.data,
+                    bus_entry_data=dict(config_entry.data),
                 ).slave_id
                 for meter in get_configured_meters(
-                    config_entry.data,
+                    dict(config_entry.data),
                     title=config_entry.title,
                 )
             }
@@ -76,10 +77,10 @@ class SerialBusFlowMixin:
                 configured_slave_ids = {
                     get_bus_route_for_meter(
                         meter,
-                        bus_entry_data=existing_entry.data,
+                        bus_entry_data=dict(existing_entry.data),
                     ).slave_id
                     for meter in get_configured_meters(
-                        existing_entry.data,
+                        dict(existing_entry.data),
                         title=existing_entry.title,
                     )
                 }
@@ -164,7 +165,9 @@ class SerialBusFlowMixin:
             if exclude_entry is not None and entry.entry_id == exclude_entry.entry_id:
                 continue
             configured_serials.update(
-                _meter_serials(get_configured_meters(entry.data, title=entry.title))
+                _meter_serials(
+                    get_configured_meters(dict(entry.data), title=entry.title)
+                )
             )
         return configured_serials
 
@@ -228,12 +231,15 @@ class SerialBusFlowMixin:
             )
 
         existing_meters = list(
-            get_configured_meters(existing_entry.data, title=existing_entry.title)
+            get_configured_meters(
+                dict(existing_entry.data),
+                title=existing_entry.title,
+            )
         )
         existing_slave_ids = {
             get_bus_route_for_meter(
                 meter,
-                bus_entry_data=existing_entry.data,
+                bus_entry_data=dict(existing_entry.data),
             ).slave_id
             for meter in existing_meters
         }
@@ -245,7 +251,7 @@ class SerialBusFlowMixin:
         new_meters = [
             ensure_bus_meter_routes(
                 meter,
-                bus_entry_data=existing_entry.data,
+                bus_entry_data=dict(existing_entry.data),
             )
             for meter in meters
             if meter.slave_id not in existing_slave_ids
@@ -261,7 +267,7 @@ class SerialBusFlowMixin:
             serialize_configured_meter(
                 ensure_bus_meter_routes(
                     meter,
-                    bus_entry_data=existing_entry.data,
+                    bus_entry_data=dict(existing_entry.data),
                 )
             )
             for meter in (*existing_meters, *new_meters)
@@ -357,6 +363,6 @@ class SerialBusFlowMixin:
     def _configured_meters(self) -> tuple[ConfiguredMeter, ...]:
         """Return the meters configured under this entry."""
         return get_configured_meters(
-            self._config_entry.data,
+            dict(self._config_entry.data),
             title=self._config_entry.title,
         )
