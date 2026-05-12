@@ -512,6 +512,20 @@ async def test_setup_does_not_skip_initial_energy_site_auth_error(
     assert normal_config_entry.state is state
 
 
+async def test_setup_retries_on_initial_energy_site_bad_response(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test setup retries when initial site info returns a malformed response."""
+    mock_site_info.side_effect = None
+    mock_site_info.return_value = {}
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_energy_live_refresh_bad_response(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,

@@ -361,7 +361,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     async def async_config_entry_first_refresh_or_skip(self) -> bool:
         """Refresh site info during setup, skipping site-specific API failures."""
         try:
-            data = (await self.api.site_info())["response"]
+            data = flatten((await self.api.site_info())["response"])
         except RateLimited as e:
             if isinstance(e.data, dict) and "after" in e.data:
                 LOGGER.warning(
@@ -385,8 +385,12 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 err,
             )
             return False
+        except Exception as err:
+            self.last_exception = err
+            self.last_update_success = False
+            raise ConfigEntryNotReady from err
 
-        self.data = flatten(data)
+        self.data = data
         self.updated_once = True
         return True
 
