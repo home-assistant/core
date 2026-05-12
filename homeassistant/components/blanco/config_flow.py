@@ -51,12 +51,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     reg = await client.register_app(locale)
 
-    if CONF_DEV_ID in data:
-        dev_id: str = data[CONF_DEV_ID]
-    else:
-        dev_id = hashlib.sha256(
-            (data[CONF_SERIAL] + data[CONF_SERVICE_CODE]).encode()
-        ).hexdigest()
+    dev_id: str = hashlib.sha256(
+        (data[CONF_SERIAL] + data[CONF_SERVICE_CODE]).encode()
+    ).hexdigest()
 
     auth = await client.authenticate(dev_id)
 
