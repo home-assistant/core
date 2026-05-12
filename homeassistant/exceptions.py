@@ -35,6 +35,9 @@ class HomeAssistantError(Exception):
 
     _message: str | None = None
     generate_message: bool = False
+    translation_domain: str | None = None
+    translation_key: str | None = None
+    translation_placeholders: dict[str, str] | None = None
 
     def __init__(
         self,
