@@ -9821,7 +9821,7 @@
     'supported_features': 0,
     'translation_key': 'compressor_strength',
     'unique_id': 'tuya.ol8xwtcj42eg18bdbrnzcompressor_strength',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': '℃',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hot_water_heat_pump_compressor_strength-state]
@@ -9829,7 +9829,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hot Water Heat Pump Compressor strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hot_water_heat_pump_compressor_strength',
@@ -11644,11 +11644,8 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -11657,16 +11654,15 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_current',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': '',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_temperature',
