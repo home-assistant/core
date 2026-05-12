@@ -298,7 +298,7 @@ class Analytics:
         if stored:
             self._data = AnalyticsData.from_dict(stored)
 
-        if self.supervisor:
+        if self.supervisor and not self.onboarded:
             # This may raise HassioNotReadyError if Supervisor was unreachable
             # during setup of the Supervisor integration. That will fail setup
             # of this integration. However there is no better option at this time
@@ -306,16 +306,16 @@ class Analytics:
             # setup this integration and we can't raise ConfigEntryNotReady to
             # trigger a retry from async_setup.
             supervisor_info = hassio.get_supervisor_info(self._hass)
-            if not self.onboarded:
-                # User have not configured analytics, get this setting from the supervisor
-                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = True
-                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = False
+
+            # User have not configured analytics, get this setting from the supervisor
+            if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = True
+            elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def _save(self) -> None:
         """Save data."""

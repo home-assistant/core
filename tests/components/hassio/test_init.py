@@ -62,7 +62,6 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.homeassistant.const import DATA_STOP_HANDLER
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -1834,13 +1833,15 @@ async def test_stop_handler_restored_on_unload(
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-    hassio_stop_handler = hass.data[DATA_STOP_HANDLER]
-
     entry = hass.config_entries.async_entries("hassio")[0]
     await hass.config_entries.async_unload(entry.entry_id)
 
-    # After unload the hassio handler must no longer be registered.
-    assert hass.data.get(DATA_STOP_HANDLER) is not hassio_stop_handler
+    # After a stop call to core no longer calls supervisor
+    with patch.object(hass, "async_stop") as mock_stop:
+        await hass.services.async_call("homeassistant", "stop", {})
+        await hass.async_block_till_done()
+        mock_stop.assert_called_once()
+        supervisor_client.homeassistant.stop.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor_client")

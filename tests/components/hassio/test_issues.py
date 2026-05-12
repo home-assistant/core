@@ -27,10 +27,10 @@ from aiohasupervisor.models import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.hassio.issues import SupervisorIssues
+from homeassistant.components.hassio.const import DOMAIN
+from homeassistant.components.hassio.coordinator import get_issues_info
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
@@ -1157,10 +1157,12 @@ async def test_supervisor_issues_addon_pwned(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_unload_disconnects_listener(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     resolution_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test SupervisorIssues.unload() disconnects the EVENT_SUPERVISOR_EVENT listener.
 
@@ -1168,34 +1170,52 @@ async def test_supervisor_issues_unload_disconnects_listener(
     the listener — preventing listener accumulation on config-entry reload.
     """
     mock_resolution_info(supervisor_client)
-    issues = SupervisorIssues(hass)
-    await issues.setup()
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    # Get config entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Get issues instance
+    issues = get_issues_info(hass)
+    assert issues is not None
+    assert issues.unhealthy_reasons == set()
 
     # While connected, a health_changed event updates unhealthy_reasons.
-    async_dispatcher_send(
-        hass,
-        "supervisor_event",
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
         {
-            "event": "health_changed",
-            "data": {"healthy": False, "unhealthy_reasons": ["docker"]},
-        },
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": False, "unhealthy_reasons": ["docker"]},
+            },
+        }
     )
+    msg = await client.receive_json()
+    assert msg["success"]
     await hass.async_block_till_done()
     assert "docker" in issues.unhealthy_reasons
 
-    # After unload(), the same event is silently ignored.
-    issues.unload()
-    async_dispatcher_send(
-        hass,
-        "supervisor_event",
+    # After config entry unload, the same event is silently ignored.
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json(
         {
-            "event": "health_changed",
-            "data": {"healthy": True},
-        },
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": True},
+            },
+        }
     )
+    msg = await client.receive_json()
+    assert msg["success"]
     await hass.async_block_till_done()
     # unhealthy_reasons unchanged — listener did not fire.
     assert "docker" in issues.unhealthy_reasons
-
-    # Calling unload() again is safe (idempotent).
-    issues.unload()
