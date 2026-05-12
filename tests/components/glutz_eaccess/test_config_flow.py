@@ -1,4 +1,5 @@
 """Tests for the Glutz eAccess config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -479,7 +480,10 @@ async def test_reconfigure_wrong_account_aborts(
     """Test that reconfigure aborts when system ID doesn't match the entry."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_glutz_client.get_system_info.return_value = {"id": "DIFFERENT_ID", "name": "Other"}
+    mock_glutz_client.get_system_info.return_value = {
+        "id": "DIFFERENT_ID",
+        "name": "Other",
+    }
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -527,7 +531,10 @@ async def test_reauth_wrong_account_aborts(
     """Test that reauth aborts when system ID doesn't match the entry."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_glutz_client.get_system_info.return_value = {"id": "DIFFERENT_ID", "name": "Other"}
+    mock_glutz_client.get_system_info.return_value = {
+        "id": "DIFFERENT_ID",
+        "name": "Other",
+    }
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(

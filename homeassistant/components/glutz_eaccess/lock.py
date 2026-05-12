@@ -1,4 +1,5 @@
 """Lock platform for the Glutz eAccess integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -30,9 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Create a GlutzLock per access point from the coordinator's snapshot."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        GlutzLock(coordinator, ap) for ap in coordinator.data.values()
-    )
+    async_add_entities(GlutzLock(coordinator, ap) for ap in coordinator.data.values())
 
 
 class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
@@ -82,7 +81,9 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door and schedule an automatic re-lock."""
         try:
-            success = await self.coordinator.api.open_access_point(self._access_point_id)
+            success = await self.coordinator.api.open_access_point(
+                self._access_point_id
+            )
         except GlutzAuthError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -112,7 +113,9 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Hold the door open indefinitely and cancel any pending auto-relock."""
         try:
-            success = await self.coordinator.api.hold_open_access_point(self._access_point_id)
+            success = await self.coordinator.api.hold_open_access_point(
+                self._access_point_id
+            )
         except GlutzAuthError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
