@@ -200,7 +200,7 @@ async def test_home_assistant_error_subclass(hass: HomeAssistant) -> None:
         # A subclass which doesn't call super should not raise an error when __str__
         # is called and should have None for translation attributes.
         with pytest.raises(HomeAssistantError) as exc:
-            raise _SubExceptionNoSuper()
+            raise _SubExceptionNoSuper
         assert str(exc.value) == ""
         assert exc.value.translation_domain is None
         assert exc.value.translation_key is None
