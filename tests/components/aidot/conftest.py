@@ -18,13 +18,7 @@ import pytest
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.core import callback
 
-from .const import (
-    TEST_DEVICE1,
-    TEST_DEVICE_LIST,
-    TEST_EMAIL,
-    TEST_LOGIN_RESP,
-    TEST_REGION,
-)
+from .const import TEST_DEVICE1, TEST_DEVICE_LIST, TEST_EMAIL, TEST_LOGIN_RESP
 
 from tests.common import MockConfigEntry
 

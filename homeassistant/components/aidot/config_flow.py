@@ -1,11 +1,9 @@
 """Config flow for Aidot integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aidot.client import AidotClient
-from aidot.const import DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES, CONF_ID
+from aidot.const import CONF_ID, DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
 from aidot.exceptions import AidotUserOrPassIncorrect
 from aiohttp import ClientError
 import voluptuous as vol
