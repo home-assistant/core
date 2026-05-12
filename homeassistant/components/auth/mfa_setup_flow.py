@@ -5,12 +5,13 @@ from typing import Any
 
 import voluptuous as vol
 import voluptuous_serialize
+from voluptuous_serialize import UnsupportedType
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowContext
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.hass_dict import HassKey
 
 DATA_SETUP_FLOW_MGR: HassKey[MfaFlowManager] = HassKey("auth_mfa_setup_flow_manager")
@@ -151,6 +152,16 @@ def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = voluptuous_serialize.convert(
+            schema, custom_serializer=_serializer
+        )
 
     return data
+
+
+def _serializer(input: Any) -> dict[str, Any] | UnsupportedType:
+    return (
+        input.serialize()
+        if isinstance(input, selector.EntitySelector)
+        else voluptuous_serialize.UNSUPPORTED
+    )
