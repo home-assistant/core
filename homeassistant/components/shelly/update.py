@@ -53,6 +53,7 @@ class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
     """Class to describe a RPC update."""
 
     latest_version: Callable[[dict], Any]
+    installed_version: Callable[[dict], Any] | None = None
     beta: bool
 
 
@@ -102,6 +103,16 @@ RPC_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+    "loraupdate": RpcUpdateDescription(
+        key="lora",
+        sub_key="available_updates",
+        translation_key="lora_firmware",
+        latest_version=lambda status: status.get("stable", {"version": ""})["version"],
+        installed_version=lambda status: status.get("fw_version"),
+        beta=False,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -296,6 +307,12 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
+        if self.entity_description.installed_version is not None:
+            return cast(
+                str,
+                self.entity_description.installed_version(self.status),
+            )
+
         return cast(str, self.coordinator.device.shelly["ver"])
 
     @property
