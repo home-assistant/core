@@ -25,7 +25,7 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step initiated by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
