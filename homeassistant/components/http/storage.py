@@ -45,6 +45,7 @@ def async_get_store(hass: HomeAssistant) -> HttpConfigStore:
         USER_CONFIG_STORAGE_VERSION,
         USER_CONFIG_STORAGE_KEY,
         private=True,
+        atomic_writes=True,
     )
 
 
