@@ -225,8 +225,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             # Tesla may keep deactivated energy sites in the products API after an
             # old solar system is removed or replaced. Those stale sites can
             # still return live status while the info endpoint returns an error.
-            # Only skip failures from site info. Live status failures may be
-            # transient and should keep the config entry in setup retry.
+            # Only the site info refresh can be skipped here. Live status
+            # failures may be transient and should keep the config entry in
+            # setup retry.
             if not await info_coordinator.async_config_entry_first_refresh_or_skip():
                 continue
 

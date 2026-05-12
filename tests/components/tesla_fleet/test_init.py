@@ -492,8 +492,8 @@ async def test_setup_retries_on_initial_energy_live_refresh_error(
 @pytest.mark.parametrize(
     ("side_effect", "state"),
     [
-        (InvalidToken, ConfigEntryState.SETUP_ERROR),
-        (OAuthExpired, ConfigEntryState.SETUP_ERROR),
+        (InvalidToken, ConfigEntryState.SETUP_RETRY),
+        (OAuthExpired, ConfigEntryState.SETUP_RETRY),
         (LoginRequired, ConfigEntryState.SETUP_ERROR),
     ],
 )

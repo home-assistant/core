@@ -370,22 +370,14 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.updated_once = False
 
     async def async_config_entry_first_refresh_or_skip(self) -> bool:
-        """Refresh site info during setup, skipping only stale-site failures."""
+        """Refresh site info during setup, skipping site-specific API failures."""
         try:
             await super().async_config_entry_first_refresh()
         except ConfigEntryNotReady as err:
             root_err = _get_root_exception(err)
 
-            if isinstance(
-                root_err,
-                (
-                    InvalidToken,
-                    OAuthExpired,
-                    LoginRequired,
-                    OAuth2TokenRequestReauthError,
-                ),
-            ):
-                raise ConfigEntryAuthFailed from root_err
+            if isinstance(root_err, (InvalidToken, OAuthExpired)):
+                raise
 
             if not isinstance(root_err, TeslaFleetError):
                 raise
