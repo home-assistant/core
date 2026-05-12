@@ -92,7 +92,7 @@
   "entity": {
     "lock": {
       "access_point": {
-        "name": "[%key:component::lock::entity_component::_::name%]"
+        "name": "[%key:component::lock::title%]"
       }
     }
   },
