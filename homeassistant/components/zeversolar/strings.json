@@ -24,6 +24,9 @@
     "sensor": {
       "energy_today": {
         "name": "Energy today"
+      },
+      "pac": {
+        "name": "Power"
       }
     }
   }
