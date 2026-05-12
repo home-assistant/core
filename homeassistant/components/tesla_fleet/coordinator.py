@@ -18,11 +18,7 @@ from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -83,13 +79,6 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
         else:
             result[key] = value
     return result
-
-
-def _get_root_exception(err: BaseException) -> BaseException:
-    """Unwrap nested exception causes to the original error."""
-    while err.__cause__ is not None and isinstance(err.__cause__, BaseException):
-        err = err.__cause__
-    return err
 
 
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -372,23 +361,33 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     async def async_config_entry_first_refresh_or_skip(self) -> bool:
         """Refresh site info during setup, skipping site-specific API failures."""
         try:
-            await super().async_config_entry_first_refresh()
-        except ConfigEntryNotReady as err:
-            root_err = _get_root_exception(err)
-
-            if isinstance(root_err, (InvalidToken, OAuthExpired)):
-                raise
-
-            if not isinstance(root_err, TeslaFleetError):
-                raise
-
+            data = (await self.api.site_info())["response"]
+        except RateLimited as e:
+            if isinstance(e.data, dict) and "after" in e.data:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    e.data["after"],
+                )
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
+            return True
+        except (InvalidToken, OAuthExpired) as err:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise ConfigEntryNotReady from err
+        except LoginRequired as err:
+            raise ConfigEntryAuthFailed from err
+        except TeslaFleetError as err:
             LOGGER.warning(
                 "Skipping Tesla energy site %s because info setup failed: %s",
                 self.site_id,
-                root_err,
+                err,
             )
             return False
 
+        self.data = flatten(data)
+        self.updated_once = True
         return True
 
     async def _async_update_data(self) -> dict[str, Any]:
