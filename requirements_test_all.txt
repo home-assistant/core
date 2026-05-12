@@ -214,6 +214,9 @@ aiobafi6==0.9.0
 # homeassistant.components.idrive_e2
 aiobotocore==2.21.1
 
+# homeassistant.components.centriconnect
+aiocentriconnect==0.2.3
+
 # homeassistant.components.comelit
 aiocomelit==2.0.3
 
@@ -429,7 +432,7 @@ aiousbwatcher==1.1.2
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.1.3
+aiovodafone==3.2.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -554,8 +557,11 @@ autoskope_client==1.4.1
 # homeassistant.components.stream
 av==16.0.1
 
+# homeassistant.components.avea
+avea==1.6.1
+
 # homeassistant.components.axis
-axis==70
+axis==71
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1190,7 +1196,7 @@ imgw_pib==2.1.2
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.7.1
+indevolt-api==1.7.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1199,7 +1205,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==4.0.0
+infrared-protocols==5.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2434,7 +2440,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.7
+renault-api==0.5.8
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2445,7 +2451,7 @@ reolink-aio==0.19.1
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==2.2.0
+rf-protocols==3.0.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2526,7 +2532,7 @@ sentry-sdk==2.48.0
 # homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.7.2
+serialx==1.7.3
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
@@ -2634,7 +2640,7 @@ tailscale==0.7.0
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.2.0
+teltasync==0.3.0
 
 # homeassistant.components.lg_soundbar
 temescal==0.5

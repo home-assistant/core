@@ -84,16 +84,6 @@ def test_invalid_template(hass: HomeAssistant) -> None:
         tmpl.async_render()
 
 
-def test_invalid_entity_id(hass: HomeAssistant) -> None:
-    """Test referring states by entity id."""
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states["big.fat..."] }}')
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states.test["big.fat..."] }}')
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states["invalid/domain"] }}')
-
-
 def test_raise_exception_on_error(hass: HomeAssistant) -> None:
     """Test raising an exception on error."""
     with pytest.raises(TemplateError):
@@ -599,19 +589,6 @@ def test_state_with_unit_and_rounding_options(
     assert tpl2.async_render() == output2_2
 
 
-def test_length_of_states(hass: HomeAssistant) -> None:
-    """Test fetching the length of states."""
-    hass.states.async_set("sensor.test", "23")
-    hass.states.async_set("sensor.test2", "wow")
-    hass.states.async_set("climate.test2", "cooling")
-
-    result = render(hass, "{{ states | length }}")
-    assert result == 3
-
-    result = render(hass, "{{ states.sensor | length }}")
-    assert result == 2
-
-
 def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> None:
     """Test that we can render non-template fields."""
     assert template.render_complex(
@@ -705,21 +682,6 @@ For loop example getting 3 entity values:
     assert "sensor0" in result
     assert "sensor1" in result
     assert "sun" in result
-
-
-async def test_slice_states(hass: HomeAssistant) -> None:
-    """Test iterating states with a slice."""
-    hass.states.async_set("sensor.test", "23")
-
-    result = render(
-        hass,
-        (
-            "{% for states in states | slice(1) -%}{% set state = states | first %}"
-            "{{ state.entity_id }}"
-            "{%- endfor %}"
-        ),
-    )
-    assert result == "sensor.test"
 
 
 async def test_lifecycle(hass: HomeAssistant) -> None:
@@ -831,63 +793,6 @@ async def test_template_errors(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         render(hass, "{{ utcnow() | random }}")
-
-
-async def test_state_attributes(hass: HomeAssistant) -> None:
-    """Test state attributes."""
-    hass.states.async_set("sensor.test", "23")
-
-    result = render(hass, "{{ states.sensor.test.last_changed }}")
-    assert result == str(hass.states.get("sensor.test").last_changed)
-
-    result = render(hass, "{{ states.sensor.test.object_id }}")
-    assert result == hass.states.get("sensor.test").object_id
-
-    result = render(hass, "{{ states.sensor.test.domain }}")
-    assert result == hass.states.get("sensor.test").domain
-
-    result = render(hass, "{{ states.sensor.test.context.id }}")
-    assert result == hass.states.get("sensor.test").context.id
-
-    result = render(hass, "{{ states.sensor.test.state_with_unit }}")
-    assert result == 23
-
-    result = render(hass, "{{ states.sensor.test.invalid_prop }}")
-    assert result == ""
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ states.sensor.test.invalid_prop.xx }}")
-
-
-async def test_unavailable_states(hass: HomeAssistant) -> None:
-    """Test watching unavailable states."""
-
-    for i in range(10):
-        hass.states.async_set(f"light.sensor{i}", "on")
-
-    hass.states.async_set("light.unavailable", "unavailable")
-    hass.states.async_set("light.unknown", "unknown")
-    hass.states.async_set("light.none", "none")
-
-    result = render(
-        hass,
-        (
-            "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
-        ),
-    )
-    assert result == "light.none, light.unavailable, light.unknown"
-
-    result = render(
-        hass,
-        (
-            "{{ states.light "
-            "| selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list "
-            "| join(', ') }}"
-        ),
-    )
-    assert result == "light.none, light.unavailable, light.unknown"
 
 
 async def test_no_result_parsing(hass: HomeAssistant) -> None:

@@ -73,6 +73,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Requirement 'pyuptimerobot==22.2.0' appears untyped
+  strict-typing: done
