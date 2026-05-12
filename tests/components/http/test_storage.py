@@ -17,8 +17,8 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def disable_http_server(socket_enabled: None) -> None:
-    """Allow the HTTP server to start."""
+def enable_sockets(socket_enabled: None) -> None:
+    """Enable sockets so the HTTP server can start in tests."""
     return
 
 

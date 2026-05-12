@@ -13,7 +13,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def disable_http_server(socket_enabled: None) -> None:
+def enable_sockets_for_http_server(socket_enabled: None) -> None:
     """Allow the HTTP server to start."""
     return
 

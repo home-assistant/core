@@ -12,9 +12,9 @@ from .storage import async_get_store, to_stored
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the HTTP config WebSocket commands.
 
-    The ``websocket_api`` module is imported lazily because it imports from
-    ``homeassistant.components.http``; using its decorators at this module's
-    load time would create a circular import.
+    The core ``homeassistant.components.websocket_api`` dependency is imported
+    lazily because it imports from ``homeassistant.components.http``; using its
+    decorators at this module's load time would create a circular import.
     """
     from homeassistant.components import websocket_api  # noqa: PLC0415
 
