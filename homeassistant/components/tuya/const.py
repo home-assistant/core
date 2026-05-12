@@ -915,7 +915,7 @@ class DPCode(StrEnum):
     TEMP_AROUND = "temp_around"  # Current around (outside) temperature
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
-    TEMP_COILER = "temp_coiler"  # Current coiler temperature
+    TEMP_COILER = "temp_coiler"  # Current coil temperature
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
@@ -940,10 +940,10 @@ class DPCode(StrEnum):
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
-    TEMP_VENTING = "temp_venting"  # Current heat plate temperature
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_VENTING = "temp_venting"  # Current heat plate temperature
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation

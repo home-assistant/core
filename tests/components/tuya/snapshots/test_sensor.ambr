@@ -11348,7 +11348,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump-entry]
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_coil_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11364,7 +11364,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_pool_heat_pump',
+    'entity_id': 'sensor.inverter_pool_heat_pump_coil_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11372,12 +11372,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Coil temperature',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Coil temperature',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -11387,15 +11387,15 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump-state]
+# name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_coil_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inverter Pool Heat Pump',
+      'friendly_name': 'Inverter Pool Heat Pump Coil temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_pool_heat_pump',
+    'entity_id': 'sensor.inverter_pool_heat_pump_coil_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
