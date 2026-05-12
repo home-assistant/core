@@ -1,6 +1,7 @@
 """Test report state."""
 
 import json
+import logging
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
@@ -609,6 +610,7 @@ async def test_doorbell_event_for_event_entity(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test doorbell event reports."""
     freezer.move_to("2026-05-11T19:50:47.647427+0000")
@@ -675,6 +677,23 @@ async def test_doorbell_event_for_event_entity(
     assert call_json["event"]["header"]["name"] == "DoorbellPress"
     assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
     assert call_json["event"]["endpoint"]["endpointId"] == "event#test_doorbell"
+
+    # Same event after being unavailable
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set(
+            "event.test_doorbell",
+            "11 may 2026 19:50:30",
+            {
+                "friendly_name": "Test Doorbell Sensor",
+                "device_class": "doorbell",
+                "event_types": ["ring"],
+            },
+        )
+        await hass.async_block_till_done()
+        assert (
+            "Unable to parse ISO timestamp from state for "
+            "event.test_doorbell. Got 11 may 2026 19:50:30" in caplog.text
+        )
 
     # Later event
     freezer.tick(35000)

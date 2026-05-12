@@ -301,12 +301,17 @@ async def async_enable_proactive_mode(
         if TYPE_CHECKING:
             assert new_state is not None
 
-        def valid_doorbell_timestamp(event_state: str) -> bool:
+        def valid_doorbell_timestamp(entity_id: str, event_state: str) -> bool:
             if event_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return False
             try:
                 timestamp = datetime.fromisoformat(event_state)
             except ValueError:
+                _LOGGER.debug(
+                    "Unable to parse ISO timestamp from state for %s. Got %s",
+                    entity_id,
+                    event_state,
+                )
                 return False
             else:
                 if (dt_util.utcnow() - timestamp) < timedelta(seconds=30):
@@ -335,7 +340,7 @@ async def async_enable_proactive_mode(
             old_state = data["old_state"]
             if (
                 new_state.domain == event.DOMAIN
-                and valid_doorbell_timestamp(new_state.state)
+                and valid_doorbell_timestamp(new_state.entity_id, new_state.state)
                 and (old_state is None or old_state.state != STATE_UNAVAILABLE)
             ) or (
                 new_state.state == STATE_ON
