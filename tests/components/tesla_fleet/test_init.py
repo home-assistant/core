@@ -746,6 +746,8 @@ async def test_energy_info_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_site_info.call_count == 2
+    assert (state := hass.states.get("number.energy_site_backup_reserve"))
+    assert state.state != "unavailable"
 
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)

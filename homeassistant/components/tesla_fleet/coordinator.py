@@ -378,9 +378,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = flatten((await self.api.site_info())["response"])
         except RateLimited as err:
-            raise ConfigEntryNotReady from UpdateFailed(
-                err.message, retry_after=_retry_after_from_rate_limit(err)
-            )
+            raise ConfigEntryNotReady(str(err)) from err
         except (InvalidToken, OAuthExpired) as err:
             _invalidate_access_token(self.hass, self.config_entry)
             raise ConfigEntryNotReady from err
@@ -413,9 +411,16 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            raise UpdateFailed(
-                e.message, retry_after=_retry_after_from_rate_limit(e)
-            ) from e
+            if (retry_after := _retry_after_from_rate_limit(e)) is not None:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    retry_after,
+                )
+                self.update_interval = timedelta(seconds=retry_after)
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
+            return self.data
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
