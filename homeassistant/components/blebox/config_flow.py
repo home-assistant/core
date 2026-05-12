@@ -231,12 +231,15 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Scan network via mDNS, then show device picker."""
         hass = self.hass
-        current_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
+        current_addresses = {
+            (entry.data[CONF_HOST], entry.data[CONF_PORT])
+            for entry in self._async_current_entries()
         }
         found_addresses = await async_scan_mdns(hass)
         candidates = [
-            (host, port) for host, port in found_addresses if host not in current_hosts
+            (host, port)
+            for host, port in found_addresses
+            if (host, port) not in current_addresses
         ]
 
         websession = async_get_clientsession(hass)
