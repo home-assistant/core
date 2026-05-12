@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -108,7 +109,7 @@ async def test_unlock_auto_relocks_after_duration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the door auto-relocks after UNLOCK_DURATION seconds."""
     await setup_integration(hass, mock_config_entry)
@@ -131,7 +132,7 @@ async def test_open_sets_state_unlocked_and_cancels_relock(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that open (hold) cancels any pending relock and sets unlocked."""
     await setup_integration(hass, mock_config_entry)
@@ -305,7 +306,7 @@ async def test_entity_unavailable_when_access_point_removed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entity becomes unavailable when its AP is removed from coordinator data."""
     await setup_integration(hass, mock_config_entry)
@@ -328,7 +329,7 @@ async def test_unlock_twice_cancels_first_relock(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a second unlock cancels the pending relock from the first."""
     await setup_integration(hass, mock_config_entry)
