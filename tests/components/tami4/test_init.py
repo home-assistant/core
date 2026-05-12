@@ -49,6 +49,19 @@ async def test_init_error_raised(
     assert entry.state == expected_state
 
 
+async def test_init_success_with_none_fields(
+    mock_api_none_fields, hass: HomeAssistant
+) -> None:
+    """Test setup succeeds when upcoming_replacement dates are None.
+
+    The Strauss cloud API may return None for upcoming_replacement dates
+    when the device is disconnected.
+    """
+
+    entry = await create_config_entry(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+
 async def test_load_unload(mock_api, hass: HomeAssistant) -> None:
     """Config entry can be unloaded."""
 

@@ -20,9 +20,9 @@ type Tami4ConfigEntry = ConfigEntry[Tami4EdgeCoordinator]
 class FlattenedWaterQuality:
     """Flattened WaterQuality dataclass."""
 
-    uv_upcoming_replacement: date
+    uv_upcoming_replacement: date | None
     uv_installed: bool
-    filter_upcoming_replacement: date
+    filter_upcoming_replacement: date | None
     filter_installed: bool
     filter_litters_passed: float
 
