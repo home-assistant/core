@@ -127,7 +127,7 @@ async def test_already_configured(
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
-async def test_invalid_token(
+async def test_invalid_access_token(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,

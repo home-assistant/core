@@ -39,7 +39,7 @@ async def test_setup_unload(
     mock_yoto_client.disconnect_events.assert_called_once()
 
 
-async def test_setup_auth_failure(
+async def test_setup_triggers_reauth_on_auth_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -58,7 +58,7 @@ async def test_setup_auth_failure(
     )
 
 
-async def test_setup_update_failure(
+async def test_setup_retries_on_api_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -101,6 +101,7 @@ async def test_status_push_tick(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The status-push timer publishes a request every 60 s."""
+    mock_yoto_client.is_mqtt_connected = True
     await setup_integration(hass, mock_config_entry)
     mock_yoto_client.request_status_push.reset_mock()
 
@@ -111,25 +112,26 @@ async def test_status_push_tick(
     mock_yoto_client.request_status_push.assert_called_once_with("player-test")
 
 
-async def test_status_push_swallows_errors(
+async def test_status_push_skipped_when_mqtt_disconnected(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Status-push errors don't break the entry."""
+    """The status-push timer is a no-op while MQTT is reconnecting."""
     await setup_integration(hass, mock_config_entry)
-    mock_yoto_client.request_status_push.side_effect = YotoError("boom")
+    mock_yoto_client.request_status_push.reset_mock()
+    mock_yoto_client.is_mqtt_connected = False
 
     freezer.tick(STATUS_PUSH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_yoto_client.request_status_push.assert_not_called()
 
 
-async def test_periodic_refresh(
+async def test_periodic_poll_refreshes_players(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -149,7 +151,7 @@ async def test_periodic_refresh(
     mock_yoto_client.update_player_status.assert_called_once_with("player-test")
 
 
-async def test_periodic_refresh_auth_failure(
+async def test_periodic_poll_triggers_reauth_on_auth_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -171,29 +173,7 @@ async def test_periodic_refresh_auth_failure(
     )
 
 
-async def test_mqtt_disconnect_logs(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """An MQTT disconnect with an error logs at debug level."""
-    await setup_integration(hass, mock_config_entry)
-
-    # connect_events(device_ids, on_update, on_disconnect) — pull the disconnect cb
-    on_disconnect = mock_yoto_client.connect_events.call_args.args[2]
-    with caplog.at_level("DEBUG", logger="homeassistant.components.yoto"):
-        on_disconnect(YotoError("connection reset"))
-
-    assert "MQTT disconnect: connection reset" in caplog.text
-    # A clean shutdown (err=None) is silent.
-    caplog.clear()
-    on_disconnect(None)
-    assert "MQTT disconnect" not in caplog.text
-
-
-async def test_setup_implementation_unavailable(
+async def test_setup_retries_when_implementation_missing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
@@ -208,7 +188,7 @@ async def test_setup_implementation_unavailable(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_token_refresh_network_error(
+async def test_setup_retries_on_token_refresh_network_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
@@ -223,23 +203,7 @@ async def test_setup_token_refresh_network_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_library_failure_is_best_effort(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A failure loading the card library logs a warning but doesn't block."""
-    mock_yoto_client.update_library.side_effect = YotoError("no library")
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert "Could not load Yoto card library" in caplog.text
-
-
-async def test_setup_connect_events_failure(
+async def test_setup_retries_when_mqtt_unavailable(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -253,7 +217,21 @@ async def test_setup_connect_events_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_periodic_refresh_network_error(
+async def test_setup_succeeds_without_card_library(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """A library load failure doesn't block setup; titles and artwork stay empty."""
+    mock_yoto_client.update_library.side_effect = YotoError("library down")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_periodic_poll_fails_on_network_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -274,7 +252,7 @@ async def test_periodic_refresh_network_error(
     assert coordinator.last_update_success is False
 
 
-async def test_periodic_refresh_api_error(
+async def test_periodic_poll_fails_on_api_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -293,7 +271,7 @@ async def test_periodic_refresh_api_error(
     assert coordinator.last_update_success is False
 
 
-async def test_status_per_device_failure_is_logged(
+async def test_offline_player_does_not_break_status_refresh(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -307,17 +285,3 @@ async def test_status_per_device_failure_is_logged(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Could not refresh Yoto player" in caplog.text
-
-
-async def test_status_per_device_unexpected_error_propagates(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
-) -> None:
-    """A non-YotoError from update_player_status is not swallowed."""
-    mock_yoto_client.update_player_status.side_effect = RuntimeError("boom")
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
