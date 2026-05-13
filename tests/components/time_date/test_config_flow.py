@@ -1,7 +1,5 @@
 """Test the Time & Date config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory

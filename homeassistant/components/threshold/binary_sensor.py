@@ -1,7 +1,5 @@
 """Support for monitoring if a sensor value is below/above a threshold."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Final

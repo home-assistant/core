@@ -1,7 +1,5 @@
 """Tests for the Fronius integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import json
 from typing import Any

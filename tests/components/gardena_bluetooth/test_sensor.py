@@ -6,6 +6,7 @@ from datetime import datetime
 from gardena_bluetooth.const import (
     AquaContourBattery,
     AquaContourErrorCode,
+    AquaContourWatering,
     Battery,
     EventHistory,
     FlowStatistics,
@@ -96,6 +97,9 @@ async def test_setup(
                     ErrorData(
                         1, 1, datetime(2000, 1, 1), AquaContourErrorCode.FLASH_ERROR
                     )
+                ),
+                AquaContourWatering.remaining_watering_time.uuid: AquaContourWatering.remaining_watering_time.encode(
+                    100
                 ),
             },
             id="aqua_contour",

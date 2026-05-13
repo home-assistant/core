@@ -1,7 +1,5 @@
 """Common fixtures for Anova."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import json

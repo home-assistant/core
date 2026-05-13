@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "UniFi Network site is already configured",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "configuration_updated": "Configuration updated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
@@ -66,9 +67,6 @@
       "client_bandwidth_tx": {
         "name": "TX"
       },
-      "client_uptime": {
-        "name": "Uptime"
-      },
       "device_clients": {
         "name": "Clients"
       },
@@ -100,9 +98,6 @@
       },
       "device_uplink_mac": {
         "name": "Uplink MAC"
-      },
-      "device_uptime": {
-        "name": "Uptime"
       },
       "outlet_power": {
         "name": "{outlet_name} outlet power"

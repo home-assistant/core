@@ -1,7 +1,5 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps

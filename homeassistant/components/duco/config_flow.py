@@ -1,12 +1,10 @@
 """Config flow for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-from duco import DucoClient
-from duco.exceptions import DucoConnectionError, DucoError
+from duco_connectivity import DucoClient
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -161,9 +159,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns a tuple of (box_name, mac_address).
         """
         client = DucoClient(
-            session=async_get_clientsession(self.hass, verify_ssl=False),
+            session=async_get_clientsession(self.hass),
             host=host,
-            scheme="https",
         )
         board_info = await client.async_get_board_info()
         lan_info = await client.async_get_lan_info()

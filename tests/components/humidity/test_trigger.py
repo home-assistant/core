@@ -240,12 +240,16 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", HVACMode.AUTO, CLIMATE_ATTR_CURRENT_HUMIDITY
+            "humidity.changed",
+            HVACMode.AUTO,
+            CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -284,6 +288,7 @@ async def test_humidity_trigger_climate_behavior_any(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -322,6 +327,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -360,12 +366,16 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", STATE_ON, HUMIDIFIER_ATTR_CURRENT_HUMIDITY
+            "humidity.changed",
+            STATE_ON,
+            HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -404,6 +414,7 @@ async def test_humidity_trigger_humidifier_behavior_any(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -442,6 +453,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -480,12 +492,16 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", "sunny", ATTR_WEATHER_HUMIDITY
+            "humidity.changed",
+            "sunny",
+            ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -524,6 +540,7 @@ async def test_humidity_trigger_weather_behavior_any(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -562,6 +579,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )

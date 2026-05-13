@@ -1,7 +1,5 @@
 """Support for easyEnergy sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -32,6 +30,9 @@ from .coordinator import (
     EasyEnergyData,
     EasyEnergyDataUpdateCoordinator,
 )
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

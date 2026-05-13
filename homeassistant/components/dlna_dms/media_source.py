@@ -10,8 +10,6 @@ Media identifiers can look like:
     for the syntax.
 """
 
-from __future__ import annotations
-
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
