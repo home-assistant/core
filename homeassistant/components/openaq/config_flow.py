@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 LOCATION_FETCH_LIMIT = 100
 LOCATION_SEARCH_RADII = (5000, 10000, MAX_RADIUS)
-MAX_LOCATION_OPTIONS = 5
+MAX_LOCATION_OPTIONS = 10
 SENSOR_DISPLAY_NAMES = {
     "bc": "Black carbon",
     "co": "Carbon monoxide",
