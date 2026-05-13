@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the Ouman EH-800 web interface",
+          "url": "The URL of the Ouman EH-800 web interface",
+          "username": "Username for the Ouman EH-800 web interface"
+        }
+      }
+    }
+  },
+  "device": {
+    "heating_circuit": { "name": "Heating circuit {circuit_number}" },
+    "heating_circuit_with_name": {
+      "name": "Heating circuit {circuit_number} {circuit_name}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "curve_supply_water_temperature": {
+        "name": "Curve supply water temperature"
+      },
+      "delayed_outdoor_temperature_effect": {
+        "name": "Delayed outdoor temperature effect"
+      },
+      "delayed_room_temperature": { "name": "Delayed room temperature" },
+      "fine_adjustment_effect": { "name": "Fine adjustment effect" },
+      "outside_temperature": { "name": "Outside temperature" },
+      "room_sensor_potentiometer": { "name": "Room sensor potentiometer" },
+      "room_temperature": { "name": "Room temperature" },
+      "room_temperature_setpoint": { "name": "Room temperature setpoint" },
+      "supply_water_temperature": { "name": "Supply water temperature" },
+      "supply_water_temperature_setpoint": {
+        "name": "Supply water temperature setpoint"
+      },
+      "valve_position": { "name": "Valve position" }
+    }
+  }
+}
