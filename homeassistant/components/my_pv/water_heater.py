@@ -105,11 +105,9 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        if temperature is not None and await self.coordinator.set_target_temperature(
+        if temperature is None or not await self.coordinator.set_target_temperature(
             float(temperature)
         ):
-            self.async_write_ha_state()
-        else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
             )
@@ -125,9 +123,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         """Turn the water heater on."""
         _LOGGER.debug("Turning on %s", self.name)
 
-        if await self.coordinator.turn_on():
-            self.async_write_ha_state()
-        else:
+        if not await self.coordinator.turn_on():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
             )
@@ -136,9 +132,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         """Turn the water heater off."""
         _LOGGER.debug("Turning off %s", self.name)
 
-        if await self.coordinator.turn_off():
-            self.async_write_ha_state()
-        else:
+        if not await self.coordinator.turn_off():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
             )
