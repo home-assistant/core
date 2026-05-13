@@ -1,7 +1,5 @@
 """Tests for the ProxmoxVE button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from proxmoxer import AuthenticationError

@@ -4,14 +4,16 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from google_weather_api import GoogleWeatherApiError
+from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -170,3 +172,29 @@ async def test_state_update(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "15.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_auth_failure_during_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure that we start a reauth flow when auth fails during an update."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = (
+        GoogleWeatherApiAuthError()
+    )
+
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert any(
+        flow["step_id"] == "user"
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )

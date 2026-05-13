@@ -1,7 +1,5 @@
 """Update coordinator for Ruuvi Gateway."""
 
-from __future__ import annotations
-
 import logging
 
 from aioruuvigateway.api import get_gateway_history_data

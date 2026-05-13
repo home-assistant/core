@@ -1,7 +1,5 @@
 """An abstract class common to all Bond entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from asyncio import Lock
 from datetime import datetime

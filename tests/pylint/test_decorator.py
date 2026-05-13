@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
 
-from __future__ import annotations
-
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED

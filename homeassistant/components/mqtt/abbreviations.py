@@ -257,6 +257,7 @@ ABBREVIATIONS = {
     "tit": "title",
     "t": "topic",
     "trns": "transition",
+    "tz": "timezone",
     "uniq_id": "unique_id",
     "unit_of_meas": "unit_of_measurement",
     "url_t": "url_topic",

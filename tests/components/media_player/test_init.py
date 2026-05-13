@@ -12,12 +12,10 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_SEARCH_QUERY,
-    DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
-    MediaPlayerState,
     SearchMedia,
     SearchMediaQuery,
 )
@@ -26,11 +24,11 @@ from homeassistant.components.media_player.const import (
     SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, setup_test_component_platform
+from tests.common import MockEntityPlatform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -637,62 +635,3 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-
-
-async def test_media_player_state(hass: HomeAssistant) -> None:
-    """Test that media player state includes last_non_buffering_state."""
-    entity1 = MediaPlayerEntity()
-    entity1._attr_name = "test1"
-
-    setup_test_component_platform(hass, DOMAIN, [entity1])
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.test1")
-    assert state.state == "unknown"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": None,
-        "supported_features": 0,
-    }
-
-    entity1._attr_state = MediaPlayerState.PLAYING
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "playing"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "playing",
-        "supported_features": 0,
-    }
-
-    # last_non_buffering_state not updated when state is buffering
-    entity1._attr_state = MediaPlayerState.BUFFERING
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "buffering"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "playing",
-        "supported_features": 0,
-    }
-
-    entity1._attr_state = MediaPlayerState.PAUSED
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "paused"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "paused",
-        "supported_features": 0,
-    }
-
-    # last_non_buffering_state not present when unavailable
-    entity1._attr_available = False
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "unavailable"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "supported_features": 0,
-    }

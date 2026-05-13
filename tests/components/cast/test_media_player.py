@@ -1,7 +1,5 @@
 """The tests for the Cast Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import json
@@ -16,7 +14,10 @@ import pytest
 import yarl
 
 from homeassistant.components import media_player, tts
-from homeassistant.components.cast import media_player as cast
+from homeassistant.components.cast import (
+    CastRuntimeData,
+    media_player as cast_media_player,
+)
 from homeassistant.components.cast.const import (
     DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -486,22 +487,28 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData()
     info = get_fake_chromecast_info(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
-    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData()
+    added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is not None
     assert info.uuid in added_casts
 
     # Sending second time should not create new entity
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 

@@ -1,7 +1,5 @@
 """Configure Synology DSM tests."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 from awesomeversion import AwesomeVersion

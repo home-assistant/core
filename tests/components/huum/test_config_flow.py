@@ -183,3 +183,115 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_USERNAME] == TEST_USERNAME
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.usefixtures("mock_huum_client", "mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new@sauna.org",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.title == "new@sauna.org"
+    assert mock_config_entry.data[CONF_USERNAME] == "new@sauna.org"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.usefixtures("mock_huum_client", "mock_setup_entry")
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow aborts when username already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "other@sauna.org",
+            CONF_PASSWORD: "other_password",
+        },
+        entry_id="OTHER_ENTRY",
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "other@sauna.org",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    (
+        "raises",
+        "error_base",
+    ),
+    [
+        (Exception, "unknown"),
+        (Forbidden, "invalid_auth"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_huum_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    raises: Exception,
+    error_base: str,
+) -> None:
+    """Test reconfiguration flow handles errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_huum_client.status.side_effect = raises
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
+
+    # Recover with valid credentials
+    mock_huum_client.status.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: "new_password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"

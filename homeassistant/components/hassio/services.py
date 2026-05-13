@@ -7,6 +7,7 @@ from typing import Any
 
 from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import (
+    Folder,
     FullBackupOptions,
     FullRestoreOptions,
     PartialBackupOptions,
@@ -27,12 +28,13 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    issue_registry as ir,
     selector,
 )
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.dt import now
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_APP,
@@ -46,9 +48,11 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
+    ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+    MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_info
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -68,6 +72,43 @@ SERVICE_MOUNT_RELOAD = "mount_reload"
 
 
 VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
+# Legacy alias used by the Supervisor API for the homeassistant flag, kept
+# for backwards compatibility with existing automations.
+LEGACY_FOLDER_HOMEASSISTANT = "homeassistant"
+
+
+def _normalize_partial_options_data(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Map legacy aliases used by both partial backup and partial restore handlers."""
+    if ATTR_APPS in data:
+        data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+    if ATTR_FOLDERS in data:
+        folders: set[Any] = set(data[ATTR_FOLDERS])
+        if LEGACY_FOLDER_HOMEASSISTANT in folders:
+            folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
+            if data.get(ATTR_HOMEASSISTANT) is False:
+                raise ServiceValidationError(
+                    f"{ATTR_HOMEASSISTANT}=False conflicts with the legacy "
+                    f"{LEGACY_FOLDER_HOMEASSISTANT!r} entry in {ATTR_FOLDERS}"
+                )
+            data[ATTR_HOMEASSISTANT] = True
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+                breaks_in_ha_version="2026.12.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+            )
+        if folders:
+            data[ATTR_FOLDERS] = folders
+        else:
+            data.pop(ATTR_FOLDERS)
+    return data
 
 
 def valid_addon(value: Any) -> str:
@@ -112,7 +153,10 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
@@ -135,7 +179,10 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
@@ -196,8 +243,8 @@ def async_register_app_services(
             ) from err
 
     for service in simple_app_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
+        async_register_admin_service(
+            hass, DOMAIN, service, async_simple_app_service_handler, schema=SCHEMA_APP
         )
 
     async def async_app_stdin_service_handler(service: ServiceCall) -> None:
@@ -220,7 +267,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {app_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_APP_STDIN,
         async_app_stdin_service_handler,
@@ -247,8 +295,12 @@ def async_register_app_services(
             ) from err
 
     for service in simple_addon_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_addon_service_handler, schema=SCHEMA_ADDON
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_addon_service_handler,
+            schema=SCHEMA_ADDON,
         )
 
     async def async_addon_stdin_service_handler(service: ServiceCall) -> None:
@@ -267,7 +319,8 @@ def async_register_app_services(
                 f"Failed to write stdin to app {addon_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ADDON_STDIN,
         async_addon_stdin_service_handler,
@@ -294,8 +347,12 @@ def async_register_host_services(
             raise HomeAssistantError(f"Failed to {action} the host: {err}") from err
 
     for service in simple_host_services:
-        hass.services.async_register(
-            DOMAIN, service, async_simple_host_service_handler, schema=SCHEMA_NO_DATA
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            async_simple_host_service_handler,
+            schema=SCHEMA_NO_DATA,
         )
 
 
@@ -319,7 +376,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_FULL,
         async_full_backup_service_handler,
@@ -331,9 +389,7 @@ def async_register_backup_restore_services(
         service: ServiceCall,
     ) -> ServiceResponse:
         """Handler for create partial backup service. Returns the new backup's ID."""
-        data = service.data.copy()
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, service.data.copy())
         options = PartialBackupOptions(**data)
 
         try:
@@ -345,7 +401,8 @@ def async_register_backup_restore_services(
 
         return {"backup": backup.slug}
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_BACKUP_PARTIAL,
         async_partial_backup_service_handler,
@@ -367,7 +424,8 @@ def async_register_backup_restore_services(
                 f"Failed to full restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_FULL,
         async_full_restore_service_handler,
@@ -378,8 +436,7 @@ def async_register_backup_restore_services(
         """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(ATTR_SLUG)
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, data)
         options = PartialRestoreOptions(**data)
 
         try:
@@ -389,7 +446,8 @@ def async_register_backup_restore_services(
                 f"Failed to partial restore from backup {backup_slug}: {err}"
             ) from err
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RESTORE_PARTIAL,
         async_partial_restore_service_handler,
@@ -406,7 +464,7 @@ def async_register_network_storage_services(
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        coordinator: HassioDataUpdateCoordinator | None = None
+        coordinator: HassioMainDataUpdateCoordinator | None = None
 
         if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
             raise ServiceValidationError(
@@ -417,7 +475,7 @@ def async_register_network_storage_services(
         if (
             device.name is None
             or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
+            or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
             or coordinator.entry_id not in device.config_entries
         ):
             raise ServiceValidationError(
@@ -434,6 +492,6 @@ def async_register_network_storage_services(
                 translation_placeholders={"name": device.name, "error": str(error)},
             ) from error
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
     )

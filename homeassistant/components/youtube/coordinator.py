@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the YouTube integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -14,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import AsyncConfigEntryAuth
+from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_LATEST_VIDEO,
@@ -29,14 +27,19 @@ from .const import (
     LOGGER,
 )
 
+type YouTubeConfigEntry = ConfigEntry[YouTubeDataUpdateCoordinator]
+
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A YouTube Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: YouTubeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, auth: AsyncConfigEntryAuth
+        self,
+        hass: HomeAssistant,
+        config_entry: YouTubeConfigEntry,
+        auth: AsyncConfigEntryAuth,
     ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
