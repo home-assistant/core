@@ -45,7 +45,6 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_LOCATION_ID,
     CONF_RADIUS,
-    DEFAULT_RADIUS,
     DOMAIN,
     MAX_RADIUS,
     SUBENTRY_TYPE_LOCATION,
@@ -256,7 +255,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
             max_radius = max(
                 1,
                 min(
-                    int(selected_location.get(CONF_RADIUS, DEFAULT_RADIUS)),
+                    int(selected_location.get(CONF_RADIUS, MAX_RADIUS)),
                     MAX_RADIUS,
                 ),
             )
@@ -313,7 +312,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     CONF_LOCATION: {
                         CONF_LATITUDE: self.hass.config.latitude,
                         CONF_LONGITUDE: self.hass.config.longitude,
-                        CONF_RADIUS: DEFAULT_RADIUS,
+                        CONF_RADIUS: MAX_RADIUS,
                     }
                 },
             ),
