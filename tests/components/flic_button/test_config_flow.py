@@ -1,5 +1,6 @@
 """Test the Flic Button config flow."""
 
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -65,20 +66,38 @@ async def _init_bt_flow(hass: HomeAssistant, device_type: DeviceType) -> dict:
 
 
 async def test_user_flow_shows_discovery_progress(hass: HomeAssistant) -> None:
-    """Test user-initiated flow starts discovery progress."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
+    """Test user-initiated flow starts discovery and stops it on abort."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
 
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["progress_action"] == "wait_for_discovery"
+    async def _fake_process_advertisements(*args, **kwargs):
+        started.set()
+        try:
+            await asyncio.Event().wait()  # block until cancelled
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
 
-    # Cancel the background discovery task so it does not run after the test
-    hass.config_entries.flow.async_abort(result["flow_id"])
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.flic_button.config_flow.async_process_advertisements",
+        side_effect=_fake_process_advertisements,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
 
-    # Subsequent inspection should show no remaining flows in progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "wait_for_discovery"
+
+        # Let the background discovery task start before aborting
+        await started.wait()
+
+        # Aborting the flow must cancel the background discovery task
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert cancelled.is_set()
     assert not hass.config_entries.flow.async_progress(include_uninitialized=True)
 
 

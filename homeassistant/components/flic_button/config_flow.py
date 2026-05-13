@@ -68,7 +68,9 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def async_remove(self) -> None:
-        """Clean up BLE client when the flow is removed or cancelled."""
+        """Clean up BLE client and discovery task when the flow is removed."""
+        if self._discovery_task and not self._discovery_task.done():
+            self._discovery_task.cancel()
         if self._client:
             client = self._client
             self._client = None
