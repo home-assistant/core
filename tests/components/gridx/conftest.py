@@ -56,7 +56,7 @@ MOCK_HIST_DATA = [
 
 
 @pytest.fixture
-def mock_gridx_connector() -> Generator[MagicMock, None, None]:
+def mock_gridx_connector() -> Generator[MagicMock]:
     """Mock GridboxConnector so tests never hit the real network."""
     connector = MagicMock()
     connector.retrieve_live_data = AsyncMock(return_value=[MOCK_LIVE_DATA])
