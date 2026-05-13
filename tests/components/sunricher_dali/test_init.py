@@ -18,12 +18,12 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from tests.common import MockConfigEntry
 
 
-def _register_stale_firmware_issue(hass: HomeAssistant) -> None:
+def _register_stale_firmware_issue(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Pre-register an unsupported_firmware issue from a prior setup."""
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "unsupported_firmware",
+        f"unsupported_firmware_{entry.entry_id}",
         is_fixable=False,
         is_persistent=True,
         issue_domain=DOMAIN,
@@ -192,14 +192,15 @@ async def test_firmware_version_issue(
     issue_exists: bool,
 ) -> None:
     """Make sure we get the issue for certain gateway firmware versions."""
+    mock_config_entry.add_to_hass(hass)
     if preregister:
-        _register_stale_firmware_issue(hass)
+        _register_stale_firmware_issue(hass, mock_config_entry)
     mock_gateway.software_version = sw_version
     mock_gateway.firmware_version = fw_version
-    mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_firmware")
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (issue is not None) == issue_exists

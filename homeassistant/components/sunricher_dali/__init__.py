@@ -140,6 +140,7 @@ def _async_check_firmware_version(
     gateway = entry.runtime_data.gateway
     sw_version = gateway.software_version
     fw_version = gateway.firmware_version
+    issue_id = f"unsupported_firmware_{entry.entry_id}"
 
     if not sw_version or not fw_version:
         return
@@ -162,7 +163,7 @@ def _async_check_firmware_version(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "unsupported_firmware",
+            issue_id,
             is_fixable=False,
             is_persistent=True,
             issue_domain=DOMAIN,
@@ -176,7 +177,7 @@ def _async_check_firmware_version(
             },
         )
     else:
-        ir.async_delete_issue(hass, DOMAIN, "unsupported_firmware")
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
