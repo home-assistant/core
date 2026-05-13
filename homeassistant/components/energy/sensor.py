@@ -664,6 +664,12 @@ class EnergyPowerSensor(SensorEntity):
         self._is_inverted = "stat_rate_inverted" in config
         self._is_combined = "stat_rate_from" in config and "stat_rate_to" in config
 
+        # Combined mode always emits Watts because _update_state converts
+        # heterogeneous source units to W internally. Inverted mode copies
+        # the source unit in _update_state to track source changes.
+        if self._is_combined:
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
+
         # Determine source sensors
         if self._is_inverted:
             self._source_sensors = [config["stat_rate_inverted"]]
@@ -764,11 +770,6 @@ class EnergyPowerSensor(SensorEntity):
             # Check first sensor
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                # Combined mode always emits Watts because we convert
-                # heterogeneous source units internally. For inverted mode the
-                # unit is copied from the source state in _update_state.
-                if self._is_combined:
-                    self._attr_native_unit_of_measurement = UnitOfPower.WATT
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
             # Assign power sensor to same device as source sensor(s)

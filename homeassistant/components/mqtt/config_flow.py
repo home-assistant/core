@@ -190,6 +190,7 @@ from .const import (
     CONF_DIRECTION_STATE_TOPIC,
     CONF_DIRECTION_VALUE_TEMPLATE,
     CONF_DISCOVERY_PREFIX,
+    CONF_DISCOVERY_QOS,
     CONF_EFFECT_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -3835,7 +3836,7 @@ def data_schema_from_fields(
         if not data_schema_element:
             # Do not show empty sections
             continue
-        # Collapse if values are changed or required fields need to be set
+        # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
@@ -4382,6 +4383,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "bad_discovery_prefix",
                 valid_publish_topic,
             )
+            options_config[CONF_DISCOVERY_QOS] = int(user_input[CONF_DISCOVERY_QOS])
             if "birth_topic" in user_input:
                 _validate(
                     CONF_BIRTH_MESSAGE,
@@ -4415,6 +4417,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         }
         discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery_qos = options_config.get(CONF_DISCOVERY_QOS, DEFAULT_QOS)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -4422,6 +4425,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
             PUBLISH_TOPIC_SELECTOR
         )
+        fields[vol.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -4542,7 +4546,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, data_schema: vol.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
-        device_data = self._subentry_data["device"]
+        device_data = deepcopy(self._subentry_data["device"])
+        device_data.update(device_data.get("mqtt_settings", {}))
         return {
             field_key: self.get_suggested_values_from_device_data(value.schema)
             if isinstance(value, section)
