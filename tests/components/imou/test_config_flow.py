@@ -1,6 +1,6 @@
 """Tests for the Imou config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyimouapi.exceptions import (
     ConnectFailedException,
@@ -108,17 +108,17 @@ async def test_user_flow_exception_then_recover(
     assert "errors" in result
     assert result["errors"]["base"] == expected_error
 
-    mock_api_client.async_get_token.reset_mock(side_effect=True)
+    # Patch away the failure, then complete the same flow again (must end in CREATE_ENTRY).
+    with patch.object(mock_api_client.async_get_token, "side_effect", None):
+        recover = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
+        )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=USER_INPUT,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
-    assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
+    assert recover["type"] is FlowResultType.CREATE_ENTRY
+    assert recover["title"] == DOMAIN
+    assert recover["data"] == USER_INPUT
+    assert recover["result"].unique_id == USER_INPUT[CONF_APP_ID]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
