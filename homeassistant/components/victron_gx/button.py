@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
+    GenericOnOff,
     Metric as VictronVenusMetric,
     MetricKind,
     WritableMetric as VictronVenusWritableMetric,
@@ -15,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BINARY_SENSOR_ON_ID
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -60,5 +60,5 @@ class VictronButton(VictronBaseEntity, ButtonEntity):
         """Press the button."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
-        _LOGGER.debug("Pressing button: %s", self._attr_unique_id)
-        self._metric.set(BINARY_SENSOR_ON_ID)
+        _LOGGER.debug("Pressing button: %s", self.unique_id)
+        self._metric.set(GenericOnOff.ON)
