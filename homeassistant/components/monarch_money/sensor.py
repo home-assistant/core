@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import MONARCH_MONEY_CURRENCY
 from .coordinator import MonarchMoneyConfigEntry
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
@@ -164,7 +165,7 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the currency for monetary sensors."""
         if self.entity_description.device_class == SensorDeviceClass.MONETARY:
-            return self.hass.config.currency
+            return MONARCH_MONEY_CURRENCY
         return self.entity_description.native_unit_of_measurement
 
 
@@ -184,7 +185,7 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the currency for monetary sensors."""
         if self.entity_description.device_class == SensorDeviceClass.MONETARY:
-            return self.hass.config.currency
+            return MONARCH_MONEY_CURRENCY
         return self.entity_description.native_unit_of_measurement
 
     @property
