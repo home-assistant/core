@@ -1374,7 +1374,7 @@ async def test_logs_error_if_broker_does_not_support_subscription_identifiers(
     caplog: pytest.LogCaptureFixture,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test for setup failure if connection to broker is missing."""
+    """Test logging an error if the broker reports Subscription Identifiers are disabled."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_client_mock.on_disconnect(Mock(), None, None, MockMqttReasonCode())
     properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.CONNACK)
