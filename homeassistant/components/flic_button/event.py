@@ -4,18 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.event import (
-    EventDeviceClass,
-    EventEntity,
-    EventEntityDescription,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from . import FlicButtonConfigEntry, FlicButtonData
-from .const import (
-    CONF_PUSH_TWIST_MODE,
-    EVENT_CLASS_BUTTON,
+from pyflic_ble import PushTwistMode
+from pyflic_ble.const import (
     EVENT_TYPE_CLICK,
     EVENT_TYPE_DOUBLE_CLICK,
     EVENT_TYPE_DOWN,
@@ -32,8 +22,18 @@ from .const import (
     EVENT_TYPE_TWIST_DECREMENT,
     EVENT_TYPE_TWIST_INCREMENT,
     EVENT_TYPE_UP,
-    PushTwistMode,
 )
+
+from homeassistant.components.event import (
+    EventDeviceClass,
+    EventEntity,
+    EventEntityDescription,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import FlicButtonConfigEntry, FlicButtonData
+from .const import CONF_PUSH_TWIST_MODE, EVENT_CLASS_BUTTON
 from .entity import FlicButtonEntity
 
 PARALLEL_UPDATES = 0

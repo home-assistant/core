@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from bleak import BleakError
-from pyflic_ble import FlicClient, FlicProtocolError
+from pyflic_ble import DeviceType, FlicClient, FlicProtocolError, PushTwistMode
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -22,8 +22,6 @@ from .const import (
     CONF_PUSH_TWIST_MODE,
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
-    DeviceType,
-    PushTwistMode,
 )
 
 PLATFORMS: list[Platform] = [

@@ -9,11 +9,14 @@ from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
 from pyflic_ble import (
+    DeviceType,
     FlicAuthenticationError,
     FlicClient,
     FlicPairingError,
     FlicProtocolError,
+    PushTwistMode,
 )
+from pyflic_ble.const import FLIC_SERVICE_UUID, PAIRING_TIMEOUT, TWIST_SERVICE_UUID
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -41,11 +44,6 @@ from .const import (
     CONF_SIG_BITS,
     DEVICE_TYPE_MODEL_NAMES,
     DOMAIN,
-    FLIC_SERVICE_UUID,
-    PAIRING_TIMEOUT,
-    TWIST_SERVICE_UUID,
-    DeviceType,
-    PushTwistMode,
 )
 
 if TYPE_CHECKING:
