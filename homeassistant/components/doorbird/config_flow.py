@@ -54,7 +54,7 @@ def _schema_with_defaults(
             vol.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(CONF_NAME, default=name): str,
         }
     )
