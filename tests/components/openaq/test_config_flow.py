@@ -16,13 +16,11 @@ from openaq.shared.exceptions import APIError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.openaq.config_flow import OpenAQLocationFlowData
-from homeassistant.components.openaq.const import (
-    CONF_LIMIT,
-    CONF_LOCATION_ID,
-    CONF_RADIUS,
-    DOMAIN,
+from homeassistant.components.openaq.config_flow import (
+    LOCATION_FETCH_LIMIT,
+    OpenAQLocationFlowData,
 )
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, CONF_RADIUS, DOMAIN
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -33,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .conftest import API_KEY, LOCATION_ID, make_location, make_response
+from .conftest import API_KEY, make_location, make_response
 
 from tests.common import MockConfigEntry
 
@@ -172,7 +170,6 @@ async def test_location_subentry_map_flow(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -189,7 +186,7 @@ async def test_location_subentry_map_flow(
     mock_openaq_client.locations.list.assert_awaited_once_with(
         coordinates=(35.1, -106.6),
         radius=5000,
-        limit=10,
+        limit=LOCATION_FETCH_LIMIT,
     )
 
 
@@ -215,7 +212,6 @@ async def test_location_subentry_map_flow_without_locality(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -227,12 +223,12 @@ async def test_location_subentry_map_flow_without_locality(
     assert result["title"] == "Albuquerque"
 
 
-async def test_location_subentry_map_flow_sorts_by_sensor_count_before_distance(
+async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test map search ranks useful locations by sensor count before distance."""
+    """Test map search ranks useful locations by distance before sensor count."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.side_effect = [
         make_response(
@@ -270,22 +266,21 @@ async def test_location_subentry_map_flow_sorts_by_sensor_count_before_distance(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 10000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select"
     assert _get_select_options(result) == [
+        SelectOptionDict(value="9998", label="Nearby - 1 sensor: Ozone - 1.0 km"),
         SelectOptionDict(
             value="9999",
             label="Pinecliff - 3 sensors: PM1, PM10, PM2.5 - 6.0 km",
         ),
-        SelectOptionDict(value="9998", label="Nearby - 1 sensor: Ozone - 1.0 km"),
     ]
     assert mock_openaq_client.locations.list.await_args_list == [
-        call(coordinates=(35.1, -106.6), radius=5000, limit=10),
-        call(coordinates=(35.1, -106.6), radius=10000, limit=10),
+        call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
+        call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
     ]
 
 
@@ -312,7 +307,6 @@ async def test_location_subentry_map_flow_labels_unknown_distance(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -353,7 +347,6 @@ async def test_location_subentry_map_flow_limits_to_top_five_locations(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -395,7 +388,6 @@ async def test_location_subentry_map_flow_omits_locations_without_supported_sens
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -430,7 +422,6 @@ async def test_location_subentry_map_flow_deduplicates_locations_across_radius_s
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 10000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -471,14 +462,13 @@ async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 10000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
     assert [option["value"] for option in _get_select_options(result)] == ["9999"]
     assert mock_openaq_client.locations.list.await_args_list == [
-        call(coordinates=(35.1, -106.6), radius=5000, limit=10),
-        call(coordinates=(35.1, -106.6), radius=10000, limit=10),
+        call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
+        call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
     ]
 
 
@@ -502,7 +492,6 @@ async def test_location_subentry_no_locations_found(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -553,7 +542,6 @@ async def test_location_subentry_map_flow_errors(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
@@ -562,14 +550,19 @@ async def test_location_subentry_map_flow_errors(
     assert result["errors"] == {"base": error}
 
 
-async def test_duplicate_location_subentry_from_map_selection(
+async def test_location_subentry_map_flow_omits_configured_locations(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test duplicate OpenAQ location selected from map aborts."""
+    """Test map search omits already configured OpenAQ locations."""
     mock_config_entry.add_to_hass(hass)
-    mock_openaq_client.locations.list.return_value = make_response([make_location()])
+    mock_openaq_client.locations.list.return_value = make_response(
+        [
+            make_location(),
+            make_location(location_id=9999, name="New location"),
+        ]
+    )
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "location"),
         context={"source": config_entries.SOURCE_USER},
@@ -582,16 +575,12 @@ async def test_duplicate_location_subentry_from_map_selection(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_LOCATION_ID: str(LOCATION_ID)}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select"
+    assert [option["value"] for option in _get_select_options(result)] == ["9999"]
 
 
 async def test_duplicate_location_subentry_across_entries(
@@ -599,7 +588,7 @@ async def test_duplicate_location_subentry_across_entries(
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test duplicate OpenAQ location subentries across entries abort."""
+    """Test duplicate OpenAQ location subentries are omitted across entries."""
     mock_config_entry.add_to_hass(hass)
     second_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -619,13 +608,9 @@ async def test_duplicate_location_subentry_across_entries(
                 ATTR_LONGITUDE: -106.6,
                 CONF_RADIUS: 5000,
             },
-            CONF_LIMIT: 10,
         },
     )
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_LOCATION_ID: str(LOCATION_ID)}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_locations_found"}
