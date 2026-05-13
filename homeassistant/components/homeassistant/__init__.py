@@ -486,4 +486,4 @@ def async_set_stop_handler(
 
     If stop handler is omitted it will restore the default stop handler.
     """
-    hass.data[DATA_STOP_HANDLER] = stop_handler or _async_stop
+    hass.data[DATA_STOP_HANDLER] = _async_stop if stop_handler is None else stop_handler
