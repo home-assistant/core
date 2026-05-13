@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
 import voluptuous as vol
@@ -12,6 +12,7 @@ from zwave_js_server.const.command_class.access_control import (
     UserCredentialType,
     UserCredentialUserType,
 )
+from zwave_js_server.model.access_control import AccessControlAPI, SetUserOptions
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.const import DOMAIN
@@ -26,25 +27,27 @@ from tests.common import MockConfigEntry
 
 def _mock_access_control(node: Node) -> MagicMock:
     """Inject a mock AccessControlAPI into the node's endpoint 0."""
-    api = MagicMock()
-    api.is_supported = AsyncMock(return_value=True)
+    api = create_autospec(AccessControlAPI, instance=True)
+    api.is_supported.return_value = True
 
     user_caps = MagicMock()
     user_caps.max_users = 20
     user_caps.supported_user_types = [UserCredentialUserType.GENERAL]
     user_caps.max_user_name_length = 20
     user_caps.supported_credential_rules = []
-    api.get_user_capabilities_cached = AsyncMock(return_value=user_caps)
+    api.get_user_capabilities_cached.return_value = user_caps
 
     pin_cap = MagicMock()
     pin_cap.number_of_credential_slots = 10
     pin_cap.min_credential_length = 4
     pin_cap.max_credential_length = 10
+    pin_cap.supports_credential_learn = False
 
     password_cap = MagicMock()
     password_cap.number_of_credential_slots = 10
     password_cap.min_credential_length = 4
     password_cap.max_credential_length = 10
+    password_cap.supports_credential_learn = False
 
     cred_caps = MagicMock()
     cred_caps.supported_credential_types = {
@@ -53,20 +56,20 @@ def _mock_access_control(node: Node) -> MagicMock:
     }
     cred_caps.supports_admin_code = False
     cred_caps.supports_admin_code_deactivation = False
-    api.get_credential_capabilities_cached = AsyncMock(return_value=cred_caps)
+    api.get_credential_capabilities_cached.return_value = cred_caps
 
-    api.get_users_cached = AsyncMock(return_value=[])
-    api.get_user_cached = AsyncMock(return_value=None)
-    api.set_user = AsyncMock(return_value=SetUserResult.OK)
-    api.delete_user = AsyncMock(return_value=SetUserResult.OK)
-    api.delete_all_users = AsyncMock(return_value=SetUserResult.OK)
+    api.get_users_cached.return_value = []
+    api.get_user_cached.return_value = None
+    api.set_user.return_value = SetUserResult.OK
+    api.delete_user.return_value = SetUserResult.OK
+    api.delete_all_users.return_value = SetUserResult.OK
 
-    api.get_credentials_cached = AsyncMock(return_value=[])
-    api.get_credentials_by_type_cached = AsyncMock(return_value=[])
-    api.get_all_credentials_cached = AsyncMock(return_value=[])
-    api.get_credential_cached = AsyncMock(return_value=None)
-    api.set_credential = AsyncMock(return_value=SetCredentialResult.OK)
-    api.delete_credential = AsyncMock(return_value=SetCredentialResult.OK)
+    api.get_credentials_cached.return_value = []
+    api.get_credentials_by_type_cached.return_value = []
+    api.get_all_credentials_cached.return_value = []
+    api.get_credential_cached.return_value = None
+    api.set_credential.return_value = SetCredentialResult.OK
+    api.delete_credential.return_value = SetCredentialResult.OK
 
     node.endpoints[0].access_control = api
     return api
@@ -124,10 +127,16 @@ async def test_set_user_auto_find(
         return_response=True,
     )
 
-    api.set_user.assert_called_once()
-    call_args = api.set_user.call_args
-    assert call_args[0][0] == 1  # auto-found user_id
-    assert result[entity_id]["user_id"] == 1
+    api.set_user.assert_called_once_with(
+        1,
+        SetUserOptions(
+            active=True,
+            user_type=UserCredentialUserType.GENERAL,
+            user_name="Alice",
+            credential_rule=None,
+        ),
+    )
+    assert result == {entity_id: {"user_id": 1}}
 
 
 async def test_set_user_explicit_index(
@@ -156,10 +165,16 @@ async def test_set_user_explicit_index(
         return_response=True,
     )
 
-    api.set_user.assert_called_once()
-    call_args = api.set_user.call_args
-    assert call_args[0][0] == 5
-    assert result[entity_id]["user_id"] == 5
+    api.set_user.assert_called_once_with(
+        5,
+        SetUserOptions(
+            active=None,
+            user_type=None,
+            user_name="Bob",
+            credential_rule=None,
+        ),
+    )
+    assert result == {entity_id: {"user_id": 5}}
 
 
 async def test_set_user_no_slots(
@@ -181,7 +196,7 @@ async def test_set_user_no_slots(
     user2.user_id = 2
     api.get_users_cached.return_value = [user1, user2]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_user",
@@ -194,6 +209,11 @@ async def test_set_user_no_slots(
             blocking=True,
             return_response=True,
         )
+
+    assert exc.value.translation_key == "no_available_user_slots"
+    # Here, we fail trying to find a free user slot, meaning
+    # before we even call set_user.
+    api.set_user.assert_not_called()
 
 
 async def test_delete_user(
@@ -244,7 +264,7 @@ async def test_delete_all_users(
         blocking=True,
     )
 
-    api.delete_all_users.assert_called_once()
+    api.delete_all_users.assert_called_once_with()
 
 
 async def test_get_credential_capabilities(
@@ -269,9 +289,29 @@ async def test_get_credential_capabilities(
         return_response=True,
     )
 
-    assert result[entity_id]["supports_user_management"] is True
-    assert result[entity_id]["max_users"] == 20
-    assert result[entity_id]["supported_user_types"] == ["general"]
+    assert result == {
+        entity_id: {
+            "supports_user_management": True,
+            "max_users": 20,
+            "supported_user_types": ["general"],
+            "max_user_name_length": 20,
+            "supported_credential_rules": [],
+            "supported_credential_types": {
+                "pin_code": {
+                    "num_slots": 10,
+                    "min_length": 4,
+                    "max_length": 10,
+                    "supports_learn": False,
+                },
+                "password": {
+                    "num_slots": 10,
+                    "min_length": 4,
+                    "max_length": 10,
+                    "supports_learn": False,
+                },
+            },
+        }
+    }
 
 
 async def test_get_credential_capabilities_not_supported(
@@ -286,7 +326,7 @@ async def test_get_credential_capabilities_not_supported(
     api = _mock_access_control(lock_schlage_be469)
     api.is_supported.return_value = False
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "get_credential_capabilities",
@@ -298,6 +338,13 @@ async def test_get_credential_capabilities_not_supported(
             blocking=True,
             return_response=True,
         )
+
+    assert exc.value.translation_key == "access_control_not_supported"
+    # The call to is_supported tells us that access control is not supported
+    # therefore we should not call the other methods, as they would throw.
+    api.is_supported.assert_called_once_with()
+    api.get_user_capabilities_cached.assert_not_called()
+    api.get_credential_capabilities_cached.assert_not_called()
 
 
 async def test_get_users(
@@ -338,15 +385,23 @@ async def test_get_users(
         return_response=True,
     )
 
-    assert result[entity_id]["max_users"] == 20
-    assert len(result[entity_id]["users"]) == 1
-    user_entry = result[entity_id]["users"][0]
-    assert user_entry["user_id"] == 1
-    assert user_entry["user_name"] == "Alice"
-    assert user_entry["active"] is True
-    # Z-Wave supports reading back credentials, but we don't want to expose them
-    # Make sure the service does not return the credential data.
-    assert user_entry["credentials"] == [{"type": "pin_code", "slot": 3}]
+    # Z-Wave can read back credential plaintext, but get_users must not expose it.
+    # Assert the whole response so any extra field (especially `data`) trips the test.
+    assert result == {
+        entity_id: {
+            "max_users": 20,
+            "users": [
+                {
+                    "user_id": 1,
+                    "user_name": "Alice",
+                    "active": True,
+                    "user_type": "general",
+                    "credential_rule": None,
+                    "credentials": [{"type": "pin_code", "slot": 3}],
+                }
+            ],
+        }
+    }
 
 
 async def test_set_credential_auto_slot(
@@ -377,9 +432,10 @@ async def test_set_credential_auto_slot(
     )
 
     api.set_user.assert_not_called()
-    api.set_credential.assert_called_once()
-    assert result[entity_id]["user_id"] == 2
-    assert result[entity_id]["credential_slot"] == 1
+    api.set_credential.assert_called_once_with(
+        2, UserCredentialType.PIN_CODE, 1, "1234"
+    )
+    assert result == {entity_id: {"user_id": 2, "credential_slot": 1}}
 
 
 async def test_set_credential_explicit_slot(
@@ -411,9 +467,10 @@ async def test_set_credential_explicit_slot(
     )
 
     api.set_user.assert_not_called()
-    api.set_credential.assert_called_once()
-    assert result[entity_id]["user_id"] == 3
-    assert result[entity_id]["credential_slot"] == 2
+    api.set_credential.assert_called_once_with(
+        3, UserCredentialType.PIN_CODE, 2, "5678"
+    )
+    assert result == {entity_id: {"user_id": 3, "credential_slot": 2}}
 
 
 async def test_set_credential_multi_target(
@@ -448,11 +505,16 @@ async def test_set_credential_multi_target(
         return_response=True,
     )
 
-    api1.set_credential.assert_called_once()
-    api2.set_credential.assert_called_once()
-    assert set(result.keys()) == {entity_1, entity_2}
-    assert result[entity_1]["user_id"] == 1
-    assert result[entity_2]["user_id"] == 1
+    api1.set_credential.assert_called_once_with(
+        1, UserCredentialType.PIN_CODE, 1, "1234"
+    )
+    api2.set_credential.assert_called_once_with(
+        1, UserCredentialType.PIN_CODE, 1, "1234"
+    )
+    assert result == {
+        entity_1: {"user_id": 1, "credential_slot": 1},
+        entity_2: {"user_id": 1, "credential_slot": 1},
+    }
 
 
 @pytest.mark.parametrize(
@@ -473,7 +535,7 @@ async def test_set_duplicate_credential_rejection_raises(
 ) -> None:
     """A device-reported duplicate credential rejection must surface as HomeAssistantError."""
     api = _mock_access_control(lock_schlage_be469)
-    api.set_credential = AsyncMock(return_value=result)
+    api.set_credential.return_value = result
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
@@ -494,6 +556,9 @@ async def test_set_duplicate_credential_rejection_raises(
     # While Z-Wave can report that a credential matches the admin code,
     # we don't want to expose this information to the user.
     assert exc.value.translation_key == "credential_rejected_duplicate"
+    api.set_credential.assert_called_once_with(
+        1, UserCredentialType.PIN_CODE, 1, "1234"
+    )
 
 
 async def test_set_user_rejection_raises(
@@ -506,11 +571,9 @@ async def test_set_user_rejection_raises(
 ) -> None:
     """A device-reported rejection on set_user must raise."""
     api = _mock_access_control(lock_schlage_be469)
-    api.set_user = AsyncMock(
-        return_value=SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
-    )
+    api.set_user.return_value = SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_user",
@@ -525,6 +588,17 @@ async def test_set_user_rejection_raises(
             return_response=True,
         )
 
+    assert exc.value.translation_key == "user_rejected_add_occupied"
+    api.set_user.assert_called_once_with(
+        1,
+        SetUserOptions(
+            active=None,
+            user_type=None,
+            user_name="Guest",
+            credential_rule=None,
+        ),
+    )
+
 
 async def test_set_credential_requires_user_id(
     hass: HomeAssistant,
@@ -535,7 +609,7 @@ async def test_set_credential_requires_user_id(
     integration: MockConfigEntry,
 ) -> None:
     """Test set_credential rejects calls without user_id."""
-    _mock_access_control(lock_schlage_be469)
+    api = _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -552,6 +626,10 @@ async def test_set_credential_requires_user_id(
             return_response=True,
         )
 
+    # The schema rejects the missing user_id, so the helper is never reached
+    # and no credential write is attempted on the device.
+    api.set_credential.assert_not_called()
+
 
 async def test_set_credential_type_not_supported(
     hass: HomeAssistant,
@@ -567,7 +645,7 @@ async def test_set_credential_type_not_supported(
     cred_caps = api.get_credential_capabilities_cached.return_value
     cred_caps.supported_credential_types = {}
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -582,6 +660,12 @@ async def test_set_credential_type_not_supported(
             blocking=True,
             return_response=True,
         )
+
+    # The device reports that pin_code is not in its supported set, so the
+    # helper raises with the rendered credential type before any write.
+    assert exc.value.translation_key == "credential_type_not_supported"
+    assert exc.value.translation_placeholders == {"credential_type": "pin_code"}
+    api.set_credential.assert_not_called()
 
 
 async def test_set_credential_no_available_slots(
@@ -609,7 +693,7 @@ async def test_set_credential_no_available_slots(
     cred2.slot = 2
     api.get_credentials_by_type_cached.return_value = [cred1, cred2]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -625,6 +709,12 @@ async def test_set_credential_no_available_slots(
             return_response=True,
         )
 
+    # Every pin_code slot the device reports is already taken, so auto-find
+    # raises with the rendered credential type and nothing reaches the device.
+    assert exc.value.translation_key == "no_available_credential_slots"
+    assert exc.value.translation_placeholders == {"credential_type": "pin_code"}
+    api.set_credential.assert_not_called()
+
 
 async def test_set_credential_pin_not_digits(
     hass: HomeAssistant,
@@ -635,9 +725,9 @@ async def test_set_credential_pin_not_digits(
     integration: MockConfigEntry,
 ) -> None:
     """PIN credential data containing non-digit characters is rejected locally."""
-    _mock_access_control(lock_schlage_be469)
+    api = _mock_access_control(lock_schlage_be469)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "set_credential",
@@ -654,6 +744,11 @@ async def test_set_credential_pin_not_digits(
             return_response=True,
         )
 
+    # PIN codes are validated locally to be digits-only, so a non-numeric
+    # value is rejected up front without bothering the device.
+    assert exc.value.translation_key == "credential_data_pin_not_digits"
+    api.set_credential.assert_not_called()
+
 
 async def test_set_credential_password_allows_non_digits(
     hass: HomeAssistant,
@@ -665,14 +760,15 @@ async def test_set_credential_password_allows_non_digits(
 ) -> None:
     """Password credentials must not be subject to the PIN-only digit check."""
     api = _mock_access_control(lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
 
     result = await hass.services.async_call(
         DOMAIN,
         "set_credential",
         {
-            ATTR_ENTITY_ID: _lock_entity_id(
-                entity_registry, device_registry, client, lock_schlage_be469
-            ),
+            ATTR_ENTITY_ID: entity_id,
             "user_id": 1,
             "credential_type": "password",
             "credential_data": "s3cret!",
@@ -682,15 +778,10 @@ async def test_set_credential_password_allows_non_digits(
         return_response=True,
     )
 
-    api.set_credential.assert_called_once()
-    call_args = api.set_credential.call_args
-    assert call_args[0][1] == UserCredentialType.PASSWORD
-    assert call_args[0][3] == "s3cret!"
-    entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
+    api.set_credential.assert_called_once_with(
+        1, UserCredentialType.PASSWORD, 1, "s3cret!"
     )
-    assert result[entity_id]["user_id"] == 1
-    assert result[entity_id]["credential_slot"] == 1
+    assert result == {entity_id: {"user_id": 1, "credential_slot": 1}}
 
 
 @pytest.mark.parametrize("credential_data", ["12", "12345678901"])
@@ -704,7 +795,7 @@ async def test_set_credential_length_validation(
     credential_data: str,
 ) -> None:
     """Credential data outside the device-reported length range is rejected locally."""
-    _mock_access_control(lock_schlage_be469)
+    api = _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
@@ -722,7 +813,17 @@ async def test_set_credential_length_validation(
             blocking=True,
             return_response=True,
         )
+
+    # The helper compares the data length against the bounds the device
+    # reported, so out-of-range values are caught locally and the device
+    # is never asked to store an invalid credential.
     assert exc.value.translation_key == "credential_data_invalid_length"
+    assert exc.value.translation_placeholders == {
+        "credential_type": "pin_code",
+        "min_length": "4",
+        "max_length": "10",
+    }
+    api.set_credential.assert_not_called()
 
 
 async def test_set_credential_slot_out_of_range(
@@ -756,7 +857,14 @@ async def test_set_credential_slot_out_of_range(
             blocking=True,
             return_response=True,
         )
+
+    # The explicit slot exceeds the device-reported capacity, so the helper
+    # rejects the call with the rendered upper bound and never writes.
     assert exc.value.translation_key == "credential_slot_out_of_range"
+    assert exc.value.translation_placeholders == {
+        "credential_type": "pin_code",
+        "max_slot": "5",
+    }
     api.set_credential.assert_not_called()
 
 
@@ -785,7 +893,7 @@ async def test_delete_credential(
         blocking=True,
     )
 
-    api.delete_credential.assert_called_once()
+    api.delete_credential.assert_called_once_with(1, UserCredentialType.PIN_CODE, 2)
 
 
 async def test_delete_all_credentials(
@@ -800,10 +908,10 @@ async def test_delete_all_credentials(
     api = _mock_access_control(lock_schlage_be469)
 
     cred1 = MagicMock()
-    cred1.type = MagicMock()
+    cred1.type = UserCredentialType.PIN_CODE
     cred1.slot = 1
     cred2 = MagicMock()
-    cred2.type = MagicMock()
+    cred2.type = UserCredentialType.PIN_CODE
     cred2.slot = 2
     api.get_credentials_cached.return_value = [cred1, cred2]
 
@@ -820,6 +928,8 @@ async def test_delete_all_credentials(
     )
 
     assert api.delete_credential.call_count == 2
+    api.delete_credential.assert_any_call(1, UserCredentialType.PIN_CODE, 1)
+    api.delete_credential.assert_any_call(1, UserCredentialType.PIN_CODE, 2)
 
 
 @pytest.mark.parametrize("field", ["user_id", "credential_slot"])
@@ -835,7 +945,7 @@ async def test_set_credential_id_range_validation(
     value: int,
 ) -> None:
     """Reject user_id / credential_slot outside 1..65535."""
-    _mock_access_control(lock_schlage_be469)
+    api = _mock_access_control(lock_schlage_be469)
 
     payload: dict = {
         ATTR_ENTITY_ID: _lock_entity_id(
@@ -856,6 +966,10 @@ async def test_set_credential_id_range_validation(
             return_response=True,
         )
 
+    # The schema's uint16 range check fails on out-of-bounds ids, so the
+    # call never reaches the helper and the device sees no write.
+    api.set_credential.assert_not_called()
+
 
 async def test_delete_user_rejects_oversize_user_id(
     hass: HomeAssistant,
@@ -866,7 +980,7 @@ async def test_delete_user_rejects_oversize_user_id(
     integration: MockConfigEntry,
 ) -> None:
     """Reject user_id above uint16 max on delete_user."""
-    _mock_access_control(lock_schlage_be469)
+    api = _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -880,6 +994,10 @@ async def test_delete_user_rejects_oversize_user_id(
             },
             blocking=True,
         )
+
+    # The schema's uint16 range check rejects 70000 before the helper runs,
+    # so no delete is dispatched to the device.
+    api.delete_user.assert_not_called()
 
 
 async def test_mutation_supports_multi_target(
@@ -960,6 +1078,31 @@ async def test_get_users_supports_multi_target(
         return_response=True,
     )
 
-    assert set(result) == {entity_1, entity_2}
-    assert result[entity_1]["users"][0]["user_name"] == "Alice"
-    assert result[entity_2]["users"][0]["user_name"] == "Bob"
+    assert result == {
+        entity_1: {
+            "max_users": 20,
+            "users": [
+                {
+                    "user_id": 1,
+                    "user_name": "Alice",
+                    "active": True,
+                    "user_type": "general",
+                    "credential_rule": None,
+                    "credentials": [],
+                }
+            ],
+        },
+        entity_2: {
+            "max_users": 20,
+            "users": [
+                {
+                    "user_id": 2,
+                    "user_name": "Bob",
+                    "active": True,
+                    "user_type": "disposable",
+                    "credential_rule": None,
+                    "credentials": [],
+                }
+            ],
+        },
+    }
