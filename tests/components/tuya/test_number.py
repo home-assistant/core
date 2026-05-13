@@ -13,10 +13,9 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir, json
+from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
@@ -130,7 +129,6 @@ async def test_set_value(
         "dpcode",
         "tuya_uom",
         "expected_msg",
-        "has_issue",
     ),
     [
         (
@@ -141,11 +139,10 @@ async def test_set_value(
             (
                 "Incompatible unit invalid_uom replaced by entity description "
                 "unit s for device class duration in number entity "
-                "tuya.iks13mcaiyie3rryjb2ocalarm_time; this will stop working "
-                "in 2026.12; use a quirk (https://github.com/home-assistant-libs"
-                "/tuya-device-handlers) to override"
+                "tuya.iks13mcaiyie3rryjb2ocalarm_time; use a quirk "
+                "(https://github.com/home-assistant-libs/tuya-device-handlers) "
+                "to override"
             ),
-            True,
         ),
         (
             "znrb_gpzittzfnzhduquz",
@@ -156,7 +153,6 @@ async def test_set_value(
                 "Device class temperature ignored for incompatible unit  in "
                 "number entity tuya.zuqudhznfzttizpgbrnztemp_set"
             ),
-            False,
         ),
     ],
 )
@@ -169,14 +165,10 @@ async def test_invalid_uom(
     dpcode: str,
     tuya_uom: str,
     expected_msg: str,
-    has_issue: bool,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid unit of measurement."""
     values = json_util.json_loads_object(mock_device.status_range[dpcode].values)
-    original_unit = values.get("unit")
     values["unit"] = tuya_uom
     mock_device.function[dpcode].values = json.json_dumps(values)
     mock_device.status_range[dpcode].values = json.json_dumps(values)
@@ -185,24 +177,3 @@ async def test_invalid_uom(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert expected_msg in caplog.text
-    entity = entity_registry.async_get(entity_id)
-
-    # Issue gets added when the entity description overrides the unit to a compatible one
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"{entity.unique_id}_incompatible_unit"
-    )
-    assert bool(issue) == has_issue
-
-    # Issue gets cleared when a compatible unit is restored and the entry is reloaded
-    values["unit"] = original_unit
-    mock_device.function[dpcode].values = json.json_dumps(values)
-    mock_device.status_range[dpcode].values = json.json_dumps(values)
-    with patch(
-        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
-    ):
-        await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    assert (
-        issue_registry.async_get_issue(DOMAIN, f"{entity.unique_id}_incompatible_unit")
-        is None
-    )
