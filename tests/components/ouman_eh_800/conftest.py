@@ -167,7 +167,11 @@ SCENARIOS: dict[str, list[type[OumanRegistry]]] = {
         L1ConstantTempMode,
         RelayPumpSummerStop,
     ],
-    # Theoretical combinations for testing remaining endpoints
+    # Minimal scenarios that wouldn't occur on a real device but test
+    # each remaining Relay* registry so every endpoint that the API can
+    # return is seen by the integration at least once. They're trimmed
+    # to just SystemEndpoints + the relay because a fuller registry set
+    # adds no additional coverage here and would only bloat the snapshots.
     "relay_valve_position": [SystemEndpoints, RelayL1ValvePosition],
     "relay_temperature": [SystemEndpoints, RelayTemperature],
     "relay_temp_difference": [SystemEndpoints, RelayTempDifference],
