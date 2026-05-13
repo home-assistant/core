@@ -47,21 +47,34 @@ async def test_deprecation_warning(
 ) -> None:
     """Test the min sensor with a default name."""
     config = {
-        "sensor": {
-            "platform": "min_max",
-            "type": "min",
-            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
-        }
+        "sensor": [
+            {
+                "platform": "min_max",
+                "type": "min",
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            },
+            {
+                "platform": "min_max",
+                "type": "min",
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+                "unique_id": "my_unique_id",
+            },
+        ]
     }
 
     with patch("homeassistant.util.ulid.ulid", return_value="1234"):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "1234")
+    # Use ulid for issue id when unique_id is not set
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated-1234")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "yaml_deprecated"
+
+    # Use unique_id for issue id if exist
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated-my_unique_id")
+    assert issue is not None
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
