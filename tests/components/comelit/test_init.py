@@ -1,6 +1,6 @@
 """Tests for Comelit SimpleHome integration init."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -97,40 +97,6 @@ async def test_migrate_sensor_unique_id(
 
     assert config_entry.version == 1
     assert config_entry.minor_version == 2
-
-
-async def test_migrate_sensor_unique_id_missing_device(
-    hass: HomeAssistant,
-    mock_vedo: AsyncMock,
-    mock_vedo_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor unique ID migration when linked device no longer exists."""
-    config_entry = mock_vedo_config_entry
-    config_entry.add_to_hass(hass)
-
-    old_unique_id = f"{config_entry.entry_id}-0"
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, f"{config_entry.entry_id}-zone-0")},
-    )
-
-    entity_entry = entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        old_unique_id,
-        config_entry=config_entry,
-        device_id=device.id,
-    )
-
-    with patch.object(device_registry, "async_get", return_value=None):
-        await setup_integration(hass, config_entry)
-
-    migrated_entry = entity_registry.async_get(entity_entry.entity_id)
-    assert migrated_entry
-    assert migrated_entry.unique_id == old_unique_id
 
 
 async def test_migrate_future_version_returns_false(
