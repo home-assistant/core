@@ -147,6 +147,8 @@ async def test_save_preferences(
                 "stat_rate": "my_battery_power",
                 "stat_soc": "sensor.my_battery_state_of_charge",
             },
+            {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
+            {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},
         ],
         "device_consumption": [
             {
