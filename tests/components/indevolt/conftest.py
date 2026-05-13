@@ -20,6 +20,7 @@ TEST_PORT = 8080
 TEST_DEVICE_SN_GEN1 = "BK1600-12345678"
 TEST_DEVICE_SN_GEN2 = "SolidFlex2000-87654321"
 TEST_FW_VERSION = "1.2.3"
+TEST_MAC_ADDRESS = "AA:BB:CC:11:22:33"
 
 # Map device fixture names to generation and fixture files
 DEVICE_MAPPING = {
@@ -122,6 +123,7 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
                 "type": device_info["device"],
                 "generation": device_info["generation"],
                 "fw": TEST_FW_VERSION,
+                "mac": TEST_MAC_ADDRESS,
             }
         }
 

@@ -4,7 +4,7 @@ from typing import Any
 
 from indevolt_api import IndevoltBattery, IndevoltSystem
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -25,6 +25,18 @@ TO_REDACT = {
 }
 
 
+def _redact_mac(mac_address: str | None) -> str | None:
+    """Redact the device-specific part of a MAC address (keep OUI, used for discovery)."""
+    if not mac_address:
+        return mac_address
+
+    parts = mac_address.split(":")
+    if len(parts) == 6:
+        return ":".join([*parts[:3], "XX", "XX", "XX"])
+
+    return REDACTED
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: IndevoltConfigEntry
 ) -> dict[str, Any]:
@@ -36,6 +48,7 @@ async def async_get_config_entry_diagnostics(
         "generation": coordinator.generation,
         "serial_number": coordinator.serial_number,
         "firmware_version": coordinator.firmware_version,
+        "mac_address": _redact_mac(coordinator.mac_address),
     }
 
     return {
