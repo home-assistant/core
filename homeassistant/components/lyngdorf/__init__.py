@@ -6,7 +6,7 @@ from lyngdorf.device import async_create_receiver, lookup_receiver_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -38,6 +38,12 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
+    if lyngdorf_model is None:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"model": config_entry.data[CONF_MODEL]},
+        )
 
     try:
         receiver = await async_create_receiver(
@@ -61,24 +67,20 @@ async def async_setup_entry(
     serial = config_entry.data.get(CONF_SERIAL_NUMBER)
     mac = _serial_as_mac(serial)
     connections = {(CONNECTION_NETWORK_MAC, mac)} if mac else set()
-    manufacturer = lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf"
-    model = (
-        lyngdorf_model.model_name if lyngdorf_model else config_entry.data[CONF_MODEL]
-    )
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.unique_id)},
         connections=connections,
-        manufacturer=manufacturer,
+        manufacturer=lyngdorf_model.manufacturer,
         serial_number=serial,
-        model=model,
+        model=lyngdorf_model.model_name,
     )
 
     zone_b_device_info = DeviceInfo(
         identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
-        manufacturer=manufacturer,
+        manufacturer=lyngdorf_model.manufacturer,
         serial_number=serial,
-        model=model,
+        model=lyngdorf_model.model_name,
         translation_key="zone_b",
         translation_placeholders={"device_name": config_entry.title},
         via_device=(DOMAIN, config_entry.unique_id),
