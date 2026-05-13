@@ -1,22 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This LG device has already been configured with this transmitter.",
-      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+      "already_configured": "This LG device has already been configured with this infrared entity.",
+      "no_emitters_receivers": "No infrared emitter or receiver entities found. Please set up an infrared device first."
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter or receiver."
     },
     "step": {
       "user": {
         "data": {
           "device_type": "Device type",
-          "infrared_entity_id": "Infrared transmitter",
+          "infrared_entity_id": "Infrared emitter",
           "infrared_receiver_entity_id": "Infrared receiver"
         },
         "data_description": {
           "device_type": "The type of LG device to control.",
-          "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "infrared_entity_id": "The infrared emitter entity to use for sending commands.",
           "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
-        "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
+        "description": "Select the device type and at least one infrared emitter or receiver to use with your LG device.",
         "title": "Set up LG IR Remote"
       }
     }
