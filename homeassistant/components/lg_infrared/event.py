@@ -1,6 +1,7 @@
 """Event platform for LG IR integration."""
 
 import logging
+from typing import override
 
 from infrared_protocols.codes.lg.tv import LG_ADDRESS, LGTVCode
 from infrared_protocols.commands.nec import NECCommand
@@ -11,7 +12,6 @@ from homeassistant.components.infrared import (
     async_subscribe_receiver,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -20,7 +20,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_RECEIVER_ENTITY_ID, LGDeviceType
 from .entity import LgIrEntity
@@ -120,13 +119,6 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
 
         self._async_update_receiver_subscription()
         self.async_on_remove(self._async_unsubscribe_receiver)
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass,
-                [self._infrared_entity_id],
-                self._async_ir_state_changed,
-            )
-        )
 
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
@@ -165,11 +157,6 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
     @callback
     def _async_update_receiver_subscription(self) -> None:
         """Update the IR receiver subscription when availability changes."""
-        ir_state = self.hass.states.get(self._infrared_entity_id)
-        self._attr_available = (
-            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
-        )
-
         if not self._attr_available:
             self._async_unsubscribe_receiver()
         elif self._remove_signal_subscription is None:
@@ -182,8 +169,10 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
                 self.hass, self._infrared_entity_id, self._handle_signal
             )
 
+    @override
     @callback
     def _async_ir_state_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle infrared entity state changes."""
+        super()._async_ir_state_changed(event)
         self._async_update_receiver_subscription()
         self.async_write_ha_state()
