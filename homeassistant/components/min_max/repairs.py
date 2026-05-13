@@ -1,7 +1,5 @@
 """Repairs platform for the Min/Max integration."""
 
-from __future__ import annotations
-
 from types import MappingProxyType
 from typing import Any, cast
 
