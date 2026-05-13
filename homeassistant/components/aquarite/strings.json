@@ -58,6 +58,9 @@
     },
     "no_pools": {
       "message": "No pools were found on this account."
+    },
+    "update_failed": {
+      "message": "Error fetching data from Aquarite."
     }
   }
 }
