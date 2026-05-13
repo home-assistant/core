@@ -29,11 +29,13 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for d in hub.dests.values():
-        if d.hasAction(ACTION_DESC.SlatDrive) and d.hasAction(ACTION_DESC.SlatRotate):
+        if d.hasAction(ACTION_DESC.SlatRotate):
             entities.append(WebControlProSlatRange(config_entry.entry_id, d, "min"))
             entities.append(WebControlProSlatRange(config_entry.entry_id, d, "max"))
-        if d.hasAction(ACTION_DESC.SlatRotate):
-            entities.append(WebControlProSlatRotation(config_entry.entry_id, d))
+            entities.append(WebControlProSlatRotationRaw(config_entry.entry_id, d))
+            if not d.hasAction(ACTION_DESC.SlatDrive):
+                # Only add the numeric slat rotation entity if no cover entity exists
+                entities.append(WebControlProSlatRotation(config_entry.entry_id, d))
 
     async_add_entities(entities)
 
@@ -108,10 +110,9 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
 
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
-    """Representation of a WMS based slat-rotation for a slat-based cover."""
+    """Representation of the WMS based slat-rotation for a slat-based cover."""
 
     _attr_translation_key = "rotation"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, config_entry_id: str, dest: Destination) -> None:
         """Initialize the entity with destination channel."""
@@ -144,3 +145,28 @@ class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
         """Update the current value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
         await action(rotation=value)
+
+
+class WebControlProSlatRotationRaw(WebControlProSlatRotation):
+    """Representation of the WMS based raw slat-rotation for a slat-based cover."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "rotation-raw"
+
+    def __init__(self, config_entry_id: str, dest: Destination) -> None:
+        """Initialize the entity with destination channel."""
+        super().__init__(config_entry_id, dest)
+        if self._attr_unique_id:
+            self._attr_unique_id += "-raw"
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        return action.wms__minValue
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        return action.wms__maxValue

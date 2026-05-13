@@ -37,6 +37,9 @@
       },
       "rotation-min": {
         "name": "Minimum Rotation"
+      },
+      "rotation-raw": {
+        "name": "Raw Rotation"
       }
     }
   }
