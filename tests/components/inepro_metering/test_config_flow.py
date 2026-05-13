@@ -1,8 +1,11 @@
 """Home Assistant config flow tests for Inepro Metering."""
 
+import importlib
+
 from ipaddress import ip_address
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from inepro_metering.const import MeterFamily, TransportType
 import pytest
@@ -188,6 +191,267 @@ def test_bluetooth_validation_error_reason_keeps_generic_failure_unclassified() 
     )
     assert bluetooth_setup_identity_error_reason(err, TransportType.BLUETOOTH) == (
         "bluetooth_not_paired"
+    )
+
+
+async def test_config_flow_wrapper_paths_are_runtime_covered(
+    hass: HomeAssistant,
+) -> None:
+    """Exercise wrapper helpers in the runtime-imported config flow module."""
+    import homeassistant.components.inepro_metering.config_flow as config_flow_module
+
+    config_flow_module = importlib.reload(config_flow_module)
+
+    def _wrap_entry_data(
+        _hass: HomeAssistant,
+        entry_data: dict[str, Any],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        return {**entry_data, "_runtime_only": True, **kwargs}
+
+    flow = config_flow_module.IneproMeteringConfigFlow()
+    flow.hass = hass
+
+    entry_data = {CONF_TRANSPORT: TransportType.BLUETOOTH.value}
+    with (
+        patch.object(
+            config_flow_module,
+            "shared_read_detected_serial",
+            new=AsyncMock(return_value="075625480002"),
+        ) as shared_read_detected_serial,
+        patch.object(
+            config_flow_module,
+            "async_entry_data_with_ha_ble_device",
+            side_effect=_wrap_entry_data,
+        ) as entry_data_with_ble,
+        patch.object(
+            config_flow_module,
+            "async_validate_modbus_config",
+            new=AsyncMock(),
+        ) as validate_modbus_config,
+        patch.object(
+            config_flow_module,
+            "async_validate_bluetooth_gatt_identity",
+            new=AsyncMock(return_value="075625480002"),
+        ) as validate_bluetooth_gatt_identity,
+        patch.object(
+            config_flow_module,
+            "_async_resolve_entry_serial_number_for_creation",
+            new=AsyncMock(return_value="075625480002"),
+        ) as resolve_serial_for_creation,
+        patch.object(
+            config_flow_module,
+            "_async_validate_entry_identity",
+            new=AsyncMock(),
+        ) as validate_entry_identity,
+        patch.object(
+            config_flow_module,
+            "async_discover_grow_serial_bus",
+            new=AsyncMock(return_value=()),
+        ) as discover_serial_bus,
+        patch.object(
+            config_flow_module,
+            "async_discover_grow_tcp_gateway",
+            new=AsyncMock(return_value=()),
+        ) as discover_tcp_gateway,
+        patch.object(
+            config_flow_module,
+            "async_discover_tcp_gateways",
+            new=AsyncMock(return_value=()),
+        ) as discover_tcp_gateways,
+        patch.object(
+            config_flow_module,
+            "async_discover_grow_bluetooth_proxy_meters",
+            new=AsyncMock(return_value=()),
+        ) as discover_bluetooth_proxy_meters,
+        patch.object(
+            config_flow_module,
+            "async_discover_grow_bluetooth_meters",
+            return_value=(),
+        ) as discover_bluetooth_meters,
+        patch.object(
+            config_flow_module,
+            "grow_bluetooth_meter_from_service_info",
+            return_value="meter",
+        ) as bluetooth_meter_from_service_info,
+    ):
+        assert (
+            await config_flow_module._async_read_detected_grow_serial(
+                entry_data,
+                product_code="0756",
+            )
+            == "075625480002"
+        )
+        shared_read_detected_serial.assert_awaited_once()
+
+        await flow._async_validate_modbus_config(entry_data)
+        validate_modbus_config.assert_awaited_once()
+
+        assert (
+            await flow._async_validate_bluetooth_gatt_identity(entry_data)
+            == "075625480002"
+        )
+        validate_bluetooth_gatt_identity.assert_awaited_once()
+
+        assert (
+            await flow._async_resolve_entry_serial_number_for_creation(entry_data)
+            == "075625480002"
+        )
+        resolve_serial_for_creation.assert_awaited_once()
+
+        await flow._async_validate_entry_identity(entry_data)
+        validate_entry_identity.assert_awaited_once()
+
+        assert await flow._async_discover_grow_serial_bus(
+            {},
+            slave_id_start=1,
+            slave_id_end=2,
+        ) == ()
+        discover_serial_bus.assert_awaited_once()
+
+        assert await flow._async_discover_grow_tcp_gateway(
+            {},
+            slave_id_start=1,
+            slave_id_end=2,
+        ) == ()
+        discover_tcp_gateway.assert_awaited_once()
+
+        assert await flow._async_discover_tcp_gateways(scan_target="192.168.1.0/24") == ()
+        discover_tcp_gateways.assert_awaited_once()
+
+        assert flow._async_discover_grow_bluetooth_meters() == ()
+        discover_bluetooth_meters.assert_called_once_with(hass)
+
+        assert await flow._async_discover_grow_bluetooth_proxy_meters() == ()
+        discover_bluetooth_proxy_meters.assert_awaited_once()
+
+        assert flow._grow_bluetooth_meter_from_service_info(object()) == "meter"
+        bluetooth_meter_from_service_info.assert_called_once()
+        assert entry_data_with_ble.call_count >= 3
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    options_flow = config_flow_module.IneproMeteringConfigFlow.async_get_options_flow(
+        config_entry
+    )
+    assert isinstance(options_flow, config_flow_module.IneproMeteringOptionsFlow)
+    assert options_flow._config_entry is config_entry
+    assert options_flow._discovered_bluetooth_devices == ()
+
+    bus_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Main RS485 Bus",
+        unique_id="bus-entry",
+        data={
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_METERS: [],
+        },
+    )
+    with (
+        patch.object(flow, "_get_reconfigure_entry", return_value=bus_entry),
+        patch.object(flow, "async_set_unique_id", new=AsyncMock()) as set_unique_id,
+        patch.object(flow, "_abort_if_unique_id_mismatch") as abort_if_mismatch,
+        patch.object(
+            flow,
+            "async_step_edit_serial_bus",
+            new=AsyncMock(
+                return_value={
+                    "type": FlowResultType.FORM,
+                    "step_id": "edit_serial_bus",
+                }
+            ),
+        ) as edit_serial_bus,
+    ):
+        result = await flow.async_step_reconfigure()
+
+    assert result["step_id"] == "edit_serial_bus"
+    set_unique_id.assert_awaited_once_with("bus-entry")
+    abort_if_mismatch.assert_called_once()
+    edit_serial_bus.assert_awaited_once()
+
+    single_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="075625480002",
+        unique_id="single-entry",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_NAME: "075625480002",
+            CONF_VARIANT: "grow_750",
+            CONF_SLAVE_ID: DEFAULT_SLAVE_ID,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SERIAL_NUMBER: "075625480002",
+        },
+    )
+
+    multi_transport_flow = config_flow_module.IneproMeteringConfigFlow()
+    with (
+        patch.object(
+            config_flow_module.IneproMeteringConfigFlow,
+            "_available_transports_for_current_flow",
+            new_callable=PropertyMock,
+            return_value=[TransportType.SERIAL, TransportType.TCP_GATEWAY],
+        ),
+        patch.object(
+            multi_transport_flow,
+            "_get_reconfigure_entry",
+            return_value=single_entry,
+        ),
+        patch.object(
+            multi_transport_flow,
+            "async_set_unique_id",
+            new=AsyncMock(),
+        ) as set_unique_id,
+        patch.object(multi_transport_flow, "_abort_if_unique_id_mismatch"),
+        patch.object(
+            multi_transport_flow,
+            "async_step_transport",
+            new=AsyncMock(
+                return_value={"type": FlowResultType.FORM, "step_id": "transport"}
+            ),
+        ) as step_transport,
+    ):
+        result = await multi_transport_flow.async_step_reconfigure()
+
+    assert result["step_id"] == "transport"
+    set_unique_id.assert_awaited_once_with("single-entry")
+    step_transport.assert_awaited_once()
+    assert multi_transport_flow._meter_selection[CONF_SERIAL_NUMBER] == "075625480002"
+
+    single_transport_flow = config_flow_module.IneproMeteringConfigFlow()
+    with (
+        patch.object(
+            config_flow_module.IneproMeteringConfigFlow,
+            "_available_transports_for_current_flow",
+            new_callable=PropertyMock,
+            return_value=[TransportType.BLUETOOTH],
+        ),
+        patch.object(
+            single_transport_flow,
+            "_get_reconfigure_entry",
+            return_value=single_entry,
+        ),
+        patch.object(
+            single_transport_flow,
+            "async_set_unique_id",
+            new=AsyncMock(),
+        ),
+        patch.object(single_transport_flow, "_abort_if_unique_id_mismatch"),
+        patch.object(
+            single_transport_flow,
+            "async_step_connection",
+            new=AsyncMock(
+                return_value={"type": FlowResultType.FORM, "step_id": "connection"}
+            ),
+        ) as step_connection,
+    ):
+        result = await single_transport_flow.async_step_reconfigure()
+
+    assert result["step_id"] == "connection"
+    step_connection.assert_awaited_once()
+    assert (
+        single_transport_flow._meter_selection[CONF_TRANSPORT]
+        == TransportType.BLUETOOTH.value
     )
 
 

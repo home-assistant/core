@@ -1,5 +1,7 @@
 """Diagnostics tests for the Inepro Metering integration."""
 
+import importlib
+
 from datetime import UTC, datetime
 
 from inepro_metering.const import MeterFamily, TransportType
@@ -222,3 +224,206 @@ async def test_config_entry_diagnostics_include_bus_routes_and_snapshot(
     assert result["runtime"]["meters"][0]["route"]["transport"] == "bluetooth_proxy"
     assert result["coordinator"]["snapshot"]["meter_count"] == 1
     assert result["coordinator"]["snapshot"]["available_meters"] == ["075625480002"]
+
+
+async def test_diagnostics_helpers_are_runtime_covered(
+    hass: HomeAssistant,
+) -> None:
+    """Exercise diagnostics helper branches after a runtime reload."""
+    import homeassistant.components.inepro_metering.diagnostics as diagnostics_module
+
+    diagnostics_module = importlib.reload(diagnostics_module)
+
+    assert diagnostics_module._format_datetime(None) is None
+    assert diagnostics_module._transport_endpoint(
+        {
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SERIAL_PORT: "COM5",
+            CONF_SLAVE_ID: 2,
+            CONF_TIMEOUT: 4,
+        }
+    ) == {
+        "transport": TransportType.SERIAL.value,
+        "serial_port": "COM5",
+        "slave_id": 2,
+        "timeout": 4,
+    }
+    assert diagnostics_module._transport_endpoint(
+        {
+            CONF_TRANSPORT: TransportType.BLUETOOTH_PROXY.value,
+            CONF_BLUETOOTH_ADDRESS: "11:22:33:44:55:66",
+            CONF_BLUETOOTH_NAME: "IM-075625480002",
+            "host": "127.0.0.1",
+            "port": 16026,
+            CONF_SLAVE_ID: 1,
+            CONF_TIMEOUT: 5,
+        }
+    ) == {
+        "transport": TransportType.BLUETOOTH_PROXY.value,
+        "bluetooth_address": "11:22:33:44:55:66",
+        "bluetooth_name": "IM-075625480002",
+        "host": "127.0.0.1",
+        "port": 16026,
+        "slave_id": 1,
+        "timeout": 5,
+    }
+    assert diagnostics_module._transport_endpoint(
+        {
+            CONF_TRANSPORT: TransportType.TCP_GATEWAY.value,
+            "host": "192.168.68.80",
+            "port": 502,
+            CONF_SLAVE_ID: 3,
+            CONF_TIMEOUT: 6,
+        }
+    ) == {
+        "transport": TransportType.TCP_GATEWAY.value,
+        "host": "192.168.68.80",
+        "port": 502,
+        "slave_id": 3,
+        "timeout": 6,
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="075625480002",
+        unique_id="075625480002",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_750",
+            CONF_TRANSPORT: TransportType.TCP_ETHERNET.value,
+            CONF_SLAVE_ID: 1,
+            CONF_TIMEOUT: 3,
+            CONF_SERIAL_NUMBER: "075625480002",
+            CONF_ROUTES: [
+                {
+                    CONF_TRANSPORT: TransportType.TCP_ETHERNET.value,
+                    CONF_SLAVE_ID: 1,
+                    CONF_TIMEOUT: 3,
+                    CONF_ROUTE_PURPOSE: ROUTE_PURPOSE_ACTIVE,
+                    "host": "192.168.68.80",
+                    "port": 502,
+                }
+            ],
+            CONF_ACTIVE_ROUTE: "tcp_ethernet:192.168.68.80:502:1",
+        },
+        version=5,
+    )
+    entry.add_to_hass(hass)
+
+    runtime = build_meter_runtime_data(
+        profile=get_profile(MeterFamily.GROW.value, "grow_750"),
+        route=MeterRoute(
+            transport=TransportType.TCP_ETHERNET,
+            slave_id=1,
+        ),
+        readings={
+            "serial_number": "075625480002",
+            "product_code": "0756",
+            "meter_code": "0756",
+        },
+        available=True,
+        last_successful_update=datetime(2026, 4, 23, 11, 0, tzinfo=UTC),
+    )
+    coordinator = _FakeSingleCoordinator(CoordinatorData(meter=runtime))
+    entry.runtime_data = coordinator
+
+    result = await diagnostics_module.async_get_config_entry_diagnostics(hass, entry)
+    assert result["transport"]["entry_transport"] == TransportType.TCP_ETHERNET.value
+    assert result["runtime"]["meters"][0]["meter_key"] == "075625480002"
+
+    route = diagnostics_module.get_configured_routes(dict(entry.data))[0]
+    assert diagnostics_module._serialize_route(route)["route_key"] == (
+        "tcp_ethernet:192.168.68.80:502:1"
+    )
+    assert diagnostics_module._build_runtime_diagnostics(entry, None) is None
+    assert diagnostics_module._build_runtime_diagnostics(
+        entry,
+        _FakeSingleCoordinator(data=object()),
+    ) is None
+    assert diagnostics_module._build_runtime_diagnostics(entry, coordinator)["meters"][0][
+        "configured_name"
+    ] == "075625480002"
+    assert diagnostics_module._build_coordinator_diagnostics(None) is None
+
+    coordinator.last_update_success = False
+    coordinator.last_exception = RuntimeError("boom")
+    coordinator_diagnostics = diagnostics_module._build_coordinator_diagnostics(
+        coordinator
+    )
+    assert coordinator_diagnostics["last_exception"] == "RuntimeError"
+    assert coordinator_diagnostics["snapshot"]["meter_count"] == 1
+
+    bus_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Main RS485 Bus",
+        unique_id="COM5",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SERIAL_PORT: "COM5",
+            CONF_BAUDRATE: DEFAULT_BAUDRATE,
+            CONF_BYTESIZE: DEFAULT_BYTESIZE,
+            CONF_PARITY: DEFAULT_PARITY,
+            CONF_STOPBITS: DEFAULT_STOPBITS,
+            CONF_TIMEOUT: 3,
+            CONF_METERS: [
+                {
+                    CONF_FAMILY: MeterFamily.GROW.value,
+                    "name": "075625480002",
+                    CONF_VARIANT: "grow_750",
+                    CONF_SLAVE_ID: 1,
+                    CONF_SERIAL_NUMBER: "075625480002",
+                    CONF_ROUTES: [
+                        {
+                            CONF_TRANSPORT: TransportType.SERIAL.value,
+                            CONF_SLAVE_ID: 1,
+                            CONF_TIMEOUT: 3,
+                            CONF_ROUTE_PURPOSE: ROUTE_PURPOSE_ACTIVE,
+                            CONF_SERIAL_PORT: "COM5",
+                            CONF_BAUDRATE: DEFAULT_BAUDRATE,
+                            CONF_BYTESIZE: DEFAULT_BYTESIZE,
+                            CONF_PARITY: DEFAULT_PARITY,
+                            CONF_STOPBITS: DEFAULT_STOPBITS,
+                        },
+                        {
+                            CONF_TRANSPORT: TransportType.BLUETOOTH_PROXY.value,
+                            CONF_SLAVE_ID: 1,
+                            CONF_TIMEOUT: 5,
+                            CONF_ROUTE_PURPOSE: ROUTE_PURPOSE_ONBOARDING,
+                            "host": "127.0.0.1",
+                            "port": 16026,
+                            CONF_BLUETOOTH_ADDRESS: "11:22:33:44:55:66",
+                            CONF_BLUETOOTH_NAME: "IM-075625480002",
+                        },
+                    ],
+                    CONF_ACTIVE_ROUTE: "bluetooth_proxy:127.0.0.1:16026:11:22:33:44:55:66:1",
+                }
+            ],
+        },
+        version=5,
+    )
+    bus_entry.add_to_hass(hass)
+
+    bus_runtime = build_meter_runtime_data(
+        profile=get_profile(MeterFamily.GROW.value, "grow_750"),
+        route=MeterRoute(
+            transport=TransportType.BLUETOOTH_PROXY,
+            slave_id=1,
+        ),
+        readings={"serial_number": "075625480002"},
+        available=True,
+        last_successful_update=datetime(2026, 4, 23, 11, 30, tzinfo=UTC),
+    )
+    bus_coordinator = _FakeBusCoordinator(
+        SerialBusCoordinatorData(
+            meters={
+                "075625480002": MeterCoordinatorData(meter=bus_runtime),
+            }
+        )
+    )
+    bus_result = diagnostics_module._build_runtime_diagnostics(bus_entry, bus_coordinator)
+    assert bus_result["meters"][0]["route"]["transport"] == "bluetooth_proxy"
+    assert diagnostics_module._build_coordinator_diagnostics(bus_coordinator)[
+        "snapshot"
+    ]["available_meters"] == ["075625480002"]
+    assert diagnostics_module._build_transport_diagnostics(bus_entry)["bus_entry"] is True
