@@ -1,7 +1,5 @@
 """The Husqvarna Autoconnect Bluetooth lawn mower platform."""
 
-from __future__ import annotations
-
 from automower_ble.protocol import MowerActivity, MowerState, ResponseResult
 
 from homeassistant.components import bluetooth

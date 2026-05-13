@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import MAX_PAGE_SIZE
 
+type TodoistConfigEntry = ConfigEntry[TodoistCoordinator]
+
 T = TypeVar("T")
 
 

@@ -1,7 +1,5 @@
 """Provide common test tools for Z-Wave JS."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
@@ -46,6 +44,7 @@ HUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_humidifier"
 DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"
+TEST_SENSITIVE_NETWORK_KEY = "00112233445566778899AABBCCDDEEFF"
 
 
 def replace_value_of_zwave_value(

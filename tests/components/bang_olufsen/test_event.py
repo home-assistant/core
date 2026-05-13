@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
+from mozart_api.models import (
+    BeolinkSelf,
+    BeoRemoteButton,
+    ButtonEvent,
+    PairedRemoteResponse,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,6 +25,10 @@ from .conftest import mock_websocket_connection
 from .const import (
     TEST_BATTERY,
     TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_FRIENDLY_NAME_3,
+    TEST_FRIENDLY_NAME_4,
+    TEST_JID_3,
+    TEST_JID_4,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
     TEST_SERIAL_NUMBER_4,
@@ -109,6 +118,9 @@ async def test_button_event_creation_premiere(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Bluetooth and Microphone button event entities are not created when using a Beosound Premiere."""
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3
+    )
 
     await _check_button_event_creation(
         hass,
@@ -132,6 +144,9 @@ async def test_button_event_creation_a5(
 ) -> None:
     """Test Microphone button event entity is not created when using a Beosound A5."""
     mock_mozart_client.get_battery_state.return_value = TEST_BATTERY
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
+    )
 
     await _check_button_event_creation(
         hass,

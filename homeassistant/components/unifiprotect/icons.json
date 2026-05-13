@@ -1,5 +1,10 @@
 {
   "entity": {
+    "alarm_control_panel": {
+      "nvr_alarm": {
+        "default": "mdi:shield-home"
+      }
+    },
     "binary_sensor": {
       "alarm_sound_detection": {
         "default": "mdi:alarm-bell"

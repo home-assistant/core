@@ -149,7 +149,7 @@ async def test_setup_entry_not_shelly(
 ) -> None:
     """Test not Shelly entry."""
     await init_integration(hass, 1, data={})
-    assert "probably comes from a community integration" in caplog.text
+    assert "probably comes from a custom integration" in caplog.text
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

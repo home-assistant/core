@@ -2,11 +2,10 @@
 
 DOMAIN = "nobo_hub"
 
-CONF_AUTO_DISCOVERED = "auto_discovered"
 CONF_SERIAL = "serial"
 CONF_OVERRIDE_TYPE = "override_type"
-OVERRIDE_TYPE_CONSTANT = "Constant"
-OVERRIDE_TYPE_NOW = "Now"
+OVERRIDE_TYPE_CONSTANT = "constant"
+OVERRIDE_TYPE_NOW = "now"
 
 NOBO_MANUFACTURER = "Glen Dimplex Nordic AS"
 ATTR_HARDWARE_VERSION = "hardware_version"

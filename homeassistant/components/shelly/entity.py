@@ -1,7 +1,5 @@
 """Shelly entity helper."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from functools import wraps
@@ -74,7 +72,7 @@ def async_setup_block_attribute_entities(
 
     for block in coordinator.device.blocks:
         for sensor_id in block.sensor_ids:
-            description = sensors.get((cast(str, block.type), sensor_id))
+            description = sensors.get((block.type, sensor_id))
             if description is None:
                 continue
 

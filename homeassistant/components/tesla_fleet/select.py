@@ -1,7 +1,5 @@
 """Select platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain

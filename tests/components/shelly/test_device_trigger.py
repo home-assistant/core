@@ -402,6 +402,8 @@ async def test_rpc_no_runtime_data(
 ) -> None:
     """Test the device trigger for the RPC device when there is no runtime_data in the entry."""
     entry = await init_integration(hass, 2)
+    # Cache initial runtime_data
+    runtime_data = entry.runtime_data
     monkeypatch.delattr(entry, "runtime_data")
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -437,6 +439,9 @@ async def test_rpc_no_runtime_data(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_single_push"
 
+    # Restore runtime_data to avoid issues on cleanup
+    entry.runtime_data = runtime_data
+
 
 async def test_block_no_runtime_data(
     hass: HomeAssistant,
@@ -447,6 +452,8 @@ async def test_block_no_runtime_data(
 ) -> None:
     """Test the device trigger for the block device when there is no runtime_data in the entry."""
     entry = await init_integration(hass, 1)
+    # Cache initial runtime_data
+    runtime_data = entry.runtime_data
     monkeypatch.delattr(entry, "runtime_data")
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -481,3 +488,6 @@ async def test_block_no_runtime_data(
 
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_single"
+
+    # Restore runtime_data to avoid issues on cleanup
+    entry.runtime_data = runtime_data

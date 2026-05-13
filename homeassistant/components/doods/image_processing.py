@@ -1,7 +1,5 @@
 """Support for the DOODS service."""
 
-from __future__ import annotations
-
 import io
 import logging
 import os

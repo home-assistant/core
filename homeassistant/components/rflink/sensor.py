@@ -1,7 +1,5 @@
 """Support for Rflink sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from rflink.parser import PACKET_FIELDS, UNITS

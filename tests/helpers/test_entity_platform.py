@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import types
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -245,8 +245,13 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
 
         await hass.async_block_till_done()
-    assert mock_track.called
-    assert mock_track.call_args[0][0] == 30.0
+    poll_calls = [
+        call
+        for call in mock_track.call_args_list
+        if getattr(call.args[1], "__name__", None) == "_async_handle_interval_callback"
+    ]
+    assert len(poll_calls) == 1
+    assert poll_calls[0].args[0] == 30.0
 
 
 async def test_adding_entities_with_generator_and_thread_callback(
@@ -270,35 +275,45 @@ async def test_adding_entities_with_generator_and_thread_callback(
 
 
 @pytest.mark.usefixtures("disable_translations_once")
-async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
-    """Warn we log when platform setup takes a long time."""
+async def test_platform_slow_setup_cancel_warning(hass: HomeAssistant) -> None:
+    """Test slow setup warning timer is scheduled and cancelled on success."""
     platform = MockPlatform()
 
     mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_at") as mock_call:
+    call_at_handles: list[tuple[tuple, MagicMock]] = []
+
+    def mock_call_at(*args: Any, **kwargs: Any) -> MagicMock:
+        handle = MagicMock()
+        call_at_handles.append((args, handle))
+        return handle
+
+    with patch.object(hass.loop, "call_at", side_effect=mock_call_at):
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
-        assert mock_call.called
+        assert call_at_handles
 
-        # mock_calls[3] is the warning message for component setup
-        # mock_calls[10] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[10][1][:2]
+        # Find the platform setup warning by matching the exact format string
+        warn_args, warn_handle = next(
+            (args, handle)
+            for args, handle in call_at_handles
+            if len(args) >= 3
+            and args[1] == _LOGGER.warning
+            and args[2] == "Setup of %s platform %s is taking over %s seconds."
+        )
 
-        assert timeout - hass.loop.time() == pytest.approx(
+        assert warn_args[0] - hass.loop.time() == pytest.approx(
             entity_platform.SLOW_SETUP_WARNING, 0.5
         )
-        assert logger_method == _LOGGER.warning
-
-        assert mock_call().cancel.called
+        assert warn_handle.cancel.call_count == 1
 
 
-async def test_platform_error_slow_setup(
+async def test_platform_slow_setup_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+    """Test that platform setup is aborted after SLOW_SETUP_MAX_WAIT."""
     with patch.object(entity_platform, "SLOW_SETUP_MAX_WAIT", 0):
         called = []
 

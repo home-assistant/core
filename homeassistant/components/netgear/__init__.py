@@ -1,7 +1,5 @@
 """Support for Netgear routers."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_PORT, CONF_SSL

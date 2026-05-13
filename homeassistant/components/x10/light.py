@@ -1,7 +1,5 @@
 """Support for X10 lights."""
 
-from __future__ import annotations
-
 import logging
 from subprocess import STDOUT, CalledProcessError, check_output
 from typing import Any

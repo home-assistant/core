@@ -1,7 +1,5 @@
 """Config flow for Switch as X integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Energy data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
@@ -164,6 +162,9 @@ class BatterySourceType(TypedDict):
 
     # User's original power sensor configuration
     power_config: NotRequired[PowerConfig]
+
+    # statistic_id of a sensor (unit %) reporting the battery state of charge
+    stat_soc: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -485,6 +486,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         # If power_config is provided, it takes precedence and stat_rate is overwritten
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+        vol.Optional("stat_soc"): str,
     }
 )
 

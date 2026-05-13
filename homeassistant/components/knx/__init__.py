@@ -1,7 +1,5 @@
 """The KNX integration."""
 
-from __future__ import annotations
-
 import contextlib
 from pathlib import Path
 from typing import Final
@@ -123,6 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     knx_module.ui_time_server_controller.start(
         knx_module.xknx, knx_module.config_store.get_time_server_config()
     )
+    knx_module.ui_expose_controller.start(
+        hass, knx_module.xknx, knx_module.config_store.get_exposes()
+    )
     if CONF_KNX_EXPOSE in config:
         knx_module.yaml_exposures.extend(
             create_combined_knx_exposure(hass, knx_module.xknx, config[CONF_KNX_EXPOSE])
@@ -157,6 +158,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for exposure in knx_module.service_exposures.values():
         exposure.async_remove()
     knx_module.ui_time_server_controller.stop()
+    knx_module.ui_expose_controller.stop()
 
     configured_platforms_yaml = {
         platform
