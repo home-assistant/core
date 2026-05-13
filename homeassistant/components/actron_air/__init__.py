@@ -1,11 +1,7 @@
 """The Actron Air integration."""
 
-from actron_neo_api import (
-    ActronAirACSystem,
-    ActronAirAPI,
-    ActronAirAPIError,
-    ActronAirAuthError,
-)
+from actron_neo_api import ActronAirAPI, ActronAirAPIError, ActronAirAuthError
+from actron_neo_api.models.system import ActronAirSystemInfo
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -25,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     """Set up Actron Air integration from a config entry."""
 
     api = ActronAirAPI(refresh_token=entry.data[CONF_API_TOKEN])
-    systems: list[ActronAirACSystem] = []
+    systems: list[ActronAirSystemInfo] = []
 
     try:
         systems = await api.get_ac_systems()
@@ -44,9 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
         coordinator = ActronAirSystemCoordinator(hass, entry, api, system)
-        _LOGGER.debug("Setting up coordinator for system: %s", system["serial"])
+        _LOGGER.debug("Setting up coordinator for system: %s", system.serial)
         await coordinator.async_config_entry_first_refresh()
-        system_coordinators[system["serial"]] = coordinator
+        system_coordinators[system.serial] = coordinator
 
     entry.runtime_data = ActronAirRuntimeData(
         api=api,

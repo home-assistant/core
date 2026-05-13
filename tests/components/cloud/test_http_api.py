@@ -1803,6 +1803,44 @@ async def test_api_calls_require_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_support_package_requires_admin(
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test the support package download is restricted to admins."""
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.get("/api/cloud/support_package")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    "msg",
+    [
+        {"type": "cloud/subscription"},
+        {"type": "cloud/update_prefs", "alexa_report_state": True},
+        {"type": "cloud/cloudhook/create", "webhook_id": "mock-webhook-id"},
+        {"type": "cloud/cloudhook/delete", "webhook_id": "mock-webhook-id"},
+    ],
+)
+async def test_ws_commands_require_admin(
+    hass: HomeAssistant,
+    setup_cloud: None,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    msg: dict[str, Any],
+) -> None:
+    """Test cloud WebSocket commands do not work as a normal user."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json({"id": 5, **msg})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
 async def test_login_view_dispatch_event(
     hass: HomeAssistant,
     cloud: MagicMock,

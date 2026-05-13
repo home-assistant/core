@@ -1,7 +1,5 @@
 """The Teltonika integration."""
 
-from __future__ import annotations
-
 import logging
 
 from teltasync import Teltasync

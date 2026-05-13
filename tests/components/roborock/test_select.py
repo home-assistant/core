@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, call
 import pytest
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
+    CleanPathPreferenceMapping,
     RoborockDockDustCollectionModeCode,
     WaterLevelMapping,
     ZeoProgram,
@@ -265,6 +266,64 @@ async def test_update_failure_q7_cleaning_mode(
             blocking=True,
             target={"entity_id": "select.roborock_q7_cleaning_mode"},
         )
+
+
+async def test_q7_cleaning_route_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test Q7 cleaning route select state and options."""
+    entity_id = "select.roborock_q7_cleaning_route"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == "balanced"
+    assert state.attributes["options"] == ["balanced", "deep"]
+
+
+async def test_update_failure_q7_cleaning_route(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test failure when setting Q7 cleaning route."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_clean_path_preference.side_effect = (
+        RoborockException
+    )
+
+    with pytest.raises(HomeAssistantError, match="Error while calling cleaning_route"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "deep"},
+            blocking=True,
+            target={"entity_id": "select.roborock_q7_cleaning_route"},
+        )
+
+
+async def test_update_success_q7_cleaning_route(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test allowed changing values for Q7 cleaning route select entity."""
+    entity_id = "select.roborock_q7_cleaning_route"
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "deep"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert q7_device.b01_q7_properties
+    assert q7_device.b01_q7_properties.set_clean_path_preference.call_count == 1
+    q7_device.b01_q7_properties.set_clean_path_preference.assert_called_with(
+        CleanPathPreferenceMapping.DEEP
+    )
 
 
 async def test_update_success_q7_cleaning_mode(

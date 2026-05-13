@@ -1,7 +1,5 @@
 """Config flow for simplepush integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from simplepush import UnknownError, send

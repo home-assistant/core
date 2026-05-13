@@ -1,7 +1,5 @@
 """Alexa state report code."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
 from http import HTTPStatus

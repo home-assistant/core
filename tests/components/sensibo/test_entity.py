@@ -1,7 +1,5 @@
 """The test for the sensibo entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest

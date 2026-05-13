@@ -1,7 +1,5 @@
 """Test the Nina binary sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pynina import Warning

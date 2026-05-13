@@ -1,7 +1,5 @@
 """Support for assist satellites in ESPHome."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 from functools import partial

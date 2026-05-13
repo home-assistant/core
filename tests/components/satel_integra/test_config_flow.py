@@ -4,10 +4,16 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from satel_integra import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -51,7 +57,11 @@ from tests.common import MockConfigEntry
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
             {},
-            {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
+            {
+                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ENCRYPTION_KEY: None,
+            },
             {CONF_CODE: None},
         ),
     ],
@@ -93,8 +103,21 @@ async def test_setup_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_setup_connection_failed(
-    hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test the setup flow when connection fails."""
     user_input = MOCK_CONFIG_DATA
@@ -103,7 +126,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.connect.return_value = False
+    mock_satel.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -111,9 +134,9 @@ async def test_setup_connection_failed(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -362,6 +385,7 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data == {
         CONF_HOST: "10.0.0.2",
         CONF_PORT: 4321,
+        CONF_ENCRYPTION_KEY: None,
     }
 
     await hass.async_block_till_done()
@@ -422,13 +446,25 @@ async def test_reconfigure_flow_config_unchanged_not_loaded(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_reconfigure_connection_failed(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Failure path for the reconfigure flow."""
-    mock_satel.connect.return_value = False
+
+    mock_satel.connect.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
 
@@ -444,9 +480,9 @@ async def test_reconfigure_connection_failed(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -459,6 +495,7 @@ async def test_reconfigure_connection_failed(
     assert mock_config_entry.data == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
+        CONF_ENCRYPTION_KEY: None,
     }
 
 
@@ -483,3 +520,75 @@ async def test_same_host_config_disallowed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_encryption_key_changed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow when encryption key is changed."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Change encryption key
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+    assert mock_config_entry.data == expected_data
+
+
+async def test_reconfigure_encryption_key_removed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow when encryption key is explicitly removed."""
+    # Start with config that has encryption key
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Explicitly set encryption key to None (empty string in UI)
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: None,
+    }
+    assert mock_config_entry.data == expected_data

@@ -1,7 +1,5 @@
 """Update coordinator and WebSocket listener(s) for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

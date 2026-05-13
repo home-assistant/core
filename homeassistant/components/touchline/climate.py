@@ -1,7 +1,5 @@
 """Platform for Roth Touchline floor heating controller."""
 
-from __future__ import annotations
-
 from typing import Any, NamedTuple
 
 from pytouchline_extended import PyTouchline

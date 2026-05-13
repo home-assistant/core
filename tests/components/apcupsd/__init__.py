@@ -1,7 +1,5 @@
 """Tests for the APCUPSd component."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import CONF_HOST, CONF_PORT

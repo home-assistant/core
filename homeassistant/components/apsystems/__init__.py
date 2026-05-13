@@ -1,7 +1,5 @@
 """The APsystems local API integration."""
 
-from __future__ import annotations
-
 from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform

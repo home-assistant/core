@@ -47,7 +47,7 @@ def mock_aquacell_api() -> Generator[MagicMock]:
             "aquacell/get_all_softeners_one_softener.json"
         )
 
-        softeners = [Softener(softener) for softener in softeners_dict]
+        softeners = [Softener.from_dict(softener) for softener in softeners_dict]
         mock_aquacell_api.get_all_softeners.return_value = softeners
 
         yield mock_aquacell_api

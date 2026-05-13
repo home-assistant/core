@@ -1,7 +1,5 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN, SERVICE_UPDATE_RECORDS

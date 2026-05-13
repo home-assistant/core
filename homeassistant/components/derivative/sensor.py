@@ -1,7 +1,5 @@
 """Numeric derivative of data coming from a source sensor over time."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
@@ -187,6 +185,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     _attr_translation_key = "derivative"
     _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
