@@ -13,7 +13,11 @@ from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import ServiceValidationError, TemplateError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    TemplateError,
+)
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -42,10 +46,20 @@ class PayloadSentinel(StrEnum):
     DEFAULT = "default"
 
 
+MAX_28BIT: int = 268435455
+
+
 class SubscriptionID:
     """ID generator for wildcard subscriptions."""
 
-    _id: int = 1
+    _next_id: int = 2
+    _used_ids: set[int]
+    _available_ids: set[int]
+
+    def __init__(self) -> None:
+        """Initialize the Subscription Identifier generator."""
+        self._used_ids = set()
+        self._available_ids = set()
 
     def generate(self) -> int:
         """Generate a new subscription ID.
@@ -54,8 +68,28 @@ class SubscriptionID:
         ID 1 is used for non wildcard topics.
         Generator starts at ID 2.
         """
-        self._id = self._id + 1
-        return self._id
+        if self._available_ids:
+            subscription_id = self._available_ids.pop()
+            self._used_ids.add(subscription_id)
+            return subscription_id
+
+        subscription_id = self._next_id
+        self._used_ids.add(self._next_id)
+        if self._next_id > MAX_28BIT:
+            raise HomeAssistantError(
+                "MQTT Subscription ID limit reached. "
+                "Cannot generate more IDs to subscribe",
+                translation_domain=DOMAIN,
+                translation_key="mqtt_max_subscription_id_reached",
+            )
+        self._next_id += 1
+        return subscription_id
+
+    def release(self, subscription_id: int | None) -> None:
+        """Release a Subscription Identifier to allow reuse."""
+        if subscription_id and subscription_id in self._used_ids:
+            self._used_ids.remove(subscription_id)
+            self._available_ids.add(subscription_id)
 
 
 _LOGGER = logging.getLogger(__name__)

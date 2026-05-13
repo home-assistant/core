@@ -2588,3 +2588,44 @@ async def test_overlapping_subscriptions_only_processed_once(
             await hass.async_block_till_done()
         # Each sensor should receive one update, so we should have 3 state write calls
         assert len(mock_async_ha_write_state.mock_calls) == 3
+
+
+async def test_subscriptions_id_generation(hass: HomeAssistant) -> None:
+    """Test subscription identifier generation."""
+
+    generator = mqtt.models.SubscriptionID()
+    # Mock we are past the last subscriptions
+    generator._next_id = mqtt.models.MAX_28BIT - 2
+    new_id_1 = generator.generate()
+    assert new_id_1 == mqtt.models.MAX_28BIT - 2
+    new_id_2 = generator.generate()
+    assert new_id_2 == mqtt.models.MAX_28BIT - 1
+    new_id_3 = generator.generate()
+    assert new_id_3 == mqtt.models.MAX_28BIT
+    with pytest.raises(HomeAssistantError) as exc:
+        generator.generate()
+    assert exc.value.translation_domain == mqtt.DOMAIN
+    assert exc.value.translation_key == "mqtt_max_subscription_id_reached"
+
+    generator.release(new_id_2)
+    new_id_4 = generator.generate()
+    # Check we reused the ID
+    assert new_id_4 == mqtt.models.MAX_28BIT - 1
+
+    with pytest.raises(HomeAssistantError) as exc:
+        generator.generate()
+    assert exc.value.translation_domain == mqtt.DOMAIN
+    assert exc.value.translation_key == "mqtt_max_subscription_id_reached"
+
+    generator.release(new_id_1)
+    generator.release(new_id_3)
+
+    new_id_5 = generator.generate()
+    new_id_6 = generator.generate()
+
+    assert {new_id_5, new_id_6} == {new_id_1, new_id_3}
+
+    with pytest.raises(HomeAssistantError) as exc:
+        generator.generate()
+    assert exc.value.translation_domain == mqtt.DOMAIN
+    assert exc.value.translation_key == "mqtt_max_subscription_id_reached"

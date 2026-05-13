@@ -1115,7 +1115,9 @@ class MQTT:
 
         # Remove stored subscription identifiers for topics that were just unsubscribed
         for topic in topics:
-            self._registered_subscriptions.pop(topic, None)
+            self._mqtt_data.subscription_id_generator.release(
+                self._registered_subscriptions.pop(topic, None)
+            )
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
