@@ -48,7 +48,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
-    mac_address: str
+    mac_address: str | None
     serial_number: str
     device_model: str
     generation: int
@@ -85,7 +85,8 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Cache device information
         device_data = config_data.get("device", {})
         self.firmware_version = device_data.get("fw")
-        self.mac_address = format_mac(device_data["mac"])
+        raw_mac = device_data.get("mac")
+        self.mac_address = format_mac(raw_mac) if raw_mac else None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""

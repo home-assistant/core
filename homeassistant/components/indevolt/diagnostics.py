@@ -42,7 +42,9 @@ async def async_get_config_entry_diagnostics(
         "generation": coordinator.generation,
         "serial_number": coordinator.serial_number,
         "firmware_version": coordinator.firmware_version,
-        "mac_address": _redact_mac(coordinator.mac_address),
+        "mac_address": _redact_mac(coordinator.mac_address)
+        if coordinator.mac_address
+        else None,
     }
 
     return {
