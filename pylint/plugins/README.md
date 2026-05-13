@@ -98,6 +98,7 @@ Every check has a code following the
 | `W7491` | [`hass-unique-id-ip-based`](#w7491-hass-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
 | `W7492` | [`hass-config-flow-polling-field`](#w7492-hass-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7493` | [`hass-config-flow-name-field`](#w7493-hass-config-flow-name-field) | Config flow should not include name fields |
+| `W7483` | [`hass-reconfigure-flow-missing`](#w7496-hass-reconfigure-flow-missing) | Integration claiming reconfigure-flow must implement it |
 
 
 ## `hass_logger` checker
@@ -323,4 +324,17 @@ subentry flows (`ConfigSubentryFlow` subclasses) are excluded.
 Config flow should not include a name field. Users should not set names
 in config flows; they come automatically from the device or are set by
 the integration.
+
+## `hass_enforce_reconfigure_flow` checker
+
+**Quality-scale-gated** (🥇 Gold): only fires for integrations whose
+`quality_scale.yaml` marks `reconfigure-flow` as `done`.
+
+### `W7483`: `hass-reconfigure-flow-missing`
+
+Integration claims `reconfigure-flow: done` in `quality_scale.yaml` but
+`config_flow.py` has no `async_step_reconfigure` method. Either implement
+the reconfigure step or change the quality scale claim.
+
+See the [reconfiguration-flow quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reconfiguration-flow).
 

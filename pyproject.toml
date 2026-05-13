@@ -125,6 +125,7 @@ load-plugins = [
   "hass_enforce_config_flow_no_name",
   "hass_enforce_config_flow_no_polling",
   "hass_enforce_greek_micro_char",
+  "hass_enforce_reconfigure_flow",
   "hass_enforce_runtime_data",
   "hass_enforce_sorted_platforms",
   "hass_enforce_super_call",

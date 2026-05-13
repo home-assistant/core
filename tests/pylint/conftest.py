@@ -140,6 +140,35 @@ def decorator_checker_fixture(hass_decorator, linter) -> BaseChecker:
     return type_hint_checker
 
 
+@pytest.fixture(name="hass_quality_scale_helpers", scope="package")
+def hass_quality_scale_helpers_fixture() -> ModuleType:
+    """Fixture to load the quality scale helpers module."""
+    return _load_plugin_from_file(
+        "_hass_quality_scale_helpers",
+        "pylint/plugins/_hass_quality_scale_helpers.py",
+    )
+
+
+@pytest.fixture(name="hass_enforce_reconfigure_flow", scope="package")
+def hass_enforce_reconfigure_flow_fixture() -> ModuleType:
+    """Fixture to the content for the reconfigure_flow check."""
+    return _load_plugin_from_file(
+        "hass_enforce_reconfigure_flow",
+        "pylint/plugins/hass_enforce_reconfigure_flow.py",
+    )
+
+
+@pytest.fixture(name="enforce_reconfigure_flow_checker")
+def enforce_reconfigure_flow_checker_fixture(
+    hass_quality_scale_helpers, hass_enforce_reconfigure_flow, linter
+) -> BaseChecker:
+    """Fixture to provide a reconfigure_flow checker."""
+    hass_quality_scale_helpers._quality_scale_cache.clear()
+    checker = hass_enforce_reconfigure_flow.HassEnforceReconfigureFlowChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="hass_enforce_config_entry_unique_id_no_ip", scope="package")
 def hass_enforce_config_entry_unique_id_no_ip_fixture() -> ModuleType:
     """Fixture to the content for the unique_id_no_ip check."""
