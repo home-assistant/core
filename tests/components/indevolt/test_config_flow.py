@@ -321,6 +321,30 @@ async def test_dhcp_ip_change(
     assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT
 
 
+async def test_dhcp_ip_reuse_by_different_device(
+    hass: HomeAssistant,
+    alt_mock_config_entry: MockConfigEntry,
+    mock_indevolt: AsyncMock,
+) -> None:
+    """Test DHCP discovery is not blocked when a known host is now used by a different device."""
+    alt_mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=TEST_HOST_ALT,
+            hostname="indevolt",
+            macaddress="1c784b8d47bb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"][CONF_HOST] == TEST_HOST_ALT
+    assert result["description_placeholders"][CONF_MODEL] == TEST_MODEL_GEN2
+
+
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [

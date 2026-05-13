@@ -96,8 +96,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle DHCP discovery — probe the device to confirm it is an Indevolt device."""
         host = discovery_info.ip
 
-        self._async_abort_entries_match({CONF_HOST: host})
-
         try:
             device_data = await self._async_get_device_data(host)
         except OSError, ClientError, KeyError:
