@@ -80,6 +80,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_overview_sensors_unavailable_on_api_error(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -91,9 +92,16 @@ async def test_overview_sensors_unavailable_on_api_error(
 
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.solaredge_lifetime_energy")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    for sensor_id in (
+        "sensor.solaredge_lifetime_energy",
+        "sensor.solaredge_energy_this_year",
+        "sensor.solaredge_energy_this_month",
+        "sensor.solaredge_energy_today",
+        "sensor.solaredge_current_power",
+    ):
+        state = hass.states.get(sensor_id)
+        assert state is not None, sensor_id
+        assert state.state == STATE_UNAVAILABLE, sensor_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
