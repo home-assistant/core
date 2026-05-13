@@ -477,52 +477,6 @@ async def test_create_default_config_returns_none_if_write_error(
     assert mock_print.called
 
 
-@patch("homeassistant.config.shutil")
-@patch("homeassistant.config.os")
-@patch("homeassistant.config.is_docker_env", return_value=False)
-def test_remove_lib_on_upgrade(
-    mock_docker, mock_os, mock_shutil, hass: HomeAssistant
-) -> None:
-    """Test removal of library on upgrade from before 0.50."""
-    ha_version = "0.49.0"
-    mock_os.path.isdir = mock.Mock(return_value=True)
-    mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True):
-        opened_file = mock_open.return_value
-        opened_file.readline.return_value = ha_version
-        hass.config.path = mock.Mock()
-        config_util.process_ha_config_upgrade(hass)
-        hass_path = hass.config.path.return_value
-
-        assert mock_os.path.isdir.call_count == 1
-        assert mock_os.path.isdir.call_args == mock.call(hass_path)
-        assert mock_shutil.rmtree.call_count == 1
-        assert mock_shutil.rmtree.call_args == mock.call(hass_path)
-
-
-@patch("homeassistant.config.shutil")
-@patch("homeassistant.config.os")
-@patch("homeassistant.config.is_docker_env", return_value=True)
-def test_remove_lib_on_upgrade_94(
-    mock_docker, mock_os, mock_shutil, hass: HomeAssistant
-) -> None:
-    """Test removal of library on upgrade from before 0.94 and in Docker."""
-    ha_version = "0.93.0.dev0"
-    mock_os.path.isdir = mock.Mock(return_value=True)
-    mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True):
-        opened_file = mock_open.return_value
-        opened_file.readline.return_value = ha_version
-        hass.config.path = mock.Mock()
-        config_util.process_ha_config_upgrade(hass)
-        hass_path = hass.config.path.return_value
-
-        assert mock_os.path.isdir.call_count == 1
-        assert mock_os.path.isdir.call_args == mock.call(hass_path)
-        assert mock_shutil.rmtree.call_count == 1
-        assert mock_shutil.rmtree.call_args == mock.call(hass_path)
-
-
 def test_process_config_upgrade(hass: HomeAssistant) -> None:
     """Test update of version on upgrade."""
     ha_version = "0.92.0"
