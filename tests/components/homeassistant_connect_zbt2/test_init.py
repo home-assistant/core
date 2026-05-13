@@ -7,7 +7,11 @@ import pytest
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -169,6 +173,65 @@ async def test_config_entry_migration_v2_collapses_duplicates(
     assert unique_entry.unique_id == serial_number
     assert unique_entry.data == newer["data"]
     assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+
+
+@pytest.mark.parametrize(
+    ("sibling_source", "sibling_disabled_by"),
+    [
+        (SOURCE_IGNORE, None),
+        ("usb", ConfigEntryDisabler.USER),
+    ],
+)
+async def test_config_entry_migration_v2_prefers_active_entry(
+    hass: HomeAssistant,
+    sibling_source: str,
+    sibling_disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test v1.2 migration prefers an active entry over ignored/disabled siblings."""
+    serial_number = "80B54EEFAE18"
+    active_data = {
+        "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0",
+        "vid": "303A",
+        "pid": "4001",
+        "serial_number": serial_number,
+        "manufacturer": "Nabu Casa",
+        "product": "ZBT-2",
+        "firmware": "ezsp",
+        "firmware_version": "7.4.4.0",
+    }
+
+    active_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="303A:4001_80B54EEFAE18_Nabu Casa_ZBT-2",
+        source="usb",
+        data=active_data,
+        version=1,
+        minor_version=1,
+    )
+    active_entry.add_to_hass(hass)
+
+    sibling_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        source=sibling_source,
+        disabled_by=sibling_disabled_by,
+        data=dict(active_data),
+        version=1,
+        minor_version=2,
+    )
+    sibling_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(active_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(sibling_entry.entry_id) is None
+    assert active_entry.minor_version == 2
+    assert active_entry.unique_id == serial_number
 
 
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:

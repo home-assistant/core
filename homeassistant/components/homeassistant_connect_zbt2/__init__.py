@@ -8,7 +8,7 @@ from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
 from homeassistant.components.usb import USBDevice, async_register_port_event_callback
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -118,27 +118,38 @@ async def async_migrate_entry(
 
             # Installations ended up with multiple config entries per physical adapter
             # in 2026.5.0 and 2026.5.1. We need to delete the older entry.
-            same_serial = [
+            duplicates = [
                 entry
                 for entry in hass.config_entries.async_entries(DOMAIN)
                 if entry.data.get(SERIAL_NUMBER) == serial_number
             ]
             canonical = max(
-                same_serial,
-                key=lambda e: (e.minor_version, e.modified_at, e.entry_id),
+                duplicates,
+                key=lambda e: (
+                    e.source != SOURCE_IGNORE,
+                    e.disabled_by is None,
+                    e.minor_version,
+                    e.modified_at,
+                    e.entry_id,
+                ),
             )
 
             if canonical.entry_id != config_entry.entry_id:
+                # The canonical entry's migration will remove this duplicate.
+                return False
+
+            for duplicate in duplicates:
+                if duplicate.entry_id == config_entry.entry_id:
+                    continue
                 _LOGGER.debug(
                     "Removing duplicate config entry %s for serial %s in favor of %s",
-                    config_entry.entry_id,
+                    duplicate.entry_id,
                     serial_number,
-                    canonical.entry_id,
+                    config_entry.entry_id,
                 )
                 hass.async_create_task(
-                    hass.config_entries.async_remove(config_entry.entry_id)
+                    hass.config_entries.async_remove(duplicate.entry_id)
                 )
-                return False
 
             # Replace the synthetic unique ID with the USB serial number
             hass.config_entries.async_update_entry(

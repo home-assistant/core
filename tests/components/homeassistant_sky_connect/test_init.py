@@ -19,7 +19,11 @@ from homeassistant.components.homeassistant_sky_connect.const import (
     VID,
 )
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -216,6 +220,71 @@ async def test_config_entry_migration_v5_collapses_duplicates(
     assert unique_entry.unique_id == serial_number
     assert unique_entry.data == newer["data"]
     assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+
+
+@pytest.mark.parametrize(
+    ("sibling_source", "sibling_disabled_by"),
+    [
+        (SOURCE_IGNORE, None),
+        ("usb", ConfigEntryDisabler.USER),
+    ],
+)
+async def test_config_entry_migration_v5_prefers_active_entry(
+    hass: HomeAssistant,
+    sibling_source: str,
+    sibling_disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test v1.5 migration prefers an active entry over ignored/disabled siblings."""
+    serial_number = "9e2adbd75b8beb119fe564a0f320645d"
+    active_data = {
+        "description": "SkyConnect v1.0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
+        "vid": "10C4",
+        "pid": "EA60",
+        "serial_number": serial_number,
+        "manufacturer": "Nabu Casa",
+        "product": "SkyConnect v1.0",
+        "firmware": "ezsp",
+        "firmware_version": "7.4.4.0",
+    }
+
+    active_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=(
+            "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa_SkyConnect v1.0"
+        ),
+        source="usb",
+        data=active_data,
+        version=1,
+        minor_version=4,
+    )
+    active_entry.add_to_hass(hass)
+
+    sibling_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        source=sibling_source,
+        disabled_by=sibling_disabled_by,
+        data=dict(active_data),
+        version=1,
+        minor_version=5,
+    )
+    sibling_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_get_entry(active_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(sibling_entry.entry_id) is None
+    assert active_entry.minor_version == 5
+    assert active_entry.unique_id == serial_number
 
 
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
