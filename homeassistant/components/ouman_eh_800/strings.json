@@ -25,10 +25,10 @@
     }
   },
   "device": {
-    "l1": { "name": "H1" },
-    "l1_with_circuit_name": { "name": "H1 {circuit_name}" },
-    "l2": { "name": "H2" },
-    "l2_with_circuit_name": { "name": "H2 {circuit_name}" }
+    "heating_circuit": { "name": "Heating circuit {circuit_number}" },
+    "heating_circuit_with_name": {
+      "name": "Heating circuit {circuit_number} {circuit_name}"
+    }
   },
   "entity": {
     "sensor": {

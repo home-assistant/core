@@ -67,12 +67,14 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             ),
             OumanDevice.L1: DeviceInfo(
                 identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L1}")},
-                translation_key=OumanDevice.L1,
+                translation_key="heating_circuit",
+                translation_placeholders={"circuit_number": "1"},
                 via_device=main_device_identifier,
             ),
             OumanDevice.L2: DeviceInfo(
                 identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L2}")},
-                translation_key=OumanDevice.L2,
+                translation_key="heating_circuit",
+                translation_placeholders={"circuit_number": "2"},
                 via_device=main_device_identifier,
             ),
         }
@@ -101,12 +103,15 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         Should be called after the data update so that platforms register
         L1/L2 devices with the resolved names.
         """
-        for device, endpoint, translation_key in (
-            (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "l1_with_circuit_name"),
-            (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "l2_with_circuit_name"),
+        for device, endpoint, circuit_number in (
+            (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "1"),
+            (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "2"),
         ):
             if circuit_name := self.data.get(endpoint):
                 assert isinstance(circuit_name, str)
                 device_info = self.device_info[device]
-                device_info["translation_key"] = translation_key
-                device_info["translation_placeholders"] = {"circuit_name": circuit_name}
+                device_info["translation_key"] = "heating_circuit_with_name"
+                device_info["translation_placeholders"] = {
+                    "circuit_number": circuit_number,
+                    "circuit_name": circuit_name,
+                }
