@@ -3,9 +3,9 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any
 
-from ring_doorbell import RingCapability, RingEvent
+from ring_doorbell import RingCapability, RingEvent, RingGeneric
 from ring_doorbell.const import KIND_DING, KIND_MOTION
 
 from homeassistant.components.binary_sensor import (
@@ -33,8 +33,8 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+class RingBinarySensorEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
+    BinarySensorEntityDescription, RingEntityDescription
 ):
     """Describes Ring binary sensor entity."""
 

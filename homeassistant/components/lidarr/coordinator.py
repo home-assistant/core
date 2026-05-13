@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Generic, TypeVar, cast
+from typing import TypeVar, cast
 
 from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
 from aiopyarr.lidarr_client import LidarrClient
@@ -33,7 +33,9 @@ T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum 
 type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class LidarrDataUpdateCoordinator[
+    T: list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum | int
+](DataUpdateCoordinator[T], ABC):
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: LidarrConfigEntry

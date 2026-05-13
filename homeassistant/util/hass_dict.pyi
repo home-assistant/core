@@ -1,7 +1,7 @@
 """Stub file for hass_dict. Provide overload for type checking."""
 # ruff: noqa: PYI021  # Allow docstrings
 
-from typing import Any, Generic, TypeVar, assert_type, overload
+from typing import Any, TypeVar, assert_type, overload
 
 __all__ = [
     "HassDict",
@@ -11,7 +11,7 @@ __all__ = [
 
 _T = TypeVar("_T")  # needs to be invariant
 
-class _Key(Generic[_T]):
+class _Key[_T]:
     """Base class for Hass key types. At runtime delegated to str."""
 
     def __init__(self, value: str, /) -> None: ...

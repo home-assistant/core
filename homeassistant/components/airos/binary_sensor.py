@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from airos.data import AirOSDataBaseClass
 
@@ -24,9 +24,8 @@ AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
 
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSBinarySensorEntityDescription(
+class AirOSBinarySensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
     BinarySensorEntityDescription,
-    Generic[AirOSDataModel],
 ):
     """Describe an AirOS binary sensor."""
 

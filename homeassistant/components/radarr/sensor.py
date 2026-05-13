@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import dataclasses
 from datetime import UTC, datetime
-from typing import Any, Generic
+from typing import Any
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
 
@@ -45,15 +45,15 @@ def get_modified_description(
 
 
 @dataclasses.dataclass(frozen=True)
-class RadarrSensorEntityDescriptionMixIn(Generic[T]):
+class RadarrSensorEntityDescriptionMixIn[T]:
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int | datetime]
 
 
 @dataclasses.dataclass(frozen=True)
-class RadarrSensorEntityDescription(
-    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
+class RadarrSensorEntityDescription[T](
+    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T]
 ):
     """Class to describe a Radarr sensor."""
 

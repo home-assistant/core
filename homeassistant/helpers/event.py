@@ -10,7 +10,7 @@ from functools import partial, wraps
 import logging
 from random import randint
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, TypeVar
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -91,7 +91,7 @@ _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventTracker(Generic[_TypedDictT]):
+class _KeyedEventTracker[_TypedDictT: Mapping[str, Any]]:
     """Class to track events by key."""
 
     key: HassKey[_KeyedEventData[_TypedDictT]]
@@ -115,7 +115,7 @@ class _KeyedEventTracker(Generic[_TypedDictT]):
 
 
 @dataclass(slots=True, frozen=True)
-class _KeyedEventData(Generic[_TypedDictT]):
+class _KeyedEventData[_TypedDictT: Mapping[str, Any]]:
     """Class to track data for events by key."""
 
     listener: CALLBACK_TYPE

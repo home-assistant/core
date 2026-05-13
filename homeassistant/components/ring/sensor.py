@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, cast
 
 from ring_doorbell import (
     RingCapability,
@@ -134,8 +134,8 @@ def _get_last_event_attrs(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSensorEntityDescription(
-    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+class RingSensorEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
+    SensorEntityDescription, RingEntityDescription
 ):
     """Describes Ring sensor entity."""
 

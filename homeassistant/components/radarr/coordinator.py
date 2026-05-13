@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import TypeVar, cast
 
 from aiopyarr import (
     Health,
@@ -55,7 +55,9 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator[
+    T: SystemStatus | list[RootFolder] | list[Health] | int | None
+](DataUpdateCoordinator[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry

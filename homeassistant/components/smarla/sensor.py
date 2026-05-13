@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from pysmarlaapi.federwiege.services.classes import Property
 from pysmarlaapi.federwiege.services.types import SpringStatus
@@ -27,8 +27,8 @@ _VT = TypeVar("_VT")
 
 
 @dataclass(frozen=True, kw_only=True)
-class SmarlaSensorEntityDescription(
-    SmarlaEntityDescription, SensorEntityDescription, Generic[_VT]
+class SmarlaSensorEntityDescription[_VT](
+    SmarlaEntityDescription, SensorEntityDescription
 ):
     """Class describing Swing2Sleep Smarla sensor entities."""
 
@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(SmarlaSensor(federwiege, desc) for desc in SENSORS)
 
 
-class SmarlaSensor(SmarlaBaseEntity, SensorEntity, Generic[_VT]):
+class SmarlaSensor[_VT](SmarlaBaseEntity, SensorEntity):
     """Representation of Smarla sensor."""
 
     entity_description: SmarlaSensorEntityDescription[_VT]

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from airos.data import (
     AirOSDataBaseClass,
@@ -45,7 +45,9 @@ AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
 
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSSensorEntityDescription(SensorEntityDescription, Generic[AirOSDataModel]):
+class AirOSSensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
+    SensorEntityDescription
+):
     """Describe an AirOS sensor."""
 
     value_fn: Callable[[AirOSDataModel], StateType]

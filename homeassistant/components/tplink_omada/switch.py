@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from tplink_omada_client import (
     GatewayPortSettings,
@@ -132,9 +132,11 @@ def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class OmadaDevicePortSwitchEntityDescription(
-    SwitchEntityDescription, Generic[TCoordinator, TDevice, TPort]
-):
+class OmadaDevicePortSwitchEntityDescription[
+    TCoordinator: "OmadaCoordinator[Any]",
+    TDevice: "OmadaDevice",
+    TPort,
+](SwitchEntityDescription):
     """Entity description for a toggle switch derived from a network port on an Omada device."""
 
     exists_func: Callable[[TDevice, TPort], bool] = lambda _, p: True
@@ -262,10 +264,13 @@ GATEWAY_PORT_CONFIG_SWITCHES: list[OmadaGatewayPortConfigSwitchEntityDescription
 ]
 
 
-class OmadaDevicePortSwitchEntity(
+class OmadaDevicePortSwitchEntity[
+    TCoordinator: "OmadaCoordinator[Any]",
+    TDevice: "OmadaDevice",
+    TPort,
+](
     OmadaDeviceEntity[TCoordinator],
     SwitchEntity,
-    Generic[TCoordinator, TDevice, TPort],
 ):
     """Generic toggle switch entity for a Netork Port of an Omada Device."""
 

@@ -2,9 +2,16 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
-from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
+from pylitterbot import (
+    FeederRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Pet,
+    Robot,
+)
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -12,13 +19,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+from .entity import LitterRobotEntity, whisker_command
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):
+class RobotButtonEntityDescription[_WhiskerEntityT: Robot | Pet](
+    ButtonEntityDescription
+):
     """A class that describes robot button entities."""
 
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
@@ -78,7 +87,9 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
-class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
+class LitterRobotButtonEntity[_WhiskerEntityT: Robot | Pet](
+    LitterRobotEntity[_WhiskerEntityT], ButtonEntity
+):
     """Litter-Robot button entity."""
 
     entity_description: RobotButtonEntityDescription[_WhiskerEntityT]

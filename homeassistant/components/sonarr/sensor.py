@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 from aiopyarr import (
     Command,
@@ -29,7 +29,7 @@ from .entity import SonarrEntity
 
 
 @dataclass(frozen=True)
-class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
+class SonarrSensorEntityDescriptionMixIn[SonarrDataT]:
     """Mixin for Sonarr sensor."""
 
     attributes_fn: Callable[[SonarrDataT], dict[str, str]]

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
@@ -97,7 +97,26 @@ T = TypeVar(
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzSensorDescription(SensorEntityDescription, Generic[T]):
+class DeconzSensorDescription[
+    T: (
+        AirPurifier,
+        AirQuality,
+        CarbonDioxide,
+        Consumption,
+        Daylight,
+        Formaldehyde,
+        GenericStatus,
+        Humidity,
+        LightLevel,
+        Moisture,
+        ParticulateMatter,
+        Power,
+        Pressure,
+        Temperature,
+        Time,
+        PydeconzSensorBase,
+    )
+](SensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None

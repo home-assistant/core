@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, Generic, TypeVar
+from typing import Any, Concatenate, TypeVar
 
 from pylitterbot import Pet, Robot
 from pylitterbot.exceptions import LitterRobotException
@@ -58,8 +58,8 @@ def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
     )
 
 
-class LitterRobotEntity(
-    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_WhiskerEntityT]
+class LitterRobotEntity[_WhiskerEntityT: Robot | Pet](
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator]
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 

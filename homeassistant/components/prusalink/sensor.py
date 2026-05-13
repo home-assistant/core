@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import TypeVar, cast
 
 from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus
@@ -33,10 +33,11 @@ T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkSensorEntityDescription(
+class PrusaLinkSensorEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+](
     SensorEntityDescription,
     PrusaLinkEntityDescription,
-    Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
 

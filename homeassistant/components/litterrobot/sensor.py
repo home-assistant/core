@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity
 
 PARALLEL_UPDATES = 0
 
@@ -36,7 +36,9 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):
+class RobotSensorEntityDescription[_WhiskerEntityT: Robot | Pet](
+    SensorEntityDescription
+):
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
@@ -273,7 +275,9 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots_and_pets))
 
 
-class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
+class LitterRobotSensorEntity[_WhiskerEntityT: Robot | Pet](
+    LitterRobotEntity[_WhiskerEntityT], SensorEntity
+):
     """Litter-Robot sensor entity."""
 
     entity_description: RobotSensorEntityDescription[_WhiskerEntityT]
