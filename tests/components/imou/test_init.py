@@ -6,10 +6,10 @@ from homeassistant.components.imou.coordinator import ImouDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from .conftest import imou_package_setup_patches
 from .util import create_mock_device_manager
 
 from tests.common import MockConfigEntry
-from tests.components.imou.conftest import imou_package_setup_patches
 
 
 async def test_setup_and_unload_entry(
