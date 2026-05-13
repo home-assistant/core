@@ -1507,6 +1507,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
+        if self._loaded_event.is_set():
+            raise RuntimeError("Device registry is already loaded")
+
         async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()
@@ -1753,7 +1756,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 @singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return hass.data[DATA_REGISTRY]
+    raise RuntimeError("Device registry not set up")
 
 
 def async_setup(hass: HomeAssistant) -> None:

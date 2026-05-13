@@ -704,6 +704,9 @@ async def test_filter_on_load(
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -874,6 +877,9 @@ async def test_load_bad_data(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -1182,6 +1188,9 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1298,6 +1307,9 @@ async def test_migration_1_7(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1369,6 +1381,9 @@ async def test_migration_1_11(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -1536,6 +1551,9 @@ async def test_migration_1_18(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
