@@ -119,7 +119,9 @@ async def test_dhcp_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "1.1.1.1"}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.1.1.1"}
