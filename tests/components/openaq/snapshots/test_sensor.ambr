@@ -233,7 +233,7 @@
     'state': '0.4',
   })
 # ---
-# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-entry]
+# name: test_sensor_snapshot[sensor.del_norte_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
+    'entity_id': 'sensor.del_norte_distance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -255,7 +255,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Distance from Home Assistant',
+    'object_id_base': 'Distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -263,7 +263,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Distance from Home Assistant',
+    'original_name': 'Distance',
     'platform': 'openaq',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -273,16 +273,16 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-state]
+# name: test_sensor_snapshot[sensor.del_norte_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenAQ',
       'device_class': 'distance',
-      'friendly_name': 'Del Norte Distance from Home Assistant',
+      'friendly_name': 'Del Norte Distance',
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
+    'entity_id': 'sensor.del_norte_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
