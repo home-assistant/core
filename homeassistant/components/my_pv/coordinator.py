@@ -137,6 +137,10 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         self.async_update_listeners()
         return result
 
+    def get_data_value(self, key: str) -> bool | float | int | str | None:
+        """Get the data value for the given key."""
+        return self._device.get_data_value(key)
+
     @_my_pv_connecton
     async def turn_on(self):
         """Turn on the device."""
