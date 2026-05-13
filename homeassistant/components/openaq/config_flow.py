@@ -43,10 +43,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_LIMIT,
     CONF_LOCATION_ID,
     CONF_RADIUS,
-    DEFAULT_LOCATION_LIMIT,
     DEFAULT_RADIUS,
     DOMAIN,
     MAX_RADIUS,
@@ -58,6 +56,7 @@ from .sensor import SENSOR_DESCRIPTIONS
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+LOCATION_FETCH_LIMIT = 100
 LOCATION_SEARCH_RADII = (5000, 10000, MAX_RADIUS)
 MAX_LOCATION_OPTIONS = 5
 SENSOR_DISPLAY_NAMES = {
@@ -160,11 +159,11 @@ def _location_distance(location: Location) -> float | None:
 
 def _location_sort_key(
     location: OpenAQLocationFlowData,
-) -> tuple[int, float, str, int]:
+) -> tuple[float, int, str, int]:
     """Return the ranking key for an OpenAQ location."""
     return (
-        -len(location.supported_parameters),
         location.distance if location.distance is not None else inf,
+        -len(location.supported_parameters),
         location.title,
         location.location_id,
     )
@@ -268,11 +267,13 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     response = await client.locations.list(
                         coordinates=coordinates,
                         radius=radius,
-                        limit=user_input[CONF_LIMIT],
+                        limit=LOCATION_FETCH_LIMIT,
                     )
                     for result_location in response.results:
                         location_data = _location_from_result(result_location)
-                        if location_data is None:
+                        if location_data is None or _is_location_configured(
+                            self.hass, location_data.location_id
+                        ):
                             continue
                         locations.setdefault(location_data.location_id, location_data)
             except ApiKeyMissingError, ForbiddenError, NotAuthorizedError:
@@ -306,9 +307,6 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                         vol.Required(CONF_LOCATION): LocationSelector(
                             LocationSelectorConfig(radius=True)
                         ),
-                        vol.Required(
-                            CONF_LIMIT, default=DEFAULT_LOCATION_LIMIT
-                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                     }
                 ),
                 {
