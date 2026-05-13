@@ -6,12 +6,7 @@ from typing import Any, cast
 from inepro_metering.routes import describe_route
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,

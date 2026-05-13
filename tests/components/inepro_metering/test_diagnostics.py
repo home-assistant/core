@@ -334,13 +334,19 @@ async def test_diagnostics_helpers_are_runtime_covered(
         "tcp_ethernet:192.168.68.80:502:1"
     )
     assert diagnostics_module._build_runtime_diagnostics(entry, None) is None
-    assert diagnostics_module._build_runtime_diagnostics(
-        entry,
-        _FakeSingleCoordinator(data=object()),
-    ) is None
-    assert diagnostics_module._build_runtime_diagnostics(entry, coordinator)["meters"][0][
-        "configured_name"
-    ] == "075625480002"
+    assert (
+        diagnostics_module._build_runtime_diagnostics(
+            entry,
+            _FakeSingleCoordinator(data=object()),
+        )
+        is None
+    )
+    assert (
+        diagnostics_module._build_runtime_diagnostics(entry, coordinator)["meters"][0][
+            "configured_name"
+        ]
+        == "075625480002"
+    )
     assert diagnostics_module._build_coordinator_diagnostics(None) is None
 
     coordinator.last_update_success = False
@@ -419,9 +425,13 @@ async def test_diagnostics_helpers_are_runtime_covered(
             }
         )
     )
-    bus_result = diagnostics_module._build_runtime_diagnostics(bus_entry, bus_coordinator)
+    bus_result = diagnostics_module._build_runtime_diagnostics(
+        bus_entry, bus_coordinator
+    )
     assert bus_result["meters"][0]["route"]["transport"] == "bluetooth_proxy"
     assert diagnostics_module._build_coordinator_diagnostics(bus_coordinator)[
         "snapshot"
     ]["available_meters"] == ["075625480002"]
-    assert diagnostics_module._build_transport_diagnostics(bus_entry)["bus_entry"] is True
+    assert (
+        diagnostics_module._build_transport_diagnostics(bus_entry)["bus_entry"] is True
+    )

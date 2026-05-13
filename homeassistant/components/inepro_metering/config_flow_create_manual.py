@@ -29,8 +29,6 @@ from .config_flow_shared import (
     user_visible_transports,
 )
 from .const import (
-    DEFAULT_BLUETOOTH_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
     CONF_DEVICE_KIND,
     CONF_FAMILY,
     CONF_SERIAL_NUMBER,
@@ -38,6 +36,8 @@ from .const import (
     CONF_SLAVE_ID,
     CONF_TRANSPORT,
     CONF_VARIANT,
+    DEFAULT_BLUETOOTH_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
     DEVICE_KIND_GATEWAY,
     SETUP_METHOD_SCAN_BLUETOOTH,
     SETUP_METHOD_SCAN_SERIAL,
@@ -344,9 +344,7 @@ class CreateManualFlowMixin(IneproFlowProtocol):
                         profile=profile,
                         serial_number=serial_number,
                     )
-                    scan_interval = self._default_scan_interval_for_transport(
-                        transport
-                    )
+                    scan_interval = self._default_scan_interval_for_transport(transport)
                     self._meter_selection[CONF_NAME] = configured_name
                     self._meter_selection[CONF_SCAN_INTERVAL] = scan_interval
                     entry_data[CONF_NAME] = configured_name

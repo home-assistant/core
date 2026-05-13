@@ -300,21 +300,29 @@ async def test_config_flow_wrapper_paths_are_runtime_covered(
         await flow._async_validate_entry_identity(entry_data)
         validate_entry_identity.assert_awaited_once()
 
-        assert await flow._async_discover_grow_serial_bus(
-            {},
-            slave_id_start=1,
-            slave_id_end=2,
-        ) == ()
+        assert (
+            await flow._async_discover_grow_serial_bus(
+                {},
+                slave_id_start=1,
+                slave_id_end=2,
+            )
+            == ()
+        )
         discover_serial_bus.assert_awaited_once()
 
-        assert await flow._async_discover_grow_tcp_gateway(
-            {},
-            slave_id_start=1,
-            slave_id_end=2,
-        ) == ()
+        assert (
+            await flow._async_discover_grow_tcp_gateway(
+                {},
+                slave_id_start=1,
+                slave_id_end=2,
+            )
+            == ()
+        )
         discover_tcp_gateway.assert_awaited_once()
 
-        assert await flow._async_discover_tcp_gateways(scan_target="192.168.1.0/24") == ()
+        assert (
+            await flow._async_discover_tcp_gateways(scan_target="192.168.1.0/24") == ()
+        )
         discover_tcp_gateways.assert_awaited_once()
 
         assert flow._async_discover_grow_bluetooth_meters() == ()
