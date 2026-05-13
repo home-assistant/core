@@ -77,6 +77,30 @@ async def test_setup(
     assert state.state == "on"
 
 
+async def test_setup_ignore_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup does not create a device before we see service."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+
+    inject_bluetooth_service_info(
+        hass,
+        MOCK_SERVICE_INFO,
+    )
+
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    )
+    assert device_entry is None
+
+
 async def test_remove_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
