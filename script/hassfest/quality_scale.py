@@ -1191,6 +1191,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "caldav",
     "canary",
     "cast",
+    "cert_expiry",
     "ccm15",
     "chacon_dio",
     "channels",
