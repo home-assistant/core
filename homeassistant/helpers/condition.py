@@ -370,8 +370,6 @@ class ConditionChecker(abc.ABC):
 class LegacyConditionChecker(ConditionChecker):
     """Condition checker wrapping a legacy condition factory function."""
 
-    _set_up = True  # Legacy condition factories can be used without async_setup
-
     def __init__(self, hass: HomeAssistant, checker: ConditionCheckerType) -> None:
         """Initialize condition checker."""
         super().__init__(hass)
@@ -383,8 +381,6 @@ class LegacyConditionChecker(ConditionChecker):
 
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
-
-    _set_up = True  # Disabled conditions don't need to be set up
 
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
@@ -1106,7 +1102,9 @@ async def async_from_config(
                     f"Error rendering condition enabled template: {err}"
                 ) from err
         if not enabled:
-            return DisabledConditionChecker(hass)
+            disabled_checker = DisabledConditionChecker(hass)
+            await disabled_checker.async_setup()
+            return disabled_checker
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None
@@ -1139,14 +1137,15 @@ async def async_from_config(
     while isinstance(check_factory, ft.partial):
         check_factory = check_factory.func
 
+    checker: ConditionChecker | ConditionCheckerType
     if inspect.iscoroutinefunction(check_factory):
         checker = await factory(hass, config)
     else:
         checker = factory(config)
-    if isinstance(checker, ConditionChecker):
-        await checker.async_setup()
-        return checker
-    return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
+    if not isinstance(checker, ConditionChecker):
+        checker = LegacyConditionChecker(hass, checker)
+    await checker.async_setup()
+    return checker
 
 
 async def async_and_from_config(
