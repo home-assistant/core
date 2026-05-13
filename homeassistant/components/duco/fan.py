@@ -2,8 +2,8 @@
 
 import logging
 
-from duco.exceptions import DucoError, DucoRateLimitError
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.exceptions import DucoError, DucoRateLimitError
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant

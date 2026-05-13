@@ -486,8 +486,21 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
     coordinator: WeatherFlowCloudUpdateCoordinatorREST
 
     @property
+    def _observation(self) -> Observation | None:
+        """Return the current station observation."""
+        observations = self.coordinator.data[self.station_id].observation.obs
+        if not observations:
+            return None
+        return observations[0]
+
+    @property
+    def available(self) -> bool:
+        """Get if available."""
+        return super().available and self._observation is not None
+
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.station_id].observation.obs[0]
-        )
+        if (observation := self._observation) is None:
+            return None
+        return self.entity_description.value_fn(observation)

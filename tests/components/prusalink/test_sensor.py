@@ -335,15 +335,11 @@ async def test_axis_x_y_not_created_when_absent(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_location_and_min_extrusion_temp_sensors(
+async def test_min_extrusion_temp_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
-    """Test location and minimum extrusion temperature sensors from info endpoint."""
+    """Test minimum extrusion temperature sensor from info endpoint."""
     assert await async_setup_component(hass, "prusalink", {})
-
-    state = hass.states.get("sensor.mock_title_location")
-    assert state is not None
-    assert state.state == "Workshop"
 
     state = hass.states.get("sensor.mock_title_minimum_extrusion_temperature")
     assert state is not None
@@ -354,16 +350,14 @@ async def test_location_and_min_extrusion_temp_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_location_and_min_extrusion_temp_not_created_when_absent(
+async def test_min_extrusion_temp_not_created_when_absent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: None,
     mock_info_api: dict[str, Any],
 ) -> None:
-    """Location and min extrusion temp sensors are not created when info fields are absent."""
-    del mock_info_api["location"]
+    """Min extrusion temp sensor is not created when the info field is absent."""
     del mock_info_api["min_extrusion_temp"]
     assert await async_setup_component(hass, "prusalink", {})
 
-    assert hass.states.get("sensor.mock_title_location") is None
     assert hass.states.get("sensor.mock_title_minimum_extrusion_temperature") is None
