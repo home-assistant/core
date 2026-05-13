@@ -155,6 +155,7 @@ async def test_open_sets_state_unlocked_and_cancels_relock(
     )
 
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Relock task was cancelled; door stays unlocked

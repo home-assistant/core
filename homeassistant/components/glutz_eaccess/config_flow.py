@@ -178,7 +178,7 @@ class GlutzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await set_new_password(
                         async_get_clientsession(self.hass),
-                        urlparse(full_host).hostname or full_host,
+                        urlparse(full_host).netloc or full_host,
                         self._invitation["token"],
                         password,
                     )
