@@ -20,7 +20,12 @@ from homeassistant.components.openaq.config_flow import (
     LOCATION_FETCH_LIMIT,
     OpenAQLocationFlowData,
 )
-from homeassistant.components.openaq.const import CONF_LOCATION_ID, CONF_RADIUS, DOMAIN
+from homeassistant.components.openaq.const import (
+    CONF_LOCATION_ID,
+    CONF_RADIUS,
+    DOMAIN,
+    MAX_RADIUS,
+)
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -43,6 +48,15 @@ def _get_select_options(result: FlowResult) -> Sequence[SelectOptionDict]:
     selector = next(iter(data_schema.schema.values()))
     assert isinstance(selector, SelectSelector)
     return cast(Sequence[SelectOptionDict], selector.config["options"])
+
+
+def _get_suggested_values(result: FlowResult) -> dict[str, object]:
+    """Return suggested values from a flow result."""
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    marker = next(iter(data_schema.schema))
+    assert marker == ATTR_LOCATION
+    return cast(dict[str, object], marker.description["suggested_value"])
 
 
 async def test_user_flow_success(
@@ -161,6 +175,11 @@ async def test_location_subentry_map_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert _get_suggested_values(result) == {
+        ATTR_LATITUDE: hass.config.latitude,
+        ATTR_LONGITUDE: hass.config.longitude,
+        CONF_RADIUS: MAX_RADIUS,
+    }
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
