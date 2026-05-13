@@ -40,7 +40,6 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Config flow only collects host/port; the integration does not authenticate.
-  repair-issues: todo
   test-coverage: todo
   # Gold
   devices: done
