@@ -42,13 +42,13 @@ async def test_all_entities(
         "GBP",
     ],
 )
-async def test_monetary_sensors_use_monarch_money_currency(
+async def test_monetary_sensors_ignore_hass_currency(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_config_api: AsyncMock,
     currency: str,
 ) -> None:
-    """Test that monetary sensors use the Monarch Money currency."""
+    """Test that monetary sensors ignore the configured HA currency."""
     await hass.config.async_update(currency=currency)
 
     with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
@@ -150,7 +150,7 @@ async def test_statistics_migration_returns_early_without_recorder(
     ):
         assert await async_migrate_entry(hass, mock_config_entry)
 
-    assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
+    assert mock_config_entry.minor_version == 1
 
 
 def test_config_flow_minor_version() -> None:

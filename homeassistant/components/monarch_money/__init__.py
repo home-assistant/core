@@ -35,8 +35,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
 ) -> bool:
     """Migrate old config entries."""
-    if entry.version == 1 and entry.minor_version < 2:
-        _async_migrate_statistics_currency(hass, entry)
+    if (
+        entry.version == 1
+        and entry.minor_version < 2
+        and _async_migrate_statistics_currency(hass, entry)
+    ):
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
@@ -44,7 +47,7 @@ async def async_migrate_entry(
 
 def _async_migrate_statistics_currency(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
-) -> None:
+) -> bool:
     """Migrate monetary sensor statistics from '$' to USD.
 
     Prior versions used CURRENCY_DOLLAR ('$') which is invalid for
@@ -52,7 +55,7 @@ def _async_migrate_statistics_currency(
     to use the proper ISO 4217 currency code.
     """
     if DATA_INSTANCE not in hass.data:
-        return
+        return False
 
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -68,6 +71,8 @@ def _async_migrate_statistics_currency(
                 new_unit_of_measurement=MONARCH_MONEY_CURRENCY,
                 new_unit_class=None,
             )
+
+    return True
 
 
 async def async_unload_entry(
