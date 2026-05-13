@@ -658,6 +658,7 @@ select = [
   "B006",   # Do not use mutable data structures for argument defaults
   "B007",   # Loop control variable {name} not used within loop body
   "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
+  "B010",   # Do not call setattr with a constant attribute value. It is not any safer than normal property access.
   "B011",   # Do not call assert False since python -O removes these calls
   "B012",   # Use of break/continue/return inside a finally block
   "B013",   # A length-one tuple literal is redundant in exception handlers
