@@ -86,7 +86,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except ConnectionError, TimeoutError, OSError:
+            except (ConnectionError, TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
@@ -147,7 +147,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except ConnectionError, TimeoutError, OSError:
+            except (ConnectionError, TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
@@ -195,7 +195,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except ConnectionError, TimeoutError, OSError:
+            except (ConnectionError, TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
