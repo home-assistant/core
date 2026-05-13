@@ -75,7 +75,6 @@ class MigrateToGroupSensorFlow(RepairsFlow):
 
             await self.hass.config_entries.async_unload(self.entry.entry_id)
             await self.hass.config_entries.async_add(new_config_entry)
-
             entity_reg.async_update_entity_platform(
                 old_entity,
                 GROUP_DOMAIN,
@@ -85,8 +84,6 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             await self.hass.config_entries.async_set_disabled_by(
                 entry_id=new_config_entry.entry_id, disabled_by=None
             )
-
-            # await self.hass.config_entries.async_setup(new_config_entry.entry_id)
             await self.hass.config_entries.async_remove(self.entry.entry_id)
 
             return self.async_create_entry(data={})
