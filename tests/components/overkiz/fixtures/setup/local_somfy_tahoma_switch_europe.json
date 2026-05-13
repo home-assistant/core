@@ -784,7 +784,7 @@
         {
           "name": "core:Memorized1PositionState",
           "type": 1,
-          "value": 100
+          "value": 85
         },
         {
           "name": "core:Memorized1OrientationState",

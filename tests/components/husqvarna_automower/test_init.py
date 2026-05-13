@@ -14,8 +14,13 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
-from aioautomower.model.model_work_areas import Type
+from aioautomower.model import (
+    Calendar,
+    MowerAttributes,
+    MowerStates,
+    WorkArea,
+    WorkAreaType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -464,7 +469,7 @@ async def test_add_and_remove_work_area(
                 last_time_completed=datetime(
                     2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
                 ),
-                type=Type.RANDOM,
+                type=WorkAreaType.RANDOM,
                 use_global_cutting_height=False,
             )
         }

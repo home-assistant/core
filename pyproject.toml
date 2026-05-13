@@ -60,7 +60,7 @@ dependencies = [
   "cryptography==47.0.0",
   "Pillow==12.2.0",
   "propcache==0.4.1",
-  "pyOpenSSL==26.1.0",
+  "pyOpenSSL==26.2.0",
   "orjson==3.11.8",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.8",
+  "uv==0.11.10",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
@@ -122,6 +122,7 @@ load-plugins = [
   "hass_decorator",
   "hass_enforce_class_module",
   "hass_enforce_config_entry_unique_id_no_ip",
+  "hass_enforce_config_flow_no_name",
   "hass_enforce_config_flow_no_polling",
   "hass_enforce_greek_micro_char",
   "hass_enforce_runtime_data",
@@ -663,21 +664,40 @@ select = [
   "A001",   # Variable {name} is shadowing a Python builtin
   "ASYNC",  # flake8-async
   "B002",   # Python does not support the unary prefix increment
+  "B003",   # Assigning to os.environ doesn't clear the environment
+  "B004",   # Using hasattr(x, "__call__") instead of callable(x)
   "B005",   # Using .strip() with multi-character strings is misleading
+  "B006",   # Do not use mutable data structures for argument defaults
   "B007",   # Loop control variable {name} not used within loop body
   "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
+  "B011",   # Do not call assert False since python -O removes these calls
+  "B012",   # Use of break/continue/return inside a finally block
+  "B013",   # A length-one tuple literal is redundant in exception handlers
   "B014",   # Exception handler with duplicate exception
   "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+  "B016",   # Cannot raise a literal. Did you intend to return it or raise an exception?
   "B017",   # pytest.raises(BaseException) should be considered evil
   "B018",   # Found useless attribute access. Either assign it to a variable or remove it.
+  "B020",   # Loop control variable overrides iterable it iterates
+  "B021",   # f-string used as docstring
+  "B022",   # No arguments passed to contextlib.suppress
   "B023",   # Function definition does not bind loop variable {name}
   "B024",   # `{name}` is an abstract base class, but it has no abstract methods or properties
   "B025",   # try-except* block with duplicate exception {name}
   "B026",   # Star-arg unpacking after a keyword argument is strongly discouraged
+  "B027",   # Empty method in abstract base class without abstract decorator
+  "B028",   # No explicit stacklevel keyword argument found in warnings.warn
+  "B029",   # Using except (): with an empty tuple is a no-op
+  "B030",   # Except handlers should only be exception classes
+  "B031",   # Using the result of the groupby() generator
   "B032",   # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
+  "B033",   # Set should not contain duplicate items
+  "B034",   # re.sub/subn/split should pass count/maxsplit as keyword arguments
   "B035",   # Dictionary comprehension uses static key
+  "B039",   # ContextVar with mutable literal or function call as default
   "B904",   # Use raise from to specify exception cause
   "B905",   # zip() without an explicit strict= parameter
+  "B911",   # itertools.batched() without explicit strict= parameter
   "BLE",
   "C",      # complexity
   "COM818", # Trailing comma on bare tuple prohibited
@@ -731,6 +751,7 @@ select = [
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
   "RUF200", # Failed to parse pyproject.toml: {message}
+  "S107",   # Possible hardcoded password assigned to function default
   "S102",   # Use of exec detected
   "S103",   # bad-file-permissions
   "S108",   # hardcoded-temp-file
@@ -895,6 +916,7 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
+"__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
