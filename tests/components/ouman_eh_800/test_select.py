@@ -9,6 +9,8 @@ from ouman_eh_800_api import (
     L1BaseEndpoints,
     L2BaseEndpoints,
     OperationMode,
+    OumanClientAuthenticationError,
+    OumanClientCommunicationError,
     PumpSummerStopControl,
     RelayControl,
     RelayL1ValvePosition,
@@ -28,6 +30,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SCENARIOS
@@ -140,3 +143,52 @@ async def test_async_select_option(
 
     mock_ouman_client.set_endpoint_value.assert_called_once_with(endpoint, target_value)
     assert hass.states.get(entity_id).state == target_value.name.lower()
+
+
+@pytest.mark.parametrize("init_integration", [Platform.SELECT], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("client_error", "expected_exception", "expected_message"),
+    [
+        pytest.param(
+            OumanClientAuthenticationError("Wrong username or password"),
+            HomeAssistantError,
+            "Authentication failed",
+            id="auth_failure",
+        ),
+        pytest.param(
+            OumanClientCommunicationError("Network error: Connection refused"),
+            HomeAssistantError,
+            "Error communicating with API",
+            id="communication_failure",
+        ),
+        pytest.param(
+            ValueError(
+                "Value for l1_water_out_minimum_temperature out of bounds [5,95]: 200"
+            ),
+            ServiceValidationError,
+            r"Value for l1_water_out_minimum_temperature out of bounds \[5,95\]: 200",
+            id="value_out_of_range",
+        ),
+    ],
+)
+async def test_async_select_option_errors(
+    hass: HomeAssistant,
+    mock_ouman_client: AsyncMock,
+    client_error: Exception,
+    expected_exception: type[Exception],
+    expected_message: str,
+) -> None:
+    """Test that errors from the client are mapped to the expected exceptions."""
+    mock_ouman_client.set_endpoint_value.side_effect = client_error
+
+    with pytest.raises(expected_exception, match=expected_message):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.ouman_eh_800_home_away_mode",
+                ATTR_OPTION: HomeAwayControl.AWAY.name.lower(),
+            },
+            blocking=True,
+        )
