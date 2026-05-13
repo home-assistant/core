@@ -1,6 +1,6 @@
 """Test methods in __main__."""
 
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, call, patch
 
 import pytest
 
@@ -10,24 +10,24 @@ from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
 
 @patch("sys.exit")
 @pytest.mark.parametrize(
-    ("is_venv", "is_docker", "expect_exit", "expected_stderr"),
+    ("is_venv", "is_docker", "expected_exit_calls", "expected_stderr"),
     [
         (
             False,
             False,
-            True,
-            "Home Assistant must be run in a Python virtual environment or a container.",
+            [call(1)],
+            "Home Assistant must be run in a Python virtual environment or a container.\n",
         ),
-        (True, False, False, ""),
-        (False, True, False, ""),
-        (True, True, False, ""),
+        (True, False, [], ""),
+        (False, True, [], ""),
+        (True, True, [], ""),
     ],
 )
 def test_validate_environment(
     mock_exit: Mock,
     is_venv: bool,
     is_docker: bool,
-    expect_exit: bool,
+    expected_exit_calls: list[call],
     expected_stderr: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -37,8 +37,8 @@ def test_validate_environment(
         patch("homeassistant.__main__.is_docker_env", return_value=is_docker),
     ):
         main.validate_environment()
-    assert mock_exit.called == expect_exit
-    assert expected_stderr in capsys.readouterr().err
+    assert mock_exit.call_args_list == expected_exit_calls
+    assert capsys.readouterr().err == expected_stderr
 
 
 @patch("sys.exit")
