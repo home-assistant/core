@@ -4455,6 +4455,7 @@ async def test_condition_checker_call_calls_async_check(
             return True
 
     checker = MockChecker(hass)
+    await checker.async_setup()
     check_mock = Mock(wraps=checker.async_check)
     checker.async_check = check_mock
 
@@ -5362,13 +5363,6 @@ async def test_async_from_config_calls_async_setup_on_checker(
     class StubChecker(condition.ConditionChecker):
         """Stub checker to track async_setup calls."""
 
-        def __init__(self, hass: HomeAssistant) -> None:
-            super().__init__(hass)
-            self.setup_called = False
-
-        async def async_setup(self) -> None:
-            self.setup_called = True
-
         def _async_check(self, **kwargs: Any) -> bool:
             return True
 
@@ -5390,4 +5384,77 @@ async def test_async_from_config_calls_async_setup_on_checker(
         result = await condition.async_from_config(hass, config)
 
     assert result is stub
-    assert stub.setup_called
+    assert stub._set_up is True
+
+
+async def test_async_setup_invokes_async_setup_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_setup awaits _async_setup and sets _set_up."""
+
+    setup_hook = AsyncMock()
+
+    class MockChecker(ConditionChecker):
+        async def _async_setup(self) -> None:
+            await setup_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._set_up is False
+    setup_hook.assert_not_called()
+
+    await checker.async_setup()
+
+    setup_hook.assert_awaited_once()
+    assert checker._set_up is True
+
+
+async def test_async_check_raises_before_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_check raises HomeAssistantError before async_setup is called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker.async_check()
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker(hass)
+
+    await checker.async_setup()
+
+    assert checker.async_check() is True
+    assert checker(hass) is True
+
+
+async def test_async_unload_invokes_async_unload_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_unload calls _async_unload and sets _unloaded."""
+
+    unload_hook = Mock()
+
+    class MockChecker(ConditionChecker):
+        def _async_unload(self) -> None:
+            unload_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._unloaded is False
+    unload_hook.assert_not_called()
+
+    checker.async_unload()
+
+    unload_hook.assert_called_once()
+    assert checker._unloaded is True
