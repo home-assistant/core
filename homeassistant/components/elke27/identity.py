@@ -2,18 +2,16 @@
 
 import secrets
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components import network
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import INTEGRATION_SERIAL_LENGTH, MANUFACTURER_NUMBER
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
 
 
 async def async_get_integration_serial(

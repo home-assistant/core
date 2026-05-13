@@ -1,7 +1,8 @@
 """Config flow for the Elke27 integration."""
 
+from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from elke27_lib import ClientConfig, LinkKeys
 from elke27_lib.client import Elke27Client
@@ -32,9 +33,6 @@ from .const import (
     READY_TIMEOUT,
 )
 from .identity import async_get_integration_serial, build_client_identity
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
 
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"

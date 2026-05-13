@@ -509,6 +509,42 @@ async def test_async_set_output_supports_async_and_sync(
     assert await hub.async_set_output(3, state=True) is True
 
 
+async def test_async_set_helpers_handle_uninspectable_signatures(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify helpers fall back when client method signatures are unavailable."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.72",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.elke27.hub.inspect.signature",
+        Mock(side_effect=ValueError("signature unavailable")),
+    )
+
+    async def _async_output(output_id: int, state: bool) -> bool:
+        return output_id == 1 and state is True
+
+    async def _async_light(light_id: int, state: bool) -> bool:
+        return light_id == 2 and state is False
+
+    async def _async_lock(lock_id: int, locked: bool) -> bool:
+        return lock_id == 3 and locked is True
+
+    hub._client = SimpleNamespace(async_set_output=_async_output)
+    assert await hub.async_set_output(1, state=True) is True
+
+    hub._client = SimpleNamespace(async_set_light=_async_light)
+    assert await hub.async_set_light(2, state=False) is True
+
+    hub._client = SimpleNamespace(async_set_lock=_async_lock)
+    assert await hub.async_set_lock(3, locked=True) is True
+
+
 async def test_async_set_output_missing_method(
     hass: HomeAssistant,
 ) -> None:
@@ -557,6 +593,20 @@ async def test_async_set_light_and_lock(
     assert await hub.async_set_light(1, state=False) is False
     assert await hub.async_set_lock(1, locked=True) is False
 
+    execute = AsyncMock(
+        return_value=SimpleNamespace(ok=False, error=ValueError("light failed"))
+    )
+    hub._client = SimpleNamespace(async_execute=execute)
+    with pytest.raises(HomeAssistantError, match="light failed"):
+        await hub.async_set_light(1, state=False)
+
+    execute = AsyncMock(
+        return_value=SimpleNamespace(ok=False, error=ValueError("lock failed"))
+    )
+    hub._client = SimpleNamespace(async_execute=execute)
+    with pytest.raises(HomeAssistantError, match="lock failed"):
+        await hub.async_set_lock(1, locked=True)
+
 
 async def test_async_set_tstat_status(
     hass: HomeAssistant,
@@ -593,6 +643,13 @@ async def test_async_set_tstat_status(
         cool_setpoint=72,
     )
 
+    execute = AsyncMock(
+        return_value=SimpleNamespace(ok=False, error=ValueError("tstat failed"))
+    )
+    hub._client = SimpleNamespace(async_execute=execute)
+    with pytest.raises(HomeAssistantError, match="tstat failed"):
+        await hub.async_set_tstat_status(3, mode="HEAT")
+
 
 async def test_zone_bypass_validation_and_errors(
     hass: HomeAssistant,
@@ -615,7 +672,7 @@ async def test_zone_bypass_validation_and_errors(
         await hub.async_set_zone_bypass(1, bypassed=True, pin=None)
     with pytest.raises(HomeAssistantError, match="Code must be numeric"):
         await hub.async_set_zone_bypass(1, bypassed=True, pin="aa")
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="bad"):
         await hub.async_set_zone_bypass(1, bypassed=True, pin="1234")
 
 
