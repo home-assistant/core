@@ -2102,8 +2102,8 @@ async def test_history_stream_live_chained_events(
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
 
-    await async_wait_recording_done(hass)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
