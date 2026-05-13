@@ -91,6 +91,7 @@ rules:
       are independent and do not need to be serialized.
   reauthentication-flow:
     status: todo
+    comment: Will be added in a follow-up PR.
   test-coverage:
     status: done
     comment: Integration has comprehensive test coverage.
@@ -101,6 +102,7 @@ rules:
     comment: Each access point is represented as its own device.
   diagnostics:
     status: todo
+    comment: Will be added in a follow-up PR.
   discovery:
     status: exempt
     comment: The Glutz eAccess system does not support any discovery protocol.
@@ -130,6 +132,7 @@ rules:
     comment: Documentation includes use case examples.
   dynamic-devices:
     status: todo
+    comment: Will be added in a follow-up PR.
   entity-category:
     status: exempt
     comment: All entities are primary lock entities.
@@ -152,6 +155,7 @@ rules:
     comment: Icons defined in icons.json with translation support.
   reconfiguration-flow:
     status: todo
+    comment: Will be added in a follow-up PR.
   repair-issues:
     status: exempt
     comment: >-
@@ -160,6 +164,7 @@ rules:
       to prompt the user to recharge the lock.
   stale-devices:
     status: todo
+    comment: Will be added in a follow-up PR.
 
   # Platinum
   async-dependency:
