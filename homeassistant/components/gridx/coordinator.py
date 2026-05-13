@@ -1,6 +1,5 @@
 """Data update coordinators for the GridX integration."""
 
-
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, TypedDict
 

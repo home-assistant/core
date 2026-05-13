@@ -1,6 +1,5 @@
 """The GridX integration."""
 
-
 import httpx
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform

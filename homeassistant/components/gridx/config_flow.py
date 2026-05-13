@@ -1,6 +1,5 @@
 """Config flow for the GridX integration."""
 
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -20,7 +19,6 @@ UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
 
 class _NoSystemsFoundError(Exception):
     """Raised when authentication succeeds but no GridX systems are found."""
-
 
 async def _validate_credentials(
     hass: HomeAssistant,
@@ -85,7 +83,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
@@ -146,7 +144,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
@@ -194,7 +192,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except _NoSystemsFoundError:
                 errors["base"] = "no_systems"
