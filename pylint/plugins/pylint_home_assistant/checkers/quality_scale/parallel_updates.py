@@ -4,8 +4,8 @@
 ``quality_scale.yaml`` marks ``parallel-updates`` as ``done``.
 
 Every entity platform module must define a ``PARALLEL_UPDATES`` constant that
-controls how many updates can run concurrently. The integration author should
-set this based on the device/API capabilities.
+controls how many entity updates and actions can run concurrently. The
+integration author should set this based on the device/API capabilities.
 
 https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/parallel-updates
 """
@@ -32,7 +32,7 @@ class ParallelUpdatesChecker(BaseChecker):
             "home-assistant-missing-parallel-updates",
             "Used when an entity platform module does not define the "
             "PARALLEL_UPDATES constant. This constant controls how many "
-            "entity updates can run concurrently.",
+            "entity updates and actions can run concurrently.",
         ),
     }
     options = ()
@@ -47,10 +47,16 @@ class ParallelUpdatesChecker(BaseChecker):
             return
 
         for item in node.body:
+            if isinstance(item, nodes.Assign) and any(
+                isinstance(target, nodes.AssignName)
+                and target.name == "PARALLEL_UPDATES"
+                for target in item.targets
+            ):
+                return
             if (
-                isinstance(item, nodes.Assign)
-                and isinstance(item.targets[0], nodes.AssignName)
-                and item.targets[0].name == "PARALLEL_UPDATES"
+                isinstance(item, nodes.AnnAssign)
+                and isinstance(item.target, nodes.AssignName)
+                and item.target.name == "PARALLEL_UPDATES"
             ):
                 return
 

@@ -89,6 +89,28 @@ def test_parallel_updates_zero(
         walker.walk(root_node)
 
 
+def test_parallel_updates_annotated_assignment(
+    linter: UnittestLinter,
+    parallel_updates_checker: ParallelUpdatesChecker,
+    tmp_path: Path,
+) -> None:
+    """PARALLEL_UPDATES: Final = 0 (annotated assignment) is accepted."""
+    integration_dir = _make_integration(tmp_path)
+    _create_quality_scale(integration_dir, {"parallel-updates": "done"})
+
+    root_node = astroid.parse(
+        "PARALLEL_UPDATES: Final = 0\n",
+        "homeassistant.components.test_int.sensor",
+    )
+    root_node.file = str(integration_dir / "sensor.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(parallel_updates_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 def test_parallel_updates_missing_fires(
     linter: UnittestLinter,
     parallel_updates_checker: ParallelUpdatesChecker,
