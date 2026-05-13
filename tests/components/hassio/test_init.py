@@ -638,13 +638,13 @@ async def test_invalid_service_calls(hass: HomeAssistant, app_or_addon: str) -> 
 
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", f"{app_or_addon}_start", {app_or_addon: "does_not_exist"}
+            "hassio", f"{app_or_addon}_start", {app_or_addon: "inv@lid"}
         )
     with pytest.raises(Invalid):
         await hass.services.async_call(
             "hassio",
             f"{app_or_addon}_stdin",
-            {app_or_addon: "does_not_exist", "input": "test"},
+            {app_or_addon: "inv@lid", "input": "test"},
         )
 
 

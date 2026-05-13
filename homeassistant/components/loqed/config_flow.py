@@ -111,7 +111,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             else vol.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=hass-config-flow-name-field
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_API_TOKEN): str,
                 }
