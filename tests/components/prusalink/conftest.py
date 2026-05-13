@@ -209,6 +209,6 @@ def mock_api(
     mock_info_api: dict[str, Any],
     mock_get_legacy_printer: dict[str, Any],
     mock_get_status_idle: dict[str, Any],
-    mock_job_api_idle: dict[str, Any],
+    mock_job_api_idle: None,
 ) -> None:
     """Mock PrusaLink API."""
