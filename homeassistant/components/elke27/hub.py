@@ -1,12 +1,13 @@
 """Hub wrapper for the Elke27 client lifecycle."""
 
 import asyncio
+from collections.abc import Callable, Mapping
 import contextlib
 from enum import Enum
 from functools import partial
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from elke27_lib import ArmMode, ClientConfig, LinkKeys
 from elke27_lib.client import Elke27Client
@@ -18,10 +19,27 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from .const import READY_TIMEOUT
 from .identity import build_client_identity
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 _LOGGER = logging.getLogger(__name__)
+
+
+def _method_parameters(
+    method: Callable[..., Any],
+) -> Mapping[str, inspect.Parameter]:
+    """Return inspectable method parameters, or an empty mapping."""
+    with contextlib.suppress(TypeError, ValueError):
+        return inspect.signature(method).parameters
+    return {}
+
+
+def _raise_command_error(action: str, error: BaseException) -> None:
+    """Raise a Home Assistant error for a failed client command."""
+    message = (
+        getattr(error, "user_message", None)
+        or getattr(error, "message", None)
+        or str(error)
+        or f"{action} failed."
+    )
+    raise HomeAssistantError(message) from error
 
 
 class Elke27Hub:
@@ -215,7 +233,7 @@ class Elke27Hub:
                 output_id,
             )
             return False
-        params = inspect.signature(method).parameters
+        params = _method_parameters(method)
         if "on" in params:
             if inspect.iscoroutinefunction(method):
                 result = await method(output_id, on=state)
@@ -241,7 +259,7 @@ class Elke27Hub:
         if method is None:
             method = getattr(client, "set_light", None)
         if method is not None:
-            params = inspect.signature(method).parameters
+            params = _method_parameters(method)
             if "on" in params:
                 if inspect.iscoroutinefunction(method):
                     result = await method(light_id, on=state)
@@ -270,7 +288,7 @@ class Elke27Hub:
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
             if error is not None:
-                raise error
+                _raise_command_error("Light control", error)
             return False
         return True
 
@@ -284,7 +302,7 @@ class Elke27Hub:
         if method is None:
             method = getattr(client, "set_lock", None)
         if method is not None:
-            params = inspect.signature(method).parameters
+            params = _method_parameters(method)
             if "locked" in params:
                 if inspect.iscoroutinefunction(method):
                     result = await method(lock_id, locked=locked)
@@ -316,7 +334,7 @@ class Elke27Hub:
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
             if error is not None:
-                raise error
+                _raise_command_error("Lock control", error)
             return False
         return True
 
@@ -366,7 +384,7 @@ class Elke27Hub:
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
             if error is not None:
-                raise error
+                _raise_command_error("Thermostat control", error)
             return False
         return True
 
@@ -409,7 +427,7 @@ class Elke27Hub:
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
             if error is not None:
-                raise error
+                _raise_command_error("Zone bypass", error)
             return False
         return True
 
