@@ -367,7 +367,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Validate required parameters
             if not access_token:
-                msg = "Cannot initialize MQTT: access_token not available from any source"
+                msg = (
+                    "Cannot initialize MQTT: access_token not available from any source"
+                )
                 _LOGGER.warning(msg)
                 raise HeimanMQTTError(msg)
             if not user_id:
