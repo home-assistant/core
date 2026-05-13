@@ -47,6 +47,8 @@ class EmulatedRokuFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Required(CONF_NAME, default=default_name): str,
                     vol.Required(CONF_LISTEN_PORT, default=default_port): vol.Coerce(
                         int
