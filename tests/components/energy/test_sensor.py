@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     compile_statistics,
 )
 from homeassistant.const import (

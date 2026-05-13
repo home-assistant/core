@@ -70,7 +70,7 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
     return vol.Schema(
         {
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=hass.config.location_name): str,
             vol.Required(
                 CONF_LOCATION,
