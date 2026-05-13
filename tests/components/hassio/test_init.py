@@ -54,6 +54,7 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    DATA_KEY_SUPERVISOR_ISSUES,
     HASSIO_MAIN_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
@@ -62,6 +63,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -167,9 +169,26 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
+
+
+async def test_setup_api_ping_fails(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Test that a failed ping raises ConfigEntryNotReady and retries."""
+    supervisor_client.supervisor.ping.side_effect = SupervisorError
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    # async_setup succeeds (domain registered), but the config entry is in retry
+    assert result
+    assert is_hassio(hass)
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_app_panel(hass: HomeAssistant) -> None:
@@ -205,7 +224,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
     )
@@ -221,7 +240,7 @@ async def test_setup_api_push_api_data_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
 
 
@@ -238,7 +257,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
     )
@@ -256,7 +275,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
     )
@@ -333,7 +352,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
     )
@@ -350,7 +369,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     supervisor_client.supervisor.set_options.assert_called_once_with(
         SupervisorOptions(timezone="testzone")
     )
@@ -375,7 +394,7 @@ async def test_setup_core_push_config_error(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     assert "Failed to update Supervisor options: boom" in caplog.text
 
 
@@ -391,7 +410,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
 
 
 async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
@@ -403,17 +422,17 @@ async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
 
 async def test_warn_when_cannot_connect(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     supervisor_is_connected: AsyncMock,
 ) -> None:
-    """Fail warn when we cannot connect."""
+    """Test that a failed ping puts the config entry in retry state."""
     supervisor_is_connected.side_effect = SupervisorError
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
     assert is_hassio(hass)
-    assert "Not connected with the supervisor / system too busy!" in caplog.text
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("hassio_env")
@@ -611,11 +630,8 @@ async def test_service_calls(
     "app_or_addon",
     ["app", "addon"],
 )
-async def test_invalid_service_calls(
-    hass: HomeAssistant, supervisor_is_connected: AsyncMock, app_or_addon: str
-) -> None:
+async def test_invalid_service_calls(hass: HomeAssistant, app_or_addon: str) -> None:
     """Call service with invalid input and check that it raises."""
-    supervisor_is_connected.side_effect = SupervisorError
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
@@ -706,24 +722,22 @@ async def test_addon_service_call_with_complex_slug(
     )
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_service_calls_core(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Call core service and check the API calls behind that."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "hassio", {})
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, "hassio", {})
 
     await hass.services.async_call("homeassistant", "stop")
     await hass.async_block_till_done()
 
     supervisor_client.homeassistant.stop.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 21
 
     await hass.services.async_call("homeassistant", "check_config")
     await hass.async_block_till_done()
-
-    assert len(supervisor_client.mock_calls) == 21
 
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -733,7 +747,6 @@ async def test_service_calls_core(
         assert mock_check_config.called
 
     supervisor_client.homeassistant.restart.assert_called_once_with()
-    assert len(supervisor_client.mock_calls) == 22
 
 
 @pytest.mark.parametrize(
@@ -796,6 +809,11 @@ async def test_partial_backup_legacy_homeassistant_folder(
             homeassistant=True,
             folders={Folder.SSL},
         )
+    )
+    issue_registry = ir.async_get(hass)
+    assert (
+        issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
+        is not None
     )
 
 
@@ -1124,7 +1142,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert len(supervisor_client.mock_calls) == 25
+    assert len(supervisor_client.mock_calls) == 16
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1807,3 +1825,46 @@ async def test_get_core_info(hass: HomeAssistant) -> None:
     assert result["version"] == "1.0.0"
     assert result["version_latest"] == "1.0.0"
     assert result["image"] == "homeassistant"
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_stop_handler_restored_on_unload(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test that the default stop handler is restored when the hassio entry unloads."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries("hassio")[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    # After a stop call to core no longer calls supervisor
+    with patch.object(hass, "async_stop") as mock_stop:
+        await hass.services.async_call("homeassistant", "stop", {})
+        await hass.async_block_till_done()
+        mock_stop.assert_called_once()
+        supervisor_client.homeassistant.stop.assert_not_called()
+
+
+@pytest.mark.usefixtures("supervisor_client")
+async def test_supervisor_issues_not_set_on_coordinator_failure(
+    hass: HomeAssistant,
+    supervisor_is_connected: AsyncMock,
+    supervisor_root_info: AsyncMock,
+) -> None:
+    """Test DATA_KEY_SUPERVISOR_ISSUES is not populated when coordinator fails.
+
+    If a coordinator first-refresh raises ConfigEntryNotReady the issues
+    listener must not be registered, preventing accumulation across retries.
+    """
+    supervisor_root_info.side_effect = SupervisorError()
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        assert result
+
+    entry = hass.config_entries.async_entries("hassio")[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert DATA_KEY_SUPERVISOR_ISSUES not in hass.data
