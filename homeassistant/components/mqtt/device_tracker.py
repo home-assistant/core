@@ -1,7 +1,5 @@
 """Support for tracking MQTT enabled devices identified."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -163,8 +161,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             latitude: float | None
             longitude: float | None
             gps_accuracy: float
-            # Reset manually set location to allow automatic zone detection
-            self._attr_location_name = None
             if isinstance(
                 latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
             ) and isinstance(

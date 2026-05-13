@@ -201,8 +201,12 @@ async def test_google_entity_registry_sync(
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
-    await config.async_initialize()
-    await config.async_connect_agent_user("mock-user-id")
+    with (
+        patch.object(config, "async_sync_entities_all"),
+        patch.object(config, "async_enable_report_state"),
+    ):
+        await config.async_initialize()
+        await config.async_connect_agent_user("mock-user-id")
 
     with (
         patch.object(config, "async_schedule_google_sync_all") as mock_sync,

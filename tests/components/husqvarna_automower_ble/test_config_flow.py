@@ -15,6 +15,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import (
     AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+    AUTOMOWER_NOT_PAIRABLE_SERVICE_INFO,
     AUTOMOWER_SERVICE_INFO_MOWER,
     AUTOMOWER_SERVICE_INFO_SERIAL,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
@@ -178,14 +179,10 @@ async def test_bluetooth_incorrect_pin(
 ) -> None:
     """Test we can select a device."""
 
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO_SERIAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO_SERIAL,
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
 
     # Try non numeric pin
@@ -235,14 +232,10 @@ async def test_bluetooth_unknown_error(
 ) -> None:
     """Test we can select a device."""
 
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO_SERIAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO_SERIAL,
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
 
     mock_automower_client.connect.return_value = ResponseResult.UNKNOWN_ERROR
@@ -262,14 +255,10 @@ async def test_bluetooth_not_paired(
 ) -> None:
     """Test we can select a device."""
 
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO_SERIAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO_SERIAL,
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
 
     mock_automower_client.connect.return_value = ResponseResult.NOT_ALLOWED
@@ -295,6 +284,44 @@ async def test_bluetooth_not_paired(
 
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
+        CONF_CLIENT_ID: 1197489078,
+        CONF_PIN: "1234",
+    }
+
+
+async def test_bluetooth_not_pairable_logs_on_connect(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the not-pairable warning is logged only when a connection is attempted."""
+
+    inject_bluetooth_service_info(hass, AUTOMOWER_NOT_PAIRABLE_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # The warning must not be emitted just from showing the form
+    assert "does not appear to be pairable" not in caplog.text
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "1234"},
+    )
+
+    # Now that the user submitted a valid PIN and a connection is attempted,
+    # the warning should appear exactly once
+    assert (
+        sum(
+            "does not appear to be pairable" in record.getMessage()
+            for record in caplog.records
+        )
+        == 1
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000005"
+    assert result["data"] == {
+        CONF_ADDRESS: "00000000-0000-0000-0000-000000000005",
         CONF_CLIENT_ID: 1197489078,
         CONF_PIN: "1234",
     }

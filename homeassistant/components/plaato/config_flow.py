@@ -1,7 +1,5 @@
 """Config flow for Plaato."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyplaato.plaato import PlaatoDeviceType
@@ -210,6 +208,8 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=hass-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

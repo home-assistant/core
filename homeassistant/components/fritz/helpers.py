@@ -1,7 +1,5 @@
 """Helpers for AVM FRITZ!Box."""
 
-from __future__ import annotations
-
 from collections.abc import ValuesView
 import logging
 
@@ -34,6 +32,6 @@ def device_filter_out_from_trackers(
     return bool(reason)
 
 
-def _ha_is_stopping(activity: str) -> None:
+def ha_is_stopping(activity: str) -> None:
     """Inform that HA is stopping."""
     _LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)

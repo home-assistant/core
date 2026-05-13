@@ -77,7 +77,7 @@ async def test_setup_h_j_model(
     assert "H and J series use an encrypted protocol" in caplog.text
 
 
-@pytest.mark.usefixtures("remote_websocket")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(

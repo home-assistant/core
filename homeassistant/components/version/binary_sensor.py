@@ -1,7 +1,5 @@
 """Binary sensor platform for Version."""
 
-from __future__ import annotations
-
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.binary_sensor import (

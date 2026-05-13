@@ -51,6 +51,33 @@ def make_test_trigger(*entities: str) -> dict:
     }
 
 
+def make_test_action(action: str, extra_data: ConfigType | None = None) -> ConfigType:
+    """Make a test action."""
+    data = extra_data or {}
+    return {
+        action: {
+            "action": "test.automation",
+            "data": {"caller": "{{ this.entity_id }}", "action": action, **data},
+        }
+    }
+
+
+def assert_action(
+    platform_setup: TemplatePlatformSetup,
+    calls: list[ServiceCall],
+    expected_calls: int,
+    expected_action: str,
+    index: int = -1,
+    **kwargs,
+) -> None:
+    """Validate the action was properly called."""
+    assert len(calls) == expected_calls
+    assert calls[index].data["action"] == expected_action
+    assert calls[index].data["caller"] == platform_setup.entity_id
+    for key, value in kwargs.items():
+        assert calls[index].data[key] == value
+
+
 async def async_trigger(
     hass: HomeAssistant,
     entity_id: str,

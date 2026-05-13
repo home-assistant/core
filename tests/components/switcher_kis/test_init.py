@@ -14,7 +14,15 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import init_integration
-from .consts import DUMMY_DEVICE_ID1, DUMMY_DEVICE_ID4, DUMMY_SWITCHER_DEVICES
+from .consts import (
+    DUMMY_DEVICE_ID1,
+    DUMMY_DEVICE_ID4,
+    DUMMY_DEVICE_ID10,
+    DUMMY_HEATER_DEVICE,
+    DUMMY_SWITCHER_DEVICES,
+    DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
+)
 
 from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -69,6 +77,57 @@ async def test_update_fail(
         entity_id = f"sensor.{slugify(device.name)}_power"
         state = hass.states.get(entity_id)
         assert state.state != STATE_UNAVAILABLE
+
+
+async def test_update_fail_token_needed(
+    hass: HomeAssistant,
+    mock_bridge,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entities state unavailable when updates fail.."""
+    entry = await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
+    await hass.async_block_till_done()
+
+    assert mock_bridge.is_running is True
+    assert len(entry.runtime_data) == 1
+
+    freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        f"Device {device.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+        in caplog.text
+    )
+
+    entity_id = f"switch.{slugify(device.name)}"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+    entity_id = f"sensor.{slugify(device.name)}_power"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 2)
+    )
+    await hass.async_block_till_done()
+
+    entity_id = f"switch.{slugify(device.name)}"
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
+
+    entity_id = f"sensor.{slugify(device.name)}_power"
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:
@@ -136,6 +195,61 @@ async def test_remove_device(
     response = await client.remove_device(device.id, entry_id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)}) is None
+    )
+
+
+async def test_remove_device_token_needed(
+    hass: HomeAssistant,
+    mock_bridge,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test being able to remove a disconnected device."""
+    assert await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass, USERNAME, TOKEN)
+    entry_id = entry.entry_id
+    assert mock_bridge
+
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
+    await hass.async_block_till_done()
+
+    assert mock_bridge.is_running is True
+    assert len(entry.runtime_data) == 1
+
+    live_device_id = DUMMY_DEVICE_ID10
+    dead_device_id = DUMMY_DEVICE_ID4
+
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
+
+    # Create a dead device
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, dead_device_id)},
+        manufacturer="Switcher",
+        model="Switcher Model",
+        name="Switcher Device",
+    )
+    await hass.async_block_till_done()
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+
+    # Try to remove a live device - fails
+    device = device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id, entry_id)
+    assert not response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+        is not None
+    )
+
+    # Try to remove a dead device - succeeds
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)})
+    response = await client.remove_device(device.id, entry_id)
+    assert response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
     assert (
         device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)}) is None
     )

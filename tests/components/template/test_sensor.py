@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
-from homeassistant.components.template.sensor import TriggerSensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -127,6 +126,19 @@ async def setup_attributes_state_sensor(
 
 
 @pytest.mark.parametrize(
+    ("count", "state_template", "style", "config"),
+    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_legacy_template_creates_warning(
+    hass: HomeAssistant, caplog_setup_text
+) -> None:
+    """Test legacy YAML configuration logs a warning."""
+    assert len(hass.states.async_all("sensor")) == 0
+    assert "entities can only be configured under template:" in caplog_setup_text
+
+
+@pytest.mark.parametrize(
     "config_entry_extra_options",
     [
         {},
@@ -183,7 +195,6 @@ async def test_setup_config_entry(
 @pytest.mark.parametrize(
     ("style", "initial_state"),
     [
-        (ConfigurationStyle.LEGACY, "It ."),
         (ConfigurationStyle.MODERN, "It ."),
         (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
     ],
@@ -204,7 +215,6 @@ async def test_sensor_state(hass: HomeAssistant, initial_state: str) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "icon_template"),
         (ConfigurationStyle.MODERN, "icon"),
         (ConfigurationStyle.TRIGGER, "icon"),
     ],
@@ -243,7 +253,6 @@ async def test_icon_template(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "entity_picture_template"),
         (ConfigurationStyle.MODERN, "picture"),
         (ConfigurationStyle.TRIGGER, "picture"),
     ],
@@ -288,7 +297,6 @@ async def test_entity_picture_template(
 @pytest.mark.parametrize(
     ("style", "attribute", "entity_id"),
     [
-        (ConfigurationStyle.LEGACY, "friendly_name_template", TEST_SENSOR.entity_id),
         (ConfigurationStyle.MODERN, "name", TEST_SENSOR.entity_id),
         (ConfigurationStyle.TRIGGER, "name", "sensor.unnamed_device"),
     ],
@@ -320,79 +328,13 @@ async def test_name_template(
     assert hass.states.get(entity_id).attributes["friendly_name"] == after_update
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, sensor.DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test_template_sensor": {"value_template": "{% if rubbish %}"}
-                },
-            },
-        },
-        {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test INVALID sensor": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
-                },
-            },
-        },
-        {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test_template_sensor": {"invalid"},
-                },
-            },
-        },
-        {
-            "sensor": {
-                "platform": "template",
-            },
-        },
-        {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test_template_sensor": {
-                        "not_value_template": "{{ states.sensor.test_state.state }}"
-                    }
-                },
-            },
-        },
-        {
-            "sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test_template_sensor": {
-                        "test": {
-                            "value_template": "{{ states.sensor.test_sensor.state }}",
-                            "device_class": "foobarnotreal",
-                        }
-                    }
-                },
-            },
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_legacy_template_syntax_error(hass: HomeAssistant) -> None:
-    """Test setup with invalid device_class."""
-    assert hass.states.async_all("sensor") == []
-
-
 @pytest.mark.parametrize(
     ("count", "config", "state_template"),
     [(1, {}, "{{ x - 12 }}")],
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_sensor")
 async def test_bad_template_unavailable(hass: HomeAssistant) -> None:
@@ -407,7 +349,7 @@ async def test_bad_template_unavailable(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("config", "expected_device_class"),
@@ -502,7 +444,6 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -537,7 +478,6 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -555,7 +495,7 @@ async def test_invalid_availability_template_keeps_component_available(
 
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("count", "state_template", "attributes", "before", "after"),
@@ -591,9 +531,7 @@ async def test_attribute_templates(
     assert state.attributes["test_attribute"] == after
 
 
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
-)
+@pytest.mark.parametrize("style", [ConfigurationStyle.MODERN])
 @pytest.mark.parametrize(
     ("count", "state_template", "attributes"),
     [
@@ -619,7 +557,7 @@ async def test_invalid_attribute_template(
 
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_unique_id(
     hass: HomeAssistant,
@@ -685,7 +623,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "75"
+        return 75
 
     later = dt_util.utcnow()
 
@@ -706,11 +644,6 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "before", "after"),
     [
-        (
-            ConfigurationStyle.LEGACY,
-            "It: " + TEST_SENSOR.entity_id,
-            "Works: " + TEST_SENSOR.entity_id,
-        ),
         (
             ConfigurationStyle.MODERN,
             "It: " + TEST_SENSOR.entity_id,
@@ -873,7 +806,7 @@ async def test_this_variable_early_hass_running(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.MODERN],
 )
 @pytest.mark.usefixtures("setup_state_sensor")
 async def test_self_referencing_sensor_loop(
@@ -1180,76 +1113,42 @@ async def test_trigger_conditional_entity_invalid_condition(
     assert state is None
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
-    "config",
+    (
+        "count",
+        "style",
+        "config",
+    ),
     [
-        {
-            "template": [
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensors": {
-                        "hello_name": {
-                            "friendly_name": "Hello Name",
-                            "value_template": "{{ trigger.event.data.beer }}",
-                            "entity_picture_template": "{{ '/local/dogs.png' }}",
-                            "icon_template": "{{ 'mdi:pirate' }}",
-                            "attribute_templates": {
-                                "last": "{{now().strftime('%D %X')}}",
-                                "history_1": "{{this.attributes.last|default('Not yet set')}}",
-                            },
-                        },
-                    },
+        (
+            1,
+            ConfigurationStyle.TRIGGER,
+            {
+                "state": "{{ trigger.event.data.beer }}",
+                "picture": "{{ '/local/dogs.png' }}",
+                "icon": "{{ 'mdi:pirate' }}",
+                "attributes": {
+                    "last": "{{now().strftime('%D %X')}}",
+                    "history_1": "{{this.attributes.last|default('Not yet set')}}",
                 },
-            ],
-        },
+            },
+        )
     ],
 )
-@pytest.mark.usefixtures("start_ha")
+@pytest.mark.usefixtures("setup_sensor")
 async def test_trigger_entity_runs_once(hass: HomeAssistant) -> None:
     """Test trigger entity handles a trigger once."""
-    state = hass.states.get("sensor.hello_name")
+    state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
     hass.bus.async_fire("test_event", {"beer": 2})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hello_name")
+    state = hass.states.get(TEST_SENSOR.entity_id)
     assert state.state == "2"
     assert state.attributes.get("last") == ANY
     assert state.attributes.get("history_1") == "Not yet set"
-
-
-@pytest.mark.parametrize(("count", "domain"), [(0, sensor.DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "sensor": {
-                "platform": "template",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "sensors": {
-                    "test_template_sensor": {
-                        "value_template": "{{ states.sensor.test_state.state }}",
-                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
-                    }
-                },
-            }
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_trigger_not_allowed_platform_config(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test we throw a helpful warning if a trigger is configured in platform config."""
-    state = hass.states.get(TEST_SENSOR.entity_id)
-    assert state is None
-    assert (
-        "Invalid config for 'sensor' from integration 'template': 'trigger' is an invalid option for"
-        in caplog_setup_text
-    )
 
 
 @pytest.mark.parametrize(("source_event_value"), [None, "None"])
@@ -1363,93 +1262,6 @@ async def test_trigger_attribute_order(
     )
 
 
-async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
-    """Test trigger entity device class parsing works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "{{ now().date() }}",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "{{ now() }}",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    # State of timestamp sensors are always in UTC
-    now = dt_util.utcnow()
-
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == now.date().isoformat()
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == now.isoformat(timespec="seconds")
-
-
-async def test_trigger_entity_device_class_errors_works(hass: HomeAssistant) -> None:
-    """Test trigger entity device class errors works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "invalid",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "invalid",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    now = dt_util.now()
-
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == STATE_UNKNOWN
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == STATE_UNKNOWN
-
-
 async def test_entity_last_reset_total_increasing(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1487,258 +1299,134 @@ async def test_entity_last_reset_total_increasing(
     )
 
 
-async def test_entity_last_reset_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("count", "extra_config", "state_template", "attribute"),
+    [
+        (
+            1,
+            {"state_class": "total"},
+            "{{ states('sensor.test_state') | int(0) }}",
+            "last_reset",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        (
+            "{{ '2023-01-01T00:00:00.000+00:00' | as_datetime }}",
+            "2023-01-01T00:00:00+00:00",
+        ),
+        (
+            "2023-01-01T00:00:00",
+            datetime(2023, 1, 1, 0, 0, 0).isoformat(),
+        ),
+        (
+            "{{ as_datetime('2023-01-01') }}",
+            datetime(2023, 1, 1).isoformat(),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_sensor")
+async def test_last_reset(hass: HomeAssistant, expected: str) -> None:
+    """Test last_reset."""
+    await async_trigger(hass, "sensor.test_state", "0")
+
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes["state_class"] == "total"
+    assert state.attributes["last_reset"] == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config", "state_template", "attribute", "attribute_template"),
+    [
+        (
+            1,
+            {"state_class": "total"},
+            "{{ states('sensor.test_state') | int(0) }}",
+            "last_reset",
+            "{{ 'not a datetime' }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_sensor")
+async def test_invalid_last_reset(
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test last_reset works for template sensors."""
-    # State of timestamp sensors are always in UTC
-    now = dt_util.utcnow()
+    await async_trigger(hass, "sensor.test_state", "0")
 
-    with patch("homeassistant.util.dt.now", return_value=now):
-        assert await async_setup_component(
-            hass,
-            "template",
-            {
-                "template": [
-                    {
-                        "sensor": [
-                            {
-                                "name": "Total entity",
-                                "state": "{{ states('sensor.test_state') | int(0) + 1 }}",
-                                "state_class": "total",
-                                "last_reset": "{{ now() }}",
-                            },
-                            {
-                                "name": "Static last_reset entity",
-                                "state": "{{ states('sensor.test_state') | int(0) }}",
-                                "state_class": "total",
-                                "last_reset": "2023-01-01T00:00:00",
-                            },
-                        ],
-                    },
-                    {
-                        "trigger": {
-                            "platform": "state",
-                            "entity_id": [
-                                "sensor.test_state",
-                            ],
-                        },
-                        "sensor": {
-                            "name": "Total trigger entity",
-                            "state": "{{ states('sensor.test_state') | int(0) + 2 }}",
-                            "state_class": "total",
-                            "last_reset": "{{ as_datetime('2023-01-01') }}",
-                        },
-                    },
-                ],
-            },
-        )
-        await hass.async_block_till_done()
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("last_reset") is None
 
-    # Trigger update
-    hass.states.async_set("sensor.test_state", "0")
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    static_state = hass.states.get("sensor.static_last_reset_entity")
-    assert static_state is not None
-    assert static_state.state == "0"
-    assert static_state.attributes.get("state_class") == "total"
-    assert (
-        static_state.attributes.get("last_reset")
-        == datetime(2023, 1, 1, 0, 0, 0).isoformat()
-    )
-
-    total_state = hass.states.get("sensor.total_entity")
-    assert total_state is not None
-    assert total_state.state == "1"
-    assert total_state.attributes.get("state_class") == "total"
-    assert total_state.attributes.get("last_reset") == now.isoformat()
-
-    total_trigger_state = hass.states.get("sensor.total_trigger_entity")
-    assert total_trigger_state is not None
-    assert total_trigger_state.state == "2"
-    assert total_trigger_state.attributes.get("state_class") == "total"
-    assert (
-        total_trigger_state.attributes.get("last_reset")
-        == datetime(2023, 1, 1).isoformat()
-    )
+    err = "Received invalid sensor last_reset: not a datetime for entity"
+    assert err in caplog_setup_text or err in caplog.text
 
 
-async def test_entity_last_reset_static_value(hass: HomeAssistant) -> None:
-    """Test static last_reset marked as static_rendered."""
-
-    tse = TriggerSensorEntity(
-        hass,
-        None,
-        {
-            "name": Template("Static last_reset entity", hass),
-            "state": Template("{{ states('sensor.test_state') | int(0) }}", hass),
-            "state_class": "total",
-            "last_reset": Template("2023-01-01T00:00:00", hass),
-        },
-    )
-
-    assert "last_reset" in tse._static_rendered
-
-
-async def test_entity_last_reset_parsing(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"device_class": "timestamp"},
+        {"device_class": "uptime"},
+    ],
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("invalid", STATE_UNKNOWN),
+        ("{{ now() }}", "2026-05-04T00:00:00+00:00"),
+        ("{{ now().isoformat() }}", "2026-05-04T00:00:00+00:00"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+@pytest.mark.freeze_time("2026-05-04 00:00:00+00:00")
+async def test_sensor_datetime_device_classes(
+    hass: HomeAssistant, expected_state: str
 ) -> None:
-    """Test last_reset works for template sensors."""
-    # State of timestamp sensors are always in UTC
-    now = dt_util.utcnow()
+    """Test sensor datetime device classes."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
 
-    with (
-        patch(
-            "homeassistant.components.template.sensor._LOGGER.warning"
-        ) as mocked_warning,
-        patch(
-            "homeassistant.components.template.template_entity._LOGGER.error"
-        ) as mocked_error,
-        patch("homeassistant.util.dt.now", return_value=now),
-    ):
-        assert await async_setup_component(
-            hass,
-            "template",
-            {
-                "template": [
-                    {
-                        "sensor": [
-                            {
-                                "name": "Total entity",
-                                "state": "{{ states('sensor.test_state') | int(0) + 1 }}",
-                                "state_class": "total",
-                                "last_reset": "{{ 'not a datetime' }}",
-                            },
-                        ],
-                    },
-                    {
-                        "trigger": {
-                            "platform": "state",
-                            "entity_id": [
-                                "sensor.test_state",
-                            ],
-                        },
-                        "sensor": {
-                            "name": "Total trigger entity",
-                            "state": "{{ states('sensor.test_state') | int(0) + 2 }}",
-                            "state_class": "total",
-                            "last_reset": "{{ 'not a datetime' }}",
-                        },
-                    },
-                ],
-            },
-        )
-        await hass.async_block_till_done()
-
-        # Trigger update
-        hass.states.async_set("sensor.test_state", "0")
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-        # Trigger based datetime parsing warning:
-        mocked_warning.assert_called_once_with(
-            "%s rendered invalid timestamp for last_reset attribute: %s",
-            "sensor.total_trigger_entity",
-            "not a datetime",
-        )
-
-        # State based datetime parsing error
-        mocked_error.assert_called_once()
-        args, _ = mocked_error.call_args
-        assert len(args) == 6
-        assert args[0] == (
-            "Error validating template result '%s' "
-            "from template '%s' "
-            "for attribute '%s' in entity %s "
-            "validation message '%s'"
-        )
-        assert args[1] == "not a datetime"
-        assert args[3] == "_attr_last_reset"
-        assert args[4] == "sensor.total_entity"
-        assert args[5] == "Invalid datetime specified: not a datetime"
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
-async def test_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
-    """Test entity device class parsing works."""
-    # State of timestamp sensors are always in UTC
-    now = dt_util.utcnow()
+@pytest.mark.parametrize(("count", "config"), [(1, {"device_class": "date"})])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("invalid", STATE_UNKNOWN),
+        ("{{ utcnow().date() }}", "2026-05-04"),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+@pytest.mark.freeze_time("2026-05-04 00:00:00+00:00")
+async def test_sensor_date_device_class(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor date device class."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
 
-    with patch("homeassistant.util.dt.now", return_value=now):
-        assert await async_setup_component(
-            hass,
-            "template",
-            {
-                "template": [
-                    {
-                        "sensor": [
-                            {
-                                "name": "Date entity",
-                                "state": "{{ now().date() }}",
-                                "device_class": "date",
-                            },
-                            {
-                                "name": "Timestamp entity",
-                                "state": "{{ now() }}",
-                                "device_class": "timestamp",
-                            },
-                        ],
-                    },
-                ],
-            },
-        )
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == now.date().isoformat()
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == now.isoformat(timespec="seconds")
-
-
-async def test_entity_device_class_errors_works(hass: HomeAssistant) -> None:
-    """Test entity device class errors works."""
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "sensor": [
-                        {
-                            "name": "Date entity",
-                            "state": "invalid",
-                            "device_class": "date",
-                        },
-                        {
-                            "name": "Timestamp entity",
-                            "state": "invalid",
-                            "device_class": "timestamp",
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    now = dt_util.now()
-
-    with patch("homeassistant.util.dt.now", return_value=now):
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-
-    date_state = hass.states.get("sensor.date_entity")
-    assert date_state is not None
-    assert date_state.state == STATE_UNKNOWN
-
-    ts_state = hass.states.get("sensor.timestamp_entity")
-    assert ts_state is not None
-    assert ts_state.state == STATE_UNKNOWN
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
@@ -1987,61 +1675,6 @@ async def test_trigger_conditional_action(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
-@pytest.mark.parametrize("trigger_field", ["trigger", "triggers"])
-@pytest.mark.parametrize("condition_field", ["condition", "conditions"])
-@pytest.mark.parametrize("action_field", ["action", "actions"])
-async def test_legacy_and_new_config_schema(
-    hass: HomeAssistant, trigger_field: str, condition_field: str, action_field: str
-) -> None:
-    """Tests that both old and new config schema (singular -> plural) work."""
-
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {
-                    "unique_id": "listening-test-event",
-                    f"{trigger_field}": {
-                        "platform": "event",
-                        "event_type": "beer_event",
-                    },
-                    f"{condition_field}": [
-                        {
-                            "condition": "template",
-                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
-                        }
-                    ],
-                    f"{action_field}": [
-                        {"event": "test_event_by_action"},
-                    ],
-                    "sensor": [
-                        {
-                            "name": "Unimportant",
-                            "state": "Uninteresting",
-                        }
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    event = "test_event_by_action"
-    events = async_capture_events(hass, event)
-
-    hass.bus.async_fire("beer_event", {"beer": 1})
-    await hass.async_block_till_done()
-
-    assert len(events) == 0
-
-    hass.bus.async_fire("beer_event", {"beer": 42})
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-
-
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2095,3 +1728,84 @@ async def test_flow_preview(
     )
 
     assert state["state"] == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "state_template"),
+    [
+        (
+            1,
+            {
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+            "{{ states('sensor.test_state') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_numeric_sensor_recovers_from_exception(hass: HomeAssistant) -> None:
+    """Test template."""
+    assert hass.states.get(TEST_SENSOR.entity_id).state == STATE_UNKNOWN
+
+    for set_state, expected_state in (
+        ("0.0", "0.0"),
+        ("unavailable", STATE_UNKNOWN),
+        ("1.0", "1.0"),
+        ("unknown", STATE_UNKNOWN),
+        ("2.0", "2.0"),
+        ("kjfdah", STATE_UNKNOWN),
+        ("3.0", "3.0"),
+        ("3.x", STATE_UNKNOWN),
+        ("4.0", "4.0"),
+    ):
+        await async_trigger(hass, TEST_STATE_SENSOR, set_state)
+        assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state"),
+    [
+        ("{{ '1.0' }}", "1.0"),
+        ("{{ '1' }}", "1"),
+        ("{{ 1.0 }}", "1.0"),
+        ("{{ 1 }}", "1"),
+        ("{{ '0.0' }}", "0.0"),
+        ("{{ '0' }}", "0"),
+        ("{{ 0.0 }}", "0.0"),
+        ("{{ 0 }}", "0"),
+        ("{{ '10021452' }}", "10021452"),
+        ("{{ 10021452 }}", "10021452"),
+        ("{{ '1002.1452' }}", "1002.1452"),
+        ("{{ 1002.1452 }}", "1002.1452"),
+        ("{{ True }}", STATE_UNKNOWN),
+        ("{{ False }}", STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_numeric_sensor_int_float(
+    hass: HomeAssistant, expected_state: str
+) -> None:
+    """Test sensor properly stores int or float for state."""
+    await async_trigger(hass, TEST_STATE_SENSOR, "anything")
+    assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_platform[legacy-override][climate.thermostat_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -70,8 +71,9 @@
 # ---
 # name: test_setup_platform[legacy-zero_override][climate.thermostat_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -139,8 +141,9 @@
 # ---
 # name: test_setup_platform[modern-override][climate.thermostat_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -208,8 +211,9 @@
 # ---
 # name: test_setup_platform[modern-zero_override][climate.thermostat_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

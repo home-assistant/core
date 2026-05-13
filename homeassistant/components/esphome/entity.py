@@ -1,7 +1,5 @@
 """Support for esphome entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -189,6 +187,7 @@ async def platform_async_setup_entry(
     info_type: type[_InfoT],
     entity_type: type[_EntityT],
     state_type: type[_StateT],
+    info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
     """Set up an esphome platform.
 
@@ -208,10 +207,22 @@ async def platform_async_setup_entry(
         entity_type,
         state_type,
     )
+
+    if info_filter is not None:
+
+        def on_filtered_update(infos: list[EntityInfo]) -> None:
+            on_static_info_update(
+                [info for info in infos if info_filter(cast(_InfoT, info))]
+            )
+
+        info_callback = on_filtered_update
+    else:
+        info_callback = on_static_info_update
+
     entry_data.cleanup_callbacks.append(
         entry_data.async_register_static_info_callback(
             info_type,
-            on_static_info_update,
+            info_callback,
         )
     )
 

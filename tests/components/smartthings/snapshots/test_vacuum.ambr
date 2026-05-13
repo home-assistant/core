@@ -1,10 +1,18 @@
 # serializer version: 1
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'normal',
+        'maximum',
+        'smart',
+        'quiet',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -29,17 +37,24 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12308>,
-    'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main',
+    'supported_features': <VacuumEntityFeature: 12340>,
+    'translation_key': 'vacuum',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
-      'supported_features': <VacuumEntityFeature: 12308>,
+      'fan_speed': 'maximum',
+      'fan_speed_list': list([
+        'normal',
+        'maximum',
+        'smart',
+        'quiet',
+      ]),
+      'friendly_name': 'Robot Vacuum',
+      'supported_features': <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum',
@@ -49,12 +64,20 @@
     'state': 'docked',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-entry]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'normal',
+        'maximum',
+        'smart',
+        'quiet',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -62,7 +85,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.robot_vacuum',
+    'entity_id': 'vacuum.robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -79,20 +102,27 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12308>,
-    'translation_key': None,
+    'supported_features': <VacuumEntityFeature: 12340>,
+    'translation_key': 'vacuum',
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-state]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
-      'supported_features': <VacuumEntityFeature: 12308>,
+      'fan_speed': 'smart',
+      'fan_speed_list': list([
+        'normal',
+        'maximum',
+        'smart',
+        'quiet',
+      ]),
+      'friendly_name': 'Robot vacuum 1',
+      'supported_features': <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.robot_vacuum',
+    'entity_id': 'vacuum.robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

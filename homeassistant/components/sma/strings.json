@@ -38,6 +38,12 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "group": "[%key:component::sma::config::step::user::data_description::group%]",
+          "host": "[%key:component::sma::config::step::user::data_description::host%]",
+          "ssl": "[%key:component::sma::config::step::user::data_description::ssl%]",
+          "verify_ssl": "[%key:component::sma::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Use the following form to reconfigure your SMA device.",
         "title": "Reconfigure SMA Solar Integration"
       },
@@ -50,7 +56,11 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your SMA device."
+          "group": "The group of your SMA device, where the Modbus connection is configured",
+          "host": "The hostname or IP address of your SMA device",
+          "password": "The password for your SMA device",
+          "ssl": "Whether to use SSL to connect to your SMA device. This is required for newer SMA devices, but older devices do not support SSL",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your SMA device information.",
         "title": "Set up SMA Solar"

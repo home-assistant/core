@@ -1,7 +1,5 @@
 """Provide a way to label and group anything."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
@@ -80,7 +78,7 @@ class LabelRegistryStore(Store[LabelRegistryStoreData]):
     ) -> LabelRegistryStoreData:
         """Migrate to the new version."""
         if old_major_version > STORAGE_VERSION_MAJOR:
-            raise ValueError("Can't migrate to future version")
+            raise NotImplementedError
 
         if old_major_version == 1:
             if old_minor_version < 2:
@@ -224,7 +222,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         return new
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the label registry."""
         data = await self._store.async_load()
         labels = NormalizedNameBaseRegistryItems[LabelEntry]()
@@ -270,7 +268,7 @@ def async_get(hass: HomeAssistant) -> LabelRegistry:
     return LabelRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load label registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)

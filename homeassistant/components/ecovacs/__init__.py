@@ -38,12 +38,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
     """Set up this integration using UI."""
     controller = EcovacsController(hass, entry.data)
+
+    entry.async_on_unload(controller.teardown)
+
     await controller.initialize()
 
-    async def on_unload() -> None:
-        await controller.teardown()
-
-    entry.async_on_unload(on_unload)
     entry.runtime_data = controller
 
     async def _async_wait_connect(device: VacBot) -> None:

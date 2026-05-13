@@ -108,26 +108,42 @@ async def setup_weather(
 
 @pytest.mark.parametrize(
     ("style", "config"),
+    [(ConfigurationStyle.LEGACY, TEST_LEGACY_REQUIRED)],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_legacy_template_creates_warning(
+    hass: HomeAssistant, caplog_setup_text
+) -> None:
+    """Test legacy YAML configuration logs a warning."""
+    assert len(hass.states.async_all("weather")) == 0
+    assert "entities can only be configured under template:" in caplog_setup_text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
     [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
-                "attribution_template": "{{ states('sensor.attribution') }}",
-                "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
-                "condition_template": "{{ states('sensor.condition') }}",
-                "dew_point_template": "{{ states('sensor.dew_point') }}",
-                "humidity_template": "{{ states('sensor.humidity') | int }}",
-                "ozone_template": "{{ states('sensor.ozone') }}",
-                "pressure_template": "{{ states('sensor.pressure') }}",
-                "temperature_template": "{{ states('sensor.temperature') | float }}",
-                "unique_id": "abc123",
-                "visibility_template": "{{ states('sensor.visibility') }}",
-                "wind_bearing_template": "{{ states('sensor.wind_bearing') }}",
-                "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
-                "wind_speed_template": "{{ states('sensor.wind_speed') }}",
-            },
-        ),
+        {
+            "condition": "{{ x - 2 }}",
+            "temperature": "{{ 20 }}",
+            "humidity": "{{ 25 }}",
+        },
+    ],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_template_state_exception(hass: HomeAssistant) -> None:
+    """Test condition produces exception."""
+    await async_trigger(hass, "sensor.condition", "anything")
+    state = hass.states.get(TEST_WEATHER.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("style", "config"),
+    [
         (
             ConfigurationStyle.MODERN,
             {
@@ -211,9 +227,7 @@ async def setup_weather(
     ],
 )
 @pytest.mark.usefixtures("setup_weather")
-async def test_template_state_text(
-    hass: HomeAssistant, style: ConfigurationStyle
-) -> None:
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
     await async_trigger(hass, "sensor.condition", "sunny")
     for entity_id, v_attr, value in (
@@ -235,60 +249,32 @@ async def test_template_state_text(
         state = hass.states.get(TEST_WEATHER.entity_id)
         assert state is not None
         assert state.state == "sunny"
-        # Legacy template entities do not support uv_index, modern and trigger do.
-        assert state.attributes.get(v_attr) == value or (
-            entity_id == "sensor.uv_index" and style == ConfigurationStyle.LEGACY
-        )
+        assert state.attributes.get(v_attr) == value
+
+    await async_trigger(hass, "sensor.condition", "None")
+    state = hass.states.get(TEST_WEATHER.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
-    ("style", "config"),
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
     [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_LEGACY_REQUIRED,
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_LEGACY_REQUIRED,
-            },
-        ),
-        (
-            ConfigurationStyle.TRIGGER,
-            {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_LEGACY_REQUIRED,
-            },
-        ),
-        (
-            ConfigurationStyle.MODERN,
-            {
-                "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_MODERN_REQUIRED,
-            },
-        ),
-        (
-            ConfigurationStyle.TRIGGER,
-            {
-                "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_MODERN_REQUIRED,
-            },
-        ),
+        {
+            "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+            "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+            "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+            **TEST_LEGACY_REQUIRED,
+        },
+        {
+            "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
+            "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
+            "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+            **TEST_MODERN_REQUIRED,
+        },
     ],
 )
 @pytest.mark.usefixtures("setup_weather")
@@ -377,15 +363,6 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
     ("style", "config"),
     [
         (
-            ConfigurationStyle.LEGACY,
-            {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_LEGACY_REQUIRED,
-            },
-        ),
-        (
             ConfigurationStyle.MODERN,
             {
                 "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
@@ -469,7 +446,7 @@ async def test_forecasts_invalid(
         return_response=True,
     )
     assert response == expected
-    assert "Only valid keys in Forecast are allowed" in caplog.text
+    assert "expected valid forecast keys, unallowed keys:" in caplog.text
 
     # Test twice daily missing is_daytime
     hass.states.async_set(
@@ -521,21 +498,12 @@ async def test_forecasts_invalid(
         return_response=True,
     )
     assert response == expected
-    assert "`datetime` is required in forecasts" in caplog.text
+    assert "`datetime` is missing in forecast" in caplog.text
 
 
 @pytest.mark.parametrize(
     ("style", "config"),
     [
-        (
-            ConfigurationStyle.LEGACY,
-            {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
-                **TEST_LEGACY_REQUIRED,
-            },
-        ),
         (
             ConfigurationStyle.MODERN,
             {
@@ -612,7 +580,7 @@ async def test_forecast_format_error(
         blocking=True,
         return_response=True,
     )
-    assert "Forecast in list is not a dict, see Weather documentation" in caplog.text
+    assert "expected a list of forecast dictionaries, got" in caplog.text
     await hass.services.async_call(
         WEATHER_DOMAIN,
         SERVICE_GET_FORECASTS,
@@ -620,7 +588,7 @@ async def test_forecast_format_error(
         blocking=True,
         return_response=True,
     )
-    assert "Forecasts is not a list, see Weather documentation" in caplog.text
+    assert "expected a list, " in caplog.text
 
 
 SAVED_EXTRA_DATA = {

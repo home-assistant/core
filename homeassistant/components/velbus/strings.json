@@ -66,17 +66,11 @@
     "connection_failed": {
       "message": "Could not connect to Velbus."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
     },
     "module_not_found": {
       "message": "Module with address {address} not found."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     },
     "scan_failed": {
       "message": "Scan service: {error}."

@@ -1,7 +1,5 @@
 """Number platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -358,7 +356,7 @@ PINECIL_SETPOINT_NUMBER_DESCRIPTION = IronOSNumberEntityDescription(
     native_max_value=MAX_TEMP,
     native_min_value_f=MIN_TEMP_F,
     native_max_value_f=MAX_TEMP_F,
-    native_step=5,
+    native_step=1,
 )
 
 

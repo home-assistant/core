@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[number.mock_classicledcontrol_e_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -60,8 +61,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_day_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -119,8 +121,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_manual_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -178,8 +181,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_night_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -237,8 +241,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -296,8 +301,9 @@
 # ---
 # name: test_setup[number.mock_filter_high_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 200000,
@@ -356,8 +362,9 @@
 # ---
 # name: test_setup[number.mock_filter_low_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 200000,
@@ -416,8 +423,9 @@
 # ---
 # name: test_setup[number.mock_filter_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -475,8 +483,9 @@
 # ---
 # name: test_setup[number.mock_heater_night_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -534,8 +543,9 @@
 # ---
 # name: test_setup[number.mock_heater_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -593,8 +603,9 @@
 # ---
 # name: test_setup[number.mock_heater_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3,
@@ -644,6 +655,249 @@
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_heater_temperature_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_reeflex_booster_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20160,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_reeflex_booster_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Booster duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Booster duration',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'booster_time',
+    'unique_id': '00:00:00:00:00:05_booster_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup[number.mock_reeflex_booster_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock reeflex Booster duration',
+      'max': 20160,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_reeflex_booster_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_reeflex_daily_burn_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1440,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_reeflex_daily_burn_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily burn duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Daily burn duration',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_burn_time',
+    'unique_id': '00:00:00:00:00:05_daily_burn_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup[number.mock_reeflex_daily_burn_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock reeflex Daily burn duration',
+      'max': 1440,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_reeflex_daily_burn_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_reeflex_pause_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20160,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_reeflex_pause_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pause duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Pause duration',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause_time',
+    'unique_id': '00:00:00:00:00:05_pause_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup[number.mock_reeflex_pause_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock reeflex Pause duration',
+      'max': 20160,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_reeflex_pause_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_reeflex_system_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_reeflex_system_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'System LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System LED brightness',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'system_led',
+    'unique_id': '00:00:00:00:00:05_system_led',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_setup[number.mock_reeflex_system_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock reeflex System LED brightness',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_reeflex_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

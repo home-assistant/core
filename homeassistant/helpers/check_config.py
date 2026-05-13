@@ -1,7 +1,5 @@
 """Helper to check the configuration file."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 import logging
 import os
@@ -31,7 +29,7 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
 )
 
-from . import config_validation as cv
+from . import condition, config_validation as cv, trigger
 from .typing import ConfigType
 
 
@@ -92,6 +90,12 @@ async def async_check_ha_config_file(  # noqa: C901
     """
     result = HomeAssistantConfig()
     async_clear_install_history(hass)
+
+    # Set up condition and trigger helpers needed for config validation.
+    if condition.CONDITIONS not in hass.data:
+        await condition.async_setup(hass)
+    if trigger.TRIGGERS not in hass.data:
+        await trigger.async_setup(hass)
 
     def _pack_error(
         hass: HomeAssistant,

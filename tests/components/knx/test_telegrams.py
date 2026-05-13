@@ -18,6 +18,7 @@ from .conftest import KNXTestKit
 MOCK_TIMESTAMP = "2023-07-02T14:51:24.045162-07:00"
 MOCK_TELEGRAMS = [
     {
+        "data_secure": None,  # None since CEMIHandler is mocked away and doesn't set it to False
         "destination": "1/3/4",
         "destination_name": "",
         "direction": "Incoming",
@@ -33,6 +34,7 @@ MOCK_TELEGRAMS = [
         "value": None,
     },
     {
+        "data_secure": None,
         "destination": "2/2/2",
         "destination_name": "",
         "direction": "Outgoing",

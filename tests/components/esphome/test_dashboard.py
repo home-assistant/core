@@ -19,9 +19,11 @@ from .conftest import MockESPHomeDeviceType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("init_integration", "mock_dashboard")
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_dashboard_storage(
     hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
@@ -129,6 +131,7 @@ async def test_setup_dashboard_fails(
 
 async def test_setup_dashboard_fails_when_already_setup(
     hass: HomeAssistant,
+    mock_client: APIClient,
     mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -168,7 +171,9 @@ async def test_setup_dashboard_fails_when_already_setup(
 
 @pytest.mark.usefixtures("mock_dashboard")
 async def test_new_info_reload_config_entries(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test config entries are reloaded when new info is set."""
     assert init_integration.state is ConfigEntryState.LOADED

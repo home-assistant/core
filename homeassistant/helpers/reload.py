@@ -1,7 +1,5 @@
 """Class to reload platforms."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
@@ -136,6 +134,8 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
 @overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str

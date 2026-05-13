@@ -1,10 +1,26 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:calendar-blank"
+    },
+    "is_on": {
+      "condition": "mdi:calendar-clock"
+    }
+  },
   "services": {
     "get_schedule": {
       "service": "mdi:calendar-export"
     },
     "reload": {
       "service": "mdi:reload"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:calendar-blank"
+    },
+    "turned_on": {
+      "trigger": "mdi:calendar-clock"
     }
   }
 }

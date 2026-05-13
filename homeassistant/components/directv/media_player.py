@@ -1,7 +1,5 @@
 """Support for the DirecTV receivers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -117,7 +115,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._attr_assumed_state = self._is_recorded
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         if self._is_standby:
             return {}

@@ -256,6 +256,9 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

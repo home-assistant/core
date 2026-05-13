@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[number.aqi_alarm_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60.0,
@@ -59,10 +60,72 @@
     'state': '1.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.balkonbewasserung_irrigation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.balkonbewasserung_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.balkonbewasserung_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'balkonbewässerung Irrigation duration',
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.balkonbewasserung_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.blissradia_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -120,8 +183,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.9,
@@ -179,8 +243,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.c9_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -238,8 +303,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50.0,
@@ -297,8 +363,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5.0,
@@ -356,8 +423,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_battery_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -415,8 +483,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_inverter_output_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100000.0,
@@ -475,8 +544,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20.0,
@@ -532,10 +602,72 @@
     'state': '1.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.garden_valve_yard_irrigation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.garden_valve_yard_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.ggimpv4dqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.garden_valve_yard_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Garden Valve Yard Irrigation duration',
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.garden_valve_yard_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300.0,
@@ -593,8 +725,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300.0,
@@ -652,8 +785,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75.0,
@@ -712,8 +846,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -771,8 +906,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -830,8 +966,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.5,
@@ -890,8 +1027,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.4,
@@ -950,8 +1088,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000.0,
@@ -1010,8 +1149,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_near_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000.0,
@@ -1070,8 +1210,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -1127,10 +1268,71 @@
     'state': '3.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.inverter_pool_heat_pump_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 104.0,
+      'min': -22.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.inverter_pool_heat_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_set',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.inverter_pool_heat_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inverter Pool Heat Pump Temperature',
+      'max': 104.0,
+      'min': -22.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inverter_pool_heat_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1189,8 +1391,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1249,8 +1452,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1309,8 +1513,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1369,8 +1574,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1429,8 +1635,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1489,8 +1696,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1549,8 +1757,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1439.0,
@@ -1609,8 +1818,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kabinet_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.0,
@@ -1668,8 +1878,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 600.0,
@@ -1728,8 +1939,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -1787,8 +1999,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1847,8 +2060,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_arm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1907,8 +2121,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_siren_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -1967,8 +2182,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 600.0,
@@ -2027,8 +2243,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2086,8 +2303,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2145,8 +2363,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.0,
@@ -2205,8 +2424,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.7,
@@ -2263,10 +2483,191 @@
     'state': '0.1',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video brightness',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_brightness',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_bright',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video brightness',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_contrast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_contrast',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video contrast',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video contrast',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_contrast',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_contrast',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_contrast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video contrast',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_contrast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_sharpness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_sharpness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video sharpness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video sharpness',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_sharpness',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_sharp',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_sharpness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video sharpness',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_sharpness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.siren_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10.0,
@@ -2324,8 +2725,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.siren_veranda_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 30.0,
@@ -2383,8 +2785,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.0,
@@ -2440,10 +2843,72 @@
     'state': '-2.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.smart_water_timer_irrigation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_water_timer_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.bl5cuqxnqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.smart_water_timer_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Smart Water Timer Irrigation duration',
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_water_timer_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2501,8 +2966,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 92.5,
@@ -2560,8 +3026,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5999.0,
@@ -2617,10 +3084,72 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.sprinkler_cesare_irrigation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.sprinkler_cesare_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.tskafaotnfigad6oqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.sprinkler_cesare_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Sprinkler Cesare Irrigation duration',
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sprinkler_cesare_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.v20_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2676,10 +3205,72 @@
     'state': '95.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.valve_controller_2_irrigation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.valve_controller_2_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.kx8dncf1qzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.valve_controller_2_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Valve Controller 2 Irrigation duration',
+      'max': 86400.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.valve_controller_2_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.white_noise_machine_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -2737,8 +3328,9 @@
 # ---
 # name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9.9,

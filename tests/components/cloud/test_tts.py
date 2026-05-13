@@ -25,7 +25,7 @@ from homeassistant.components.cloud.tts import (
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.tts import (
@@ -274,6 +274,7 @@ async def test_get_tts_audio(
 
         # Force streaming
         await client.get(response["path"])
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     if data.get("engine_id", "").startswith("tts."):
         # Streaming
@@ -857,7 +858,7 @@ async def test_tts_services(
     service_data: dict[str, Any],
 ) -> None:
     """Test tts services."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
     mock_process_tts = AsyncMock(return_value=b"")
     cloud.voice.process_tts = mock_process_tts
     mock_process_tts_stream = _make_stream_mock("There is someone at the door.")

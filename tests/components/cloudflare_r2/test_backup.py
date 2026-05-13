@@ -1,18 +1,22 @@
 """Test the Cloudflare R2 backup platform."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 import json
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
-from botocore.exceptions import ConnectTimeoutError
+from botocore.exceptions import BotoCoreError, ConnectTimeoutError
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    UploadBackupEvent,
+)
 from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
-    BotoCoreError,
     R2BackupAgent,
     async_register_backup_agents_listener,
     suggested_filenames,
@@ -401,7 +405,7 @@ async def test_multipart_upload_consistent_part_sizes(
 
     mock_client.upload_part.side_effect = record_upload_part
 
-    await agent._upload_multipart("test.tar", open_stream)
+    await agent._upload_multipart("test.tar", open_stream, Mock())
 
     # Verify that all non-trailing parts have the same size
     assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
@@ -416,6 +420,68 @@ async def test_multipart_upload_consistent_part_sizes(
     if expected_trailing == 0:
         expected_trailing = MULTIPART_MIN_PART_SIZE_BYTES
     assert uploaded_part_sizes[-1] == expected_trailing
+
+
+@pytest.mark.parametrize(
+    "test_backup",
+    [MULTIPART_MIN_PART_SIZE_BYTES * 2],
+    indirect=True,
+    ids=["large"],
+)
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: UploadBackupEvent) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=test_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * test_backup.size,
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    agent_events = [e for e in events if e.agent_id == agent_id]
+    assert len(agent_events) >= 2
+    assert all(e.total_bytes == test_backup.size for e in agent_events)
+    # Verify events report distinct increasing byte counts
+    uploaded_bytes = [e.uploaded_bytes for e in agent_events]
+    assert uploaded_bytes == sorted(uploaded_bytes)
+    assert len(set(uploaded_bytes)) == len(uploaded_bytes)
+    # Verify at least one intermediate event (uploaded_bytes < total_bytes)
+    assert agent_events[0].uploaded_bytes < agent_events[0].total_bytes
 
 
 async def test_agents_download(
@@ -521,3 +587,57 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
+
+
+async def test_multipart_upload_uses_prefix_for_all_calls(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry_with_prefix: MockConfigEntry,
+) -> None:
+    """Test multipart upload uses the configured prefix for all S3 calls."""
+    mock_config_entry_with_prefix.runtime_data = mock_client
+    agent = R2BackupAgent(hass, mock_config_entry_with_prefix)
+
+    async def stream() -> AsyncIterator[bytes]:
+        # Force multipart: > MIN_PART_SIZE
+        yield b"x" * (MULTIPART_MIN_PART_SIZE_BYTES + 1)
+
+    async def open_stream():
+        return stream()
+
+    await agent._upload_multipart("test.tar", open_stream, Mock())
+
+    prefixed_key = "ha/backups/test.tar"
+
+    assert mock_client.create_multipart_upload.await_args.kwargs["Key"] == prefixed_key
+
+    for call in mock_client.upload_part.await_args_list:
+        assert call.kwargs["Key"] == prefixed_key
+
+    assert (
+        mock_client.complete_multipart_upload.await_args.kwargs["Key"] == prefixed_key
+    )
+
+
+async def test_list_backups_passes_prefix_to_list_objects(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry_with_prefix: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test list_objects_v2 is called with Prefix when configured."""
+    mock_config_entry_with_prefix.runtime_data = mock_client
+    agent = R2BackupAgent(hass, mock_config_entry_with_prefix)
+
+    # Make the listing for a prefixed bucket
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    mock_client.list_objects_v2.return_value = {
+        "Contents": [
+            {"Key": f"ha/backups/{metadata_filename}"},
+            {"Key": f"ha/backups/{tar_filename}"},
+        ]
+    }
+
+    await agent.async_list_backups()
+
+    assert mock_client.list_objects_v2.call_args.kwargs["Prefix"] == "ha/backups/"

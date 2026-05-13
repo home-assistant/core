@@ -1,7 +1,5 @@
 """Support for tariff selection."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.select import SelectEntity
@@ -62,10 +60,9 @@ async def async_setup_platform(
         return
 
     meter: str = discovery_info[CONF_METER]
-    conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
-        CONF_UNIQUE_ID
-    )
-    conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+    meter_info = hass.data[DATA_UTILITY][meter]
+    conf_meter_unique_id = meter_info.get(CONF_UNIQUE_ID)
+    conf_meter_name = meter_info.get(CONF_NAME, meter)
 
     async_add_entities(
         [

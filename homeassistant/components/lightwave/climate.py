@@ -1,7 +1,5 @@
 """Support for LightwaveRF TRVs."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -90,7 +88,7 @@ class LightwaveTrv(ClimateEntity):
                 self._attr_hvac_action = HVACAction.OFF
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Target room temperature."""
         if self._inhibit > 0:
             # If we get an update before the new temp has

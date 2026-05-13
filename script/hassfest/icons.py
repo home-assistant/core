@@ -1,7 +1,5 @@
 """Validate integration icon translation files."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import orjson
@@ -11,7 +9,7 @@ from voluptuous.humanize import humanize_error
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import convert_shorthand_service_icon
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 from .translations import translation_key_validator
 
 
@@ -141,7 +139,7 @@ TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
 
 
 def icon_schema(
-    core_integration: bool, integration_type: str, no_entity_platform: bool
+    core_integration: bool, integration_type: IntegrationType, no_entity_platform: bool
 ) -> vol.Schema:
     """Create an icon schema."""
 
@@ -189,8 +187,12 @@ def icon_schema(
         }
     )
 
-    if integration_type in ("entity", "helper", "system"):
-        if integration_type != "entity" or no_entity_platform:
+    if integration_type in (
+        IntegrationType.ENTITY,
+        IntegrationType.HELPER,
+        IntegrationType.SYSTEM,
+    ):
+        if integration_type != IntegrationType.ENTITY or no_entity_platform:
             field = vol.Optional("entity_component")
         else:
             field = vol.Required("entity_component")
@@ -207,7 +209,7 @@ def icon_schema(
                 )
             }
         )
-    if integration_type not in ("entity", "system"):
+    if integration_type not in (IntegrationType.ENTITY, IntegrationType.SYSTEM):
         schema = schema.extend(
             {
                 vol.Optional("entity"): vol.All(

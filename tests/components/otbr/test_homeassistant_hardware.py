@@ -4,6 +4,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_callback,
 )
@@ -174,7 +177,7 @@ async def test_hardware_firmware_info_provider_notification(
     )
     otbr.add_to_hass(hass)
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     callback = Mock()
     async_register_firmware_info_callback(hass, DEVICE_PATH, callback)

@@ -1,7 +1,5 @@
 """Config flow for pyLoad integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -90,7 +88,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
         password=user_input[CONF_PASSWORD],
     )
 
-    await pyload.login()
+    await pyload.get_status()
 
 
 class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):

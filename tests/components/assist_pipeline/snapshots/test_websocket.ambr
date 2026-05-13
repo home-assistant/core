@@ -661,8 +661,6 @@
           ]),
           'success': list([
           ]),
-          'targets': list([
-          ]),
         }),
         'language': 'en',
         'response_type': 'action_done',

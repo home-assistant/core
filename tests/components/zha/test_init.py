@@ -13,6 +13,9 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.device import Device
 from zigpy.exceptions import TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_is_firmware_update_in_progress,
     async_register_firmware_update_in_progress,
@@ -330,7 +333,7 @@ async def test_setup_no_firmware_update_in_progress(
     mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test that ZHA setup proceeds normally when no firmware update is in progress."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
@@ -345,7 +348,7 @@ async def test_setup_firmware_update_in_progress(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test that ZHA setup is blocked when firmware update is in progress."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
@@ -362,7 +365,7 @@ async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
     mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test firmware update in progress prevents silabs firmware warning on setup failure."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]

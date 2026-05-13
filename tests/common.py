@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -31,6 +29,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
+from paho.mqtt.client import MQTTMessage
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -305,6 +304,8 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
+        dr.async_setup(hass)
+
         with (
             patch.object(StoreWithoutWriteLoad, "async_load", return_value=None),
             patch(
@@ -453,11 +454,6 @@ def async_fire_mqtt_message(
     retain: bool = False,
 ) -> None:
     """Fire the MQTT message."""
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
-
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
@@ -560,7 +556,11 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
-    if integration is None and "/" in filename and not filename.startswith("helpers/"):
+    if (
+        integration is None
+        and "/" in filename
+        and not filename.startswith(("core/", "helpers/"))
+    ):
         integration, filename = filename.split("/", 1)
 
     if integration is None:

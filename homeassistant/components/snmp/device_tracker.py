@@ -1,7 +1,5 @@
 """Support for fetching WiFi associations through SNMP."""
 
-from __future__ import annotations
-
 import binascii
 import logging
 from typing import TYPE_CHECKING

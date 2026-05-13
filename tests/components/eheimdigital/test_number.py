@@ -119,6 +119,35 @@ async def test_setup(
                 ),
             ],
         ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "number.mock_reeflex_daily_burn_duration",
+                    20,
+                    "dailyBurnTime",
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_booster_duration",
+                    20,
+                    "boosterTime",
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_pause_duration",
+                    20,
+                    "pauseTime",
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_system_led_brightness",
+                    20,
+                    "sysLED",
+                    20,
+                ),
+            ],
+        ),
     ],
 )
 async def test_set_value(
@@ -235,6 +264,39 @@ async def test_set_value(
                     "sysLED",
                     20,
                     20,
+                ),
+            ],
+        ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "number.mock_reeflex_daily_burn_duration",
+                    "reeflex_data",
+                    "dailyBurnTime",
+                    20,
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_booster_duration",
+                    "reeflex_data",
+                    "boosterTime",
+                    20,
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_pause_duration",
+                    "reeflex_data",
+                    "pauseTime",
+                    20,
+                    20,
+                ),
+                (
+                    "number.mock_reeflex_system_led_brightness",
+                    "usrdta",
+                    "sysLED",
+                    100,
+                    100,
                 ),
             ],
         ),

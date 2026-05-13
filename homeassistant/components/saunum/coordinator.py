@@ -1,7 +1,5 @@
 """Coordinator for Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -47,5 +45,4 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err

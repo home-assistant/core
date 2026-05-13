@@ -1,7 +1,5 @@
 """The Overkiz (by Somfy) integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -30,8 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_TYPE,
@@ -44,6 +47,9 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -56,6 +62,12 @@ class HomeAssistantOverkizData:
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Overkiz component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
@@ -160,10 +172,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
-            model=gateway.sub_type.beautify_name if gateway.sub_type else None,
+            model=gateway.type.beautify_name if gateway.type else None,
+            model_id=str(gateway.type),
             manufacturer=client.server.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
+            hw_version=f"{gateway.type}:{gateway.sub_type}"
+            if gateway.type and gateway.sub_type
+            else None,
             configuration_url=client.server.configuration_url,
         )
 

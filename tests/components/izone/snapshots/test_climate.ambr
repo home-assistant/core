@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_basic_controller_properties[climate.izone_controller_test_controller_123-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -93,8 +94,9 @@
 # ---
 # name: test_basic_controller_properties[climate.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

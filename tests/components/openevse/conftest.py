@@ -49,9 +49,9 @@ def mock_charger() -> Generator[MagicMock]:
         charger.charge_time_elapsed = 3600  # 60 minutes in seconds
         charger.vehicle_eta = None
         # Electrical sensors
-        charger.charging_current = 32.0
+        charger.charging_current = 32000.0
         charger.charging_voltage = 240
-        charger.charging_power = 7680.0
+        charger.charging_power = 7680000.0
         charger.current_power = 7680
         charger.current_capacity = 32
         charger.max_current = 48

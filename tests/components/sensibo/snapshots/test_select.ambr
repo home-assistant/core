@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[load_platforms0][select.hallway_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_select[load_platforms0][select.kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

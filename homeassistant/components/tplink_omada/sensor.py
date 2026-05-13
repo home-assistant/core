@@ -1,7 +1,5 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -23,6 +21,8 @@ from . import OmadaConfigEntry
 from .const import OmadaDeviceStatus
 from .coordinator import OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 # Useful low level status categories, mapped to a more descriptive status.
 DEVICE_STATUS_MAP = {

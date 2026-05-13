@@ -1,7 +1,5 @@
 """Support for Azure Storage backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
@@ -16,6 +14,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -129,6 +128,7 @@ class AzureStorageBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""

@@ -1,13 +1,12 @@
 """Fixtures for the Radio Browser integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.radio_browser.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -39,9 +38,14 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Radio Browser integration for testing."""
     mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.radio_browser.RadioBrowser",
+        autospec=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     return mock_config_entry
 

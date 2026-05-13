@@ -1,7 +1,5 @@
 """Shared schemas for MQTT discovery and YAML config items."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -42,7 +40,6 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
-    CONF_OBJECT_ID,
     CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
@@ -68,9 +65,11 @@ SHARED_OPTIONS = [
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
     CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_STATE_TOPIC,
+    CONF_QOS,
 ]
 
 
@@ -173,7 +172,6 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
-        vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )

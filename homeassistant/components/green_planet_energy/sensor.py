@@ -1,10 +1,8 @@
 """Green Planet Energy sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -36,6 +34,40 @@ class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | datetime | None]
 
 
+def _get_lowest_price_day_time(
+    api: GreenPlanetEnergyAPI, data: dict[str, Any]
+) -> datetime | None:
+    """Return timestamp of the lowest-priced day hour (06:00–18:00)."""
+    now = dt_util.now()
+    now_h = now.hour
+    hour = api.get_lowest_price_day_with_hour(data, now_h)[1]
+    if hour is None:
+        return None
+    # After 18:00 the day period is over; use tomorrow's date
+    base = dt_util.start_of_local_day(now + timedelta(days=1) if now_h >= 18 else now)
+    return base.replace(hour=hour)
+
+
+def _get_lowest_price_night_time(
+    api: GreenPlanetEnergyAPI, data: dict[str, Any]
+) -> datetime | None:
+    """Return timestamp of the lowest-priced night hour (18:00-06:00)."""
+    now = dt_util.now()
+    now_h = now.hour
+    hour = api.get_lowest_price_night_with_hour(data)[1]
+    if hour is None:
+        return None
+
+    if now_h < 6:
+        base = dt_util.start_of_local_day(
+            now - timedelta(days=1) if hour >= 18 else now
+        )
+    else:
+        base = dt_util.start_of_local_day(now + timedelta(days=1) if hour < 6 else now)
+
+    return base.replace(hour=hour)
+
+
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
     # Statistical sensors only - hourly prices available via service
     GreenPlanetEnergySensorEntityDescription(
@@ -43,7 +75,11 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="highest_price_today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        value_fn=lambda api, data: api.get_highest_price_today(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_highest_price_today(data)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_highest_price_time",
@@ -61,18 +97,18 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: api.get_lowest_price_day(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_lowest_price_day(data, dt_util.now().hour)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_day_time",
         translation_key="lowest_price_day_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
-            if (hour := api.get_lowest_price_day_with_hour(data)[1]) is not None
-            else None
-        ),
+        value_fn=_get_lowest_price_day_time,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
@@ -80,25 +116,29 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
         translation_placeholders={"time_range": "(18:00-06:00)"},
-        value_fn=lambda api, data: api.get_lowest_price_night(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_lowest_price_night(data)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night_time",
         translation_key="lowest_price_night_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_placeholders={"time_range": "(18:00-06:00)"},
-        value_fn=lambda api, data: (
-            dt_util.start_of_local_day().replace(hour=hour)
-            if (hour := api.get_lowest_price_night_with_hour(data)[1]) is not None
-            else None
-        ),
+        value_fn=_get_lowest_price_night_time,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_current_price",
         translation_key="current_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        value_fn=lambda api, data: api.get_current_price(data, dt_util.now().hour),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_current_price(data, dt_util.now().hour)) is not None
+            else None
+        ),
     ),
 ]
 

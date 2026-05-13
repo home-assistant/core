@@ -14,17 +14,17 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
-from homeassistant.components.reolink import (
-    DEVICE_UPDATE_INTERVAL_MIN,
-    FIRMWARE_UPDATE_INTERVAL,
-    NUM_CRED_ERRORS,
-)
+from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
 from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
     DOMAIN,
+)
+from homeassistant.components.reolink.coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    NUM_CRED_ERRORS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -529,15 +529,22 @@ async def test_migrate_with_already_existing_device(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+@pytest.mark.parametrize(
+    "original_id",
+    [
+        f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
+        f"{TEST_UID}_0_record_audio",
+    ],
+)
 async def test_migrate_with_already_existing_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    original_id: str,
 ) -> None:
     """Test entity ids that need to be migrated while the new ids already exist."""
-    original_id = f"{TEST_UID}_0_record_audio"
     new_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
     domain = Platform.SWITCH

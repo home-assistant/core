@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[time.mock_classicvario_day_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_setup[time.mock_classicvario_night_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +101,9 @@
 # ---
 # name: test_setup[time.mock_filter_day_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +151,9 @@
 # ---
 # name: test_setup[time.mock_filter_night_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,8 +201,9 @@
 # ---
 # name: test_setup[time.mock_heater_day_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -246,8 +251,9 @@
 # ---
 # name: test_setup[time.mock_heater_night_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,6 +293,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_heater_night_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[time.mock_reeflex_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.mock_reeflex_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start time',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_time',
+    'unique_id': '00:00:00:00:00:05_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[time.mock_reeflex_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock reeflex Start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.mock_reeflex_start_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,5 @@
 """Generic Omada API coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -159,7 +157,7 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-class-module
+class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
     """Coordinator for getting details about available firmware updates for Omada devices."""
 
     def __init__(

@@ -1,0 +1,68 @@
+{
+  "BigIds": ["9VWGNH0VBZJX"],
+  "HasMorePages": false,
+  "Products": [
+    {
+      "LastModifiedDate": "2014-10-21T17:30:01.0000000+00:00",
+      "LocalizedProperties": [
+        {
+          "Images": [
+            {
+              "FileSizeInBytes": 0,
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox",
+              "ImagePurpose": "FeaturePromotionalSquareArt",
+              "SortOrder": "0",
+              "Uri": "https://images-eds-ssl.xboxlive.com/image?url=8Oaj9Ryq1G1_p3lLnXlsaZgGzAie6Mnu24_PawYuDYIoH77pJ.X5Z.MqQPibUVTcbx57bBxf63xu2Ef8acP3S7Uz80NbHc5nza..4R00GT1V5G760cdfX7Hl0uIHdHCbkzTikdvNE0TedhKgQfQy.2gjOGbd8kXZXzy4VzeJiNPLhLq2QUQbo8q3sVoSPaw73J4BxM7gaNX8V8qLcWtO5sn6vgbTso51OaEIn4zeAiw-",
+              "Width": 1080
+            }
+          ],
+          "Language": "en-US",
+          "PublisherName": "Microsoft",
+          "SearchTitles": [
+            { "SearchTitleString": "TV", "SearchTitleType": "SearchHint" }
+          ],
+          "ShortTitle": "TV",
+          "SortTitle": "TV",
+          "Videos": [],
+          "VoiceTitle": "TV",
+          "ProductDescription": "",
+          "ProductTitle": "TV",
+          "Markets": []
+        }
+      ],
+      "MarketProperties": [],
+      "ProductASchema": "Product;3",
+      "ProductBSchema": "ProductUnifiedApp;3",
+      "ProductId": "9VWGNH0VBZJX",
+      "Properties": {
+        "AllowedUrls": [],
+        "Categories": ["Video"],
+        "PublisherId": "",
+        "SkuDisplayGroups": [],
+        "RevisionId": "2014-10-21T17:30:01.0000000+00:00"
+      },
+      "AlternateIds": [
+        {
+          "IdType": "LegacyXboxProductId",
+          "Value": "71e7df12-89e0-4dc7-a5ff-a182fc2df94f"
+        },
+        { "IdType": "XboxTitleId", "Value": "371594669" }
+      ],
+      "DomainDataVersion": "",
+      "IngestionSource": "Bingbox App",
+      "IsMicrosoftProduct": false,
+      "ProductType": "Application",
+      "ValidationData": null,
+      "MerchandizingTags": null,
+      "SandboxId": "RETAIL",
+      "ProductFamily": "Apps",
+      "SchemaVersion": "1",
+      "IsSandboxedProduct": true,
+      "ProductKind": "Application",
+      "ProductPolicies": {},
+      "DisplaySkuAvailabilities": []
+    }
+  ],
+  "TotalResultCount": 2
+}

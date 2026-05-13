@@ -133,8 +133,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.whiteled_mode_list.return_value = []
     host_mock.post_recording_time_list.return_value = []
     host_mock.zoom_range.return_value = {
-        "zoom": {"pos": {"min": 0, "max": 100}},
-        "focus": {"pos": {"min": 0, "max": 100}},
+        "zoom": {"min": 0, "max": 100},
+        "focus": {"min": 0, "max": 100},
     }
     host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
     host_mock.checked_api_versions = {"GetEvents": 1}

@@ -1,7 +1,5 @@
 """Alexa entity adapters."""
 
-from __future__ import annotations
-
 from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING, Any

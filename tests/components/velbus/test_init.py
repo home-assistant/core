@@ -114,11 +114,45 @@ async def test_migrate_config_entry(
     entry.add_to_hass(hass)
 
     # test in case we do not have a cache
-    with patch("os.path.isdir", return_value=True), patch("shutil.rmtree"):
+    with (
+        patch("os.path.isdir", return_value=True),
+        patch("shutil.rmtree") as mock_rmtree,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
-        assert entry.version == 2
+        assert entry.version == 3
         assert entry.minor_version == 2
+        mock_rmtree.assert_called_once()
+
+
+async def test_migrate_config_entry_32(
+    hass: HomeAssistant,
+    controller: MagicMock,
+) -> None:
+    """Test successful migration of entry data."""
+    legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="my own id",
+        data=legacy_config,
+        version=2,
+        minor_version=2,
+    )
+    assert entry.version == 2
+    assert entry.minor_version == 2
+
+    entry.add_to_hass(hass)
+
+    # test in case we do not have a cache
+    with (
+        patch("os.path.isdir", return_value=True),
+        patch("shutil.rmtree") as mock_rmtree,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert dict(entry.data) == legacy_config
+        assert entry.version == 3
+        assert entry.minor_version == 2
+        mock_rmtree.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -141,7 +175,7 @@ async def test_migrate_config_entry_unique_id(
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.unique_id == expected
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.minor_version == 2
 
 

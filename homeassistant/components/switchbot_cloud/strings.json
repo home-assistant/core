@@ -18,6 +18,25 @@
     }
   },
   "entity": {
+    "button": {
+      "art_frame_next_picture": {
+        "name": "Next"
+      },
+      "art_frame_previous_picture": {
+        "name": "Previous"
+      }
+    },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {
@@ -48,10 +67,39 @@
         }
       }
     },
+    "image": {
+      "display": {
+        "name": "Display"
+      }
+    },
+
     "sensor": {
       "light_level": {
         "name": "Light level"
+      },
+      "lock_state": {
+        "name": "Lock state",
+        "state": {
+          "half_locked": "Half locked",
+          "jammed": "Jammed",
+          "latch_bolt_locked": "Latch bolt locked",
+          "locked": "[%key:common::state::locked%]",
+          "locking": "Locking",
+          "unlocked": "[%key:common::state::unlocked%]",
+          "unlocking": "Unlocking"
+        }
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "SwitchBot Cloud command failed: {error}"
+    },
+    "connection_error": {
+      "message": "Error communicating with SwitchBot Cloud: {error}"
+    },
+    "device_offline": {
+      "message": "SwitchBot Cloud device is offline."
     }
   }
 }

@@ -3,6 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -44,14 +47,11 @@
     }
   },
   "exceptions": {
-    "invalid_config_entry": {
-      "message": "Invalid config entry provided. Got {config_entry}"
+    "connection_error": {
+      "message": "Error communicating with the easyEnergy API."
     },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
-    },
-    "unloaded_config_entry": {
-      "message": "Invalid config entry provided. {config_entry} is not loaded."
     }
   },
   "services": {

@@ -1,7 +1,5 @@
 """Sensor platform for the Immich integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -11,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -40,6 +38,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_storage.disk_size_raw,
     ),
     ImmichSensorEntityDescription(
@@ -50,6 +49,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_storage.disk_available_raw,
     ),
     ImmichSensorEntityDescription(
@@ -60,6 +60,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_storage.disk_use_raw,
         entity_registry_enabled_default=False,
     ),
@@ -68,6 +69,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         translation_key="disk_usage",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_storage.disk_usage_percentage,
         entity_registry_enabled_default=False,
     ),
@@ -75,6 +77,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         key="photos_count",
         translation_key="photos_count",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_usage.photos if data.server_usage else None,
         is_suitable=lambda data: data.server_usage is not None,
     ),
@@ -82,6 +85,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         key="videos_count",
         translation_key="videos_count",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.server_usage.videos if data.server_usage else None,
         is_suitable=lambda data: data.server_usage is not None,
     ),
@@ -93,6 +97,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda d: d.server_usage.usage_photos if d.server_usage else None,
         is_suitable=lambda data: data.server_usage is not None,
         entity_registry_enabled_default=False,
@@ -105,6 +110,7 @@ SENSOR_TYPES: tuple[ImmichSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda d: d.server_usage.usage_videos if d.server_usage else None,
         is_suitable=lambda data: data.server_usage is not None,
         entity_registry_enabled_default=False,

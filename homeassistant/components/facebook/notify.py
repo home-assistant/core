@@ -1,7 +1,5 @@
 """Facebook platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
@@ -77,7 +75,7 @@ class FacebookNotificationService(BaseNotificationService):
                 "recipient": recipient,
                 "message": body_message,
                 "messaging_type": "MESSAGE_TAG",
-                "tag": "ACCOUNT_UPDATE",
+                "tag": "HUMAN_AGENT",
             }
             resp = requests.post(
                 BASE_URL,

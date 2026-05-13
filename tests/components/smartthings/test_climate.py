@@ -619,7 +619,7 @@ async def test_thermostat_set_fan_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.asd", ATTR_FAN_MODE: "on"},
+        {ATTR_ENTITY_ID: "climate.virtual_thermostat", ATTR_FAN_MODE: "on"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -744,7 +744,7 @@ async def test_thermostat_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.asd"} | data,
+        {ATTR_ENTITY_ID: "climate.virtual_thermostat"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -762,7 +762,7 @@ async def test_humidity(
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.asd")
+    state = hass.states.get("climate.virtual_thermostat")
     assert state
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
@@ -779,7 +779,7 @@ async def test_updating_humidity(
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.asd")
+    state = hass.states.get("climate.virtual_thermostat")
     assert state
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
@@ -792,7 +792,10 @@ async def test_updating_humidity(
         40,
     )
 
-    assert hass.states.get("climate.asd").attributes[ATTR_CURRENT_HUMIDITY] == 40
+    assert (
+        hass.states.get("climate.virtual_thermostat").attributes[ATTR_CURRENT_HUMIDITY]
+        == 40
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
@@ -869,7 +872,10 @@ async def test_thermostat_state_attributes_update(
     """Test state attributes update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.asd").attributes[state_attribute] == original_value
+    assert (
+        hass.states.get("climate.virtual_thermostat").attributes[state_attribute]
+        == original_value
+    )
 
     await trigger_update(
         hass,
@@ -880,7 +886,10 @@ async def test_thermostat_state_attributes_update(
         value,
     )
 
-    assert hass.states.get("climate.asd").attributes[state_attribute] == expected_value
+    assert (
+        hass.states.get("climate.virtual_thermostat").attributes[state_attribute]
+        == expected_value
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])

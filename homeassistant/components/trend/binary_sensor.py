@@ -1,7 +1,5 @@
 """A sensor that monitors trends in other components."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Mapping
 import logging
@@ -21,7 +19,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -209,7 +206,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._attr_name,
             ATTR_GRADIENT: self._gradient,
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,

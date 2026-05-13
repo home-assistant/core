@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity[bulb_type0][fan.mock_title-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -62,8 +63,9 @@
 # ---
 # name: test_entity[bulb_type1][fan.mock_title-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

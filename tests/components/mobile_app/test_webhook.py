@@ -29,7 +29,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import MockUser, async_capture_events, async_mock_service
 from tests.components.conversation import MockAgent
 
 
@@ -377,6 +377,43 @@ async def test_webhook_handle_get_config_with_cloudhook_no_subscription(
         assert "remote_ui_url" not in json_resp
 
 
+async def test_webhook_handle_get_config_with_cloudhook_local_only_user(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test get_config doesn't return cloudhook_url or remote_ui_url for local_only users."""
+    hass_admin_user.local_only = True
+
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Get the config entry and add cloudhook_url to it
+    config_entry = hass.config_entries.async_entries(DOMAIN)[1]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, "cloudhook_url": "https://hooks.nabu.casa/test"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            return_value="https://remote.ui.url",
+        ),
+    ):
+        resp = await webhook_client.post(webhook_url, json={"type": "get_config"})
+        assert resp.status == HTTPStatus.OK
+        json_resp = await resp.json()
+
+        assert "cloudhook_url" not in json_resp
+        assert "remote_ui_url" not in json_resp
+
+
 async def test_webhook_returns_error_incorrect_json(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
@@ -699,6 +736,34 @@ async def test_webhook_update_location_with_gps_without_accuracy(
 
     state = hass.states.get("device_tracker.test_1_2")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_webhook_update_location_preserves_float_gps_accuracy(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that sub-meter ``gps_accuracy`` is not floored to an integer.
+
+    Android's fused location provider reports accuracy as a float in metres.
+    The zone-containment predicate (``zone_dist - zone_radius < accuracy``)
+    can flip its result over a sub-metre difference at zone boundaries -
+    so flooring 6.938 to 6 has been observed to drop inner-zone transitions
+    in nested same-centre zones, with no automatic retry.
+    """
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2], "gps_accuracy": 6.938},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.attributes["gps_accuracy"] == 6.938
 
 
 async def test_webhook_update_location_with_location_name(
@@ -1142,7 +1207,6 @@ async def test_webhook_handle_conversation_process(
             },
             "language": hass.config.language,
             "data": {
-                "targets": [],
                 "success": [],
                 "failed": [],
             },

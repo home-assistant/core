@@ -1,7 +1,5 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -31,6 +29,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

@@ -6,6 +6,8 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -16,6 +18,7 @@ from homeassistant.helpers.reload import async_get_platform_without_config_entry
 from homeassistant.helpers.restore_state import (
     DATA_RESTORE_STATE,
     STORAGE_KEY,
+    ExtraStoredData,
     RestoreEntity,
     RestoreStateData,
     StoredState,
@@ -342,8 +345,12 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     assert state1["state"]["state"] == "off"
 
 
-async def test_dump_error(hass: HomeAssistant) -> None:
-    """Test that we cache data."""
+@pytest.mark.parametrize(
+    "exception",
+    [HomeAssistantError, RuntimeError],
+)
+async def test_dump_error(hass: HomeAssistant, exception: type[Exception]) -> None:
+    """Test that errors during save are caught."""
     states = [
         State("input_boolean.b0", "on"),
         State("input_boolean.b1", "on"),
@@ -368,7 +375,7 @@ async def test_dump_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save",
-        side_effect=HomeAssistantError,
+        side_effect=exception,
     ) as mock_write_data:
         await data.async_dump_states()
 
@@ -534,3 +541,89 @@ async def test_restore_entity_end_to_end(
     assert len(storage_data) == 1
     assert storage_data[0]["state"]["entity_id"] == entity_id
     assert storage_data[0]["state"]["state"] == "stored"
+
+
+async def test_dump_states_with_failing_extra_data(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing extra_restore_state_data skips only that entity."""
+
+    class BadRestoreEntity(RestoreEntity):
+        """Entity that raises on extra_restore_state_data."""
+
+        @property
+        def extra_restore_state_data(self) -> ExtraStoredData | None:
+            raise RuntimeError("Unexpected error")
+
+    states = [
+        State("input_boolean.good", "on"),
+        State("input_boolean.bad", "on"),
+    ]
+
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+
+    good_entity = RestoreEntity()
+    good_entity.hass = hass
+    good_entity.entity_id = "input_boolean.good"
+    await platform.async_add_entities([good_entity])
+
+    bad_entity = BadRestoreEntity()
+    bad_entity.hass = hass
+    bad_entity.entity_id = "input_boolean.bad"
+    await platform.async_add_entities([bad_entity])
+
+    for state in states:
+        hass.states.async_set(state.entity_id, state.state, state.attributes)
+
+    data = async_get(hass)
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        await data.async_dump_states()
+
+    assert mock_write_data.called
+    written_states = mock_write_data.mock_calls[0][1][0]
+
+    # Only the good entity should be saved
+    assert len(written_states) == 1
+    state0 = json_round_trip(written_states[0])
+    assert state0["state"]["entity_id"] == "input_boolean.good"
+    assert state0["state"]["state"] == "on"
+
+    assert "Error getting extra restore state data for input_boolean.bad" in caplog.text
+
+
+async def test_entity_removal_with_failing_extra_data(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that entity removal succeeds even if extra_restore_state_data raises."""
+
+    class BadRestoreEntity(RestoreEntity):
+        """Entity that raises on extra_restore_state_data."""
+
+        @property
+        def extra_restore_state_data(self) -> ExtraStoredData | None:
+            raise RuntimeError("Unexpected error")
+
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    entity = BadRestoreEntity()
+    entity.hass = hass
+    entity.entity_id = "input_boolean.bad"
+    await platform.async_add_entities([entity])
+
+    hass.states.async_set("input_boolean.bad", "on")
+
+    data = async_get(hass)
+    assert "input_boolean.bad" in data.entities
+
+    await entity.async_remove()
+
+    # Entity should be unregistered
+    assert "input_boolean.bad" not in data.entities
+    # No last state should be saved since extra data failed
+    assert "input_boolean.bad" not in data.last_states
+
+    assert "Error getting extra restore state data for input_boolean.bad" in caplog.text

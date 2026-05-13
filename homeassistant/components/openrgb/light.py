@@ -1,7 +1,5 @@
 """OpenRGB light platform."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -195,7 +193,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             color_mode = self._attr_color_mode
 
         if color_mode is None:
-            # If color mode is still None, default to RGB
+            # If color mode is still unknown, default to RGB
             color_mode = ColorMode.RGB
 
         if self._attr_brightness is not None and self._attr_brightness != brightness:

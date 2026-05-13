@@ -1,14 +1,12 @@
 """Binary sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Final, cast
 
 from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_PLATFORM,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -292,7 +290,7 @@ RPC_SENSORS: Final = {
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, BINARY_SENSOR_PLATFORM)
+            not is_view_for_platform(config, key, BINARY_SENSOR_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
@@ -349,6 +347,28 @@ RPC_SENSORS: Final = {
         sub_key="value",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
+    ),
+    "cury_tilt": RpcBinarySensorDescription(
+        key="cury",
+        sub_key="errors",
+        translation_key="tilt",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: (
+            False if status is None else "orientation_tilt" in status
+        ),
+        supported=lambda status: status.get("slots") is not None,
+    ),
+    "cury_rotation": RpcBinarySensorDescription(
+        key="cury",
+        sub_key="errors",
+        translation_key="rotation",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda status, _: (
+            False if status is None else "orientation_plug_rotated" in status
+        ),
+        supported=lambda status: status.get("slots") is not None,
     ),
 }
 
@@ -424,7 +444,7 @@ def _async_setup_rpc_entry(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            BINARY_SENSOR_PLATFORM,
+            BINARY_SENSOR_DOMAIN,
             coordinator.device.status,
         )
 

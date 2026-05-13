@@ -1,7 +1,5 @@
 """Data update coordinator for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 from calendar import timegm
 from datetime import datetime
 import html

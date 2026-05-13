@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_dynamic_new_devices[climate.mock_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -80,8 +81,9 @@
 # ---
 # name: test_setup_heater[climate.mock_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

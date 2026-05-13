@@ -1,9 +1,6 @@
 """The GIOS component."""
 
-from __future__ import annotations
-
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
@@ -22,14 +19,7 @@ from .const import API_TIMEOUT, DOMAIN, MANUFACTURER, SCAN_INTERVAL, URL
 
 _LOGGER = logging.getLogger(__name__)
 
-type GiosConfigEntry = ConfigEntry[GiosData]
-
-
-@dataclass
-class GiosData:
-    """Data for GIOS integration."""
-
-    coordinator: GiosDataUpdateCoordinator
+type GiosConfigEntry = ConfigEntry[GiosDataUpdateCoordinator]
 
 
 class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):

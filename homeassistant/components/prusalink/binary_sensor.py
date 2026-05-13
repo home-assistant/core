@@ -1,7 +1,5 @@
 """PrusaLink binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
@@ -13,33 +11,24 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
-@dataclass(frozen=True)
-class PrusaLinkBinarySensorEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    value_fn: Callable[[T], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PrusaLinkBinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    PrusaLinkBinarySensorEntityDescriptionMixin[T],
+    PrusaLinkEntityDescription,
     Generic[T],
 ):
     """Describes PrusaLink sensor entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
+    value_fn: Callable[[T], bool]
 
 
 BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = {
@@ -56,13 +45,11 @@ BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PrusaLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink sensor based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
     for coordinator_type, binary_sensors in BINARY_SENSORS.items():

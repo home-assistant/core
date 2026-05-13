@@ -1,7 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -93,7 +91,7 @@ class LutronCasetaEntity(Entity):
         return str(self._handle_none_serial(self.serial))
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {
             "device_id": self.device_id,

@@ -17,6 +17,7 @@ from .agent import (
     BackupAgentError,
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
+    OnProgressCallback,
 )
 from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
@@ -41,6 +42,7 @@ from .manager import (
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
@@ -72,9 +74,11 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "OnProgressCallback",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
+    "UploadBackupEvent",
     "WrittenBackup",
     "async_get_manager",
     "suggested_filename",
