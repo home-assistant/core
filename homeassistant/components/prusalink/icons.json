@@ -4,6 +4,9 @@
       "cancel_job": {
         "default": "mdi:cancel"
       },
+      "continue_job": {
+        "default": "mdi:play-circle"
+      },
       "pause_job": {
         "default": "mdi:pause"
       },
@@ -14,9 +17,6 @@
     "sensor": {
       "filename": {
         "default": "mdi:file-image-outline"
-      },
-      "location": {
-        "default": "mdi:map-marker"
       },
       "material": {
         "default": "mdi:palette-swatch-variant"
