@@ -8,8 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -18,7 +16,6 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerState,
-    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -235,8 +232,6 @@ async def test_main_zone_state_properties(
     ]
 
     mock_receiver.power_on = True
-    mock_receiver.audio_information = "Stereo"
-    mock_receiver.video_information = "No video"
     mock_receiver.volume = -40.0
     mock_receiver.mute_enabled = False
     mock_receiver.source = "HDMI"
@@ -249,32 +244,12 @@ async def test_main_zone_state_properties(
 
     state = hass.states.get(MAIN_ZONE)
     assert state.state == MediaPlayerState.ON
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert state.attributes[ATTR_MEDIA_TITLE] == "audio: Stereo"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.408, abs=0.01)
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
     assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI"
     assert state.attributes[ATTR_SOUND_MODE] == "Movie"
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
     assert state.attributes[ATTR_SOUND_MODE_LIST] == ["Movie", "Stereo"]
-
-    mock_receiver.video_information = "Video"
-    for cb in callbacks:
-        cb()
-    await hass.async_block_till_done()
-    state = hass.states.get(MAIN_ZONE)
-    assert state.attributes[ATTR_MEDIA_TITLE] == "audio: Stereo video: Video"
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.VIDEO
-
-    mock_receiver.audio_information = "No audio"
-    mock_receiver.video_information = "No video"
-    for cb in callbacks:
-        cb()
-    await hass.async_block_till_done()
-    state = hass.states.get(MAIN_ZONE)
-    assert state.state == MediaPlayerState.ON
-    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
 
     mock_receiver.volume = None
     for cb in callbacks:
@@ -289,8 +264,6 @@ async def test_main_zone_state_properties(
     await hass.async_block_till_done()
     state = hass.states.get(MAIN_ZONE)
     assert state.state == MediaPlayerState.OFF
-    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
 
 
 async def test_zone_b_state_properties(

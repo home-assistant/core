@@ -88,10 +88,10 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host
         try:
             model = await async_find_receiver_model(self._host)
-        except (TimeoutError, OSError) as err:
-            raise AbortFlow("cannot_connect") from err
+        except TimeoutError, OSError:
+            return self.async_abort(reason="cannot_connect")
         if not model:
-            raise AbortFlow("unsupported_model")
+            return self.async_abort(reason="unsupported_model")
 
         display_name = (
             f"{self._device_model} ({self._name})"

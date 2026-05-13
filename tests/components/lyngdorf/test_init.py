@@ -56,10 +56,10 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("serial", "expected_mac"),
+    ("serial", "expected_mac_connections"),
     [
-        ("0050c27c76b2", "00:50:c2:7c:76:b2"),
-        ("NOT-A-MAC", None),
+        ("0050c27c76b2", {"00:50:c2:7c:76:b2"}),
+        ("NOT-A-MAC", set()),
     ],
     ids=["valid_mac", "non_mac_serial"],
 )
@@ -68,7 +68,7 @@ async def test_mac_connection_registered_when_serial_is_mac(
     mock_receiver: MagicMock,
     device_registry: dr.DeviceRegistry,
     serial: str,
-    expected_mac: str | None,
+    expected_mac_connections: set[str],
 ) -> None:
     """Test that the device gets a MAC connection only when serial parses as one."""
     entry = MockConfigEntry(
@@ -95,7 +95,4 @@ async def test_mac_connection_registered_when_serial_is_mac(
     mac_connections = {
         value for kind, value in device.connections if kind == dr.CONNECTION_NETWORK_MAC
     }
-    if expected_mac is None:
-        assert mac_connections == set()
-    else:
-        assert mac_connections == {expected_mac}
+    assert mac_connections == expected_mac_connections

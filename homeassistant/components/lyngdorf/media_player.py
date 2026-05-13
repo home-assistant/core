@@ -7,7 +7,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -198,47 +197,6 @@ class LyngdorfMainDevice(LyngdorfDevice):
         if self._receiver.power_on:
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
-
-    @property
-    def media_title(self) -> str | None:
-        """Return title of the current media."""
-        if not self._receiver.power_on:
-            return None
-
-        parts: list[str] = []
-        if self._has_audio_signal:
-            parts.append(f"audio: {self._receiver.audio_information}")
-        if self._has_video_signal:
-            parts.append(f"video: {self._receiver.video_information}")
-
-        return " ".join(parts) if parts else None
-
-    @property
-    def _has_video_signal(self) -> bool:
-        """Return whether a video signal is present at the current input."""
-        return bool(
-            self._receiver.video_information
-            and not self._receiver.video_information.startswith("No")
-        )
-
-    @property
-    def _has_audio_signal(self) -> bool:
-        """Return whether an audio signal is present at the current input."""
-        return bool(
-            self._receiver.audio_information
-            and not self._receiver.audio_information.startswith("No")
-        )
-
-    @property
-    def media_content_type(self) -> MediaType | None:
-        """Return the content type of the current media."""
-        if not self._receiver.power_on:
-            return None
-        if self._has_video_signal:
-            return MediaType.VIDEO
-        if self._has_audio_signal:
-            return MediaType.MUSIC
-        return None
 
     @property
     def source_list(self) -> list[str] | None:
