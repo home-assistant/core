@@ -29,16 +29,10 @@ class FlicButtonEntity(Entity):
         serial = data.serial_number
         model_name = DEVICE_TYPE_MODEL_NAMES[client.device_type]
 
-        if serial:
-            device_name = f"{model_name} ({serial})"
-        else:
-            device_name = f"Flic {client.address[-5:]}"
-
         fw = client.state.firmware_version
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, client.address)},
             connections={(CONNECTION_BLUETOOTH, client.address)},
-            name=device_name,
             manufacturer="Shortcut Labs",
             model=model_name,
             serial_number=serial,

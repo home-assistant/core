@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Brand submission will be handled in a separate PR to home-assistant/brands.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -14,15 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
-  docs-high-level-description:
-    status: exempt
-    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
-  docs-installation-instructions:
-    status: exempt
-    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
-  docs-removal-instructions:
-    status: exempt
-    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -40,7 +32,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+    comment: Pairing uses discovery and does not require user-supplied setup parameters.
   docs-installation-parameters:
     status: exempt
     comment: Pairing uses discovery and does not require user-supplied setup parameters.
@@ -60,13 +52,13 @@ rules:
     status: exempt
     comment: Single device per config entry, no network address to update.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Single fixed BLE device per config entry.
