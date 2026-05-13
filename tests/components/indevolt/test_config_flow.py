@@ -326,7 +326,7 @@ async def test_dhcp_ip_reuse_by_different_device(
     alt_mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
 ) -> None:
-    """Test DHCP discovery is not blocked when a known host is now used by a different device."""
+    """Test DHCP discovery aborts when the discovered IP is already used by another config entry."""
     alt_mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
