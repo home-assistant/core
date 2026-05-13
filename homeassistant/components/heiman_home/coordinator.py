@@ -375,7 +375,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             raise HeimanMQTTError(msg)
 
         try:
-
             # Get user display name using SDK method
             user_display_name = None
             if self.data.user_info:
