@@ -405,44 +405,38 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
-
-            async def _cleanup_and_reraise_mqtt_error() -> None:
-                """Clean up MQTT client and re-raise the error."""
-                if self.mqtt_client is not None:
-                    with contextlib.suppress(Exception):
-                        await _async_call_cleanup_method(
-                            self.mqtt_client,
-                            (
-                                "async_disconnect",
-                                "disconnect",
-                                "async_close",
-                                "close",
-                            ),
-                        )
-                self.mqtt_client = None
-                raise
-
-            await _cleanup_and_reraise_mqtt_error()
+            # Disconnect any partially connected client before clearing reference
+            if self.mqtt_client is not None:
+                with contextlib.suppress(Exception):
+                    await _async_call_cleanup_method(
+                        self.mqtt_client,
+                        (
+                            "async_disconnect",
+                            "disconnect",
+                            "async_close",
+                            "close",
+                        ),
+                    )
+            # Clear mqtt_client so future calls can retry
+            self.mqtt_client = None
+            raise  # noqa: TRY301
         except Exception as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
-
-            async def _cleanup_and_reraise_generic_error() -> None:
-                """Clean up MQTT client and re-raise the error."""
-                if self.mqtt_client is not None:
-                    with contextlib.suppress(Exception):
-                        await _async_call_cleanup_method(
-                            self.mqtt_client,
-                            (
-                                "async_disconnect",
-                                "disconnect",
-                                "async_close",
-                                "close",
-                            ),
-                        )
-                self.mqtt_client = None
-                raise
-
-            await _cleanup_and_reraise_generic_error()
+            # Disconnect any partially connected client before clearing reference
+            if self.mqtt_client is not None:
+                with contextlib.suppress(Exception):
+                    await _async_call_cleanup_method(
+                        self.mqtt_client,
+                        (
+                            "async_disconnect",
+                            "disconnect",
+                            "async_close",
+                            "close",
+                        ),
+                    )
+            # Clear mqtt_client so future calls can retry
+            self.mqtt_client = None
+            raise  # noqa: TRY301
 
     def _on_device_property_update(
         self, device_id: str, properties: dict[str, Any]
