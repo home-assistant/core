@@ -17,9 +17,9 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import LOCATION_ID, make_latest, make_response, make_sensor
@@ -223,7 +223,7 @@ async def test_entity_unavailable_on_auth_failure(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert isinstance(coordinator.last_exception, HomeAssistantError)
+    assert isinstance(coordinator.last_exception, UpdateFailed)
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNAVAILABLE
 
