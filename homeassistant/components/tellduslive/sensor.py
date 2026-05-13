@@ -176,7 +176,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     @property
     def _value_as_humidity(self):
         """Return the value as humidity."""
-        return int(round(float(self._value)))
+        return round(float(self._value))
 
     @property
     def native_value(self):
