@@ -500,8 +500,8 @@ async def test_options(hass: HomeAssistant) -> None:
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
 
 
-async def test_advanced_options(hass: HomeAssistant) -> None:
-    """Check an options flow with advanced options."""
+async def test_more_options(hass: HomeAssistant) -> None:
+    """Check an options flow with the more options section."""
 
     config_entry = create_mock_motioneye_config_entry(hass)
 
