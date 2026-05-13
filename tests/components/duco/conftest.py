@@ -3,7 +3,9 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from duco.models import (
+from duco_connectivity import (
+    ApiEndpointInfo,
+    ApiInfo,
     BoardInfo,
     DiagComponent,
     DiagStatus,
@@ -49,6 +51,25 @@ def mock_board_info() -> BoardInfo:
         serial_duco_box="GHI789",
         serial_duco_comm="JKL012",
         time=1700000000,
+        public_api_version="2.5",
+        software_version="1.2.3",
+    )
+
+
+@pytest.fixture
+def mock_api_info() -> ApiInfo:
+    """Return mock API info."""
+    return ApiInfo(
+        api_version="2.5",
+        reported_api_version="2.5.1",
+        endpoints=[
+            ApiEndpointInfo(
+                url="/info",
+                query_parameters=["module", "submodule"],
+                methods=["GET"],
+                modules=["General", "Diag"],
+            )
+        ],
     )
 
 
@@ -180,18 +201,13 @@ def mock_nodes() -> list[Node]:
 
 @pytest.fixture
 def mock_duco_client(
+    mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
-        patch(
-            "homeassistant.components.duco.build_ssl_context",
-        ),
-        patch(
-            "homeassistant.components.duco.config_flow.build_ssl_context",
-        ),
         patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
@@ -202,13 +218,14 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
+        client.async_get_api_info.return_value = mock_api_info
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status=DiagStatus.OK)
         ]
-        client.async_get_write_req_remaining.return_value = 100
+        client.async_get_write_requests_remaining.return_value = 100
         yield client
 
 

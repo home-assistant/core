@@ -1,5 +1,8 @@
 {
   "conditions": {
+    "is_muted": {
+      "condition": "mdi:volume-mute"
+    },
     "is_not_playing": {
       "condition": "mdi:stop"
     },
@@ -14,6 +17,12 @@
     },
     "is_playing": {
       "condition": "mdi:play"
+    },
+    "is_unmuted": {
+      "condition": "mdi:volume-high"
+    },
+    "is_volume": {
+      "condition": "mdi:volume-medium"
     }
   },
   "entity_component": {
@@ -123,6 +132,9 @@
     }
   },
   "triggers": {
+    "muted": {
+      "trigger": "mdi:volume-mute"
+    },
     "paused_playing": {
       "trigger": "mdi:pause"
     },
@@ -137,6 +149,15 @@
     },
     "turned_on": {
       "trigger": "mdi:power"
+    },
+    "unmuted": {
+      "trigger": "mdi:volume-high"
+    },
+    "volume_changed": {
+      "trigger": "mdi:volume-medium"
+    },
+    "volume_crossed_threshold": {
+      "trigger": "mdi:volume-medium"
     }
   }
 }

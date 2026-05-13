@@ -1,7 +1,5 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs
@@ -174,7 +172,7 @@ def _format_tool(
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
-        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")
     if isinstance(value, list):
         return [_escape_decode(item) for item in value]
     if isinstance(value, dict):

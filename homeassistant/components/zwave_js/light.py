@@ -1,7 +1,5 @@
 """Support for Z-Wave lights."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, cast
 
 from zwave_js_server.const import (

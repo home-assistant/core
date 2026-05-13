@@ -1,7 +1,5 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Hashable, Mapping
 import contextlib
 from contextvars import ContextVar
@@ -1772,7 +1770,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
+            vol.Required(CONF_CONDITION): vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)

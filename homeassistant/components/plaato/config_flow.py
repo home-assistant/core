@@ -1,7 +1,5 @@
 """Config flow for Plaato."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyplaato.plaato import PlaatoDeviceType
@@ -61,6 +59,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),

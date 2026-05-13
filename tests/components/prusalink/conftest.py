@@ -48,6 +48,7 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "serial": "serial-1337",
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
+        "location": "Workshop",
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp
@@ -184,6 +185,15 @@ def mock_job_api_paused(
     """Mock PrusaLink paused printing."""
     mock_job_api_printing["state"] = "PAUSED"
     mock_get_status_printing["printer"]["state"] = "PAUSED"
+
+
+@pytest.fixture
+def mock_job_api_attention(
+    mock_get_status_printing: dict[str, Any], mock_job_api_printing: dict[str, Any]
+) -> None:
+    """Mock PrusaLink printing in ATTENTION state (e.g. timelapse capture)."""
+    mock_job_api_printing["state"] = "ATTENTION"
+    mock_get_status_printing["printer"]["state"] = "ATTENTION"
 
 
 @pytest.fixture

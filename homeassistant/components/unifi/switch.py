@@ -7,8 +7,6 @@ Support for controlling WLAN availability.
 Support for controlling zone based traffic rules.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass

@@ -1,7 +1,5 @@
 """Expose Home Assistant entity states to KNX."""
 
-from __future__ import annotations
-
 from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass

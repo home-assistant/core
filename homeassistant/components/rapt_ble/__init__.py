@@ -1,7 +1,5 @@
 """The rapt_ble integration."""
 
-from __future__ import annotations
-
 import logging
 
 from rapt_ble import RAPTPillBluetoothDeviceData

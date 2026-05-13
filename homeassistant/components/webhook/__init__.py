@@ -1,7 +1,5 @@
 """Webhooks for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -250,6 +248,7 @@ class WebhookView(HomeAssistantView):
         "type": "webhook/list",
     }
 )
+@websocket_api.require_admin
 @callback
 def websocket_list(
     hass: HomeAssistant,

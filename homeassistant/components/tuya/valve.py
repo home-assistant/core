@@ -1,7 +1,5 @@
 """Support for Tuya valves."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.valve import (
     ValveDefinition,
     get_default_definition,

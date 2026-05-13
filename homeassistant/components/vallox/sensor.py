@@ -1,7 +1,5 @@
 """Support for Vallox ventilation unit sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, time
 

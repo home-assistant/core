@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud cover devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import DoorCommand, DoorState

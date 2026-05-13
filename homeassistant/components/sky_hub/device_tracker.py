@@ -1,7 +1,5 @@
 """Support for Sky Hub."""
 
-from __future__ import annotations
-
 import logging
 
 from pyskyqhub.skyq_hub import SkyQHub

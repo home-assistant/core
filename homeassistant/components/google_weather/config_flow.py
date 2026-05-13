@@ -1,7 +1,5 @@
 """Config flow for the Google Weather integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -72,6 +70,8 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
     """Return the schema for a location with default values from the hass config."""
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Required(CONF_NAME, default=hass.config.location_name): str,
             vol.Required(
                 CONF_LOCATION,

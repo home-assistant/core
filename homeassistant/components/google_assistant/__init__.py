@@ -1,8 +1,6 @@
 """Support for Actions on Google Assistant Smart Home Control."""
 # pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol

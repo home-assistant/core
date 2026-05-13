@@ -1,7 +1,5 @@
 """Support for Airthings sensors."""
 
-from __future__ import annotations
-
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
