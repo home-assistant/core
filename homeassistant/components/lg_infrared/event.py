@@ -2,6 +2,7 @@
 
 import logging
 
+from infrared_protocols.codes.lg.tv import LG_ADDRESS, LGTVCode
 from infrared_protocols.commands.nec import NECCommand
 
 from homeassistant.components.event import EventEntity
@@ -28,65 +29,61 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-# TODO: remove this when https://github.com/home-assistant-libs/infrared-protocols/pull/38
-# is merged
-_LG_TV_NEC_ADDRESS = 0xFB04
-
-_COMMAND_BYTE_TO_EVENT_TYPE: dict[int, str] = {
-    0x79: "aspect",
-    0x28: "back",
-    0x72: "blue",
-    0x01: "channel_down",
-    0x00: "channel_up",
-    0x5B: "exit",
-    0xFF: "ez_adjust",
-    0x8E: "fast_forward",
-    0x63: "green",
-    0xA9: "guide",
-    0xCE: "hdmi_1",
-    0xCC: "hdmi_2",
-    0xE9: "hdmi_3",
-    0xDA: "hdmi_4",
-    0x7C: "home",
-    0xAA: "info",
-    0x0B: "input",
-    0xFB: "in_start",
-    0xCA: "list",
-    0x43: "menu",
-    0x09: "mute",
-    0x41: "nav_down",
-    0x07: "nav_left",
-    0x06: "nav_right",
-    0x40: "nav_up",
-    0x10: "num_0",
-    0x11: "num_1",
-    0x12: "num_2",
-    0x13: "num_3",
-    0x14: "num_4",
-    0x15: "num_5",
-    0x16: "num_6",
-    0x17: "num_7",
-    0x18: "num_8",
-    0x19: "num_9",
-    0x44: "ok",
-    0xBA: "pause",
-    0xB0: "play",
-    0x08: "power",
-    0xC4: "power_on",
-    0xC5: "power_off",
-    0x71: "red",
-    0x8F: "rewind",
-    0x0A: "sap",
-    0x45: "settings",
-    0xB1: "stop",
-    0x39: "subtitle",
-    0x20: "text",
-    0x03: "volume_down",
-    0x02: "volume_up",
-    0x61: "yellow",
+_COMMAND_CODE_TO_EVENT_TYPE: dict[LGTVCode, str] = {
+    LGTVCode.ASPECT: "aspect",
+    LGTVCode.BACK: "back",
+    LGTVCode.BLUE: "blue",
+    LGTVCode.CHANNEL_DOWN: "channel_down",
+    LGTVCode.CHANNEL_UP: "channel_up",
+    LGTVCode.EXIT: "exit",
+    LGTVCode.EZ_ADJUST: "ez_adjust",
+    LGTVCode.FAST_FORWARD: "fast_forward",
+    LGTVCode.GREEN: "green",
+    LGTVCode.GUIDE: "guide",
+    LGTVCode.HDMI_1: "hdmi_1",
+    LGTVCode.HDMI_2: "hdmi_2",
+    LGTVCode.HDMI_3: "hdmi_3",
+    LGTVCode.HDMI_4: "hdmi_4",
+    LGTVCode.HOME: "home",
+    LGTVCode.INFO: "info",
+    LGTVCode.INPUT: "input",
+    LGTVCode.IN_START: "in_start",
+    LGTVCode.LIST: "list",
+    LGTVCode.MENU: "menu",
+    LGTVCode.MUTE: "mute",
+    LGTVCode.NAV_DOWN: "nav_down",
+    LGTVCode.NAV_LEFT: "nav_left",
+    LGTVCode.NAV_RIGHT: "nav_right",
+    LGTVCode.NAV_UP: "nav_up",
+    LGTVCode.NUM_0: "num_0",
+    LGTVCode.NUM_1: "num_1",
+    LGTVCode.NUM_2: "num_2",
+    LGTVCode.NUM_3: "num_3",
+    LGTVCode.NUM_4: "num_4",
+    LGTVCode.NUM_5: "num_5",
+    LGTVCode.NUM_6: "num_6",
+    LGTVCode.NUM_7: "num_7",
+    LGTVCode.NUM_8: "num_8",
+    LGTVCode.NUM_9: "num_9",
+    LGTVCode.OK: "ok",
+    LGTVCode.PAUSE: "pause",
+    LGTVCode.PLAY: "play",
+    LGTVCode.POWER: "power",
+    LGTVCode.POWER_ON: "power_on",
+    LGTVCode.POWER_OFF: "power_off",
+    LGTVCode.RED: "red",
+    LGTVCode.REWIND: "rewind",
+    LGTVCode.SAP: "sap",
+    LGTVCode.SETTINGS: "settings",
+    LGTVCode.STOP: "stop",
+    LGTVCode.SUBTITLE: "subtitle",
+    LGTVCode.TEXT: "text",
+    LGTVCode.VOLUME_DOWN: "volume_down",
+    LGTVCode.VOLUME_UP: "volume_up",
+    LGTVCode.YELLOW: "yellow",
 }
 _EVENT_TYPE_UNKNOWN = "unknown"
-_EVENT_TYPES: list[str] = [*_COMMAND_BYTE_TO_EVENT_TYPE.values(), _EVENT_TYPE_UNKNOWN]
+_EVENT_TYPES: list[str] = [*_COMMAND_CODE_TO_EVENT_TYPE.values(), _EVENT_TYPE_UNKNOWN]
 
 
 async def async_setup_entry(
@@ -138,12 +135,17 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
         if nec_command is None:
             return
 
-        if nec_command.address != _LG_TV_NEC_ADDRESS:
+        if nec_command.address != LG_ADDRESS:
             return
 
-        event_type = _COMMAND_BYTE_TO_EVENT_TYPE.get(
-            nec_command.command, _EVENT_TYPE_UNKNOWN
-        )
+        try:
+            command_code = LGTVCode(nec_command.command)
+        except ValueError:
+            event_type = _EVENT_TYPE_UNKNOWN
+        else:
+            event_type = _COMMAND_CODE_TO_EVENT_TYPE.get(
+                command_code, _EVENT_TYPE_UNKNOWN
+            )
 
         _LOGGER.debug(
             "Received LG TV IR command: %s (0x%02X)", event_type, nec_command.command

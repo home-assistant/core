@@ -117,19 +117,25 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "aspect": "Aspect",
               "back": "Back",
+              "blue": "Blue",
               "channel_down": "Channel down",
               "channel_up": "Channel up",
               "exit": "Exit",
+              "ez_adjust": "EZ adjust",
               "fast_forward": "Fast forward",
+              "green": "Green",
               "guide": "Guide",
               "hdmi_1": "HDMI 1",
               "hdmi_2": "HDMI 2",
               "hdmi_3": "HDMI 3",
               "hdmi_4": "HDMI 4",
               "home": "Home",
+              "in_start": "In start",
               "info": "Info",
               "input": "Input",
+              "list": "List",
               "menu": "Menu",
               "mute": "Mute",
               "nav_down": "Navigate down",
@@ -152,11 +158,17 @@
               "power": "Power",
               "power_off": "Power off",
               "power_on": "Power on",
+              "red": "Red",
               "rewind": "Rewind",
+              "sap": "SAP",
+              "settings": "Settings",
               "stop": "Stop",
+              "subtitle": "Subtitle",
+              "text": "Text",
               "unknown": "Unknown",
               "volume_down": "Volume down",
-              "volume_up": "Volume up"
+              "volume_up": "Volume up",
+              "yellow": "Yellow"
             }
           }
         }
