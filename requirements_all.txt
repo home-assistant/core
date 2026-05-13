@@ -276,7 +276,7 @@ aiogithubapi==26.0.0
 aioguardian==2026.01.1
 
 # homeassistant.components.harmony
-aioharmony==0.5.3
+aioharmony==1.0.3
 
 # homeassistant.components.hassio
 aiohasupervisor==0.4.3
