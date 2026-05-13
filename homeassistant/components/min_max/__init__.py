@@ -16,6 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         DOMAIN,
         f"migrate_to_group_sensor-{entry.entry_id}",
+        breaks_in_ha_version="2026.12.0",
         is_fixable=True,
         is_persistent=False,
         severity=IssueSeverity.WARNING,
