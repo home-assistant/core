@@ -26,7 +26,22 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HeimanApiClient
-from .const import CONF_HOME_ID, CONF_USER_ID
+from .const import (
+    AREA_NAME_RULE_HOME_ROOM,
+    CONF_AREA_NAME_RULE,
+    CONF_DEVICE_FILTER,
+    CONF_DEVICE_FILTER_MODE,
+    CONF_DEVICE_LIST,
+    CONF_HOME_ID,
+    CONF_MODEL_FILTER_MODE,
+    CONF_MODEL_LIST,
+    CONF_ROOM_FILTER_MODE,
+    CONF_ROOM_LIST,
+    CONF_STATISTICS_LOGIC,
+    CONF_TYPE_FILTER_MODE,
+    CONF_TYPE_LIST,
+    CONF_USER_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,21 +136,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         # Configure device management if provided
         if self.device_management:
-            from .const import (
-                AREA_NAME_RULE_HOME_ROOM,
-                CONF_AREA_NAME_RULE,
-                CONF_DEVICE_FILTER,
-                CONF_DEVICE_FILTER_MODE,
-                CONF_DEVICE_LIST,
-                CONF_MODEL_FILTER_MODE,
-                CONF_MODEL_LIST,
-                CONF_ROOM_FILTER_MODE,
-                CONF_ROOM_LIST,
-                CONF_STATISTICS_LOGIC,
-                CONF_TYPE_FILTER_MODE,
-                CONF_TYPE_LIST,
-            )
-
             filter_config = {
                 "filter_mode": config_entry.data.get(CONF_DEVICE_FILTER, "exclude"),
                 "statistics_logic": config_entry.data.get(CONF_STATISTICS_LOGIC, "or"),
@@ -405,40 +405,44 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
-            # Disconnect any partially connected client before clearing reference
-            if self.mqtt_client is not None:
-                with contextlib.suppress(Exception):
-                    await _async_call_cleanup_method(
-                        self.mqtt_client,
-                        (
-                            "async_disconnect",
-                            "disconnect",
-                            "async_close",
-                            "close",
-                        ),
-                    )
-            # Clear mqtt_client so future calls can retry
-            self.mqtt_client = None
-            # Re-raise to allow caller to handle the failure
-            raise
+
+            async def _cleanup_and_reraise_mqtt_error() -> None:
+                """Clean up MQTT client and re-raise the error."""
+                if self.mqtt_client is not None:
+                    with contextlib.suppress(Exception):
+                        await _async_call_cleanup_method(
+                            self.mqtt_client,
+                            (
+                                "async_disconnect",
+                                "disconnect",
+                                "async_close",
+                                "close",
+                            ),
+                        )
+                self.mqtt_client = None
+                raise
+
+            await _cleanup_and_reraise_mqtt_error()
         except Exception as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
-            # Disconnect any partially connected client before clearing reference
-            if self.mqtt_client is not None:
-                with contextlib.suppress(Exception):
-                    await _async_call_cleanup_method(
-                        self.mqtt_client,
-                        (
-                            "async_disconnect",
-                            "disconnect",
-                            "async_close",
-                            "close",
-                        ),
-                    )
-            # Clear mqtt_client so future calls can retry
-            self.mqtt_client = None
-            # Re-raise to allow caller to handle the failure
-            raise
+
+            async def _cleanup_and_reraise_generic_error() -> None:
+                """Clean up MQTT client and re-raise the error."""
+                if self.mqtt_client is not None:
+                    with contextlib.suppress(Exception):
+                        await _async_call_cleanup_method(
+                            self.mqtt_client,
+                            (
+                                "async_disconnect",
+                                "disconnect",
+                                "async_close",
+                                "close",
+                            ),
+                        )
+                self.mqtt_client = None
+                raise
+
+            await _cleanup_and_reraise_generic_error()
 
     def _on_device_property_update(
         self, device_id: str, properties: dict[str, Any]
