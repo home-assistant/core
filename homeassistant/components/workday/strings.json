@@ -31,7 +31,24 @@
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "workdays": "Select which weekdays to include as possible workdays."
         },
-        "description": "Set additional options for {name} configured for country {country}"
+        "description": "Set additional options for {name} configured for country {country}",
+        "sections": {
+          "add_remove_holidays": {
+            "data": {
+              "add_holidays": "Add holidays",
+              "remove_holidays": "Remove holidays",
+              "remove_holidays_named": "Remove named holidays"
+            },
+            "data_description": {
+              "add_holidays": "Holidays to add. For a single day, only enter a date in the start date field.",
+              "remove_holidays": "Holidays to remove. For a single day, only enter a date in the start date field.",
+              "remove_holidays_named": "Select named holidays from the list to remove them to be considered as holiday days."
+            },
+            "description": "Configure the holidays to add or remove.",
+
+            "name": "Add/Remove Holidays"
+          }
+        }
       },
       "user": {
         "data": {
@@ -176,11 +193,34 @@
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
           "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]"
         },
-        "description": "Change additional options for {name} configured for country {country}"
+        "description": "Change additional options for {name} configured for country {country}",
+        "sections": {
+          "add_remove_holidays": {
+            "data": {
+              "add_holidays": "Add holidays",
+              "remove_holidays": "Remove holidays",
+              "remove_holidays_named": "Named holidays to remove"
+            },
+            "data_description": {
+              "add_holidays": "Holidays to add. For a single day, only enter a date in the start date field.",
+              "remove_holidays": "Holidays to remove. For a single day, only enter a date in the start date field.",
+              "remove_holidays_named": "Select named holidays from the list to remove them to be considered as holiday days."
+            },
+            "description": "Configure the holidays to add or remove.",
+
+            "name": "Add/Remove Holidays"
+          }
+        }
       }
     }
   },
   "selector": {
+    "add_holidays": {
+      "fields": {
+        "end_date": "End date",
+        "start_date": "Start date"
+      }
+    },
     "category": {
       "options": {
         "armed_forces": "Armed forces",
@@ -215,6 +255,12 @@
     "province": {
       "options": {
         "none": "No subdivision"
+      }
+    },
+    "remove_holidays": {
+      "fields": {
+        "end_date": "[%key:component::workday::selector::add_holidays::fields::end_date%]",
+        "start_date": "[%key:component::workday::selector::add_holidays::fields::start_date%]"
       }
     }
   },
