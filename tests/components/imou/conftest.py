@@ -9,7 +9,12 @@ from homeassistant.components.imou.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG_ENTRY_DATA, create_mock_api_client, create_mock_device_manager
+from .util import (
+    CONFIG_ENTRY_DATA,
+    PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
+    create_mock_device_manager,
+    imou_package_setup_patches,
+)
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_api_client() -> Generator[MagicMock]:
     """Create a mock API client used by the config flow."""
     with patch(
-        "homeassistant.components.imou.config_flow.ImouOpenApiClient"
+        PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
     ) as mock_client:
         mock_instance = AsyncMock()
         mock_instance.async_get_token = AsyncMock()
@@ -63,16 +68,7 @@ async def imou_integration(
     """Set up Imou with mocked pyimouapi clients; yields the device manager mock."""
     mock_dm = create_mock_device_manager()
     mock_dm.async_get_devices = AsyncMock(return_value=imou_mock_devices)
-    with (
-        patch(
-            "homeassistant.components.imou.ImouOpenApiClient",
-            return_value=create_mock_api_client(),
-        ),
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-            return_value=mock_dm,
-        ),
-    ):
+    with imou_package_setup_patches(mock_dm):
         mock_config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

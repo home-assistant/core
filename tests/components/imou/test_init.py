@@ -6,7 +6,7 @@ from homeassistant.components.imou.coordinator import ImouDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .util import create_mock_api_client, create_mock_device_manager
+from .util import create_mock_device_manager, imou_package_setup_patches
 
 from tests.common import MockConfigEntry
 
@@ -35,14 +35,7 @@ async def test_setup_entry_failed_on_refresh(
     mock_dm.async_get_devices = AsyncMock(return_value=[])
 
     with (
-        patch(
-            "homeassistant.components.imou.ImouOpenApiClient",
-            return_value=create_mock_api_client(),
-        ),
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-            return_value=mock_dm,
-        ),
+        imou_package_setup_patches(mock_dm),
         patch.object(
             ImouDataUpdateCoordinator,
             "async_config_entry_first_refresh",

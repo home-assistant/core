@@ -107,7 +107,7 @@ async def test_user_flow_exception_then_recover(
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == expected_error
 
-    mock_api_client.async_get_token.side_effect = None
+    mock_api_client.async_get_token.reset_mock(side_effect=True)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -115,7 +115,9 @@ async def test_user_flow_exception_then_recover(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DOMAIN
     assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -144,4 +146,6 @@ async def test_user_flow_success_per_region(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DOMAIN
     assert result["data"] == user_input
+    assert result["result"].unique_id == user_input[CONF_APP_ID]
