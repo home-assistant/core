@@ -119,6 +119,52 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Cache TTL: 5 minutes
         self._device_detail_cache_ttl = 300
 
+        # Configure device management if provided
+        if self.device_management:
+            from .const import (
+                AREA_NAME_RULE_HOME_ROOM,
+                CONF_AREA_NAME_RULE,
+                CONF_DEVICE_FILTER,
+                CONF_DEVICE_FILTER_MODE,
+                CONF_DEVICE_LIST,
+                CONF_MODEL_FILTER_MODE,
+                CONF_MODEL_LIST,
+                CONF_ROOM_FILTER_MODE,
+                CONF_ROOM_LIST,
+                CONF_STATISTICS_LOGIC,
+                CONF_TYPE_FILTER_MODE,
+                CONF_TYPE_LIST,
+            )
+
+            filter_config = {
+                "filter_mode": config_entry.data.get(CONF_DEVICE_FILTER, "exclude"),
+                "statistics_logic": config_entry.data.get(CONF_STATISTICS_LOGIC, "or"),
+                "room_filter_mode": config_entry.data.get(
+                    CONF_ROOM_FILTER_MODE, "exclude"
+                ),
+                "room_list": config_entry.data.get(CONF_ROOM_LIST, []),
+                "type_filter_mode": config_entry.data.get(
+                    CONF_TYPE_FILTER_MODE, "exclude"
+                ),
+                "type_list": config_entry.data.get(CONF_TYPE_LIST, []),
+                "model_filter_mode": config_entry.data.get(
+                    CONF_MODEL_FILTER_MODE, "exclude"
+                ),
+                "model_list": config_entry.data.get(CONF_MODEL_LIST, []),
+                "device_filter_mode": config_entry.data.get(
+                    CONF_DEVICE_FILTER_MODE, "exclude"
+                ),
+                "device_list": config_entry.data.get(CONF_DEVICE_LIST, []),
+            }
+            area_sync_mode = config_entry.data.get(
+                CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM
+            )
+
+            self.device_management.configure(
+                filter_config=filter_config,
+                area_sync_mode=area_sync_mode,
+            )
+
     async def _async_update_data(self) -> HeimanData:
         """Update coordinator data."""
         # Ensure client is initialized
@@ -320,6 +366,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
 
             def _raise_if_missing(value: Any, error_msg: str) -> None:
+                """Raise HeimanMQTTError if value is missing."""
                 if not value:
                     _LOGGER.warning(error_msg)
                     raise HeimanMQTTError(error_msg)
@@ -373,7 +420,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Clear mqtt_client so future calls can retry
             self.mqtt_client = None
             # Re-raise to allow caller to handle the failure
-            raise
+            raise  # noqa: TRY301
         except Exception as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
             # Disconnect any partially connected client before clearing reference
@@ -391,7 +438,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Clear mqtt_client so future calls can retry
             self.mqtt_client = None
             # Re-raise to allow caller to handle the failure
-            raise
+            raise  # noqa: TRY301
 
     def _on_device_property_update(
         self, device_id: str, properties: dict[str, Any]
