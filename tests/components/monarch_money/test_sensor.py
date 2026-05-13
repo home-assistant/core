@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.monarch_money import async_migrate_entry
 from homeassistant.components.monarch_money.config_flow import MonarchMoneyConfigFlow
-from homeassistant.components.monarch_money.const import DOMAIN, MONARCH_MONEY_CURRENCY
+from homeassistant.components.monarch_money.const import DEFAULT_CURRENCY, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
@@ -57,19 +57,19 @@ async def test_monetary_sensors_ignore_hass_currency(
     # Test account balance sensor (monetary)
     state = hass.states.get("sensor.rando_bank_checking_balance")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
+    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
     # Test cashflow sensor (monetary)
     state = hass.states.get("sensor.cashflow_income_year_to_date")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
+    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
     # Test value sensor (monetary)
     state = hass.states.get("sensor.vinaudit_2050_toyota_rav8_value")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
+    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
 
@@ -130,7 +130,7 @@ async def test_statistics_migration_called_for_monetary_sensors(
 
     # Verify all calls used the Monarch Money currency
     for call in mock_update_stats.call_args_list:
-        assert call.kwargs["new_unit_of_measurement"] == MONARCH_MONEY_CURRENCY
+        assert call.kwargs["new_unit_of_measurement"] == DEFAULT_CURRENCY
 
     assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
 

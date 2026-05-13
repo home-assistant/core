@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.recorder import DATA_INSTANCE
 
-from .const import MONARCH_MONEY_CURRENCY
+from .const import DEFAULT_CURRENCY
 from .coordinator import MonarchMoneyConfigEntry, MonarchMoneyDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -68,7 +68,7 @@ def _async_migrate_statistics_currency(
             async_update_statistics_metadata(
                 hass,
                 entity_entry.entity_id,
-                new_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+                new_unit_of_measurement=DEFAULT_CURRENCY,
                 new_unit_class=None,
             )
 

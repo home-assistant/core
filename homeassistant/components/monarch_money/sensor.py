@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import MONARCH_MONEY_CURRENCY
+from .const import DEFAULT_CURRENCY
 from .coordinator import MonarchMoneyConfigEntry
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
@@ -46,7 +46,7 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, .
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
 )
 
@@ -59,7 +59,7 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
 )
 
@@ -80,7 +80,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.income,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="sum_expense",
@@ -88,7 +88,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.expenses,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings",
@@ -96,7 +96,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.savings,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=MONARCH_MONEY_CURRENCY,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings_rate",
