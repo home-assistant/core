@@ -76,7 +76,7 @@ class IneproGatewayText(
         try:
             await self.coordinator.async_write_gateway_setting(
                 setting_key=self._setting.key,
-                value=value,
+                value=normalized_value,
             )
             await self.coordinator.async_request_refresh()
         except Exception:

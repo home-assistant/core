@@ -54,7 +54,6 @@ def gateway_display_name(entry: ConfigEntry, *, gateway=None) -> str:
 def build_gateway_device_info(
     entry: ConfigEntry,
     *,
-    name: str,
     gateway,
 ) -> DeviceInfo:
     """Return a device-registry view for one TCP gateway endpoint."""
@@ -115,6 +114,5 @@ class IneproGatewayEntity(CoordinatorEntity[GatewayCoordinator]):
         """Return the gateway device information."""
         return build_gateway_device_info(
             self._entry,
-            name=f"{self._entry.title} Gateway",
             gateway=self.gateway,
         )

@@ -139,7 +139,7 @@ class IneproGatewayNumber(
         try:
             await self.coordinator.async_write_gateway_setting(
                 setting_key=self._setting.key,
-                value=value,
+                value=normalized_value,
             )
             await self.coordinator.async_request_refresh()
         except Exception:
@@ -250,7 +250,7 @@ class IneproWritableNumber(
                 profile=self._profile,
                 slave_id=int(self._entry.data[CONF_SLAVE_ID]),
                 setting_key=self._setting.key,
-                value=value,
+                value=normalized_value,
             )
             await self.coordinator.async_request_refresh()
         except Exception:
@@ -388,7 +388,7 @@ class IneproWritableBusNumber(
                 profile=self._profile,
                 slave_id=self._meter.slave_id,
                 setting_key=self._setting.key,
-                value=value,
+                value=normalized_value,
             )
             await self.coordinator.async_request_refresh()
         except Exception:

@@ -29,7 +29,6 @@ from .config_flow_schemas import (
     build_serial_bus_scan_schema,
     build_switch_route_schema,
     build_update_connection_schema,
-    build_update_polling_schema,
 )
 from .config_flow_shared import (
     CONF_ACTION,
@@ -44,7 +43,6 @@ from .config_flow_shared import (
     OPTION_ACTION_SCAN_SERIAL,
     OPTION_ACTION_SWITCH_ROUTE,
     OPTION_ACTION_UPDATE_CONNECTION,
-    OPTION_ACTION_UPDATE_POLLING,
     IneproIdentityError,
     bluetooth_gatt_validation_data,
     bluetooth_meter_key,
@@ -173,7 +171,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                 if self._supports_serial_rescan:
                     return await self.async_step_edit_serial_bus()
                 return await self.async_step_update_connection()
-            return await self.async_step_update_polling()
 
         return self.async_show_form(
             step_id="init",
@@ -302,10 +299,8 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                     )
                 )
             return await self._async_finish_entry_update(
-                title=str(user_input[CONF_NAME]).strip() or self._config_entry.title,
                 data={
                     **updated_bus_data,
-                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
                     CONF_METERS: [
                         serialize_configured_meter(meter) for meter in meters
                     ],
@@ -317,7 +312,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
             step_id="edit_serial_bus",
             data_schema=build_edit_serial_bus_schema(
                 self._config_entry.data,
-                self._config_entry.title,
                 self._configured_meters,
                 user_input,
             ),
@@ -330,31 +324,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                     else "Modbus TCP gateway bus"
                 ),
             },
-        )
-
-    async def async_step_update_polling(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        """Update the polling interval for the current entry."""
-        if user_input is not None:
-            return await self._async_finish_entry_update(
-                data={
-                    **self._config_entry.data,
-                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-                },
-            )
-
-        return self.async_show_form(
-            step_id="update_polling",
-            data_schema=build_update_polling_schema(
-                int(
-                    self._config_entry.data.get(
-                        CONF_SCAN_INTERVAL,
-                        DEFAULT_SCAN_INTERVAL,
-                    )
-                )
-            ),
         )
 
     async def async_step_update_connection(
@@ -810,7 +779,7 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
             return OPTION_ACTION_UPDATE_CONNECTION
         if self._supports_connection_update:
             return OPTION_ACTION_UPDATE_CONNECTION
-        return OPTION_ACTION_UPDATE_POLLING
+        return OPTION_ACTION_EDIT_SERIAL_BUS
 
     @property
     def _action_options(self) -> list[dict[str, str]]:
@@ -867,12 +836,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                     "label": "Update connection details",
                 }
             )
-        options.append(
-            {
-                "value": OPTION_ACTION_UPDATE_POLLING,
-                "label": "Update polling interval only",
-            }
-        )
         return options
 
     @property

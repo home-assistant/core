@@ -2,7 +2,8 @@
 
 from datetime import timedelta
 import struct
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 from inepro_metering.const import MeterFamily, TransportType
 
@@ -19,6 +20,16 @@ from homeassistant.components.inepro_metering.const import (
     CONF_VARIANT,
     DOMAIN,
 )
+from homeassistant.components.inepro_metering.entry_data import ConfiguredMeter
+from homeassistant.components.inepro_metering.number import (
+    IneproWritableBusNumber,
+    IneproWritableNumber,
+)
+from homeassistant.components.inepro_metering.select import (
+    IneproWritableBusSelect,
+    IneproWritableSelect,
+)
+from homeassistant.components.inepro_metering.models import get_profile
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
@@ -204,6 +215,204 @@ class FakeWritableSerialBusModbusClient:
     async def async_close(self) -> None:
         """Close the fake client."""
         return
+
+
+async def test_single_meter_select_writes_normalized_value() -> None:
+    """Single-meter writable selects should use normalized values for state and I/O."""
+    profile = get_profile(MeterFamily.GROW.value, "grow_850")
+    coordinator = SimpleNamespace(
+        data=None,
+        async_write_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_850",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    setting = SimpleNamespace(
+        key="backlight_mode",
+        name="Backlight mode",
+        resolved_options_by_value=lambda profile: {"button": "Button Activated"},
+        normalize_value=lambda profile, option: "button",
+    )
+    entity = IneproWritableSelect(coordinator, entry, profile, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_select_option(" Button Activated ")
+
+    assert entity.current_option == "button"
+    coordinator.async_write_setting.assert_awaited_once_with(
+        profile=profile,
+        slave_id=1,
+        setting_key="backlight_mode",
+        value="button",
+    )
+
+
+async def test_bus_select_writes_normalized_value() -> None:
+    """Bus writable selects should use normalized values for state and I/O."""
+    profile = get_profile(MeterFamily.GROW.value, "grow_850")
+    coordinator = SimpleNamespace(
+        data=None,
+        async_write_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Serial Bus",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+            CONF_METERS: [],
+        },
+    )
+    meter = ConfiguredMeter(
+        family=MeterFamily.GROW.value,
+        name="Bus Meter",
+        variant="grow_850",
+        slave_id=157,
+        serial_number="080125260007",
+    )
+    setting = SimpleNamespace(
+        key="backlight_mode",
+        name="Backlight mode",
+        resolved_options_by_value=lambda profile: {"button": "Button Activated"},
+        normalize_value=lambda profile, option: "button",
+    )
+    entity = IneproWritableBusSelect(coordinator, entry, meter, profile, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_select_option(" Button Activated ")
+
+    assert entity.current_option == "button"
+    coordinator.async_write_setting.assert_awaited_once_with(
+        profile=profile,
+        slave_id=157,
+        setting_key="backlight_mode",
+        value="button",
+    )
+
+
+async def test_single_meter_number_writes_normalized_value() -> None:
+    """Single-meter writable numbers should use normalized values for state and I/O."""
+    profile = get_profile(MeterFamily.GROW.value, "grow_850")
+    coordinator = SimpleNamespace(
+        data=None,
+        async_write_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_850",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    setting = SimpleNamespace(
+        key="backlight_timeout",
+        name="Backlight timeout",
+        native_min_value=0,
+        native_max_value=120,
+        native_step=1,
+        native_unit_of_measurement_for_profile=lambda profile: "s",
+        normalize_value=lambda profile, value: 12,
+    )
+    entity = IneproWritableNumber(coordinator, entry, profile, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_set_native_value(12.2)
+
+    assert entity.native_value == 12.0
+    coordinator.async_write_setting.assert_awaited_once_with(
+        profile=profile,
+        slave_id=1,
+        setting_key="backlight_timeout",
+        value=12.0,
+    )
+
+
+async def test_bus_number_writes_normalized_value() -> None:
+    """Bus writable numbers should use normalized values for state and I/O."""
+    profile = get_profile(MeterFamily.GROW.value, "grow_850")
+    coordinator = SimpleNamespace(
+        data=None,
+        async_write_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Serial Bus",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+            CONF_METERS: [],
+        },
+    )
+    meter = ConfiguredMeter(
+        family=MeterFamily.GROW.value,
+        name="Bus Meter",
+        variant="grow_850",
+        slave_id=157,
+        serial_number="080125260007",
+    )
+    setting = SimpleNamespace(
+        key="backlight_timeout",
+        name="Backlight timeout",
+        native_min_value=0,
+        native_max_value=120,
+        native_step=1,
+        native_unit_of_measurement_for_profile=lambda profile: "s",
+        normalize_value=lambda profile, value: 12,
+    )
+    entity = IneproWritableBusNumber(coordinator, entry, meter, profile, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_set_native_value(12.2)
+
+    assert entity.native_value == 12.0
+    coordinator.async_write_setting.assert_awaited_once_with(
+        profile=profile,
+        slave_id=157,
+        setting_key="backlight_timeout",
+        value=12.0,
+    )
 
 
 async def test_single_meter_display_settings_entities_expose_current_values(

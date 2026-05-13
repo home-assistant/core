@@ -336,7 +336,6 @@ class IneproGatewayDiagnosticEntity(IneproDiagnosticEntity):
         )
         return build_gateway_device_info(
             self._entry,
-            name=f"{self._entry.title} Gateway",
             gateway=gateway,
         )
 
@@ -678,7 +677,6 @@ class IneproBusGatewayBaseEntity(
         )
         return build_gateway_device_info(
             self._entry,
-            name=f"{self._entry.title} Gateway",
             gateway=gateway,
         )
 

@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
@@ -245,9 +244,6 @@ def build_model_schema(
     """Build the meter model selection form for one family."""
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.TEXT)
-            ),
             vol.Required(CONF_VARIANT, default=default_variant): SelectSelector(
                 _select_selector_config(
                     options=[
@@ -264,17 +260,6 @@ def build_model_schema(
                 NumberSelectorConfig(
                     min=1,
                     max=247,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=DEFAULT_SCAN_INTERVAL,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )
@@ -1193,38 +1178,14 @@ def build_switch_route_schema(
     )
 
 
-def build_update_polling_schema(default_scan_interval: int) -> vol.Schema:
-    """Build the form for updating only the polling interval."""
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=default_scan_interval,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
-                )
-            )
-        }
-    )
-
-
 def build_edit_serial_bus_schema(
     entry_data: dict[str, Any],
-    entry_title: str,
     configured_meters: tuple[ConfiguredMeter, ...],
     user_input: dict[str, Any] | None,
 ) -> vol.Schema:
     """Build the form schema for editing a shared Modbus bus entry."""
     transport = TransportType(entry_data[CONF_TRANSPORT])
     schema: dict[vol.Marker, Any] = {
-        vol.Required(
-            CONF_NAME,
-            default=user_value(user_input, CONF_NAME, entry_title),
-        ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         vol.Required(
             CONF_TIMEOUT,
             default=user_value(
@@ -1236,21 +1197,6 @@ def build_edit_serial_bus_schema(
             NumberSelectorConfig(
                 min=1,
                 max=30,
-                step=1,
-                mode=NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Required(
-            CONF_SCAN_INTERVAL,
-            default=user_value(
-                user_input,
-                CONF_SCAN_INTERVAL,
-                int(entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
-            ),
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=5,
-                max=3600,
                 step=1,
                 mode=NumberSelectorMode.BOX,
             )

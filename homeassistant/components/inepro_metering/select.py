@@ -127,7 +127,7 @@ class IneproGatewaySelect(
         try:
             await self.coordinator.async_write_gateway_setting(
                 setting_key=self._setting.key,
-                value=option,
+                value=normalized_option,
             )
             await self.coordinator.async_request_refresh()
         except Exception:
@@ -228,7 +228,7 @@ class IneproWritableSelect(
                 profile=self._profile,
                 slave_id=int(self._entry.data[CONF_SLAVE_ID]),
                 setting_key=self._setting.key,
-                value=option,
+                value=normalized_option,
             )
             await self.coordinator.async_request_refresh()
         except Exception:
@@ -356,7 +356,7 @@ class IneproWritableBusSelect(
                 profile=self._profile,
                 slave_id=self._meter.slave_id,
                 setting_key=self._setting.key,
-                value=option,
+                value=normalized_option,
             )
             await self.coordinator.async_request_refresh()
         except Exception:

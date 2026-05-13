@@ -65,7 +65,6 @@ CONF_RESET_BLUETOOTH_PAIRING = "reset_bluetooth_pairing"
 CONF_BLUETOOTH_PAIRING_PIN = "bluetooth_pairing_pin"
 CONF_SELECTED_METER = "selected_meter"
 
-OPTION_ACTION_UPDATE_POLLING = "update_polling"
 OPTION_ACTION_SCAN_SERIAL = "scan_serial"
 OPTION_ACTION_UPDATE_CONNECTION = "update_connection"
 OPTION_ACTION_EDIT_SERIAL_BUS = "edit_serial_bus"

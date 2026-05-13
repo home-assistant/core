@@ -1,7 +1,8 @@
 """Home Assistant tests for TCP gateway configuration entities."""
 
 import ipaddress
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 from inepro_metering.commands import encode_ascii_registers
 from inepro_metering.const import MeterFamily, TransportType
@@ -34,6 +35,9 @@ from inepro_metering.modbus import IneproDeviceIdentification, IneproTcpGatewayI
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.inepro_metering.number import IneproGatewayNumber
+from homeassistant.components.inepro_metering.select import IneproGatewaySelect
+from homeassistant.components.inepro_metering.text import IneproGatewayText
 from homeassistant.components.inepro_metering.const import (
     CONF_FAMILY,
     CONF_METERS,
@@ -274,6 +278,126 @@ async def test_tcp_gateway_entry_exposes_gateway_only_configuration_entities(
             _gateway_entity_id(hass, BUTTON_DOMAIN, entry.entry_id, "apply")
         ).state
         == "unknown"
+    )
+
+
+async def test_gateway_text_entity_writes_normalized_value() -> None:
+    """Gateway text writes should use the normalized value for state and I/O."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(gateway=None, gateway_settings={}),
+        async_write_gateway_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Gateway Config",
+        data={
+            CONF_FAMILY: MeterFamily.PRO.value,
+            CONF_VARIANT: "pro_380",
+            CONF_TRANSPORT: TransportType.TCP_GATEWAY.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            "host": "10.5.2.10",
+            "port": 502,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    setting = SimpleNamespace(
+        key="host_name",
+        name="Host name",
+        normalize_value=lambda value: "gateway-01",
+    )
+    entity = IneproGatewayText(coordinator, entry, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_set_value(" Gateway-01 ")
+
+    assert entity.native_value == "gateway-01"
+    coordinator.async_write_gateway_setting.assert_awaited_once_with(
+        setting_key="host_name",
+        value="gateway-01",
+    )
+
+
+async def test_gateway_select_entity_writes_normalized_value() -> None:
+    """Gateway selects should use normalized choices for optimistic state and writes."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(gateway=None, gateway_settings={}),
+        async_write_gateway_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Gateway Config",
+        data={
+            CONF_FAMILY: MeterFamily.PRO.value,
+            CONF_VARIANT: "pro_380",
+            CONF_TRANSPORT: TransportType.TCP_GATEWAY.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            "host": "10.5.2.10",
+            "port": 502,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    setting = SimpleNamespace(
+        key="baudrate",
+        name="Baudrate",
+        value_by_option=lambda: {"9600": 6, "19200": 7},
+        normalize_value=lambda option: "9600",
+    )
+    entity = IneproGatewaySelect(coordinator, entry, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_select_option(" 9600 ")
+
+    assert entity.current_option == "9600"
+    coordinator.async_write_gateway_setting.assert_awaited_once_with(
+        setting_key="baudrate",
+        value="9600",
+    )
+
+
+async def test_gateway_number_entity_writes_normalized_value() -> None:
+    """Gateway numbers should use normalized numeric values for state and writes."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(gateway=None, gateway_settings={}),
+        async_write_gateway_setting=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Gateway Config",
+        data={
+            CONF_FAMILY: MeterFamily.PRO.value,
+            CONF_VARIANT: "pro_380",
+            CONF_TRANSPORT: TransportType.TCP_GATEWAY.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            "host": "10.5.2.10",
+            "port": 502,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    setting = SimpleNamespace(
+        key="timeout_ms",
+        name="Timeout",
+        number_mode=None,
+        native_min_value=0,
+        native_max_value=5000,
+        native_step=1,
+        native_unit_of_measurement="ms",
+        normalize_value=lambda value: 500,
+    )
+    entity = IneproGatewayNumber(coordinator, entry, setting)
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_set_native_value(499.6)
+
+    assert entity.native_value == 500.0
+    coordinator.async_write_gateway_setting.assert_awaited_once_with(
+        setting_key="timeout_ms",
+        value=500.0,
     )
 
 
