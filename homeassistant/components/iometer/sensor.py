@@ -74,7 +74,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
-            int(round(data.status.device.core.battery_level))
+            round(data.status.device.core.battery_level)
             if data.status.device.core.battery_level is not None
             else None
         ),

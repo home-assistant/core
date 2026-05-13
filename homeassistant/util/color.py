@@ -408,7 +408,7 @@ def match_max_scale(
         factor = 0.0
     else:
         factor = max_in / max_out
-    return tuple(int(round(i * factor)) for i in output_colors)
+    return tuple(round(i * factor) for i in output_colors)
 
 
 def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:

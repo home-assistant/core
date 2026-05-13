@@ -298,7 +298,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         vol = max(0.0, min(volume, 1.0))
-        amp_vol = int(round(vol * 100))
+        amp_vol = round(vol * 100)
         try:
             await self._client.send(COMMANDS["volume_set"](amp_vol), expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:

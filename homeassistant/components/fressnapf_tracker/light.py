@@ -57,7 +57,7 @@ class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
         if TYPE_CHECKING:
             # The entity is not created if led_brightness_value is None
             assert self.coordinator.data.led_brightness_value is not None
-        return int(round((self.coordinator.data.led_brightness_value / 100) * 255))
+        return round((self.coordinator.data.led_brightness_value / 100) * 255)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
