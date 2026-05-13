@@ -75,9 +75,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
         try:
             await self.client.connect_events(
-                list(self.client.players),
-                self._mqtt_event,
-                self._mqtt_disconnect,
+                list(self.client.players), self._mqtt_event
             )
         except YotoError as err:
             raise ConfigEntryNotReady(
@@ -137,38 +135,29 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
     async def _async_refresh_status_per_device(self) -> None:
         """Refresh the REST status for every known player in parallel."""
-        device_ids = list(self.client.players)
-        results = await asyncio.gather(
-            *(self.client.update_player_status(did) for did in device_ids),
-            return_exceptions=True,
-        )
-        for device_id, result in zip(device_ids, results, strict=True):
-            if isinstance(result, YotoError):
+
+        async def _refresh_one(device_id: str) -> None:
+            try:
+                await self.client.update_player_status(device_id)
+            except YotoError as err:
                 _LOGGER.warning(
-                    "Could not refresh Yoto player %s status: %s", device_id, result
+                    "Could not refresh Yoto player %s status: %s", device_id, err
                 )
-            elif isinstance(result, BaseException):
-                raise result
+
+        await asyncio.gather(*(_refresh_one(did) for did in self.client.players))
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
         # The response arrives via the on_update callback, which already
         # triggers async_set_updated_data — nothing to await here.
+        if not self.client.is_mqtt_connected:
+            return
         for device_id in list(self.client.players):
-            try:
-                await self.client.request_status_push(device_id)
-            except YotoError as err:
-                _LOGGER.debug("status push failed for %s: %s", device_id, err)
+            await self.client.request_status_push(device_id)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""
         self.async_set_updated_data(self.client.players)
-
-    def _mqtt_disconnect(self, err: Exception | None) -> None:
-        """Log MQTT disconnects."""
-        # The library auto-reconnects on transient drops; we only log here.
-        if err is not None:
-            _LOGGER.debug("MQTT disconnect: %s", err)
 
     async def async_shutdown(self) -> None:
         """Shut down the coordinator."""

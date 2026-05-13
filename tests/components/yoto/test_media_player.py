@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 ENTITY_ID = "media_player.nursery_yoto"
 
 
-async def test_media_player_state(
+async def test_entity_state(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_token_hex: MagicMock,
@@ -233,13 +233,13 @@ async def test_no_card_metadata_when_card_id_missing(
     assert "media_image_url" not in state.attributes
 
 
-async def test_state_idle_for_unknown_playback_status(
+async def test_state_idle_before_first_event(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
 ) -> None:
-    """An unrecognized playback_status falls back to IDLE."""
+    """A freshly-online player with no playback event yet reports IDLE."""
     player = next(iter(mock_yoto_client.players.values()))
     player.last_event.playback_status = None
 

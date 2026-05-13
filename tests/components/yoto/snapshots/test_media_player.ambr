@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_media_player_state[media_player.nursery_yoto-entry]
+# name: test_entity_state[media_player.nursery_yoto-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -37,7 +37,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_media_player_state[media_player.nursery_yoto-state]
+# name: test_entity_state[media_player.nursery_yoto-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',

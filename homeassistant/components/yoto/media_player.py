@@ -80,10 +80,9 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Return the playback state."""
         if self.player.status.is_online is False:
             return MediaPlayerState.OFF
-        status = self.player.last_event.playback_status
-        if status in PLAYBACK_STATE_MAP:
-            return PLAYBACK_STATE_MAP[status]
-        return MediaPlayerState.IDLE
+        return PLAYBACK_STATE_MAP.get(
+            self.player.last_event.playback_status, MediaPlayerState.IDLE
+        )
 
     @property
     def volume_level(self) -> float | None:
