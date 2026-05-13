@@ -19,13 +19,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    UV_INDEX,
     EntityCategory,
+    UnitOfIrradiance,
     UnitOfLength,
+    UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -147,7 +153,43 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         value_fn=lambda data: data.air_density,
-        native_unit_of_measurement="kg/m³",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfVolume.CUBIC_METERS}",
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="relative_humidity",
+        translation_key="relative_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.relative_humidity,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Light Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="brightness",
+        translation_key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.brightness,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="uv",
+        translation_key="uv_index",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.uv,
+        native_unit_of_measurement=UV_INDEX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="solar_radiation",
+        translation_key="solar_radiation",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.solar_radiation,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     ),
     # Temp Sensors
     WeatherFlowCloudSensorEntityDescription(
