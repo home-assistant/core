@@ -143,7 +143,9 @@ class PassiveBluetoothDataUpdate[_T]:
     def update(
         self, new_data: PassiveBluetoothDataUpdate[_T]
     ) -> set[PassiveBluetoothEntityKey] | None:
-        """Update the data and returned changed PassiveBluetoothEntityKey or None on device change.
+        """Update the data and return changed PassiveBluetoothEntityKey.
+
+        Returns None on device change.
 
         The changed PassiveBluetoothEntityKey can be used to filter
         which listeners are called.
