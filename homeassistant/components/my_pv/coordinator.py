@@ -1,6 +1,7 @@
 """The my-PV integration for Home Assistant."""
 
 from datetime import timedelta
+import functools
 import logging
 from typing import Any
 
@@ -9,13 +10,36 @@ from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _my_pv_connecton(func):
+    @functools.wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        if not self._device.connected and not await self._device.connect():
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            )
+
+        try:
+            return await func(self, *args, **kwargs)
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
+
+    return wrapper
 
 
 class MyPVCoordinator(DataUpdateCoordinator[None]):
@@ -101,143 +125,31 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """
         return await self._device.disconnect()
 
+    @_my_pv_connecton
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        if not self._device.connected and not await self._device.connect():
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
+        await self._device.fetch_data()
 
-        try:
-            await self._device.fetch_data()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-
-    def get_setup_value(self, key: str) -> bool | float | int | str | None:
-        """Get the setup value for the given key."""
-        return self._device.get_setup_value(key)
-
-    async def set_setup_value(self, key: str, value: bool | float | str) -> bool:
-        """Set setup value for the given key."""
-        if not self._device.connected and not await self._device.connect():
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-
-        try:
-            result = await self._device.set_setup_value(key, value)
-            self.async_update_listeners()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-        else:
-            return result
-
+    @_my_pv_connecton
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set setup value for the given key."""
-        if not self._device.connected and not await self._device.connect():
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
+        result = await self._device.set_target_temperature(temperature)
+        self.async_update_listeners()
+        return result
 
-        try:
-            result = await self._device.set_target_temperature(temperature)
-            self.async_update_listeners()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-        else:
-            return result
-
-    def get_data_value(self, key: str) -> bool | float | int | str | None:
-        """Get the data value for the given key."""
-        return self._device.get_data_value(key)
-
-    async def send_command(self, key, value: bool | float | str | None = None):
-        """Send command."""
-        if not self._device.connected and not await self._device.connect():
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-
-        try:
-            result = await self._device.send_command(key, value)
-            self.async_update_listeners()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-        else:
-            return result
-
+    @_my_pv_connecton
     async def turn_on(self):
         """Turn on the device."""
-        if not self._device.connected and not await self._device.connect():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"uri": self._device.uri},
-            )
+        result = await self._device.turn_on()
+        self.async_update_listeners()
+        return result
 
-        try:
-            result = await self._device.turn_on()
-            self.async_update_listeners()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-        else:
-            return result
-
+    @_my_pv_connecton
     async def turn_off(self):
         """Turn off the device."""
-        if not self._device.connected and not await self._device.connect():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-
-        try:
-            result = await self._device.turn_off()
-            self.async_update_listeners()
-        except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
-        except MyPVConnectionError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
-            ) from exc
-        else:
-            return result
+        result = await self._device.turn_off()
+        self.async_update_listeners()
+        return result
 
 
 type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
