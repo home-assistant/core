@@ -92,7 +92,9 @@ async def test_setup_entry_subscribe_failure(
     mock_aquarite_client: AsyncMock,
 ) -> None:
     """Test setup retries when the Firestore subscription fails."""
-    mock_aquarite_client.subscribe_pool.side_effect = AquariteError("subscribe fail")
+    mock_aquarite_client.subscribe_pool_resilient.side_effect = AquariteError(
+        "subscribe fail"
+    )
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
