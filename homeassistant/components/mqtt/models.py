@@ -74,14 +74,14 @@ class SubscriptionID:
             return subscription_id
 
         subscription_id = self._next_id
-        self._used_ids.add(self._next_id)
-        if self._next_id > MAX_28BIT:
+        if subscription_id > MAX_28BIT:
             raise HomeAssistantError(
                 "MQTT Subscription ID limit reached. "
                 "Cannot generate more IDs to subscribe",
                 translation_domain=DOMAIN,
                 translation_key="mqtt_max_subscription_id_reached",
             )
+        self._used_ids.add(subscription_id)
         self._next_id += 1
         return subscription_id
 
