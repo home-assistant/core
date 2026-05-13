@@ -414,7 +414,7 @@ class CachedProperties(type):
                 if property_name in seen_props:
                     continue
                 attr_name = f"_attr_{property_name}"
-                # Check if an _attr_ class attribute exits.
+                # Check if an _attr_ class attribute exists.
                 # We check __dict__ here because we don't care
                 # about _attr_ class attributes in parents.
                 if (attr_name) not in cls.__dict__:
