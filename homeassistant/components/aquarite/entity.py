@@ -1,4 +1,4 @@
-"""Shared base entity helpers for Aquarite."""
+"""Shared base entity helpers for AquaRite."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -8,7 +8,7 @@ from .coordinator import AquariteDataUpdateCoordinator
 
 
 class AquariteEntity(CoordinatorEntity[AquariteDataUpdateCoordinator]):
-    """Base entity class for Aquarite platforms (one device per pool)."""
+    """Base entity class for AquaRite platforms (one device per pool)."""
 
     _attr_has_entity_name = True
 

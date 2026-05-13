@@ -1,8 +1,8 @@
-"""Shared constants for the Aquarite integration."""
+"""Shared constants for the AquaRite integration."""
 
 DOMAIN = "aquarite"
 BRAND = "Hayward"
-MODEL = "Aquarite"
+MODEL = "AquaRite"
 
 PATH_PREFIX = "main."
 PATH_HASCD = f"{PATH_PREFIX}hasCD"

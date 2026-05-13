@@ -1,4 +1,4 @@
-"""Data coordinator for the Aquarite integration."""
+"""Data coordinator for the AquaRite integration."""
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Aquarite coordinator for a single pool's Firestore subscription."""
+    """AquaRite coordinator for a single pool's Firestore subscription."""
 
     config_entry: AquariteConfigEntry
 
@@ -45,7 +45,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=f"Aquarite {pool_name}",
+            name=f"AquaRite {pool_name}",
             update_interval=None,
             config_entry=entry,
         )

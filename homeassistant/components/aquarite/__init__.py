@@ -1,4 +1,4 @@
-"""The Aquarite integration."""
+"""The AquaRite integration."""
 
 from dataclasses import dataclass, field
 import logging
@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 @dataclass
 class AquariteData:
-    """Runtime data for an Aquarite account (holds one coordinator per pool)."""
+    """Runtime data for an AquaRite account (holds one coordinator per pool)."""
 
     auth: AquariteAuth
     api: AquariteClient
@@ -32,7 +32,7 @@ type AquariteConfigEntry = ConfigEntry[AquariteData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> bool:
-    """Set up Aquarite from a config entry.
+    """Set up AquaRite from a config entry.
 
     One config entry represents a Hayward account; the account can contain
     multiple pools, each exposed as a separate device.
@@ -88,5 +88,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> bool:
-    """Unload Aquarite config entry."""
+    """Unload AquaRite config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
