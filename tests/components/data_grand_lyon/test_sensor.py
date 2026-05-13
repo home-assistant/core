@@ -245,7 +245,7 @@ async def test_velov_sensor_no_data(
     mock_velov_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that Vélo'v sensors is unavailable when station not found."""
+    """Test that Vélo'v sensors are unavailable when station not found."""
     mock_tcl_client.get_velov_station.return_value = None
     mock_velov_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
