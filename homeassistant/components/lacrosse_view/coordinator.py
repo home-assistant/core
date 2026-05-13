@@ -55,7 +55,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         now = int(time())
 
         if now - self.last_update > 59 * 60:
-            _LOGGER.debug("Refreshing LaCrosse View token")
+            _LOGGER.debug("Refreshing token")
             self.last_update = now
             try:
                 await self.api.login(self.username, self.password)
