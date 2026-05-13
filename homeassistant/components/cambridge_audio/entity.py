@@ -58,8 +58,12 @@ class CambridgeAudioEntity(Entity):
         self, _client: StreamMagicClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
-        self._attr_available = _client.is_connected()
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.client.is_connected()
 
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""

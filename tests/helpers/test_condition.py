@@ -155,10 +155,15 @@ def assert_condition_trace(expected):
     ("config", "error"),
     [
         (
+            {"blabla": "not_a_condition"},
+            "Unexpected value for condition: 'None'. Expected a condition, "
+            "a list of conditions or a valid template",
+        ),
+        (
             {"condition": 123},
             "Unexpected value for condition: '123'. Expected a condition, "
             "a list of conditions or a valid template",
-        )
+        ),
     ],
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
@@ -4450,6 +4455,7 @@ async def test_condition_checker_call_calls_async_check(
             return True
 
     checker = MockChecker(hass)
+    await checker.async_setup()
     check_mock = Mock(wraps=checker.async_check)
     checker.async_check = check_mock
 
@@ -5255,12 +5261,12 @@ async def test_state_condition_primary_entities_only(
     await hass.async_block_till_done()
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both on - true regardless of flag
     hass.states.async_set(diagnostic_id, STATE_ON)
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5292,12 +5298,12 @@ async def test_numerical_condition_primary_entities_only(
     # If diagnostic is included (primary_entities_only=False), behavior=all fails because
     # the diagnostic value is below the threshold. If excluded, only the primary is
     # checked and it's above.
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # Both above threshold — true regardless of flag
     hass.states.async_set(diagnostic_id, "75")
     await hass.async_block_till_done()
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 @pytest.mark.parametrize(("primary_entities_only"), [True, False])
@@ -5341,12 +5347,12 @@ async def test_state_condition_primary_entities_only_with_duration(
     # - primary_entities_only=False: diagnostic is included. Diagnostic has
     #   only been matching for 3s < 5s → behavior=all is False.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is primary_entities_only
+    assert test.async_check() is primary_entities_only
 
     # 3 more seconds later (6s after diagnostic became matching). Now diagnostic
     # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
-    assert test(hass) is True
+    assert test.async_check() is True
 
 
 async def test_async_from_config_calls_async_setup_on_checker(
@@ -5356,13 +5362,6 @@ async def test_async_from_config_calls_async_setup_on_checker(
 
     class StubChecker(condition.ConditionChecker):
         """Stub checker to track async_setup calls."""
-
-        def __init__(self, hass: HomeAssistant) -> None:
-            super().__init__(hass)
-            self.setup_called = False
-
-        async def async_setup(self) -> None:
-            self.setup_called = True
 
         def _async_check(self, **kwargs: Any) -> bool:
             return True
@@ -5385,4 +5384,77 @@ async def test_async_from_config_calls_async_setup_on_checker(
         result = await condition.async_from_config(hass, config)
 
     assert result is stub
-    assert stub.setup_called
+    assert stub._set_up is True
+
+
+async def test_async_setup_invokes_async_setup_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_setup awaits _async_setup and sets _set_up."""
+
+    setup_hook = AsyncMock()
+
+    class MockChecker(ConditionChecker):
+        async def _async_setup(self) -> None:
+            await setup_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._set_up is False
+    setup_hook.assert_not_called()
+
+    await checker.async_setup()
+
+    setup_hook.assert_awaited_once()
+    assert checker._set_up is True
+
+
+async def test_async_check_raises_before_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_check raises HomeAssistantError before async_setup is called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker.async_check()
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker(hass)
+
+    await checker.async_setup()
+
+    assert checker.async_check() is True
+    assert checker(hass) is True
+
+
+async def test_async_unload_invokes_async_unload_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_unload calls _async_unload and sets _unloaded."""
+
+    unload_hook = Mock()
+
+    class MockChecker(ConditionChecker):
+        def _async_unload(self) -> None:
+            unload_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._unloaded is False
+    unload_hook.assert_not_called()
+
+    checker.async_unload()
+
+    unload_hook.assert_called_once()
+    assert checker._unloaded is True

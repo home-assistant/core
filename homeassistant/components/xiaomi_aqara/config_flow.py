@@ -40,6 +40,8 @@ GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
 GATEWAY_SETTINGS = vol.Schema(
     {
         vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
     }
 )
