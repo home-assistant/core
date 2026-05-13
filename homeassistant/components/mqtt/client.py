@@ -439,6 +439,7 @@ class MQTT:
     _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
+    supports_subscriptions_identifiers: bool = False
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
@@ -1150,6 +1151,27 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
+        if self.is_mqttv5:
+            # Check if the server explicitly disabled Subscription Identifiers
+            if (
+                properties is not None
+                and hasattr(properties, "SubscriptionIdentifierAvailable")
+                and properties.SubscriptionIdentifierAvailable == 0
+            ):
+                _LOGGER.warning(
+                    "Your MQTT broker reports it does not support "
+                    "Subscription Identifiers, see "
+                    "https://docs.oasis-open.org/"
+                    "mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901092. "
+                    "Please use a supported MQTT broker; got broker properties: %s",
+                    properties,
+                )
+                self.supports_subscriptions_identifiers = False
+            else:
+                self.supports_subscriptions_identifiers = True
+        else:
+            self.supports_subscriptions_identifiers = False
+
         if reason_code.is_failure:
             # 24: Continue authentication
             # 25: Re-authenticate
@@ -1243,7 +1265,7 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         identifiers: tuple[int,] | None = None
-        if self.is_mqttv5:
+        if self.supports_subscriptions_identifiers:
             # It is possible we have multiple messages if there
             # are overlapping wildcard subscriptions.
             # So we assigned all wildcard subscriptions with a

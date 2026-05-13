@@ -1367,6 +1367,29 @@ async def test_logs_error_if_no_connect_broker(
 
 
 @pytest.mark.parametrize(
+    "mqtt_config_entry_data", [{mqtt.CONF_BROKER: "mock-broker", CONF_PROTOCOL: "5"}]
+)
+async def test_logs_error_if_broker_does_not_support_subscription_identifiers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test for setup failure if connection to broker is missing."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.on_disconnect(Mock(), None, None, MockMqttReasonCode())
+    properties = paho_mqtt.Properties(paho_mqtt.PacketTypes.CONNACK)
+    properties.SubscriptionIdentifierAvailable = 0
+    mqtt_client_mock.on_connect(Mock(), None, None, MockMqttReasonCode(), properties)
+    await hass.async_block_till_done()
+    assert (
+        "Your MQTT broker reports it does not support Subscription Identifiers, see "
+        "https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901092. "
+        "Please use a supported MQTT broker; got broker properties: "
+        "[SubscriptionIdentifierAvailable : 0]" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
     "reason_code",
     [
         MockMqttReasonCode(
