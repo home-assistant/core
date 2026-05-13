@@ -33,9 +33,17 @@ _MINIMUM_REFRESH_INTERVAL = 1.0
 
 # Job is the only coordinator whose payload can be None — pyprusalink's
 # get_job() returns None on HTTP 204 when no job is running. The other
-# endpoints always return data or raise on failure.
+# endpoints always return data or raise on failure. Using `bound=` rather
+# than constraint members so `JobInfo | None` fits without forcing a union
+# into the constraint list.
 T = TypeVar(
-    "T", PrinterStatus, LegacyPrinterStatus, JobInfo | None, PrinterInfo, VersionInfo
+    "T",
+    bound=PrinterStatus
+    | LegacyPrinterStatus
+    | JobInfo
+    | None
+    | PrinterInfo
+    | VersionInfo,
 )
 
 
