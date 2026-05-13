@@ -2410,6 +2410,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "gentex_place": {
+      "name": "Place",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "geo_json_events": {
       "name": "GeoJSON",
       "integration_type": "service",
