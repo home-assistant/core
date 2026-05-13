@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from grandstream_home_api import GDSPhoneAPI, GNSNasAPI, fetch_gds_status
 
@@ -10,9 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COORDINATOR_ERROR_THRESHOLD, COORDINATOR_UPDATE_INTERVAL, DOMAIN
+from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import GrandstreamRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
+
+type GrandstreamConfigEntry = ConfigEntry["GrandstreamRuntimeData"]
 
 
 class GrandstreamCoordinator(DataUpdateCoordinator[str]):
@@ -21,7 +27,7 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: GrandstreamConfigEntry,
         api: GDSPhoneAPI | GNSNasAPI,
         unique_id: str,
         discovery_version: str | None = None,
@@ -34,10 +40,8 @@ class GrandstreamCoordinator(DataUpdateCoordinator[str]):
             name=DOMAIN,
             update_interval=timedelta(seconds=COORDINATOR_UPDATE_INTERVAL),
         )
-        self.entry_id = entry.entry_id
         self._api = api
         self._unique_id = unique_id
-        self._max_errors = COORDINATOR_ERROR_THRESHOLD
         self._discovery_version = discovery_version
 
     def _update_firmware_version(self, version: str | None) -> None:

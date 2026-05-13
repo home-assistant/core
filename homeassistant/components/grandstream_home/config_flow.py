@@ -18,23 +18,20 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_HOST,
-    CONF_NAME,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TYPE,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    CONF_DEVICE_MODEL,
-    CONF_FIRMWARE_VERSION,
-    CONF_PRODUCT_MODEL,
-    CONF_VERIFY_SSL,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +96,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         name = discovery_info.name
         if name:
             self._name = str(name).split(".", maxsplit=1)[0].upper()
+            self.context["title_placeholders"] = {"name": self._name}
         else:
             self._name = ""
 
@@ -117,11 +115,8 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._firmware_version = str(version)
             self._product_model = txt_properties.get("product")
 
-        if self._name:
-            self.context["title_placeholders"] = {"name": self._name}
-
         # Use MAC address as unique_id if available
-        self._mac = extract_mac_from_name(self._name)
+        self._mac = extract_mac_from_name(self._name) if self._name else None
         # Set unique_id and check if already configured
         if self._mac:
             await self.async_set_unique_id(format_mac(self._mac))
@@ -134,7 +129,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         # Prepare updates
         updates = {CONF_HOST: self._host, CONF_PORT: self._port}
         if self._firmware_version:
-            updates[CONF_FIRMWARE_VERSION] = self._firmware_version
+            updates[ATTR_SW_VERSION] = self._firmware_version
 
         self._abort_if_unique_id_configured(updates=updates)
 
@@ -212,9 +207,12 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_auth_form(errors)
 
         # Set device name from API if not already set (e.g., from zeroconf)
-        if not self._name and api:
+        if not self._name:
             # Use device MAC or host as name for manual configuration
-            self._name = f"{self._device_model.upper()} {self._mac or self._host}"
+            if api:
+                self._name = f"{self._device_model.upper()} {self._mac or self._host}"
+            else:
+                self._name = "Grandstream Device"
 
         # Set unique_id before creating entry (prefer MAC if available)
         if not self.unique_id:
@@ -229,17 +227,16 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Create config entry (username is fixed, store password directly)
         return self.async_create_entry(
-            title=self._name or "Grandstream Device",
+            title=self._name,
             data={
                 CONF_HOST: self._host,
-                CONF_NAME: self._name,
                 CONF_PORT: port,
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: password,
                 CONF_VERIFY_SSL: verify_ssl,
-                CONF_DEVICE_MODEL: self._device_model,
-                CONF_PRODUCT_MODEL: self._product_model,
-                CONF_FIRMWARE_VERSION: self._firmware_version,
+                CONF_TYPE: self._device_model,
+                CONF_MODEL: self._product_model,
+                ATTR_SW_VERSION: self._firmware_version,
             },
         )
 

@@ -78,19 +78,6 @@ async def test_sensor_unique_id() -> None:
     assert sensor.unique_id == "test_unique_id_phone_status"
 
 
-def test_sensor_entity_description() -> None:
-    """Test sensor entity description."""
-    description = GrandstreamSensorEntityDescription(
-        key="test_sensor",
-        key_path="test_path",
-        translation_key="test_translation",
-    )
-
-    assert description.key == "test_sensor"
-    assert description.key_path == "test_path"
-    assert description.translation_key == "test_translation"
-
-
 async def test_sensor_unavailable_mapping(
     hass: HomeAssistant, mock_coordinator: MagicMock, mock_device_info: MagicMock
 ) -> None:
@@ -163,3 +150,22 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
     assert len(entities) == 1
     assert entities[0].unique_id == "test_unique_id_phone_status"
+
+
+async def test_sensor_without_value_fn(
+    hass: HomeAssistant, mock_coordinator: MagicMock, mock_device_info: MagicMock
+) -> None:
+    """Test sensor without value_fn returns raw value."""
+
+    # Create a description without value_fn
+    description = GrandstreamSensorEntityDescription(
+        key="test_sensor",
+        translation_key="test",
+    )
+    mock_coordinator.data = "raw_value"
+
+    sensor = GrandstreamDeviceSensor(
+        mock_coordinator, mock_device_info, "test_unique_id", description
+    )
+
+    assert sensor.native_value == "raw_value"

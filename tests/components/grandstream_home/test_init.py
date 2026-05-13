@@ -10,14 +10,19 @@ import pytest
 
 from homeassistant.components.grandstream_home import (
     GrandstreamRuntimeData,
-    _create_device_info,
     _get_display_model,
     _setup_api,
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.grandstream_home.const import CONF_DEVICE_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -40,7 +45,7 @@ def mock_gds_entry():
             CONF_NAME: "Test GDS",
             CONF_USERNAME: "gdsha",
             CONF_PASSWORD: "password",
-            CONF_DEVICE_MODEL: DEVICE_TYPE_GDS,
+            CONF_TYPE: DEVICE_TYPE_GDS,
             "port": 443,
             "verify_ssl": False,
         },
@@ -170,52 +175,6 @@ async def test_setup_api_offline(hass: HomeAssistant, mock_gds_entry) -> None:
         assert result == mock_api
 
 
-def test_create_device_info_with_ip_and_mac() -> None:
-    """Test _create_device_info with IP and MAC."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "Test Device"},
-    )
-
-    device_info = _create_device_info(
-        entry=entry,
-        unique_id="test_id",
-        device_model="gds",
-        product_model="GDS3710",
-        ip_address="192.168.1.100",
-        mac_address="AA:BB:CC:DD:EE:FF",
-        firmware_version="1.0.0",
-    )
-
-    assert device_info["name"] == "Test Device"
-    assert device_info["model"] == "GDS3710 (IP: 192.168.1.100)"
-    assert device_info["sw_version"] == "1.0.0"
-    assert ("mac", "aa:bb:cc:dd:ee:ff") in device_info["connections"]
-
-
-def test_create_device_info_without_ip() -> None:
-    """Test _create_device_info without IP."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "Test Device"},
-    )
-
-    device_info = _create_device_info(
-        entry=entry,
-        unique_id="test_id",
-        device_model="gds",
-        product_model="GDS3710",
-        ip_address=None,
-        mac_address=None,
-        firmware_version=None,
-    )
-
-    assert device_info["name"] == "Test Device"
-    assert device_info["model"] == "GDS3710"
-    assert device_info["sw_version"] == "unknown"
-    assert len(device_info["connections"]) == 0
-
-
 @pytest.mark.asyncio
 async def test_async_setup_entry_full(hass: HomeAssistant) -> None:
     """Test full async_setup_entry flow."""
@@ -226,7 +185,7 @@ async def test_async_setup_entry_full(hass: HomeAssistant) -> None:
             CONF_NAME: "Test GDS",
             CONF_USERNAME: "gdsha",
             CONF_PASSWORD: "password",
-            CONF_DEVICE_MODEL: DEVICE_TYPE_GDS,
+            CONF_TYPE: DEVICE_TYPE_GDS,
             "port": 443,
             "verify_ssl": False,
         },
@@ -264,35 +223,3 @@ async def test_async_setup_entry_full(hass: HomeAssistant) -> None:
         assert entry.runtime_data is not None
         assert entry.runtime_data.api == mock_api
         assert entry.runtime_data.coordinator == mock_coordinator
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_no_unique_id(hass: HomeAssistant) -> None:
-    """Test async_setup_entry with missing unique_id."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_USERNAME: "gdsha",
-            CONF_PASSWORD: "password",
-            CONF_DEVICE_MODEL: DEVICE_TYPE_GDS,
-            "port": 443,
-            "verify_ssl": False,
-        },
-        unique_id=None,
-    )
-    entry.add_to_hass(hass)
-
-    mock_api = MagicMock()
-    mock_api.host = "192.168.1.100"
-    mock_api.device_mac = "AA:BB:CC:DD:EE:FF"
-
-    with (
-        patch(
-            "homeassistant.components.grandstream_home._setup_api",
-            return_value=mock_api,
-        ),
-        pytest.raises(ConfigEntryNotReady, match="Config entry missing unique_id"),
-    ):
-        await async_setup_entry(hass, entry)

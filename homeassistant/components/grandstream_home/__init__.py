@@ -4,8 +4,6 @@ from dataclasses import dataclass
 import logging
 
 from grandstream_home_api import (
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     GDSPhoneAPI,
     GNSNasAPI,
     attempt_login,
@@ -14,24 +12,23 @@ from grandstream_home_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TYPE,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import (
-    CONF_DEVICE_MODEL,
-    CONF_FIRMWARE_VERSION,
-    CONF_PRODUCT_MODEL,
-    CONF_VERIFY_SSL,
-    DOMAIN,
-)
-from .coordinator import GrandstreamCoordinator
+from .const import DOMAIN
+from .coordinator import GrandstreamConfigEntry, GrandstreamCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +47,6 @@ class GrandstreamRuntimeData:
     unique_id: str
 
 
-type GrandstreamConfigEntry = ConfigEntry[GrandstreamRuntimeData]
-
-
 def _get_display_model(device_model: str, product_model: str | None) -> str:
     """Get the model string to display in device info."""
     if product_model:
@@ -65,27 +59,22 @@ def _create_device_info(
     unique_id: str,
     device_model: str,
     product_model: str | None,
-    ip_address: str | None,
     mac_address: str | None,
     firmware_version: str | None,
 ) -> DeviceInfo:
     """Create device info for Home Assistant."""
     display_model = _get_display_model(device_model, product_model)
-    model_info = display_model
-    if ip_address:
-        model_info = f"{display_model} (IP: {ip_address})"
 
     connections: set[tuple[str, str]] = set()
     if mac_address:
-        connections.add(("mac", format_mac(mac_address)))
+        connections.add((dr.CONNECTION_NETWORK_MAC, mac_address))
 
     return DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
-        name=entry.data.get("name", "Grandstream Device"),
         manufacturer="Grandstream",
-        model=model_info,
+        model=display_model,
         suggested_area="Entry",
-        sw_version=firmware_version or "unknown",
+        sw_version=firmware_version,
         connections=connections,
     )
 
@@ -94,12 +83,12 @@ async def _setup_api(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> GDSPhoneAPI | GNSNasAPI:
     """Set up and initialize API with error handling."""
-    host = entry.data.get(CONF_HOST, "")
-    username = entry.data.get(CONF_USERNAME, DEFAULT_USERNAME)
-    password = entry.data.get(CONF_PASSWORD, "")
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
-    verify_ssl = entry.data.get(CONF_VERIFY_SSL, False)
-    device_model = entry.data[CONF_DEVICE_MODEL]
+    host = entry.data[CONF_HOST]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    port = entry.data[CONF_PORT]
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    device_model = entry.data[CONF_TYPE]
 
     # Create API instance using library function
     api = create_api_instance(
@@ -142,35 +131,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     _LOGGER.debug("Starting integration initialization: %s", entry.entry_id)
 
     # Extract device info from entry
-    device_model = entry.data[CONF_DEVICE_MODEL]
-    product_model = entry.data.get(CONF_PRODUCT_MODEL)
+    device_model = entry.data[CONF_TYPE]
+    product_model = entry.data.get(CONF_MODEL)
 
     # 1. Set up API
     api = await _setup_api(hass, entry)
 
-    # 2. Get unique_id from entry (should always be set by config_flow)
-    if not entry.unique_id:
-        raise ConfigEntryNotReady("Config entry missing unique_id")
-
-    unique_id = entry.unique_id
+    # 2. unique_id is always set in config flow
+    assert entry.unique_id is not None
 
     # 3. Create device info
-    ip_address = api.host
     mac_address = api.device_mac
-    discovery_version = entry.data.get(CONF_FIRMWARE_VERSION)
+    discovery_version = entry.data.get(ATTR_SW_VERSION)
 
     device_info = _create_device_info(
         entry=entry,
-        unique_id=unique_id,
+        unique_id=entry.unique_id,
         device_model=device_model,
         product_model=product_model,
-        ip_address=ip_address,
         mac_address=mac_address,
         firmware_version=discovery_version,
     )
 
     # 4. Create coordinator (pass api, unique_id and discovery_version for firmware fallback)
-    coordinator = GrandstreamCoordinator(hass, entry, api, unique_id, discovery_version)
+    coordinator = GrandstreamCoordinator(
+        hass, entry, api, entry.unique_id, discovery_version
+    )
 
     # 5. Store runtime data BEFORE first refresh
     entry.runtime_data = GrandstreamRuntimeData(
@@ -179,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
         device_info=device_info,
         device_model=device_model,
         product_model=product_model,
-        unique_id=unique_id,
+        unique_id=entry.unique_id,
     )
 
     # 6. First refresh (firmware version updated in coordinator)

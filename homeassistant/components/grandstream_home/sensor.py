@@ -1,5 +1,6 @@
 """Sensor platform for Grandstream integration."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -20,18 +21,28 @@ from .coordinator import GrandstreamCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def _map_phone_status(value: str) -> str | None:
+    """Map phone status values."""
+    if isinstance(value, str):
+        value = value.strip()
+    if value == "unavailable":
+        return "no_available_account"
+    if value == "unknown":
+        return None
+    return value
+
+
 @dataclass(frozen=True, kw_only=True)
 class GrandstreamSensorEntityDescription(SensorEntityDescription):
     """Describes Grandstream sensor entity."""
 
-    key_path: str | None = None
+    value_fn: Callable[[str], str | None] | None = None
 
 
 # Device status sensors
 DEVICE_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
     GrandstreamSensorEntityDescription(
         key="phone_status",
-        key_path="phone_status",
         translation_key="device_status",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -41,11 +52,9 @@ DEVICE_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
             "preview",
             "ringing",
             "offline",
-            "auth_failed",
-            "ha_control_disabled",
-            "account_locked",
         ],
         icon="mdi:account-badge",
+        value_fn=_map_phone_status,
     ),
 )
 
@@ -93,16 +102,7 @@ class GrandstreamDeviceSensor(CoordinatorEntity[GrandstreamCoordinator], SensorE
         """Return the state of the sensor."""
         value = self.coordinator.data
 
-        # Strip whitespace from value
-        if isinstance(value, str):
-            value = value.strip()
-
-        # Map unavailable to no_available_account (unavailable is entity state)
-        if value == "unavailable":
-            return "no_available_account"
-
-        # Return None for unknown (not in options)
-        if value == "unknown":
-            return None
+        if self.entity_description.value_fn:
+            return self.entity_description.value_fn(value)
 
         return value

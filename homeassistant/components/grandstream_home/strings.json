@@ -47,11 +47,8 @@
       "device_status": {
         "name": "Device status",
         "state": {
-          "account_locked": "Account locked",
-          "auth_failed": "Authentication failed",
           "available": "Available",
           "busy": "Busy",
-          "ha_control_disabled": "HA control disabled",
           "no_available_account": "No available account",
           "offline": "Offline",
           "preview": "Preview",

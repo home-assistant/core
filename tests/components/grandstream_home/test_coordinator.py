@@ -49,7 +49,6 @@ async def test_coordinator_init(
         discovery_version="1.0.1.6",
     )
 
-    assert coordinator.entry_id == mock_config_entry.entry_id
     assert coordinator._api == mock_api
     assert coordinator._unique_id == "ec:74:d7:97:53:c5"
     assert coordinator._discovery_version == "1.0.1.6"

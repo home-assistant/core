@@ -10,12 +10,15 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.grandstream_home.config_flow import GrandstreamConfigFlow
-from homeassistant.components.grandstream_home.const import (
-    CONF_DEVICE_MODEL,
+from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TYPE,
     CONF_VERIFY_SSL,
-    DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -302,7 +305,7 @@ async def test_zeroconf_update_existing_entry(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.1.100",  # Old IP
             CONF_PORT: 443,
             CONF_PASSWORD: "password",
-            CONF_DEVICE_MODEL: DEVICE_TYPE_GDS,
+            CONF_TYPE: DEVICE_TYPE_GDS,
         },
     )
     existing_entry.add_to_hass(hass)
@@ -563,3 +566,47 @@ async def test_duplicate_detection_no_mac(hass: HomeAssistant) -> None:
         # Should abort due to _async_abort_entries_match
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_config_flow_manual_no_api_fallback_name(hass: HomeAssistant) -> None:
+    """Test manual config flow uses fallback name when API is None."""
+    flow = GrandstreamConfigFlow()
+    flow.hass = hass
+    flow._host = "192.168.1.100"
+    flow._device_model = "gds"
+    flow._name = ""  # Empty name
+    flow._mac = None
+
+    # Call async_step_auth with mocked validation that returns None API
+    with (
+        patch.object(
+            flow,
+            "_validate_credentials",
+            return_value=(None, None),  # API is None, no error
+        ),
+        patch.object(
+            flow,
+            "async_set_unique_id",
+        ),
+        patch.object(
+            flow,
+            "_abort_if_unique_id_configured",
+        ),
+        patch.object(
+            flow,
+            "async_create_entry",
+            return_value={"type": FlowResultType.CREATE_ENTRY},
+        ) as mock_create,
+    ):
+        await flow.async_step_auth(
+            {
+                CONF_PASSWORD: "test",
+                CONF_PORT: "443",
+                CONF_VERIFY_SSL: False,
+            }
+        )
+
+        # Check that fallback name was used
+        mock_create.assert_called_once()
+        call_args = mock_create.call_args
+        assert call_args[1]["title"] == "Grandstream Device"
