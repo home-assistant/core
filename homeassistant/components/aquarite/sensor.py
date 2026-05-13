@@ -1,4 +1,4 @@
-"""Aquarite Sensor entities."""
+"""AquaRite Sensor entities."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -45,7 +45,7 @@ def _convert_tenths(value: Any) -> float:
 
 @dataclass(frozen=True, kw_only=True)
 class AquariteSensorEntityDescription(SensorEntityDescription):
-    """Describes an Aquarite sensor entity."""
+    """Describes an AquaRite sensor entity."""
 
     value_path: str
     value_fn: Callable[[Any], float | int] = float
@@ -130,7 +130,7 @@ async def async_setup_entry(
     entry: AquariteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Aquarite sensors for every pool on the account."""
+    """Set up AquaRite sensors for every pool on the account."""
     entities: list[AquariteSensorEntity] = []
 
     for coordinator in entry.runtime_data.coordinators.values():
@@ -164,7 +164,7 @@ async def async_setup_entry(
 
 
 class AquariteSensorEntity(AquariteEntity, SensorEntity):
-    """Generic Aquarite sensor driven by an entity description."""
+    """Generic AquaRite sensor driven by an entity description."""
 
     entity_description: AquariteSensorEntityDescription
 

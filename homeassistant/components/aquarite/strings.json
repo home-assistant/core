@@ -54,13 +54,13 @@
   },
   "exceptions": {
     "invalid_credentials": {
-      "message": "Invalid Aquarite credentials."
+      "message": "Invalid AquaRite credentials."
     },
     "no_pools": {
       "message": "No pools were found on this account."
     },
     "update_failed": {
-      "message": "Error fetching data from Aquarite."
+      "message": "Error fetching data from AquaRite."
     }
   }
 }

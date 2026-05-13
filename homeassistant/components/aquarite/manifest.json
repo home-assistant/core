@@ -1,6 +1,6 @@
 {
   "domain": "aquarite",
-  "name": "Aquarite",
+  "name": "AquaRite",
   "codeowners": ["@fdebrus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aquarite",
