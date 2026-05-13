@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -96,4 +96,31 @@ async def test_sensor_state(
     assert hass.states.get("sensor.everhome_abcdef123456_power_phase_3").state == "40"
     assert (
         hass.states.get("sensor.everhome_abcdef123456_signal_strength").state == "-22"
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coordinator_connection_failed(
+    hass: HomeAssistant,
+    mock_everhome_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator update failed."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert (
+        hass.states.get("sensor.everhome_abcdef123456_energy_in").state
+        != STATE_UNAVAILABLE
+    )
+
+    mock_everhome_client.async_update.return_value = False
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.everhome_abcdef123456_energy_in").state
+        == STATE_UNAVAILABLE
     )
