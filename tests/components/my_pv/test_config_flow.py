@@ -15,14 +15,14 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     "127.0.0.1",
-    macaddress="986d35cabcdef",
+    macaddress="986d35cabcde",
     hostname="",
 )
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
-    hostname="mypv_986d35cabcdef.local.",
+    hostname="mypv_986d35cabcde.local.",
     name="_mypv._mypv._tcp.local.",
     port=80,
     type="_mypv._tcp.local.",
