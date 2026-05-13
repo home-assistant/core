@@ -43,10 +43,10 @@ async def test_setup_entry_connection_failures(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_receiver")
 async def test_setup_entry_unsupported_model(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_receiver: MagicMock,
 ) -> None:
     """Test setup errors when the stored model is no longer supported."""
     mock_config_entry.add_to_hass(hass)
