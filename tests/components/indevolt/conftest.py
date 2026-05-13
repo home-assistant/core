@@ -19,21 +19,26 @@ ALT_TEST_HOST = "192.168.1.101"
 TEST_PORT = 8080
 TEST_DEVICE_SN_GEN1 = "BK1600-12345678"
 TEST_DEVICE_SN_GEN2 = "SolidFlex2000-87654321"
-TEST_FW_VERSION = "1.2.3"
+TEST_MODEL_GEN1 = "BK1600"
+TEST_MODEL_GEN2 = "CMS-SF2000"
 
-# Map device fixture names to generation and fixture files
+# Create DeviceInfo per generation
 DEVICE_MAPPING = {
     1: {
-        "device": "BK1600",
+        "device": TEST_MODEL_GEN1,
         "generation": 1,
         "sn": TEST_DEVICE_SN_GEN1,
         "host": ALT_TEST_HOST,
+        "mac": "aa:bb:cc:11:22:33",
+        "fw": "1.2.3",
     },
     2: {
-        "device": "CMS-SF2000",
+        "device": TEST_MODEL_GEN2,
         "generation": 2,
         "sn": TEST_DEVICE_SN_GEN2,
         "host": TEST_HOST,
+        "mac": "aa:bb:cc:44:55:66",
+        "fw": "1.2.3",
     },
 }
 
@@ -121,7 +126,8 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
                 "sn": device_info["sn"],
                 "type": device_info["device"],
                 "generation": device_info["generation"],
-                "fw": TEST_FW_VERSION,
+                "fw": device_info["fw"],
+                "mac": device_info["mac"],
             }
         }
 
