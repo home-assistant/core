@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
+from pyprusalink.types import (
+    JobFilePrint,
+    JobInfo,
+    PrinterInfo,
+    PrinterState,
+    PrinterStatus,
+)
 from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
@@ -171,10 +177,11 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
-            # available_fn ensures `file` is not None; mypy doesn't follow
-            # that guarantee into the lambda. TODO: tighten in a followup
-            # PR (latent typing debt surfaced by pyprusalink 3.0.0 py.typed).
-            value_fn=lambda data: cast(str, data["file"]["display_name"]),  # type: ignore[index]
+            # `available_fn` guarantees `file` is not None at this point;
+            # the inner cast narrows the Optional for the index.
+            value_fn=lambda data: cast(
+                str, cast(JobFilePrint, data["file"])["display_name"]
+            ),
             available_fn=lambda data: (
                 data.get("file") is not None
                 and data.get("state") != PrinterState.IDLE.value
@@ -197,11 +204,12 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
-            # available_fn ensures `time_remaining` is not None; mypy doesn't
-            # follow the guarantee. TODO: tighten in a followup PR (latent
-            # typing debt surfaced by pyprusalink 3.0.0 py.typed).
+            # `available_fn` guarantees `time_remaining` is not None at this
+            # point; the cast narrows the Optional for `timedelta`.
             value_fn=ignore_variance(
-                lambda data: utcnow() + timedelta(seconds=data["time_remaining"]),  # type: ignore[arg-type]
+                lambda data: (
+                    utcnow() + timedelta(seconds=cast(int, data["time_remaining"]))
+                ),
                 timedelta(minutes=2),
             ),
             available_fn=lambda data: (
