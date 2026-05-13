@@ -203,7 +203,7 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unknown"
+    assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
 async def test_no_readings(hass: HomeAssistant) -> None:
@@ -285,7 +285,7 @@ async def test_stale_reading(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a stale spot reading is ignored and sensor reports unknown."""
+    """Test that a stale spot reading is ignored and sensor reports unavailable."""
     freezer.move_to("2026-01-01T02:00:00+00:00")
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -309,7 +309,7 @@ async def test_stale_reading(
     assert entries
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state == "unknown"
+    assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
 async def test_stale_reading_retains_previous_value(
