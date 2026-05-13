@@ -24,7 +24,11 @@
         "already_configured_service": "Service is already configured",
         "already_in_progress": "Configuration flow is already in progress",
         "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+        "no_compatible_radio_frequency_transmitters": "No radio frequency transmitter supports 433.92 MHz OOK transmissions. Please add a compatible transmitter first.",
         "no_devices_found": "No devices found on the network",
+        "no_infrared_emitters": "No infrared transmitter entities found. Please set up an infrared device first.",
+        "no_infrared_entities": "No infrared entities found. Please set up an infrared device first.",
+        "no_radio_frequency_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first.",
         "oauth2_authorize_url_timeout": "Timeout while generating an authorization URL.",
         "oauth2_error": "Received invalid token data.",
         "oauth2_failed": "Error while obtaining access token.",
@@ -54,6 +58,8 @@
         "email": "Email",
         "host": "Host",
         "implementation": "Application credentials",
+        "infrared_entity_id": "Infrared emitter",
+        "infrared_receiver_entity_id": "Infrared receiver",
         "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
@@ -67,11 +73,16 @@
         "pin": "PIN code",
         "port": "Port",
         "prompt": "Instructions",
+        "radio_frequency_transmitter": "Radio frequency transmitter",
         "ssl": "Uses an SSL certificate",
         "url": "URL",
         "usb_path": "USB device path",
         "username": "Username",
         "verify_ssl": "Verify SSL certificate"
+      },
+      "data_description": {
+        "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+        "radio_frequency_transmitter": "The radio frequency transmitter to use for sending commands."
       },
       "description": {
         "confirm_setup": "Do you want to start setup?",
@@ -120,13 +131,130 @@
         "turned_on": "{entity_name} turned on"
       }
     },
+    "entity": {
+      "button": {
+        "back": {
+          "name": "Back"
+        },
+        "down": {
+          "name": "Down"
+        },
+        "exit": {
+          "name": "Exit"
+        },
+        "guide": {
+          "name": "Guide"
+        },
+        "hdmi_1": {
+          "name": "HDMI 1"
+        },
+        "hdmi_2": {
+          "name": "HDMI 2"
+        },
+        "hdmi_3": {
+          "name": "HDMI 3"
+        },
+        "hdmi_4": {
+          "name": "HDMI 4"
+        },
+        "home": {
+          "name": "Home"
+        },
+        "info": {
+          "name": "Info"
+        },
+        "input": {
+          "name": "Input"
+        },
+        "left": {
+          "name": "Left"
+        },
+        "menu": {
+          "name": "Menu"
+        },
+        "num_0": {
+          "name": "Number 0"
+        },
+        "num_1": {
+          "name": "Number 1"
+        },
+        "num_2": {
+          "name": "Number 2"
+        },
+        "num_3": {
+          "name": "Number 3"
+        },
+        "num_4": {
+          "name": "Number 4"
+        },
+        "num_5": {
+          "name": "Number 5"
+        },
+        "num_6": {
+          "name": "Number 6"
+        },
+        "num_7": {
+          "name": "Number 7"
+        },
+        "num_8": {
+          "name": "Number 8"
+        },
+        "num_9": {
+          "name": "Number 9"
+        },
+        "ok": {
+          "name": "OK"
+        },
+        "power": {
+          "name": "Power"
+        },
+        "power_off": {
+          "name": "Power off"
+        },
+        "power_on": {
+          "name": "Power on"
+        },
+        "right": {
+          "name": "Right"
+        },
+        "up": {
+          "name": "Up"
+        }
+      }
+    },
     "exceptions": {
+      "infrared_component_not_loaded": {
+        "message": "Infrared component not loaded"
+      },
+      "infrared_entity_not_found": {
+        "message": "Infrared entity `{entity_id}` not found"
+      },
+      "infrared_receiver_not_found": {
+        "message": "Infrared receiver entity `{entity_id}` not found"
+      },
       "oauth2_implementation_unavailable": {
         "message": "OAuth2 implementation unavailable, will retry"
+      },
+      "radio_frequency_component_not_loaded": {
+        "message": "Radio Frequency component not loaded"
+      },
+      "radio_frequency_entity_not_found": {
+        "message": "Radio Frequency entity `{entity_id}` not found"
+      },
+      "radio_frequency_no_transmitters": {
+        "message": "No Radio Frequency transmitters available"
+      },
+      "radio_frequency_unsupported_frequency": {
+        "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
+      },
+      "radio_frequency_unsupported_modulation": {
+        "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
       }
     },
     "generic": {
+      "device_type": "Device type",
       "model": "Model",
+      "tv": "TV",
       "ui_managed": "Managed via UI"
     },
     "state": {

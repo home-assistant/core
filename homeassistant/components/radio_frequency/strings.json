@@ -1,19 +1,19 @@
 {
   "exceptions": {
     "component_not_loaded": {
-      "message": "Radio Frequency component not loaded"
+      "message": "[%key:common::exceptions::radio_frequency_component_not_loaded::message%]"
     },
     "entity_not_found": {
-      "message": "Radio Frequency entity `{entity_id}` not found"
+      "message": "[%key:common::exceptions::radio_frequency_entity_not_found::message%]"
     },
     "no_transmitters": {
-      "message": "No Radio Frequency transmitters available"
+      "message": "[%key:common::exceptions::radio_frequency_no_transmitters::message%]"
     },
     "unsupported_frequency": {
-      "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
+      "message": "[%key:common::exceptions::radio_frequency_unsupported_frequency::message%]"
     },
     "unsupported_modulation": {
-      "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
+      "message": "[%key:common::exceptions::radio_frequency_unsupported_modulation::message%]"
     }
   }
 }
