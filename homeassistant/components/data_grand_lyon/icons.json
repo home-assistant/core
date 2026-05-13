@@ -57,9 +57,6 @@
         "state": {
           "estimated": "mdi:clock-check-outline"
         }
-      },
-      "station_status": {
-        "default": "mdi:information-outline"
       }
     }
   }

@@ -217,7 +217,6 @@ async def test_velov_sensor_disabled_by_default(
     await hass.async_block_till_done()
 
     for unique_id in (
-        "velov_1001-station_status",
         "velov_1001-capacity",
         "velov_1001-electrical_internal_battery_bikes",
         "velov_1001-electrical_removable_battery_bikes",

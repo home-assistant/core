@@ -146,13 +146,6 @@
           "estimated": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::estimated%]",
           "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
-      },
-      "station_status": {
-        "name": "Station status",
-        "state": {
-          "closed": "Closed",
-          "open": "Open"
-        }
       }
     }
   },

@@ -5,12 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from data_grand_lyon_ha import (
-    TclPassage,
-    TclPassageType,
-    VelovStation,
-    VelovStationStatus,
-)
+from data_grand_lyon_ha import TclPassage, TclPassageType, VelovStation
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,8 +27,6 @@ PARALLEL_UPDATES = 0
 _TZ_PARIS = ZoneInfo("Europe/Paris")
 
 _DEPARTURE_TYPE_OPTIONS = [t.name.lower() for t in TclPassageType]
-
-_STATION_STATUS_OPTIONS = [s.name.lower() for s in VelovStationStatus]
 
 
 def _departure_time(departure: TclPassage) -> datetime:
@@ -150,14 +143,6 @@ VELOV_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonVelovSensorEntityDescription, ...]
         key="available_stands",
         translation_key="available_stands",
         value_fn=lambda s: s.total_stands.stands,
-    ),
-    DataGrandLyonVelovSensorEntityDescription(
-        key="station_status",
-        translation_key="station_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=_STATION_STATUS_OPTIONS,
-        value_fn=lambda s: s.status.name.lower(),
-        entity_registry_enabled_default=False,
     ),
     DataGrandLyonVelovSensorEntityDescription(
         key="capacity",
