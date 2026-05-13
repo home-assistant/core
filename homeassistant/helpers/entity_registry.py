@@ -8,12 +8,12 @@ registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
 
+import logging
+import time
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
-import logging
-import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
@@ -43,14 +43,17 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util import slugify
+from homeassistant.util import uuid as uuid_util
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import area_registry as ar, device_registry as dr, storage
+from . import area_registry as ar
+from . import device_registry as dr
+from . import storage
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -2357,7 +2360,9 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import category_registry as cr, event, label_registry as lr  # noqa: PLC0415
+    from . import category_registry as cr  # noqa: PLC0415
+    from . import event
+    from . import label_registry as lr
 
     @callback
     def _removed_from_registry_filter(
