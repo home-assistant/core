@@ -1043,7 +1043,7 @@ class MQTT:
         subscribe_chain = chunked_or_all(
             pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
         )
-        if self.is_mqttv5 and pending_subscriptions:
+        if self.supports_subscriptions_identifiers and pending_subscriptions:
             bulk_properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
             bulk_properties.SubscriptionIdentifier = 1
         else:
@@ -1052,7 +1052,7 @@ class MQTT:
         self._pending_subscriptions = {}
 
         for topic, qos in pending_wildcard_subscriptions.items():
-            if self.is_mqttv5:
+            if self.supports_subscriptions_identifiers:
                 properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
                 properties.SubscriptionIdentifier = self._registered_subscriptions[
                     topic
