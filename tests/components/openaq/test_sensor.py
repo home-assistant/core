@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from openaq import TimeoutError as OpenAQTimeoutError
+from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -36,7 +37,7 @@ async def test_sensor_snapshot(
         "sensor",
         "openaq",
         f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
+        suggested_object_id="del_norte_distance",
         disabled_by=None,
     )
     await setup_integration(hass, mock_config_entry)
@@ -82,9 +83,7 @@ async def test_sensor_entities(
     assert state.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_BILLION
 
     assert entity_registry.async_get("sensor.del_norte_unsupported") is None
-    distance = entity_registry.async_get(
-        "sensor.del_norte_distance_from_home_assistant"
-    )
+    distance = entity_registry.async_get("sensor.del_norte_distance")
     assert distance is not None
     assert distance.capabilities is None
     assert distance.disabled_by is er.RegistryEntryDisabler.INTEGRATION
@@ -112,22 +111,47 @@ async def test_distance_from_home_sensor(
         "sensor",
         "openaq",
         f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
+        suggested_object_id="del_norte_distance",
         disabled_by=None,
     )
 
     await setup_integration(hass, mock_config_entry)
 
-    distance = entity_registry.async_get(
-        "sensor.del_norte_distance_from_home_assistant"
-    )
+    distance = entity_registry.async_get("sensor.del_norte_distance")
     assert distance is not None
     assert distance.disabled_by is None
     assert distance.options == {"sensor": {"suggested_display_precision": 1}}
-    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
+    assert (state := hass.states.get("sensor.del_norte_distance"))
     assert state.state == "0.0"
     assert state.attributes["device_class"] == SensorDeviceClass.DISTANCE
     assert state.attributes["unit_of_measurement"] == UnitOfLength.KILOMETERS
+
+
+async def test_distance_from_home_sensor_updates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test distance from Home Assistant sensor updates with coordinator data."""
+    hass.config.latitude = 35.1
+    hass.config.longitude = -106.6
+    entity_registry.async_get_or_create(
+        "sensor",
+        "openaq",
+        f"{LOCATION_ID}_distance_from_home",
+        suggested_object_id="del_norte_distance",
+        disabled_by=None,
+    )
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    hass.config.latitude = 35.2
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.del_norte_distance"))
+    assert float(state.state) > 0
 
 
 async def test_missing_latest_values_are_not_created(
@@ -163,6 +187,26 @@ async def test_entity_unavailable_on_update_failure(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
+    assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_entity_unavailable_on_auth_failure(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors become unavailable when runtime authentication fails."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
+        "Invalid API key"
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert isinstance(coordinator.last_exception, HomeAssistantError)
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNAVAILABLE
 
