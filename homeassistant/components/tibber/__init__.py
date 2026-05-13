@@ -47,26 +47,28 @@ class TibberRuntimeData:
     price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
 
-    async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
-        """Return an authenticated Tibber client."""
+    async def _async_get_access_token(self) -> str:
+        """Return a valid Tibber access token."""
         await self.session.async_ensure_token_valid()
         token = self.session.token
         access_token = token.get(CONF_ACCESS_TOKEN)
-        if not access_token:
+        if not isinstance(access_token, str) or not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        return access_token
+
+    async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
+        """Return an authenticated Tibber client."""
+        access_token = await self._async_get_access_token()
         if self._client is None:
-
-            async def _on_reconnect() -> None:
-                await self.async_get_client(hass)
-
             self._client = tibber.Tibber(
                 access_token=access_token,
                 websession=async_get_clientsession(hass),
                 time_zone=dt_util.get_default_time_zone(),
                 ssl=ssl_util.get_default_context(),
-                on_reconnect=_on_reconnect,
+                refresh_access_token=self._async_get_access_token,
             )
-        await self._client.set_access_token(access_token)
+        else:
+            await self._client.set_access_token(access_token)
         return self._client
 
 
