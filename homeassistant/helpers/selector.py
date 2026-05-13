@@ -1641,6 +1641,7 @@ class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     label_field: str
     description_field: str
     translation_key: str
+    overview_labels: bool
 
 
 @SELECTORS.register("object")
@@ -1662,6 +1663,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             vol.Optional("label_field"): str,
             vol.Optional("description_field"): str,
             vol.Optional("translation_key"): str,
+            vol.Optional("overview_labels", default=False): bool,
         }
     )
 
@@ -1698,7 +1700,10 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    if isinstance(field_data["selector"], Selector):
+                        field_data["selector"](_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_data["selector"])(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
