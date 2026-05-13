@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[cover.cover-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -39,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'cover',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

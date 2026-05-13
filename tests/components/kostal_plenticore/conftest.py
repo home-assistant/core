@@ -1,7 +1,5 @@
 """Fixtures for Kostal Plenticore tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator, Iterable
 import copy
 from unittest.mock import patch
@@ -25,6 +23,7 @@ DEFAULT_SETTING_VALUES = {
         "Properties:VersionMC": "01.46",
         "Battery:MinSoc": "5",
         "Battery:MinHomeComsumption": "50",
+        "Inverter:ActivePowerLimitation": "8000",
     },
     "scb:network": {"Hostname": "scb"},
 }
@@ -47,6 +46,15 @@ DEFAULT_SETTINGS = {
             access="readwrite",
             unit="W",
             id="Battery:MinHomeComsumption",
+            type="byte",
+        ),
+        SettingsData(
+            min="0",
+            max="10000",
+            default=None,
+            access="readwrite",
+            unit="W",
+            id="Inverter:ActivePowerLimitation",
             type="byte",
         ),
     ],

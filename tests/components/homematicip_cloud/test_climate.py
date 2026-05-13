@@ -23,6 +23,10 @@ from homeassistant.components.homematicip_cloud.climate import (
     ATTR_PRESET_END_TIME,
     PERMANENT_END_TIME,
 )
+from homeassistant.components.homematicip_cloud.entity import (
+    ATTR_GROUP_MEMBER_UNREACHABLE,
+)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -426,6 +430,30 @@ async def test_hmip_heating_group_heat_with_radiator(
         PRESET_ECO,
         "Default",
     ]
+
+
+async def test_hmip_heating_group_availability(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test heating group stays available when group member is unreachable."""
+    entity_id = "climate.badezimmer"
+    entity_name = "Badezimmer"
+    device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=[entity_name]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state != STATE_UNAVAILABLE
+    assert not ha_state.attributes.get(ATTR_GROUP_MEMBER_UNREACHABLE)
+
+    await async_manipulate_test_data(hass, hmip_device, "unreach", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state != STATE_UNAVAILABLE
+    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
 
 
 async def test_hmip_heating_profile_default_name(

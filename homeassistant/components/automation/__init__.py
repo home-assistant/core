@@ -1,13 +1,11 @@
 """Allow to set up simple automation rules via the config file."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, cast
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -83,7 +81,6 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 from homeassistant.util.hass_dict import HassKey
 
@@ -118,43 +115,90 @@ SERVICE_TRIGGER = "trigger"
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
+    "calendar",
     "climate",
+    "counter",
+    "cover",
     "device_tracker",
+    "door",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
+    "motion",
+    "occupancy",
     "person",
+    "power",
+    "remote",
+    "schedule",
+    "select",
     "siren",
     "switch",
+    "temperature",
+    "text",
+    "timer",
+    "todo",
+    "update",
     "vacuum",
+    "valve",
+    "water_heater",
+    "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
-    "binary_sensor",
+    "battery",
     "button",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
+    "door",
+    "doorbell",
+    "event",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
+    "motion",
+    "occupancy",
     "person",
+    "power",
+    "remote",
     "scene",
+    "schedule",
+    "select",
     "siren",
     "switch",
+    "temperature",
     "text",
+    "timer",
+    "todo",
     "update",
     "vacuum",
+    "valve",
+    "water_heater",
+    "window",
 }
 
 
@@ -184,16 +228,12 @@ def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool
     )
 
 
-class IfAction(Protocol):
+class IfAction(condition_helper.ConditionsChecker):
     """Define the format of if_action."""
 
     config: list[ConfigType]
 
-    def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
-        """AND all conditions."""
 
-
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return true if specified automation entity_id is on.
 
@@ -363,8 +403,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         if automation_id := service_call.data.get(CONF_ID):
             await _async_process_single_config(hass, conf, component, automation_id)
         else:
@@ -792,7 +831,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if (
                 not skip_condition
                 and self._condition is not None
-                and not self._condition(variables)
+                and not self._condition.async_check(variables=variables)
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
@@ -860,7 +899,15 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        await self._async_disable()
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script or conditions as they will
+            # be reused.
+            await self._async_disable()
+            return
+        await self._async_disable(stop_actions=False)
+        await self.action_script.async_unload()
+        if self._condition is not None:
+            self._condition.async_unload()
 
     async def _async_enable_automation(self, event: Event) -> None:
         """Start automation on startup."""
@@ -1233,6 +1280,7 @@ async def _async_process_if(
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

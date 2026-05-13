@@ -42,6 +42,7 @@ from homeassistant.util.aiohttp import MockStreamReaderChunked
 from .const import (
     MOCK_ALBUM_WITH_ASSETS,
     MOCK_ALBUM_WITHOUT_ASSETS,
+    MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
     MOCK_TAGS_ASSETS,
 )
@@ -149,6 +150,7 @@ def mock_immich_people() -> AsyncMock:
 def mock_immich_search() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichSearch)
+    mock.async_get_all_favorites.return_value = MOCK_FAVORITE_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
     return mock
@@ -287,7 +289,9 @@ async def mock_immich(
 ) -> AsyncGenerator[AsyncMock]:
     """Mock the Immich API."""
     with (
-        patch("homeassistant.components.immich.Immich", autospec=True) as mock_immich,
+        patch(
+            "homeassistant.components.immich.coordinator.Immich", autospec=True
+        ) as mock_immich,
         patch("homeassistant.components.immich.config_flow.Immich", new=mock_immich),
     ):
         client = mock_immich.return_value

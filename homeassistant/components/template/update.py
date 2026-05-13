@@ -1,7 +1,5 @@
 """Support for updates which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -65,6 +63,8 @@ CONF_SPECIFIC_VERSION = "specific_version"
 CONF_TITLE = "title"
 CONF_UPDATE_PERCENTAGE = "update_percentage"
 
+SCRIPT_FIELDS = (CONF_INSTALL,)
+
 UPDATE_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_BACKUP, default=False): cv.boolean,
@@ -105,6 +105,7 @@ async def async_setup_platform(
         TriggerUpdateEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -120,6 +121,7 @@ async def async_setup_entry(
         async_add_entities,
         StateUpdateEntity,
         UPDATE_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -266,7 +268,7 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
             # The default picture for update entities would use `self.platform.platform_name` in
             # place of `template`.  This does not work when creating an entity preview because
             # the platform does not exist for that entity, therefore this is hardcoded as `template`.
-            return "https://brands.home-assistant.io/_/template/icon.png"
+            return "/api/brands/integration/template/icon.png"
         return self._attr_entity_picture
 
 

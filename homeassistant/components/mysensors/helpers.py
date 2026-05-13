@@ -1,7 +1,5 @@
 """Helper functions for mysensors package."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum
@@ -62,6 +60,8 @@ def discover_mysensors_node(
     hass: HomeAssistant, gateway_id: GatewayId, node_id: int
 ) -> None:
     """Discover a MySensors node."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     discovered_nodes = hass.data[DOMAIN].setdefault(
         MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
     )
@@ -70,7 +70,7 @@ def discover_mysensors_node(
         discovered_nodes.add(node_id)
         async_dispatcher_send(
             hass,
-            MYSENSORS_NODE_DISCOVERY,
+            MYSENSORS_NODE_DISCOVERY.format(gateway_id),
             {
                 ATTR_GATEWAY_ID: gateway_id,
                 ATTR_NODE_ID: node_id,

@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from pyintelliclima.const import FanMode, FanSpeed
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -103,7 +104,7 @@ async def test_fan_turn_on_service_calls_api(
 
     # Device serial from single_eco_device.crono_sn
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
-        "11223344", "1", "2"
+        "11223344", FanMode.inward, FanSpeed.low
     )
 
 
@@ -119,10 +120,10 @@ async def test_fan_set_percentage_maps_to_speed(
         {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 15},
         blocking=True,
     )
-    # Initial mode_set="1" (forward) from single_eco_device.
-    # Sleep speed is "1" (25%).
+    # Initial mode_set=FanMode.inward from single_eco_device.
+    # Sleep speed is FanSpeed.sleep (25%).
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
-        "11223344", "1", "1"
+        "11223344", FanMode.inward, FanSpeed.sleep
     )
 
 
@@ -165,18 +166,18 @@ async def test_fan_set_percentage_zero_turns_off(
     ("service_data", "expected_mode", "expected_speed"),
     [
         # percentage=None, preset_mode=None -> defaults to previous speed > 75% (medium),
-        # previous mode > "inward"
-        ({}, "1", "3"),
-        # percentage=0, preset_mode=None -> default 25% (sleep), previous mode (inward)
-        ({ATTR_PERCENTAGE: 0}, "1", "1"),
+        # previous mode > FanMode.inward
+        ({}, FanMode.inward, FanSpeed.medium),
+        # percentage=0, preset_mode=None -> default 25% (FanSpeed.sleep), previous mode (inward)
+        ({ATTR_PERCENTAGE: 0}, FanMode.inward, FanSpeed.sleep),
     ],
 )
 async def test_fan_turn_on_defaulting_behavior(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
     service_data: dict,
-    expected_mode: str,
-    expected_speed: str,
+    expected_mode: FanMode,
+    expected_speed: FanSpeed,
 ) -> None:
     """turn_on defaults percentage/preset as expected."""
     data = {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data

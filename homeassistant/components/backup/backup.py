@@ -1,7 +1,5 @@
 """Local backup support for Core and Container installations."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from pathlib import Path
@@ -11,7 +9,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
-from .agent import BackupAgent, LocalBackupAgent
+from .agent import BackupAgent, LocalBackupAgent, OnProgressCallback
 from .const import DOMAIN, LOGGER
 from .models import AgentBackup, BackupNotFound
 from .util import read_backup, suggested_filename
@@ -73,6 +71,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""

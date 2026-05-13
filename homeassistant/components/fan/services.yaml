@@ -10,7 +10,8 @@ set_preset_mode:
       required: true
       example: "auto"
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 set_percentage:
   target:
@@ -49,7 +50,8 @@ turn_on:
         supported_features:
           - fan.FanEntityFeature.PRESET_MODE
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 turn_off:
   target:

@@ -1,6 +1,5 @@
 """The Netatmo data handler."""
-
-from __future__ import annotations
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections import deque
 from dataclasses import dataclass
@@ -27,20 +26,22 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    AUTH,
     CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
     MANUFACTURER,
-    NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
+    NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
+    NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_LIGHT,
+    NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
@@ -86,6 +87,8 @@ DEFAULT_INTERVALS = {
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
+
+type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
 
 
 @dataclass
@@ -136,11 +139,16 @@ class NetatmoDataHandler:
     account: pyatmo.AsyncAccount
     _interval_factor: int
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: NetatmoConfigEntry,
+        auth: pyatmo.AbstractAsyncAuth,
+    ) -> None:
         """Initialize self."""
         self.hass = hass
         self.config_entry = config_entry
-        self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
+        self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
@@ -169,7 +177,7 @@ class NetatmoDataHandler:
             )
         )
 
-        self.account = pyatmo.AsyncAccount(self._auth)
+        self.account = pyatmo.AsyncAccount(self.auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
@@ -363,10 +371,15 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,
+                NETATMO_CREATE_LEGACY_SENSOR,
+            ],
+            NetatmoDeviceCategory.meter: [NETATMO_CREATE_LEGACY_SENSOR],
+            NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
+            NetatmoDeviceCategory.opening: [
+                NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
+                NETATMO_CREATE_OPENING_BINARY_SENSOR,
                 NETATMO_CREATE_SENSOR,
             ],
-            NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
-            NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
         }
         for module in home.modules.values():
             if not module.device_category:
@@ -418,7 +431,7 @@ class NetatmoDataHandler:
                     if module.device_category is NetatmoDeviceCategory.climate:
                         async_dispatcher_send(
                             self.hass,
-                            NETATMO_CREATE_BATTERY,
+                            NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
                             NetatmoDevice(
                                 self,
                                 module,

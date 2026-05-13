@@ -1,7 +1,5 @@
 """Sensor for the CityBikes data."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -50,7 +48,9 @@ ATTR_UID = "uid"
 ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
+ATTR_FREE_EBIKES = "free_ebikes"
 ATTR_TIMESTAMP = "timestamp"
+EXTRA_EBIKES = "ebikes"
 
 CONF_NETWORK = "network"
 CONF_STATIONS_LIST = "stations"
@@ -238,5 +238,6 @@ class CityBikesStation(SensorEntity):
             ATTR_LATITUDE: station.latitude,
             ATTR_LONGITUDE: station.longitude,
             ATTR_EMPTY_SLOTS: station.empty_slots,
+            ATTR_FREE_EBIKES: station.extra.get(EXTRA_EBIKES),
             ATTR_TIMESTAMP: station.timestamp,
         }

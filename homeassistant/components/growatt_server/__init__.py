@@ -1,4 +1,28 @@
-"""The Growatt server PV inverter sensor integration."""
+"""The Growatt server PV inverter sensor integration.
+
+This integration supports two distinct Growatt APIs with different auth models:
+
+Classic API (username/password):
+- Authenticates via api.login(), which returns a dict with a "success" key.
+- Auth failure is signalled by success=False and msg="502" (LOGIN_INVALID_AUTH_CODE).
+- A failed login does NOT raise an exception — the return value must be checked.
+- The coordinator calls api.login() on every update cycle to maintain the session.
+
+Open API V1 (API token):
+- Stateless — no login call, token is sent as a Bearer header on every request.
+- Auth failure is signalled by raising GrowattV1ApiError with error_code=10011
+  (V1_API_ERROR_NO_PRIVILEGE). The library NEVER returns a failure silently;
+  any non-zero error_code raises an exception via _process_response().
+- Because the library always raises on error, return-value validation after a
+  successful V1 API call is unnecessary — if it returned, the token was valid.
+
+Error handling pattern for reauth:
+- Classic API: check NOT login_response["success"] and msg == LOGIN_INVALID_AUTH_CODE
+  → raise ConfigEntryAuthFailed
+- V1 API: catch GrowattV1ApiError with error_code == V1_API_ERROR_NO_PRIVILEGE
+  → raise ConfigEntryAuthFailed
+- All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
+"""
 
 from collections.abc import Mapping
 from json import JSONDecodeError
@@ -25,6 +49,7 @@ from .const import (
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
@@ -214,6 +239,9 @@ def _login_classic_api(
     return login_response
 
 
+V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}
+
+
 def get_device_list_v1(
     api, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
@@ -227,22 +255,25 @@ def get_device_list_v1(
     try:
         devices_dict = api.device_list(plant_id)
     except growattServer.GrowattV1ApiError as e:
+        if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
+            ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e} (Code: {getattr(e, 'error_code', None)}, Message: {getattr(e, 'error_msg', None)})"
+            f"API error during device list: {e.error_msg or str(e)} (Code: {e.error_code})"
         ) from e
     devices = devices_dict.get("devices", [])
-    # Only MIN device (type = 7) support implemented in current V1 API
     supported_devices = [
         {
             "deviceSn": device.get("device_sn", ""),
-            "deviceType": "min",
+            "deviceType": V1_DEVICE_TYPES[device.get("type")],
         }
         for device in devices
-        if device.get("type") == 7
+        if device.get("type") in V1_DEVICE_TYPES
     ]
 
     for device in devices:
-        if device.get("type") != 7:
+        if device.get("type") not in V1_DEVICE_TYPES:
             _LOGGER.warning(
                 "Device %s with type %s not supported in Open API V1, skipping",
                 device.get("device_sn", ""),
@@ -272,6 +303,7 @@ async def async_setup_entry(
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
         api = growattServer.OpenApiV1(token=token)
+        api.server_url = url
         devices, plant_id = await hass.async_add_executor_job(
             get_device_list_v1, api, config
         )
@@ -318,7 +350,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min"]
+        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
     }
 
     # Perform the first refresh for the total coordinator

@@ -1,8 +1,7 @@
 """Sensor for Supervisord process status."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 import xmlrpc.client
 
 import voluptuous as vol
@@ -76,7 +75,7 @@ class SupervisorProcessSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_DESCRIPTION: self._info.get("description"),

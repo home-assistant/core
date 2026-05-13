@@ -1,19 +1,58 @@
 """Test HTML5 notify platform."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
 
+from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
+from pywebpush import WebPushException
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.html5 import notify as html5
+from homeassistant.components.html5 import DOMAIN, notify as html5
+from homeassistant.components.html5.const import (
+    ATTR_ACTIONS,
+    ATTR_BADGE,
+    ATTR_DIR,
+    ATTR_ICON,
+    ATTR_IMAGE,
+    ATTR_LANG,
+    ATTR_RENOTIFY,
+    ATTR_REQUIRE_INTERACTION,
+    ATTR_SILENT,
+    ATTR_TAG,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
+    ATTR_URGENCY,
+    ATTR_VIBRATE,
+    SERVICE_DISMISS,
+)
+from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_DISMISS, DEFAULT_TTL
+from homeassistant.components.html5.services import SERVICE_DISMISS_MESSAGE
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
@@ -76,6 +115,16 @@ VAPID_HEADERS = {
     "urgency": "normal",
     "priority": "normal",
 }
+
+
+@pytest.fixture(autouse=True)
+def notify_only() -> Generator[None]:
+    """Enable only the notify platform."""
+    with patch(
+        "homeassistant.components.html5.PLATFORMS",
+        [Platform.NOTIFY],
+    ):
+        yield
 
 
 async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
@@ -732,3 +781,452 @@ async def test_send_fcm_expired_save_fails(
         )
     # "device" should still exist if save fails.
     assert "Error saving registration" in caplog.text
+
+
+async def test_notify_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    load_config: MagicMock,
+) -> None:
+    """Test setup of the notify platform."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+) -> None:
+    """Test sending a message."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.my_desktop",
+            ATTR_MESSAGE: "World",
+            ATTR_TITLE: "Hello",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == "2009-02-13T23:31:30+00:00"
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "title": "Hello",
+        "body": "World",
+        "badge": "/static/images/notification-badge.png",
+        "icon": "/static/icons/favicon-192x192.png",
+        "tag": "12345678-1234-5678-1234-567812345678",
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (
+            WebPushException("", response=Mock(status=HTTPStatus.IM_A_TEAPOT)),
+            "request_error",
+        ),
+        (
+            WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+            "channel_expired",
+        ),
+        (
+            ClientError,
+            "connection_error",
+        ),
+    ],
+)
+@pytest.mark.parametrize("domain", [NOTIFY_DOMAIN, DOMAIN])
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    exception: Exception,
+    translation_key: str,
+    domain: str,
+) -> None:
+    """Test sending a message with exceptions."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            domain,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_save_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending a message with channel expired but saving registration fails."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = (
+        WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+    )
+    with (
+        patch(
+            "homeassistant.components.html5.notify.save_json",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError) as e,
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == "channel_expired"
+
+    assert "Error saving registration" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+) -> None:
+    """Test sending a message with channel expired and entity goes unavailable."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = (
+        WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+    )
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == "channel_expired"
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_payload", "expected_ttl", "expected_headers"),
+    [
+        ({ATTR_MESSAGE: "World"}, {"body": "World"}, DEFAULT_TTL, None),
+        (
+            {ATTR_ICON: "/static/icons/favicon-192x192.png"},
+            {"icon": "/static/icons/favicon-192x192.png"},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_BADGE: "/static/images/notification-badge.png"},
+            {"badge": "/static/images/notification-badge.png"},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_IMAGE: "/static/images/image.jpg"},
+            {"image": "/static/images/image.jpg"},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({ATTR_TAG: "message-group-1"}, {"tag": "message-group-1"}, DEFAULT_TTL, None),
+        ({ATTR_DIR: "rtl"}, {"dir": "rtl"}, DEFAULT_TTL, None),
+        ({ATTR_RENOTIFY: True}, {"renotify": True}, DEFAULT_TTL, None),
+        ({ATTR_SILENT: True}, {"silent": True}, DEFAULT_TTL, None),
+        (
+            {ATTR_REQUIRE_INTERACTION: True},
+            {"requireInteraction": True},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_VIBRATE: [200, 100, 200]},
+            {"vibrate": [200, 100, 200]},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({ATTR_LANG: "es-419"}, {"lang": "es-419"}, DEFAULT_TTL, None),
+        ({ATTR_TIMESTAMP: "1970-01-01 00:00:00"}, {"timestamp": 0}, DEFAULT_TTL, None),
+        ({ATTR_TTL: {"days": 28}}, {}, 2419200, None),
+        ({ATTR_TTL: {"seconds": 0}}, {}, 0, None),
+        (
+            {ATTR_URGENCY: "high"},
+            {},
+            DEFAULT_TTL,
+            {"Urgency": "high"},
+        ),
+        (
+            {
+                ATTR_ACTIONS: [
+                    {
+                        ATTR_ACTION: "callback-event",
+                        ATTR_TITLE: "Callback Event",
+                        ATTR_ICON: "/static/icons/favicon-192x192.png",
+                    }
+                ]
+            },
+            {
+                "actions": [
+                    {
+                        "action": "callback-event",
+                        "title": "Callback Event",
+                        "icon": "/static/icons/favicon-192x192.png",
+                    }
+                ]
+            },
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_DATA: {"customKey": "customValue"}},
+            {"data": {"jwt": "JWT", "customKey": "customValue"}},
+            DEFAULT_TTL,
+            None,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_html5_send_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    service_data: dict[str, Any],
+    expected_payload: dict[str, Any],
+    expected_ttl: int,
+    expected_headers: dict[str, Any] | None,
+) -> None:
+    """Test sending a message via html5.send_message action."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.my_desktop", ATTR_TITLE: "Hello", **service_data},
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == "2009-02-13T23:31:30+00:00"
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "title": "Hello",
+        "tag": "12345678-1234-5678-1234-567812345678",
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+        **expected_payload,
+    }
+
+    assert webpush_async.await_args.kwargs["ttl"] == expected_ttl
+    assert webpush_async.await_args.kwargs["headers"] == expected_headers
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "service_data", "issue_id"),
+    [
+        (
+            NOTIFY_DOMAIN,
+            "html5_my_desktop",
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop"]},
+            "deprecated_notify_action_notify.html5_my_desktop",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello"},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop", "my-phone"]},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            DOMAIN,
+            SERVICE_DISMISS,
+            {},
+            "deprecated_dismiss_action",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+async def test_deprecation_action_call(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any] | None,
+    issue_id: str,
+) -> None:
+    """Test deprecation action call."""
+    load_config.return_value = {
+        "my-desktop": SUBSCRIPTION_1,
+        "my-phone": SUBSCRIPTION_2,
+    }
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        domain,
+        service,
+        service_data,
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_payload"),
+    [
+        (
+            {ATTR_TAG: "message-group-1"},
+            {ATTR_DISMISS: True, ATTR_TAG: "message-group-1"},
+        ),
+        (
+            {},
+            {ATTR_DISMISS: True, ATTR_TAG: ""},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_html5_dismiss_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    service_data: dict[str, Any],
+    expected_payload: dict[str, Any],
+) -> None:
+    """Test dismissing a message via html5.dismiss_message action."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DISMISS_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.my_desktop",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+        **expected_payload,
+    }

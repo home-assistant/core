@@ -1,7 +1,5 @@
 """Tests for the Tuya component."""
 
-from __future__ import annotations
-
 import pathlib
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -13,9 +11,10 @@ from tuya_sharing import (
     DeviceFunction,
     DeviceStatusRange,
     Manager,
+    SharingDeviceListener,
 )
 
-from homeassistant.components.tuya import DOMAIN, DeviceListener
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
@@ -30,17 +29,54 @@ DEVICE_MOCKS = sorted(
 )
 
 
-class MockDeviceListener(DeviceListener):
-    """Mocked DeviceListener for testing."""
+class TuyaNotificationHelper:
+    """Helper to raise manager events to device listeners."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager) -> None:
+        """Initialize the helper."""
+        self.hass = hass
+        self.manager = manager
+
+    async def _async_update_device(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
+        for listener in self.manager.device_listeners:
+            listener.update_device(device, updated_status_properties, dp_timestamps)
+        await self.hass.async_block_till_done()
+
+    async def async_send_add_device(self, device: CustomerDevice) -> None:
+        """Mock add device from the manager."""
+        self.manager.device_map[device.id] = device
+        for listener in self.manager.device_listeners:
+            listener.add_device(device)
+        await self.hass.async_block_till_done()
+
+    async def async_send_remove_device(self, device: CustomerDevice) -> None:
+        """Mock remove device from the manager."""
+        self.manager.device_map.pop(device.id, None)
+        for listener in self.manager.device_listeners:
+            listener.remove_device(device.id)
+        await self.hass.async_block_till_done()
+
+    async def async_mock_online(self, device: CustomerDevice) -> None:
+        """Mock online event from the manager."""
+        device.online = True
+        await self._async_update_device(device, None, None)
+
+    async def async_mock_offline(self, device: CustomerDevice) -> None:
+        """Mock offline event from the manager."""
+        device.online = False
+        await self._async_update_device(device, None, None)
 
     async def async_send_device_update(
         self,
-        hass: HomeAssistant,
         device: CustomerDevice,
         updated_status_properties: dict[str, Any] | None = None,
         dp_timestamps: dict[str, int] | None = None,
-        *,
-        online: bool | None = None,
     ) -> None:
         """Mock update device method."""
         property_list: list[str] | None = None
@@ -53,10 +89,7 @@ class MockDeviceListener(DeviceListener):
                     )
                 device.status[key] = value
                 property_list.append(key)
-        if online is not None:
-            device.online = online
-        self.update_device(device, property_list, dp_timestamps)
-        await hass.async_block_till_done()
+        await self._async_update_device(device, property_list, dp_timestamps)
 
 
 async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
@@ -128,19 +161,13 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
     return device
 
 
-def create_listener(hass: HomeAssistant, manager: Manager) -> MockDeviceListener:
-    """Create a DeviceListener for testing."""
-    listener = MockDeviceListener(hass, manager)
-    manager.add_device_listener(listener)
-    return listener
-
-
 def create_manager(
     terminal_id: str = "7cd96aff-6ec8-4006-b093-3dbff7947591",
 ) -> Manager:
     """Create a Manager for testing."""
     manager = MagicMock(spec=Manager)
     manager.device_map = {}
+    manager.device_listeners = set()
     manager.mq = MagicMock()
     manager.mq.client = MagicMock()
     manager.mq.client.is_connected = MagicMock(return_value=True)
@@ -148,6 +175,18 @@ def create_manager(
     # Meaningless URL / UUIDs
     manager.customer_api.endpoint = "https://apigw.tuyaeu.com"
     manager.terminal_id = terminal_id
+
+    def _add_device_listener(listener: SharingDeviceListener):
+        """Add device listener."""
+        manager.device_listeners.add(listener)
+
+    def _remove_device_listener(listener: SharingDeviceListener):
+        """Remove device listener."""
+        manager.device_listeners.discard(listener)
+
+    manager.add_device_listener.side_effect = _add_device_listener
+    manager.remove_device_listener.side_effect = _remove_device_listener
+
     return manager
 
 
@@ -166,7 +205,9 @@ async def initialize_entry(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -174,7 +215,7 @@ async def initialize_entry(
 async def check_selective_state_update(
     hass: HomeAssistant,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     *,
     entity_id: str,
@@ -198,13 +239,13 @@ async def check_selective_state_update(
 
     # Trigger device offline
     freezer.tick(10)
-    await mock_listener.async_send_device_update(hass, mock_device, online=False)
+    await notification_helper.async_mock_offline(mock_device)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert hass.states.get(entity_id).last_reported.isoformat() == unavailable_reported
 
     # Trigger device online
     freezer.tick(10)
-    await mock_listener.async_send_device_update(hass, mock_device, online=True)
+    await notification_helper.async_mock_online(mock_device)
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
@@ -212,12 +253,12 @@ async def check_selective_state_update(
     # in updated properties - state should not change
     freezer.tick(10)
     mock_device.status[dpcode] = None
-    await mock_listener.async_send_device_update(hass, mock_device, {})
+    await notification_helper.async_send_device_update(mock_device, {})
     assert hass.states.get(entity_id).state == initial_state
     assert hass.states.get(entity_id).last_reported.isoformat() == available_reported
 
     # Trigger device update with provided updates
     freezer.tick(30)
-    await mock_listener.async_send_device_update(hass, mock_device, updates)
+    await notification_helper.async_send_device_update(mock_device, updates)
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).last_reported.isoformat() == last_reported

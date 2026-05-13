@@ -1,11 +1,11 @@
 """Defines a base Alexa Devices entity."""
 
-from aioamazondevices.const.devices import SPEAKER_GROUP_MODEL
 from aioamazondevices.structures import AmazonDevice
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
@@ -25,19 +25,15 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._serial_num = serial_num
-        model_details = coordinator.api.get_model_details(self.device) or {}
-        model = model_details.get("model")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
             name=self.device.account_name,
-            model=model,
+            model=self.device.model,
             model_id=self.device.device_type,
-            manufacturer=model_details.get("manufacturer", "Amazon"),
-            hw_version=model_details.get("hw_version"),
-            sw_version=(
-                self.device.software_version if model != SPEAKER_GROUP_MODEL else None
-            ),
-            serial_number=serial_num if model != SPEAKER_GROUP_MODEL else None,
+            manufacturer=self.device.manufacturer or "Amazon",
+            hw_version=self.device.hardware_version,
+            sw_version=self.device.software_version,
+            serial_number=serial_num,
         )
         self.entity_description = description
         self._attr_unique_id = f"{serial_num}-{description.key}"
@@ -55,3 +51,32 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
             and self._serial_num in self.coordinator.data
             and self.device.online
         )
+
+
+class AmazonServiceEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
+    """Defines Alexa Devices entity for service device."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: AmazonDevicesCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the service entity."""
+
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_device_id(coordinator))},
+            manufacturer="Amazon",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{slugify(coordinator.config_entry.unique_id)}-{description.key}"
+        )
+
+
+def service_device_id(coordinator: AmazonDevicesCoordinator) -> str:
+    """Return service device id."""
+    return slugify(f"{coordinator.config_entry.unique_id}_service_device")

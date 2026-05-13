@@ -1,7 +1,5 @@
 """Support for Ecobee Thermostats."""
 
-from __future__ import annotations
-
 import collections
 from typing import Any
 
@@ -490,14 +488,14 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def fan(self):
+    def fan(self) -> str:
         """Return the current fan status."""
         if "fan" in self.thermostat["equipmentStatus"]:
             return STATE_ON
         return STATE_OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
         return self.thermostat["runtime"]["desiredFanMode"]
 
@@ -535,7 +533,7 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation."""
         return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
 
@@ -548,7 +546,7 @@ class Thermostat(ClimateEntity):
             return None
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.

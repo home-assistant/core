@@ -1,7 +1,5 @@
 """Support for Apple HomeKit."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
@@ -979,7 +977,7 @@ class HomeKit:
             for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
             if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
-                or connection not in entry.connections
+                or connection not in entry.connections  # type: ignore[unreachable]
             )
         ]
 

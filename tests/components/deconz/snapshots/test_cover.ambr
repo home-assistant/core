@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[light_payload0][cover.window_covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,7 @@
       'current_position': 0,
       'device_class': 'shade',
       'friendly_name': 'Window covering device',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -53,8 +55,9 @@
 # ---
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
       'current_tilt_position': 97,
       'device_class': 'damper',
       'friendly_name': 'Vent',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
@@ -106,8 +110,9 @@
 # ---
 # name: test_tilt_cover[light_payload0][cover.covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -147,6 +152,7 @@
       'current_tilt_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Covering device',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,

@@ -1,7 +1,5 @@
 """Config flow for the Fish Audio integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -111,7 +109,7 @@ def get_model_selection_schema(
             ),
             vol.Required(
                 CONF_BACKEND,
-                default=options.get(CONF_BACKEND, "s1"),
+                default=options.get(CONF_BACKEND, "s2-pro"),
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=[

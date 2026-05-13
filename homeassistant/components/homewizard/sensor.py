@@ -1,7 +1,5 @@
 """Creates HomeWizard sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -610,6 +608,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_liter_lpm",
         translation_key="active_liter_lpm",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.measurement.active_liter_lpm is not None,
         value_fn=lambda data: data.measurement.active_liter_lpm,

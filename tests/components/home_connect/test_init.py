@@ -336,7 +336,13 @@ async def test_entity_migration(
             config_entry=config_entry_v1_1,
         )
 
-    with patch("homeassistant.components.home_connect.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch(
+            "homeassistant.components.home_connect.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
         await hass.async_block_till_done()
 
@@ -364,8 +370,12 @@ async def test_config_entry_unique_id_migration(
     assert config_entry_v1_2.unique_id != "1234567890"
     assert config_entry_v1_2.minor_version == 2
 
-    await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry_v1_2.unique_id == "1234567890"
     assert config_entry_v1_2.minor_version == 3

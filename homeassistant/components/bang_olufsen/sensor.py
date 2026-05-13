@@ -1,7 +1,5 @@
 """Sensor entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 import contextlib
 from datetime import timedelta
 
@@ -115,7 +113,7 @@ class BeoSensorRemoteBatteryLevel(BeoSensor):
             f"{remote.serial_number}_{self._unique_id}_remote_battery_level"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
         )
         self._attr_native_value = remote.battery_level
         self._remote = remote

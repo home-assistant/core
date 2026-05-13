@@ -4,8 +4,6 @@ This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 from random import random
@@ -56,10 +54,13 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
+    Platform.FAN,
     Platform.IMAGE,
+    Platform.INFRARED,
     Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.RADIO_FREQUENCY,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WEATHER,
@@ -131,6 +132,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
+    # Reload config entry when subentries are added/removed/updated
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     # Subscribe to labs feature updates for kitchen_sink preview repair
     entry.async_on_unload(
         async_subscribe_preview_feature(
@@ -145,6 +149,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_update_special_repair(hass)
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry on update (e.g. subentry added/removed)."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

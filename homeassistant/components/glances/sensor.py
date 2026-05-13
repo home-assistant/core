@@ -1,6 +1,4 @@
-"""Support gathering system information of hosts which are running glances."""
-
-from __future__ import annotations
+"""Support gathering system information of hosts which are running Glances."""
 
 from dataclasses import dataclass
 
@@ -45,6 +43,14 @@ SENSOR_TYPES = {
         key="disk_use",
         type="fs",
         translation_key="disk_used",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("fs", "disk_size"): GlancesSensorEntityDescription(
+        key="disk_size",
+        type="fs",
+        translation_key="disk_size",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,

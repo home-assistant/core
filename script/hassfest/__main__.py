@@ -1,7 +1,5 @@
 """Validate manifests."""
 
-from __future__ import annotations
-
 import argparse
 from operator import attrgetter
 from pathlib import Path
@@ -21,6 +19,7 @@ from . import (
     docker,
     icons,
     integration_info,
+    integration_type,
     json,
     labs,
     manifest,
@@ -48,6 +47,7 @@ INTEGRATION_PLUGINS = [
     dhcp,
     icons,
     integration_info,
+    integration_type,
     json,
     labs,
     manifest,

@@ -2,16 +2,20 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.climate import PRESET_AWAY
+from homeassistant.components.generic_thermostat.config_flow import _validate_config
 from homeassistant.components.generic_thermostat.const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_KEEP_ALIVE,
+    CONF_MAX_DUR,
+    CONF_MIN_DUR,
     CONF_PRESETS,
     CONF_SENSOR,
     DOMAIN,
@@ -26,6 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.schema_config_entry_flow import SchemaFlowError
 
 from tests.common import MockConfigEntry
 
@@ -225,3 +230,39 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_validate_config_min_max_duration() -> None:
+    """Test _validate_config with min and max cycle duration validation."""
+    # Test valid case: min_dur < max_dur
+    user_input = {
+        CONF_MIN_DUR: {"seconds": 30},
+        CONF_MAX_DUR: {"minutes": 1},
+    }
+    result = await _validate_config(None, user_input)
+    assert result == user_input
+
+    # Test invalid case: min_dur >= max_dur
+    user_input_invalid = {
+        CONF_MIN_DUR: {"minutes": 2},
+        CONF_MAX_DUR: {"minutes": 1},
+    }
+    with pytest.raises(SchemaFlowError) as exc_info:
+        await _validate_config(None, user_input_invalid)
+    assert str(exc_info.value) == "min_max_runtime"
+
+    # Test equal durations (should fail)
+    user_input_equal = {
+        CONF_MIN_DUR: {"minutes": 1},
+        CONF_MAX_DUR: {"minutes": 1},
+    }
+    with pytest.raises(SchemaFlowError) as exc_info:
+        await _validate_config(None, user_input_equal)
+    assert str(exc_info.value) == "min_max_runtime"
+
+    # Test without both durations (should pass)
+    user_input_partial = {
+        CONF_MIN_DUR: {"seconds": 30},
+    }
+    result = await _validate_config(None, user_input_partial)
+    assert result == user_input_partial

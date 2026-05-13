@@ -442,7 +442,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
-    # test boost preset
+    # test boost preset by special temp
     device.target_temperature = 127  # special temp from the api
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
@@ -450,6 +450,18 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert fritz().update_devices.call_count == 4
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # test boost preset by boost_active
+    device.target_temperature = 21
+    device.boost_active = True
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(ENTITY_ID)
+
+    assert fritz().update_devices.call_count == 5
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
 

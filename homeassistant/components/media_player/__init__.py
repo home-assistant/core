@@ -1,7 +1,5 @@
 """Component to interface with various media players."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Callable
@@ -59,7 +57,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import (  # noqa: F401
@@ -246,7 +243,6 @@ class _ImageCache(TypedDict):
 _ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """Return true if specified media player entity_id is on.
 

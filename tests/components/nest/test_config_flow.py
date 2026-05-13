@@ -1,7 +1,5 @@
 """Test the Google Nest Device Access config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
@@ -497,6 +495,7 @@ def mock_pubsub_api_responses_fixture(
         "user-managed-topic-existing-subscription",
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_full_flow(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -641,6 +640,7 @@ async def test_full_flow(
         "user-managed-topic-existing-subscription",
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_config_flow_restart(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -701,6 +701,7 @@ async def test_config_flow_restart(
     }
 
 
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 @pytest.mark.parametrize(("sdm_managed_topic"), [True])
 async def test_config_flow_wrong_project_id(
     hass: HomeAssistant,
@@ -763,6 +764,7 @@ async def test_config_flow_wrong_project_id(
     ("create_subscription_status"),
     [HTTPStatus.NOT_FOUND, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.UNAUTHORIZED],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_config_flow_pubsub_create_subscription_failure(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -872,6 +874,7 @@ async def test_config_flow_pubsub_create_subscription_failure(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_multiple_config_entries(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1026,6 +1029,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_config_entry_title_from_home(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1078,6 +1082,7 @@ async def test_config_entry_title_from_home(
         (False, {"selected_topic": "create_new_topic"}),
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_config_entry_title_multiple_homes(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1159,6 +1164,7 @@ async def test_title_failure_fallback(
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_structure_missing_trait(
     hass: HomeAssistant, oauth: OAuthFixture, auth: FakeAuth
 ) -> None:
@@ -1312,6 +1318,7 @@ async def test_dhcp_discovery_already_setup(
         "user-managed-select-existing-subscription",
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_dhcp_discovery_with_creds(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1368,7 +1375,7 @@ async def test_dhcp_discovery_with_creds(
     ("status_code", "error_reason"),
     [
         (HTTPStatus.UNAUTHORIZED, "oauth_unauthorized"),
-        (HTTPStatus.NOT_FOUND, "oauth_failed"),
+        (HTTPStatus.NOT_FOUND, "oauth_unauthorized"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, "oauth_failed"),
     ],
 )
@@ -1407,6 +1414,7 @@ async def test_token_error(
         )
     ],
 )
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_existing_topic_and_subscription(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1448,6 +1456,7 @@ async def test_existing_topic_and_subscription(
     }
 
 
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_no_eligible_topics(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1520,6 +1529,7 @@ async def test_list_topics_failure(
     assert result.get("reason") == "pubsub_api_error"
 
 
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_create_topic_failed(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -1607,6 +1617,7 @@ async def test_create_topic_failed(
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.usefixtures("mock_subscriber_refresh")
 async def test_list_subscriptions_failure(
     hass: HomeAssistant,
     oauth: OAuthFixture,

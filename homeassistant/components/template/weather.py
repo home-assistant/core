@@ -1,7 +1,5 @@
 """Template platform that aggregates meteorological data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging
@@ -27,19 +25,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     DOMAIN as WEATHER_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as WEATHER_PLATFORM_SCHEMA,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -232,18 +223,6 @@ WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
 )
 
-PLATFORM_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
-    .extend(WEATHER_PLATFORM_SCHEMA.schema)
-)
-
-
 WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -259,21 +238,23 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        # Legacy
-        config = rewrite_legacy_to_modern_config(hass, config, LEGACY_FIELDS)
-    else:
-        # Modern and Trigger
-        entity_configs: list[ConfigType] = discovery_info["entities"]
-        modified_entity_configs = []
-        for entity_config in entity_configs:
-            entity_config = rewrite_legacy_to_modern_config(
-                hass, entity_config, LEGACY_FIELDS
-            )
+        _LOGGER.warning(
+            "Template weather entities can only be configured under template:"
+        )
+        return
 
-            modified_entity_configs.append(entity_config)
+    # Modern and Trigger
+    entity_configs: list[ConfigType] = discovery_info["entities"]
+    modified_entity_configs = []
+    for entity_config in entity_configs:
+        entity_config = rewrite_legacy_to_modern_config(
+            hass, entity_config, LEGACY_FIELDS
+        )
 
-        if modified_entity_configs:
-            discovery_info["entities"] = modified_entity_configs
+        modified_entity_configs.append(entity_config)
+
+    if modified_entity_configs:
+        discovery_info["entities"] = modified_entity_configs
 
     await async_setup_template_platform(
         hass,
@@ -389,6 +370,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     """Representation of a template weathers features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_CONDITION
     _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
@@ -399,8 +381,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         """Initialize the features."""
 
         # Required options
-        self.setup_template(
-            CONF_CONDITION,
+        self.setup_state_template(
             "_attr_condition",
             template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
         )

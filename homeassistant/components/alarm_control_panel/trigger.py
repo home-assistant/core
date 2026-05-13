@@ -2,6 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
@@ -44,7 +45,7 @@ def make_entity_state_trigger_required_features(
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _to_states = {to_state}
         _required_features = required_features
 

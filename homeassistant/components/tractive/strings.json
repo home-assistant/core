@@ -6,7 +6,9 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

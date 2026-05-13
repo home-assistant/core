@@ -60,7 +60,6 @@ async def test_config_entry_unload(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert config_entry.entry_id not in hass.data[DOMAIN]
 
 
 async def test_entity_id_migration(

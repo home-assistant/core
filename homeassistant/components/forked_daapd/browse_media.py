@@ -1,7 +1,5 @@
 """Browse media for forked-daapd."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -304,7 +302,7 @@ def base_owntone_library() -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children=children,
-        thumbnail="https://brands.home-assistant.io/_/forked_daapd/logo.png",
+        thumbnail="/api/brands/integration/forked_daapd/logo.png",
     )
 
 
@@ -321,7 +319,7 @@ def library(other: Sequence[BrowseMedia] | None) -> BrowseMedia:
             media_content_type=MediaType.APP,
             can_play=False,
             can_expand=True,
-            thumbnail="https://brands.home-assistant.io/_/forked_daapd/logo.png",
+            thumbnail="/api/brands/integration/forked_daapd/logo.png",
         )
     ]
     if other:

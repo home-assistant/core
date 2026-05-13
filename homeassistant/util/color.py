@@ -1,7 +1,5 @@
 """Color util methods."""
 
-from __future__ import annotations
-
 import colorsys
 import math
 from typing import NamedTuple
@@ -283,7 +281,7 @@ def color_xy_brightness_to_RGB(
     Y = brightness
 
     if vY == 0.0:
-        vY += 0.00000000001
+        vY += 1e-11
 
     X = (Y / vY) * vX
     Z = (Y / vY) * (1 - vX - vY)

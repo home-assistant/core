@@ -15,8 +15,7 @@ This does not do any connectivity checks. So user could have all their border ro
 some of their thread accessories can't be pinged, but it's still a thread problem.
 """
 
-from __future__ import annotations
-
+from ipaddress import IPv6Address
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from python_otbr_api.tlv_parser import MeshcopTLVType
@@ -147,8 +146,11 @@ async def async_get_config_entry_diagnostics(
             },
         )
         if mlp_item := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
-            mlp = str(mlp_item)
-            network["prefixes"].add(f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}")
+            # We know that it is indeed a /64 mesh-local IPv6 NETWORK because Thread spec;
+            # However, the "prefixes" field contains no /XX (prefix length) in their entries ATM,
+            # so we use an IPv6Address in order to get a "prefixes" entry with no prefix length.
+            prefix_address = IPv6Address(mlp_item.data.ljust(16, b"\x00"))
+            network["prefixes"].add(str(prefix_address))
 
     # Find all routes currently act that might be thread related, so we can match them to
     # border routers as we process the zeroconf data.

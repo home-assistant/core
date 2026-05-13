@@ -94,11 +94,11 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return self.coordinator.data["measures"][self.key]["parameterName"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, "measure-id", self.station_id)},
+            identifiers={(DOMAIN, self.station_id)},
             manufacturer="https://environment.data.gov.uk/",
             model=self.parameter_name,
             name=f"{self.station_name} {self.parameter_name} {self.qualifier}",

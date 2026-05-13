@@ -173,13 +173,13 @@ def test_restoring_backup_that_is_not_a_file(
     restore_file_path = tmp_path / ".HA_RESTORE"
 
     # Set up restore file to point to a file within the temporary directory
-    restore_config = json.load(
-        get_fixture_path(f"core/backup_restore/{restore_config}", None).open(
-            "r", encoding="utf-8"
+    restore_config = json.loads(
+        get_fixture_path(f"core/backup_restore/{restore_config}", None).read_text(
+            encoding="utf-8"
         )
     )
     restore_config["path"] = backup_file_path.as_posix()
-    json.dump(restore_config, restore_file_path.open("w", encoding="utf-8"))
+    restore_file_path.write_text(json.dumps(restore_config), encoding="utf-8")
     assert restore_file_path.exists()
 
     # Create a directory at the backup file path to simulate the backup file not being a file
@@ -211,13 +211,13 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     restore_file_path = tmp_path / ".HA_RESTORE"
 
     # Set up restore file to point to a file within the temporary directory
-    restore_config = json.load(
-        get_fixture_path(f"core/backup_restore/{restore_config}", None).open(
-            "r", encoding="utf-8"
+    restore_config = json.loads(
+        get_fixture_path(f"core/backup_restore/{restore_config}", None).read_text(
+            encoding="utf-8"
         )
     )
     restore_config["path"] = backup_file_path.as_posix()
-    json.dump(restore_config, restore_file_path.open("w", encoding="utf-8"))
+    restore_file_path.write_text(json.dumps(restore_config), encoding="utf-8")
     assert restore_file_path.exists()
 
     get_fixture_path("core/backup_restore/backup_from_future.tar", None).copy_into(
@@ -240,6 +240,14 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     }
 
 
+@pytest.mark.parametrize(
+    ("backup", "password"),
+    [
+        ("backup_with_database.tar", None),
+        ("backup_with_database_protected_v2.tar", "hunter2"),
+        ("backup_with_database_protected_v3.tar", "hunter2"),
+    ],
+)
 @pytest.mark.parametrize(
     (
         "restore_backup_content",
@@ -287,6 +295,8 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     ],
 )
 def test_restore_backup(
+    backup: str,
+    password: str | None,
     restore_backup_content: backup_restore.RestoreBackupFileContent,
     expected_kept_files: set[str],
     expected_restored_files: set[str],
@@ -321,9 +331,7 @@ def test_restore_backup(
     for f in existing_files:
         (tmp_path / f).write_text("before_restore")
 
-    get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
-    ).copy(backup_file_path)
+    get_fixture_path(f"core/backup_restore/{backup}", None).copy(backup_file_path)
 
     files_before_restore = get_files(tmp_path)
     assert files_before_restore == {
@@ -341,6 +349,7 @@ def test_restore_backup(
         kept_files_data[file] = (tmp_path / file).read_bytes()
 
     restore_backup_content.backup_file_path = backup_file_path
+    restore_backup_content.password = password
 
     with (
         mock.patch(
@@ -378,7 +387,7 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
     get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
+        "core/backup_restore/malicious_backup_with_database.tar", None
     ).copy(backup_file_path)
 
     with (
@@ -440,9 +449,9 @@ def test_remove_backup_file_after_restore(
     """Test removing a backup file after restore."""
     backup_file_path = tmp_path / "backups" / "test.tar"
     backup_file_path.parent.mkdir()
-    get_fixture_path(
-        "core/backup_restore/empty_backup_database_included.tar", None
-    ).copy(backup_file_path)
+    get_fixture_path("core/backup_restore/backup_with_database.tar", None).copy(
+        backup_file_path
+    )
 
     with (
         mock.patch(
@@ -463,21 +472,3 @@ def test_remove_backup_file_after_restore(
         "error_type": None,
         "success": True,
     }
-
-
-@pytest.mark.parametrize(
-    ("password", "expected"),
-    [
-        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
-        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
-    ],
-)
-def test_pw_to_key(password: str | None, expected: bytes | None) -> None:
-    """Test password to key conversion."""
-    assert backup_restore.password_to_key(password) == expected
-
-
-def test_pw_to_key_none() -> None:
-    """Test password to key conversion."""
-    with pytest.raises(AttributeError):
-        backup_restore.password_to_key(None)

@@ -1,7 +1,5 @@
 """Support for SleepIQ foundation preset selection."""
 
-from __future__ import annotations
-
 from asyncsleepiq import (
     CoreTemps,
     FootWarmingTemps,
@@ -13,22 +11,21 @@ from asyncsleepiq import (
 )
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CORE_CLIMATE, DOMAIN, FOOT_WARMER
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
+from .const import CORE_CLIMATE, FOOT_WARMER
+from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SleepIQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ foundation preset select entities."""
-    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[SleepIQBedEntity] = []
     for bed in data.client.beds.values():
         entities.extend(

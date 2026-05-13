@@ -1,7 +1,5 @@
 """Constants for 1-Wire component."""
 
-from __future__ import annotations
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4304
 
