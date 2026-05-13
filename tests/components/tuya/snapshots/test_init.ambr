@@ -4515,7 +4515,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': ' (unsupported)',
+    'model': '',
     'model_id': 'qhxmvae667uap4zh',
     'name': 'DryFix',
     'name_by_user': None,
@@ -4611,6 +4611,37 @@
     'model': 'Smart IR (unsupported)',
     'model_id': 'om518smspsaltzdi',
     'name': 'Smart IR Theater',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[ifiw20mpsqld]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ifiw20mpsqld',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SPM02_WiFi',
+    'model_id': 'fygozcnralhwbauo',
+    'name': 'SPM02_WiFi',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -4825,7 +4856,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'the Smart Dry Plus™ Connect Dehumidifier  (unsupported)',
+    'model': 'the Smart Dry Plus™ Connect Dehumidifier ',
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
     'name_by_user': None,

@@ -104,7 +104,6 @@ class InvalidStreamException(HomeAssistantError):
 
 def build_schema(
     is_options_flow: bool = False,
-    show_advanced_options: bool = False,
 ) -> vol.Schema:
     """Create schema for camera config setup."""
     rtsp_options = [
@@ -141,8 +140,7 @@ def build_schema(
     }
     if is_options_flow:
         advanced_section[vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE)] = bool
-        if show_advanced_options:
-            advanced_section[vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)] = bool
+        advanced_section[vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)] = bool
 
     return vol.Schema(spec)
 
@@ -469,10 +467,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                build_schema(
-                    True,
-                    self.show_advanced_options,
-                ),
+                build_schema(True),
                 user_input or self.config_entry.options,
             ),
             errors=errors,

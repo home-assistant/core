@@ -592,7 +592,9 @@ async def test_run_install_service(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(command_topic, "install", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        command_topic, "install", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
