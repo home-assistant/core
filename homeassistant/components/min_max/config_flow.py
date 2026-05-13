@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
-
 import voluptuous as vol
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -56,15 +53,13 @@ OPTIONS_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({})
 
 
-async def migrate_to_groups(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
+async def migrate_to_groups(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Abort flow as migrate to groups."""
     raise AbortFlow("migrated_to_groups")
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_user_input=migrate_to_groups),
+    "user": SchemaFlowFormStep(migrate_to_groups),
 }
 
 OPTIONS_FLOW = {
@@ -78,7 +73,3 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
-
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
-        return cast(str, options["name"]) if "name" in options else ""
