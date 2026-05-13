@@ -107,6 +107,7 @@ def test_panel_helpers() -> None:
     assert normalized["port"] == 2102
     assert normalized["name"] == "Panel 2"
     assert normalized["mac"] == "cc:dd"
+    assert config_flow._panel_mac({}) is None
     assert config_flow._panel_mac({"mac": "ee:ff"}) == "ee:ff"
     assert config_flow._panel_mac({"mac": "AA-BB-CC-DD-EE-FF"}) == "aa:bb:cc:dd:ee:ff"
     assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
