@@ -79,10 +79,9 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         # Learn min/max rotation if different from action limits
         action = self._dest.action(ACTION_DESC.SlatRotate)
         rotation = action["rotation"]
-        if rotation and rotation not in (action.minValue, action.maxValue):
-            self._attr_native_value = self._value_func(
-                self._attr_native_value or rotation, rotation
-            )
+        if rotation and rotation not in (action.wms__minValue, action.wms__maxValue):
+            native_value = self._attr_native_value or rotation
+            await self.async_set_native_value(self._value_func(native_value, rotation))
 
     @property
     def native_min_value(self) -> float:
@@ -103,8 +102,9 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         # Push the new min/max rotation to the hub as custom overwrite
         action = self._dest.action(ACTION_DESC.SlatRotate)
         action[self._value_attr] = value
-        self._attr_native_value = value
-        self.async_write_ha_state()
+        if self._attr_native_value != value:
+            self._attr_native_value = value
+            self.async_write_ha_state()
 
 
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
