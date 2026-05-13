@@ -3,10 +3,17 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioaquarite import AquariteAuth, AquariteClient, ResilientPoolSubscription
+from aioaquarite import (
+    AquariteAuth,
+    AquariteClient,
+    AquariteError,
+    ResilientPoolSubscription,
+)
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import AquariteConfigEntry
@@ -45,7 +52,13 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
-        return await self.api.fetch_pool_data(self.pool_id)
+        try:
+            return await self.api.fetch_pool_data(self.pool_id)
+        except AquariteError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
 
     async def subscribe(self) -> None:
         """Subscribe to Firestore real-time updates via the library."""
