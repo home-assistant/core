@@ -53,8 +53,10 @@ def rename_keys(project_id, to_migrate):
     pprint(lokalise.keys_bulk_update(updates))
 
 
-def list_keys_helper(lokalise, keys, params={}, *, validate=True):
+def list_keys_helper(lokalise, keys, params=None, *, validate=True):
     """List keys in chunks so it doesn't exceed max URL length."""
+    if params is None:
+        params = {}
     results = []
 
     for i in range(0, len(keys), 100):

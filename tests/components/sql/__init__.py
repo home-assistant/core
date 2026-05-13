@@ -328,11 +328,11 @@ YAML_CONFIG_ALL_TEMPLATES = {
 }
 
 
-async def init_integration(  # pylint: disable=dangerous-default-value
+async def init_integration(
     hass: HomeAssistant,
     *,
     title: str = "Select value SQL query",
-    config: dict[str, Any] = {},
+    config: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
@@ -347,7 +347,7 @@ async def init_integration(  # pylint: disable=dangerous-default-value
         title=title,
         domain=DOMAIN,
         source=source,
-        data=config,
+        data=config or {},
         options=options,
         entry_id=entry_id,
         version=2,

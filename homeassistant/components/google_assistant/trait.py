@@ -301,7 +301,7 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
-    def query_notifications(self) -> dict[str, Any] | None:
+    def query_notifications(self) -> dict[str, Any] | None:  # noqa: B027
         """Return notifications payload."""
 
     def can_execute(self, command, params):

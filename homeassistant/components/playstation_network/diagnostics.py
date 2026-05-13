@@ -18,7 +18,6 @@ TO_REDACT = {
     "onlineId",
     "url",
     "username",
-    "onlineId",
     "accountId",
     "members",
     "body",

@@ -328,7 +328,7 @@ class ConditionChecker(abc.ABC):
         await self._async_setup()
         self._set_up = True
 
-    async def _async_setup(self) -> None:
+    async def _async_setup(self) -> None:  # noqa: B027
         """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do setup.
@@ -344,7 +344,7 @@ class ConditionChecker(abc.ABC):
         self._async_unload()
         self._unloaded = True
 
-    def _async_unload(self) -> None:
+    def _async_unload(self) -> None:  # noqa: B027
         """Clean up any resources held by the checker.
 
         Intended to be overridden in derived classes that need to do unloading.

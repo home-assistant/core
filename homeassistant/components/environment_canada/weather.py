@@ -238,9 +238,9 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
                 ),
             }
 
-        i = 2 if half_days[0]["temperature_class"] == "high" else 1
-        forecast_array.append(get_day_forecast(half_days[0:i]))
-        for i in range(i, len(half_days) - 1, 2):
+        start = 2 if half_days[0]["temperature_class"] == "high" else 1
+        forecast_array.append(get_day_forecast(half_days[0:start]))
+        for i in range(start, len(half_days) - 1, 2):
             forecast_array.append(get_day_forecast(half_days[i : i + 2]))  # noqa: PERF401
 
     else:
