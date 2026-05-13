@@ -22,12 +22,25 @@
       },
       "user": {
         "data": {
+          "legacy_entity_names": "Use Legacy Entity Names (for backwards compatibility)",
           "password": "[%key:common::config_flow::data::password%]",
+          "read_only": "Read Only",
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "description": "Please enter your CalDAV server credentials"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "read_only": "Read Only"
+        },
+        "description": "Entry Options",
+        "title": "CalDAV Integration Options for Entry"
       }
     }
   }
