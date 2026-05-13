@@ -43,7 +43,7 @@ def deprecated_substitute[_ObjectT: object](
                         inspect.getfile(self.__class__),
                     )
                     warnings[module_name] = True
-                    setattr(func, "_deprecated_substitute_warnings", warnings)
+                    setattr(func, "_deprecated_substitute_warnings", warnings)  # noqa: B010
 
                 # Return the old property
                 return getattr(self, substitute_name)

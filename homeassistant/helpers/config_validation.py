@@ -1411,7 +1411,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         ),
         _HAS_ENTITY_SERVICE_FIELD,
     )
-    setattr(validator, "_entity_service_schema", True)
+    setattr(validator, "_entity_service_schema", True)  # noqa: B010
     return validator
 
 

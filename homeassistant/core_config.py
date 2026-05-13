@@ -367,9 +367,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             [{"type": "totp", "id": "totp", "name": "Authenticator app"}],
         )
 
-        setattr(
-            hass, "auth", await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
-        )
+        hass.auth = await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
 
     await hass.config.async_load()
 

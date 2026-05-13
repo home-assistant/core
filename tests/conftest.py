@@ -229,9 +229,9 @@ def pytest_runtest_setup() -> None:
         _validate_host(host)
         return (host, [], [host])
 
-    setattr(socket, "getaddrinfo", getaddrinfo_patched)
-    setattr(socket, "gethostbyname", gethostbyname_patched)
-    setattr(socket, "gethostbyname_ex", gethostbyname_ex_patched)
+    socket.getaddrinfo = getaddrinfo_patched
+    socket.gethostbyname = gethostbyname_patched
+    socket.gethostbyname_ex = gethostbyname_ex_patched
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
