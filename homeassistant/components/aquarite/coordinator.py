@@ -1,10 +1,9 @@
 """Data coordinator for the Aquarite integration."""
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioaquarite import AquariteAuth, AquariteClient
+from aioaquarite import AquariteAuth, AquariteClient, ResilientPoolSubscription
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -34,8 +33,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.pool_id: str = pool_id
         self.pool_name: str = pool_name
-        self.watch: Any | None = None
-        self._subscription_lock = asyncio.Lock()
+        self.subscription: ResilientPoolSubscription | None = None
 
         super().__init__(
             hass,
@@ -53,28 +51,18 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Subscribe to Firestore real-time updates via the library."""
 
         def _on_data(data: dict[str, Any]) -> None:
-            """Callback from Firestore thread; push data to HA loop."""
+            """Callback from the Firestore thread; push data to the HA loop."""
             self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, data)
 
-        self.watch = await self.api.subscribe_pool(self.pool_id, _on_data)
-
-    async def refresh_subscription(self) -> None:
-        """Resubscribe to Firestore (e.g., after a token refresh)."""
-        async with self._subscription_lock:
-            _LOGGER.debug("Refreshing Firestore subscription for %s", self.pool_id)
-            watch = self.watch
-            self.watch = None
-            if watch:
-                await asyncio.to_thread(watch.unsubscribe)
-            await self.subscribe()
+        self.subscription = await self.api.subscribe_pool_resilient(
+            self.pool_id, _on_data
+        )
 
     async def async_shutdown(self) -> None:
-        """Cleanly unsubscribe."""
-        async with self._subscription_lock:
-            watch = self.watch
-            self.watch = None
-            if watch:
-                await asyncio.to_thread(watch.unsubscribe)
+        """Cleanly close the resilient subscription."""
+        if self.subscription is not None:
+            await self.subscription.aclose()
+            self.subscription = None
         await super().async_shutdown()
 
     def get_value(self, path: str, default: Any = None) -> Any:
