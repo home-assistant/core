@@ -42,6 +42,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _device_model: str
+    _auth_step: str | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -121,50 +122,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle discovery password authentication."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            host = self._host
-            password = user_input[CONF_PASSWORD]
-
-            # Check if we can connect to the device
-            device = await MyPVLocalDevice(host, password)
-            try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
-            except MyPVAuthenticationError:
-                errors[CONF_PASSWORD] = "invalid_password"
-            finally:
-                await device.disconnect()
-
-            if not errors:
-                await self.async_set_unique_id(device.serial_number)
-                self._abort_if_unique_id_configured()
-
-                title = f"my-PV {device.model}"
-                data = {
-                    CONF_HOST: host,
-                    CONF_PASSWORD: password,
-                }
-                return self.async_create_entry(title=title, data=data)
-
-        # Combine user input with schema.
-        data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
-
-        self.context.update(
-            {
-                "title_placeholders": {
-                    "name": f"my-PV {self._device_model}",
-                }
-            }
-        )
-
-        return self.async_show_form(
-            step_id="discovery_auth",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders=self.context["title_placeholders"],
-        )
+        self._auth_step = "discovery_auth"
+        return await self.async_step_auth(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -253,7 +212,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="auth",
+            step_id=self._auth_step or "auth",
             data_schema=data_schema,
             errors=errors,
             description_placeholders=self.context["title_placeholders"],
