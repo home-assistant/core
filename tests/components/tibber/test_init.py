@@ -50,15 +50,15 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
             websession=ANY,
             time_zone=ANY,
             ssl=ANY,
-            on_reconnect=ANY,
+            refresh_access_token=ANY,
         )
         session.async_ensure_token_valid.assert_awaited_once()
         mock_client.set_access_token.assert_not_awaited()
         assert client is mock_client
 
-        on_reconnect = mock_client_cls.call_args.kwargs["on_reconnect"]
+        refresh_access_token = mock_client_cls.call_args.kwargs["refresh_access_token"]
         session.async_ensure_token_valid.reset_mock()
-        assert await on_reconnect() == "access-token"
+        assert await refresh_access_token() == "access-token"
         session.async_ensure_token_valid.assert_awaited_once()
 
         session.async_ensure_token_valid.reset_mock()
