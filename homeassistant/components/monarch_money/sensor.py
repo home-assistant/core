@@ -181,7 +181,7 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
         """Return the currency for monetary sensors."""
         if self.entity_description.device_class == SensorDeviceClass.MONETARY:
             return self.hass.config.currency
-        return None
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def entity_picture(self) -> str | None:

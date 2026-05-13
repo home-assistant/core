@@ -5,9 +5,11 @@ from typedmonarchmoney import TypedMonarchMoney
 from homeassistant.components.recorder.statistics import (
     async_update_statistics_metadata,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import DATA_INSTANCE
 
 from .coordinator import MonarchMoneyConfigEntry, MonarchMoneyDataUpdateCoordinator
 
@@ -24,10 +26,18 @@ async def async_setup_entry(
     await mm_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = mm_coordinator
 
-    # Migrate statistics from "$" to proper ISO currency code
-    _async_migrate_statistics_currency(hass, entry)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: MonarchMoneyConfigEntry
+) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version < 2:
+        _async_migrate_statistics_currency(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
     return True
 
 
@@ -40,16 +50,18 @@ def _async_migrate_statistics_currency(
     device_class=MONETARY sensors. This migrates existing statistics
     to use the proper ISO 4217 currency code from HA config.
     """
+    if DATA_INSTANCE not in hass.data:
+        return
+
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
     currency = hass.config.currency
 
     for entity_entry in entries:
-        # Only migrate sensor entities with monetary device class
         if (
-            entity_entry.domain == "sensor"
-            and entity_entry.original_device_class == "monetary"
+            entity_entry.domain == SENSOR_DOMAIN
+            and entity_entry.original_device_class == SensorDeviceClass.MONETARY
         ):
             async_update_statistics_metadata(
                 hass,
