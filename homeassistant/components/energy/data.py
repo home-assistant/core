@@ -186,6 +186,9 @@ class GasSourceType(TypedDict):
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
 
+    # An optional custom name for display in energy graphs
+    name: str | None
+
 
 class WaterSourceType(TypedDict):
     """Dictionary holding the source of water consumption."""
@@ -205,6 +208,9 @@ class WaterSourceType(TypedDict):
     # Used to generate costs if stat_cost is set to None
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
+
+    # An optional custom name for display in energy graphs
+    name: str | None
 
 
 type SourceType = (
@@ -502,6 +508,7 @@ GAS_SOURCE_SCHEMA = vol.All(
             vol.Remove("entity_energy_from"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -515,6 +522,7 @@ WATER_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_cost"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
