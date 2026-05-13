@@ -93,6 +93,8 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         if self._data[CONF_HOST] is not None
                         else "",
                     ): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Optional(
                         CONF_NAME,
                         default=self._data[CONF_NAME]
