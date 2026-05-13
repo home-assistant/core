@@ -1112,7 +1112,7 @@ class MQTT:
 
             await self._async_wait_for_mid_or_raise(mid, result)
 
-        # Flush subscription identifiers if they are available
+        # Remove stored subscription identifiers for topics that were just unsubscribed
         for topic in topics:
             self._registered_subscriptions.pop(topic, None)
 
@@ -1143,7 +1143,7 @@ class MQTT:
         _userdata: None,
         _connect_flags: mqtt.ConnectFlags,
         reason_code: mqtt.ReasonCode,
-        _properties: mqtt.Properties | None = None,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
