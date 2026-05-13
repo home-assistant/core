@@ -23,6 +23,7 @@ from tests.components.common import (
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
+    assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -68,6 +69,41 @@ async def test_humidity_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the humidity triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+
+_PERCENT_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 50, "unit_of_measurement": "%"},
+    }
+}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("humidity.changed", _CHANGED_THRESHOLD, False, False),
+        ("humidity.crossed_threshold", _PERCENT_CROSSED_THRESHOLD, True, True),
+    ],
+)
+async def test_humidity_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that humidity triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 # --- Sensor domain tests (value in state.state) ---
@@ -204,12 +240,16 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", HVACMode.AUTO, CLIMATE_ATTR_CURRENT_HUMIDITY
+            "humidity.changed",
+            HVACMode.AUTO,
+            CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -248,6 +288,7 @@ async def test_humidity_trigger_climate_behavior_any(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -286,6 +327,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -324,12 +366,16 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", STATE_ON, HUMIDIFIER_ATTR_CURRENT_HUMIDITY
+            "humidity.changed",
+            STATE_ON,
+            HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -368,6 +414,7 @@ async def test_humidity_trigger_humidifier_behavior_any(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -406,6 +453,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             STATE_ON,
             HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -444,12 +492,16 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "humidity.changed", "sunny", ATTR_WEATHER_HUMIDITY
+            "humidity.changed",
+            "sunny",
+            ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -488,6 +540,7 @@ async def test_humidity_trigger_weather_behavior_any(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )
@@ -526,6 +579,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
             "humidity.crossed_threshold",
             "sunny",
             ATTR_WEATHER_HUMIDITY,
+            attribute_required=True,
         ),
     ],
 )

@@ -436,7 +436,11 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             else None
         )
         if (
-            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            program_key
+            in (
+                ProgramKey.BSH_COMMON_FAVORITE_001,
+                ProgramKey.BSH_COMMON_FAVORITE_002,
+            )
             and (
                 base_program_event := self.appliance.events.get(
                     EventKey.BSH_COMMON_OPTION_BASE_PROGRAM

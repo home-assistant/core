@@ -1929,3 +1929,40 @@ async def test_reload_when_labs_flag_changes(
 
         assert hass.states.get(f"script.{active_object_id}") is not None
         assert hass.services.has_service(script.DOMAIN, active_object_id)
+
+
+async def test_remove_script_entity_unloads_script(hass: HomeAssistant) -> None:
+    """Test that removing a script entity unloads its underlying script."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_script": {
+                    "sequence": [{"event": "test_event"}],
+                }
+            }
+        },
+    )
+
+    entity = hass.data[script.DOMAIN].get_entity("script.test_script")
+    assert entity is not None
+    assert isinstance(entity, ScriptEntity)
+
+    # Reload with empty config to remove the script
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={script.DOMAIN: {}},
+        ),
+        patch.object(
+            entity.script,
+            "async_unload",
+            wraps=entity.script.async_unload,
+        ) as script_unload,
+    ):
+        await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    script_unload.assert_called_once()

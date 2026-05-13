@@ -1,7 +1,5 @@
 """AirOS Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -180,7 +178,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS sensors from a config entry."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.status
 
     entities = [AirOSSensor(coordinator, description) for description in COMMON_SENSORS]
 

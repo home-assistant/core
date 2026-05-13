@@ -23,7 +23,9 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_action,
     async_get_flow_preview_state,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -55,17 +57,13 @@ TEST_UPDATE_CONFIG = {
     "latest_version": TEST_LATEST_TEMPLATE,
 }
 
-INSTALL_ACTION = {
-    "install": {
-        "action": "test.automation",
-        "data": {
-            "caller": "{{ this.entity_id }}",
-            "action": "install",
-            "backup": "{{ backup }}",
-            "specific_version": "{{ specific_version }}",
-        },
-    }
-}
+INSTALL_ACTION = make_test_action(
+    "install",
+    {
+        "backup": "{{ backup }}",
+        "specific_version": "{{ specific_version }}",
+    },
+)
 
 
 @pytest.fixture
@@ -425,9 +423,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
+    assert_action(TEST_UPDATE, calls, 1, "install")
 
     hass.states.async_set(TEST_INSTALLED_SENSOR, "2.0")
     hass.states.async_set(TEST_LATEST_SENSOR, "2.0")
@@ -444,9 +440,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
+    assert_action(TEST_UPDATE, calls, 1, "install")
 
 
 @pytest.mark.parametrize(
@@ -813,12 +807,14 @@ async def test_supported_features(
     await hass.async_block_till_done()
 
     # verify
-    assert len(calls) == 1
-    data = calls[-1].data
-    assert data["action"] == "install"
-    assert data["caller"] == TEST_UPDATE.entity_id
-    assert data["backup"] == expected_backup
-    assert data["specific_version"] == expected_version
+    assert_action(
+        TEST_UPDATE,
+        calls,
+        1,
+        "install",
+        backup=expected_backup,
+        specific_version=expected_version,
+    )
 
 
 @pytest.mark.parametrize(

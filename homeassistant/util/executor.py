@@ -1,7 +1,5 @@
 """Executor util helpers."""
 
-from __future__ import annotations
-
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import logging

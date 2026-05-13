@@ -1,7 +1,5 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from devolo_home_control_api.devices.zwave import Zwave

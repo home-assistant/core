@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[binary_sensor.nina_warning_aach_1-entry]
+# name: test_binary_sensors[binary_sensor.aach_warning_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_1',
+    'entity_id': 'binary_sensor.aach_warning_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Warning: Aach 1',
+    'object_id_base': 'Warning 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach 1',
+    'original_name': 'Warning 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,17 +36,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_1-state]
+# name: test_binary_sensors[binary_sensor.aach_warning_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'affected_areas': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere.',
       'description': 'Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.',
       'device_class': 'safety',
       'expires': '3021-11-22T05:19:00+01:00',
-      'friendly_name': 'NINA Warning: Aach 1',
+      'friendly_name': 'Aach Warning 1',
       'headline': 'Ausfall Notruf 112',
       'id': 'mow.DE-NW-BN-SE030-20201014-30-000',
-      'recommended_actions': '',
+      'recommended_actions': 'ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achte besonders auf herabfallende Gegenstände.',
       'sender': 'Deutscher Wetterdienst',
       'sent': '2021-10-11T05:20:00+01:00',
       'severity': 'Minor',
@@ -54,14 +54,14 @@
       'web': 'https://www.wettergefahren.de',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_1',
+    'entity_id': 'binary_sensor.aach_warning_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_2-entry]
+# name: test_binary_sensors[binary_sensor.aach_warning_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -75,7 +75,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_2',
+    'entity_id': 'binary_sensor.aach_warning_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -83,12 +83,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Warning: Aach 2',
+    'object_id_base': 'Warning 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach 2',
+    'original_name': 'Warning 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -98,21 +98,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_2-state]
+# name: test_binary_sensors[binary_sensor.aach_warning_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach 2',
+      'friendly_name': 'Aach Warning 2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_2',
+    'entity_id': 'binary_sensor.aach_warning_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_3-entry]
+# name: test_binary_sensors[binary_sensor.aach_warning_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -126,7 +126,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_3',
+    'entity_id': 'binary_sensor.aach_warning_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -134,12 +134,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Warning: Aach 3',
+    'object_id_base': 'Warning 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach 3',
+    'original_name': 'Warning 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -149,21 +149,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_3-state]
+# name: test_binary_sensors[binary_sensor.aach_warning_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach 3',
+      'friendly_name': 'Aach Warning 3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_3',
+    'entity_id': 'binary_sensor.aach_warning_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_4-entry]
+# name: test_binary_sensors[binary_sensor.aach_warning_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -177,7 +177,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_4',
+    'entity_id': 'binary_sensor.aach_warning_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -185,12 +185,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Warning: Aach 4',
+    'object_id_base': 'Warning 4',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach 4',
+    'original_name': 'Warning 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -200,21 +200,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_4-state]
+# name: test_binary_sensors[binary_sensor.aach_warning_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach 4',
+      'friendly_name': 'Aach Warning 4',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_4',
+    'entity_id': 'binary_sensor.aach_warning_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_5-entry]
+# name: test_binary_sensors[binary_sensor.aach_warning_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -228,7 +228,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_5',
+    'entity_id': 'binary_sensor.aach_warning_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -236,12 +236,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Warning: Aach 5',
+    'object_id_base': 'Warning 5',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach 5',
+    'original_name': 'Warning 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -251,14 +251,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_5-state]
+# name: test_binary_sensors[binary_sensor.aach_warning_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach 5',
+      'friendly_name': 'Aach Warning 5',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_5',
+    'entity_id': 'binary_sensor.aach_warning_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

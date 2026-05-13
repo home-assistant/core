@@ -29,6 +29,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -54,6 +55,8 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
         "climate.target_temperature_crossed_threshold",
         "climate.turned_off",
         "climate.turned_on",
+        "climate.started_cooling",
+        "climate.started_drying",
         "climate.started_heating",
     ],
 )
@@ -62,6 +65,59 @@ async def test_climate_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the climate triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+_TEMPERATURE_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("climate.started_cooling", {}, True, True),
+        ("climate.started_drying", {}, True, True),
+        ("climate.started_heating", {}, True, True),
+        ("climate.turned_off", {}, True, True),
+        ("climate.turned_on", {}, True, True),
+        ("climate.hvac_mode_changed", {"hvac_mode": [HVACMode.HEAT]}, True, True),
+        ("climate.target_humidity_changed", _CHANGED_THRESHOLD, False, False),
+        (
+            "climate.target_humidity_crossed_threshold",
+            _HUMIDITY_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
+        ("climate.target_temperature_changed", _CHANGED_THRESHOLD, False, False),
+        (
+            "climate.target_temperature_crossed_threshold",
+            _TEMPERATURE_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
+    ],
+)
+async def test_climate_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that climate triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -187,22 +243,30 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_changed",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -311,13 +375,17 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -426,13 +494,17 @@ async def test_climate_state_trigger_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",

@@ -1,7 +1,5 @@
 """Tests for the lifx component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import socket
 from typing import Any

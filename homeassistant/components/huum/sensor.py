@@ -1,7 +1,5 @@
 """Sensor platform for Huum sauna integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -7,6 +7,7 @@
           "down": "mdi:television-off",
           "pause": "mdi:television-pause",
           "seems_down": "mdi:television-off",
+          "started": "mdi:television-play",
           "up": "mdi:television-shimmer"
         }
       }

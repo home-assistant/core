@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -10,6 +8,7 @@ from functools import partial
 import logging
 import re
 from typing import Any, TypedDict, cast
+from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzActionError
@@ -26,7 +25,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -228,7 +227,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         self.fritz_call = FritzCall(fc=self.connection)
-        info = self.fritz_status.get_device_info()
+        try:
+            info = self.fritz_status.get_device_info()
+        except ParseError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="error_parse_device_info",
+            ) from ex
 
         _LOGGER.debug(
             "gathered device info of %s %s",
@@ -332,7 +337,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        _LOGGER.debug("enity_data: %s", entity_data)
+        _LOGGER.debug("entity_data: %s", entity_data)
+
+        await self.async_trigger_cleanup()
+
         return entity_data
 
     @property
@@ -376,6 +384,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing
+        # Unique ID is the serial number of the device
+        # which is the MAC of the device without the colons
         return dr.format_mac(self._unique_id)
 
     @property
@@ -448,10 +458,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 if not attributes.get("MACAddress"):
                     continue
 
+                wan_access_result = None
                 if (wan_access := attributes.get("X_AVM-DE_WANAccess")) is not None:
-                    wan_access_result = "granted" in wan_access
-                else:
-                    wan_access_result = None
+                    # wan_access can be "granted", "denied", "unknown" or "error"
+                    if "granted" in wan_access:
+                        wan_access_result = True
+                    elif "denied" in wan_access:
+                        wan_access_result = False
 
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],
@@ -687,7 +700,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
-            device_hosts = await self._async_update_hosts_info()
+            device_hosts.update(await self._async_update_hosts_info())
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry
 

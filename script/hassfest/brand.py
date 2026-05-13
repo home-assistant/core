@@ -1,7 +1,5 @@
 """Brand validation."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 

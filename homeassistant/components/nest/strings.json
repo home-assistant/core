@@ -113,7 +113,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "doorbell_chime": "[%key:component::nest::entity::event::chime::name%]"
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
             }
           }
         }

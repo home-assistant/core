@@ -1,7 +1,5 @@
 """Support for 1-Wire environment select entities."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import os
 

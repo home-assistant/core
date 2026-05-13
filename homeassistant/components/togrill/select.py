@@ -1,7 +1,5 @@
 """Support for select entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from enum import Enum

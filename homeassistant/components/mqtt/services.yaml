@@ -30,6 +30,10 @@ publish:
       selector:
         boolean:
 
+    message_expiry_interval:
+      selector:
+        duration:
+          enable_day: true
 dump:
   fields:
     topic:
