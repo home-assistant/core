@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.recorder import DATA_INSTANCE
 
+from .const import MONARCH_MONEY_CURRENCY
 from .coordinator import MonarchMoneyConfigEntry, MonarchMoneyDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -44,19 +45,17 @@ async def async_migrate_entry(
 def _async_migrate_statistics_currency(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
 ) -> None:
-    """Migrate monetary sensor statistics from '$' to configured currency.
+    """Migrate monetary sensor statistics from '$' to USD.
 
     Prior versions used CURRENCY_DOLLAR ('$') which is invalid for
     device_class=MONETARY sensors. This migrates existing statistics
-    to use the proper ISO 4217 currency code from HA config.
+    to use the proper ISO 4217 currency code.
     """
     if DATA_INSTANCE not in hass.data:
         return
 
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    currency = hass.config.currency
 
     for entity_entry in entries:
         if (
@@ -66,7 +65,7 @@ def _async_migrate_statistics_currency(
             async_update_statistics_metadata(
                 hass,
                 entity_entry.entity_id,
-                new_unit_of_measurement=currency,
+                new_unit_of_measurement=MONARCH_MONEY_CURRENCY,
                 new_unit_class=None,
             )
 

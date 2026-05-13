@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.monarch_money import async_migrate_entry
 from homeassistant.components.monarch_money.config_flow import MonarchMoneyConfigFlow
-from homeassistant.components.monarch_money.const import DOMAIN
+from homeassistant.components.monarch_money.const import DOMAIN, MONARCH_MONEY_CURRENCY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
@@ -34,22 +34,21 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    ("currency", "expected_unit"),
+    "currency",
     [
-        ("USD", "USD"),
-        ("CAD", "CAD"),
-        ("EUR", "EUR"),
-        ("GBP", "GBP"),
+        "USD",
+        "CAD",
+        "EUR",
+        "GBP",
     ],
 )
-async def test_monetary_sensors_use_configured_currency(
+async def test_monetary_sensors_use_monarch_money_currency(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_config_api: AsyncMock,
     currency: str,
-    expected_unit: str,
 ) -> None:
-    """Test that monetary sensors use the configured HA currency."""
+    """Test that monetary sensors use the Monarch Money currency."""
     await hass.config.async_update(currency=currency)
 
     with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
@@ -58,19 +57,19 @@ async def test_monetary_sensors_use_configured_currency(
     # Test account balance sensor (monetary)
     state = hass.states.get("sensor.rando_bank_checking_balance")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
     # Test cashflow sensor (monetary)
     state = hass.states.get("sensor.cashflow_income_year_to_date")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
     # Test value sensor (monetary)
     state = hass.states.get("sensor.vinaudit_2050_toyota_rav8_value")
     assert state is not None
-    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert state.attributes["unit_of_measurement"] == MONARCH_MONEY_CURRENCY
     assert state.attributes["device_class"] == "monetary"
 
 
@@ -129,9 +128,9 @@ async def test_statistics_migration_called_for_monetary_sensors(
     # Verify non-monetary sensor was NOT included
     assert "sensor.rando_bank_checking_data_age" not in called_entity_ids
 
-    # Verify all calls used the configured currency
+    # Verify all calls used the Monarch Money currency
     for call in mock_update_stats.call_args_list:
-        assert call.kwargs["new_unit_of_measurement"] == "USD"
+        assert call.kwargs["new_unit_of_measurement"] == MONARCH_MONEY_CURRENCY
 
     assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
 

@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': 'sum_expense',
     'unique_id': '222260252323873333_cashflow_sum_expense',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.cashflow_expense_year_to_date-state]
@@ -44,7 +44,7 @@
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Expense year to date',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cashflow_expense_year_to_date',
@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': 'sum_income',
     'unique_id': '222260252323873333_cashflow_sum_income',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.cashflow_income_year_to_date-state]
@@ -99,7 +99,7 @@
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Income year to date',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cashflow_income_year_to_date',
@@ -199,7 +199,7 @@
     'supported_features': 0,
     'translation_key': 'savings',
     'unique_id': '222260252323873333_cashflow_savings',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.cashflow_savings_year_to_date-state]
@@ -208,7 +208,7 @@
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Savings year to date',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cashflow_savings_year_to_date',
@@ -254,7 +254,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_186321412999033223_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-state]
@@ -264,7 +264,7 @@
       'device_class': 'monetary',
       'friendly_name': 'Manual entry Wallet Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.manual_entry_wallet_balance',
@@ -362,7 +362,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000002_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_balance-state]
@@ -373,7 +373,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Bank Checking Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_bank_checking_balance',
@@ -471,7 +471,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_balance-state]
@@ -482,7 +482,7 @@
       'entity_picture': 'base64Nonce',
       'friendly_name': 'Rando Brokerage Brokerage Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_brokerage_brokerage_balance',
@@ -580,7 +580,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_9000000007_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_balance-state]
@@ -591,7 +591,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Credit Credit Card Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_credit_credit_card_balance',
@@ -689,7 +689,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000022_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_balance-state]
@@ -700,7 +700,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Employer Investments 401.k Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_employer_investments_401_k_balance',
@@ -798,7 +798,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000012_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_balance-state]
@@ -809,7 +809,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Investments Roth IRA Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_investments_roth_ira_balance',
@@ -907,7 +907,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000030_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_balance-state]
@@ -918,7 +918,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Mortgage Mortgage Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rando_mortgage_mortgage_balance',
@@ -1068,7 +1068,7 @@
     'supported_features': 0,
     'translation_key': 'value',
     'unique_id': '222260252323873333_121212192626186051_value',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
@@ -1079,7 +1079,7 @@
       'entity_picture': 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
       'friendly_name': 'VinAudit 2050 Toyota RAV8 Value',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vinaudit_2050_toyota_rav8_value',
@@ -1125,7 +1125,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000020_balance',
-    'unit_of_measurement': 'EUR',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.zillow_house_balance-state]
@@ -1136,7 +1136,7 @@
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Zillow House Balance',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      'unit_of_measurement': 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zillow_house_balance',
