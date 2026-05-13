@@ -24,8 +24,7 @@ from .entity import YotoEntity
 PARALLEL_UPDATES = 0
 
 # Yoto players expose 16 hardware volume steps.
-VOLUME_STEPS = 16
-VOLUME_STEP = 1 / VOLUME_STEPS
+VOLUME_STEP = 1 / 16
 
 PLAYBACK_STATE_MAP = {
     PlaybackStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -104,13 +103,6 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Return the time the media position was last refreshed."""
         return self.player.last_event_received_at
 
-    def _current_card(self) -> Card | None:
-        """Return the cached library card for the currently active media."""
-        card_id = self.player.last_event.card_id
-        if not card_id:
-            return None
-        return self.coordinator.client.library.get(card_id)
-
     @property
     def media_title(self) -> str | None:
         """Return the title of the currently playing track."""
@@ -134,6 +126,13 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Return the cover image URL of the active card."""
         card = self._current_card()
         return card.cover_image_large if card else None
+
+    def _current_card(self) -> Card | None:
+        """Return the cached library card for the currently active media."""
+        card_id = self.player.last_event.card_id
+        if not card_id:
+            return None
+        return self.coordinator.client.library.get(card_id)
 
     async def async_media_play(self) -> None:
         """Resume playback."""
