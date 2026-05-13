@@ -68,6 +68,14 @@ SWITCH_DESCRIPTION = [
         on_fn=lambda client: client.async_change_price_cap(True),
         off_fn=lambda client: client.async_change_price_cap(False),
     ),
+    OhmeSwitchDescription(
+        key="solar_boost",
+        translation_key="solar_boost",
+        is_supported_fn=lambda client: client.is_capable("solar"),
+        is_on_fn=lambda client: client.solar_enabled,
+        on_fn=lambda client: client.async_set_solar_mode(True),
+        off_fn=lambda client: client.async_set_solar_mode(False),
+    ),
 ]
 
 
