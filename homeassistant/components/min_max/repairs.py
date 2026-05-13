@@ -47,7 +47,8 @@ class MigrateToGroupSensorFlow(RepairsFlow):
         old_entity = entity_reg.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, self.entry.entry_id
         )
-        assert old_entity
+        if not old_entity:
+            return self.async_abort(reason="entity_not_found")
 
         if user_input is not None:
             config = dict(self.entry.options)
