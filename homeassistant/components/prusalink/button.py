@@ -13,25 +13,20 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-@dataclass(frozen=True)
-class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PrusaLinkButtonEntityDescription(
-    ButtonEntityDescription, PrusaLinkButtonEntityDescriptionMixin[T], Generic[T]
+    ButtonEntityDescription,
+    PrusaLinkEntityDescription,
+    Generic[T],
 ):
     """Describes PrusaLink button entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
+    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
 
 
 BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
@@ -59,6 +54,14 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             press_fn=lambda api: api.resume_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PAUSED.value
+            ),
+        ),
+        PrusaLinkButtonEntityDescription[PrinterStatus](
+            key="job.continue_job",
+            translation_key="continue_job",
+            press_fn=lambda api: api.continue_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.ATTENTION.value
             ),
         ),
     ),
@@ -99,13 +102,6 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
-        )
 
     async def async_press(self) -> None:
         """Press the button."""
