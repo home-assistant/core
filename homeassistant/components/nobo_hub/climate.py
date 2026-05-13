@@ -147,7 +147,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.zones:
             # Zone removed via the Nobø app; mark unavailable.
             self._attr_available = False

@@ -92,7 +92,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         for override in self._nobo.overrides.values():
             if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
                 self._attr_current_option = self._modes[override["mode"]]
@@ -135,7 +135,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. These are only local calls."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.zones:
             # Zone removed via the Nobø app; mark unavailable.
             self._attr_available = False
