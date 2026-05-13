@@ -233,7 +233,7 @@
     'state': '0.4',
   })
 # ---
-# name: test_sensor_snapshot[sensor.del_norte_distance-entry]
+# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.del_norte_distance',
+    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,7 +273,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.del_norte_distance-state]
+# name: test_sensor_snapshot[sensor.del_norte_distance_from_home_assistant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenAQ',
@@ -282,7 +282,7 @@
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.del_norte_distance',
+    'entity_id': 'sensor.del_norte_distance_from_home_assistant',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

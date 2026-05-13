@@ -214,15 +214,33 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         sensors: Sequence[Sensor]
         try:
             if self._location is None or self._sensors is None:
-                (
-                    location_response,
-                    latest_response,
-                    sensors_response,
-                ) = await asyncio.gather(
-                    self.client.locations.get(self.location_id),
-                    self.client.locations.latest(self.location_id),
-                    self.client.locations.sensors(self.location_id),
-                )
+                try:
+                    async with asyncio.TaskGroup() as tg:
+                        location_task = tg.create_task(
+                            self.client.locations.get(self.location_id)
+                        )
+                        latest_task = tg.create_task(
+                            self.client.locations.latest(self.location_id)
+                        )
+                        sensors_task = tg.create_task(
+                            self.client.locations.sensors(self.location_id)
+                        )
+                except* (
+                    ApiKeyMissingError,
+                    ForbiddenError,
+                    NotAuthorizedError,
+                ) as err:
+                    raise HomeAssistantError(
+                        f"Authentication failed for location {self.location_id}: {err}"
+                    ) from err.exceptions[0]
+                except* (APIError, OpenAQError, httpx.HTTPError) as err:
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="unable_to_fetch",
+                    ) from err.exceptions[0]
+                location_response = location_task.result()
+                latest_response = latest_task.result()
+                sensors_response = sensors_task.result()
                 if not location_response.results:
                     raise UpdateFailed(
                         translation_domain=DOMAIN,

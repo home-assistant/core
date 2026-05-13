@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.openaq.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -18,11 +19,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 from .conftest import LOCATION_ID, make_latest, make_response, make_sensor
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+async def async_load_entity_translations(hass: HomeAssistant) -> None:
+    """Load OpenAQ entity translations."""
+    await async_get_translations(hass, "en", "entity", [DOMAIN])
 
 
 async def test_sensor_snapshot(
@@ -33,11 +40,12 @@ async def test_sensor_snapshot(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor snapshots."""
+    await async_load_entity_translations(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        "openaq",
+        DOMAIN,
         f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance",
+        suggested_object_id="del_norte_distance_from_home_assistant",
         disabled_by=None,
     )
     await setup_integration(hass, mock_config_entry)
@@ -53,6 +61,7 @@ async def test_sensor_entities(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor entities."""
+    await async_load_entity_translations(hass)
     await setup_integration(hass, mock_config_entry)
 
     pm25 = entity_registry.async_get("sensor.del_norte_pm2_5")
@@ -83,7 +92,11 @@ async def test_sensor_entities(
     assert state.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_BILLION
 
     assert entity_registry.async_get("sensor.del_norte_unsupported") is None
-    distance = entity_registry.async_get("sensor.del_norte_distance")
+    distance_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{LOCATION_ID}_distance_from_home"
+    )
+    assert distance_entity_id is not None
+    distance = entity_registry.async_get(distance_entity_id)
     assert distance is not None
     assert distance.capabilities is None
     assert distance.disabled_by is er.RegistryEntryDisabler.INTEGRATION
@@ -107,21 +120,24 @@ async def test_distance_from_home_sensor(
     """Test distance from Home Assistant sensor."""
     hass.config.latitude = 35.1
     hass.config.longitude = -106.6
+    await async_load_entity_translations(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        "openaq",
+        DOMAIN,
         f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance",
+        suggested_object_id="del_norte_distance_from_home_assistant",
         disabled_by=None,
     )
 
     await setup_integration(hass, mock_config_entry)
 
-    distance = entity_registry.async_get("sensor.del_norte_distance")
+    distance = entity_registry.async_get(
+        "sensor.del_norte_distance_from_home_assistant"
+    )
     assert distance is not None
     assert distance.disabled_by is None
     assert distance.options == {"sensor": {"suggested_display_precision": 1}}
-    assert (state := hass.states.get("sensor.del_norte_distance"))
+    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
     assert state.state == "0.0"
     assert state.attributes["device_class"] == SensorDeviceClass.DISTANCE
     assert state.attributes["unit_of_measurement"] == UnitOfLength.KILOMETERS
@@ -136,11 +152,12 @@ async def test_distance_from_home_sensor_updates(
     """Test distance from Home Assistant sensor updates with coordinator data."""
     hass.config.latitude = 35.1
     hass.config.longitude = -106.6
+    await async_load_entity_translations(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        "openaq",
+        DOMAIN,
         f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance",
+        suggested_object_id="del_norte_distance_from_home_assistant",
         disabled_by=None,
     )
     await setup_integration(hass, mock_config_entry)
@@ -150,7 +167,7 @@ async def test_distance_from_home_sensor_updates(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.del_norte_distance"))
+    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
     assert float(state.state) > 0
 
 
