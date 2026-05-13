@@ -1,8 +1,7 @@
 """Diagnostics tests for the Inepro Metering integration."""
 
-import importlib
-
 from datetime import UTC, datetime
+import importlib
 
 from inepro_metering.const import MeterFamily, TransportType
 from inepro_metering.runtime import MeterRoute, build_meter_runtime_data
@@ -39,6 +38,7 @@ from homeassistant.components.inepro_metering.coordinator import (
     MeterCoordinatorData,
     SerialBusCoordinatorData,
 )
+import homeassistant.components.inepro_metering.diagnostics as diagnostics_module
 from homeassistant.components.inepro_metering.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -230,12 +230,10 @@ async def test_diagnostics_helpers_are_runtime_covered(
     hass: HomeAssistant,
 ) -> None:
     """Exercise diagnostics helper branches after a runtime reload."""
-    import homeassistant.components.inepro_metering.diagnostics as diagnostics_module
+    reloaded_module = importlib.reload(diagnostics_module)
 
-    diagnostics_module = importlib.reload(diagnostics_module)
-
-    assert diagnostics_module._format_datetime(None) is None
-    assert diagnostics_module._transport_endpoint(
+    assert reloaded_module._format_datetime(None) is None
+    assert reloaded_module._transport_endpoint(
         {
             CONF_TRANSPORT: TransportType.SERIAL.value,
             CONF_SERIAL_PORT: "COM5",
@@ -248,7 +246,7 @@ async def test_diagnostics_helpers_are_runtime_covered(
         "slave_id": 2,
         "timeout": 4,
     }
-    assert diagnostics_module._transport_endpoint(
+    assert reloaded_module._transport_endpoint(
         {
             CONF_TRANSPORT: TransportType.BLUETOOTH_PROXY.value,
             CONF_BLUETOOTH_ADDRESS: "11:22:33:44:55:66",
@@ -267,7 +265,7 @@ async def test_diagnostics_helpers_are_runtime_covered(
         "slave_id": 1,
         "timeout": 5,
     }
-    assert diagnostics_module._transport_endpoint(
+    assert reloaded_module._transport_endpoint(
         {
             CONF_TRANSPORT: TransportType.TCP_GATEWAY.value,
             "host": "192.168.68.80",

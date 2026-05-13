@@ -21,6 +21,7 @@ from homeassistant.components.inepro_metering.const import (
     DOMAIN,
 )
 from homeassistant.components.inepro_metering.entry_data import ConfiguredMeter
+from homeassistant.components.inepro_metering.models import get_profile
 from homeassistant.components.inepro_metering.number import (
     IneproWritableBusNumber,
     IneproWritableNumber,
@@ -29,7 +30,6 @@ from homeassistant.components.inepro_metering.select import (
     IneproWritableBusSelect,
     IneproWritableSelect,
 )
-from homeassistant.components.inepro_metering.models import get_profile
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant

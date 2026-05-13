@@ -35,9 +35,6 @@ from inepro_metering.modbus import IneproDeviceIdentification, IneproTcpGatewayI
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.inepro_metering.number import IneproGatewayNumber
-from homeassistant.components.inepro_metering.select import IneproGatewaySelect
-from homeassistant.components.inepro_metering.text import IneproGatewayText
 from homeassistant.components.inepro_metering.const import (
     CONF_FAMILY,
     CONF_METERS,
@@ -46,6 +43,9 @@ from homeassistant.components.inepro_metering.const import (
     CONF_VARIANT,
     DOMAIN,
 )
+from homeassistant.components.inepro_metering.number import IneproGatewayNumber
+from homeassistant.components.inepro_metering.select import IneproGatewaySelect
+from homeassistant.components.inepro_metering.text import IneproGatewayText
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

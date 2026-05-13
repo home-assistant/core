@@ -1,7 +1,6 @@
 """Home Assistant config flow tests for Inepro Metering."""
 
 import importlib
-
 from ipaddress import ip_address
 from types import SimpleNamespace
 from typing import Any
@@ -14,6 +13,7 @@ from homeassistant.components.inepro_metering import async_migrate_entry
 from homeassistant.components.inepro_metering.bluetooth import (
     DiscoveredGrowBluetoothMeter,
 )
+import homeassistant.components.inepro_metering.config_flow as config_flow_module
 from homeassistant.components.inepro_metering.config_flow import (
     CONF_DISCOVERED_BLUETOOTH_METER,
     CONF_SELECTED_METER,
@@ -198,9 +198,7 @@ async def test_config_flow_wrapper_paths_are_runtime_covered(
     hass: HomeAssistant,
 ) -> None:
     """Exercise wrapper helpers in the runtime-imported config flow module."""
-    import homeassistant.components.inepro_metering.config_flow as config_flow_module
-
-    config_flow_module = importlib.reload(config_flow_module)
+    reloaded_module = importlib.reload(config_flow_module)
 
     def _wrap_entry_data(
         _hass: HomeAssistant,
@@ -209,74 +207,74 @@ async def test_config_flow_wrapper_paths_are_runtime_covered(
     ) -> dict[str, Any]:
         return {**entry_data, "_runtime_only": True, **kwargs}
 
-    flow = config_flow_module.IneproMeteringConfigFlow()
+    flow = reloaded_module.IneproMeteringConfigFlow()
     flow.hass = hass
 
     entry_data = {CONF_TRANSPORT: TransportType.BLUETOOTH.value}
     with (
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "shared_read_detected_serial",
             new=AsyncMock(return_value="075625480002"),
         ) as shared_read_detected_serial,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_entry_data_with_ha_ble_device",
             side_effect=_wrap_entry_data,
         ) as entry_data_with_ble,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_validate_modbus_config",
             new=AsyncMock(),
         ) as validate_modbus_config,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_validate_bluetooth_gatt_identity",
             new=AsyncMock(return_value="075625480002"),
         ) as validate_bluetooth_gatt_identity,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "_async_resolve_entry_serial_number_for_creation",
             new=AsyncMock(return_value="075625480002"),
         ) as resolve_serial_for_creation,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "_async_validate_entry_identity",
             new=AsyncMock(),
         ) as validate_entry_identity,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_discover_grow_serial_bus",
             new=AsyncMock(return_value=()),
         ) as discover_serial_bus,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_discover_grow_tcp_gateway",
             new=AsyncMock(return_value=()),
         ) as discover_tcp_gateway,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_discover_tcp_gateways",
             new=AsyncMock(return_value=()),
         ) as discover_tcp_gateways,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_discover_grow_bluetooth_proxy_meters",
             new=AsyncMock(return_value=()),
         ) as discover_bluetooth_proxy_meters,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "async_discover_grow_bluetooth_meters",
             return_value=(),
         ) as discover_bluetooth_meters,
         patch.object(
-            config_flow_module,
+            reloaded_module,
             "grow_bluetooth_meter_from_service_info",
             return_value="meter",
         ) as bluetooth_meter_from_service_info,
     ):
         assert (
-            await config_flow_module._async_read_detected_grow_serial(
+            await reloaded_module._async_read_detected_grow_serial(
                 entry_data,
                 product_code="0756",
             )
@@ -330,10 +328,10 @@ async def test_config_flow_wrapper_paths_are_runtime_covered(
         assert entry_data_with_ble.call_count >= 3
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
-    options_flow = config_flow_module.IneproMeteringConfigFlow.async_get_options_flow(
+    options_flow = reloaded_module.IneproMeteringConfigFlow.async_get_options_flow(
         config_entry
     )
-    assert isinstance(options_flow, config_flow_module.IneproMeteringOptionsFlow)
+    assert isinstance(options_flow, reloaded_module.IneproMeteringOptionsFlow)
     assert options_flow._config_entry is config_entry
     assert options_flow._discovered_bluetooth_devices == ()
 
