@@ -12,7 +12,22 @@
               "in_progress": "In progress"
             }
           },
-          "failed_reason": { "name": "Failure reason" }
+          "failed_reason": {
+            "name": "Failure reason",
+            "state": {
+              "backup_agent_error": "Backup agent error",
+              "backup_agent_unreachable": "Backup agent unreachable",
+              "backup_manager_error": "Backup manager error",
+              "backup_not_found": "Backup not found",
+              "backup_reader_writer_error": "Backup reader/writer error",
+              "decrypt_on_download_not_supported": "Decrypt on download not supported",
+              "invalid_backup_filename": "Invalid backup filename",
+              "multiple_errors": "Multiple errors",
+              "password_incorrect": "Password incorrect",
+              "unknown_error": "Unknown error",
+              "upload_failed": "Upload failed"
+            }
+          }
         }
       }
     },
