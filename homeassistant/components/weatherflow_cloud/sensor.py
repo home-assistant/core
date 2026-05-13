@@ -27,10 +27,12 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfIrradiance,
     UnitOfLength,
+    UnitOfMass,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -152,7 +154,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         value_fn=lambda data: data.air_density,
-        native_unit_of_measurement="kg/m³",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfVolume.CUBIC_METERS}",
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="relative_humidity",
