@@ -293,11 +293,12 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 class ConditionChecker(abc.ABC):
     """Base class for condition checkers."""
 
+    _set_up = False
+    _unloaded = False
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
-        self._set_up = False
-        self._unloaded = False
 
     def __call__(
         self, hass: HomeAssistant, variables: TemplateVarsType = None
@@ -368,6 +369,8 @@ class ConditionChecker(abc.ABC):
 
 class LegacyConditionChecker(ConditionChecker):
     """Condition checker wrapping a legacy condition factory function."""
+
+    _set_up = True  # Legacy condition factories can be used without async_setup
 
     def __init__(self, hass: HomeAssistant, checker: ConditionCheckerType) -> None:
         """Initialize condition checker."""
