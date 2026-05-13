@@ -169,9 +169,15 @@ class AbstractTemplateEntity(Entity):
         )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop scripts when removing from Home Assistant."""
-        for action_script in self._action_scripts.values():
-            await action_script.async_stop()
+        """Clean up scripts when removing from Home Assistant."""
+        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
+            # Entity ID not changed, unload scripts as they will not be reused.
+            for action_script in self._action_scripts.values():
+                await action_script.async_unload()
+        else:
+            # Entity ID changed, just stop scripts
+            for action_script in self._action_scripts.values():
+                await action_script.async_stop()
 
     async def async_run_script(
         self,

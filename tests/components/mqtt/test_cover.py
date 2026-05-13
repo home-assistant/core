@@ -739,7 +739,9 @@ async def test_optimistic_state_change(
         cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.OPEN
@@ -748,7 +750,9 @@ async def test_optimistic_state_change(
         cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "CLOSE", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.CLOSED
@@ -757,7 +761,9 @@ async def test_optimistic_state_change(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.OPEN
@@ -766,7 +772,9 @@ async def test_optimistic_state_change(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "CLOSE", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("cover.test")
     assert state.state == CoverState.CLOSED
 
@@ -802,7 +810,9 @@ async def test_optimistic_state_change_with_position(
         cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.OPEN
@@ -812,7 +822,9 @@ async def test_optimistic_state_change_with_position(
         cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "CLOSE", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.CLOSED
@@ -822,7 +834,9 @@ async def test_optimistic_state_change_with_position(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
     assert state.state == CoverState.OPEN
@@ -832,7 +846,9 @@ async def test_optimistic_state_change_with_position(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "CLOSE", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("cover.test")
     assert state.state == CoverState.CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
@@ -866,7 +882,9 @@ async def test_send_open_cover_command(
         cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 2, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 2, False, message_expiry_interval=None
+    )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
 
@@ -899,7 +917,9 @@ async def test_send_close_cover_command(
         cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 2, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "CLOSE", 2, False, message_expiry_interval=None
+    )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
 
@@ -932,7 +952,9 @@ async def test_send_stop_cover_command(
         cover.DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "STOP", 2, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "STOP", 2, False, message_expiry_interval=None
+    )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
 
@@ -988,7 +1010,7 @@ async def test_send_stop_tilt_command(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", payload_stop, 2, False
+        "tilt-command-topic", payload_stop, 2, False, message_expiry_interval=None
     )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
@@ -1243,7 +1265,7 @@ async def test_set_position_templated(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "set-position-topic", pos_message, 0, False
+        "set-position-topic", pos_message, 0, False, message_expiry_interval=None
     )
 
 
@@ -1290,7 +1312,9 @@ async def test_set_position_templated_and_attributes(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("set-position-topic", "5", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "set-position-topic", "5", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1330,7 +1354,7 @@ async def test_set_tilt_templated(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "42", 0, False
+        "tilt-command-topic", "42", 0, False, message_expiry_interval=None
     )
 
 
@@ -1379,6 +1403,7 @@ async def test_set_tilt_templated_and_attributes(
         '{"entity_id": "cover.test","value": 45,"tilt_position": 45}',
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1393,6 +1418,7 @@ async def test_set_tilt_templated_and_attributes(
         '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1407,6 +1433,7 @@ async def test_set_tilt_templated_and_attributes(
         '{"entity_id": "cover.test","value": 0,"tilt_position": 0}',
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1421,6 +1448,7 @@ async def test_set_tilt_templated_and_attributes(
         '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
+        message_expiry_interval=None,
     )
 
 
@@ -1455,7 +1483,9 @@ async def test_set_position_untemplated(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "position-topic", "62", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1491,7 +1521,9 @@ async def test_set_position_untemplated_custom_percentage_range(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "position-topic", "62", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1692,7 +1724,7 @@ async def test_tilt_via_invocation_defaults(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "100", 0, False
+        "tilt-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1703,7 +1735,9 @@ async def test_tilt_via_invocation_defaults(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "0", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
@@ -1722,7 +1756,7 @@ async def test_tilt_via_invocation_defaults(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "100", 0, False
+        "tilt-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1741,7 +1775,9 @@ async def test_tilt_via_invocation_defaults(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "0", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1780,7 +1816,7 @@ async def test_tilt_given_value(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "80", 0, False
+        "tilt-command-topic", "80", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1792,7 +1828,7 @@ async def test_tilt_given_value(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1812,7 +1848,7 @@ async def test_tilt_given_value(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "80", 0, False
+        "tilt-command-topic", "80", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1832,7 +1868,7 @@ async def test_tilt_given_value(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
 
 
@@ -1878,7 +1914,7 @@ async def test_tilt_given_value_optimistic(
     assert current_cover_tilt_position == 80
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "80", 0, False
+        "tilt-command-topic", "80", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1895,7 +1931,7 @@ async def test_tilt_given_value_optimistic(
     assert current_cover_tilt_position == 50
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "50", 0, False
+        "tilt-command-topic", "50", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1912,7 +1948,7 @@ async def test_tilt_given_value_optimistic(
     assert current_cover_tilt_position == 25
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
 
 
@@ -1960,7 +1996,7 @@ async def test_tilt_given_value_altered_range(
     assert current_cover_tilt_position == 50
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -1976,7 +2012,9 @@ async def test_tilt_given_value_altered_range(
     ]
     assert current_cover_tilt_position == 0
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "0", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1992,7 +2030,7 @@ async def test_tilt_given_value_altered_range(
     assert current_cover_tilt_position == 50
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
 
 
@@ -2392,7 +2430,7 @@ async def test_tilt_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "50", 0, False
+        "tilt-command-topic", "50", 0, False, message_expiry_interval=None
     )
 
 
@@ -2431,7 +2469,7 @@ async def test_tilt_position_templated(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "68", 0, False
+        "tilt-command-topic", "68", 0, False, message_expiry_interval=None
     )
 
 
@@ -2473,7 +2511,7 @@ async def test_tilt_position_altered_range(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "25", 0, False
+        "tilt-command-topic", "25", 0, False, message_expiry_interval=None
     )
 
 

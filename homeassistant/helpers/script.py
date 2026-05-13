@@ -458,7 +458,7 @@ class _ScriptRun:
 
         try:
             self._log("Running %s", self._script.running_description)
-            for self._step, self._action in enumerate(self._script.sequence):
+            for self._step, self._action in enumerate(self._script.sequence):  # noqa: B020
                 if self._stop.done():
                     script_execution_set("cancelled")
                     break

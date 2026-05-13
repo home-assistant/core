@@ -3,7 +3,7 @@
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_INFRARED_ENTITY_ID
+from tests.components.infrared import ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 async def check_availability_follows_ir_entity(

@@ -57,6 +57,7 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
     PluggableAction,
+    StatelessEntityTriggerBase,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
@@ -2968,10 +2969,6 @@ async def test_make_entity_target_state_trigger(
     # Value did not change — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
-    # From unavailable — not valid
-    unavailable = State("light.bed", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
-
     # Value not in to_states — not valid
     assert not trig.is_valid_state(wrong_value_state)
 
@@ -3042,10 +3039,6 @@ async def test_make_entity_transition_trigger(
     # No change in tracked value — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
-    # From unavailable — not valid
-    unavailable = State("climate.living", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
-
 
 @pytest.mark.parametrize(
     ("domain_specs", "origin", "from_state", "to_state", "wrong_from"),
@@ -3096,6 +3089,88 @@ async def test_make_entity_origin_state_trigger(
 
     # To-state still matches from_state — not valid
     assert not trig.is_valid_state(from_state)
+
+
+class _ActivatedTrigger(StatelessEntityTriggerBase):
+    """Test trigger leaf for StatelessEntityTriggerBase."""
+
+    _domain_specs = {"test": DomainSpec()}
+
+
+async def _arm_activated_trigger(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    calls: list[dict[str, Any]],
+) -> CALLBACK_TYPE:
+    """Set up _ActivatedTrigger via async_initialize_triggers."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"activated": _ActivatedTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    trigger_config = {
+        CONF_PLATFORM: "test.activated",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+    }
+
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    return await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_activated",
+        log_cb=log.log,
+    )
+
+
+@pytest.mark.parametrize(
+    ("initial_state", "sequence", "expected_calls"),
+    [
+        (STATE_UNKNOWN, ["2026-05-06T12:00:00+00:00", "2026-05-06T12:00:01+00:00"], 2),
+        (STATE_UNAVAILABLE, ["2026-05-06T12:00:00+00:00"], 0),
+        ("2026-05-06T12:00:00+00:00", [STATE_UNAVAILABLE], 0),
+        ("2026-05-06T12:00:00+00:00", [STATE_UNKNOWN], 0),
+        ("2026-05-06T12:00:00+00:00", ["2026-05-06T12:00:00+00:00"], 0),
+    ],
+)
+async def test_stateless_entity_trigger(
+    hass: HomeAssistant,
+    initial_state: str,
+    sequence: list[str],
+    expected_calls: int,
+) -> None:
+    """Test StatelessEntityTriggerBase end-to-end via a mocked platform.
+
+    StatelessEntityTriggerBase covers entities (buttons, scenes,
+    doorbells, events) that have no meaningful prior state — STATE_UNKNOWN
+    must be a valid origin so the first activation after startup fires,
+    but UNAVAILABLE/UNKNOWN are never valid target states.
+    """
+    entity_id = "test.bell"
+    hass.states.async_set(entity_id, initial_state)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_activated_trigger(hass, [entity_id], calls)
+
+    for state in sequence:
+        hass.states.async_set(entity_id, state)
+        await hass.async_block_till_done()
+
+    assert len(calls) == expected_calls
+
+    unsub()
 
 
 class _OffToOnTrigger(EntityTriggerBase):
@@ -3301,7 +3376,7 @@ async def test_entity_trigger_first_requires_exactly_one(
 async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
+    """Test behavior last: unavailable/unknown entities are excluded from the all-match check.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     not fire because C is still off, so the available entities do not all
@@ -3565,6 +3640,51 @@ async def test_entity_trigger_duration_last_requires_all(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last with for: timer is cancelled when every targeted entity is filtered out.
+
+    With behavior=last + `for:`, an "all match" check that becomes vacuously
+    True (every targeted entity filtered by `_should_include` — here all
+    entities go unavailable) must not keep the timer alive; otherwise the
+    action would fire after the duration even though no entity still
+    matches.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on — combined state "all on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 2 seconds, every targeted entity goes unavailable. Both are
+    # filtered out of the all-check by `_should_include`, leaving the
+    # check vacuously True. The timer must still be cancelled.
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_UNAVAILABLE)
+    hass.states.async_set(entity_b, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
     unsub()
 

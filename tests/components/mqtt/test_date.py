@@ -179,7 +179,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "2025-12-01", 2, False
+        "command-topic", "2025-12-01", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("date.test")
@@ -188,7 +188,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await async_set_value(hass, "date.test", datetime.date(year=2025, month=12, day=2))
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "2025-12-02", 2, False
+        "command-topic", "2025-12-02", 2, False, message_expiry_interval=None
     )
     state = hass.states.get("date.test")
     assert state.state == "2025-12-02"

@@ -6,7 +6,13 @@ from enum import StrEnum
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import DeviceFeature, LightMode, TemperatureUnit
+from letpot.models import (
+    DeviceFeature,
+    LetPotDeviceStatus,
+    LetPotGardenStatus,
+    LightMode,
+    TemperatureUnit,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -52,15 +58,17 @@ async def _set_brightness_low_high_value(
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSelectEntityDescription(LetPotEntityDescription, SelectEntityDescription):
+class LetPotSelectEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, SelectEntityDescription
+):
     """Describes a LetPot select entity."""
 
-    value_fn: Callable[[LetPotDeviceCoordinator], str | None]
+    value_fn: Callable[[LetPotDeviceCoordinator[_DataT]], str | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, str], Coroutine[Any, Any, None]]
 
 
-SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
-    LetPotSelectEntityDescription(
+SELECTORS: tuple[LetPotSelectEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="display_temperature_unit",
         translation_key="display_temperature_unit",
         options=[x.name.lower() for x in TemperatureUnit],
@@ -86,7 +94,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotSelectEntityDescription(
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="light_brightness_low_high",
         translation_key="light_brightness",
         options=[
@@ -105,7 +113,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotSelectEntityDescription(
+    LetPotSelectEntityDescription[LetPotGardenStatus](
         key="light_mode",
         translation_key="light_mode",
         options=[x.name.lower() for x in LightMode],
@@ -134,22 +142,24 @@ async def async_setup_entry(
     """Set up LetPot select entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotSelectEntity(coordinator, description)
+        LetPotSelectEntity[LetPotGardenStatus](coordinator, description)
         for description in SELECTORS
         for coordinator in coordinators
         if description.supported_fn(coordinator)
     )
 
 
-class LetPotSelectEntity(LetPotEntity, SelectEntity):
+class LetPotSelectEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], SelectEntity
+):
     """Defines a LetPot select entity."""
 
-    entity_description: LetPotSelectEntityDescription
+    entity_description: LetPotSelectEntityDescription[_DataT]
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
-        description: LetPotSelectEntityDescription,
+        coordinator: LetPotDeviceCoordinator[_DataT],
+        description: LetPotSelectEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot select entity."""
         super().__init__(coordinator)

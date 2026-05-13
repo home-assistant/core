@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import final
 
-from infrared_protocols import Command as InfraredCommand
+from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
