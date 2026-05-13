@@ -22,6 +22,7 @@ from typing import (
     TypedDict,
     Unpack,
     cast,
+    final,
     overload,
     override,
 )
@@ -295,6 +296,7 @@ class ConditionChecker(abc.ABC):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
+        self._set_up = False
         self._unloaded = False
 
     def __call__(
@@ -315,29 +317,45 @@ class ConditionChecker(abc.ABC):
         except Exception:
             _LOGGER.exception("Error while unloading condition checker")
 
+    @final
     async def async_setup(self) -> None:
         """Set up the condition checker.
 
         Users of conditions do not need to call this method directly. It is called
         automatically by async_from_config and async_conditions_from_config.
+        """
+        await self._async_setup()
+        self._set_up = True
+
+    async def _async_setup(self) -> None:
+        """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do setup.
         """
 
+    @final
     def async_unload(self) -> None:
         """Clean up any resources held by the checker.
 
         Users of conditions must call this method when they are done with the
         checker to ensure resources are released.
+        """
+        self._async_unload()
+        self._unloaded = True
+
+    def _async_unload(self) -> None:
+        """Clean up any resources held by the checker.
 
         Intended to be overridden in derived classes that need to do unloading.
         """
-        self._unloaded = True
 
+    @final
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool | None:
         """Check the condition."""
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
         with trace_condition(variables):
             result = self._async_check(variables=variables)
             condition_trace_update_result(result=result)
@@ -375,11 +393,10 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
-    def async_unload(self) -> None:
+    def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
             condition.async_unload()
-        super().async_unload()
 
 
 class Condition(ConditionChecker):
@@ -523,9 +540,8 @@ class EntityConditionBase(Condition):
             self._valid_since.pop(entity_id, None)
 
     @override
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Set up state tracking for duration-based conditions."""
-        await super().async_setup()
         if not self._duration or not self._needs_duration_tracking:
             return
 
@@ -559,9 +575,8 @@ class EntityConditionBase(Condition):
         self._on_unload.append(unsub)
 
     @override
-    def async_unload(self) -> None:
+    def _async_unload(self) -> None:
         """Unsubscribe from listeners."""
-        super().async_unload()
         for cb in self._on_unload:
             cb()
         self._on_unload.clear()
