@@ -18,17 +18,6 @@ from tests.common import (
 
 
 @pytest.fixture
-def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
-    """Skip reauth translation keys (Lokalise-only) for auth_error tests."""
-    if "auth_error" not in request.node.name:
-        return []
-    return [
-        "component.homeassistant.issues.config_entry_reauth.title",
-        "component.homeassistant.issues.config_entry_reauth.description",
-    ]
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
