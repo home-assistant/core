@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location as location_util
@@ -123,9 +123,9 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
 
 def _as_float(value: float | None) -> float | None:
     """Return value as a float when it is a numeric sensor value."""
-    if value is None or isinstance(value, bool):
-        return None
-    return float(value)
+    if isinstance(value, float | int):
+        return float(value)
+    return None
 
 
 def _normalize_unit(unit: str | None) -> str | None:
@@ -237,7 +237,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 sensors = self._sensors
                 latest_response = await self.client.locations.latest(self.location_id)
         except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
-            raise ConfigEntryError(
+            raise HomeAssistantError(
                 f"Authentication failed for location {self.location_id}: {err}"
             ) from err
         except (APIError, OpenAQError, httpx.HTTPError) as err:
