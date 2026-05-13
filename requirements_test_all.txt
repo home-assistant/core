@@ -1196,7 +1196,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.1.2
+imgw_pib==2.2.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.7.0
@@ -1272,7 +1272,7 @@ konnected==1.2.0
 krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.1.1
+lacrosse-view==1.1.2
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
