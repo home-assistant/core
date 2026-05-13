@@ -27,7 +27,7 @@ async def test_sensors_default_modules(
     assert hass.states.get("sensor.my_pool_temperature").state == "25.5"
     assert hass.states.get("sensor.my_pool_filtration_intel_time") is not None
 
-    # Module-gated; the fixture has hasPH=1, hasRX=1, hasHidro=1 with
+    # Module-gated; the fixture sets hasPH=1, hasRX=1, hasHidro=1 with
     # is_electrolysis=True.
     assert hass.states.get("sensor.my_pool_ph").state == "7.42"
     assert hass.states.get("sensor.my_pool_redox_potential").state == "707"
