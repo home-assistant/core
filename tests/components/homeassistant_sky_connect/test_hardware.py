@@ -20,10 +20,10 @@ CONFIG_ENTRY_DATA = {
 }
 
 CONFIG_ENTRY_DATA_2 = {
-    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_3c0ed67c628beb11b1cd64a0f320645d-if00-port0",
     "vid": "10C4",
     "pid": "EA60",
-    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
     "manufacturer": "Nabu Casa",
     "product": "Home Assistant Connect ZBT-1",
     "firmware": "ezsp",
@@ -106,7 +106,7 @@ async def test_hardware_info(
                 "dongle": {
                     "vid": "10C4",
                     "pid": "EA60",
-                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
                     "manufacturer": "Nabu Casa",
                     "description": "Home Assistant Connect ZBT-1",
                 },
