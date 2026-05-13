@@ -1,6 +1,5 @@
 """Client helpers for the GridX integration."""
 
-
 from importlib import import_module
 from importlib.resources import files
 import json
@@ -26,7 +25,6 @@ class GridxConnector(Protocol):
 
     async def close(self) -> None:
         """Close the connector and any owned clients."""
-
 
 def load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
     """Load OEM connector config and inject credentials."""

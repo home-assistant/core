@@ -1,6 +1,5 @@
 """Typing helpers for the GridX integration."""
 
-
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry

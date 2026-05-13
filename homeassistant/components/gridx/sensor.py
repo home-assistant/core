@@ -1,6 +1,5 @@
 """Sensor platform for the GridX integration."""
 
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
