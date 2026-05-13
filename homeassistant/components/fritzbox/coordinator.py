@@ -72,7 +72,10 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 translation_key="connect_error",
             ) from err
         except LoginError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+            ) from err
 
         self.has_templates = await self.hass.async_add_executor_job(
             self.fritz.has_templates

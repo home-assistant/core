@@ -97,6 +97,9 @@
     "connect_error_reload": {
       "message": "A connection error occurred while updating the data from the FRITZ!Box. The integration is going to be reloaded to ensure a proper re-login."
     },
+    "login_failed": {
+      "message": "Login failed, please check your username and password and try again."
+    },
     "manual_switching_disabled": {
       "message": "Can't toggle switch while manual switching is disabled for the device."
     }
