@@ -22,13 +22,15 @@ _PYTHON_VERSION_ERROR = (
         ((3, 4, 2), [call(1)], _PYTHON_VERSION_ERROR),
         ((3, 5, 2), [call(1)], _PYTHON_VERSION_ERROR),
         (
-            (REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:]),  # previous major version should fail
+            # previous major version should fail
+            (REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:]),
             [call(1)],
             _PYTHON_VERSION_ERROR,
         ),
         (REQUIRED_PYTHON_VER, [], ""),
         (
-            (*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1),  # next patch version should pass
+            # next patch version should pass
+            (*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1),
             [],
             "",
         ),
