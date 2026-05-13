@@ -585,7 +585,11 @@ ZEROCONF = {
         },
         {
             "domain": "duco",
-            "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+            "name": (
+                "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+                "[0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+                "[0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*"
+            ),
         },
         {
             "domain": "eheimdigital",
