@@ -119,10 +119,16 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     yaml_config = yaml_util.dump(platform_config)
     yaml_config = yaml_config.replace("\n", "\n    ")
     yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
+
+    issue_id = "yaml_deprecated-"
+    if platform_config.get(CONF_UNIQUE_ID):
+        issue_id += f"{platform_config[CONF_UNIQUE_ID]}"
+    else:
+        issue_id += ulid_util.ulid()
     async_create_issue(
         hass,
         DOMAIN,
-        ulid_util.ulid(),
+        issue_id,
         breaks_in_ha_version="2026.12.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
