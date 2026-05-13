@@ -2,8 +2,9 @@
 
 from json import JSONDecodeError
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -83,7 +84,7 @@ async def test_coordinator_json_decode_error(
         0,
     )
 
-    new_session = object()
+    new_session = create_autospec(ClientSession, instance=True)
     with (
         patch(
             "homeassistant.components.vodafone_station.coordinator.async_client_session",
