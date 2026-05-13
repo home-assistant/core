@@ -1,11 +1,9 @@
 """Tests for the Duco config flow."""
 
 from ipaddress import IPv4Address
-from ssl import SSLContext
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, LanInfo
+from duco_connectivity import BoardInfo, DucoConnectionError, DucoError, LanInfo
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -455,24 +453,17 @@ async def test_dhcp_discovery_exception_recovery(
     assert result["result"].unique_id == TEST_MAC
 
 
-async def test_user_flow_builds_ssl_context_in_executor(
+async def test_user_flow_initializes_client_with_host(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
 ) -> None:
-    """Test that build_ssl_context runs in an executor and its result is passed to DucoClient."""
-    mock_ssl_context = MagicMock(spec=SSLContext)
-    with (
-        patch(
-            "homeassistant.components.duco.config_flow.build_ssl_context",
-            return_value=mock_ssl_context,
-        ) as mock_build,
-        patch(
-            "homeassistant.components.duco.config_flow.DucoClient",
-            autospec=True,
-        ) as mock_client_class,
-    ):
+    """Test that the config flow initializes the Duco client with the host."""
+    with patch(
+        "homeassistant.components.duco.config_flow.DucoClient",
+        autospec=True,
+    ) as mock_client_class:
         mock_client_class.return_value.async_get_board_info.return_value = (
             mock_board_info
         )
@@ -485,9 +476,7 @@ async def test_user_flow_builds_ssl_context_in_executor(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    mock_build.assert_called_once()
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,
-        ssl_context=mock_ssl_context,
     )
