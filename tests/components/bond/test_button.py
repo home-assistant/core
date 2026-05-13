@@ -8,7 +8,14 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import patch_bond_action, patch_bond_device_state, setup_platform
+from .common import (
+    patch_bond_action,
+    patch_bond_device_state,
+    patch_bond_group_action,
+    patch_bond_group_state,
+    setup_group_platform,
+    setup_platform,
+)
 
 
 def ceiling_fan(name: str):
@@ -75,6 +82,16 @@ def motorized_shade_with_preset(name: str):
     }
 
 
+def motorized_shade_group(name: str):
+    """Create a shade group with actions exposed by the button platform."""
+    return {
+        "name": name,
+        "types": [DeviceType.MOTORIZED_SHADES],
+        "locations": ["Den"],
+        "actions": [Action.OPEN, Action.OPEN_NEXT, Action.CLOSE, Action.CLOSE_NEXT],
+    }
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -96,6 +113,23 @@ async def test_entity_registry(
     assert entity.unique_id == "test-hub-id_test-device-id_startdecreasingbrightness"
     entity = entity_registry.entities["button.name_1_start_dimmer"]
     assert entity.unique_id == "test-hub-id_test-device-id_startdimmer"
+
+
+async def test_group_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests that group-only button actions are registered in the entity registry."""
+    await setup_group_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_group("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["button.name_1_open_next"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id_opennext"
 
 
 async def test_mutually_exclusive_actions(hass: HomeAssistant) -> None:
@@ -198,6 +232,29 @@ async def test_press_button(hass: HomeAssistant) -> None:
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
     )
+
+
+async def test_group_button(hass: HomeAssistant) -> None:
+    """Tests shade group actions are exposed through the button platform."""
+    await setup_group_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_group("name-1"),
+        bond_group_id="test-group-id",
+    )
+
+    assert hass.states.get("button.name_1_open_next")
+
+    with patch_bond_group_action() as mock_action, patch_bond_group_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_open_next"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-group-id", Action(Action.OPEN_NEXT))
 
 
 async def test_motorized_shade_actions(hass: HomeAssistant) -> None:

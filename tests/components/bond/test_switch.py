@@ -22,6 +22,7 @@ from .common import (
     patch_bond_action,
     patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
+    setup_group_platform,
     setup_platform,
 )
 
@@ -31,6 +32,16 @@ from tests.common import async_fire_time_changed
 def generic_device(name: str):
     """Create a generic device with given name."""
     return {"name": name, "type": DeviceType.GENERIC_DEVICE}
+
+
+def generic_group(name: str):
+    """Create a generic group with given name."""
+    return {
+        "name": name,
+        "types": [DeviceType.GENERIC_DEVICE],
+        "locations": ["Den"],
+        "actions": [Action.TURN_ON, Action.TURN_OFF],
+    }
 
 
 async def test_entity_registry(
@@ -48,6 +59,23 @@ async def test_entity_registry(
 
     entity = entity_registry.entities["switch.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
+
+
+async def test_group_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests that Bond groups are registered in the entity registry."""
+    await setup_group_platform(
+        hass,
+        SWITCH_DOMAIN,
+        generic_group("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["switch.name_1"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id"
 
 
 async def test_turn_on_switch(hass: HomeAssistant) -> None:
@@ -123,6 +151,25 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
+
+
+async def test_group_reports_unknown(hass: HomeAssistant) -> None:
+    """Tests that group state is unknown when Bond reports indeterminate power."""
+    await setup_group_platform(
+        hass,
+        SWITCH_DOMAIN,
+        generic_group("name-1"),
+        state={"power": None},
+    )
+
+    assert hass.states.get("switch.name_1").state == "unknown"
+
+
+async def test_initial_state_defaults_off(hass: HomeAssistant) -> None:
+    """Tests that a device defaults to off when Bond has no initial power state."""
+    await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
+
+    assert hass.states.get("switch.name_1").state == "off"
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:
