@@ -68,8 +68,8 @@ _COMMAND_CODE_TO_EVENT_TYPE: dict[LGTVCode, str] = {
     LGTVCode.PAUSE: "pause",
     LGTVCode.PLAY: "play",
     LGTVCode.POWER: "power",
-    LGTVCode.POWER_ON: "power_on",
     LGTVCode.POWER_OFF: "power_off",
+    LGTVCode.POWER_ON: "power_on",
     LGTVCode.RED: "red",
     LGTVCode.REWIND: "rewind",
     LGTVCode.SAP: "sap",
@@ -133,6 +133,8 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
         try:
             command_code = LGTVCode(nec_command.command)
         except ValueError:
+            # Ensure that a future change to the LGTVCode enum doesn't break this and
+            # shows as unknown
             event_type = _EVENT_TYPE_UNKNOWN
         else:
             event_type = _COMMAND_CODE_TO_EVENT_TYPE.get(
@@ -157,7 +159,7 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
     @callback
     def _async_update_receiver_subscription(self) -> None:
         """Update the IR receiver subscription when availability changes."""
-        if not self._attr_available:
+        if not self.available:
             self._async_unsubscribe_receiver()
         elif self._remove_signal_subscription is None:
             _LOGGER.debug(
@@ -175,4 +177,3 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
         """Handle infrared entity state changes."""
         super()._async_ir_state_changed(event)
         self._async_update_receiver_subscription()
-        self.async_write_ha_state()

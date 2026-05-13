@@ -46,8 +46,8 @@
         'pause',
         'play',
         'power',
-        'power_on',
         'power_off',
+        'power_on',
         'red',
         'rewind',
         'sap',
@@ -94,6 +94,7 @@
 # name: test_entities[event.lg_tv_received_command-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'event_type': None,
       'event_types': list([
         'aspect',
         'back',
@@ -134,8 +135,8 @@
         'pause',
         'play',
         'power',
-        'power_on',
         'power_off',
+        'power_on',
         'red',
         'rewind',
         'sap',
@@ -155,6 +156,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---

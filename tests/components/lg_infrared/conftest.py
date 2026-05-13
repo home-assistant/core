@@ -21,7 +21,10 @@ from tests.components.infrared import (
     EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
     RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
 )
-from tests.components.infrared.common import MockInfraredEmitterEntity
+from tests.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 
 @pytest.fixture
@@ -66,6 +69,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     mock_lg_tv_code_to_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
