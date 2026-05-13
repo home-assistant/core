@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location as location_util
@@ -230,7 +229,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     ForbiddenError,
                     NotAuthorizedError,
                 ) as err:
-                    raise HomeAssistantError(
+                    raise UpdateFailed(
                         f"Authentication failed for location {self.location_id}: {err}"
                     ) from err.exceptions[0]
                 except* (APIError, OpenAQError, httpx.HTTPError) as err:
@@ -255,7 +254,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 sensors = self._sensors
                 latest_response = await self.client.locations.latest(self.location_id)
         except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
-            raise HomeAssistantError(
+            raise UpdateFailed(
                 f"Authentication failed for location {self.location_id}: {err}"
             ) from err
         except (APIError, OpenAQError, httpx.HTTPError) as err:
