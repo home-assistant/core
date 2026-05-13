@@ -23,7 +23,7 @@
       "title": "Min/Max helper has been deprecated"
     },
     "yaml_deprecated": {
-      "description": "The Min/Max helper has been migrated to use group helper sensors.\n\nReplace your Min/Max YAML-configuration with this converted configuration:\n{yaml_config}\n\nOnce you have replaced your YAML-configuration, restart your Home Assistant to use group helper instead.\n\nThe Group helper have more configuration possibilities, refer to the documentation by clicking on learn more.",
+      "description": "The Min/Max helper has been deprecated and you should use group helper sensors instead.\n\nReplace your Min/Max YAML-configuration with this converted configuration:\n{yaml_config}\n\nOnce you have replaced your YAML-configuration, restart your Home Assistant to use group helper instead.\n\nThe Group helper have more configuration possibilities, refer to the documentation by clicking on learn more.",
       "title": "[%key:component::min_max::issues::migrate_to_group_sensor::title%]"
     }
   },
