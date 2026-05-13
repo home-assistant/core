@@ -196,6 +196,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/autoskope/ @mcisk
 /tests/components/autoskope/ @mcisk
 /homeassistant/components/avea/ @pattyland
+/tests/components/avea/ @pattyland
 /homeassistant/components/awair/ @ahayworth @ricohageman
 /tests/components/awair/ @ahayworth @ricohageman
 /homeassistant/components/aws_s3/ @tomasbedrich
@@ -288,6 +289,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cast/ @emontnemery
 /homeassistant/components/ccm15/ @ocalvo
 /tests/components/ccm15/ @ocalvo
+/homeassistant/components/centriconnect/ @gresrun
+/tests/components/centriconnect/ @gresrun
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/chacon_dio/ @cnico
@@ -2025,6 +2028,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG
 /homeassistant/components/xiaomi_tv/ @simse
 /homeassistant/components/xmpp/ @fabaff @flowolf
+/homeassistant/components/xthings_cloud/ @XthingsJacobs
+/tests/components/xthings_cloud/ @XthingsJacobs
 /homeassistant/components/yale/ @bdraco
 /tests/components/yale/ @bdraco
 /homeassistant/components/yale_smart_alarm/ @gjohansson-ST
