@@ -22,8 +22,9 @@ class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
     """Describes Cambridge Audio number entity."""
 
     exists_fn: Callable[[StreamMagicClient], bool] = lambda _: True
-    value_fn: Callable[[StreamMagicClient], int]
+    value_fn: Callable[[StreamMagicClient], int | None]
     set_value_fn: Callable[[StreamMagicClient, int], Awaitable[None]]
+    available_fn: Callable[[StreamMagicClient], bool] = lambda _: True
 
 
 def room_correction_intensity(client: StreamMagicClient) -> int:
@@ -31,13 +32,6 @@ def room_correction_intensity(client: StreamMagicClient) -> int:
     if TYPE_CHECKING:
         assert client.audio.tilt_eq is not None
     return client.audio.tilt_eq.intensity
-
-
-def volume_limit_percent(client: StreamMagicClient) -> int:
-    """Get volume limit percent."""
-    if TYPE_CHECKING:
-        assert client.audio.volume_limit_percent is not None
-    return client.audio.volume_limit_percent
 
 
 CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
@@ -60,8 +54,8 @@ CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
         native_max_value=100,
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
-        exists_fn=lambda client: client.state.pre_amp_mode,
-        value_fn=volume_limit_percent,
+        available_fn=lambda client: client.state.pre_amp_mode,
+        value_fn=lambda client: client.audio.volume_limit_percent,
         set_value_fn=lambda client, value: client.set_volume_limit(value),
     ),
 )
@@ -105,3 +99,8 @@ class CambridgeAudioNumber(CambridgeAudioEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.client, int(value))
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.available_fn(self.client)

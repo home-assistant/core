@@ -60,8 +60,9 @@
 # ---
 # name: test_all_entities[number.cambridge_audio_cxnv2_volume_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
