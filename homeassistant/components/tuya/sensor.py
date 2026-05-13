@@ -38,7 +38,6 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
-    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -49,7 +48,6 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
-    FAHRENHEIT_ALIASES,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -1791,14 +1789,9 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # If the device provides TEMP_UNIT_CONVERT, use it to determine the unit.
         if (
                 self.device_class == SensorDeviceClass.TEMPERATURE
-                and (unit_value := self.device.status.get(DPCode.TEMP_UNIT_CONVERT))
-                is not None
+                and (temp_unit := self._get_converted_temp_unit()) is not None
         ):
-            self._attr_native_unit_of_measurement = (
-                UnitOfTemperature.FAHRENHEIT
-                if str(unit_value).lower() in FAHRENHEIT_ALIASES
-                else UnitOfTemperature.CELSIUS
-            )
+            self._attr_native_unit_of_measurement = temp_unit
             return
 
         self._attr_native_unit_of_measurement = tuya_uom

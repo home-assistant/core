@@ -5,10 +5,17 @@ from typing import Any
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import (
+    CELSIUS_ALIASES,
+    FAHRENHEIT_ALIASES,
+    LOGGER,
+    TUYA_HA_SIGNAL_UPDATE_ENTITY,
+    DPCode,
+)
 from .util import get_device_info
 
 
@@ -89,6 +96,17 @@ class TuyaEntity(Entity):
         await self.hass.async_add_executor_job(
             self.device_manager.send_commands, self.device.id, commands
         )
+
+    def _get_converted_temp_unit(self) -> UnitOfTemperature | None:
+        """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
+        if DPCode.TEMP_UNIT_CONVERT not in self.device.status:
+            return None
+        value = str(self.device.status.get(DPCode.TEMP_UNIT_CONVERT)).lower()
+        if value in CELSIUS_ALIASES:
+            return UnitOfTemperature.CELSIUS
+        if value in FAHRENHEIT_ALIASES:
+            return UnitOfTemperature.FAHRENHEIT
+        return None
 
     def _read_wrapper[T](self, wrapper: DeviceWrapper[T] | None) -> T | None:
         """Read the wrapper device status."""
