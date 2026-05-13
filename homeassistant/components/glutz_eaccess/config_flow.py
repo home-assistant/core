@@ -1,6 +1,5 @@
 """Config flow for the Glutz eAccess integration."""
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -54,17 +53,6 @@ def _invitation_confirm_schema(host: str, email: str) -> vol.Schema:
         {
             vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_USERNAME, default=email): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
-    )
-
-
-def _reauth_confirm_schema(host: str, username: str) -> vol.Schema:
-    """Build the reauth/reconfigure schema with prefilled host and username."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_USERNAME, default=username): str,
             vol.Required(CONF_PASSWORD): str,
         }
     )
@@ -220,98 +208,3 @@ class GlutzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            api = GlutzAPI(
-                async_get_clientsession(self.hass),
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-            try:
-                await api.get_access_points()
-                info = await api.get_system_info()
-            except GlutzAuthError:
-                errors["base"] = "invalid_auth"
-            except GlutzConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                system_id = info.get("id")
-                if not system_id:
-                    errors["base"] = "cannot_connect"
-                else:
-                    await self.async_set_unique_id(system_id)
-                    self._abort_if_unique_id_mismatch(reason="wrong_account")
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data_updates={
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_USERNAME: user_input[CONF_USERNAME],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        },
-                    )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=_reauth_confirm_schema(
-                entry.data[CONF_HOST], entry.data[CONF_USERNAME]
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Start a reauth flow."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauth and update the entry credentials."""
-        errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            api = GlutzAPI(
-                async_get_clientsession(self.hass),
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-            try:
-                await api.get_access_points()
-                info = await api.get_system_info()
-            except GlutzAuthError:
-                errors["base"] = "invalid_auth"
-            except GlutzConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                system_id = info.get("id")
-                if not system_id:
-                    errors["base"] = "cannot_connect"
-                else:
-                    await self.async_set_unique_id(system_id)
-                    self._abort_if_unique_id_mismatch(reason="wrong_account")
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data_updates={
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_USERNAME: user_input[CONF_USERNAME],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        },
-                    )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=_reauth_confirm_schema(
-                entry.data[CONF_HOST], entry.data[CONF_USERNAME]
-            ),
-            errors=errors,
-        )

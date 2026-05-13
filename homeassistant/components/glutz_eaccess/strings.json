@@ -2,10 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This Glutz instance is already configured.",
-      "reauth_successful": "Re-authentication was successful.",
-      "reconfigure_successful": "Configuration updated successfully.",
-      "unknown": "An unexpected error occurred.",
-      "wrong_account": "The credentials belong to a different Glutz system."
+      "unknown": "An unexpected error occurred."
     },
     "error": {
       "cannot_connect": "Unable to connect to the Glutz server. Check the host URL and try again.",
@@ -51,34 +48,6 @@
         },
         "description": "Review the host and email, then choose a password with at least 8 characters including uppercase, lowercase, a digit and a special character.",
         "title": "Set your password"
-      },
-      "reauth_confirm": {
-        "data": {
-          "host": "Server name or URL",
-          "password": "Password",
-          "username": "Username or email"
-        },
-        "data_description": {
-          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
-          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]",
-          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]"
-        },
-        "description": "Your stored credentials are no longer valid. Review the server and username, then enter your current password.",
-        "title": "Re-authenticate with Glutz eAccess"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "Server name or URL",
-          "password": "Password",
-          "username": "Username or email"
-        },
-        "data_description": {
-          "host": "[%key:component::glutz_eaccess::config::step::credentials::data_description::host%]",
-          "password": "[%key:component::glutz_eaccess::config::step::credentials::data_description::password%]",
-          "username": "[%key:component::glutz_eaccess::config::step::credentials::data_description::username%]"
-        },
-        "description": "Update the server address or credentials for this Glutz eAccess instance.",
-        "title": "Update Glutz eAccess connection"
       },
       "user": {
         "menu_options": {

@@ -9,7 +9,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.glutz_eaccess.const import DOMAIN
-from homeassistant.components.glutz_eaccess.coordinator import SCAN_INTERVAL
 from homeassistant.components.glutz_eaccess.lock import UNLOCK_DURATION
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -220,14 +219,14 @@ async def test_unlocked_state_preserved_across_coordinator_refresh(
         (SERVICE_OPEN, "hold_open_access_point"),
     ],
 )
-async def test_service_auth_error_starts_reauth(
+async def test_service_auth_error_raises(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_glutz_client: AsyncMock,
     service: str,
     api_method: str,
 ) -> None:
-    """Test that GlutzAuthError during service call triggers reauth and raises."""
+    """Test that GlutzAuthError during service call raises HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
     getattr(mock_glutz_client, api_method).side_effect = GlutzAuthError
@@ -239,9 +238,6 @@ async def test_service_auth_error_starts_reauth(
             {ATTR_ENTITY_ID: ENTITY_AP1},
             blocking=True,
         )
-
-    flows = hass.config_entries.flow.async_progress()
-    assert any(f["context"]["source"] == "reauth" for f in flows)
 
 
 @pytest.mark.parametrize(
@@ -300,29 +296,6 @@ async def test_service_api_returns_false_raises(
             {ATTR_ENTITY_ID: ENTITY_AP1},
             blocking=True,
         )
-
-
-async def test_entity_removed_when_access_point_removed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_glutz_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test entity is removed when its AP is removed from coordinator data."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED
-
-    # Simulate the API returning only ap-2 (ap-1 removed)
-    mock_glutz_client.get_access_points.return_value = [
-        {"accessPointId": "ap-2", "location": []}
-    ]
-
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_AP1) is None
 
 
 async def test_unlock_twice_cancels_first_relock(

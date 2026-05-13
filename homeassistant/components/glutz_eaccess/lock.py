@@ -8,7 +8,6 @@ from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -30,33 +29,12 @@ async def async_setup_entry(
     entry: GlutzConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up lock entities and register a listener to add new access points."""
+    """Set up lock entities from a config entry."""
     coordinator = entry.runtime_data
-    known_ids: set[str] = set()
-
-    def _async_update_entities() -> None:
-        current_ids = set(coordinator.data)
-
-        new_ids = current_ids - known_ids
-        if new_ids:
-            async_add_entities(
-                GlutzLock(coordinator, coordinator.data[ap_id])
-                for ap_id in sorted(new_ids)
-            )
-            known_ids.update(new_ids)
-
-        removed_ids = known_ids - current_ids
-        if removed_ids:
-            ent_reg = er.async_get(hass)
-            for ap_id in removed_ids:
-                if entity_id := ent_reg.async_get_entity_id(
-                    "lock", DOMAIN, f"glutz_{ap_id}"
-                ):
-                    ent_reg.async_remove(entity_id)
-            known_ids.difference_update(removed_ids)
-
-    _async_update_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_async_update_entities))
+    async_add_entities(
+        GlutzLock(coordinator, access_point)
+        for access_point in coordinator.data.values()
+    )
 
 
 class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
@@ -110,7 +88,6 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
                 self._access_point_id
             )
         except GlutzAuthError as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
@@ -146,7 +123,6 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
                 self._access_point_id
             )
         except GlutzAuthError as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
@@ -178,7 +154,6 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
                 self._access_point_id
             )
         except GlutzAuthError as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
