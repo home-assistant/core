@@ -1,4 +1,5 @@
 """Config flow for the Bayesian integration."""
+# pylint: disable=hass-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
 from enum import StrEnum

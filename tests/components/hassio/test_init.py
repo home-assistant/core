@@ -797,6 +797,11 @@ async def test_partial_backup_legacy_homeassistant_folder(
             folders={Folder.SSL},
         )
     )
+    issue_registry = ir.async_get(hass)
+    assert (
+        issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("hassio_env")
