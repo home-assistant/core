@@ -1,7 +1,8 @@
 """Define tests for the Vodafone Station coordinator."""
 
+from json import JSONDecodeError
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiovodafone.api import VodafoneStationDevice
 from freezegun.api import FrozenDateTimeFactory
@@ -65,3 +66,38 @@ async def test_coordinator_device_cleanup(
         device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)}) is None
     )
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
+
+
+async def test_coordinator_json_decode_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale-session JSON response reinitializes API session."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_vodafone_station_router.get_devices_data.side_effect = JSONDecodeError(
+        "Invalid JSON",
+        "<html>stale session</html>",
+        0,
+    )
+
+    new_session = object()
+    with (
+        patch(
+            "homeassistant.components.vodafone_station.coordinator.async_client_session",
+            AsyncMock(return_value=new_session),
+        ) as mock_async_client_session,
+        patch.object(
+            mock_config_entry.runtime_data,
+            "initialize_api",
+            wraps=mock_config_entry.runtime_data.initialize_api,
+        ) as mock_initialize_api,
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_async_client_session.assert_awaited_once_with(hass)
+    mock_initialize_api.assert_called_once_with(new_session, mock_config_entry.data)

@@ -3,11 +3,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
+from types import MappingProxyType
 from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiovodafone import exceptions
-from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.api import VodafoneStationCommonApi, VodafoneStationDevice
 from aiovodafone.models import init_device_class
 from yarl import URL
 
@@ -33,6 +34,7 @@ from .const import (
     SCAN_INTERVAL,
 )
 from .helpers import cleanup_device_tracker
+from .utils import async_client_session
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -61,6 +63,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
     config_entry: VodafoneConfigEntry
+    api: VodafoneStationCommonApi
+    _session: ClientSession
 
     def __init__(
         self,
@@ -72,13 +76,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         data = config_entry.data
 
-        self.api = init_device_class(
-            URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
-            data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
-            data,
-            session,
-        )
-        self._session = session
+        self.initialize_api(session, data)
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry.unique_id
@@ -159,10 +157,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) as err:
             if isinstance(err, JSONDecodeError):
                 # Plain html response (usually occurs after a firmware update), requiring session reinitialization
-                _LOGGER.info("Stale session detected, scheduling integration reload")
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
+                _LOGGER.info("Stale session detected, reinitializing API session")
+                session = await async_client_session(self.hass)
+                self.initialize_api(session, self.config_entry.data)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -217,3 +214,15 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             sw_version=sensors_data["sys_firmware_version"],
             serial_number=self.serial_number,
         )
+
+    def initialize_api(
+        self, session: ClientSession, data: MappingProxyType[str, Any]
+    ) -> None:
+        """Init API session."""
+        self.api = init_device_class(
+            URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
+            data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
+            data,
+            session,
+        )
+        self._session = session
