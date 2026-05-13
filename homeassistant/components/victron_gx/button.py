@@ -52,7 +52,7 @@ class VictronButton(VictronBaseEntity, ButtonEntity):
     """Implementation of a Victron GX button entity."""
 
     @callback
-    def _on_update_cb(self, value: Any) -> None:
+    def _on_update_cb(self, _value: Any) -> None:
         # Buttons are stateless in HA; incoming metric updates are intentionally ignored.
         pass
 
