@@ -1,7 +1,5 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 import binascii
 from collections.abc import Callable, Mapping
 import copy

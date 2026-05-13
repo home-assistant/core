@@ -1,7 +1,5 @@
 """Sensor for Last.fm account status."""
 
-from __future__ import annotations
-
 import hashlib
 from typing import Any
 

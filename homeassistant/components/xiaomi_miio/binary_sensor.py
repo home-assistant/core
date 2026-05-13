@@ -1,7 +1,5 @@
 """Support for Xiaomi Miio binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging

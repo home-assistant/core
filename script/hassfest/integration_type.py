@@ -1,7 +1,5 @@
 """Validate integration type is set for config flow integrations."""
 
-from __future__ import annotations
-
 from .model import Config, Integration
 
 # Integrations with config_flow that are missing integration_type.

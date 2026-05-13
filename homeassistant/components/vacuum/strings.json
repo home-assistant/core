@@ -112,21 +112,6 @@
       "title": "Vacuum segments have changed for {entity_id}"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "clean_area": {
       "description": "Tells a vacuum cleaner to clean one or more areas.",

@@ -1,7 +1,5 @@
 """Diagnostics support for Litter-Robot."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylitterbot.utils import REDACT_FIELDS

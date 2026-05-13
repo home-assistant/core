@@ -1,7 +1,5 @@
 """Support for Home Assistant iOS app sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import (

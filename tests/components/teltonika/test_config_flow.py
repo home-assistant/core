@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
+from teltasync.unauthorized import UnauthorizedStatusData
 
 from homeassistant import config_entries
 from homeassistant.components.teltonika.const import DOMAIN
@@ -11,6 +12,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -438,6 +440,37 @@ async def test_reauth_flow_success(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.1"
 
 
+async def test_reauth_flow_success_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """Reauth on a RUT240 falls back to mnf_info.serial for unique_id matching."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
@@ -518,3 +551,169 @@ async def test_reauth_flow_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+
+
+async def test_form_user_flow_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """RUT240 firmware omits device_identifier; the flow falls back to mnf_info.serial."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RUT240"
+    assert result["result"].unique_id == "1234567890"
+
+
+async def test_dhcp_discovery_rut240(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """RUT240 DHCP discovery proceeds to confirmation when the MAC isn't yet known."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.50",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+    assert "name" in result["description_placeholders"]
+    assert "host" in result["description_placeholders"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RUT240"
+    assert result["data"][CONF_HOST] == "https://192.168.1.50"
+    assert result["data"][CONF_USERNAME] == "admin"
+    assert result["data"][CONF_PASSWORD] == "password"
+    assert result["result"].unique_id == "1234567890"
+
+
+async def test_dhcp_discovery_rut240_repeated_advertisement(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """A second DHCP advertisement before dhcp_confirm finishes is suppressed."""
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    discovery = DhcpServiceInfo(
+        ip="192.168.1.50",
+        macaddress="209727aabbcc",
+        hostname="teltonika",
+    )
+
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery
+    )
+    assert first["type"] is FlowResultType.FORM
+    assert first["step_id"] == "dhcp_confirm"
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery
+    )
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_in_progress"
+
+
+async def test_dhcp_discovery_rut240_already_configured_updates_host(
+    hass: HomeAssistant,
+    mock_teltasync_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """An already-configured RUT240 gets its host updated through dhcp_confirm."""
+    mock_config_entry.add_to_hass(hass)
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+    mock_teltasync_client.validate_credentials.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.99.99",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "https://192.168.99.99"
+
+
+async def test_dhcp_discovery_apiv1_already_configured_aborts(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_teltasync_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    rut240_device_info: UnauthorizedStatusData,
+) -> None:
+    """An API v1.0 (e.g. RUT240) known to the device registry by MAC aborts before dhcp_confirm."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, "20:97:27:aa:bb:cc")},
+    )
+    mock_teltasync_client.get_device_info.return_value = rut240_device_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.99.99",
+            macaddress="209727aabbcc",
+            hostname="teltonika",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.99.99"
+    mock_teltasync_client.validate_credentials.assert_not_called()

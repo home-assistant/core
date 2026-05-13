@@ -93,7 +93,9 @@ async def test_sensor_icons(
 
 
 async def test_minor_v1_v2_migration(
-    hass: HomeAssistant, github_client: AsyncMock
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that we migrate minor version 1 to 2 correctly."""
     mock_config_entry = MockConfigEntry(
@@ -103,7 +105,15 @@ async def test_minor_v1_v2_migration(
         options={CONF_REPOSITORIES: ["test/repository"]},
         minor_version=1,
     )
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "test/repository")},
+    )
+    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {None}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.options[CONF_REPOSITORIES] == ["test/repository"]
     assert mock_config_entry.minor_version == 2
@@ -112,3 +122,8 @@ async def test_minor_v1_v2_migration(
     assert subentry.data[CONF_REPOSITORY] == "test/repository"
     assert subentry.title == "test/repository"
     assert subentry.unique_id == "test/repository"
+
+    assert (device_entry := device_registry.async_get(device_entry.id))
+    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {
+        subentry.subentry_id
+    }

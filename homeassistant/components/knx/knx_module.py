@@ -1,7 +1,5 @@
 """Base module for the KNX integration."""
 
-from __future__ import annotations
-
 import logging
 
 from xknx import XKNX

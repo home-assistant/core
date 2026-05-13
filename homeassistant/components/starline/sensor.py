@@ -1,7 +1,5 @@
 """Reads vehicle status from StarLine API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import (

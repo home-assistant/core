@@ -54,7 +54,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("alarm_control_panel.is_armed", {}, True, False),
+        ("alarm_control_panel.is_armed", {}, True, True),
         ("alarm_control_panel.is_armed_away", {}, True, True),
         ("alarm_control_panel.is_armed_home", {}, True, True),
         ("alarm_control_panel.is_armed_night", {}, True, True),

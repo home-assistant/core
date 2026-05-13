@@ -1,7 +1,5 @@
 """Platform for Control4 Rooms Media Players."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import enum

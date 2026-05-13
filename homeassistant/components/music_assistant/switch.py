@@ -1,7 +1,5 @@
 """Music Assistant Switch platform."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from music_assistant_client.client import MusicAssistantClient

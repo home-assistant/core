@@ -1,7 +1,5 @@
 """The tests for the Vacuum entity integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 import logging
 from typing import Any

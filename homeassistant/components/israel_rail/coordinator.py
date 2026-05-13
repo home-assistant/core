@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the israel rail integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 import logging

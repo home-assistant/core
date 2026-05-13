@@ -1,7 +1,5 @@
 """Sensors for cloud based weatherflow."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -23,6 +21,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     EntityCategory,
     UnitOfLength,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -237,42 +236,47 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_last_1hr",
         translation_key="precip_accum_last_1hr",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_last_1hr,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day",
         translation_key="precip_accum_local_day",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day_final",
         translation_key="precip_accum_local_day_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday",
         translation_key="precip_accum_local_yesterday",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday_final",
         translation_key="precip_accum_local_yesterday_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_analysis_type_yesterday",
@@ -482,8 +486,21 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
     coordinator: WeatherFlowCloudUpdateCoordinatorREST
 
     @property
+    def _observation(self) -> Observation | None:
+        """Return the current station observation."""
+        observations = self.coordinator.data[self.station_id].observation.obs
+        if not observations:
+            return None
+        return observations[0]
+
+    @property
+    def available(self) -> bool:
+        """Get if available."""
+        return super().available and self._observation is not None
+
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.station_id].observation.obs[0]
-        )
+        if (observation := self._observation) is None:
+            return None
+        return self.entity_description.value_fn(observation)

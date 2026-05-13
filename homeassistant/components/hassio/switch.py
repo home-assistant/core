@@ -1,20 +1,18 @@
 """Switch platform for Hass.io addons."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonState
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ADDONS_COORDINATOR, ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
+from .const import ADDONS_COORDINATOR
 from .entity import HassioAddonEntity
 from .handler import get_supervisor_client
 
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 ENTITY_DESCRIPTION = SwitchEntityDescription(
-    key=ATTR_STATE,
+    key="state",
     name=None,
     icon="mdi:puzzle",
     entity_registry_enabled_default=False,
@@ -43,7 +41,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             entity_description=ENTITY_DESCRIPTION,
         )
-        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+        for addon in coordinator.data.addons.values()
     )
 
 
@@ -51,19 +49,19 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
     """Switch for Hass.io add-ons."""
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the add-on is on."""
-        addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
-        state = addon_data.get(self.entity_description.key)
-        return state == ATTR_STARTED
+        return (
+            self.coordinator.data.addons[self._addon_slug].addon.state
+            == AddonState.STARTED
+        )
 
     @property
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
         if not self.available:
             return None
-        addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
-        if addon_data.get(ATTR_ICON):
+        if self.coordinator.data.addons[self._addon_slug].addon.icon:
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 

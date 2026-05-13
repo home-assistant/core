@@ -1,7 +1,5 @@
 """The go2rtc component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from secrets import token_hex

@@ -1,7 +1,5 @@
 """Switch for Refoss."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from refoss_ha.controller.toggle import ToggleXMix

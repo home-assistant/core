@@ -1,7 +1,5 @@
 """Expose Radio Browser as a media source."""
 
-from __future__ import annotations
-
 import mimetypes
 
 from aiodns.error import DNSError

@@ -141,6 +141,9 @@
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
+      },
+      "temporary_mute_request": {
+        "name": "Temporary mute"
       }
     },
     "climate": {

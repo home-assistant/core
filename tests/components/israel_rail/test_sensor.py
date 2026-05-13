@@ -1,7 +1,5 @@
 """Tests for the israel_rail sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory

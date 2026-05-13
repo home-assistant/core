@@ -1,7 +1,5 @@
 """Config flow for the ntfy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import random
@@ -146,6 +144,8 @@ TOPIC_FILTER_SCHEMA = vol.Schema(
 STEP_USER_TOPIC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOPIC): str,
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Optional(CONF_NAME): str,
         vol.Required(SECTION_FILTER): data_entry_flow.section(
             TOPIC_FILTER_SCHEMA,

@@ -1,7 +1,5 @@
 """Test cryptographic hash functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 
 from tests.helpers.template.helpers import render

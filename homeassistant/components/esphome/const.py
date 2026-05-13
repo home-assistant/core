@@ -1,7 +1,5 @@
 """ESPHome constants."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Final
 
 from awesomeversion import AwesomeVersion

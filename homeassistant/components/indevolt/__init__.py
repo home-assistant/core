@@ -1,7 +1,5 @@
 """Home Assistant integration for indevolt device."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -12,6 +10,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
