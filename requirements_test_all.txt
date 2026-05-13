@@ -532,6 +532,9 @@ async-upnp-client==0.46.2
 # homeassistant.components.arve
 asyncarve==0.1.1
 
+# homeassistant.components.keyboard_remote
+asyncinotify==4.4.4
+
 # homeassistant.components.sleepiq
 asyncsleepiq==1.7.1
 
@@ -862,6 +865,9 @@ eufylife-ble-client==0.1.8
 
 # homeassistant.components.eurotronic_cometblue
 eurotronic-cometblue-ha==1.4.0
+
+# homeassistant.components.keyboard_remote
+# evdev==1.9.3
 
 # homeassistant.components.evohome
 evohome-async==1.2.0
