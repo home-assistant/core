@@ -111,9 +111,9 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             if next_month == 12:
                 bills_end_date = now.replace(month=12, day=31)
             else:
-                bills_end_date = now.replace(
-                    month=next_month + 1, day=1
-                ) - timedelta(days=1)
+                bills_end_date = now.replace(month=next_month + 1, day=1) - timedelta(
+                    days=1
+                )
 
         try:
             (

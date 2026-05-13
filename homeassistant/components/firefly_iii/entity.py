@@ -47,17 +47,15 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Accounts",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "accounts"),
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_accounts")
-            },
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "accounts"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_accounts")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
         )
-        self._attr_translation_placeholders = {
-            "name": account.attributes.name or ""
-        }
+        self._attr_translation_placeholders = {"name": account.attributes.name or ""}
 
     @property
     def _account(self) -> Account:
@@ -80,17 +78,15 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Categories",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "categories"),
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_categories")
-            },
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "categories"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_categories")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
         )
-        self._attr_translation_placeholders = {
-            "name": category.attributes.name or ""
-        }
+        self._attr_translation_placeholders = {"name": category.attributes.name or ""}
 
     @property
     def _category(self) -> Category:
@@ -113,10 +109,10 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Budgets",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "budgets"),
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_budgets")
-            },
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "budgets"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_budgets")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
@@ -144,7 +140,9 @@ class FireflyBillBaseEntity(FireflyBaseEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"
+            ),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },

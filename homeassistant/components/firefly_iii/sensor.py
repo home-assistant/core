@@ -68,9 +68,7 @@ async def async_setup_entry(
 
     for budget in coordinator.data.budgets.values():
         entities.append(FireflyBudgetSpentSensor(coordinator, budget, BUDGET))
-        entities.append(
-            FireflyBudgetLimitSensor(coordinator, budget, BUDGET_LIMIT)
-        )
+        entities.append(FireflyBudgetLimitSensor(coordinator, budget, BUDGET_LIMIT))
         entities.append(
             FireflyBudgetRemainingSensor(coordinator, budget, BUDGET_REMAINING)
         )
@@ -85,9 +83,7 @@ async def async_setup_entry(
             )
         )
         entities.append(
-            FireflySubscriptionLastPaidSensor(
-                coordinator, bill, SUBSCRIPTION_LAST_PAID
-            )
+            FireflySubscriptionLastPaidSensor(coordinator, bill, SUBSCRIPTION_LAST_PAID)
         )
 
     entities.append(
@@ -220,8 +216,7 @@ class FireflyBudgetLimitSensor(FireflyBudgetBaseEntity, SensorEntity):
         limits = self.coordinator.data.budget_limits[self._budget_id]
         if limits:
             total = sum(
-                float(limit.amount or limit.native_amount or 0)
-                for limit in limits
+                float(limit.amount or limit.native_amount or 0) for limit in limits
             )
             if total:
                 return total
@@ -257,8 +252,7 @@ class FireflyBudgetRemainingSensor(FireflyBudgetBaseEntity, SensorEntity):
         limit_total = 0.0
         if limits:
             limit_total = sum(
-                float(limit.amount or limit.native_amount or 0)
-                for limit in limits
+                float(limit.amount or limit.native_amount or 0) for limit in limits
             )
         if not limit_total:
             auto_amount = self._budget.attributes.auto_budget_amount
@@ -365,7 +359,9 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"
+            ),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },
@@ -373,7 +369,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the total expected amount for bills due this month.""
+        """Return the total expected amount for bills due this month."""
         now = datetime.now(tz=UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
@@ -424,7 +420,9 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             name="Subscriptions",
-            configuration_url=str(URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"),
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"
+            ),
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
             },

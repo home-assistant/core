@@ -69,23 +69,23 @@
       "budget_remaining": {
         "name": "{name} remaining"
       },
-      "subscription_amount": {
-        "name": "{name} expected amount"
-      },
-      "subscription_next_expected": {
-        "name": "{name} next expected"
-      },
-      "subscription_last_paid": {
-        "name": "{name} last paid"
-      },
-      "subscription_total_expected": {
-        "name": "Total expected"
+      "category": {
+        "name": "{name}"
       },
       "subscription_already_paid": {
         "name": "Already paid"
       },
-      "category": {
-        "name": "{name}"
+      "subscription_amount": {
+        "name": "{name} expected amount"
+      },
+      "subscription_last_paid": {
+        "name": "{name} last paid"
+      },
+      "subscription_next_expected": {
+        "name": "{name} next expected"
+      },
+      "subscription_total_expected": {
+        "name": "Total expected"
       }
     }
   },
