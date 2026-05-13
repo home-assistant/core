@@ -21,5 +21,6 @@ YOTO_SCOPES = [
 ]
 
 SCAN_INTERVAL = timedelta(minutes=5)
+STATUS_PUSH_INTERVAL = timedelta(seconds=60)
 
 MANUFACTURER = "Yoto"

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import jwt
+from yoto_api import YotoError, get_account_id
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -27,12 +27,8 @@ class YotoOAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Identify the Yoto account from the access token."""
         try:
-            claims = jwt.decode(
-                data["token"]["access_token"],
-                options={"verify_signature": False},
-            )
-            user_id = claims["sub"]
-        except jwt.InvalidTokenError, KeyError:
+            user_id = get_account_id(data["token"]["access_token"])
+        except YotoError:
             return self.async_abort(reason="oauth_unauthorized")
 
         await self.async_set_unique_id(user_id)
