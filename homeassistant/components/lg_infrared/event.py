@@ -52,10 +52,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LG IR event entity from config entry."""
-    receiver_entity_id = entry.data[CONF_INFRARED_RECEIVER_ENTITY_ID]
-    device_type = entry.data[CONF_DEVICE_TYPE]
-
-    if device_type == LGDeviceType.TV:
+    if (
+        receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+    ) and entry.data[CONF_DEVICE_TYPE] == LGDeviceType.TV:
         async_add_entities(
             [
                 LgIrReceivedCommandEvent(
