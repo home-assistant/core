@@ -1,16 +1,12 @@
 """Test utilities for the Imou integration."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
-    DOMAIN,
 )
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_APP_ID = "test_app_id"
 TEST_APP_SECRET = "test_app_secret"
@@ -43,39 +39,3 @@ def create_mock_api_client() -> MagicMock:
     mock_client = MagicMock()
     mock_client.async_get_token = AsyncMock()
     return mock_client
-
-
-async def async_init_integration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry | None = None,
-    *,
-    config_entry_data: dict | None = None,
-) -> MockConfigEntry:
-    """Set up the Imou integration in Home Assistant."""
-    if config_entry is None:
-        if config_entry_data is None:
-            config_entry_data = CONFIG_ENTRY_DATA
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data=config_entry_data,
-            unique_id=config_entry_data.get(CONF_APP_ID),
-            entry_id="test_entry_id",
-        )
-    config_entry.add_to_hass(hass)
-
-    mock_device_manager = create_mock_device_manager()
-
-    with (
-        patch(
-            "homeassistant.components.imou.ImouOpenApiClient",
-            return_value=create_mock_api_client(),
-        ),
-        patch(
-            "homeassistant.components.imou.ImouHaDeviceManager",
-            return_value=mock_device_manager,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry

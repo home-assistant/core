@@ -2,75 +2,54 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.imou.const import DOMAIN
+from homeassistant.components.imou.coordinator import ImouDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG_ENTRY_DATA, async_init_integration
+from .util import create_mock_api_client, create_mock_device_manager
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry_success(
+async def test_setup_and_unload_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    imou_integration: AsyncMock,
 ) -> None:
-    """Test successful setup entry."""
-    config_entry = await async_init_integration(hass)
+    """Test loading and unloading the config entry."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.runtime_data is not None
-
-
-async def test_unload_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Test successful unload entry."""
-    config_entry = await async_init_integration(hass)
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    unload_result = await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert unload_result is True
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_failed(
+async def test_setup_entry_failed_on_refresh(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup entry with coordinator refresh failure."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_ENTRY_DATA,
-        unique_id=CONFIG_ENTRY_DATA["app_id"],
-        entry_id="test_entry_id",
-    )
-    config_entry.add_to_hass(hass)
+    """First coordinator refresh failure surfaces as setup error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_dm = create_mock_device_manager()
+    mock_dm.async_get_devices = AsyncMock(return_value=[])
 
     with (
         patch(
             "homeassistant.components.imou.ImouOpenApiClient",
-        ) as mock_client_class,
+            return_value=create_mock_api_client(),
+        ),
         patch(
             "homeassistant.components.imou.ImouHaDeviceManager",
+            return_value=mock_dm,
+        ),
+        patch.object(
+            ImouDataUpdateCoordinator,
+            "async_config_entry_first_refresh",
+            AsyncMock(side_effect=RuntimeError("Setup failed")),
         ),
     ):
-        mock_client = AsyncMock()
-        mock_client.async_get_token = AsyncMock()
-        mock_client_class.return_value = mock_client
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        mock_coordinator = AsyncMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock(
-            side_effect=Exception("Setup failed")
-        )
-
-        with patch(
-            "homeassistant.components.imou.ImouDataUpdateCoordinator",
-            return_value=mock_coordinator,
-        ):
-            result = await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-
-            assert result is False
-            assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

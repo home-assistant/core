@@ -40,9 +40,6 @@
       },
       "ptz_up": {
         "name": "PTZ up"
-      },
-      "restart_device": {
-        "name": "Restart device"
       }
     }
   },

@@ -1,119 +1,119 @@
 """Tests for Imou button platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from pyimouapi.exceptions import ImouException
-from pyimouapi.ha_device import ImouHaDevice
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
-from homeassistant.components.imou import button as imou_button
-from homeassistant.components.imou.button import ImouButton
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.imou.const import (
     PARAM_MUTE,
     PARAM_PTZ_UP,
     PARAM_RESTART_DEVICE,
+    PARAM_STATE,
+    PARAM_STATUS,
 )
-from homeassistant.components.imou.coordinator import ImouDataUpdateCoordinator
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from .util import CONFIG_ENTRY_DATA
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 
 
-def _make_device_with_buttons(
-    *button_keys: str,
-) -> ImouHaDevice:
-    """Build a device with the given button ability keys in the buttons map."""
+def _device_with_buttons(*button_keys: str) -> ImouHaDevice:
+    """Build an online device exposing the given button ability keys."""
     device = ImouHaDevice("d1", "Device 1", "Imou", "m1", "1.0")
     for key in button_keys:
         device._buttons[key] = {}
+    device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.ONLINE.value}
     return device
 
 
-async def test_async_setup_entry_adds_one_entity_per_button(
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [[_device_with_buttons(PARAM_MUTE, PARAM_PTZ_UP)]],
+    indirect=True,
+)
+async def test_setup_creates_one_entity_per_supported_button(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    imou_integration: AsyncMock,
 ) -> None:
-    """Each supported button type on a device becomes an entity."""
-    entry = MockConfigEntry(
-        domain="imou",
-        data=CONFIG_ENTRY_DATA,
-        entry_id="entry-btn",
-    )
-    mock_manager = MagicMock()
-    coordinator = ImouDataUpdateCoordinator(hass, mock_manager, entry)
-    device = _make_device_with_buttons(PARAM_MUTE, PARAM_PTZ_UP)
-    coordinator._devices = [device]
-    entry.runtime_data = coordinator
-
-    added: list[ImouButton] = []
-
-    def _add(entities: object, **_kwargs: object) -> None:
-        added.extend(entities)  # type: ignore[arg-type]
-
-    await imou_button.async_setup_entry(hass, entry, _add)
-
-    types = {e.translation_key for e in added}
-    assert types == {PARAM_MUTE, PARAM_PTZ_UP}
+    """Each supported button type on a device becomes a button entity."""
+    registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    keys = {e.translation_key for e in entries}
+    assert keys == {PARAM_MUTE, PARAM_PTZ_UP}
 
 
-async def test_async_setup_entry_ignores_unknown_button_types(
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [[_device_with_buttons(UNKNOWN_BUTTON_KEY, PARAM_RESTART_DEVICE)]],
+    indirect=True,
+)
+async def test_setup_ignores_unknown_button_types(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    imou_integration: AsyncMock,
 ) -> None:
     """Unknown button keys from the API are not turned into entities."""
-    entry = MockConfigEntry(
-        domain="imou",
-        data=CONFIG_ENTRY_DATA,
-        entry_id="entry-btn-2",
+    registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    assert len(entries) == 1
+    assert entries[0].translation_key == PARAM_RESTART_DEVICE
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [[_device_with_buttons(PARAM_MUTE)]],
+    indirect=True,
+)
+async def test_press_button_via_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    imou_integration: AsyncMock,
+) -> None:
+    """Pressing a button should call the vendor library through the coordinator."""
+    states = hass.states.async_all("button")
+    assert len(states) == 1
+    entity_id = states[0].entity_id
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
-    mock_manager = MagicMock()
-    coordinator = ImouDataUpdateCoordinator(hass, mock_manager, entry)
-    device = _make_device_with_buttons(UNKNOWN_BUTTON_KEY, PARAM_RESTART_DEVICE)
-    coordinator._devices = [device]
-    entry.runtime_data = coordinator
 
-    added: list[ImouButton] = []
-
-    def _add(entities: object, **_kwargs: object) -> None:
-        added.extend(entities)  # type: ignore[arg-type]
-
-    await imou_button.async_setup_entry(hass, entry, _add)
-
-    assert len(added) == 1
-    assert added[0].translation_key == PARAM_RESTART_DEVICE
+    imou_integration.async_press_button.assert_awaited_once()
+    call = imou_integration.async_press_button.await_args
+    assert call.args[1] == PARAM_MUTE
 
 
-@pytest.mark.usefixtures("hass")
-async def test_async_press_calls_device_manager() -> None:
-    """Press delegates to the HA device manager."""
-    mock_manager = MagicMock()
-    mock_manager.async_press_button = AsyncMock()
-    coordinator = MagicMock(spec=ImouDataUpdateCoordinator)
-    coordinator.device_manager = mock_manager
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [[_device_with_buttons(PARAM_MUTE)]],
+    indirect=True,
+)
+async def test_press_button_service_propagates_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    imou_integration: AsyncMock,
+) -> None:
+    """Imou API errors from async_press_button surface to the service call."""
+    imou_integration.async_press_button.side_effect = ImouException("cloud failure")
 
-    device = _make_device_with_buttons(PARAM_MUTE)
-    entity = ImouButton(coordinator, PARAM_MUTE, device)
-
-    await entity.async_press()
-
-    mock_manager.async_press_button.assert_awaited_once_with(device, PARAM_MUTE, 500)
-
-
-@pytest.mark.usefixtures("hass")
-async def test_async_press_raises_home_assistant_error() -> None:
-    """Imou API errors become HomeAssistantError."""
-    mock_manager = MagicMock()
-    mock_manager.async_press_button = AsyncMock(
-        side_effect=ImouException("cloud failure")
-    )
-    coordinator = MagicMock(spec=ImouDataUpdateCoordinator)
-    coordinator.device_manager = mock_manager
-
-    device = _make_device_with_buttons(PARAM_MUTE)
-    entity = ImouButton(coordinator, PARAM_MUTE, device)
+    states = hass.states.async_all("button")
+    entity_id = states[0].entity_id
 
     with pytest.raises(HomeAssistantError, match="cloud failure"):
-        await entity.async_press()
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )

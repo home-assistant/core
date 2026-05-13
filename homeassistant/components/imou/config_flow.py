@@ -24,16 +24,6 @@ from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _imou_exception_to_config_error(exception: ImouException) -> str:
-    """Map library exceptions to stable Home Assistant config-flow error keys."""
-    if isinstance(exception, InvalidAppIdOrSecretException):
-        return "invalid_auth"
-    if isinstance(exception, ConnectFailedException | RequestFailedException):
-        return "cannot_connect"
-    _LOGGER.debug("Imou error during config flow: %s", exception.message)
-    return "unknown"
-
-
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
 
@@ -56,7 +46,17 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await api_client.async_get_token()
             except ImouException as exception:
-                errors["base"] = _imou_exception_to_config_error(exception)
+                if isinstance(exception, InvalidAppIdOrSecretException):
+                    errors["base"] = "invalid_auth"
+                elif isinstance(
+                    exception, ConnectFailedException | RequestFailedException
+                ):
+                    errors["base"] = "cannot_connect"
+                else:
+                    _LOGGER.debug(
+                        "Imou error during config flow: %s", exception.message
+                    )
+                    errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=DOMAIN,

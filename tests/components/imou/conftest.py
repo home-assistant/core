@@ -1,14 +1,15 @@
 """Test configuration and fixtures for Imou integration."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.imou.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG_ENTRY_DATA, async_init_integration
+from .util import CONFIG_ENTRY_DATA, create_mock_api_client, create_mock_device_manager
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_api_client() -> Generator[MagicMock]:
-    """Create a mock API client."""
+    """Create a mock API client used by the config flow."""
     with patch(
         "homeassistant.components.imou.config_flow.ImouOpenApiClient"
     ) as mock_client:
@@ -39,7 +40,7 @@ def mock_api_client() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+    """Override async_setup_entry so config flow tests do not load the full integration."""
     with patch(
         "homeassistant.components.imou.async_setup_entry",
         return_value=True,
@@ -48,9 +49,36 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def init_integration(
+def imou_mock_devices(request: pytest.FixtureRequest) -> list:
+    """Devices returned by ImouHaDeviceManager.async_get_devices (override via indirect)."""
+    return getattr(request, "param", [])
+
+
+@pytest.fixture
+async def imou_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-) -> MockConfigEntry:
-    """Set up the integration for testing."""
-    return await async_init_integration(hass, mock_config_entry)
+    imou_mock_devices: list,
+) -> AsyncGenerator[MagicMock]:
+    """Set up Imou with mocked pyimouapi clients; yields the device manager mock."""
+    mock_dm = create_mock_device_manager()
+    mock_dm.async_get_devices = AsyncMock(return_value=imou_mock_devices)
+    with (
+        patch(
+            "homeassistant.components.imou.ImouOpenApiClient",
+            return_value=create_mock_api_client(),
+        ),
+        patch(
+            "homeassistant.components.imou.ImouHaDeviceManager",
+            return_value=mock_dm,
+        ),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        try:
+            yield mock_dm
+        finally:
+            if mock_config_entry.state is ConfigEntryState.LOADED:
+                await hass.config_entries.async_unload(mock_config_entry.entry_id)
+                await hass.async_block_till_done()

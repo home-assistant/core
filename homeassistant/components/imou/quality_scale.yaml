@@ -1,8 +1,10 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+    status: done
+    comment: >-
+      Button entities expose user-triggered actions via async_press (device control),
+      which is the primary interaction surface for this integration today.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -27,8 +29,10 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions.
+    status: done
+    comment: >-
+      Button presses raise HomeAssistantError when the vendor API fails, surfacing
+      failures to the user action path.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -47,7 +51,10 @@ rules:
     comment: Cloud service integration, does not support discovery.
   discovery:
     status: exempt
-    comment: Cloud service integration, does not support discovery.
+    comment: >-
+      Devices are reached via Imou Open Platform cloud APIs (App ID / secret). Local
+      discovery (mDNS hostname, MAC, LAN presence) is not documented by the vendor
+      for this integration path; if that becomes available, discovery can be revisited.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
