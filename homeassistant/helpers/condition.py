@@ -315,7 +315,7 @@ class ConditionChecker(abc.ABC):
         except Exception:
             _LOGGER.exception("Error while unloading condition checker")
 
-    async def async_setup(self) -> None:
+    async def async_setup(self) -> None:  # noqa: B027
         """Set up the condition checker.
 
         Users of conditions do not need to call this method directly. It is called
