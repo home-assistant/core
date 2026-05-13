@@ -49,7 +49,7 @@
       'media_duration': 300,
       'media_position': 120,
       'media_position_updated_at': datetime.datetime(2026, 5, 8, 12, 0, tzinfo=datetime.timezone.utc),
-      'media_title': 'Chapter 1 - Introduction',
+      'media_title': 'Introduction',
       'supported_features': <MediaPlayerEntityFeature: 22071>,
       'volume_level': 0.5,
     }),

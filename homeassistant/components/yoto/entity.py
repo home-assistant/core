@@ -22,23 +22,25 @@ class YotoEntity(CoordinatorEntity[YotoDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._player_id = player.id
+        device = player.device
+        mac = player.info.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, player.id)},
-            connections={(CONNECTION_NETWORK_MAC, player.mac)} if player.mac else set(),
+            connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
             manufacturer=MANUFACTURER,
             model=player.model,
-            model_id=player.device_type,
-            hw_version=player.generation,
+            model_id=device.device_type,
+            hw_version=device.generation,
             name=player.name,
-            sw_version=player.firmware_version,
+            sw_version=player.info.firmware_version,
         )
 
     @property
     def player(self) -> YotoPlayer:
-        """Return the live player record from the coordinator."""
+        """Return the live player record from the client."""
         return self.coordinator.data[self._player_id]
 
     @property
     def available(self) -> bool:
-        """Return True if the player is still tracked by the coordinator."""
+        """Return if the entity is available."""
         return super().available and self._player_id in self.coordinator.data

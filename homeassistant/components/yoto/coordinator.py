@@ -1,17 +1,22 @@
 """Coordinator for the Yoto integration."""
 
+import asyncio
+from datetime import datetime
+
 import aiohttp
-from yoto_api import AuthenticationError, Token, YotoError, YotoManager, YotoPlayer
+from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
 
 type YotoConfigEntry = ConfigEntry[YotoDataUpdateCoordinator]
 
@@ -35,14 +40,14 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self.session = session
-        self.yoto_manager = YotoManager()
+        self._session = session
+        self.client = YotoClient(session=async_get_clientsession(hass))
         self._sync_token()
 
     def _sync_token(self) -> None:
-        """Push the latest OAuth2 access token into the Yoto manager."""
-        token = self.session.token
-        self.yoto_manager.token = Token(
+        """Sync the OAuth2 access token to the Yoto client."""
+        token = self._session.token
+        self.client.token = Token(
             access_token=token[CONF_ACCESS_TOKEN],
             refresh_token=token.get("refresh_token", ""),
             token_type=token.get("token_type", "Bearer"),
@@ -50,35 +55,53 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         )
 
     async def _async_setup(self) -> None:
-        """Run one-shot setup: load the library and start the MQTT listener."""
+        """Set up the coordinator."""
         try:
-            await self.hass.async_add_executor_job(self.yoto_manager.update_library)
-        except YotoError as err:
-            _LOGGER.warning("Could not load Yoto library metadata: %s", err)
-
-        # Populate the player list before connecting so MQTT can subscribe
-        # to each player's topic in the on_connect callback.
-        try:
-            await self.hass.async_add_executor_job(self.yoto_manager.update_player_list)
+            await self.client.refresh()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
             ) from err
+        except YotoError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
-        await self.hass.async_add_executor_job(
-            self.yoto_manager.connect_to_events, self._mqtt_event
+        await self._async_refresh_status_per_device()
+        await self._async_load_library()
+
+        try:
+            await self.client.connect_events(
+                list(self.client.players),
+                self._mqtt_event,
+                self._mqtt_disconnect,
+            )
+        except YotoError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        # The MQTT data/status topic is not pushed spontaneously; the firmware
+        # only emits it in response to a command/status/request publish.
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self._async_status_push_tick, STATUS_PUSH_INTERVAL
+            )
         )
 
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
-        """Refresh the player list and self-heal the MQTT subscription."""
-        # The first refresh runs right after _async_setup, which already
-        # populated the manager. Skip the duplicate fetch.
+        """Fetch fresh data from the Yoto cloud."""
+        # _async_setup already populated the client; skip the duplicate first fetch.
         if self.data is None:
-            return self.yoto_manager.players
+            return self.client.players
 
         try:
-            await self.session.async_ensure_token_valid()
+            await self._session.async_ensure_token_valid()
         except aiohttp.ClientError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -89,7 +112,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         self._sync_token()
 
         try:
-            await self.hass.async_add_executor_job(self.yoto_manager.update_player_list)
+            await self.client.refresh()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -102,35 +125,52 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Watchdog: paho-mqtt usually self-recovers, but if a connection
-        # is permanently lost we'd never see it. Re-establish on demand.
-        if not self._mqtt_connected():
-            await self.hass.async_add_executor_job(self._reconnect_mqtt)
+        await self._async_refresh_status_per_device()
+        return self.client.players
 
-        return self.yoto_manager.players
+    async def _async_load_library(self) -> None:
+        """Load the card library; failures only affect titles and artwork."""
+        try:
+            await self.client.update_library()
+        except YotoError as err:
+            _LOGGER.warning("Could not load Yoto card library: %s", err)
 
-    def _mqtt_connected(self) -> bool:
-        """Return whether the MQTT client is currently connected."""
-        client = self.yoto_manager.mqtt_client
-        if client is None or client.client is None:
-            return False
-        return bool(client.client.is_connected())
-
-    def _reconnect_mqtt(self) -> None:
-        """Tear down the stale MQTT client and reopen the subscription."""
-        if self.yoto_manager.mqtt_client is not None:
-            self.yoto_manager.disconnect()
-        self.yoto_manager.connect_to_events(self._mqtt_event)
-
-    def _mqtt_event(self) -> None:
-        """Handle a real-time update pushed by the Yoto MQTT broker."""
-        # Called from the paho-mqtt thread.
-        self.hass.loop.call_soon_threadsafe(
-            self.async_set_updated_data, self.yoto_manager.players
+    async def _async_refresh_status_per_device(self) -> None:
+        """Refresh the REST status for every known player in parallel."""
+        device_ids = list(self.client.players)
+        results = await asyncio.gather(
+            *(self.client.update_player_status(did) for did in device_ids),
+            return_exceptions=True,
         )
+        for device_id, result in zip(device_ids, results, strict=True):
+            if isinstance(result, YotoError):
+                _LOGGER.warning(
+                    "Could not refresh Yoto player %s status: %s", device_id, result
+                )
+            elif isinstance(result, BaseException):
+                raise result
+
+    async def _async_status_push_tick(self, _now: datetime) -> None:
+        """Ask each player to push a fresh status snapshot over MQTT."""
+        # The response arrives via the on_update callback, which already
+        # triggers async_set_updated_data — nothing to await here.
+        for device_id in list(self.client.players):
+            try:
+                await self.client.request_status_push(device_id)
+            except YotoError as err:
+                _LOGGER.debug("status push failed for %s: %s", device_id, err)
+
+    def _mqtt_event(self, _player: YotoPlayer) -> None:
+        """Handle a real-time update pushed by the Yoto MQTT broker."""
+        self.async_set_updated_data(self.client.players)
+
+    def _mqtt_disconnect(self, err: Exception | None) -> None:
+        """Log MQTT disconnects."""
+        # The library auto-reconnects on transient drops; we only log here.
+        if err is not None:
+            _LOGGER.debug("MQTT disconnect: %s", err)
 
     async def async_shutdown(self) -> None:
-        """Disconnect MQTT, then cancel the update loop."""
-        if self.yoto_manager.mqtt_client is not None:
-            await self.hass.async_add_executor_job(self.yoto_manager.disconnect)
+        """Shut down the coordinator."""
+        await self.client.disconnect_events()
         await super().async_shutdown()
