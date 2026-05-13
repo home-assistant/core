@@ -3,9 +3,19 @@
 import asyncio
 import contextlib
 
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_is_preview_feature_enabled,
+    async_subscribe_preview_feature,
+)
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry as er,
+    httpx_client,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
@@ -37,33 +47,81 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     session = aiohttp_client.async_create_clientsession(hass)
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
 
+    entry.runtime_data = coordinator
+
     await coordinator.async_config_entry_first_refresh()
 
-    await coordinator.sync_media_state()
+    NON_LABS_PLATFORMS = [p for p in PLATFORMS if p != Platform.MEDIA_PLAYER]
+    await hass.config_entries.async_forward_entry_setups(entry, NON_LABS_PLATFORMS)
+
+    media_player_loaded = False
 
     alexa_httpx_client = httpx_client.get_async_client(
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
     )
+    http2_task: asyncio.Task | None = None
 
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
 
-    http2_task = await coordinator.api.start_http2_processing(
-        alexa_httpx_client,
-        on_reauth_required=_on_http2_reauth_required,
-    )
-
     async def _cancel_http2() -> None:
+        if not http2_task:
+            return
         http2_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await http2_task
 
-    entry.async_on_unload(_cancel_http2)
+    async def _async_update_alexa_media(
+        event_data: EventLabsUpdatedData | None = None,
+    ) -> None:
+        nonlocal media_player_loaded
+        nonlocal http2_task
 
-    entry.runtime_data = coordinator
+        enabled = (
+            event_data["enabled"]
+            if event_data is not None
+            else async_is_preview_feature_enabled(hass, DOMAIN, "alexa_media")
+        )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        if enabled:
+            await coordinator.sync_media_state()
+            http2_task = await coordinator.api.start_http2_processing(
+                alexa_httpx_client,
+                on_reauth_required=_on_http2_reauth_required,
+            )
+            entry.async_on_unload(_cancel_http2)
+
+            if not media_player_loaded:
+                await hass.config_entries.async_forward_entry_setups(
+                    entry, [Platform.MEDIA_PLAYER]
+                )
+                media_player_loaded = True
+        else:
+            await _cancel_http2()
+            if media_player_loaded:
+                await hass.config_entries.async_unload_platforms(
+                    entry, [Platform.MEDIA_PLAYER]
+                )
+                media_player_loaded = False
+
+                # Remove entities from the registry so they don't show as unavailable
+                ent_reg = er.async_get(hass)
+                entities = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+                for entity in entities:
+                    if entity.domain == Platform.MEDIA_PLAYER:
+                        ent_reg.async_remove(entity.entity_id)
+
+    entry.async_on_unload(
+        async_subscribe_preview_feature(
+            hass,
+            DOMAIN,
+            "alexa_media",
+            _async_update_alexa_media,
+        )
+    )
+
+    await _async_update_alexa_media()
 
     return True
 
