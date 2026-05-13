@@ -39,12 +39,12 @@ async def test_device_info(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
     generation: int,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that device info is correctly registered in the device registry."""
     await setup_integration(hass, mock_config_entry)
 
     device_info = DEVICE_MAPPING[generation]
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         connections={(CONNECTION_NETWORK_MAC, device_info["mac"])}
     )
