@@ -4,26 +4,29 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from victron_mqtt import Hub as VictronVenusHub, WritableMetric
+import pytest
+from syrupy.assertion import SnapshotAssertion
+from victron_mqtt import GenericOnOff, Hub as VictronVenusHub, WritableMetric
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.victron_gx.const import DOMAIN
-from homeassistant.const import EntityCategory
+from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_victron_button(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_button_entities_snapshot(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test BUTTON MetricKind - platform reboot button is created."""
+    """Snapshot test for all Victron GX button entities."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(
@@ -34,46 +37,17 @@ async def test_victron_button(
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    assert len(entities) == 1
-    entity = entities[0]
-    assert entity.entity_id == "button.victron_venus_device_reboot"
-    assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_system_0_platform_device_reboot"
-    assert entity.translation_key == "platform_device_reboot"
-    assert entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    assert entity.entity_category is EntityCategory.DIAGNOSTIC
-
-    # Entity is disabled by default, so state is not available
-    state = hass.states.get(entity.entity_id)
-    assert state is None
-
-    # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
-    )
-    assert device is not None
-    assert device.manufacturer == "Victron Energy"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_victron_button_press(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_button_press(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test button _on_update_cb and pressing it via service call."""
+    """Test pressing a Victron GX button triggers the metric write."""
     victron_hub, mock_config_entry = init_integration
-
-    # Enable the button entity before injecting so it gets a state
-    entity_registry.async_get_or_create(
-        "button",
-        DOMAIN,
-        f"{MOCK_INSTALLATION_ID}_system_0_platform_device_reboot",
-        config_entry=mock_config_entry,
-        disabled_by=None,
-    )
 
     await inject_message(
         victron_hub,
@@ -86,24 +60,14 @@ async def test_victron_button_press(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    button_entities = [e for e in entities if e.domain == "button"]
-    assert len(button_entities) == 1
-    entity_id = button_entities[0].entity_id
+    button_entity = next(e for e in entities if e.domain == "button")
 
-    # Inject an update to exercise _on_update_cb (the pass branch)
-    await inject_message(
-        victron_hub,
-        f"N/{MOCK_INSTALLATION_ID}/platform/0/Device/Reboot",
-        '{"value": 1}',
-    )
-    await finalize_injection(victron_hub)
-    await hass.async_block_till_done()
-
-    # Spy on WritableMetric.set to verify the outgoing write
     with patch.object(WritableMetric, "set") as set_mock:
-        # Call the press service to cover async_press()
         await hass.services.async_call(
-            "button", "press", {"entity_id": entity_id}, blocking=True
+            "button",
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: button_entity.entity_id},
+            blocking=True,
         )
 
-        set_mock.assert_called_once_with(1)
+        set_mock.assert_called_once_with(GenericOnOff.ON)
