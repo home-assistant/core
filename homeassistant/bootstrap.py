@@ -705,10 +705,12 @@ def _get_stream_for_log_file(log_file: str) -> TextIO | None:
         return None
 
     for stream in (sys.stdout, sys.stderr):
+        if stream is None:
+            continue
         try:
             if os.path.samestat(log_file_stat, os.fstat(stream.fileno())):
                 return stream
-        except AttributeError, OSError, ValueError:
+        except OSError, ValueError:
             continue
 
     return None
