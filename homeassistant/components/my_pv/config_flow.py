@@ -42,7 +42,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _device_model: str
-    _auth_step: str | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -122,8 +121,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle discovery password authentication."""
-        self._auth_step = "discovery_auth"
-        return await self.async_step_auth(user_input)
+        return await self.async_step_auth(user_input, "discovery_auth")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -170,7 +168,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None, step_id: str = "auth"
     ) -> ConfigFlowResult:
         """Handle password authentication."""
         errors: dict[str, str] = {}
@@ -212,7 +210,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id=self._auth_step or "auth",
+            step_id=step_id,
             data_schema=data_schema,
             errors=errors,
             description_placeholders=self.context["title_placeholders"],
