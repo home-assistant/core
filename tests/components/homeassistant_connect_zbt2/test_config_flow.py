@@ -425,13 +425,8 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=1,
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        minor_version=2,
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -522,12 +517,7 @@ async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> 
             "manufacturer": USB_DATA_ZBT2.manufacturer,
             "product": USB_DATA_ZBT2.description,
         },
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 

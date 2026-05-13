@@ -16,7 +16,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'homeassistant_connect_zbt2',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -25,7 +25,7 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '80B54EEFAE18',
       'version': 1,
     }),
   })
