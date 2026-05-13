@@ -1,7 +1,5 @@
 """Tests for the Glutz eAccess integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

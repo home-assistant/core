@@ -1,7 +1,5 @@
 """Tests for Glutz eAccess diagnostics."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion

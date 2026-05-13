@@ -1,7 +1,5 @@
 """Tests for the Glutz eAccess config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
