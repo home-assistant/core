@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from aiopyarr import ArrAuthenticationException, ArrException
 
 from homeassistant.components.sonarr.const import (
+    CONF_MORE_OPTIONS,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
     DEFAULT_UPCOMING_DAYS,
@@ -176,27 +177,25 @@ async def test_full_user_flow_implementation(
     assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
 
 
-async def test_full_user_flow_advanced_options(
+async def test_full_user_flow_with_verify_ssl(
     hass: HomeAssistant,
     mock_sonarr_config_flow: MagicMock,
     mock_setup_entry: None,
 ) -> None:
-    """Test the full manual user flow with advanced options."""
+    """Test the full manual user flow with verify SSL option."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER, "show_advanced_options": True}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    user_input = {
-        **MOCK_USER_INPUT,
-        CONF_VERIFY_SSL: True,
-    }
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=user_input,
+        user_input={
+            **MOCK_USER_INPUT,
+            CONF_MORE_OPTIONS: {CONF_VERIFY_SSL: True},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
