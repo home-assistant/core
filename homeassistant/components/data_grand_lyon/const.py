@@ -6,6 +6,8 @@ DOMAIN = "data_grand_lyon"
 LOGGER = logging.getLogger(__package__)
 
 SUBENTRY_TYPE_STOP = "stop"
+SUBENTRY_TYPE_VELOV_STATION = "velov_station"
 
 CONF_LINE = "line"
 CONF_STOP_ID = "stop_id"
+CONF_STATION_ID = "station_id"

@@ -21,7 +21,13 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "coordinator_data": {
-            subentry_id: [asdict(passage) for passage in passages]
-            for subentry_id, passages in coordinator.data.items()
+            "stops": {
+                subentry_id: [asdict(passage) for passage in passages]
+                for subentry_id, passages in coordinator.data.stops.items()
+            },
+            "velov_stations": {
+                subentry_id: asdict(station)
+                for subentry_id, station in coordinator.data.velov_stations.items()
+            },
         },
     }
