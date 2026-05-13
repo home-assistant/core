@@ -35,6 +35,17 @@
       "sync_time": {
         "name": "Sync time"
       }
+    },
+    "number": {
+      "comfort_setpoint": {
+        "name": "Comfort setpoint"
+      },
+      "eco_setpoint": {
+        "name": "Eco setpoint"
+      },
+      "offset": {
+        "name": "Setpoint offset"
+      }
     }
   }
 }

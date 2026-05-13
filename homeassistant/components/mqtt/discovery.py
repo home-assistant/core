@@ -42,6 +42,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_COMPONENTS,
+    CONF_DISCOVERY_QOS,
     CONF_ORIGIN,
     CONF_TOPIC,
     DOMAIN,
@@ -598,12 +599,13 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
+    discovery_qos: int = config_entry.options.get(CONF_DISCOVERY_QOS, 0)
     mqtt_data.discovery_unsubscribe = [
         async_subscribe_internal(
             hass,
             topic,
             async_discovery_message_received,
-            0,
+            discovery_qos,
             job_type=HassJobType.Callback,
         )
         # Subscribe first for platform discovery wildcard topics first,
@@ -708,7 +710,7 @@ async def async_start(  # noqa: C901
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),
-                0,
+                discovery_qos,
                 job_type=HassJobType.Coroutinefunction,
             )
             for integration, topics in mqtt_integrations.items()
