@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -35,6 +36,7 @@ from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
+    CONF_MORE_OPTIONS,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
@@ -145,8 +147,6 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
             vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
-            vol.Optional(CONF_PORT): cv.port,
-            vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
             vol.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
@@ -154,6 +154,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                 SelectSelectorConfig(
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
+            ),
+            vol.Required(CONF_MORE_OPTIONS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_PORT): cv.port,
+                        vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
+                    }
+                ),
+                SectionConfig(collapsed=True),
             ),
         }
 
@@ -228,6 +237,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self._show_setup_form()
+
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
 
         self._config_data = user_input
         pwd: str | None = user_input.get(CONF_PASSWORD)
