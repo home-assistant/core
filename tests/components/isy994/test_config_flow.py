@@ -125,10 +125,10 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": MOCK_HOSTNAME,  # Test with missing protocol (http://)
-            "username": MOCK_USERNAME,
-            "password": MOCK_PASSWORD,
-            "verify_ssl": MOCK_VERIFY_SSL,
+            CONF_HOST: MOCK_HOSTNAME,  # Test with missing protocol (http://)
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_VERIFY_SSL: MOCK_VERIFY_SSL,
         },
     )
 
@@ -667,6 +667,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         data={
             CONF_USERNAME: "bob",
             CONF_HOST: f"http://{MOCK_HOSTNAME}:1443{ISY_URL_POSTFIX}",
+            CONF_VERIFY_SSL: False,
         },
         unique_id=MOCK_UUID,
     )

@@ -65,15 +65,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     """Migrate old config entries."""
-    _LOGGER.debug("Migrating ISY config entry from version %s", entry.version)
-
-    if entry.version > 2:
-        return False
-
-    if entry.version == 1:
-        # Drop the legacy "tls" version field; pyisy now negotiates automatically.
+    if entry.version == 1 and entry.minor_version == 1:
         new_data = {key: value for key, value in entry.data.items() if key != "tls"}
-        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
     return True
 
@@ -87,9 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
     user = isy_config[CONF_USERNAME]
     password = isy_config[CONF_PASSWORD]
     host = urlparse(isy_config[CONF_HOST])
-
-    # Optional
-    verify_ssl = isy_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    verify_ssl = isy_config[CONF_VERIFY_SSL]
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 

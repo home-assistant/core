@@ -83,7 +83,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     user = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
     host = urlparse(data[CONF_HOST])
-    verify_ssl = data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    verify_ssl = data[CONF_VERIFY_SSL]
 
     if host.scheme == SCHEME_HTTP:
         https = False
@@ -140,7 +140,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Universal Devices ISY/IoX."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the ISY/IoX config flow."""
