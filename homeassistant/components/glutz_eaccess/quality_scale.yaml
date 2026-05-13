@@ -90,8 +90,7 @@ rules:
       handled centrally by the coordinator; service calls (lock/unlock/open)
       are independent and do not need to be serialized.
   reauthentication-flow:
-    status: done
-    comment: Reauthentication flow implemented and tested.
+    status: todo
   test-coverage:
     status: done
     comment: Integration has comprehensive test coverage.
@@ -101,8 +100,7 @@ rules:
     status: done
     comment: Each access point is represented as its own device.
   diagnostics:
-    status: done
-    comment: Diagnostics endpoint implemented, redacting sensitive fields.
+    status: todo
   discovery:
     status: exempt
     comment: The Glutz eAccess system does not support any discovery protocol.
@@ -131,12 +129,7 @@ rules:
     status: done
     comment: Documentation includes use case examples.
   dynamic-devices:
-    status: done
-    comment: >-
-      A coordinator listener registered in async_setup_entry adds new lock
-      entities whenever new access points appear in the coordinator data.
-      Removed access points are deleted from the entity registry via
-      er.async_remove(), which also removes them from the state machine.
+    status: todo
   entity-category:
     status: exempt
     comment: All entities are primary lock entities.
@@ -158,8 +151,7 @@ rules:
     status: done
     comment: Icons defined in icons.json with translation support.
   reconfiguration-flow:
-    status: done
-    comment: Reconfiguration flow allows updating server address and credentials.
+    status: todo
   repair-issues:
     status: exempt
     comment: >-
@@ -167,11 +159,7 @@ rules:
       becomes available in a future API version, a repair issue should be raised
       to prompt the user to recharge the lock.
   stale-devices:
-    status: done
-    comment: >-
-      When the coordinator detects that an access point has been removed from
-      the server, the corresponding entity is removed from the entity registry.
-      The device is then automatically removed if no other entities remain.
+    status: todo
 
   # Platinum
   async-dependency:
