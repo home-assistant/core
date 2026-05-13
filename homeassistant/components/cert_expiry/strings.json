@@ -17,6 +17,10 @@
           "name": "The name of the certificate",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of the server to monitor.",
+          "port": "The port to connect to on the server."
+        },
         "title": "Define the certificate to test"
       }
     }
