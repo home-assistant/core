@@ -1416,8 +1416,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:
