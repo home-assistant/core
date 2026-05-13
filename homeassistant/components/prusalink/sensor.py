@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import TypeVar, cast
+from typing import cast
 
 from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus
@@ -28,8 +28,6 @@ from homeassistant.util.variance import ignore_variance
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
-
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import Conflict, PrinterState
@@ -14,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
-
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
 @dataclass(frozen=True, kw_only=True)

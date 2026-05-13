@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TypeVar
 
 from airos.data import (
     AirOSDataBaseClass,
@@ -40,8 +39,6 @@ WIRELESS_MODE_OPTIONS = [mode.value for mode in DerivedWirelessMode]
 WIRELESS_ROLE_OPTIONS = [mode.value for mode in DerivedWirelessRole]
 
 PARALLEL_UPDATES = 0
-
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
 
 
 @dataclass(frozen=True, kw_only=True)

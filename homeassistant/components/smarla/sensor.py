@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from pysmarlaapi.federwiege.services.classes import Property
 from pysmarlaapi.federwiege.services.types import SpringStatus
@@ -22,8 +22,6 @@ from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
 
 PARALLEL_UPDATES = 0
-
-_VT = TypeVar("_VT")
 
 
 @dataclass(frozen=True, kw_only=True)

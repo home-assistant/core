@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import broadlink as blk
 from broadlink.exceptions import AuthorizationError, BroadlinkException
@@ -46,7 +46,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
     return update_managers[device.api.type](device)
 
 
-class BroadlinkUpdateManager[_ApiT: blk.Device](ABC):
+class BroadlinkUpdateManager(ABC, Generic[_ApiT]):  # noqa: UP046
     """Representation of a Broadlink update manager.
 
     Implement this class to manage fetching data from the device and to

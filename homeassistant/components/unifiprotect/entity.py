@@ -7,7 +7,7 @@ from enum import Enum
 from functools import partial
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from uiprotect import make_enabled_getter, make_required_getter, make_value_getter
 from uiprotect.data import (
@@ -369,7 +369,7 @@ class EventEntityMixin(ProtectDeviceEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectEntityDescription[T: ProtectAdoptableDeviceModel | NVR](EntityDescription):
+class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     """Base class for protect entity descriptions."""
 
     ufp_required_field: str | None = None

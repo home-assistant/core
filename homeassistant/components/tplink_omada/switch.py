@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, TypeVar
+from typing import Any
 
 from tplink_omada_client import (
     GatewayPortSettings,
@@ -37,10 +37,6 @@ from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
-
-TPort = TypeVar("TPort")
-TDevice = TypeVar("TDevice", bound="OmadaDevice")
-TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
 
 PARALLEL_UPDATES = 0
 
@@ -272,7 +268,7 @@ class OmadaDevicePortSwitchEntity[
     OmadaDeviceEntity[TCoordinator],
     SwitchEntity,
 ):
-    """Generic toggle switch entity for a Netork Port of an Omada Device."""
+    """Generic toggle switch entity for a Network Port of an Omada Device."""
 
     entity_description: OmadaDevicePortSwitchEntityDescription[
         TCoordinator, TDevice, TPort

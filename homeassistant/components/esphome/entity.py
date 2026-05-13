@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -329,7 +329,7 @@ class EsphomeBaseEntity(Entity):
     device_entry: dr.DeviceEntry
 
 
-class EsphomeEntity[_InfoT: EntityInfo, _StateT: EntityState](EsphomeBaseEntity):
+class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     """Define an esphome entity."""
 
     _static_info: _InfoT

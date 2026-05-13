@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar
 
 from airos.data import AirOSDataBaseClass
 
@@ -19,8 +18,6 @@ from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinato
 from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0
-
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, TypeVar
+from typing import Any, Concatenate
 
 from pylitterbot import Pet, Robot
 from pylitterbot.exceptions import LitterRobotException
@@ -14,8 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LitterRobotDataUpdateCoordinator
-
-_WhiskerEntityT = TypeVar("_WhiskerEntityT", bound=Robot | Pet)
 
 
 def whisker_command[_WhiskerEntityT2: LitterRobotEntity, **_P](

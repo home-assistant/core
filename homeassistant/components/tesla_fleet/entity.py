@@ -1,7 +1,7 @@
 """Tesla Fleet parent entity class."""
 
 from abc import abstractmethod
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.energysite import EnergySite
@@ -24,13 +24,14 @@ from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 _ApiT = TypeVar("_ApiT", bound=VehicleFleet | EnergySite)
 
 
-class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
+class TeslaFleetEntity(
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
         | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
     ],
+    Generic[_ApiT],  # noqa: UP046
 ):
     """Parent class for all TeslaFleet entities."""
 
