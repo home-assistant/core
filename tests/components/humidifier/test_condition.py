@@ -64,6 +64,9 @@ async def test_humidifier_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
@@ -72,6 +75,8 @@ async def test_humidifier_conditions_gated_by_labs_flag(
         ("humidifier.is_on", {}, True, True),
         ("humidifier.is_drying", {}, True, True),
         ("humidifier.is_humidifying", {}, True, True),
+        ("humidifier.is_mode", {"mode": ["normal"]}, True, True),
+        ("humidifier.is_target_humidity", _HUMIDITY_THRESHOLD, True, True),
     ],
 )
 async def test_humidifier_condition_options_validation(
@@ -302,6 +307,7 @@ async def test_humidifier_attribute_condition_behavior_all(
         "humidifier.is_target_humidity",
         STATE_ON,
         ATTR_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidifier_numerical_condition_behavior_any(
@@ -338,6 +344,7 @@ async def test_humidifier_numerical_condition_behavior_any(
         "humidifier.is_target_humidity",
         STATE_ON,
         ATTR_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidifier_numerical_condition_behavior_all(

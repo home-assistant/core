@@ -11,7 +11,12 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_DISCOVERY,
+    CONF_PLATFORM,
+    CONF_PROTOCOL,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -27,6 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -48,6 +54,7 @@ from .client import (
 from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (
+    ATTR_MESSAGE_EXPIRY_INTERVAL,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -73,12 +80,14 @@ from .const import (
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
+    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
+    PROTOCOL_311,
     TEMPLATE_ERRORS,
     Platform,
 )
@@ -238,6 +247,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
         vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
     },
     required=True,
 )
@@ -341,12 +351,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        message_expiry_interval: int | None = (
+            int(call.data[ATTR_MESSAGE_EXPIRY_INTERVAL].total_seconds())
+            if ATTR_MESSAGE_EXPIRY_INTERVAL in call.data
+            else None
+        )
 
         if evaluate_payload:
             # Convert quoted binary literal to raw data
             payload = convert_outgoing_mqtt_payload(payload)
 
-        await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
+        await mqtt_data.client.async_publish(
+            msg_topic,
+            payload,
+            qos,
+            retain,
+            message_expiry_interval=message_expiry_interval,
+        )
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
@@ -423,6 +444,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data: MqttData
+
+    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != DEFAULT_PROTOCOL:
+        broker: str = entry.data[CONF_BROKER]
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "protocol_5_migration",
+            issue_domain=DOMAIN,
+            is_fixable=True,
+            breaks_in_ha_version="2027.1.0",
+            severity=IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/mqtt/#mqtt-protocol",
+            data={
+                "entry_id": entry.entry_id,
+                "broker": broker,
+                "protocol": protocol,
+            },
+            translation_placeholders={"broker": broker, "protocol": protocol},
+            translation_key="protocol_5_migration",
+        )
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""

@@ -375,7 +375,7 @@ async def test_single_device_execution_failure(
     await setup_integration(hass, mock_config_entry)
 
     # Simulate an API push failure
-    mock_indevolt.set_data.side_effect = OSError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -409,7 +409,7 @@ async def test_multi_device_execution_failure(
     await setup_integration(hass, alt_mock_config_entry)
 
     # Simulate an API push failure (triggers for both coordinators)
-    mock_indevolt.set_data.side_effect = OSError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging both devices
     with pytest.raises(HomeAssistantError) as exc_info:

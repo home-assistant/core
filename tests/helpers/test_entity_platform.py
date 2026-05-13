@@ -245,8 +245,13 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
 
         await hass.async_block_till_done()
-    assert mock_track.called
-    assert mock_track.call_args[0][0] == 30.0
+    poll_calls = [
+        call
+        for call in mock_track.call_args_list
+        if getattr(call.args[1], "__name__", None) == "_async_handle_interval_callback"
+    ]
+    assert len(poll_calls) == 1
+    assert poll_calls[0].args[0] == 30.0
 
 
 async def test_adding_entities_with_generator_and_thread_callback(

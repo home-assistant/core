@@ -58,12 +58,18 @@ async def test_illuminance_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("illuminance.detected", {}, True, True),
         ("illuminance.cleared", {}, True, True),
+        ("illuminance.changed", _CHANGED_THRESHOLD, False, False),
+        ("illuminance.crossed_threshold", _CROSSED_THRESHOLD, True, True),
     ],
 )
 async def test_illuminance_trigger_options_validation(

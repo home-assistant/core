@@ -10,8 +10,6 @@ pull requests reviewed (69 occurrences), making it a high-value target for
 automated enforcement.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from astroid import nodes
