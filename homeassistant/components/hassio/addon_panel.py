@@ -9,27 +9,33 @@ from aiohttp import web
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView, require_admin
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import Event, HomeAssistant
 
 from .handler import get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_addon_panel(hass: HomeAssistant) -> None:
+def async_setup_addon_panel(hass: HomeAssistant) -> None:
     """Add-on Ingress Panel setup."""
     hassio_addon_panel = HassIOAddonPanel(hass)
     hass.http.register_view(hassio_addon_panel)
 
-    # If panels are exists
-    if not (panels := await hassio_addon_panel.get_panels()):
-        return
+    # Handle existing panels on startup
+    async def _async_panel_start_handler(event: Event) -> None:
+        """Process all existing panels on startup."""
+        # Check if there are panels to register
+        if not (panels := await hassio_addon_panel.get_panels()):
+            return
 
-    # Register available panels
-    for addon, data in panels.items():
-        if not data.enable:
-            continue
-        _register_panel(hass, addon, data)
+        # Register available panels
+        for addon, data in panels.items():
+            if not data.enable:
+                continue
+            _register_panel(hass, addon, data)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_panel_start_handler)
 
 
 class HassIOAddonPanel(HomeAssistantView):

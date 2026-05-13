@@ -16,6 +16,7 @@ from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
+    HassioNotReadyError,
     get_apps_list,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -300,7 +301,11 @@ async def guess_hardware_owners(
                 )
 
     # Z2M can be provided by one of many add-ons, we match them by name
-    for app_info in get_apps_list(hass) or []:
+    try:
+        apps_list = get_apps_list(hass)
+    except HassioNotReadyError:
+        apps_list = []
+    for app_info in apps_list:
         slug = app_info.get("slug")
 
         if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:

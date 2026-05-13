@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.async_ import create_eager_task
 
-from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .const import DATA_HASSIO_HOST, X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +50,9 @@ DISABLED_TIMEOUT = ClientTimeout(total=None)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
-    """Auth setup."""
+def async_setup_ingress_view(hass: HomeAssistant) -> None:
+    """Set up the Hass.io ingress HTTP view."""
+    host = hass.data[DATA_HASSIO_HOST]
     websession = async_get_clientsession(hass)
 
     hassio_ingress = HassIOIngress(host, websession)

@@ -277,6 +277,10 @@ async def test_send_base_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={}),
+        ),
+        patch(
             "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ) as is_hassio_mock,

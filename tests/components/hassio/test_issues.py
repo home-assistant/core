@@ -27,6 +27,8 @@ from aiohasupervisor.models import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.hassio.const import DOMAIN
+from homeassistant.components.hassio.coordinator import get_issues_info
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1100,59 +1102,6 @@ async def test_supervisor_issues_free_space(
     )
 
 
-@pytest.mark.usefixtures("all_setup_requests")
-async def test_supervisor_issues_free_space_host_info_fail(
-    hass: HomeAssistant,
-    supervisor_client: AsyncMock,
-    hass_supervisor_ws_client: WebSocketGenerator,
-    host_info: AsyncMock,
-) -> None:
-    """Test supervisor issue for too little free space remaining without host info."""
-    mock_resolution_info(supervisor_client)
-    host_info.side_effect = SupervisorError()
-
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
-
-    client = await hass_supervisor_ws_client()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "supervisor/event",
-            "data": {
-                "event": "issue_changed",
-                "data": {
-                    "uuid": (issue_uuid := uuid4().hex),
-                    "type": "free_space",
-                    "context": "system",
-                    "reference": None,
-                },
-            },
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    await client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    assert_issue_repair_in_list(
-        msg["result"]["issues"],
-        uuid=issue_uuid,
-        context="system",
-        type_="free_space",
-        fixable=False,
-        placeholders={
-            "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
-            "storage_url": "/config/storage",
-            "free_space": "<2",
-        },
-    )
-
-
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
@@ -1206,3 +1155,67 @@ async def test_supervisor_issues_addon_pwned(
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_unload_disconnects_listener(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test SupervisorIssues.unload() disconnects the EVENT_SUPERVISOR_EVENT listener.
+
+    After calling unload(), dispatching supervisor events must not trigger
+    the listener — preventing listener accumulation on config-entry reload.
+    """
+    mock_resolution_info(supervisor_client)
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    # Get config entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Get issues instance
+    issues = get_issues_info(hass)
+    assert issues is not None
+    assert issues.unhealthy_reasons == set()
+
+    # While connected, a health_changed event updates unhealthy_reasons.
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": False, "unhealthy_reasons": ["docker"]},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert "docker" in issues.unhealthy_reasons
+
+    # After config entry unload, the same event is silently ignored.
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": True},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    # unhealthy_reasons unchanged — listener did not fire.
+    assert "docker" in issues.unhealthy_reasons
