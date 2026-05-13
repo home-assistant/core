@@ -39,20 +39,20 @@ Python issues). These pylint checkers cover patterns that Ruff cannot:
 
 # Disabling checks
 
-Always use the rule name (e.g., `hass-logger-period`) rather than the
-error code (e.g., `W7401`) for readability.
+Always use the rule name (e.g., `home-assistant-logger-period`) rather than the
+error code (e.g., `C7401`) for readability.
 
 **Single line** -- add the disable comment at the end of the line:
 
 ```python
-hass.data[DOMAIN] = data  # pylint: disable=hass-use-runtime-data
+hass.data[DOMAIN] = data  # pylint: disable=home-assistant-use-runtime-data
 ```
 
 **Next line only** -- if the inline comment would make the line too long,
 use `disable-next` on the line above:
 
 ```python
-# pylint: disable-next=hass-use-runtime-data
+# pylint: disable-next=home-assistant-use-runtime-data
 hass.data[DOMAIN] = data
 ```
 
@@ -61,7 +61,7 @@ after the module docstring:
 
 ```python
 """My integration setup."""
-# pylint: disable=hass-use-runtime-data
+# pylint: disable=home-assistant-use-runtime-data
 ```
 
 # Automated code analysis
@@ -74,190 +74,190 @@ Every check has a code following the
 
 | Code | Rule | Description |
 |------|------|-------------|
-| `W7401` | [`hass-logger-period`](#w7401-hass-logger-period) | Logger messages must not end with a period |
-| `W7402` | [`hass-logger-capital`](#w7402-hass-logger-capital) | Logger messages must start with a capital letter or use debug level |
-| `W7411` | [`hass-invalid-inheritance`](#w7411-hass-invalid-inheritance) | Invalid entity class inheritance chain |
-| `W7421` | [`hass-relative-import`](#w7421-hass-relative-import) | Use relative imports within an integration |
-| `W7422` | [`hass-deprecated-import`](#w7422-hass-deprecated-import) | Import uses a deprecated path |
-| `W7423` | [`hass-absolute-import`](#w7423-hass-absolute-import) | Use absolute imports for cross-integration references |
-| `W7424` | [`hass-component-root-import`](#w7424-hass-component-root-import) | Do not import from another integration's internals |
-| `W7425` | [`hass-helper-namespace-import`](#w7425-hass-helper-namespace-import) | Use the helper namespace import pattern |
-| `W7426` | [`hass-import-constant-alias`](#w7426-hass-import-constant-alias) | Aliased DOMAIN import needs a descriptive alias |
-| `W7427` | [`hass-import-constant-unnecessary-alias`](#w7427-hass-import-constant-unnecessary-alias) | Unnecessary alias when importing DOMAIN within the same integration |
-| `W7431` | [`hass-argument-type`](#w7431-hass-argument-type) | Function argument should have the specified type hint |
-| `W7432` | [`hass-return-type`](#w7432-hass-return-type) | Function should have the specified return type hint |
-| `W7433` | [`hass-consider-usefixtures-decorator`](#w7433-hass-consider-usefixtures-decorator) | Use `@pytest.mark.usefixtures` for unused fixtures |
-| `W7441` | [`hass-missing-super-call`](#w7441-hass-missing-super-call) | Method must call its parent via `super()` |
-| `W7451` | [`hass-enforce-sorted-platforms`](#w7451-hass-enforce-sorted-platforms) | PLATFORMS list must be sorted alphabetically |
-| `W7452` | [`hass-enforce-greek-micro-char`](#w7452-hass-enforce-greek-micro-char) | Use Greek mu (U+03BC), not ANSI micro sign (U+00B5) |
-| `C7461` | [`hass-enforce-class-module`](#c7461-hass-enforce-class-module) | Entity class should be in the correct platform module |
-| `W7471` | [`hass-async-callback-decorator`](#w7471-hass-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
-| `W7472` | [`hass-pytest-fixture-decorator`](#w7472-hass-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
-| `W7481` | [`hass-async-load-fixtures`](#w7481-hass-async-load-fixtures) | Test fixture files should be loaded asynchronously |
-| `W7482` | [`hass-use-runtime-data`](#w7482-hass-use-runtime-data) | Use `entry.runtime_data` instead of `hass.data[DOMAIN]` |
-| `W7491` | [`hass-unique-id-ip-based`](#w7491-hass-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
-| `W7492` | [`hass-config-flow-polling-field`](#w7492-hass-config-flow-polling-field) | Config flow should not include polling interval fields |
-| `W7493` | [`hass-config-flow-name-field`](#w7493-hass-config-flow-name-field) | Config flow should not include name fields |
+| `C7401` | [`home-assistant-logger-period`](#c7401-home-assistant-logger-period) | Logger messages must not end with a period |
+| `C7402` | [`home-assistant-logger-capital`](#c7402-home-assistant-logger-capital) | Logger messages must start with a capital letter or use debug level |
+| `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
+| `C7403` | [`home-assistant-relative-import`](#c7403-home-assistant-relative-import) | Use relative imports within an integration |
+| `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
+| `C7404` | [`home-assistant-absolute-import`](#c7404-home-assistant-absolute-import) | Use absolute imports for cross-integration references |
+| `C7405` | [`home-assistant-component-root-import`](#c7405-home-assistant-component-root-import) | Do not import from another integration's internals |
+| `C7406` | [`home-assistant-helper-namespace-import`](#c7406-home-assistant-helper-namespace-import) | Use the helper namespace import pattern |
+| `C7407` | [`home-assistant-import-constant-alias`](#c7407-home-assistant-import-constant-alias) | Aliased DOMAIN import needs a descriptive alias |
+| `C7408` | [`home-assistant-import-constant-unnecessary-alias`](#c7408-home-assistant-import-constant-unnecessary-alias) | Unnecessary alias when importing DOMAIN within the same integration |
+| `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
+| `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
+| `R7401` | [`home-assistant-consider-usefixtures-decorator`](#r7401-home-assistant-consider-usefixtures-decorator) | Use `@pytest.mark.usefixtures` for unused fixtures |
+| `E7404` | [`home-assistant-missing-super-call`](#e7404-home-assistant-missing-super-call) | Method must call its parent via `super()` |
+| `C7409` | [`home-assistant-enforce-sorted-platforms`](#c7409-home-assistant-enforce-sorted-platforms) | PLATFORMS list must be sorted alphabetically |
+| `C7410` | [`home-assistant-enforce-greek-micro-char`](#c7410-home-assistant-enforce-greek-micro-char) | Use Greek mu (U+03BC), not ANSI micro sign (U+00B5) |
+| `C7411` | [`home-assistant-enforce-class-module`](#c7411-home-assistant-enforce-class-module) | Entity class should be in the correct platform module |
+| `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
+| `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
+| `W7404` | [`home-assistant-async-load-fixtures`](#w7404-home-assistant-async-load-fixtures) | Test fixture files should be loaded asynchronously |
+| `W7405` | [`home-assistant-use-runtime-data`](#w7405-home-assistant-use-runtime-data) | Use `entry.runtime_data` instead of `hass.data[DOMAIN]` |
+| `W7406` | [`home-assistant-unique-id-ip-based`](#w7406-home-assistant-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
+| `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
+| `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
 
 
-## `hass_logger` checker
+## `home_assistant_logger` checker
 
 Enforces consistent formatting of logger messages across the codebase.
 
 
-### `W7401`: `hass-logger-period`
+### `C7401`: `home-assistant-logger-period`
 
 User-visible logger messages must not end with a period. Log messages in
 Home Assistant follow a convention of not using trailing punctuation.
 
 
-### `W7402`: `hass-logger-capital`
+### `C7402`: `home-assistant-logger-capital`
 
 Logger messages must start with a capital letter. Debug-level messages
 are exempt from this rule. If a message does not warrant capitalization,
 consider downgrading it to debug level.
 
 
-## `hass_imports` checker
+## `home_assistant_imports` checker
 
 Enforces import conventions for Home Assistant integrations. Integrations
 should use relative imports for their own modules and follow specific
 patterns for cross-integration references.
 
 
-### `W7421`: `hass-relative-import`
+### `C7403`: `home-assistant-relative-import`
 
 Use relative imports within an integration (e.g., `from .const import DOMAIN`
 instead of `from homeassistant.components.myintegration.const import DOMAIN`).
 
-### `W7422`: `hass-deprecated-import`
+### `W7401`: `home-assistant-deprecated-import`
 
 Import uses a deprecated path that has been moved or renamed.
 
-### `W7423`: `hass-absolute-import`
+### `C7404`: `home-assistant-absolute-import`
 
 Use absolute imports when referencing modules outside the current integration.
 
-### `W7424`: `hass-component-root-import`
+### `C7405`: `home-assistant-component-root-import`
 
 Do not import from another integration's internal modules. Only import from
 the integration's top-level public API.
 
-### `W7425`: `hass-helper-namespace-import`
+### `C7406`: `home-assistant-helper-namespace-import`
 
 Use the helper namespace import pattern for helper modules.
 
-### `W7426`: `hass-import-constant-alias`
+### `C7407`: `home-assistant-import-constant-alias`
 
 Aliased `DOMAIN` import from another integration should use a descriptive alias.
 
-### `W7427`: `hass-import-constant-unnecessary-alias`
+### `C7408`: `home-assistant-import-constant-unnecessary-alias`
 
 Unnecessary alias when importing `DOMAIN` from within the same integration.
 
 
-## `hass_enforce_type_hints` checker
+## `home_assistant_enforce_type_hints` checker
 
 Enforces type hints on platform functions, config flow methods, and test
 functions. Checks both argument types and return types against the expected
 signatures defined by Home Assistant's platform interfaces.
 
 
-### `W7431`: `hass-argument-type`
+### `E7402`: `home-assistant-argument-type`
 
 Function argument should have the specified type hint. Platform functions
 like `async_setup_entry` have well-defined signatures that must be followed.
 
-### `W7432`: `hass-return-type`
+### `E7403`: `home-assistant-return-type`
 
 Function should have the specified return type hint.
 
-### `W7433`: `hass-consider-usefixtures-decorator`
+### `R7401`: `home-assistant-consider-usefixtures-decorator`
 
 Test function should use `@pytest.mark.usefixtures("fixture_name")` instead
 of accepting an unused fixture as a parameter.
 
 
-## `hass_decorator` checker
+## `home_assistant_decorator` checker
 
 Validates decorator usage on functions and fixtures.
 
 
-### `W7471`: `hass-async-callback-decorator`
+### `W7402`: `home-assistant-async-callback-decorator`
 
 A coroutine function (`async def`) should not be decorated with `@callback`.
 The `@callback` decorator is only for synchronous functions that should be
 called from the event loop without scheduling.
 
-### `W7472`: `hass-pytest-fixture-decorator`
+### `W7403`: `home-assistant-pytest-fixture-decorator`
 
 Pytest fixture has invalid scope or autouse configuration. For example,
 `session`-scoped fixtures in component tests should use `package` scope
 or lower.
 
 
-## `hass_inheritance` checker
+## `home_assistant_inheritance` checker
 
 Validates that entity platform modules only use entity classes from their
 own platform (e.g., a `sensor.py` module should not inherit from
 `BinarySensorEntity`).
 
-### `W7411`: `hass-invalid-inheritance`
+### `E7401`: `home-assistant-invalid-inheritance`
 
 A platform module uses an entity class from a different platform. For
 example, a `sensor.py` file should not define classes inheriting from
 `BinarySensorEntity`.
 
 
-## `hass_enforce_super_call` checker
+## `home_assistant_enforce_super_call` checker
 
 Ensures methods call their parent implementation when required.
 
-### `W7441`: `hass-missing-super-call`
+### `E7404`: `home-assistant-missing-super-call`
 
 Method must call its parent implementation via `super()`. Certain entity
 methods require calling the parent to maintain correct behavior.
 
 
-## `hass_enforce_sorted_platforms` checker
+## `home_assistant_enforce_sorted_platforms` checker
 
 Ensures platform lists are maintained in alphabetical order.
 
-### `W7451`: `hass-enforce-sorted-platforms`
+### `C7409`: `home-assistant-enforce-sorted-platforms`
 
 The `PLATFORMS` (or `_PLATFORMS`) list must be sorted alphabetically. This
 makes it easier to review and prevents merge conflicts.
 
 
-## `hass_enforce_greek_micro_char` checker
+## `home_assistant_enforce_greek_micro_char` checker
 
 Ensures correct Unicode character for the micro prefix.
 
-### `W7452`: `hass-enforce-greek-micro-char`
+### `C7410`: `home-assistant-enforce-greek-micro-char`
 
 Constants with a micro unit prefix (e.g., `"μg/m³"`) must use the Greek
 small letter mu (U+03BC `μ`), not the ANSI micro sign (U+00B5 `µ`). The
 two characters look identical but are different Unicode code points.
 
 
-## `hass_enforce_class_module` checker
+## `home_assistant_enforce_class_module` checker
 
 Ensures entity classes are placed in the correct module.
 
-### `C7461`: `hass-enforce-class-module`
+### `C7411`: `home-assistant-enforce-class-module`
 
 A class deriving from a platform entity (e.g., `SensorEntity`) should be
 placed in the corresponding platform module (e.g., `sensor.py`), not in
 `__init__.py` or an unrelated module.
 
 
-## `hass_enforce_runtime_data` checker
+## `home_assistant_enforce_runtime_data` checker
 
 Enforces the modern `entry.runtime_data` pattern over the legacy
 `hass.data[DOMAIN]` dictionary pattern. Only flags integrations that
 have a config flow (YAML-only integrations are skipped).
 
-### `W7482`: `hass-use-runtime-data`
+### `W7405`: `home-assistant-use-runtime-data`
 
 Use `entry.runtime_data` instead of `hass.data[DOMAIN]`. The `runtime_data`
 approach is type-safe (via `ConfigEntry[T]`), automatically cleaned up on
@@ -267,24 +267,24 @@ See the [runtime-data quality scale rule](https://developers.home-assistant.io/d
 for migration guidance.
 
 
-## `hass_async_load_fixtures` checker
+## `home_assistant_async_load_fixtures` checker
 
 Ensures test fixture files are loaded asynchronously.
 
-### `W7481`: `hass-async-load-fixtures`
+### `W7404`: `home-assistant-async-load-fixtures`
 
 Test fixture files should be loaded using async I/O, not synchronous
 file reads. This prevents blocking the event loop during tests.
 
 
-## `hass_enforce_config_entry_unique_id_no_ip` checker
+## `home_assistant_enforce_config_entry_unique_id_no_ip` checker
 
 Detects `async_set_unique_id` calls where the argument is an IP address
 or hostname. IP addresses change when devices get new DHCP leases, breaking
 the config entry. Uses variable tracking to catch indirect usage (e.g.,
 `uid = data[CONF_HOST]; await self.async_set_unique_id(uid)`).
 
-### `W7491`: `hass-unique-id-ip-based`
+### `W7406`: `home-assistant-unique-id-ip-based`
 
 `async_set_unique_id` should not use an IP address or hostname. Use a
 stable hardware identifier instead: a MAC address (via `format_mac`),
@@ -293,13 +293,13 @@ serial number, or device-provided unique ID.
 See the [unique-config-entry quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/unique-config-entry).
 
 
-## `hass_enforce_config_flow_no_polling` checker
+## `home_assistant_enforce_config_flow_no_polling` checker
 
 Detects polling interval fields in config flow schemas. Polling intervals
 should be fixed by the integration author, not exposed as user-configurable
 fields.
 
-### `W7492`: `hass-config-flow-polling-field`
+### `W7407`: `home-assistant-config-flow-polling-field`
 
 Config flow should not include polling interval fields like
 `CONF_SCAN_INTERVAL`, `update_interval`, or `refresh_interval`. The
@@ -308,7 +308,7 @@ API rate limits, device capabilities, and data freshness needs.
 
 See the [appropriate-polling quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/appropriate-polling).
 
-## `hass_enforce_config_flow_no_name` checker
+## `home_assistant_enforce_config_flow_no_name` checker
 
 Detects name fields (`CONF_NAME`, `"name"`, `CONF_DEVICE_NAME`,
 `"device_name"`) in config flow schemas. Config flows should not ask
@@ -318,7 +318,7 @@ device (via discovery) or set by the integration code itself.
 Helper integrations (`integration_type: helper` in `manifest.json`) and
 subentry flows (`ConfigSubentryFlow` subclasses) are excluded.
 
-### `W7493`: `hass-config-flow-name-field`
+### `W7408`: `home-assistant-config-flow-name-field`
 
 Config flow should not include a name field. Users should not set names
 in config flows; they come automatically from the device or are set by
