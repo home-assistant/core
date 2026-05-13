@@ -384,6 +384,8 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
+    _set_up = True  # Disabled conditions don't need to be set up
+
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
