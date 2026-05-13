@@ -754,6 +754,7 @@ select = [
   "S102",   # Use of exec detected
   "S103",   # bad-file-permissions
   "S108",   # hardcoded-temp-file
+  "S301",   # suspicious-pickle-usage
   "S306",   # suspicious-mktemp-usage
   "S307",   # suspicious-eval-usage
   "S313",   # suspicious-xmlc-element-tree-usage
