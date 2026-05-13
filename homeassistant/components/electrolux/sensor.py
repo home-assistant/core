@@ -58,7 +58,6 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="appliance_state",
         translation_key="appliance_state",
-        icon="mdi:information-outline",
         value_fn=lambda appliance: appliance.get_current_appliance_state(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=APPLIANCE_STATE,
@@ -77,7 +76,6 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="food_probe_state",
         translation_key="food_probe_state",
-        icon="mdi:thermometer-probe",
         value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=FOOD_PROBE_STATE,
@@ -90,7 +88,6 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="remote_control",
         translation_key="remote_control",
-        icon="mdi:remote",
         value_fn=lambda appliance: appliance.get_current_remote_control(),
         device_class=SensorDeviceClass.ENUM,
         feature_name=REMOTE_CONTROL,
@@ -108,7 +105,6 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="food_probe_temperature",
         translation_key="food_probe_temperature",
-        icon="mdi:thermometer-probe",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda appliance, temp_unit=None: (
@@ -123,7 +119,6 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="display_temperature",
         translation_key="display_temperature",
-        icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda appliance, temp_unit=None: (
