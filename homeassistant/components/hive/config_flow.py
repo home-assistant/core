@@ -157,7 +157,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(
@@ -234,7 +234,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         schema = vol.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
                     vol.Coerce(int), vol.Range(min=30)
                 )

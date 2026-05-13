@@ -60,7 +60,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=hass-config-flow-name-field
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
@@ -211,7 +211,7 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

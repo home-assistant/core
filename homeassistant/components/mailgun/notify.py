@@ -43,7 +43,7 @@ def get_service(
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     data = hass.data[DOMAIN]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),

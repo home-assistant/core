@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=78.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pylint-home-assistant"
+version = "1.0.0"
+license = "Apache-2.0"
+description = "Pylint plugin for Home Assistant integration development."
+readme = "README.md"
+authors = [
+  { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
+]
+keywords = ["home-assistant", "pylint", "plugin", "linting"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Plugins",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Quality Assurance",
+]
+requires-python = ">=3.14.0"
+dependencies = [
+  "astroid>=4.0",
+  "pylint>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/home-assistant/core"
+Documentation = "https://developers.home-assistant.io"
+Repository = "https://github.com/home-assistant/core"
+"Bug Tracker" = "https://github.com/home-assistant/core/issues"
+
+[tool.setuptools.packages.find]
+include = ["pylint_home_assistant*"]

@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, CONF_INPUT
-from homeassistant.components.ffmpeg.camera import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.ffmpeg.camera import (  # pylint: disable=home-assistant-component-root-import
     DEFAULT_ARGUMENTS,
     FFmpegCamera,
 )

@@ -24,7 +24,7 @@ async def async_setup_entry(
     async def async_discover_cover(device_id):
         """Discover and add a discovered sensor."""
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         client: TelldusLiveClient = hass.data[DOMAIN]
         async_add_entities([TelldusLiveCover(client, device_id)])
 

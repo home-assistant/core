@@ -45,7 +45,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors attached to a Konnected device from a config entry."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     data = hass.data[DOMAIN]
     device_id = config_entry.data["id"]
 

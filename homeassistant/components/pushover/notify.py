@@ -44,7 +44,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
     return PushoverNotificationService(
         hass, pushover_api, discovery_info[CONF_USER_KEY]

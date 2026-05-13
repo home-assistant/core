@@ -1,5 +1,5 @@
 """Mobile app websocket API."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import wraps
 from typing import Any

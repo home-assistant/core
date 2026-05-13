@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     if (conf := config.get(DOMAIN)) is not None:
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
     async_setup_services(hass)

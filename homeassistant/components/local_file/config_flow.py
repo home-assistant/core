@@ -43,7 +43,7 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
 DATA_SCHEMA_SETUP = vol.Schema(
     {
         # Approved exemption: user names the local file camera
-        # pylint: disable-next=hass-config-flow-name-field
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     }
 ).extend(DATA_SCHEMA_OPTIONS.schema)

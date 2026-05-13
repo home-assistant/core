@@ -45,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable=hass-enforce-class-module
+# pylint: disable=home-assistant-enforce-class-module
 class DemoInfraredEntityBase(Entity):
     """Representation of a demo infrared entity."""
 

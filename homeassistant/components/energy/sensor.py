@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     reset_detected,
 )
 from homeassistant.const import (

@@ -10,7 +10,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
 )
 from homeassistant.components.homeassistant.exposed_entities import (

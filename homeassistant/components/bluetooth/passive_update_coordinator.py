@@ -90,7 +90,7 @@ class PassiveBluetoothDataUpdateCoordinator(
 
 class PassiveBluetoothCoordinatorEntity[
     _PassiveBluetoothDataUpdateCoordinatorT: PassiveBluetoothDataUpdateCoordinator = PassiveBluetoothDataUpdateCoordinator
-](  # pylint: disable=hass-enforce-class-module
+](  # pylint: disable=home-assistant-enforce-class-module
     BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
 ):
     """A class for entities using DataUpdateCoordinator."""

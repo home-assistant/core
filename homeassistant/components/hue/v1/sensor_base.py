@@ -164,7 +164,7 @@ class SensorManager:
             self._component_add_entities[platform](value)
 
 
-class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=hass-enforce-class-module
+class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Representation of a Hue sensor."""
 
     should_poll = False

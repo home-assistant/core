@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     yaml_config: ConfigType = hass.data[DOMAIN][DATA_CONFIG]
     google_config = config_entry.runtime_data
 
