@@ -30,6 +30,8 @@ def _redact_mac(mac_address: str | None) -> str | None:
     if not mac_address:
         return mac_address
 
+    # format_mac normalises to aa:bb:cc:dd:ee:ff; fall back to REDACTED for
+    # any unrecognised format that passed through unchanged.
     parts = mac_address.split(":")
     if len(parts) == 6:
         return ":".join([*parts[:3], "XX", "XX", "XX"])

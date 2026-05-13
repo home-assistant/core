@@ -17,6 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -85,7 +86,8 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         device_data = config_data.get("device", {})
 
         self.firmware_version = device_data.get("fw")
-        self.mac_address = device_data.get("mac")
+        raw_mac = device_data.get("mac")
+        self.mac_address = format_mac(raw_mac) if raw_mac else None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
