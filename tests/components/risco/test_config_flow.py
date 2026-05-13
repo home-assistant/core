@@ -391,7 +391,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_advanced_options_flow(hass: HomeAssistant) -> None:
+async def test_more_options_flow(hass: HomeAssistant) -> None:
     """Test options flow with more options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
