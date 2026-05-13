@@ -343,39 +343,38 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         if self.mqtt_client:
             return
 
+        # Validate required parameters before entering try block
+        access_token = None
+        user_id = self.config_entry.data.get(CONF_USER_ID)
+
+        # Try to get from config entry token data first
+        token_data = self.config_entry.data.get(CONF_TOKEN)
+        if token_data and isinstance(token_data, dict):
+            access_token = token_data.get("access_token")
+
+        # Fallback: try to get from OAuth2 session if not in config
+        if not access_token and self.oauth_session:
+            try:
+                await self.oauth_session.async_ensure_token_valid()
+                # After ensuring token is valid, get it from session.token
+                if self.oauth_session.token:
+                    access_token = self.oauth_session.token.get("access_token")
+                else:
+                    _LOGGER.debug("OAuth2 session token is None after validation")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Failed to get access_token from session: %s", err)
+
+        # Validate parameters
+        if not access_token:
+            msg = "Cannot initialize MQTT: access_token not available from any source"
+            _LOGGER.warning(msg)
+            raise HeimanMQTTError(msg)
+        if not user_id:
+            msg = "Cannot initialize MQTT: user_id not available"
+            _LOGGER.warning(msg)
+            raise HeimanMQTTError(msg)
+
         try:
-            # Get authentication data from config entry or OAuth2 session
-            access_token = None
-            user_id = self.config_entry.data.get(CONF_USER_ID)
-
-            # Try to get from config entry token data first
-            token_data = self.config_entry.data.get(CONF_TOKEN)
-            if token_data and isinstance(token_data, dict):
-                access_token = token_data.get("access_token")
-
-            # Fallback: try to get from OAuth2 session if not in config
-            if not access_token and self.oauth_session:
-                try:
-                    await self.oauth_session.async_ensure_token_valid()
-                    # After ensuring token is valid, get it from session.token
-                    if self.oauth_session.token:
-                        access_token = self.oauth_session.token.get("access_token")
-                    else:
-                        _LOGGER.debug("OAuth2 session token is None after validation")
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.warning("Failed to get access_token from session: %s", err)
-
-            def _validate_and_raise(value: Any, error_msg: str) -> None:
-                """Validate value and raise HeimanMQTTError if missing."""
-                if not value:
-                    _LOGGER.warning(error_msg)
-                    raise HeimanMQTTError(error_msg)
-
-            _validate_and_raise(
-                access_token,
-                "Cannot initialize MQTT: access_token not available from any source",
-            )
-            _validate_and_raise(user_id, "Cannot initialize MQTT: user_id not available")
 
             # Get user display name using SDK method
             user_display_name = None
