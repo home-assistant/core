@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
@@ -122,6 +122,32 @@ async def test_set_value(
     )
 
 
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+@pytest.mark.parametrize(
+    ("temp_unit_convert", "expected_unit"),
+    [
+        ("c", UnitOfTemperature.CELSIUS),
+        ("f", UnitOfTemperature.FAHRENHEIT),
+    ],
+)
+async def test_temp_unit_convert_number(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    temp_unit_convert: str,
+    expected_unit: UnitOfTemperature,
+) -> None:
+    """Test that temperature number entities use the unit from TEMP_UNIT_CONVERT."""
+    mock_device.status["temp_unit_convert"] = temp_unit_convert
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "number.inverter_pool_heat_pump_temperature"
+    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
+    assert entity is not None, f"{entity_id} does not exist"
+    assert entity.native_unit_of_measurement == expected_unit
+
+
 @pytest.mark.parametrize(
     (
         "mock_device_code",
@@ -142,16 +168,6 @@ async def test_set_value(
                 "tuya.iks13mcaiyie3rryjb2ocalarm_time; use a quirk "
                 "(https://github.com/home-assistant-libs/tuya-device-handlers) "
                 "to override"
-            ),
-        ),
-        (
-            "znrb_gpzittzfnzhduquz",
-            "number.inverter_pool_heat_pump_temperature",
-            "temp_set",
-            "",
-            (
-                "Device class temperature ignored for incompatible unit  in "
-                "number entity tuya.zuqudhznfzttizpgbrnztemp_set"
             ),
         ),
     ],

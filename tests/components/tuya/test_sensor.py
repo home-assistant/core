@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
@@ -184,6 +184,37 @@ async def test_delta_report_sensor(
     assert float(state.state) == pytest.approx(0.6)  # unchanged
 
 
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+@pytest.mark.parametrize(
+    ("temp_unit_convert", "expected_unit"),
+    [
+        ("c", UnitOfTemperature.CELSIUS),
+        ("f", UnitOfTemperature.FAHRENHEIT),
+    ],
+)
+async def test_temp_unit_convert_sensor(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    temp_unit_convert: str,
+    expected_unit: UnitOfTemperature,
+) -> None:
+    """Test that temperature sensors use the unit from TEMP_UNIT_CONVERT."""
+    mock_device.status["temp_unit_convert"] = temp_unit_convert
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    for entity_id in (
+        "sensor.inverter_pool_heat_pump_coil_temperature",
+        "sensor.inverter_pool_heat_pump_flow_temperature",
+        "sensor.inverter_pool_heat_pump_heat_exchanger_temperature",
+        "sensor.inverter_pool_heat_pump_outside_temperature",
+    ):
+        entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
+        assert entity is not None, f"{entity_id} does not exist"
+        assert entity.native_unit_of_measurement == expected_unit, entity_id
+
+
 @pytest.mark.parametrize(
     (
         "mock_device_code",
@@ -204,16 +235,6 @@ async def test_delta_report_sensor(
                 "tuya.fcdadqsiax2gvnt0qldadd_ele; use a quirk "
                 "(https://github.com/home-assistant-libs/tuya-device-handlers) "
                 "to override"
-            ),
-        ),
-        (
-            "znrb_gpzittzfnzhduquz",
-            "sensor.inverter_pool_heat_pump_temperature",
-            "temp_set",
-            "",
-            (
-                "Device class temperature ignored for incompatible unit  in "
-                "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
             ),
         ),
     ],
