@@ -214,6 +214,25 @@ async def test_state_off_when_offline(
     assert state.state == STATE_OFF
 
 
+async def test_no_card_metadata_when_card_id_missing(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """Card metadata properties return None when no card is active."""
+    player = next(iter(mock_yoto_client.players.values()))
+    player.last_event.card_id = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert "media_album_name" not in state.attributes
+    assert "media_artist" not in state.attributes
+    assert "media_image_url" not in state.attributes
+
+
 async def test_state_idle_for_unknown_playback_status(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
