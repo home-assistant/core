@@ -44,7 +44,6 @@
         },
         "user": {
           "data": {
-            "limit": "Maximum locations",
             "location": "[%key:common::config_flow::data::location%]"
           }
         }
