@@ -373,12 +373,12 @@ async def test_location_subentry_map_flow_sorts_locations_by_distance(
     ]
 
 
-async def test_location_subentry_map_flow_limits_to_top_five_locations(
+async def test_location_subentry_map_flow_limits_to_top_ten_locations(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test map search only shows the top five useful locations."""
+    """Test map search only shows the top ten useful locations."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.return_value = make_response(
         [
@@ -388,6 +388,11 @@ async def test_location_subentry_map_flow_limits_to_top_five_locations(
             make_location(location_id=9994, name="Location 4", distance=400),
             make_location(location_id=9995, name="Location 5", distance=500),
             make_location(location_id=9996, name="Location 6", distance=600),
+            make_location(location_id=9997, name="Location 7", distance=700),
+            make_location(location_id=9998, name="Location 8", distance=800),
+            make_location(location_id=9999, name="Location 9", distance=900),
+            make_location(location_id=10000, name="Location 10", distance=1000),
+            make_location(location_id=10001, name="Location 11", distance=1100),
         ]
     )
     result = await hass.config_entries.subentries.async_init(
@@ -411,6 +416,11 @@ async def test_location_subentry_map_flow_limits_to_top_five_locations(
         "9993",
         "9994",
         "9995",
+        "9996",
+        "9997",
+        "9998",
+        "9999",
+        "10000",
     ]
 
 
