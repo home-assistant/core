@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.parametrize(
     "entity_name",
     [
-        "number.keuken_alle_rotation",
+        "number.keuken_alle_raw_rotation",
         "number.keuken_alle_minimum_rotation",
         "number.keuken_alle_maximum_rotation",
     ],
@@ -59,7 +59,7 @@ async def test_number_update(
 @pytest.mark.parametrize(
     ("entity_name", "initial_value", "target_value"),
     [
-        ("number.keuken_alle_rotation", "127", "80"),
+        ("number.keuken_alle_raw_rotation", "0", "80"),
         ("number.keuken_alle_minimum_rotation", "-75", "-50"),
         ("number.keuken_alle_maximum_rotation", "75", "100"),
     ],

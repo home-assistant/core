@@ -35,21 +35,21 @@
     'state': '-75',
   })
 # ---
-# name: test_number_update[number.keuken_alle_rotation]
+# name: test_number_update[number.keuken_alle_raw_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Rotation',
+      'friendly_name': 'Keuken alle Raw Rotation',
       'max': 127,
       'min': -127,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.keuken_alle_rotation',
+    'entity_id': 'number.keuken_alle_raw_rotation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '127',
+    'state': '0',
   })
 # ---

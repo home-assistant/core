@@ -373,27 +373,11 @@ async def test_cover_tilt_open_and_close(
     assert len(mock_hub_configuration.mock_calls) == 1
     assert len(mock_hub_status.mock_calls) >= 1
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     entity = hass.states.get(entity_name)
     assert entity is not None
-    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
-
-    with patch(
-        "wmspro.destination.Destination.refresh",
-        return_value=True,
-    ):
-        before = len(mock_hub_status.mock_calls)
-
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
-            {ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-
-        entity = hass.states.get(entity_name)
-        assert entity is not None
-        assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
-        assert len(mock_hub_status.mock_calls) == before
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -411,6 +395,24 @@ async def test_cover_tilt_open_and_close(
         entity = hass.states.get(entity_name)
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+        assert len(mock_hub_status.mock_calls) == before
+
+    with patch(
+        "wmspro.destination.Destination.refresh",
+        return_value=True,
+    ):
+        before = len(mock_hub_status.mock_calls)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: entity.entity_id},
+            blocking=True,
+        )
+
+        entity = hass.states.get(entity_name)
+        assert entity is not None
+        assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
         assert len(mock_hub_status.mock_calls) == before
 
 
@@ -444,9 +446,11 @@ async def test_cover_tilt_to_pos(
     assert len(mock_hub_configuration.mock_calls) == 1
     assert len(mock_hub_status.mock_calls) >= 1
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     entity = hass.states.get(entity_name)
     assert entity is not None
-    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -457,13 +461,13 @@ async def test_cover_tilt_to_pos(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_TILT_POSITION: 50},
+            {ATTR_ENTITY_ID: entity.entity_id, ATTR_TILT_POSITION: 100},
             blocking=True,
         )
 
         entity = hass.states.get(entity_name)
         assert entity is not None
-        assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
+        assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
         assert len(mock_hub_status.mock_calls) == before
 
 
@@ -497,11 +501,13 @@ async def test_cover_tilt_with_open_and_close_pos(
     assert len(mock_hub_configuration.mock_calls) == 1
     assert len(mock_hub_status.mock_calls) >= 1
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     entity = hass.states.get(entity_name)
     assert entity is not None
     assert entity.state == STATE_CLOSED
     assert entity.attributes[ATTR_CURRENT_POSITION] == 0
-    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     with patch(
         "wmspro.destination.Destination.refresh",
