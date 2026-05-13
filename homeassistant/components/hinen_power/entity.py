@@ -1,7 +1,5 @@
 """Entity representing a Hinen Power."""
 
-from __future__ import annotations
-
 from hinen_open_api import HinenOpen
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

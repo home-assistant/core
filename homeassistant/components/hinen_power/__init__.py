@@ -1,7 +1,5 @@
 """Support for Hinen Power."""
 
-from __future__ import annotations
-
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
 from homeassistant.components.application_credentials import ClientCredential
