@@ -26,6 +26,7 @@ class GridxConnector(Protocol):
     async def close(self) -> None:
         """Close the connector and any owned clients."""
 
+
 def load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
     """Load OEM connector config and inject credentials."""
     config_path = files("gridx_connector").joinpath("config", f"{oem}.config.json")

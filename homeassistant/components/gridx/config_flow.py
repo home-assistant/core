@@ -20,6 +20,7 @@ UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
 class _NoSystemsFoundError(Exception):
     """Raised when authentication succeeds but no GridX systems are found."""
 
+
 async def _validate_credentials(
     hass: HomeAssistant,
     oem: str,
