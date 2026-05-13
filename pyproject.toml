@@ -60,7 +60,7 @@ dependencies = [
   "cryptography==47.0.0",
   "Pillow==12.2.0",
   "propcache==0.4.1",
-  "pyOpenSSL==26.1.0",
+  "pyOpenSSL==26.2.0",
   "orjson==3.11.8",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",

@@ -1,14 +1,41 @@
 {
   "entity": {
     "sensor": {
+      "next_departure_1": {
+        "default": "mdi:bus-clock"
+      },
       "next_departure_1_direction": {
         "default": "mdi:directions"
+      },
+      "next_departure_1_type": {
+        "default": "mdi:clock-outline",
+        "state": {
+          "estimated": "mdi:clock-check-outline"
+        }
+      },
+      "next_departure_2": {
+        "default": "mdi:bus-clock"
       },
       "next_departure_2_direction": {
         "default": "mdi:directions"
       },
+      "next_departure_2_type": {
+        "default": "mdi:clock-outline",
+        "state": {
+          "estimated": "mdi:clock-check-outline"
+        }
+      },
+      "next_departure_3": {
+        "default": "mdi:bus-clock"
+      },
       "next_departure_3_direction": {
         "default": "mdi:directions"
+      },
+      "next_departure_3_type": {
+        "default": "mdi:clock-outline",
+        "state": {
+          "estimated": "mdi:clock-check-outline"
+        }
       }
     }
   }

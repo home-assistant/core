@@ -155,10 +155,15 @@ def assert_condition_trace(expected):
     ("config", "error"),
     [
         (
+            {"blabla": "not_a_condition"},
+            "Unexpected value for condition: 'None'. Expected a condition, "
+            "a list of conditions or a valid template",
+        ),
+        (
             {"condition": 123},
             "Unexpected value for condition: '123'. Expected a condition, "
             "a list of conditions or a valid template",
-        )
+        ),
     ],
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
