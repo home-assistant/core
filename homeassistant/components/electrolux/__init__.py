@@ -21,7 +21,11 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
     try:
         await client.test_connection()
     except BadCredentialsException as e:
-        raise ConfigEntryAuthFailed("Bad credentials detected.") from e
+        raise ConfigEntryError("Bad credentials detected.") from e
     except FailedConnectionException as e:
         raise ConfigEntryNotReady("Connection with client failed.") from e
 
