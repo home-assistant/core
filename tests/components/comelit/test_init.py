@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.comelit import async_migrate_entry
 from homeassistant.components.comelit.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -112,4 +112,6 @@ async def test_migrate_future_version_returns_false(
         minor_version=0,
     )
 
-    assert not await async_migrate_entry(hass, config_entry)
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
