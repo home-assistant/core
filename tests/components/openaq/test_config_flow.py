@@ -318,6 +318,42 @@ async def test_location_subentry_map_flow_labels_unknown_distance(
     ]
 
 
+async def test_location_subentry_map_flow_sorts_locations_by_distance(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test map search presents locations ordered by distance."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [
+            make_location(location_id=9993, name="Far", distance=3000),
+            make_location(location_id=9991, name="Near", distance=1000),
+            make_location(location_id=9992, name="Middle", distance=2000),
+        ]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
+        },
+    )
+
+    assert [option["value"] for option in _get_select_options(result)] == [
+        "9991",
+        "9992",
+        "9993",
+    ]
+
+
 async def test_location_subentry_map_flow_limits_to_top_five_locations(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
