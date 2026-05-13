@@ -1260,3 +1260,22 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+async def test_missing_supported_components(
+    hass: HomeAssistant,
+    calendars: list[Mock],
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup works when calendar raises KeyError on get_supported_components."""
+    calendars[0].get_supported_components.side_effect = KeyError()
+    await setup_platform_cb()
+
+    assert hass.states.get(TEST_ENTITY)
+    assert (
+        "CalDAV server does not report supported components for calendar Example, "
+        "assuming it supports the requested component 'VEVENT'"
+        in caplog.text
+    )
+
