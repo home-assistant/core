@@ -13,6 +13,9 @@
   "issues": {
     "migrate_to_group_sensor": {
       "fix_flow": {
+        "abort": {
+          "entity_not_found": "Entity could not be found, please restart repairing the issue."
+        },
         "step": {
           "migrate": {
             "description": "The Min/Max helper has been deprecated and {title} will be migrated to a group sensor when you click submit to fix this repair.",
