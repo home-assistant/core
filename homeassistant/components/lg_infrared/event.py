@@ -2,7 +2,6 @@
 
 import logging
 
-from infrared_protocols.codes.lg.tv import LGTVCode
 from infrared_protocols.commands.nec import NECCommand
 
 from homeassistant.components.event import EventEntity
@@ -27,23 +26,67 @@ from .entity import LgIrEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# LG TV NEC address (extended NEC, 16-bit)
+PARALLEL_UPDATES = 0
+
+# TODO: remove this when https://github.com/home-assistant-libs/infrared-protocols/pull/38
+# is merged
 _LG_TV_NEC_ADDRESS = 0xFB04
 
-# Build a lookup from command byte value -> lowercase LGTVCode name
 _COMMAND_BYTE_TO_EVENT_TYPE: dict[int, str] = {
-    code.value: code.name.lower() for code in LGTVCode
+    0x79: "aspect",
+    0x28: "back",
+    0x72: "blue",
+    0x01: "channel_down",
+    0x00: "channel_up",
+    0x5B: "exit",
+    0xFF: "ez_adjust",
+    0x8E: "fast_forward",
+    0x63: "green",
+    0xA9: "guide",
+    0xCE: "hdmi_1",
+    0xCC: "hdmi_2",
+    0xE9: "hdmi_3",
+    0xDA: "hdmi_4",
+    0x7C: "home",
+    0xAA: "info",
+    0x0B: "input",
+    0xFB: "in_start",
+    0xCA: "list",
+    0x43: "menu",
+    0x09: "mute",
+    0x41: "nav_down",
+    0x07: "nav_left",
+    0x06: "nav_right",
+    0x40: "nav_up",
+    0x10: "num_0",
+    0x11: "num_1",
+    0x12: "num_2",
+    0x13: "num_3",
+    0x14: "num_4",
+    0x15: "num_5",
+    0x16: "num_6",
+    0x17: "num_7",
+    0x18: "num_8",
+    0x19: "num_9",
+    0x44: "ok",
+    0xBA: "pause",
+    0xB0: "play",
+    0x08: "power",
+    0xC4: "power_on",
+    0xC5: "power_off",
+    0x71: "red",
+    0x8F: "rewind",
+    0x0A: "sap",
+    0x45: "settings",
+    0xB1: "stop",
+    0x39: "subtitle",
+    0x20: "text",
+    0x03: "volume_down",
+    0x02: "volume_up",
+    0x61: "yellow",
 }
-
-# Event type for commands from the LG TV address that don't match any known code
 _EVENT_TYPE_UNKNOWN = "unknown"
-
-# All possible event types: known LG TV codes + unknown
-_EVENT_TYPES: list[str] = [code.name.lower() for code in LGTVCode] + [
-    _EVENT_TYPE_UNKNOWN
-]
-
-PARALLEL_UPDATES = 0
+_EVENT_TYPES: list[str] = [*_COMMAND_BYTE_TO_EVENT_TYPE.values(), _EVENT_TYPE_UNKNOWN]
 
 
 async def async_setup_entry(
@@ -52,17 +95,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LG IR event entity from config entry."""
-    if (
-        receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
-    ) and entry.data[CONF_DEVICE_TYPE] == LGDeviceType.TV:
-        async_add_entities(
-            [
-                LgIrReceivedCommandEvent(
-                    entry,
-                    receiver_entity_id,
-                )
-            ]
-        )
+    if entry.data[CONF_DEVICE_TYPE] != LGDeviceType.TV:
+        return
+    if not (receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID)):
+        return
+    async_add_entities([LgIrReceivedCommandEvent(entry, receiver_entity_id)])
 
 
 class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
@@ -109,9 +146,7 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
         )
 
         _LOGGER.debug(
-            "Received LG TV IR command: %s (0x%02X)",
-            event_type,
-            nec_command.command,
+            "Received LG TV IR command: %s (0x%02X)", event_type, nec_command.command
         )
 
         self._trigger_event(event_type)
