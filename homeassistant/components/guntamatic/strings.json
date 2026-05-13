@@ -42,8 +42,8 @@
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
       },
-      "domestic_home_water_temperature": {
-        "name": "Domestic home water temperature"
+      "domestic_hot_water_0_temperature": {
+        "name": "Domestic hot water circuit 0 temperature"
       },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
