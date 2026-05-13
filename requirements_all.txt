@@ -80,7 +80,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.sunricher_dali
-PySrDaliGateway==0.20.4
+PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
 PySwitchbot==2.2.0
@@ -1338,7 +1338,7 @@ ihcsdk==2.8.12
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.1.2
+imgw_pib==2.2.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.7.0
@@ -1353,7 +1353,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.1.0
+infrared-protocols==5.2.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -1426,7 +1426,7 @@ konnected==1.2.0
 krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.1.1
+lacrosse-view==1.1.2
 
 # homeassistant.components.eufy
 lakeside==0.13

@@ -95,7 +95,7 @@ if TYPE_CHECKING:
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
-    from .infrared.common import MockInfraredEntity
+    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
     from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
@@ -234,14 +234,28 @@ async def init_infrared_fixture(hass: HomeAssistant) -> None:
     await init_infrared_fixture_helper(hass)
 
 
-@pytest.fixture(name="mock_infrared_entity")
-async def mock_infrared_entity_fixture(
+@pytest.fixture(name="mock_infrared_emitter_entity")
+async def mock_infrared_emitter_entity_fixture(
     hass: HomeAssistant, init_infrared: None
-) -> MockInfraredEntity:
-    """Return a mock infrared entity."""
-    from .infrared.common import mock_infrared_entity_fixture_helper  # noqa: PLC0415
+) -> MockInfraredEmitterEntity:
+    """Return a mock infrared emitter entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_emitter_entity_fixture_helper,
+    )
 
-    return await mock_infrared_entity_fixture_helper(hass)
+    return await mock_infrared_emitter_entity_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_receiver_entity")
+async def mock_infrared_receiver_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredReceiverEntity:
+    """Return a mock infrared receiver entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_receiver_entity_fixture_helper,
+    )
+
+    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
@@ -890,6 +904,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.repairs.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.services.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
