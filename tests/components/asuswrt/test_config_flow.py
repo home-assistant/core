@@ -188,6 +188,19 @@ async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_BASE: "pwd_or_ssh"}
 
 
+async def test_error_password_and_ssh(hass: HomeAssistant) -> None:
+    """Test we abort for both password and ssh file combination."""
+    config_data = {**CONFIG_SCHEMA_SSH, CONF_MORE_OPTIONS: {CONF_SSH_KEY: SSH_KEY}}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=config_data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_BASE: "pwd_and_ssh"}
+
+
 async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     """Test we abort if invalid ssh file is provided."""
     config_data = {k: v for k, v in CONFIG_SCHEMA_SSH.items() if k != CONF_PASSWORD}

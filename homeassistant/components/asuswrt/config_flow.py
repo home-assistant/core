@@ -59,9 +59,6 @@ ALLOWED_PROTOCOL = [
     PROTOCOL_TELNET,
 ]
 
-PASS_KEY = "pass_key"
-PASS_KEY_MSG = "Only provide password or SSH key file"
-
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_SUCCESS = "success"
 RESULT_UNKNOWN = "unknown"
@@ -146,7 +143,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
+            vol.Optional(CONF_PASSWORD): str,
             vol.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
@@ -159,7 +156,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Schema(
                     {
                         vol.Optional(CONF_PORT): cv.port,
-                        vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
+                        vol.Optional(CONF_SSH_KEY): str,
                     }
                 ),
                 SectionConfig(collapsed=True),
@@ -251,6 +248,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(error="pwd_required")
         if not (pwd or ssh):
             return self._show_setup_form(error="pwd_or_ssh")
+        if pwd and ssh:
+            return self._show_setup_form(error="pwd_and_ssh")
         if ssh and not await self.hass.async_add_executor_job(_is_file, ssh):
             return self._show_setup_form(error="ssh_not_file")
 
