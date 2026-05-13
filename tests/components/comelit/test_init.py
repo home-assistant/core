@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.comelit import async_migrate_entry
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -130,3 +131,19 @@ async def test_migrate_sensor_unique_id_missing_device(
     migrated_entry = entity_registry.async_get(entity_entry.entity_id)
     assert migrated_entry
     assert migrated_entry.unique_id == old_unique_id
+
+
+async def test_migrate_future_version_returns_false(
+    hass: HomeAssistant,
+    mock_vedo_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration failure for downgraded future config entry version."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_vedo_config_entry.data,
+        entry_id=mock_vedo_config_entry.entry_id,
+        version=2,
+        minor_version=0,
+    )
+
+    assert not await async_migrate_entry(hass, config_entry)
