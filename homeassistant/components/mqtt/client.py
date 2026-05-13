@@ -439,7 +439,7 @@ class MQTT:
     _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
-    supports_subscriptions_identifiers: bool = False
+    _supports_subscription_identifiers: bool = False
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
@@ -1043,7 +1043,7 @@ class MQTT:
         subscribe_chain = chunked_or_all(
             pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
         )
-        if self.supports_subscriptions_identifiers and pending_subscriptions:
+        if self._supports_subscription_identifiers and pending_subscriptions:
             bulk_properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
             bulk_properties.SubscriptionIdentifier = 1
         else:
@@ -1052,7 +1052,7 @@ class MQTT:
         self._pending_subscriptions = {}
 
         for topic, qos in pending_wildcard_subscriptions.items():
-            if self.supports_subscriptions_identifiers:
+            if self._supports_subscription_identifiers:
                 properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
                 properties.SubscriptionIdentifier = self._registered_subscriptions[
                     topic
@@ -1168,11 +1168,11 @@ class MQTT:
                     "Please use a supported MQTT broker; got broker properties: %s",
                     properties,
                 )
-                self.supports_subscriptions_identifiers = False
+                self._supports_subscription_identifiers = False
             else:
-                self.supports_subscriptions_identifiers = True
+                self._supports_subscription_identifiers = True
         else:
-            self.supports_subscriptions_identifiers = False
+            self._supports_subscription_identifiers = False
 
         if reason_code.is_failure:
             # 24: Continue authentication
@@ -1267,7 +1267,7 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         identifiers: tuple[int, ...] | None = None
-        if self.supports_subscriptions_identifiers:
+        if self._supports_subscription_identifiers:
             # It is possible we have multiple messages if there
             # are overlapping wildcard subscriptions.
             # So we assigned all wildcard subscriptions with a
