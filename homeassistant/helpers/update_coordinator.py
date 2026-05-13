@@ -438,7 +438,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
-        except (OAuth2TokenRequestError,) as err:
+        except OAuth2TokenRequestError as err:
             self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
                 # Non-recoverable error
