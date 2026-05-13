@@ -106,4 +106,4 @@ async def test_victron_button_press(
             "button", "press", {"entity_id": entity_id}, blocking=True
         )
 
-        set_mock.assert_called_once()
+        set_mock.assert_called_once_with(1)
