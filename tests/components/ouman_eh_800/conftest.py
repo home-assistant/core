@@ -236,6 +236,18 @@ def mock_ouman_client(registry_set: OumanRegistrySet) -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.get_active_registries.return_value = registry_set
         client.get_values.return_value = values
+
+        # Simulate the device: a successful write changes what subsequent
+        # reads return, so the coordinator's post-write refresh keeps the
+        # new value instead of reverting. Tests can override by replacing
+        # ``set_endpoint_value.side_effect``.
+        def _set_endpoint_value(
+            endpoint: OumanEndpoint, value: OumanValues
+        ) -> OumanValues:
+            values[endpoint] = value
+            return value
+
+        client.set_endpoint_value.side_effect = _set_endpoint_value
         yield client
 
 

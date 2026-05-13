@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from ouman_eh_800_api import (
+    ControllableEndpoint,
     L1BaseEndpoints,
     L2BaseEndpoints,
     OumanClientAuthenticationError,
@@ -17,7 +18,12 @@ from ouman_eh_800_api import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -96,6 +102,23 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             return await self.client.get_values(self._registry_set)
         except OumanClientCommunicationError as err:
             raise UpdateFailed("Error communicating with API") from err
+
+    async def async_set_endpoint_value(
+        self, endpoint: ControllableEndpoint, value: OumanValues | int
+    ) -> None:
+        """Set a value on the device and refresh."""
+        try:
+            result = await self.client.set_endpoint_value(endpoint, value)
+        except OumanClientAuthenticationError as err:
+            raise HomeAssistantError("Authentication failed") from err
+        except OumanClientCommunicationError as err:
+            raise HomeAssistantError("Error communicating with API") from err
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+
+        self.async_set_updated_data({**self.data, endpoint: result})
+        # Separate refresh on all endpoints to catch cascading changes.
+        await self.async_request_refresh()
 
     def sync_circuit_device_names(self) -> None:
         """Set the device-reported circuit names for the L1/L2 sub-device names.
