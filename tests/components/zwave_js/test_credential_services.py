@@ -716,6 +716,14 @@ async def test_set_credential_no_available_slots(
     api.set_credential.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "credential_data",
+    [
+        "12ab",  # ASCII letters
+        "١٢٣٤",  # Arabic-Indic digits — str.isdigit() returns True
+        "１２３４",  # Fullwidth digits — str.isdigit() returns True
+    ],
+)
 async def test_set_credential_pin_not_digits(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -723,8 +731,9 @@ async def test_set_credential_pin_not_digits(
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
+    credential_data: str,
 ) -> None:
-    """PIN credential data containing non-digit characters is rejected locally."""
+    """PIN credential data must be ASCII 0-9, rejected locally otherwise."""
     api = _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(HomeAssistantError) as exc:
@@ -737,14 +746,14 @@ async def test_set_credential_pin_not_digits(
                 ),
                 "user_id": 1,
                 "credential_type": "pin_code",
-                "credential_data": "12ab",
+                "credential_data": credential_data,
                 "credential_slot": 1,
             },
             blocking=True,
             return_response=True,
         )
 
-    # PIN codes are validated locally to be digits-only, so a non-numeric
+    # PIN codes are validated locally to be ASCII-digits-only, so any other
     # value is rejected up front without bothering the device.
     assert exc.value.translation_key == "credential_data_pin_not_digits"
     api.set_credential.assert_not_called()

@@ -400,7 +400,11 @@ async def async_set_credential(
                 "max_length": str(type_cap.max_credential_length),
             },
         )
-    if credential_type is UserCredentialType.PIN_CODE and not credential_data.isdigit():
+    if credential_type is UserCredentialType.PIN_CODE and not (
+        credential_data.isascii() and credential_data.isdigit()
+    ):
+        # str.isdigit() accepts non-ASCII digit code points (e.g. Arabic-Indic),
+        # which the lock firmware cannot store. Restrict to ASCII 0-9.
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="credential_data_pin_not_digits",
