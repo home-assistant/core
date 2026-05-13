@@ -151,7 +151,7 @@ Aliased `DOMAIN` import from another integration should use a descriptive alias.
 
 ### `W7427`: `hass-import-constant-unnecessary-alias`
 
-Unnecessary alias for `DOMAIN` import -- the alias matches the original name.
+Unnecessary alias when importing DOMAIN from within the same integration.
 
 
 ## `hass_enforce_type_hints` checker
