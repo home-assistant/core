@@ -1275,7 +1275,5 @@ async def test_missing_supported_components(
     assert hass.states.get(TEST_ENTITY)
     assert (
         "CalDAV server does not report supported components for calendar Example, "
-        "assuming it supports the requested component 'VEVENT'"
-        in caplog.text
+        "assuming it supports the requested component 'VEVENT'" in caplog.text
     )
-
