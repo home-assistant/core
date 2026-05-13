@@ -170,6 +170,12 @@ def mock_current_request(
         ("https://foo.com", "https://example.com", "foo.com:18123", "https://foo.com"),
         ("https://example.com", "https://foo.com", "foo.com:18123", "https://foo.com"),
         # Requests have a port and match external url
+        # Note: We currently do not fully properly handle port matching for
+        # internal urls. The tests here work because of prefer_external=True. We
+        # can improve get_url so that additional cases where the internal url
+        # have the same hostname work in future:
+        # - Match request to internal url when external url has a port
+        # - Match request to external url when internal url has a port
         (
             "https://foo.com",
             "https://foo.com:18123",
@@ -183,11 +189,6 @@ def mock_current_request(
             "192.168.1.2:8123",
             "http://192.168.1.2:8123",
         ),
-        # Note: We currently do not fully properly handle port matching for
-        # internal urls. The tests above work because of prefer_external=True, and
-        # we can improve get_url so that these cases also work in the future:
-        # ("https://foo.com", "https://foo.com:18123", "foo.com", "https://foo.com"),
-        # ("https://foo.com:18123", "https://foo.com", "foo.com:18123", "https://foo.com:18123"),
     ],
     ids=[
         "request_host_matches_internal",
