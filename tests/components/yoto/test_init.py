@@ -307,3 +307,17 @@ async def test_status_per_device_failure_is_logged(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Could not refresh Yoto player" in caplog.text
+
+
+async def test_status_per_device_unexpected_error_propagates(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
+) -> None:
+    """A non-YotoError from update_player_status is not swallowed."""
+    mock_yoto_client.update_player_status.side_effect = RuntimeError("boom")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
