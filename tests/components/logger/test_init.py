@@ -309,14 +309,21 @@ async def _assert_log_levels(hass: HomeAssistant) -> None:
 
 def _reset_logging():
     """Reset loggers."""
-    logging.getLogger(CONFIGED_NS).orig_setLevel(logging.NOTSET)
-    logging.getLogger(f"{CONFIGED_NS}.info").orig_setLevel(logging.NOTSET)
-    logging.getLogger(f"{CONFIGED_NS}.debug").orig_setLevel(logging.NOTSET)
-    logging.getLogger(HASS_NS).orig_setLevel(logging.NOTSET)
-    logging.getLogger(COMPONENTS_NS).orig_setLevel(logging.NOTSET)
-    logging.getLogger(ZONE_NS).orig_setLevel(logging.NOTSET)
-    logging.getLogger(GROUP_NS).orig_setLevel(logging.NOTSET)
-    logging.getLogger(INTEGRATION_NS).orig_setLevel(logging.NOTSET)
+    for ns in (
+        CONFIGED_NS,
+        f"{CONFIGED_NS}.info",
+        f"{CONFIGED_NS}.debug",
+        HASS_NS,
+        COMPONENTS_NS,
+        ZONE_NS,
+        GROUP_NS,
+        INTEGRATION_NS,
+    ):
+        log = logging.getLogger(ns)
+        if hasattr(log, "orig_setLevel"):
+            log.orig_setLevel(logging.NOTSET)
+        else:
+            log.setLevel(logging.NOTSET)
 
 
 async def test_can_set_integration_level_from_store(
