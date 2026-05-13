@@ -1,8 +1,6 @@
 """Test utilities for the Imou integration."""
 
-from collections.abc import Iterator
-from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.imou.const import (
     CONF_API_URL,
@@ -26,15 +24,6 @@ CONFIG_ENTRY_DATA = {
     CONF_API_URL: TEST_API_URL,
 }
 
-# Patch targets: config flow imports the client in its module; __init__ uses the package namespace.
-PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT = (
-    "homeassistant.components.imou.config_flow.ImouOpenApiClient"
-)
-PATCH_PACKAGE_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
-PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER = (
-    "homeassistant.components.imou.ImouHaDeviceManager"
-)
-
 
 def create_mock_device_manager() -> MagicMock:
     """Create a mock device manager."""
@@ -45,24 +34,8 @@ def create_mock_device_manager() -> MagicMock:
     return mock_device_manager
 
 
-def create_mock_api_client() -> MagicMock:
-    """Create a mock API client."""
-    mock_client = MagicMock()
-    mock_client.async_get_token = AsyncMock()
-    return mock_client
-
-
-@contextmanager
-def imou_package_setup_patches(mock_device_manager: MagicMock) -> Iterator[None]:
-    """Patch OpenAPI client and HA device manager where async_setup_entry resolves them."""
-    with (
-        patch(
-            PATCH_PACKAGE_IMOU_OPENAPI_CLIENT,
-            return_value=create_mock_api_client(),
-        ),
-        patch(
-            PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER,
-            return_value=mock_device_manager,
-        ),
-    ):
-        yield
+def new_imou_openapi_client_mock() -> AsyncMock:
+    """API client mock used by config flow and package-level patches (same shape everywhere)."""
+    mock_instance = AsyncMock()
+    mock_instance.async_get_token = AsyncMock()
+    return mock_instance

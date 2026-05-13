@@ -105,6 +105,7 @@ async def test_user_flow_exception_then_recover(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert "errors" in result
     assert result["errors"]["base"] == expected_error
 
     mock_api_client.async_get_token.reset_mock(side_effect=True)

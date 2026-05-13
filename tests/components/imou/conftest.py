@@ -1,6 +1,7 @@
 """Test configuration and fixtures for Imou integration."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator, Iterator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,12 +12,35 @@ from homeassistant.core import HomeAssistant
 
 from .util import (
     CONFIG_ENTRY_DATA,
-    PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
     create_mock_device_manager,
-    imou_package_setup_patches,
+    new_imou_openapi_client_mock,
 )
 
 from tests.common import MockConfigEntry
+
+PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT = (
+    "homeassistant.components.imou.config_flow.ImouOpenApiClient"
+)
+PATCH_PACKAGE_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
+PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER = (
+    "homeassistant.components.imou.ImouHaDeviceManager"
+)
+
+
+@contextmanager
+def imou_package_setup_patches(mock_device_manager: MagicMock) -> Iterator[None]:
+    """Patch OpenAPI client and HA device manager where async_setup_entry resolves them."""
+    with (
+        patch(
+            PATCH_PACKAGE_IMOU_OPENAPI_CLIENT,
+            return_value=new_imou_openapi_client_mock(),
+        ),
+        patch(
+            PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER,
+            return_value=mock_device_manager,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -37,8 +61,7 @@ def mock_api_client() -> Generator[MagicMock]:
     with patch(
         PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
     ) as mock_client:
-        mock_instance = AsyncMock()
-        mock_instance.async_get_token = AsyncMock()
+        mock_instance = new_imou_openapi_client_mock()
         mock_client.return_value = mock_instance
         yield mock_instance
 
