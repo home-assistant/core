@@ -5,9 +5,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.monarch_money import async_migrate_entry
+from homeassistant.components.monarch_money.config_flow import MonarchMoneyConfigFlow
+from homeassistant.components.monarch_money.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import DATA_INSTANCE
 
 from . import setup_integration
 
@@ -97,50 +102,19 @@ async def test_statistics_migration_called_for_monetary_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_config_api: AsyncMock,
 ) -> None:
-    """Test that statistics migration is called for existing monetary sensors on setup."""
+    """Test statistics migration updates existing monetary sensors."""
     await hass.config.async_update(currency="USD")
 
     # Add entry to hass first so we can add entities to it
     mock_config_entry.add_to_hass(hass)
+    _add_migration_entity_registry_entries(entity_registry, mock_config_entry)
+    hass.data[DATA_INSTANCE] = object()
 
-    # Pre-populate entity registry with existing monetary sensor entries
-    # This simulates a previous installation that had these entities
-    entity_registry.async_get_or_create(
-        "sensor",
-        "monarch_money",
-        "222260252323873333_checking_currentBalance",
-        config_entry=mock_config_entry,
-        original_device_class="monetary",
-        suggested_object_id="rando_bank_checking_balance",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "monarch_money",
-        "222260252323873333_sum_income",
-        config_entry=mock_config_entry,
-        original_device_class="monetary",
-        suggested_object_id="cashflow_income_year_to_date",
-    )
-    # Add a non-monetary sensor to verify it's not migrated
-    entity_registry.async_get_or_create(
-        "sensor",
-        "monarch_money",
-        "222260252323873333_checking_age",
-        config_entry=mock_config_entry,
-        original_device_class="timestamp",
-        suggested_object_id="rando_bank_checking_data_age",
-    )
-
-    with (
-        patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.monarch_money.async_update_statistics_metadata"
-        ) as mock_update_stats,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.monarch_money.async_update_statistics_metadata"
+    ) as mock_update_stats:
+        assert await async_migrate_entry(hass, mock_config_entry)
 
     # Verify async_update_statistics_metadata was called for monetary sensors
     assert mock_update_stats.call_count == 2  # Only the 2 monetary sensors
@@ -158,3 +132,61 @@ async def test_statistics_migration_called_for_monetary_sensors(
     # Verify all calls used the configured currency
     for call in mock_update_stats.call_args_list:
         assert call.kwargs["new_unit_of_measurement"] == "USD"
+
+    assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
+
+
+async def test_statistics_migration_returns_early_without_recorder(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test statistics migration skips metadata updates without recorder."""
+    mock_config_entry.add_to_hass(hass)
+    _add_migration_entity_registry_entries(entity_registry, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.monarch_money.async_update_statistics_metadata",
+        side_effect=AssertionError("Statistics metadata should not be updated"),
+    ):
+        assert await async_migrate_entry(hass, mock_config_entry)
+
+    assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
+
+
+def test_config_flow_minor_version() -> None:
+    """Test config flow minor version includes the statistics migration."""
+    assert MonarchMoneyConfigFlow.MINOR_VERSION == 2
+
+
+def _add_migration_entity_registry_entries(
+    entity_registry: er.EntityRegistry, mock_config_entry: MockConfigEntry
+) -> None:
+    """Add entity registry entries for statistics migration tests."""
+    # Pre-populate entity registry with existing monetary sensor entries to
+    # simulate a previous installation that had these entities.
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "222260252323873333_checking_currentBalance",
+        config_entry=mock_config_entry,
+        original_device_class=SensorDeviceClass.MONETARY,
+        suggested_object_id="rando_bank_checking_balance",
+    )
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "222260252323873333_sum_income",
+        config_entry=mock_config_entry,
+        original_device_class=SensorDeviceClass.MONETARY,
+        suggested_object_id="cashflow_income_year_to_date",
+    )
+    # Add a non-monetary sensor to verify it is not migrated.
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "222260252323873333_checking_age",
+        config_entry=mock_config_entry,
+        original_device_class=SensorDeviceClass.TIMESTAMP,
+        suggested_object_id="rando_bank_checking_data_age",
+    )
