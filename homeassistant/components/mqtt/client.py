@@ -1266,7 +1266,7 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        identifiers: tuple[int,] | None = None
+        identifiers: tuple[int, ...] | None = None
         if self.supports_subscriptions_identifiers:
             # It is possible we have multiple messages if there
             # are overlapping wildcard subscriptions.
