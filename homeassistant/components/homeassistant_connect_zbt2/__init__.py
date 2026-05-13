@@ -147,9 +147,7 @@ async def async_migrate_entry(
                     serial_number,
                     config_entry.entry_id,
                 )
-                hass.async_create_task(
-                    hass.config_entries.async_remove(duplicate.entry_id)
-                )
+                await hass.config_entries.async_remove(duplicate.entry_id)
 
             # Replace the synthetic unique ID with the USB serial number
             hass.config_entries.async_update_entry(
