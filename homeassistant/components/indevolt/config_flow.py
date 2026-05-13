@@ -105,6 +105,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: host}, reload_on_update=True
         )
+        self._async_abort_entries_match({CONF_HOST: host})
 
         self.context["title_placeholders"] = {"name": device_data[CONF_MODEL]}
         self._discovered_host = host

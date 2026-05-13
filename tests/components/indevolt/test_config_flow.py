@@ -339,10 +339,8 @@ async def test_dhcp_ip_reuse_by_different_device(
         ),
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"][CONF_HOST] == TEST_HOST_ALT
-    assert result["description_placeholders"][CONF_MODEL] == TEST_MODEL_GEN2
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
