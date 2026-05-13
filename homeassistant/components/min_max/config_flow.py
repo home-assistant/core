@@ -1,5 +1,8 @@
 """Config flow for Min/Max integration."""
 
+from collections.abc import Mapping
+from typing import Any, cast
+
 import voluptuous as vol
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -71,3 +74,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
+
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+        """Return config entry title."""
+        return cast(str, options["name"]) if "name" in options else ""
