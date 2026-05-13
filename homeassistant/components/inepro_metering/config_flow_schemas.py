@@ -6,7 +6,7 @@ from typing import Any, cast
 from inepro_metering.routes import describe_route
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -53,13 +53,11 @@ from .const import (
     DEFAULT_BAUDRATE,
     DEFAULT_BLE_PROXY_HOST,
     DEFAULT_BLE_PROXY_PORT,
-    DEFAULT_BLUETOOTH_SCAN_INTERVAL,
     DEFAULT_BLUETOOTH_TIMEOUT,
     DEFAULT_BYTESIZE,
     DEFAULT_GATEWAY_SCAN_SLAVE_ID_END,
     DEFAULT_PARITY,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
     DEFAULT_SLAVE_ID_END,
     DEFAULT_STOPBITS,
@@ -616,21 +614,6 @@ def bluetooth_meter_settings_schema(
                 mode=NumberSelectorMode.BOX,
             )
         ),
-        vol.Required(
-            CONF_SCAN_INTERVAL,
-            default=user_value(
-                user_input,
-                CONF_SCAN_INTERVAL,
-                DEFAULT_BLUETOOTH_SCAN_INTERVAL,
-            ),
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=5,
-                max=3600,
-                step=1,
-                mode=NumberSelectorMode.BOX,
-            )
-        ),
     }
 
 
@@ -721,27 +704,12 @@ def build_serial_scan_schema(user_input: dict[str, Any] | None) -> vol.Schema:
                     mode=NumberSelectorMode.BOX,
                 )
             ),
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=user_value(
-                    user_input, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
         }
     )
 
 
 def build_discovered_serial_schema(
     discovered_meters: tuple[DiscoveredGrowMeter, ...],
-    *,
-    scan_interval_default: int,
 ) -> vol.Schema:
     """Build the form schema for selecting one or more discovered serial meters."""
     default_meter_keys = [
@@ -763,17 +731,6 @@ def build_discovered_serial_schema(
                     ],
                     multiple=True,
                     mode=SelectSelectorMode.LIST,
-                )
-            ),
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=scan_interval_default,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
                 )
             ),
         }
@@ -872,19 +829,6 @@ def build_gateway_scan_schema(user_input: dict[str, Any] | None) -> vol.Schema:
                 NumberSelectorConfig(
                     min=1,
                     max=247,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=user_value(
-                    user_input, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )
@@ -1361,21 +1305,6 @@ def build_update_connection_schema(
                 mode=NumberSelectorMode.BOX,
             )
         ),
-        vol.Required(
-            CONF_SCAN_INTERVAL,
-            default=user_value(
-                user_input,
-                CONF_SCAN_INTERVAL,
-                int(entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
-            ),
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=5,
-                max=3600,
-                step=1,
-                mode=NumberSelectorMode.BOX,
-            )
-        ),
     }
 
     if transport is TransportType.SERIAL:
@@ -1567,21 +1496,6 @@ def build_serial_bus_scan_schema(
                 NumberSelectorConfig(
                     min=1,
                     max=247,
-                    step=1,
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=user_value(
-                    user_input,
-                    CONF_SCAN_INTERVAL,
-                    int(entry_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=3600,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )

@@ -341,7 +341,11 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                 transport=transport,
                 connection_data=connection_data,
                 slave_id=int(user_input[CONF_SLAVE_ID]),
-                scan_interval=int(user_input[CONF_SCAN_INTERVAL]),
+                scan_interval=int(
+                    self._config_entry.data.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    )
+                ),
             )
             route_validation_data = self._route_validation_entry_data(updated_data)
             gatt_validation_data = bluetooth_gatt_validation_data(route_validation_data)
@@ -654,7 +658,11 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
                 )
 
             self._bus_scan_defaults = {
-                CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+                CONF_SCAN_INTERVAL: int(
+                    self._config_entry.data.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    )
+                ),
                 CONF_SLAVE_ID_START: int(user_input[CONF_SLAVE_ID_START]),
                 CONF_SLAVE_ID_END: int(user_input[CONF_SLAVE_ID_END]),
             }
@@ -741,7 +749,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
             return await self._async_finish_entry_update(
                 data={
                     **self._config_entry.data,
-                    CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
                     CONF_METERS: [
                         serialize_configured_meter(meter) for meter in merged_meters
                     ],
@@ -751,18 +758,7 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
 
         return self.async_show_form(
             step_id="serial_bus_discovered",
-            data_schema=build_discovered_serial_schema(
-                self._discovered_bus_devices,
-                scan_interval_default=self._bus_scan_defaults.get(
-                    CONF_SCAN_INTERVAL,
-                    int(
-                        self._config_entry.data.get(
-                            CONF_SCAN_INTERVAL,
-                            DEFAULT_SCAN_INTERVAL,
-                        )
-                    ),
-                ),
-            ),
+            data_schema=build_discovered_serial_schema(self._discovered_bus_devices),
             description_placeholders={
                 "count": str(len(self._discovered_bus_devices)),
             },
@@ -972,7 +968,6 @@ class OptionsUpdateFlowMixin(IneproFlowProtocol):
         return {
             **self._connection_data_from_route(self._active_route),
             CONF_SLAVE_ID: self._active_route.slave_id,
-            CONF_SCAN_INTERVAL: int(self._config_entry.data[CONF_SCAN_INTERVAL]),
         }
 
     def _transport_supports_helper_only_routes(

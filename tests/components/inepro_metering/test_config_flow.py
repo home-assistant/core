@@ -1628,7 +1628,6 @@ async def test_gateway_can_be_added_when_no_downstream_meters_are_found(
                 CONF_TIMEOUT: 3,
                 "slave_id_start": 1,
                 "slave_id_end": 8,
-                CONF_SCAN_INTERVAL: 15,
             },
         )
 
@@ -1705,7 +1704,6 @@ async def test_gateway_scan_skips_meter_already_configured_directly_by_serial(
                 CONF_TIMEOUT: 3,
                 "slave_id_start": 1,
                 "slave_id_end": 8,
-                CONF_SCAN_INTERVAL: 15,
             },
         )
 
@@ -1920,12 +1918,11 @@ async def test_transport_step_requires_explicit_selection(
     assert result["errors"] == {"base": "transport_required"}
 
 
-def test_bluetooth_confirm_schema_defaults_to_slower_polling() -> None:
-    """Bluetooth-discovered meters should default to a calmer polling interval."""
+def test_bluetooth_confirm_schema_hides_polling_interval() -> None:
+    """Bluetooth-discovered meters should keep polling intervals internal."""
     schema = build_bluetooth_confirm_schema(None)
-    scan_interval_field = _schema_field(schema, CONF_SCAN_INTERVAL)
     timeout_field = _schema_field(schema, CONF_TIMEOUT)
-    assert scan_interval_field.default() == DEFAULT_BLUETOOTH_SCAN_INTERVAL
+    assert CONF_SCAN_INTERVAL not in _schema_field_names(schema)
     assert timeout_field.default() == DEFAULT_BLUETOOTH_TIMEOUT
 
 
@@ -2133,7 +2130,6 @@ async def test_grow_serial_scan_discovers_and_creates_entry(
                 CONF_TIMEOUT: 2,
                 "slave_id_start": 1,
                 "slave_id_end": 16,
-                CONF_SCAN_INTERVAL: 15,
             },
         )
 
@@ -2144,7 +2140,6 @@ async def test_grow_serial_scan_discovers_and_creates_entry(
         result["flow_id"],
         user_input={
             "discovered_meters": ["075625480002:7", "085125250008:157"],
-            CONF_SCAN_INTERVAL: 20,
         },
     )
 
@@ -2152,7 +2147,7 @@ async def test_grow_serial_scan_discovers_and_creates_entry(
     assert result["title"] == "075625480002"
     assert result["data"][CONF_TRANSPORT] == TransportType.SERIAL.value
     assert result["data"][CONF_SERIAL_PORT] == "COM5"
-    assert result["data"][CONF_SCAN_INTERVAL] == 20
+    assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
     assert result["data"][CONF_METERS] == [
         _expected_bus_meter(
             family=MeterFamily.GROW.value,
@@ -2239,7 +2234,6 @@ async def test_grow_bluetooth_scan_discovers_and_creates_entry(
                 CONF_DISCOVERED_BLUETOOTH_METER: "075625480002:AA:BB:CC:DD:EE:FF",
                 CONF_SLAVE_ID: 1,
                 CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-                CONF_SCAN_INTERVAL: 15,
             },
         )
 
@@ -2328,7 +2322,6 @@ async def test_grow_bluetooth_scan_reports_not_paired(
                 CONF_DISCOVERED_BLUETOOTH_METER: "075625480002:AA:BB:CC:DD:EE:FF",
                 CONF_SLAVE_ID: 1,
                 CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-                CONF_SCAN_INTERVAL: 15,
             },
         )
 
@@ -2401,7 +2394,6 @@ async def test_grow_bluetooth_scan_error_keeps_discovered_placeholders(
                 CONF_DISCOVERED_BLUETOOTH_METER: "075625480002:AA:BB:CC:DD:EE:FF",
                 CONF_SLAVE_ID: 1,
                 CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-                CONF_SCAN_INTERVAL: 30,
             },
         )
 
@@ -2619,7 +2611,6 @@ async def test_grow_bluetooth_scan_rejects_meter_already_on_gateway(
             CONF_DISCOVERED_BLUETOOTH_METER: "075625480002:AA:BB:CC:DD:EE:FF",
             CONF_SLAVE_ID: 1,
             CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-            CONF_SCAN_INTERVAL: 15,
         },
     )
 
@@ -2694,7 +2685,6 @@ async def test_grow_bluetooth_scan_updates_legacy_direct_bluetooth_entry(
             CONF_DISCOVERED_BLUETOOTH_METER: "075625480002:AA:BB:CC:DD:EE:FF",
             CONF_SLAVE_ID: 1,
             CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-            CONF_SCAN_INTERVAL: 15,
         },
     )
 
@@ -3062,20 +3052,18 @@ async def test_grow_serial_scan_appends_new_meter_to_existing_bus(
                 CONF_TIMEOUT: 2,
                 "slave_id_start": 1,
                 "slave_id_end": 200,
-                CONF_SCAN_INTERVAL: 20,
             },
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 "discovered_meters": ["075625480002:157"],
-                CONF_SCAN_INTERVAL: 20,
             },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "meter_added_to_existing_bus"
-    assert existing_entry.data[CONF_SCAN_INTERVAL] == 20
+    assert existing_entry.data[CONF_SCAN_INTERVAL] == 15
     assert existing_entry.data[CONF_METERS] == [
         _expected_bus_meter(
             family=MeterFamily.GROW.value,
@@ -3261,7 +3249,6 @@ async def test_serial_bus_options_flow_can_append_new_meter(
             user_input={
                 "slave_id_start": 1,
                 "slave_id_end": 200,
-                CONF_SCAN_INTERVAL: 20,
             },
         )
         assert result["type"] is FlowResultType.FORM
@@ -3271,12 +3258,11 @@ async def test_serial_bus_options_flow_can_append_new_meter(
             result["flow_id"],
             user_input={
                 "discovered_meters": ["075625480002:157"],
-                CONF_SCAN_INTERVAL: 20,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.data[CONF_SCAN_INTERVAL] == 20
+    assert entry.data[CONF_SCAN_INTERVAL] == 15
     assert entry.data[CONF_METERS] == [
         _expected_bus_meter(
             family=MeterFamily.GROW.value,
@@ -3345,7 +3331,6 @@ async def test_grow_gateway_scan_flow_can_create_shared_gateway_bus(
                 CONF_TIMEOUT: 3,
                 "slave_id_start": 1,
                 "slave_id_end": 32,
-                CONF_SCAN_INTERVAL: 30,
             },
         )
         assert result["type"] is FlowResultType.FORM
@@ -3355,7 +3340,6 @@ async def test_grow_gateway_scan_flow_can_create_shared_gateway_bus(
             result["flow_id"],
             user_input={
                 "discovered_meters": ["075625480002:7"],
-                CONF_SCAN_INTERVAL: 30,
             },
         )
 
@@ -3424,7 +3408,6 @@ async def test_gateway_device_scan_flow_can_create_pro_shared_gateway_bus(
                 CONF_TIMEOUT: 3,
                 "slave_id_start": 1,
                 "slave_id_end": DEFAULT_GATEWAY_SCAN_SLAVE_ID_END,
-                CONF_SCAN_INTERVAL: 30,
             },
         )
         assert result["type"] is FlowResultType.FORM
@@ -3434,7 +3417,6 @@ async def test_gateway_device_scan_flow_can_create_pro_shared_gateway_bus(
             result["flow_id"],
             user_input={
                 "discovered_meters": ["025423266355:5"],
-                CONF_SCAN_INTERVAL: 30,
             },
         )
 
@@ -3967,7 +3949,6 @@ async def test_tcp_options_flow_can_edit_host_port_and_modbus_address(
                 CONF_PORT: 1502,
                 CONF_SLAVE_ID: 2,
                 CONF_TIMEOUT: 4,
-                CONF_SCAN_INTERVAL: 20,
             },
         )
 
@@ -3977,11 +3958,11 @@ async def test_tcp_options_flow_can_edit_host_port_and_modbus_address(
     assert entry.data[CONF_PORT] == 1502
     assert entry.data[CONF_SLAVE_ID] == 2
     assert entry.data[CONF_TIMEOUT] == 4
-    assert entry.data[CONF_SCAN_INTERVAL] == 20
+    assert entry.data[CONF_SCAN_INTERVAL] == 15
     validate_mock.assert_awaited_once()
 
 
-async def test_bluetooth_options_flow_can_edit_address_name_and_polling(
+async def test_bluetooth_options_flow_can_edit_address_name_and_preserve_polling(
     hass: HomeAssistant,
 ) -> None:
     """The options flow should update Bluetooth route details without changing identity."""
@@ -4046,7 +4027,6 @@ async def test_bluetooth_options_flow_can_edit_address_name_and_polling(
                 CONF_BLUETOOTH_NAME: "IM-075625480002-NEW",
                 CONF_SLAVE_ID: 2,
                 CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-                CONF_SCAN_INTERVAL: 25,
             },
         )
 
@@ -4056,7 +4036,7 @@ async def test_bluetooth_options_flow_can_edit_address_name_and_polling(
     assert entry.data[CONF_BLUETOOTH_NAME] == "IM-075625480002-NEW"
     assert entry.data[CONF_SLAVE_ID] == 2
     assert entry.data[CONF_TIMEOUT] == DEFAULT_BLUETOOTH_TIMEOUT
-    assert entry.data[CONF_SCAN_INTERVAL] == 25
+    assert entry.data[CONF_SCAN_INTERVAL] == 15
     validate_mock.assert_not_awaited()
     validate_identity.assert_awaited_once()
 
@@ -4117,7 +4097,6 @@ async def test_bluetooth_proxy_options_flow_can_edit_proxy_and_ble_details(
                 CONF_BLUETOOTH_NAME: "IM-075625480002-NEW",
                 CONF_SLAVE_ID: 2,
                 CONF_TIMEOUT: DEFAULT_BLUETOOTH_TIMEOUT,
-                CONF_SCAN_INTERVAL: 25,
             },
         )
 
@@ -4128,7 +4107,7 @@ async def test_bluetooth_proxy_options_flow_can_edit_proxy_and_ble_details(
     assert entry.data[CONF_BLUETOOTH_NAME] == "IM-075625480002-NEW"
     assert entry.data[CONF_SLAVE_ID] == 2
     assert entry.data[CONF_TIMEOUT] == DEFAULT_BLUETOOTH_TIMEOUT
-    assert entry.data[CONF_SCAN_INTERVAL] == 25
+    assert entry.data[CONF_SCAN_INTERVAL] == 15
     validate_mock.assert_awaited_once()
 
 
@@ -4243,7 +4222,6 @@ async def test_options_submit_preserves_active_route_and_deduplicates_routes(
                     CONF_HOST: "192.168.68.88",
                     CONF_PORT: 502,
                     CONF_TIMEOUT: 4,
-                    CONF_SCAN_INTERVAL: 20,
                 },
             )
 
@@ -4252,7 +4230,7 @@ async def test_options_submit_preserves_active_route_and_deduplicates_routes(
     assert entry.data[CONF_ACTIVE_ROUTE] == "tcp_wifi:192.168.68.88:502:1"
     assert entry.data[CONF_HOST] == "192.168.68.88"
     assert entry.data[CONF_PORT] == 502
-    assert entry.data[CONF_SCAN_INTERVAL] == 20
+    assert entry.data[CONF_SCAN_INTERVAL] == 15
     assert len(entry.data[CONF_ROUTES]) == 2
     route_keys = [build_route_key(route) for route in get_configured_routes(entry.data)]
     assert route_keys == [
@@ -4535,7 +4513,6 @@ async def test_tcp_options_flow_rejects_connection_update_to_different_meter(
                 CONF_PORT: 1502,
                 CONF_SLAVE_ID: 2,
                 CONF_TIMEOUT: 4,
-                CONF_SCAN_INTERVAL: 20,
             },
         )
 

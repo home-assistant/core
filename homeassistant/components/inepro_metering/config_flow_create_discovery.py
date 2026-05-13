@@ -53,6 +53,7 @@ from .const import (
     CONF_SLAVE_ID,
     CONF_TRANSPORT,
     CONF_VARIANT,
+    DEFAULT_BLUETOOTH_SCAN_INTERVAL,
     DEFAULT_GATEWAY_SCAN_SLAVE_ID_END,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
@@ -576,7 +577,7 @@ class CreateDiscoveryFlowMixin(IneproFlowProtocol):
                 user_input,
             )
             self._bus_scan_defaults = {
-                CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_SLAVE_ID_START: int(user_input[CONF_SLAVE_ID_START]),
                 CONF_SLAVE_ID_END: int(user_input[CONF_SLAVE_ID_END]),
             }
@@ -645,7 +646,7 @@ class CreateDiscoveryFlowMixin(IneproFlowProtocol):
                     selected_gateway.serial_number
                 )
             self._bus_scan_defaults = {
-                CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_SLAVE_ID_START: int(user_input[CONF_SLAVE_ID_START]),
                 CONF_SLAVE_ID_END: int(user_input[CONF_SLAVE_ID_END]),
             }
@@ -821,7 +822,11 @@ class CreateDiscoveryFlowMixin(IneproFlowProtocol):
                         )
                         for discovered_meter in selected_meters
                     ),
-                    scan_interval=int(user_input[CONF_SCAN_INTERVAL]),
+                    scan_interval=int(
+                        self._bus_scan_defaults.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        )
+                    ),
                 )
 
             return await self._async_upsert_serial_bus(
@@ -837,18 +842,16 @@ class CreateDiscoveryFlowMixin(IneproFlowProtocol):
                     )
                     for discovered_meter in selected_meters
                 ),
-                scan_interval=int(user_input[CONF_SCAN_INTERVAL]),
+                scan_interval=int(
+                    self._bus_scan_defaults.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    )
+                ),
             )
 
         return self.async_show_form(
             step_id="discovered",
-            data_schema=build_discovered_serial_schema(
-                self._discovered_bus_devices,
-                scan_interval_default=self._bus_scan_defaults.get(
-                    CONF_SCAN_INTERVAL,
-                    DEFAULT_SCAN_INTERVAL,
-                ),
-            ),
+            data_schema=build_discovered_serial_schema(self._discovered_bus_devices),
             description_placeholders={
                 "count": str(len(self._discovered_bus_devices)),
             },
@@ -928,7 +931,7 @@ class CreateDiscoveryFlowMixin(IneproFlowProtocol):
             CONF_BLUETOOTH_NAME: discovered_meter.bluetooth_name,
             CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
             CONF_TIMEOUT: int(user_input[CONF_TIMEOUT]),
-            CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+            CONF_SCAN_INTERVAL: DEFAULT_BLUETOOTH_SCAN_INTERVAL,
         }
         if discovered_meter.transport is TransportType.BLUETOOTH_PROXY:
             entry_data.update(

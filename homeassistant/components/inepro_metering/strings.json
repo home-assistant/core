@@ -34,12 +34,10 @@
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "scan_interval": "Polling interval (seconds)",
           "slave_id": "Modbus address",
           "timeout": "Timeout (seconds)"
         },
         "data_description": {
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "slave_id": "The Modbus address of the meter.",
           "timeout": "How long to wait for each Modbus response."
         },
@@ -49,13 +47,11 @@
       "bluetooth_discovered": {
         "data": {
           "discovered_bluetooth_meter": "Bluetooth meter",
-          "scan_interval": "Polling interval (seconds)",
           "slave_id": "Modbus address",
           "timeout": "Timeout (seconds)"
         },
         "data_description": {
           "discovered_bluetooth_meter": "Choose the discovered Bluetooth meter to add.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "slave_id": "The Modbus address of the meter.",
           "timeout": "How long to wait for each Modbus response."
         },
@@ -96,12 +92,10 @@
       },
       "discovered": {
         "data": {
-          "discovered_meters": "Discovered meters",
-          "scan_interval": "Polling interval (seconds)"
+          "discovered_meters": "Discovered meters"
         },
         "data_description": {
-          "discovered_meters": "Choose the discovered meters to add.",
-          "scan_interval": "How often Home Assistant polls the meter or bus."
+          "discovered_meters": "Choose the discovered meters to add."
         },
         "description": "Found {count} new supported meter(s) on this Modbus bus. Choose which meters to add.",
         "title": "Choose discovered meters"
@@ -111,10 +105,8 @@
           "baudrate": "Baud rate",
           "bytesize": "Data bits",
           "host": "Gateway host",
-          "name": "Bus name",
           "parity": "Parity",
           "port": "TCP port",
-          "scan_interval": "Polling interval (seconds)",
           "serial_port": "Serial port",
           "stopbits": "Stop bits",
           "timeout": "Timeout (seconds)"
@@ -123,10 +115,8 @@
           "baudrate": "The Modbus RTU baud rate for this serial bus.",
           "bytesize": "The number of data bits for this serial bus.",
           "host": "IP address or hostname of the Modbus TCP gateway.",
-          "name": "This renames the Home Assistant shared-bus entry. Meter device names remain based on their serial numbers.",
           "parity": "The parity setting for this serial bus.",
           "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
           "stopbits": "The number of stop bits for this serial bus.",
           "timeout": "How long to wait for each Modbus response on this shared bus."
@@ -172,7 +162,6 @@
         "data": {
           "host": "Gateway host",
           "port": "TCP port",
-          "scan_interval": "Polling interval (seconds)",
           "slave_id_end": "Last Modbus address",
           "slave_id_start": "First Modbus address",
           "timeout": "Timeout (seconds)"
@@ -180,7 +169,6 @@
         "data_description": {
           "host": "IP address or hostname of the Modbus TCP gateway.",
           "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "slave_id_end": "Defaults to the first 8 downstream Modbus addresses for a faster scan. Increase it if the site uses higher meter addresses.",
           "slave_id_start": "Usually start from 1 unless your site uses a higher address range.",
           "timeout": "How long to wait for each Modbus response."
@@ -200,18 +188,14 @@
       },
       "model": {
         "data": {
-          "name": "Name",
-          "scan_interval": "Polling interval (seconds)",
           "slave_id": "Modbus address",
           "variant": "Meter model"
         },
         "data_description": {
-          "name": "The display name to use for this entry.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "slave_id": "The Modbus address of the meter.",
           "variant": "Choose the exact meter model."
         },
-        "description": "Choose the model and basic polling settings for the selected family.",
+        "description": "Choose the model and Modbus address for the selected family.",
         "title": "Choose model"
       },
       "serial_scan": {
@@ -219,7 +203,6 @@
           "baudrate": "Baud rate",
           "bytesize": "Data bits",
           "parity": "Parity",
-          "scan_interval": "Polling interval (seconds)",
           "serial_port": "Serial port",
           "slave_id_end": "Last Modbus address",
           "slave_id_start": "First Modbus address",
@@ -230,7 +213,6 @@
           "baudrate": "The Modbus RTU baud rate for this serial bus.",
           "bytesize": "The number of data bits for this serial bus.",
           "parity": "The parity setting for this serial bus.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "serial_port": "For example COM1 on Windows or /dev/ttyUSB0 on Linux.",
           "slave_id_end": "Use a smaller range for faster scans. You can widen it if needed.",
           "slave_id_start": "Usually start from 1 unless your site uses a higher address range.",
@@ -391,10 +373,8 @@
           "baudrate": "Baud rate",
           "bytesize": "Data bits",
           "host": "Gateway host",
-          "name": "Bus name",
           "parity": "Parity",
           "port": "TCP port",
-          "scan_interval": "Polling interval (seconds)",
           "serial_port": "Serial port",
           "stopbits": "Stop bits",
           "timeout": "Timeout (seconds)"
@@ -403,10 +383,8 @@
           "baudrate": "The Modbus RTU baud rate for this serial bus.",
           "bytesize": "The number of data bits for this serial bus.",
           "host": "IP address or hostname of the Modbus TCP gateway.",
-          "name": "This renames the Home Assistant shared-bus entry. Meter device names remain based on their serial numbers.",
           "parity": "The parity setting for this serial bus.",
           "port": "Usually Modbus TCP port 502 unless the gateway has been configured differently.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
           "stopbits": "The number of stop bits for this serial bus.",
           "timeout": "How long to wait for each Modbus response."
@@ -421,7 +399,7 @@
         "data_description": {
           "action": "Choose which settings or routes to update for this entry."
         },
-        "description": "Choose whether to update this entry's connection settings, rescan a shared Modbus bus, or only update the polling interval.",
+        "description": "Choose whether to update this entry's connection settings, rescan a shared Modbus bus, or manage stored routes.",
         "title": "Configure entry"
       },
       "manage_meter_routes": {
@@ -446,24 +424,20 @@
       },
       "serial_bus_discovered": {
         "data": {
-          "discovered_meters": "Discovered meters",
-          "scan_interval": "Polling interval (seconds)"
+          "discovered_meters": "Discovered meters"
         },
         "data_description": {
-          "discovered_meters": "Choose the discovered meters to add.",
-          "scan_interval": "How often Home Assistant polls the meter or bus."
+          "discovered_meters": "Choose the discovered meters to add."
         },
         "description": "Found {count} additional supported meter(s) on this Modbus bus. Choose which meters to append to the existing bus entry.",
         "title": "Choose discovered meters"
       },
       "serial_bus_scan": {
         "data": {
-          "scan_interval": "Polling interval (seconds)",
           "slave_id_end": "Last Modbus address",
           "slave_id_start": "First Modbus address"
         },
         "data_description": {
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "slave_id_end": "The last Modbus address to scan.",
           "slave_id_start": "The first Modbus address to scan."
         },
@@ -489,7 +463,6 @@
           "host": "Host",
           "parity": "Parity",
           "port": "TCP port",
-          "scan_interval": "Polling interval (seconds)",
           "serial_port": "Serial port",
           "slave_id": "Modbus address",
           "stopbits": "Stop bits",
@@ -503,24 +476,13 @@
           "host": "IP address or hostname of the meter.",
           "parity": "The parity setting for this serial bus.",
           "port": "Usually Modbus TCP port 502.",
-          "scan_interval": "How often Home Assistant polls the meter or bus.",
           "serial_port": "For example COM1 on Windows, /dev/ttyUSB0 on Linux, or a socket URL in a development setup.",
           "slave_id": "The Modbus address of the meter.",
           "stopbits": "The number of stop bits for this serial bus.",
           "timeout": "How long to wait for each Modbus response."
         },
-        "description": "Change the active route connection details, Modbus address, timeout, or polling interval for this meter. The meter serial number remains the stable identity.",
+        "description": "Change the active route connection details, Modbus address, or timeout for this meter. The meter serial number remains the stable identity.",
         "title": "Update connection details"
-      },
-      "update_polling": {
-        "data": {
-          "scan_interval": "Polling interval (seconds)"
-        },
-        "data_description": {
-          "scan_interval": "How often Home Assistant polls the meter or bus."
-        },
-        "description": "Change how often Home Assistant polls this inepro Metering entry.",
-        "title": "Update polling interval"
       }
     }
   },
