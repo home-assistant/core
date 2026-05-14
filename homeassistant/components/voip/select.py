@@ -1,7 +1,5 @@
 """Select entities for VoIP integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.components.assist_pipeline import (
@@ -27,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up VoIP switch entities."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     domain_data: DomainData = hass.data[DOMAIN]
 
     @callback

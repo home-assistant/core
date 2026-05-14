@@ -1,7 +1,5 @@
 """Binary sensor for VoIP."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -28,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up VoIP binary sensor entities."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     domain_data: DomainData = hass.data[DOMAIN]
 
     @callback

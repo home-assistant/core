@@ -1,7 +1,5 @@
 """Reolink additional services."""
 
-from __future__ import annotations
-
 from reolink_aio.api import Chime
 from reolink_aio.enums import ChimeToneEnum
 import voluptuous as vol

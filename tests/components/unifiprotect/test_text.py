@@ -1,7 +1,5 @@
 """Test the UniFi Protect text platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from uiprotect.data import Camera, DoorbellMessageType, LCDMessage

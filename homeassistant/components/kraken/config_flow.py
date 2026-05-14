@@ -1,7 +1,5 @@
 """Config flow for kraken integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import krakenex
@@ -76,7 +74,7 @@ class KrakenOptionsFlowHandler(OptionsFlow):
 
         options = {
             # Polling interval is user-configurable, which is no longer allowed
-            # pylint: disable-next=hass-config-flow-polling-field
+            # pylint: disable-next=home-assistant-config-flow-polling-field
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(

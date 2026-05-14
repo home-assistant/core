@@ -1,7 +1,5 @@
 """Support to select an option from a list."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self, cast
 
@@ -243,7 +241,7 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 

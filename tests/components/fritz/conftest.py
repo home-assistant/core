@@ -1,7 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 import logging

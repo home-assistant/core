@@ -1,7 +1,5 @@
 """Test version functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant

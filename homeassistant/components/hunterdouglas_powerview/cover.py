@@ -1,7 +1,5 @@
 """Support for hunter douglas shades."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import replace
 from datetime import datetime, timedelta
@@ -288,7 +286,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         await self.async_update()
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(

@@ -1,7 +1,5 @@
 """Support for Ubiquiti mFi sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort

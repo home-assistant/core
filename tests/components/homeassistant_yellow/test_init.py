@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import zha
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -149,7 +149,6 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Yellow"
 
 
 async def test_contributes_radio_serial_port(
@@ -276,7 +275,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value=None,
+        side_effect=HassioNotReadyError,
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

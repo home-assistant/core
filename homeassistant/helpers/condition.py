@@ -1,7 +1,5 @@
 """Offer reusable conditions."""
 
-from __future__ import annotations
-
 import abc
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
@@ -16,6 +14,7 @@ import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Final,
     Literal,
     Never,
@@ -23,6 +22,7 @@ from typing import (
     TypedDict,
     Unpack,
     cast,
+    final,
     overload,
     override,
 )
@@ -94,7 +94,12 @@ from .selector import (
     NumericThresholdType,
     TargetSelector,
 )
-from .target import TargetSelection, async_extract_referenced_entity_ids
+from .target import (
+    TargetSelection,
+    TargetStateChangedData,
+    async_extract_referenced_entity_ids,
+    async_track_target_selector_state_change_event,
+)
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -288,10 +293,12 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 class ConditionChecker(abc.ABC):
     """Base class for condition checkers."""
 
+    _set_up = False
+    _unloaded = False
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize condition checker."""
         self._hass = hass
-        self._unloaded = False
 
     def __call__(
         self, hass: HomeAssistant, variables: TemplateVarsType = None
@@ -311,23 +318,45 @@ class ConditionChecker(abc.ABC):
         except Exception:
             _LOGGER.exception("Error while unloading condition checker")
 
+    @final
     async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Users of conditions do not need to call this method directly. It is called
+        automatically by async_from_config and async_conditions_from_config.
+        """
+        await self._async_setup()
+        self._set_up = True
+
+    async def _async_setup(self) -> None:  # noqa: B027
         """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do setup.
         """
 
+    @final
     def async_unload(self) -> None:
+        """Clean up any resources held by the checker.
+
+        Users of conditions must call this method when they are done with the
+        checker to ensure resources are released.
+        """
+        self._async_unload()
+        self._unloaded = True
+
+    def _async_unload(self) -> None:  # noqa: B027
         """Clean up any resources held by the checker.
 
         Intended to be overridden in derived classes that need to do unloading.
         """
-        self._unloaded = True
 
+    @final
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
     ) -> bool | None:
         """Check the condition."""
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
         with trace_condition(variables):
             result = self._async_check(variables=variables)
             condition_trace_update_result(result=result)
@@ -365,11 +394,10 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
-    def async_unload(self) -> None:
+    def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
             condition.async_unload()
-        super().async_unload()
 
 
 class Condition(ConditionChecker):
@@ -419,22 +447,13 @@ BEHAVIOR_ALL: Final = "all"
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): {
+        vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
-)
-
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
-    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
-        {
-            vol.Required(CONF_OPTIONS): {
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
-            },
-        }
-    )
 )
 
 
@@ -442,7 +461,13 @@ class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    # When True, indirect target expansion (via device/area/floor) skips
+    # entities with an entity_category.
+    _primary_entities_only: ClassVar[bool] = True
 
     @override
     @classmethod
@@ -458,6 +483,7 @@ class EntityConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
+        self._target = config.target
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._duration: timedelta | None = config.options.get(CONF_FOR)
@@ -465,17 +491,106 @@ class EntityConditionBase(Condition):
             self._matcher = self._check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
             self._matcher = self._check_all_match_state
+        self._on_unload: list[Callable[[], None]] = []
+        self._valid_since: dict[str, datetime] = {}
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
-    def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state based on the DomainSpec."""
-        domain_spec = self._domain_specs[entity_state.domain]
-        if domain_spec.value_source is None:
-            return entity_state.state
-        return entity_state.attributes.get(domain_spec.value_source)
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Whether this condition needs active state change tracking for duration.
+
+        The base implementation intentionally defaults to always tracking
+        duration and should be overridden by subclasses that can safely use
+        state.last_changed directly. For example, conditions that are true
+        for a single main state value may not need active tracking, while
+        conditions that track attributes or match multiple states do because
+        last_changed does not capture those transitions.
+        """
+        return True
+
+    def _state_valid_since(self, _state: State) -> datetime:
+        """Return the datetime that anchors `for:` durations for `state`.
+
+        Override in subclasses whose `is_valid_state` reads
+        attributes directly without going through `value_source`.
+        """
+        if self._domain_specs[_state.domain].value_source is None:
+            return _state.last_changed
+        return _state.last_updated
+
+    def _update_valid_since(self, entity_id: str, _state: State | None) -> None:
+        """Update _valid_since tracking for an entity based on its current state.
+
+        If the entity is in a valid state and not already tracked, records
+        when the condition became true (via `_state_valid_since`). If the
+        entity is not in a valid state, removes it from tracking.
+        """
+        if (
+            _state is not None
+            and self._should_include(_state)
+            and self.is_valid_state(_state)
+        ):
+            # Only record the time if not already tracked, to avoid
+            # resetting the duration on unrelated state/attribute updates.
+            if entity_id not in self._valid_since:
+                self._valid_since[entity_id] = self._state_valid_since(_state)
+        else:
+            self._valid_since.pop(entity_id, None)
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up state tracking for duration-based conditions."""
+        if not self._duration or not self._needs_duration_tracking:
+            return
+
+        @callback
+        def _state_change_listener(
+            data: TargetStateChangedData,
+        ) -> None:
+            """Track when entities enter or leave a valid state."""
+            event = data.state_change_event
+            entity_id = event.data["entity_id"]
+            to_state = event.data["new_state"]
+
+            self._update_valid_since(entity_id, to_state)
+
+        @callback
+        def _on_entities_update(added: set[str], removed: set[str]) -> None:
+            """Handle changes to the tracked entity set."""
+            for entity_id in added:
+                self._update_valid_since(entity_id, self._hass.states.get(entity_id))
+            for entity_id in removed:
+                self._valid_since.pop(entity_id, None)
+
+        unsub = async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            _state_change_listener,
+            self.entity_filter,
+            _on_entities_update,
+            primary_entities_only=self._primary_entities_only,
+        )
+        self._on_unload.append(unsub)
+
+    @override
+    def _async_unload(self) -> None:
+        """Unsubscribe from listeners."""
+        for cb in self._on_unload:
+            cb()
+        self._on_unload.clear()
+
+    def _should_include(self, _state: State) -> bool:
+        """Check if an entity should participate in any/all checks.
+
+        The default implementation excludes only entities whose state.state
+        is in `_excluded_states` (unavailable / unknown). Subclasses can
+        override to also exclude entities that lack the optional capability
+        the condition relies on.
+        """
+        return _state.state not in self._excluded_states
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -486,9 +601,16 @@ class EntityConditionBase(Condition):
         if not self._duration:
             # Skip duration check if duration is not specified or 0
             return any(self.is_valid_state(state) for state in states)
-        duration = dt_util.utcnow() - self._duration
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return any(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
         return any(
-            self.is_valid_state(state) and duration > state.last_changed
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
             for state in states
         )
 
@@ -497,16 +619,26 @@ class EntityConditionBase(Condition):
         if not self._duration:
             # Skip duration check if duration is not specified or 0
             return all(self.is_valid_state(state) for state in states)
-        duration = dt_util.utcnow() - self._duration
+        cutoff = dt_util.utcnow() - self._duration
+        if not self._needs_duration_tracking:
+            return all(
+                self.is_valid_state(state) and state.last_changed <= cutoff
+                for state in states
+            )
         return all(
-            self.is_valid_state(state) and duration > state.last_changed
+            self.is_valid_state(state)
+            and (valid_since := self._valid_since.get(state.entity_id)) is not None
+            and valid_since <= cutoff
             for state in states
         )
 
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
-            self._hass, self._target_selection, expand_group=False
+            self._hass,
+            self._target_selection,
+            expand_group=False,
+            primary_entities_only=self._primary_entities_only,
         )
         referenced_entity_ids = targeted_entities.referenced.union(
             targeted_entities.indirectly_referenced
@@ -516,7 +648,7 @@ class EntityConditionBase(Condition):
             _state
             for entity_id in filtered_entity_ids
             if (_state := self._hass.states.get(entity_id))
-            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            and self._should_include(_state)
         ]
         return self._matcher(entity_states)
 
@@ -525,6 +657,22 @@ class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
     _states: set[str | bool]
+
+    @property
+    def _needs_duration_tracking(self) -> bool:
+        """Single-state conditions with no attribute tracking can use last_changed."""
+        if len(self._states) != 1:
+            return True
+        return any(
+            spec.value_source is not None for spec in self._domain_specs.values()
+        )
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -544,7 +692,7 @@ def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
     *,
-    support_duration: bool = False,
+    primary_entities_only: bool = True,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -562,12 +710,8 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
-        _schema = (
-            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
-            if support_duration
-            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-        )
         _states = states_set
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -675,6 +819,8 @@ class EntityNumericalConditionBase(EntityConditionBase):
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     valid_unit: str | None | UndefinedType = UNDEFINED,
+    *,
+    primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
     specs = _normalize_domain_specs(domain_specs)
@@ -684,6 +830,7 @@ def make_entity_numerical_condition(
 
         _domain_specs = specs
         _valid_unit = valid_unit
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
@@ -955,7 +1102,9 @@ async def async_from_config(
                     f"Error rendering condition enabled template: {err}"
                 ) from err
         if not enabled:
-            return DisabledConditionChecker(hass)
+            disabled_checker = DisabledConditionChecker(hass)
+            await disabled_checker.async_setup()
+            return disabled_checker
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None
@@ -988,13 +1137,15 @@ async def async_from_config(
     while isinstance(check_factory, ft.partial):
         check_factory = check_factory.func
 
+    checker: ConditionChecker | ConditionCheckerType
     if inspect.iscoroutinefunction(check_factory):
         checker = await factory(hass, config)
     else:
         checker = factory(config)
-    if isinstance(checker, ConditionChecker):
-        return checker
-    return LegacyConditionChecker(hass, cast(ConditionCheckerType, checker))
+    if not isinstance(checker, ConditionChecker):
+        checker = LegacyConditionChecker(hass, checker)
+    await checker.async_setup()
+    return checker
 
 
 async def async_and_from_config(

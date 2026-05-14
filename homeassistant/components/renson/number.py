@@ -1,7 +1,5 @@
 """Platform to control a Renson ventilation unit."""
 
-from __future__ import annotations
-
 import logging
 
 from renson_endura_delta.field_enum import FILTER_PRESET_FIELD, DataType

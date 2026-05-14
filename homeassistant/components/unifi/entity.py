@@ -1,7 +1,5 @@
 """UniFi entity representation."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass

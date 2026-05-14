@@ -5,11 +5,10 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
 from .entity import XiaomiDevice
 
 ATTR_CURTAIN_LEVEL = "curtain_level"
@@ -20,14 +19,12 @@ DATA_KEY_PROTO_V2 = "curtain_status"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["cover"]:
         model = device["model"]
         if model in ("curtain", "curtain.aq2", "curtain.hagl04"):
@@ -50,7 +47,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key

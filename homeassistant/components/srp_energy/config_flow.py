@@ -1,7 +1,5 @@
 """Config flow for SRP Energy."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from srpenergy.client import SrpEnergyClient
@@ -88,6 +86,8 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             if self.source == SOURCE_USER
                             else self._get_reconfigure_entry().data[CONF_ID]
                         ),
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,

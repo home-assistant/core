@@ -1,7 +1,5 @@
 """Support for Portainer buttons."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass

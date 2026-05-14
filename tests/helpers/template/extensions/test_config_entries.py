@@ -1,7 +1,5 @@
 """Test config entry functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import json
 import logging
