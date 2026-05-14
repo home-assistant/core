@@ -302,6 +302,20 @@
       "rated_capacity": {
         "name": "Rated capacity"
       },
+      "realtime_command": {
+        "name": "Real-time mode",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "realtime_power_limit": {
+        "name": "Real-time power limit"
+      },
+      "realtime_target_soc": {
+        "name": "Real-time target SOC"
+      },
       "serial_number": {
         "name": "Serial number"
       },

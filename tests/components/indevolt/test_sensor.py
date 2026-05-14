@@ -57,6 +57,59 @@ async def test_sensor_availability(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_realtime_sensor_energy_mode_availability(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test real-time sensors are only available in real-time control energy mode."""
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Default fixture is not in RT mode, sensors should be unavailable
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_mode").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_target_soc").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_power_limit").state
+        == STATE_UNAVAILABLE
+    )
+
+    # Switch to RT mode, sensors should be available
+    mock_indevolt.fetch_data.return_value["7101"] = 4
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.cms_sf2000_real_time_mode").state == "standby"
+    assert hass.states.get("sensor.cms_sf2000_real_time_target_soc").state == "80"
+    assert hass.states.get("sensor.cms_sf2000_real_time_power_limit").state == "200"
+
+    # Switch back to a non-RT mode, sensors become unavailable again
+    mock_indevolt.fetch_data.return_value["7101"] = 1
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_mode").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_target_soc").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("sensor.cms_sf2000_real_time_power_limit").state
+        == STATE_UNAVAILABLE
+    )
+
+
 # In individual tests, you can override the mock behavior
 async def test_battery_pack_filtering(
     hass: HomeAssistant,

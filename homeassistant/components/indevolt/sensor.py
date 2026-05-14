@@ -6,6 +6,7 @@ from typing import Final
 from indevolt_api import (
     IndevoltBattery,
     IndevoltConfig,
+    IndevoltEnergyMode,
     IndevoltGrid,
     IndevoltSolar,
     IndevoltSystem,
@@ -43,6 +44,7 @@ class IndevoltSensorEntityDescription(SensorEntityDescription):
 
     state_mapping: dict[str | int, str] = field(default_factory=dict)
     generation: tuple[int, ...] = (1, 2)
+    energy_mode: IndevoltEnergyMode | None = None
 
 
 SENSORS: Final = (
@@ -83,6 +85,28 @@ SENSORS: Final = (
         generation=(1,),
         translation_key="discharge_limit",
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Real-time control state
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_COMMAND,
+        translation_key="realtime_command",
+        state_mapping={1000: "standby", 1001: "charging", 1002: "discharging"},
+        device_class=SensorDeviceClass.ENUM,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_TARGET_SOC,
+        translation_key="realtime_target_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_POWER_LIMIT,
+        translation_key="realtime_power_limit",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.INPUT_POWER,
@@ -756,6 +780,16 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         # Sort options (prevent randomization) for ENUM values
         if description.device_class == SensorDeviceClass.ENUM:
             self._attr_options = sorted(set(description.state_mapping.values()))
+
+    @property
+    def available(self) -> bool:
+        """Return False when the device is not in the required energy mode."""
+        if self.entity_description.energy_mode is not None:
+            energy_mode = self.coordinator.data.get(IndevoltConfig.READ_ENERGY_MODE)
+            if energy_mode != self.entity_description.energy_mode:
+                return False
+
+        return super().available
 
     @property
     def native_value(self) -> str | int | float | None:
