@@ -9,10 +9,10 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockInfraredEntity
 from .utils import check_availability_follows_ir_entity
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture
@@ -47,6 +47,7 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
+        ("button.lg_tv_power", LGTVCode.POWER),
         ("button.lg_tv_power_on", LGTVCode.POWER_ON),
         ("button.lg_tv_power_off", LGTVCode.POWER_OFF),
         ("button.lg_tv_hdmi_1", LGTVCode.HDMI_1),
@@ -80,7 +81,7 @@ async def test_entities(
 @pytest.mark.usefixtures("init_integration")
 async def test_button_press_sends_correct_code(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_id: str,
     expected_code: LGTVCode,
 ) -> None:
@@ -92,8 +93,8 @@ async def test_button_press_sends_correct_code(
         blocking=True,
     )
 
-    assert len(mock_infrared_entity.send_command_calls) == 1
-    assert mock_infrared_entity.send_command_calls[0] == expected_code
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
 
 
 @pytest.mark.usefixtures("init_integration")

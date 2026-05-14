@@ -7,7 +7,10 @@ from .const import CONF_LANGUAGE_OVERRIDE, LANGS
 
 
 def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry | None) -> str:
-    """Get the preferred language for the integration if it was overridden by the configuration."""
+    """Get the preferred language for the integration.
+
+    Returns the overridden language if set in configuration.
+    """
 
     if (
         config_entry is None

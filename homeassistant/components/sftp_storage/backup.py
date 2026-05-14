@@ -67,7 +67,8 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug(
-            "Establishing SFTP connection to remote host in order to download backup id: %s",
+            "Establishing SFTP connection to remote host"
+            " in order to download backup id: %s",
             backup_id,
         )
         try:
