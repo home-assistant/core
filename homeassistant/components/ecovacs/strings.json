@@ -212,6 +212,30 @@
       "network_ssid": {
         "name": "Wi-Fi SSID"
       },
+      "rtk_base_occlusion_rate": {
+        "name": "RTK reference station occlusion rate"
+      },
+      "rtk_base_satellites_used": {
+        "name": "RTK reference station satellites used"
+      },
+      "rtk_base_satellites_visible": {
+        "name": "RTK reference station satellites visible"
+      },
+      "rtk_base_signal_score": {
+        "name": "RTK reference station signal score"
+      },
+      "rtk_rover_occlusion_rate": {
+        "name": "RTK rover occlusion rate"
+      },
+      "rtk_rover_satellites_used": {
+        "name": "RTK rover satellites used"
+      },
+      "rtk_rover_satellites_visible": {
+        "name": "RTK rover satellites visible"
+      },
+      "rtk_rover_signal_score": {
+        "name": "RTK rover signal score"
+      },
       "station_state": {
         "name": "Station state",
         "state": {

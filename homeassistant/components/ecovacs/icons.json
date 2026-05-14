@@ -140,6 +140,30 @@
       "network_ssid": {
         "default": "mdi:wifi"
       },
+      "rtk_base_occlusion_rate": {
+        "default": "mdi:weather-cloudy"
+      },
+      "rtk_base_satellites_used": {
+        "default": "mdi:satellite-variant"
+      },
+      "rtk_base_satellites_visible": {
+        "default": "mdi:satellite-variant"
+      },
+      "rtk_base_signal_score": {
+        "default": "mdi:signal-cellular-3"
+      },
+      "rtk_rover_occlusion_rate": {
+        "default": "mdi:weather-cloudy"
+      },
+      "rtk_rover_satellites_used": {
+        "default": "mdi:satellite-variant"
+      },
+      "rtk_rover_satellites_visible": {
+        "default": "mdi:satellite-variant"
+      },
+      "rtk_rover_signal_score": {
+        "default": "mdi:signal-cellular-3"
+      },
       "station_state": {
         "default": "mdi:home"
       },
