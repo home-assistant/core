@@ -180,7 +180,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 await self.async_set_hvac_mode(mode)
             else:
                 raise ServiceValidationError(
-                    f"[{self._eq3_config.mac_address}] Can't change HVAC mode to off while changing temperature",
+                    f"[{self._eq3_config.mac_address}]"
+                    " Can't change HVAC mode to off while"
+                    " changing temperature",
                 )
 
         temperature: float | None

@@ -171,7 +171,7 @@ class IntentCache:
         return self.cache[key]
 
     def put(self, key: IntentCacheKey, value: IntentCacheValue) -> None:
-        """Put a value in the cache, evicting the least recently used item if necessary."""
+        """Put a value in the cache, evicting the LRU item if necessary."""
         if key in self.cache:
             # Update value and mark as recently used
             self.cache.move_to_end(key)
@@ -1072,7 +1072,8 @@ class DefaultAgent(ConversationEntity):
                         dict,
                     ):
                         _LOGGER.warning(
-                            "Custom sentences file does not match expected format path=%s",
+                            "Custom sentences file does not match"
+                            " expected format path=%s",
                             custom_sentences_file.name,
                         )
                         continue
@@ -1474,7 +1475,7 @@ def _make_error_result(
 
 
 def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str, Any]]:
-    """Get key and template arguments for error when there are unmatched intent entities/slots."""
+    """Get key and template args for unmatched intent entities/slots error."""
 
     # Filter out non-text and missing context entities
     unmatched_text: dict[str, str] = {

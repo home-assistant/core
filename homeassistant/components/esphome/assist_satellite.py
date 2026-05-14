@@ -67,25 +67,49 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: PipelineEventType.RUN_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: PipelineEventType.STT_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: PipelineEventType.STT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: PipelineEventType.INTENT_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: PipelineEventType.INTENT_PROGRESS,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: (
+            PipelineEventType.INTENT_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: (
+            PipelineEventType.INTENT_PROGRESS
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: (
+            PipelineEventType.INTENT_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: (
+            PipelineEventType.TTS_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: (PipelineEventType.TTS_END),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: (
+            PipelineEventType.WAKE_WORD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: (
+            PipelineEventType.WAKE_WORD_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: (
+            PipelineEventType.STT_VAD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: (
+            PipelineEventType.STT_VAD_END
+        ),
     }
 )
 
 _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
     EsphomeEnumMapper(
         {
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: TimerEventType.STARTED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: TimerEventType.UPDATED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: TimerEventType.CANCELLED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: TimerEventType.FINISHED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
+                TimerEventType.STARTED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
+                TimerEventType.UPDATED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
+                TimerEventType.CANCELLED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
+                TimerEventType.FINISHED
+            ),
         }
     )
 )
@@ -161,7 +185,7 @@ class EsphomeAssistSatellite(
 
     @property
     def pipeline_entity_id(self) -> str | None:
-        """Return the entity ID of the primary pipeline to use for the next conversation."""
+        """Return the entity ID of the pipeline to use for the next conversation."""
         return self.get_pipeline_entity(self._active_pipeline_index)
 
     def get_pipeline_entity(self, index: int) -> str | None:
@@ -176,7 +200,7 @@ class EsphomeAssistSatellite(
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the entity ID of the VAD sensitivity for the next conversation."""
         return self._get_entity_id("vad_sensitivity")
 
     @callback
@@ -708,7 +732,7 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Request pipeline to be stopped by ending the audio stream and continue processing."""
+        """Request pipeline to be stopped by ending the audio stream."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
 

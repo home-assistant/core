@@ -25,7 +25,7 @@ class ParallelUpdatesChecker(BaseChecker):
     name = "home_assistant_parallel_updates"
     priority = -1
     msgs = {
-        "W7409": (
+        "W7411": (
             "Platform module should define `PARALLEL_UPDATES` constant "
             "(https://developers.home-assistant.io/docs/core/"
             "integration-quality-scale/rules/parallel-updates)",
