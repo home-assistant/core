@@ -110,7 +110,7 @@ UP_DOWN_VENETIAN_BLIND = FixtureDevice(
     "cover.office_venetian_blind",
 )
 UP_DOWN_SHEER_SCREEN = FixtureDevice(
-    "setup/cloud_somfy_connexoon_rts_asia_with_sheer_screen.json",
+    "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16753206",
     "cover.kitchen_sheer_screen",
 )
