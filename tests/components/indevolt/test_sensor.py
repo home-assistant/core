@@ -1,6 +1,7 @@
 """Tests for the Indevolt sensor platform."""
 
 from datetime import timedelta
+from typing import Final
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,6 +17,8 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+READ_ENERGY_MODE: Final = "7101"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -82,7 +85,7 @@ async def test_realtime_sensor_energy_mode_availability(
     )
 
     # Switch to RT mode (4), sensors should be available
-    mock_indevolt.fetch_data.return_value["7101"] = 4
+    mock_indevolt.fetch_data.return_value[READ_ENERGY_MODE] = 4
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -92,7 +95,7 @@ async def test_realtime_sensor_energy_mode_availability(
     assert hass.states.get("sensor.cms_sf2000_real_time_power_limit").state == "200"
 
     # Switch back to a non-RT mode (1), sensors become unavailable again
-    mock_indevolt.fetch_data.return_value["7101"] = 1
+    mock_indevolt.fetch_data.return_value[READ_ENERGY_MODE] = 1
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
