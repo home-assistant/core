@@ -1,6 +1,8 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
 from datetime import datetime
+import hashlib
+import json
 import logging
 import statistics
 from typing import Any
@@ -37,7 +39,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import ulid as ulid_util, yaml as yaml_util
+from homeassistant.util import yaml as yaml_util
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -120,11 +122,11 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     yaml_config = yaml_config.replace("\n", "\n    ")
     yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
 
-    issue_id = "yaml_deprecated-"
-    if platform_config.get(CONF_UNIQUE_ID):
-        issue_id += f"{platform_config[CONF_UNIQUE_ID]}"
-    else:
-        issue_id += ulid_util.ulid()
+    def make_hash(config: dict[str, Any]) -> str:
+        d = hashlib.sha1(json.dumps(config, sort_keys=True).encode())
+        return d.hexdigest()
+
+    issue_id = f"yaml_deprecated-{make_hash(platform_config)}"
     async_create_issue(
         hass,
         DOMAIN,
