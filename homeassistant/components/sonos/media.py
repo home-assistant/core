@@ -2,6 +2,7 @@
 
 import asyncio
 import datetime
+import json
 import logging
 import re
 from typing import Any
@@ -330,7 +331,7 @@ class SonosMedia:
                 response.raise_for_status()
                 data = await response.json(content_type=None)
             thumbnail_url = data.get("thumbnail_url")
-        except (aiohttp.ClientError, TimeoutError) as err:
+        except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as err:
             _LOGGER.debug(
                 "SoundCloud oEmbed lookup failed for track %s: %s", track_id, err
             )

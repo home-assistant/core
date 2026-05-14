@@ -1715,6 +1715,29 @@ async def test_async_resolve_soundcloud_artwork_sets_image_url(
     assert media.image_url == thumbnail_url
 
 
+async def test_async_resolve_soundcloud_artwork_ignored_after_track_change(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A late oEmbed response must not overwrite artwork after a track change."""
+    thumbnail_url = "https://i1.sndcdn.com/late-response.jpg"
+    aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, json={"thumbnail_url": thumbnail_url})
+
+    soco = MagicMock()
+    soco.uid = "stale-resolution-test"
+    media = SonosMedia(hass, soco)
+    original_uri = "x-sonos-http:track%3esoundcloud%3atracks%3a42.mp3"
+    media.uri = original_uri
+    media.image_url = None
+
+    # Simulate the track changing while the oEmbed request is in flight.
+    media.uri = "x-sonos-http:different-track-now"
+
+    await media._async_resolve_soundcloud_artwork("42", original_uri)
+
+    assert media.image_url is None
+
+
 async def test_soundcloud_artwork_oembed_failure_leaves_no_picture(
     hass: HomeAssistant,
     soco: MockSoCo,
