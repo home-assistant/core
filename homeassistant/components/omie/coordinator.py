@@ -63,7 +63,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
 
 
 def calc_update_interval(now: dt.datetime) -> dt.timedelta:
-    """Calculate the update_interval needed to trigger at the next 15-minute boundary."""
+    """Calculate the update_interval for the next 15-min boundary."""
     current_quarter = current_quarter_hour_cet(now)
     next_quarter = current_quarter + dt.timedelta(minutes=15)
 

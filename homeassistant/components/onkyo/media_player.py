@@ -141,7 +141,8 @@ async def async_setup_entry(
             if entity.enabled:
                 entity.process_update(message)
         elif not isinstance(message, status.NotAvailable):
-            # When we receive a valid status for a zone, then that zone is available on the receiver,
+            # When we receive a valid status for a zone, then
+            # that zone is available on the receiver,
             # so we create the entity for it.
             _LOGGER.debug(
                 "Discovered %s on %s (%s)",
@@ -393,7 +394,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 else:
                     source_meaning = get_meaning(source)
                     _LOGGER.warning(
-                        'Input source "%s" for entity: %s is not in the list. Check integration options',
+                        'Input source "%s" for entity: %s is not'
+                        " in the list. Check integration options",
                         source_meaning,
                         self.entity_id,
                     )
@@ -413,7 +415,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 else:
                     sound_mode_meaning = get_meaning(sound_mode)
                     _LOGGER.warning(
-                        'Listening mode "%s" for entity: %s is not in the list. Check integration options',
+                        'Listening mode "%s" for entity: %s is'
+                        " not in the list. Check integration"
+                        " options",
                         sound_mode_meaning,
                         self.entity_id,
                     )

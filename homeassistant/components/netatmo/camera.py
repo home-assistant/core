@@ -169,7 +169,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
             if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning off and idleing streaming",
+                    "Camera %s has received %s event,"
+                    " turning off and idleing streaming",
                     data["camera_id"],
                     event_type,
                 )
@@ -177,7 +178,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._monitoring = False
             elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning on and enabling streaming if applicable",
+                    "Camera %s has received %s event,"
+                    " turning on and enabling streaming"
+                    " if applicable",
                     data["camera_id"],
                     event_type,
                 )
@@ -293,7 +296,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def get_video_url(self, video_id: str) -> str:
         """Get video url."""
         if self.device.is_local:
-            return f"{self.device.local_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
+            return (
+                f"{self.device.local_url}/vod/{video_id}"
+                f"/files/{self._quality}/index.m3u8"
+            )
         return f"{self.device.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
     def fetch_person_ids(self, persons: list[str | None]) -> list[str]:

@@ -43,7 +43,8 @@ async def async_validate_creds(
             user_input[CONF_PASSWORD],
         )
 
-    # Don't bother authenticating if we've already determined the credentials are invalid
+    # Don't bother authenticating if we've already determined
+    # the credentials are invalid
     return None
 
 

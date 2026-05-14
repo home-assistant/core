@@ -36,7 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DISCOVERY = False
 
-# Library is not thread safe and uses global variables, so we limit to 1 update at a time
+# Library is not thread safe and uses global variables,
+# so we limit to 1 update at a time
 PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
@@ -77,7 +78,8 @@ async def async_setup_platform(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"yaml_deprecation_import_issue_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
+                f"yaml_deprecation_import_issue_{switch.get('host')}"
+                f"_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
                 breaks_in_ha_version="2026.9.0",
                 is_fixable=False,
                 is_persistent=False,
@@ -95,7 +97,8 @@ async def async_setup_platform(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"yaml_deprecation_{switch.get('host')}_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
+            f"yaml_deprecation_{switch.get('host')}"
+            f"_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
             breaks_in_ha_version="2026.9.0",
             is_fixable=False,
             is_persistent=False,

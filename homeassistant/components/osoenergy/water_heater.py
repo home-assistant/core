@@ -151,11 +151,13 @@ def _get_local_hour(utc_hour: int) -> dt.datetime:
 def _convert_profile_to_local(values: list[float]) -> list[JsonValueType]:
     """Convert UTC profile to local.
 
-    Receives a device temperature schedule - 24 values for the day where the index represents the hour of the day in UTC.
+    Receives a device temperature schedule - 24 values for the day
+    where the index represents the hour of the day in UTC.
     Converts the schedule to local time.
 
     Args:
-        values: list of floats representing the 24 hour temperature schedule for the device
+        values: list of floats representing the 24 hour temperature
+                schedule for the device
     Returns:
         The device temperature schedule in local time.
 

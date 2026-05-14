@@ -199,7 +199,10 @@ class OpenThermGatewayHub:
         return self.gateway.connection.connected
 
     async def set_room_setpoint(self, temp) -> float:
-        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        """Set the room temperature setpoint on the gateway.
+
+        Return the new temperature.
+        """
         return await self.gateway.set_target_temp(
             temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
         )

@@ -39,7 +39,9 @@ from .const import (
 
 type NmapTrackerConfigEntry = ConfigEntry[NmapDeviceScanner]
 
-# Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
+# Some version of nmap will fail with
+# 'Assertion failed: htn.toclock_running == true
+# (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS: Final = 16
 
@@ -258,7 +260,7 @@ class NmapDeviceScanner:
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
-        """Build the command line and strip out last results that do not need to be updated."""
+        """Build the options and strip out last results that don't need updating."""
         options = self._options
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

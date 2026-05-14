@@ -49,7 +49,8 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
 
     _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
     # https://platform.openai.com/docs/guides/text-to-speech#supported-languages
-    # The model may also generate the audio in different languages but with lower quality
+    # The model may also generate the audio in different
+    # languages but with lower quality
     _attr_supported_languages = [
         "af-ZA",  # Afrikaans
         "ar-SA",  # Arabic

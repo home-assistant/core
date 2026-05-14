@@ -282,16 +282,20 @@ class NestEventMediaStore(EventMediaStore):
         return devices
 
     async def async_remove_orphaned_media(self, now: datetime.datetime) -> None:
-        """Remove any media files that are orphaned and not referenced by the active event data.
+        """Remove orphaned media files not referenced by active event data.
 
-        The event media store handles garbage collection, but there may be cases where files are
-        left around or unable to be removed. This is a scheduled event that will also check for
-        old orphaned files and remove them when the events are not referenced in the active list
-        of event data.
+        The event media store handles garbage collection, but
+        there may be cases where files are left around or unable
+        to be removed. This is a scheduled event that will also
+        check for old orphaned files and remove them when the
+        events are not referenced in the active list of event
+        data.
 
-        Event media files are stored with the format  <timestamp>-<event_type>.suffix. We extract
-        the list of valid timestamps from the event data and remove any files that are not in that list
-        or are older than the cutoff time.
+        Event media files are stored with the format
+        <timestamp>-<event_type>.suffix. We extract the list of
+        valid timestamps from the event data and remove any
+        files that are not in that list or are older than the
+        cutoff time.
         """
         _LOGGER.debug("Checking for orphaned media at %s", now)
 
