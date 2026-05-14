@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 
 from .client import SatelClient
 from .const import (
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -25,12 +26,18 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -43,11 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
 
     for coordinator in (
         coordinator_zones,
         coordinator_outputs,
         coordinator_partitions,
+        coordinator_temperatures,
     ):
         coordinator.setup()
 
@@ -56,12 +65,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_outputs.outputs_update_callback,
         coordinator_partitions.partitions_update_callback,
     )
+    await coordinator_temperatures.async_config_entry_first_refresh()
 
     entry.runtime_data = SatelIntegraData(
         client=client,
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_temperatures=coordinator_temperatures,
     )
 
     async def async_close_connection(event: Event) -> None:
@@ -154,6 +165,17 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry, data=new_data, minor_version=2
         )
+
+    # 2.3 Added temperature sensor option to zone subentries
+    if config_entry.version == 2 and config_entry.minor_version < 3:
+        for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
+            hass.config_entries.async_update_subentry(
+                config_entry,
+                subentry,
+                data={CONF_ENABLE_TEMPERATURE_SENSOR: False} | subentry.data,
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

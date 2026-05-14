@@ -703,7 +703,7 @@ crownstone-sse==2.0.5
 crownstone-uart==2.1.0
 
 # homeassistant.components.data_grand_lyon
-data-grand-lyon-ha==0.5.0
+data-grand-lyon-ha==0.7.0
 
 # homeassistant.components.datadog
 datadog==0.52.0
@@ -1058,6 +1058,9 @@ growattServer==2.1.0
 # homeassistant.components.google_sheets
 gspread==5.5.0
 
+# homeassistant.components.guntamatic
+guntamatic==1.6.0
+
 # homeassistant.components.profiler
 guppy3==3.1.6
 
@@ -1127,7 +1130,7 @@ hole==0.9.0
 holidays==0.96
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.3
+home-assistant-frontend==20260429.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.5.5
@@ -1208,7 +1211,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.2.0
+infrared-protocols==5.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2028,7 +2031,7 @@ pynintendoauth==1.0.2
 pynintendoparental==2.3.4
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.1
+pynobo==1.9.0
 
 # homeassistant.components.nordpool
 pynordpool==0.4.0
@@ -2416,7 +2419,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2026.5.1
 
 # homeassistant.components.qbus
-qbusmqttapi==1.4.3
+qbusmqttapi==1.5.0
 
 # homeassistant.components.qingping
 qingping-ble==1.1.0
