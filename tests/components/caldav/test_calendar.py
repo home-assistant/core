@@ -3,14 +3,16 @@
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
+import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock
 import zoneinfo
 
-from caldav import Event
+from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -1269,7 +1271,7 @@ async def test_missing_supported_components(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup works when calendar raises KeyError on get_supported_components."""
-    caplog.set_level("WARNING")
+    caplog.set_level(logging.WARNING)
     calendars[0].get_supported_components.side_effect = KeyError()
     await setup_platform_cb()
 
@@ -1277,4 +1279,24 @@ async def test_missing_supported_components(
     assert (
         "CalDAV server does not report supported components for calendar Example, "
         "assuming it supports the requested component 'VEVENT'" in caplog.text
+    )
+
+
+async def test_missing_supported_components_not_assumed(
+    hass: HomeAssistant,
+    calendars: list[Mock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test get_calendars excludes calendars when KeyError is raised for non-assumed components."""
+    caplog.set_level(logging.WARNING)
+    calendars[0].get_supported_components.side_effect = KeyError()
+    client = MagicMock()
+    client.principal().calendars.return_value = calendars
+
+    returned_calendars = await async_get_calendars(hass, client, "VJOURNAL")
+
+    assert len(returned_calendars) == 0
+    assert (
+        "CalDAV server does not report supported components for calendar Example. "
+        "Not assuming support for requested component 'VJOURNAL'" in caplog.text
     )
