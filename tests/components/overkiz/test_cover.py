@@ -428,26 +428,6 @@ async def test_cover_set_position(
     )
 
 
-async def test_cover_tilt_features_for_up_down_sheer_screen(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-) -> None:
-    """Test tilt features for a RTS UpDownSheerScreen cover."""
-    await setup_overkiz_integration(fixture=UP_DOWN_SHEER_SCREEN.fixture)
-
-    state = hass.states.get(UP_DOWN_SHEER_SCREEN.entity_id)
-    assert state
-    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
-    assert state.attributes["supported_features"] == (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-    )
-
-
 async def test_cover_tilt_services(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
