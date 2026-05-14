@@ -557,7 +557,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
-        metric.replace("\u03bc", "\u00b5")
+        metric = metric.replace("\u03bc", "\u00b5")
         return "".join(
             [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
