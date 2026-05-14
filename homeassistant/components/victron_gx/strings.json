@@ -224,6 +224,11 @@
         "name": "[%key:common::state::connected%]"
       }
     },
+    "button": {
+      "platform_device_reboot": {
+        "name": "Device reboot"
+      }
+    },
     "device_tracker": {
       "gps_location": {
         "name": "[%key:common::config_flow::data::location%]"
