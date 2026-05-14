@@ -1,5 +1,6 @@
 """Test the Sunricher DALI integration initialization."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
@@ -241,6 +242,57 @@ async def test_firmware_listener_runtime_update(
     listener((mock_gateway.software_version, mock_gateway.firmware_version))
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_firmware_issue_raised_when_discover_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Repair issue is raised from a delayed version event before discover fails."""
+    version_listener: Callable[[tuple[str, str]], None] | None = None
+    version_listener_subscribed = True
+
+    def _register_listener(
+        event_type: CallbackEventType,
+        listener: Callable[[tuple[str, str]], None],
+        _dev_id: str,
+    ) -> Callable[[], None]:
+        nonlocal version_listener, version_listener_subscribed
+        if event_type is CallbackEventType.VERSION_UPDATED:
+            version_listener = listener
+            version_listener_subscribed = True
+
+        def _unsubscribe() -> None:
+            nonlocal version_listener_subscribed
+            version_listener_subscribed = False
+
+        return _unsubscribe
+
+    def _emit_version_update() -> None:
+        if version_listener is None or not version_listener_subscribed:
+            return
+        mock_gateway.software_version = "3.50"
+        mock_gateway.firmware_version = "1.30"
+        version_listener((mock_gateway.software_version, mock_gateway.firmware_version))
+
+    async def _connect() -> None:
+        hass.loop.call_later(0.01, _emit_version_update)
+
+    mock_gateway.register_listener.side_effect = _register_listener
+    mock_gateway.connect.side_effect = _connect
+    mock_gateway.software_version = ""
+    mock_gateway.firmware_version = ""
+    mock_gateway.discover_devices.side_effect = DaliGatewayError("discover failed")
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
 
 async def test_remove_entry_clears_firmware_issue(

@@ -41,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _MIN_SUPPORTED_SW = Version(MIN_SUPPORTED_SW_VERSION)
 _MIN_SUPPORTED_FW = Version(MIN_SUPPORTED_FW_VERSION)
+_VERSION_RESPONSE_TIMEOUT = 3
 
 
 def _remove_missing_devices(
@@ -87,15 +88,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         name=entry.data[CONF_NAME],
     )
     gw_sn = gateway.gw_sn
+    version_updated = asyncio.Event()
+
+    @callback
+    def _handle_version_update(_versions: tuple[str, str]) -> None:
+        _async_check_firmware_version(hass, entry, gateway)
+        version_updated.set()
+
+    unsub_version = gateway.register_listener(
+        CallbackEventType.VERSION_UPDATED,
+        _handle_version_update,
+        gateway.gw_sn,
+    )
 
     try:
         await gateway.connect()
     except DaliGatewayError as exc:
+        unsub_version()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from exc
+
+    if gateway.software_version and gateway.firmware_version:
+        _async_check_firmware_version(hass, entry, gateway)
+    else:
+        try:
+            await asyncio.wait_for(
+                version_updated.wait(), timeout=_VERSION_RESPONSE_TIMEOUT
+            )
+        except TimeoutError:
+            _LOGGER.debug(
+                "Gateway %s did not report firmware version before discovery",
+                gateway.gw_sn,
+            )
 
     try:
         devices, scenes = await asyncio.gather(
@@ -103,6 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             gateway.discover_scenes(),
         )
     except DaliGatewayError as exc:
+        # async_on_unload only fires after a successful load, so clean up
+        # the listener manually before bailing out.
+        unsub_version()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_discover_devices",
@@ -128,20 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         scenes=scenes,
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    @callback
-    def _handle_version_update(_versions: tuple[str, str]) -> None:
-        _async_check_firmware_version(hass, entry, gateway)
-
-    entry.async_on_unload(
-        gateway.register_listener(
-            CallbackEventType.VERSION_UPDATED,
-            _handle_version_update,
-            gateway.gw_sn,
-        )
-    )
-    if gateway.software_version and gateway.firmware_version:
-        _async_check_firmware_version(hass, entry, gateway)
+    entry.async_on_unload(unsub_version)
 
     return True
 
