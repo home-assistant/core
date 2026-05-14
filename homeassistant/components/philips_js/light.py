@@ -289,7 +289,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
             "color": {
                 "hue": round(hs_color[0] * 255.0 / 360.0),
                 "saturation": round(hs_color[1] * 255.0 / 100.0),
-                "brightness": round(brightness),
+                "brightness": brightness,
             },
             "colorDelta": {
                 "hue": 0,

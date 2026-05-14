@@ -743,6 +743,7 @@ select = [
   "RUF037", # Unnecessary empty iterable within deque call
   "RUF046", # Unnecessary cast to int
   "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
+  "RUF057", # Unnecessary round call
   "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
