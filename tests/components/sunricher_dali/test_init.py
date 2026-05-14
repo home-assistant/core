@@ -234,17 +234,11 @@ async def test_firmware_listener_runtime_update(
 
     listener = _get_version_listener(mock_gateway)
 
-    # Simulate the gateway reporting an unsupported version (e.g. firmware downgrade).
-    mock_gateway.software_version = "3.50"
-    mock_gateway.firmware_version = "1.30"
-    listener((mock_gateway.software_version, mock_gateway.firmware_version))
+    listener(("3.50", "1.30"))
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    # Simulate the gateway reporting a supported version after upgrade.
-    mock_gateway.software_version = "3.99"
-    mock_gateway.firmware_version = "1.99"
-    listener((mock_gateway.software_version, mock_gateway.firmware_version))
+    listener(("3.99", "1.99"))
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
@@ -278,18 +272,16 @@ async def test_firmware_issue_raised_when_discover_fails(
     def _emit_version_update() -> None:
         if version_listener is None or not version_listener_subscribed:
             return
-        mock_gateway.software_version = "3.50"
-        mock_gateway.firmware_version = "1.30"
-        version_listener((mock_gateway.software_version, mock_gateway.firmware_version))
+        version_listener(("3.50", "1.30"))
 
-    async def _connect() -> None:
-        hass.loop.call_later(0.01, _emit_version_update)
+    async def _discover_devices() -> None:
+        _emit_version_update()
+        raise DaliGatewayError("discover failed")
 
     mock_gateway.register_listener.side_effect = _register_listener
-    mock_gateway.connect.side_effect = _connect
     mock_gateway.software_version = ""
     mock_gateway.firmware_version = ""
-    mock_gateway.discover_devices.side_effect = DaliGatewayError("discover failed")
+    mock_gateway.discover_devices.side_effect = _discover_devices
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

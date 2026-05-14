@@ -41,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _MIN_SUPPORTED_SW = Version(MIN_SUPPORTED_SW_VERSION)
 _MIN_SUPPORTED_FW = Version(MIN_SUPPORTED_FW_VERSION)
-_VERSION_RESPONSE_TIMEOUT = 3
 
 
 def _remove_missing_devices(
@@ -88,12 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         name=entry.data[CONF_NAME],
     )
     gw_sn = gateway.gw_sn
-    version_updated = asyncio.Event()
 
     @callback
     def _handle_version_update(_versions: tuple[str, str]) -> None:
-        _async_check_firmware_version(hass, entry, gateway)
-        version_updated.set()
+        _async_check_firmware_version(hass, entry, gateway, _versions)
 
     unsub_version = gateway.register_listener(
         CallbackEventType.VERSION_UPDATED,
@@ -113,16 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
 
     if gateway.software_version and gateway.firmware_version:
         _async_check_firmware_version(hass, entry, gateway)
-    else:
-        try:
-            await asyncio.wait_for(
-                version_updated.wait(), timeout=_VERSION_RESPONSE_TIMEOUT
-            )
-        except asyncio.exceptions.TimeoutError:
-            _LOGGER.debug(
-                "Gateway %s did not report firmware version before discovery",
-                gateway.gw_sn,
-            )
 
     try:
         devices, scenes = await asyncio.gather(
@@ -169,11 +156,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, entry: DaliCenterConfigEntry, gateway: DaliGateway
+    hass: HomeAssistant,
+    entry: DaliCenterConfigEntry,
+    gateway: DaliGateway,
+    versions: tuple[str, str] | None = None,
 ) -> None:
     """Raise a repair issue if the gateway firmware is below supported minimums."""
-    sw_version = gateway.software_version
-    fw_version = gateway.firmware_version
+    sw_version, fw_version = versions or (
+        gateway.software_version,
+        gateway.firmware_version,
+    )
     issue_id = f"unsupported_firmware_{entry.entry_id}"
 
     if not sw_version or not fw_version:
