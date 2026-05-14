@@ -905,7 +905,7 @@ class PrometheusMetrics:
             state,
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
-            "Target temperature in degrees Celsius",
+            "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
