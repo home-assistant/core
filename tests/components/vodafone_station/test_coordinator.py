@@ -87,18 +87,19 @@ async def test_coordinator_json_decode_error(
     new_session = create_autospec(ClientSession, instance=True)
     with (
         patch(
+            "homeassistant.components.vodafone_station.coordinator.init_device_class",
+        ) as mock_init_device_class,
+        patch(
             "homeassistant.components.vodafone_station.coordinator.async_client_session",
             AsyncMock(return_value=new_session),
         ) as mock_async_client_session,
-        patch.object(
-            mock_config_entry.runtime_data,
-            "initialize_api",
-            wraps=mock_config_entry.runtime_data.initialize_api,
-        ) as mock_initialize_api,
     ):
+        mock_init_device_class.return_value = mock_vodafone_station_router
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_async_client_session.assert_awaited_once_with(hass)
-    mock_initialize_api.assert_called_once_with(new_session, mock_config_entry.data)
+    mock_init_device_class.assert_called_once()
+    assert mock_init_device_class.call_args.args[2] == mock_config_entry.data
+    assert mock_init_device_class.call_args.args[3] == new_session
