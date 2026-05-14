@@ -36,27 +36,9 @@ class LgIrEntity(Entity):
         """Subscribe to infrared entity state changes."""
         await super().async_added_to_hass()
 
-        @callback
-        def _async_ir_state_changed(event: Event[EventStateChangedData]) -> None:
-            """Handle infrared entity state changes."""
-            new_state = event.data["new_state"]
-            ir_available = (
-                new_state is not None and new_state.state != STATE_UNAVAILABLE
-            )
-            if ir_available != self.available:
-                _LOGGER.info(
-                    "Infrared entity %s used by %s is %s",
-                    self._infrared_entity_id,
-                    self.entity_id,
-                    "available" if ir_available else "unavailable",
-                )
-
-                self._attr_available = ir_available
-                self.async_write_ha_state()
-
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, [self._infrared_entity_id], _async_ir_state_changed
+                self.hass, [self._infrared_entity_id], self._async_ir_state_changed
             )
         )
 
@@ -74,3 +56,19 @@ class LgIrEntity(Entity):
             code.to_command(),
             context=self._context,
         )
+
+    @callback
+    def _async_ir_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Handle infrared entity state changes."""
+        new_state = event.data["new_state"]
+        ir_available = new_state is not None and new_state.state != STATE_UNAVAILABLE
+        if ir_available != self.available:
+            _LOGGER.info(
+                "Infrared entity %s used by %s is %s",
+                self._infrared_entity_id,
+                self.entity_id,
+                "available" if ir_available else "unavailable",
+            )
+
+            self._attr_available = ir_available
+            self.async_write_ha_state()
