@@ -1,14 +1,15 @@
 """Support for Tuya sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from tuya_device_handlers.definition.sensor import (
-    TuyaSensorDefinition,
+    SensorDefinition,
     get_default_definition,
 )
-from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
     ElectricityCurrentJsonWrapper,
@@ -1076,6 +1077,17 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.USE_TIME_ONE,
+            translation_key="last_watering_time",
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            translation_key="irrigation_status",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
         *BATTERY_SENSORS,
     ),
     DeviceCategory.SGBJ: BATTERY_SENSORS,
@@ -1602,8 +1614,37 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     ),
     DeviceCategory.ZNRB: (
         TuyaSensorEntityDescription(
+            key=DPCode.COMPRESSOR_STRENGTH,
+            translation_key="compressor_strength",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_AROUND,
+            translation_key="outside_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_COILER,
+            translation_key="coil_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_EFFLUENT,
+            translation_key="flow_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_VENTING,
+            translation_key="heat_exchanger_temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -1681,7 +1722,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        definition: TuyaSensorDefinition,
+        definition: SensorDefinition,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager, description)
@@ -1695,6 +1736,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_suggested_unit_of_measurement = (
                 definition.sensor_wrapper.suggested_unit
             )
+        if (
+            description.device_class is None
+            # For enum type DPs, we can assume it's an ENUM sensor
+            and isinstance(definition.sensor_wrapper, DPCodeEnumWrapper)
+        ):
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = definition.sensor_wrapper.options
         if (
             description.state_class is None
             # For integer type DPs with "sum" report type, we can assume it's a total
@@ -1712,6 +1760,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # match Home Assistants requirements.
         if (
             self.device_class is not None
+            and self.device_class != SensorDeviceClass.ENUM
             and not self.device_class.startswith(DOMAIN)
             and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed

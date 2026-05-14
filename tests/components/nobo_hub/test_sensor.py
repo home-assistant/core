@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -55,3 +55,14 @@ async def test_temperature_push_update(
     mock_nobo_hub.get_current_component_temperature.return_value = "19.3"
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(TEMPERATURE_ENTITY).state == "19.3"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_component_removed_marks_unavailable(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+) -> None:
+    """A component removed via the Nobø app must not crash and goes unavailable."""
+    mock_nobo_hub.components.pop("200000059091")
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert hass.states.get(TEMPERATURE_ENTITY).state == STATE_UNAVAILABLE

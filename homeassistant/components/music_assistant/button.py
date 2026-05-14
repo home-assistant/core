@@ -1,7 +1,5 @@
 """Music Assistant Button platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

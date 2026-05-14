@@ -1,7 +1,5 @@
 """Conftest for the KNX integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch

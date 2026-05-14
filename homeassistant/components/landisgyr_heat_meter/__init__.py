@@ -1,7 +1,5 @@
 """The Landis+Gyr Heat Meter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

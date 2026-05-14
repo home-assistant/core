@@ -1,7 +1,5 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging

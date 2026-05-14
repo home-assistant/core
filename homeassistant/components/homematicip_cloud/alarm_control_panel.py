@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud alarm control panel."""
 
-from __future__ import annotations
-
 import logging
 
 from homematicip.functionalHomes import SecurityAndAlarmHome

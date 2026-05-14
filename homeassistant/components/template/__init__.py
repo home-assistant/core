@@ -1,7 +1,5 @@
 """The template component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 import logging
@@ -206,7 +204,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
-            coordinator.async_remove()
+            await coordinator.async_shutdown()
 
     async def init_coordinator(
         hass: HomeAssistant, conf_section: dict[str, Any]

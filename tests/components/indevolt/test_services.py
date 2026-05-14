@@ -2,16 +2,15 @@
 
 from unittest.mock import AsyncMock
 
-from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
+from indevolt_api import (
+    IndevoltConfig,
+    IndevoltEnergyMode,
+    PowerExceedsMaxError,
+    SocBelowMinimumError,
+)
 import pytest
 
-from homeassistant.components.indevolt.const import (
-    DOMAIN,
-    ENERGY_MODE_READ_KEY,
-    ENERGY_MODE_WRITE_KEY,
-    PORTABLE_MODE,
-    REALTIME_ACTION_MODE,
-)
+from homeassistant.components.indevolt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -67,7 +66,7 @@ async def test_service_charge_discharge(
 
     # Verify energy mode switch and charge/discharge were called correctly
     mock_indevolt.set_data.assert_called_once_with(
-        ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE
+        IndevoltConfig.WRITE_ENERGY_MODE, IndevoltEnergyMode.REAL_TIME_CONTROL
     )
     if service_name == "charge":
         mock_indevolt.charge.assert_called_once_with(power, target_soc)
@@ -312,7 +311,9 @@ async def test_charge_outdoor_portable(
 
     # Force outdoor/portable mode
     coordinator = mock_config_entry.runtime_data
-    coordinator.data[ENERGY_MODE_READ_KEY] = PORTABLE_MODE
+    coordinator.data[IndevoltConfig.READ_ENERGY_MODE] = (
+        IndevoltEnergyMode.OUTDOOR_PORTABLE
+    )
 
     # Mock call to start charging (device in outdoor/portable mode)
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -345,7 +346,7 @@ async def test_service_charge_missing_energy_mode(
 
     # Remove current energy mode value
     coordinator = mock_config_entry.runtime_data
-    del coordinator.data[ENERGY_MODE_READ_KEY]
+    del coordinator.data[IndevoltConfig.READ_ENERGY_MODE]
 
     # Mock call to start charging (current energy mode unknown)
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -370,11 +371,11 @@ async def test_single_device_execution_failure(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the original exception is re-raised for a single device execution failure."""
+    """Test that the exception is raised for a single device execution failure."""
     await setup_integration(hass, mock_config_entry)
 
     # Simulate an API push failure
-    mock_indevolt.set_data.side_effect = HomeAssistantError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -390,8 +391,7 @@ async def test_single_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for single coordinator)
-    assert str(exc_info.value) == "Device push failed"
-    assert exc_info.value.translation_key is None
+    assert exc_info.value.translation_key == "failed_to_switch_energy_mode"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -409,7 +409,7 @@ async def test_multi_device_execution_failure(
     await setup_integration(hass, alt_mock_config_entry)
 
     # Simulate an API push failure (triggers for both coordinators)
-    mock_indevolt.set_data.side_effect = HomeAssistantError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging both devices
     with pytest.raises(HomeAssistantError) as exc_info:

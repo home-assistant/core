@@ -1,7 +1,5 @@
 """Media player for Shelly."""
 
-from __future__ import annotations
-
 import base64
 import binascii
 from dataclasses import dataclass
@@ -192,6 +190,14 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         self._get_updated_media_position()
 
         return self._last_media_position_updated_at
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return image of the media playing."""
+        if not self.available:
+            return None
+
+        return super().entity_picture
 
     @property
     def media_image_url(self) -> str | None:

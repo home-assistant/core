@@ -1,7 +1,5 @@
 """Passive update processors for the Bluetooth integration."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import timedelta
 from functools import cache
@@ -624,7 +622,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class PassiveBluetoothProcessorEntity[
     _PassiveBluetoothDataProcessorT: PassiveBluetoothDataProcessor[Any, Any]
 ](Entity):

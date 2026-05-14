@@ -1,7 +1,5 @@
 """Allows to configure a switch using RPi GPIO."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from gpiozero import LED

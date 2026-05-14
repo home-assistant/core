@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 from typing import Any
@@ -16,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (

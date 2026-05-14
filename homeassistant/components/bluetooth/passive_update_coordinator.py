@@ -1,7 +1,5 @@
 """Passive update coordinator for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -92,7 +90,7 @@ class PassiveBluetoothDataUpdateCoordinator(
 
 class PassiveBluetoothCoordinatorEntity[
     _PassiveBluetoothDataUpdateCoordinatorT: PassiveBluetoothDataUpdateCoordinator = PassiveBluetoothDataUpdateCoordinator
-](  # pylint: disable=hass-enforce-class-module
+](  # pylint: disable=home-assistant-enforce-class-module
     BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
 ):
     """A class for entities using DataUpdateCoordinator."""

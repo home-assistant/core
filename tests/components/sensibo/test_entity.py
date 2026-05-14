@@ -1,7 +1,5 @@
 """The test for the sensibo entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest
@@ -31,10 +29,11 @@ async def test_device(
     state1 = hass.states.get("climate.hallway")
     assert state1
 
-    assert (
-        dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
-        == snapshot
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, load_int.entry_id
     )
+    device_entries.sort(key=lambda d: d.name)
+    assert device_entries == snapshot
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)

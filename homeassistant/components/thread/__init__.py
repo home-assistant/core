@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -37,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     async_setup_ws_api(hass)
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = {}
     return True
 

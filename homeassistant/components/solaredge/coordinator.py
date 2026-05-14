@@ -1,7 +1,5 @@
 """Provides the data update coordinators for SolarEdge."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import date, datetime, timedelta

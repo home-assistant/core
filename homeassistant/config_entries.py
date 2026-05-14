@@ -1,7 +1,5 @@
 """Manage config entries in Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (
@@ -3095,6 +3093,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             # Existing config entry present, and the
             # entry data just changed
             should_reload = True
+            if entry.update_listeners:
+                report_usage(
+                    "has an update listener and should use it for scheduling a reload",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2026.12.0",
+                    integration_domain=self.handler,
+                )
         elif (
             self.source in DISCOVERY_SOURCES
             and entry.state is ConfigEntryState.SETUP_RETRY
@@ -3494,6 +3499,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
+            if entry.update_listeners:
+                report_usage(
+                    "has an update listener and should use it for scheduling a reload",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2026.12.0",
+                    integration_domain=self.handler,
+                )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
             reason = "reauth_successful"

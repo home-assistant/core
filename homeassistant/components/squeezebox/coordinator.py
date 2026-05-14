@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta

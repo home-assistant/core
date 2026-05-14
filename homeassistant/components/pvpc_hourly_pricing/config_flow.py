@@ -1,7 +1,5 @@
 """Config flow for pvpc_hourly_pricing."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -15,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -67,9 +65,8 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             if not user_input[CONF_USE_API_TOKEN]:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_NAME,
                     data={
-                        CONF_NAME: user_input[CONF_NAME],
                         ATTR_TARIFF: user_input[ATTR_TARIFF],
                         ATTR_POWER: user_input[ATTR_POWER],
                         ATTR_POWER_P3: user_input[ATTR_POWER_P3],
@@ -77,7 +74,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            self._name = user_input[CONF_NAME]
+            self._name = DEFAULT_NAME
             self._tariff = user_input[ATTR_TARIFF]
             self._power = user_input[ATTR_POWER]
             self._power_p3 = user_input[ATTR_POWER_P3]
@@ -86,7 +83,6 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(ATTR_TARIFF, default=DEFAULT_TARIFF): VALID_TARIFF,
                 vol.Required(ATTR_POWER, default=DEFAULT_POWER_KW): VALID_POWER,
                 vol.Required(ATTR_POWER_P3, default=DEFAULT_POWER_KW): VALID_POWER,
@@ -135,7 +131,6 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         data = {
-            CONF_NAME: self._name,
             ATTR_TARIFF: self._tariff,
             ATTR_POWER: self._power,
             ATTR_POWER_P3: self._power_p3,
@@ -155,7 +150,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with ESIOS Token."""
         self._api_token = entry_data.get(CONF_API_TOKEN)
         self._use_api_token = self._api_token is not None
-        self._name = entry_data[CONF_NAME]
+        self._name = DEFAULT_NAME
         self._tariff = entry_data[ATTR_TARIFF]
         self._power = entry_data[ATTR_POWER]
         self._power_p3 = entry_data[ATTR_POWER_P3]
