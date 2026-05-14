@@ -15,7 +15,7 @@
       "message": "Infrared entity `{entity_id}` not found"
     },
     "receiver_not_found": {
-      "message": "[%key:common::exceptions::infrared_receiver_not_found::message%]"
+      "message": "Infrared receiver entity `{entity_id}` not found"
     }
   }
 }

@@ -223,9 +223,6 @@
       }
     },
     "exceptions": {
-      "infrared_receiver_not_found": {
-        "message": "Infrared receiver entity `{entity_id}` not found"
-      },
       "oauth2_implementation_unavailable": {
         "message": "OAuth2 implementation unavailable, will retry"
       },
