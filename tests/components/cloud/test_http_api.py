@@ -27,14 +27,14 @@ from webrtc_models import RTCIceServer
 from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     GoogleEntity,
 )
 from homeassistant.components.homeassistant import exposed_entities
