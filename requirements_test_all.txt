@@ -1211,7 +1211,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.2.0
+infrared-protocols==5.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -2419,7 +2419,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2026.5.1
 
 # homeassistant.components.qbus
-qbusmqttapi==1.4.3
+qbusmqttapi==1.5.0
 
 # homeassistant.components.qingping
 qingping-ble==1.1.0
