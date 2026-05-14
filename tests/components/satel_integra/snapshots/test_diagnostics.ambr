@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics
+# name: test_diagnostics[mock_config_entry_with_subentries]
   dict({
     'config_entry_data': dict({
       'encryption_key': '**REDACTED**',
@@ -44,6 +44,33 @@
       }),
       'ID_ZONE': dict({
         'data': dict({
+          'enable_temperature_sensor': False,
+          'name': 'Zone',
+          'type': 'motion',
+          'zone_number': 1,
+        }),
+        'subentry_id': 'ID_ZONE',
+        'subentry_type': 'zone',
+        'title': 'Zone (1)',
+        'unique_id': 'zone_1',
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics[mock_config_entry_with_temperature_zone]
+  dict({
+    'config_entry_data': dict({
+      'encryption_key': '**REDACTED**',
+      'host': '192.168.0.2',
+      'port': 7094,
+    }),
+    'config_entry_options': dict({
+      'code': '**REDACTED**',
+    }),
+    'subentries': dict({
+      'ID_ZONE': dict({
+        'data': dict({
+          'enable_temperature_sensor': True,
           'name': 'Zone',
           'type': 'motion',
           'zone_number': 1,
