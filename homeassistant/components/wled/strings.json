@@ -98,9 +98,6 @@
       "ip": {
         "name": "IP"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "wifi_bssid": {
         "name": "Wi-Fi BSSID"
       },

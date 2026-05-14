@@ -2,21 +2,25 @@
 
 from datetime import timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from aiohasupervisor.models import (
+        AddonsStats,
         HomeAssistantInfo,
         HostInfo,
         InstalledAddon,
+        InstalledAddonComplete,
         NetworkInfo,
         OSInfo,
         RootInfo,
         StoreInfo,
         SupervisorInfo,
     )
+
+    from homeassistant.auth.models import User
 
     from .config import HassioConfig
     from .coordinator import (
@@ -112,8 +116,12 @@ DATA_OS_INFO: HassKey[OSInfo] = HassKey("hassio_os_info")
 DATA_NETWORK_INFO: HassKey[NetworkInfo] = HassKey("hassio_network_info")
 DATA_SUPERVISOR_INFO: HassKey[SupervisorInfo] = HassKey("hassio_supervisor_info")
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
-DATA_ADDONS_INFO = "hassio_addons_info"
-DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_ADDONS_INFO: HassKey[dict[str, InstalledAddonComplete | None]] = HassKey(
+    "hassio_addons_info"
+)
+DATA_ADDONS_STATS: HassKey[dict[str, AddonsStats | None]] = HassKey(
+    "hassio_addons_stats"
+)
 DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
@@ -139,6 +147,9 @@ DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issues")
 DATA_KEY_MOUNTS = "mounts"
+DATA_HASSIO_HTTP_CONFIG: HassKey[dict[str, Any]] = HassKey("hassio_http_config")
+DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
+DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
@@ -156,6 +167,7 @@ ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
+ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
