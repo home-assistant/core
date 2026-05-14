@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
-from types import MappingProxyType
 from typing import Any, cast
 
 from aiohttp import ClientSession
@@ -74,20 +73,18 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     ) -> None:
         """Initialize the scanner."""
 
-        data = config_entry.data
-
-        self.initialize_api(session, data)
-
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry.unique_id
 
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=f"{DOMAIN}-{data[CONF_HOST]}-coordinator",
+            name=f"{DOMAIN}-{config_entry.data[CONF_HOST]}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
         )
+
+        self.initialize_api(session)
 
         entity_reg = er.async_get(hass)
         self.previous_devices = {
@@ -159,7 +156,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 # Plain html response (usually occurs after a firmware update), requiring session reinitialization
                 _LOGGER.info("Stale session detected, reinitializing API session")
                 session = await async_client_session(self.hass)
-                self.initialize_api(session, self.config_entry.data)
+                self.initialize_api(session)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -215,10 +212,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             serial_number=self.serial_number,
         )
 
-    def initialize_api(
-        self, session: ClientSession, data: MappingProxyType[str, Any]
-    ) -> None:
+    def initialize_api(self, session: ClientSession) -> None:
         """Init API session."""
+        data = self.config_entry.data
         self.api = init_device_class(
             URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
             data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
