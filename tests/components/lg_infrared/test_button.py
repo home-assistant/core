@@ -47,6 +47,7 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
+        ("button.lg_tv_power", LGTVCode.POWER),
         ("button.lg_tv_power_on", LGTVCode.POWER_ON),
         ("button.lg_tv_power_off", LGTVCode.POWER_OFF),
         ("button.lg_tv_hdmi_1", LGTVCode.HDMI_1),
