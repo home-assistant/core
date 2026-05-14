@@ -174,11 +174,9 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     "side_effect",
     [BSBLANError, TimeoutError],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_circuit_discovery_failure_falls_back_to_default(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
-    side_effect: type[Exception],
+    hass: HomeAssistant, mock_bsblan: MagicMock, side_effect: type[Exception]
 ) -> None:
     """Test that circuit discovery failure falls back to single circuit."""
     mock_bsblan.initialize.side_effect = side_effect
@@ -213,10 +211,9 @@ async def test_circuit_discovery_failure_falls_back_to_default(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_circuit_discovery_empty_result_falls_back_to_default(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_bsblan: MagicMock
 ) -> None:
     """Test that empty circuit discovery falls back to single circuit."""
     mock_bsblan.get_available_circuits.return_value = []

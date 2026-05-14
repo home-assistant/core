@@ -230,10 +230,9 @@ async def test_hassio_addon_no_supported_services(hass: HomeAssistant) -> None:
     assert result2.get("reason") == "no_services"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test config flow initiated by Supervisor."""
     with patch(
@@ -257,10 +256,9 @@ async def test_zeroconf_discovery(
     assert result2 == snapshot
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_no_port(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test discovery when the zeroconf service does not have a port."""
     with (
@@ -280,10 +278,9 @@ async def test_zeroconf_discovery_no_port(
     assert result.get("reason") == "no_port"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_no_services(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test discovery when there are no supported services on the client."""
     with patch(
@@ -300,10 +297,9 @@ async def test_zeroconf_discovery_no_services(
     assert result.get("reason") == "no_services"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test config flow initiated by Supervisor."""
     entry = MockConfigEntry(

@@ -48,11 +48,10 @@ async def _do_get_token(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    mock_setup_entry,
     twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
@@ -76,12 +75,11 @@ async def test_full_flow(
     assert result["options"] == {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_setup_entry,
     twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
@@ -98,12 +96,11 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_setup_entry,
     twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
@@ -163,12 +160,11 @@ async def test_reauth_from_import(
     assert entry.options == {CONF_CHANNELS: ["internetofthings", "homeassistant"]}
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    mock_setup_entry,
     twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:

@@ -35,9 +35,9 @@ async def test_config_flow_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_duplicate_host_port(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:
@@ -66,9 +66,9 @@ async def test_config_flow_duplicate_host_port(
     assert result["data"] == another_host
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_duplicate_serial_number(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:
@@ -185,9 +185,9 @@ async def test_reconfigure_flow_works(
     assert mock_config_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
 ) -> None:

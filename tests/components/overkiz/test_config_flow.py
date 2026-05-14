@@ -440,9 +440,8 @@ async def test_form_invalid_cozytouch_auth(
     assert result["step_id"] == "cloud"
 
 
-async def test_cloud_abort_on_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     MockConfigEntry(
@@ -489,9 +488,8 @@ async def test_cloud_abort_on_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_local_abort_on_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_local_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     """Test local API configuration is aborted if gateway already exists."""
 
     MockConfigEntry(
@@ -548,9 +546,8 @@ async def test_local_abort_on_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_cloud_allow_multiple_unique_entries(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     MockConfigEntry(
