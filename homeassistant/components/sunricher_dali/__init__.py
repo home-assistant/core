@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             await asyncio.wait_for(
                 version_updated.wait(), timeout=_VERSION_RESPONSE_TIMEOUT
             )
-        except TimeoutError:
+        except asyncio.exceptions.TimeoutError:
             _LOGGER.debug(
                 "Gateway %s did not report firmware version before discovery",
                 gateway.gw_sn,

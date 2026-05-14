@@ -1,7 +1,7 @@
 """Test the Sunricher DALI integration initialization."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.exceptions import DaliGatewayError
@@ -38,6 +38,16 @@ def _register_stale_firmware_issue(hass: HomeAssistant, entry: MockConfigEntry) 
             "min_fw_version": MIN_SUPPORTED_FW_VERSION,
         },
     )
+
+
+def _get_version_listener(
+    mock_gateway: MagicMock,
+) -> Callable[[tuple[str, str]], None]:
+    """Find the VERSION_UPDATED listener registered on the gateway."""
+    for call in mock_gateway.register_listener.call_args_list:
+        if call.args[0] is CallbackEventType.VERSION_UPDATED:
+            return call.args[1]
+    raise AssertionError("VERSION_UPDATED listener was not registered")
 
 
 async def test_setup_entry_success(
@@ -222,12 +232,7 @@ async def test_firmware_listener_runtime_update(
     issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
-    # Capture the VERSION_UPDATED listener registered on the gateway during setup.
-    listener = next(
-        call.args[1]
-        for call in mock_gateway.register_listener.call_args_list
-        if call.args[0] is CallbackEventType.VERSION_UPDATED
-    )
+    listener = _get_version_listener(mock_gateway)
 
     # Simulate the gateway reporting an unsupported version (e.g. firmware downgrade).
     mock_gateway.software_version = "3.50"
@@ -293,6 +298,28 @@ async def test_firmware_issue_raised_when_discover_fails(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
+async def test_firmware_listener_unsubscribed_when_forward_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+) -> None:
+    """VERSION_UPDATED listener is removed if platform setup fails."""
+    unsubscribe = MagicMock()
+    mock_gateway.register_listener.return_value = unsubscribe
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("platform setup failed"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    unsubscribe.assert_called_once()
 
 
 async def test_remove_entry_clears_firmware_issue(
