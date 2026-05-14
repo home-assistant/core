@@ -135,8 +135,8 @@ class SwallowedActionExceptionsChecker(BaseChecker):
     priority = -1
     msgs = {
         "E7405": (
-            "Exception in '%s' is swallowed — the error is logged but not "
-            "raised, so the user will not be notified of the failure",
+            "Exception in '%s' is swallowed — the error is not raised, "
+            "so the user will not be notified of the failure",
             "home-assistant-action-swallowed-exception",
             "Used when a service action handler catches an exception but "
             "only logs it or suppresses it instead of re-raising. The user "

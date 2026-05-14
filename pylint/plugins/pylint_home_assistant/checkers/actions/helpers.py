@@ -67,7 +67,12 @@ def collect_action_handlers(module: nodes.Module) -> ActionHandlers:
             ):
                 if len(call.args) >= 3 and isinstance(call.args[2], nodes.Name):
                     result.registered_handlers.add(call.args[2].name)
-            case nodes.Name(name="async_register_admin_service"):
+            # async_register_admin_service(hass, DOMAIN, "name", handler)
+            # Also matches service.async_register_admin_service(...)
+            case (
+                nodes.Name(name="async_register_admin_service")
+                | nodes.Attribute(attrname="async_register_admin_service")
+            ):
                 if len(call.args) >= 4 and isinstance(call.args[3], nodes.Name):
                     result.registered_handlers.add(call.args[3].name)
 
