@@ -13,6 +13,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
+from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,14 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
         try:
-            self.board_info = await self.client.async_get_board_info()
+            # Re-check support during setup so older grandfathered entries do not
+            # keep running once they fall outside the integration's supported scope.
+            self.board_info = await async_get_supported_board_info(self.client)
+        except UnsupportedBoardError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_board",
+            ) from err
         except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

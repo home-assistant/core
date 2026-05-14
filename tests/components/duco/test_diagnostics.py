@@ -73,7 +73,6 @@ async def test_diagnostics_without_optional_board_metadata(
     # integration setup — the coordinator stores board_info during async_setup.
     mock_duco_client.async_get_board_info.return_value = replace(
         mock_duco_client.async_get_board_info.return_value,
-        public_api_version=None,
         software_version=None,
     )
     mock_config_entry.add_to_hass(hass)
@@ -84,7 +83,7 @@ async def test_diagnostics_without_optional_board_metadata(
         hass, hass_client, mock_config_entry
     )
 
-    assert "public_api_version" not in diagnostics["board_info"]
+    assert diagnostics["board_info"]["public_api_version"] == "2.5"
     assert "software_version" not in diagnostics["board_info"]
 
 

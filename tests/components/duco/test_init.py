@@ -8,6 +8,7 @@ from duco_connectivity import (
     DiagStatus,
     DucoConnectionError,
     DucoError,
+    DucoResponseError,
     LanInfo,
     Node,
 )
@@ -21,6 +22,48 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import TEST_HOST, TEST_MAC
 
 from tests.common import MockConfigEntry
+
+_UNSUPPORTED_BOARD_INFOS = [
+    pytest.param(
+        BoardInfo(
+            box_name="UNSUPPORTED_BOX",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="unsupported-box-name",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.0",
+        ),
+        id="version-too-low",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version=None,
+        ),
+        id="missing-version",
+    ),
+]
 
 
 @pytest.mark.parametrize(
@@ -67,6 +110,38 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+async def test_setup_entry_unsupported_board_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    unsupported_board_info: BoardInfo,
+) -> None:
+    """Test that unsupported board info blocks setup for existing entries."""
+    mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_unsupported_board_without_info_endpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that boards without the /info endpoint are rejected during setup."""
+    mock_duco_client.async_get_board_info.side_effect = DucoResponseError(404, "/info")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(
