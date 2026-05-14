@@ -108,15 +108,35 @@ DPI_GROUPS = [
 
 
 def test_config_entry_unique_id_helpers() -> None:
-    """Test fallback controller keys and empty site IDs."""
+    """Test controller keys are only built from stable MAC addresses."""
     assert (
         controller_key_from_system_info(
             SimpleNamespace(
-                raw={},
-                anonymous_controller_id=" 24F81231-A456-4C32-ABCD-F5612345385F ",
+                raw={
+                    "anonymous_controller_id": "controller-b",
+                    "mac": "10:00:00:00:00:01",
+                }
             )
         )
-        == "24f81231-a456-4c32-abcd-f5612345385f"
+        == "10:00:00:00:00:01"
+    )
+    assert (
+        controller_key_from_system_info(
+            SimpleNamespace(raw={"mac_address": "10:00:00:00:00:02"})
+        )
+        == "10:00:00:00:00:02"
+    )
+    assert (
+        controller_key_from_system_info(
+            SimpleNamespace(raw={"device_mac": "10:00:00:00:00:03"})
+        )
+        == "10:00:00:00:00:03"
+    )
+    assert (
+        controller_key_from_system_info(
+            SimpleNamespace(raw={"anonymous_controller_id": "controller-b"})
+        )
+        is None
     )
     assert controller_key_from_system_info(SimpleNamespace(raw={})) is None
     assert extract_site_id(None) is None
