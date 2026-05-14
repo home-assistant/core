@@ -7,6 +7,7 @@ from pyloadapi import PyLoadAPI
 from yarl import URL
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -37,8 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
     pyloadapi = PyLoadAPI(
         session,
         api_url=URL(entry.data[CONF_URL]),
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
+        api_key=entry.data.get(CONF_API_KEY),
     )
 
     coordinator = PyLoadCoordinator(hass, entry, pyloadapi)

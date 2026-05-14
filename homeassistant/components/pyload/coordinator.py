@@ -7,7 +7,6 @@ import logging
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -68,9 +67,6 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={
-                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
-                },
             ) from e
         except CannotConnect as e:
             raise UpdateFailed(
@@ -102,7 +98,4 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={
-                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
-                },
             ) from e
