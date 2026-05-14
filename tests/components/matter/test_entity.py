@@ -455,70 +455,18 @@ _COMPOSED_ENTITY_ID = "switch.my_device"
 _COMPOSED_PARENT_REACHABLE_ATTR_PATH = "42/57/17"
 
 
-async def test_composed_entity_unavailable_when_parent_reachable_false_at_startup(
+async def test_composed_entity_state_updates_when_parent_reachable_changes(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
-    """Test composed entity is unavailable when parent Reachable is False at startup.
-
-    For composed devices, the BridgedDeviceBasicInformation.Reachable attribute
-    is on the parent endpoint. When the parent's Reachable is False, the composed
-    device entity must be unavailable from the moment it is created.
-    """
-    await setup_integration_with_node_fixture(hass, "fritz_bridge", matter_client)
-
-    state = hass.states.get(_COMPOSED_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_composed_entity_becomes_unavailable_on_parent_reachable_false(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-) -> None:
-    """Test composed entity becomes unavailable when parent Reachable changes to False.
-
-    Sequence:
-    1. Setup with parent Reachable=True  → entity available.
-    2. Set parent Reachable=False via set_node_attribute.
-    3. Fire ATTRIBUTE_UPDATED event              → entity must become unavailable.
-    """
-    matter_node = await setup_integration_with_node_fixture(
-        hass,
-        "fritz_bridge",
-        matter_client,
-        # fake as reachable at startup so we can test the node going offline while reachable
-        {_COMPOSED_PARENT_REACHABLE_ATTR_PATH: True},
-    )
-
-    state = hass.states.get(_COMPOSED_ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    # Simulate the parent endpoint reporting as unreachable.
-    set_node_attribute(matter_node, 42, 57, 17, False)
-    await trigger_subscription_callback(
-        hass,
-        matter_client,
-        event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, False),
-    )
-
-    state = hass.states.get(_COMPOSED_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_composed_entity_recovers_when_parent_reachable_true(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-) -> None:
-    """Test composed entity becomes available when parent Reachable returns to True.
+    """Test composed entity becomes (un-)available when parent Reachable changes.
 
     Sequence:
     1. Setup with parent Reachable=False → entity unavailable.
     2. Set parent Reachable=True via set_node_attribute.
-    3. Fire ATTRIBUTE_UPDATED event              → entity must become available.
+    3. Fire ATTRIBUTE_UPDATED event → entity must become available.
+    4. Set parent Reachable=False via set_node_attribute.
+    5. Fire ATTRIBUTE_UPDATED event → entity must become unavailable.
     """
     matter_node = await setup_integration_with_node_fixture(
         hass, "fritz_bridge", matter_client
@@ -540,6 +488,19 @@ async def test_composed_entity_recovers_when_parent_reachable_true(
     state = hass.states.get(_COMPOSED_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+    # Simulate the parent endpoint reporting as unreachable again.
+    set_node_attribute(matter_node, 42, 57, 17, False)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, False),
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_composed_entity_unavailable_when_parent_node_goes_offline(
