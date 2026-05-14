@@ -1,7 +1,5 @@
 """Support for SleepIQ SleepNumber firmness number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
@@ -21,7 +19,6 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,13 +26,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     ACTUATOR,
     CORE_CLIMATE_TIMER,
-    DOMAIN,
     ENTITY_TYPES,
     FIRMNESS,
     FOOT_WARMING_TIMER,
     ICON_OCCUPIED,
 )
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
+from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
@@ -180,11 +176,11 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SleepIQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entities: list[SleepIQNumberEntity] = []
     for bed in data.client.beds.values():

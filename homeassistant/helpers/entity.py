@@ -50,7 +50,7 @@ from homeassistant.core import (
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.loader import async_suggest_report_issue, bind_hass
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
@@ -76,7 +76,7 @@ DATA_ENTITY_SOURCE = "entity_info"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
-FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+FLOAT_PRECISION = abs(math.floor(math.log10(abs(sys.float_info.epsilon)))) - 1
 
 # How many times per hour we allow capabilities to be updated before logging a warning
 CAPABILITIES_UPDATE_LIMIT = 100
@@ -91,7 +91,6 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @callback
-@bind_hass
 @singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources.

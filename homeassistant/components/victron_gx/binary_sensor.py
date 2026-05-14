@@ -66,16 +66,16 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
         """Initialize the binary sensor."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_is_on = self._is_on(metric.value)
+        self._attr_is_on = self.convert_metric_value_to_is_on(metric.value)
 
     @callback
     def _on_update_cb(self, value: Any) -> None:
-        self._attr_is_on = self._is_on(value)
+        self._attr_is_on = self.convert_metric_value_to_is_on(value)
         self.async_write_ha_state()
 
     @staticmethod
-    def _is_on(value: Any) -> bool | None:
-        """Convert a Victron binary sensor enum value to a boolean."""
+    def convert_metric_value_to_is_on(value: Any) -> bool | None:
+        """Convert a Victron on/off enum value to a boolean."""
         if value is None or not isinstance(value, VictronEnum):
             return None
         if value.id == BINARY_SENSOR_ON_ID:

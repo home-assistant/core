@@ -93,6 +93,9 @@
       "ok": {
         "name": "OK"
       },
+      "power": {
+        "name": "Power"
+      },
       "power_off": {
         "name": "Power off"
       },

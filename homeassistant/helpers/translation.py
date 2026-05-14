@@ -1,7 +1,5 @@
 """Translation string lookup helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
@@ -21,7 +19,6 @@ from homeassistant.loader import (
     Integration,
     async_get_config_flows,
     async_get_integrations,
-    bind_hass,
 )
 from homeassistant.util.json import load_json
 
@@ -332,7 +329,6 @@ class _TranslationCache:
                 component_cache.update(flat)
 
 
-@bind_hass
 async def async_get_translations(
     hass: HomeAssistant,
     language: str,

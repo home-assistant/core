@@ -1,7 +1,5 @@
 """Config flow for Jewish calendar integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, get_args
 import zoneinfo

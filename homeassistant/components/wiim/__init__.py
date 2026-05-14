@@ -1,7 +1,5 @@
 """The WiiM integration."""
 
-from __future__ import annotations
-
 from wiim.controller import WiimController
 from wiim.discovery import async_create_wiim_device
 from wiim.exceptions import WiimDeviceException, WiimRequestException

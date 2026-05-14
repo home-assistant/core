@@ -1,8 +1,7 @@
 """Supervisor events monitor."""
 
-from __future__ import annotations
-
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
@@ -28,7 +27,6 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
     ATTR_SLUG,
@@ -54,6 +52,7 @@ from .const import (
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_MOUNT_MOUNT_FAILED,
+    MAIN_COORDINATOR,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
@@ -62,7 +61,7 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_list, get_host_info
 from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -182,6 +181,8 @@ class SupervisorIssues:
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
+        self._disconnect: Callable[[], None] | None = None
+        self._cancel_update_retry: Callable[[], None] | None = None
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -352,24 +353,41 @@ class SupervisorIssues:
 
     async def setup(self) -> None:
         """Create supervisor events listener."""
-        await self._update()
+        await self.async_update()
 
-        async_dispatcher_connect(
+        self._disconnect = async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
         )
 
-    async def _update(self, _: datetime | None = None) -> None:
+    def unload(self) -> None:
+        """Remove supervisor events listener."""
+        if self._disconnect is not None:
+            self._disconnect()
+            self._disconnect = None
+        if self._cancel_update_retry is not None:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+
+    async def async_update(self) -> None:
         """Update issues from Supervisor resolution center."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        await self._update()
+
+    async def _update(self, _: datetime | None = None) -> None:
+        """Update issues from Supervisor resolution center with retry on failure."""
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
-            async_call_later(
+            self._cancel_update_retry = async_call_later(
                 self._hass,
                 REQUEST_REFRESH_DELAY,
                 HassJob(self._update, cancel_on_shutdown=True),
             )
             return
+        self._cancel_update_retry = None
         self.unhealthy_reasons = set(data.unhealthy)
         self.unsupported_reasons = set(data.unsupported)
 
@@ -393,7 +411,7 @@ class SupervisorIssues:
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self._hass.async_create_task(self._update())
+            self._hass.async_create_task(self.async_update())
 
         elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             self.unhealthy_reasons = (
@@ -417,8 +435,8 @@ class SupervisorIssues:
 
     def _async_coordinator_refresh(self) -> None:
         """Refresh coordinator to update latest data in entities."""
-        coordinator: HassioDataUpdateCoordinator | None
-        if coordinator := self._hass.data.get(ADDONS_COORDINATOR):
+        coordinator: HassioMainDataUpdateCoordinator | None
+        if coordinator := self._hass.data.get(MAIN_COORDINATOR):
             coordinator.config_entry.async_create_task(
                 self._hass, coordinator.async_refresh()
             )

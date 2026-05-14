@@ -246,6 +246,14 @@ ENERGY_SENSORS = [
         value_fn=lambda status: status.energy_in_defrost,
     ),
     WeHeatSensorEntityDescription(
+        translation_key="electricity_used_standby",
+        key="electricity_used_standby",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_standby,
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="energy_output_heating",
         key="energy_output_heating",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,

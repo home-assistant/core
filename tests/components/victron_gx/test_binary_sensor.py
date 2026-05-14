@@ -1,7 +1,5 @@
 """Tests for Victron GX MQTT binary sensors."""
 
-from __future__ import annotations
-
 import pytest
 from victron_mqtt import Hub as VictronVenusHub, VictronEnum
 from victron_mqtt.testing import finalize_injection, inject_message
@@ -80,5 +78,5 @@ async def test_victron_binary_sensor(
     ],
 )
 def test_is_on_edge_cases(value: object, expected: bool | None) -> None:
-    """Test _is_on returns None for non-VictronEnum and unknown enum IDs."""
-    assert VictronBinarySensor._is_on(value) is expected
+    """Test convert_metric_value_to_is_on returns None for unknown values."""
+    assert VictronBinarySensor.convert_metric_value_to_is_on(value) is expected

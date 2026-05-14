@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
@@ -83,7 +81,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
             subscription = await self.cookidoo.get_active_subscription()
-            week_plan = await self.cookidoo.get_recipes_in_calendar_week(date.today())
+            week_plan = await self.cookidoo.get_recipes_in_calendar_week(date.today())  # noqa: DTZ011
         except CookidooAuthException:
             try:
                 await self.cookidoo.refresh_token()

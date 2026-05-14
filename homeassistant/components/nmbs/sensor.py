@@ -1,7 +1,5 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -57,7 +55,7 @@ def get_delay_in_minutes(delay=0):
 def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0):
     """Calculate the total travel time in minutes."""
     duration = arrival_time - departure_time
-    duration_time = int(round(duration.total_seconds() / 60))
+    duration_time = round(duration.total_seconds() / 60)
     return duration_time + get_delay_in_minutes(delay)
 
 

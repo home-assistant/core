@@ -1,7 +1,5 @@
 """The Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib

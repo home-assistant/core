@@ -1,7 +1,5 @@
 """The brunt component."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 import logging
 
@@ -56,14 +54,18 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
             raise ConfigEntryNotReady("Brunt not ready to connect.") from exc
         except ClientResponseError as exc:
             raise ConfigEntryAuthFailed(
-                f"Brunt could not connect with username: {self.config_entry.data[CONF_USERNAME]}."
+                "Brunt could not connect with username:"
+                f" {self.config_entry.data[CONF_USERNAME]}."
             ) from exc
 
     async def _async_update_data(self) -> dict[str | None, Thing]:
         """Fetch data from the Brunt endpoint for all Things.
 
-        Error 403 is the API response for any kind of authentication error (failed password or email)
-        Error 401 is the API response for things that are not part of the account, could happen when a device is deleted from the account.
+        Error 403 is the API response for any kind of
+        authentication error (failed password or email)
+        Error 401 is the API response for things that are not
+        part of the account, could happen when a device is
+        deleted from the account.
         """
         try:
             async with timeout(10):

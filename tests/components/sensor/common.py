@@ -95,6 +95,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
     SensorDeviceClass.TEMPERATURE_DELTA: UnitOfTemperature.CELSIUS,
     SensorDeviceClass.TIMESTAMP: None,
+    SensorDeviceClass.UPTIME: None,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,

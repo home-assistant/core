@@ -1,7 +1,5 @@
 """Calendar platform for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
 import logging
 
@@ -60,7 +58,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         if not self.coordinator.data.week_plan:
             return None
 
-        today = date.today()
+        today = date.today()  # noqa: DTZ011
         for day_data in self.coordinator.data.week_plan:
             day_date = date.fromisoformat(day_data.id)
             if day_date >= today and day_data.recipes:

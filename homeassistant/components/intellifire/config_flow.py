@@ -1,7 +1,5 @@
 """Config flow for IntelliFire integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -15,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -289,10 +288,8 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate connectivity for requested modes if runtime data is available
-            coordinator = self.config_entry.runtime_data
-            if coordinator is not None:
-                fireplace = coordinator.fireplace
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                fireplace = self.config_entry.runtime_data.fireplace
 
                 # Refresh connectivity status before validating
                 await fireplace.async_validate_connectivity()

@@ -1,7 +1,5 @@
 """Helper functions for Homematicip Cloud Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import json

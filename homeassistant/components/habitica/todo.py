@@ -1,7 +1,5 @@
 """Todo platform for the Habitica integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 import math
