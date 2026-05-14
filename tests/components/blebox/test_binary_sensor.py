@@ -50,26 +50,6 @@ async def test_init(
     assert device.name == "My rain sensor"
 
 
-async def test_binary_sensor_with_index(hass: HomeAssistant) -> None:
-    """Test that a binary sensor with a non-zero index gets a numeric suffix."""
-    feature = mock_feature(
-        "binary_sensors",
-        blebox_uniapi.binary_sensor.Rain,
-        unique_id="BleBox-windRainSensor-ea68e74f4f49-1.rain",
-        full_name="windRainSensor-1.rain",
-        device_class="moisture",
-        index=1,
-    )
-    type(feature).name = PropertyMock(return_value=None)
-    product = feature.product
-    type(product).name = PropertyMock(return_value="My rain sensor")
-    type(product).model = PropertyMock(return_value="rainSensor")
-
-    await async_setup_entity(hass, "binary_sensor.my_rain_sensor_moisture_1")
-    state = hass.states.get("binary_sensor.my_rain_sensor_moisture_1")
-    assert state.name == "My rain sensor Moisture 1"
-
-
 async def test_binary_sensor_with_name(hass: HomeAssistant) -> None:
     """Test that a binary sensor with a feature name uses it as the entity name."""
     feature = mock_feature(

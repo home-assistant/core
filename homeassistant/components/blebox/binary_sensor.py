@@ -16,7 +16,6 @@ from .entity import BleBoxEntity
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(
         key="moisture",
-        translation_key="moisture",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 )
@@ -48,10 +47,6 @@ class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEn
         self.entity_description = description
         if feature.name:
             self._attr_name = feature.name
-        elif feature.index:
-            self._attr_translation_placeholders = {"index": f" {feature.index}"}
-        else:
-            self._attr_translation_placeholders = {"index": ""}
 
     @property
     def is_on(self) -> bool:

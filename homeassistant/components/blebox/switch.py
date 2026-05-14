@@ -33,16 +33,13 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
+    _attr_name = None
+
     def __init__(self, feature: blebox_uniapi.switch.Switch) -> None:
         """Initialize a BleBox switch feature."""
         super().__init__(feature)
         if feature.name:
             self._attr_name = feature.name
-        elif feature.index:
-            self._attr_translation_key = "relay"
-            self._attr_translation_placeholders = {"index": f" {feature.index}"}
-        else:
-            self._attr_name = None
 
     @property
     def is_on(self) -> bool | None:

@@ -195,7 +195,7 @@ def switchbox_d_fixture():
 
     return (
         features,
-        ["switch.my_relays", "switch.my_relays_relay_1"],
+        ["switch.my_relays", "switch.my_relays_2"],
     )
 
 
@@ -230,7 +230,7 @@ async def test_switchbox_d_init(
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
 
     state = hass.states.get(entity_ids[1])
-    assert state.name == "My relays Relay 1"
+    assert state.name == "My relays"
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
