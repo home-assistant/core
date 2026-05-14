@@ -1,6 +1,6 @@
 """Binary sensor platform for the Data Grand Lyon integration."""
 
-from data_grand_lyon_ha import VelovStation, VelovStationStatus
+from data_grand_lyon_ha import VelovStationStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -82,5 +82,7 @@ class DataGrandLyonVelovBinarySensor(
     @property
     def is_on(self) -> bool:
         """Return true if the station is open."""
-        station: VelovStation = self.coordinator.data.velov_stations[self._subentry_id]
-        return station.status == VelovStationStatus.OPEN
+        return (
+            self.coordinator.data.velov_stations[self._subentry_id].status
+            == VelovStationStatus.OPEN
+        )
