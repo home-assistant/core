@@ -204,3 +204,53 @@ async def test_firmware_version_issue(
     issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (issue is not None) == issue_exists
+
+
+async def test_firmware_listener_runtime_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """The VERSION_UPDATED listener re-evaluates the issue on runtime version changes."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Capture the listener registered on the gateway during setup.
+    listener = mock_gateway.register_listener.call_args.args[1]
+
+    # Simulate the gateway reporting an unsupported version (e.g. firmware downgrade).
+    mock_gateway.software_version = "3.50"
+    mock_gateway.firmware_version = "1.30"
+    listener((mock_gateway.software_version, mock_gateway.firmware_version))
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Simulate the gateway reporting a supported version after upgrade.
+    mock_gateway.software_version = "3.99"
+    mock_gateway.firmware_version = "1.99"
+    listener((mock_gateway.software_version, mock_gateway.firmware_version))
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_remove_entry_clears_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """async_remove_entry deletes the persistent unsupported_firmware issue."""
+    mock_config_entry.add_to_hass(hass)
+    _register_stale_firmware_issue(hass, mock_config_entry)
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
