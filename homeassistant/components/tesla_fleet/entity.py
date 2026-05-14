@@ -21,6 +21,7 @@ from .coordinator import (
 from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
+
 class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
