@@ -59,6 +59,7 @@ class ParallelUpdatesChecker(BaseChecker):
                 isinstance(item, nodes.AnnAssign)
                 and isinstance(item.target, nodes.AssignName)
                 and item.target.name == "PARALLEL_UPDATES"
+                and item.value is not None
             ):
                 return
 
