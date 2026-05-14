@@ -6,6 +6,7 @@ from typing import Any
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
+from pyHomee.model_homeegram import HomeeGram
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -14,9 +15,10 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeeConfigEntry
+from . import DOMAIN, HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 from .helpers import setup_homee_platform
@@ -95,6 +97,10 @@ async def async_setup_entry(
     """Set up the switch platform for the Homee component."""
 
     await setup_homee_platform(add_switch_entities, async_add_entities, config_entry)
+    async_add_entities(
+        HomeegramSwitch(homeegram, config_entry)
+        for homeegram in config_entry.runtime_data.homeegrams
+    )
 
 
 class HomeeSwitch(HomeeEntity, SwitchEntity):
@@ -137,3 +143,70 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.async_set_homee_value(0)
+
+
+class HomeegramSwitch(SwitchEntity):
+    """Representation of a Homeegram as switch."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, homeegram: HomeeGram, entry: HomeeConfigEntry) -> None:
+        """Initialize a homee Homeegram switch entity."""
+        self._homeegram = homeegram
+        self._entry = entry
+        self._attr_unique_id = f"{entry.unique_id}-hg-{homeegram.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.unique_id}-homeegrams")},
+            name="Homeegrams",
+            model="Homeegram Switches",
+            via_device=(DOMAIN, entry.runtime_data.settings.uid),
+        )
+        self._attr_icon = "mdi:robot"
+        self._host_connected = entry.runtime_data.connected
+        self._attr_name = homeegram.name
+
+        self._attr_entity_registry_enabled_default = self.add_as_enabled(homeegram)
+
+    async def async_added_to_hass(self) -> None:
+        """Add the Homeegram entity to home assistant."""
+        self.async_on_remove(
+            self._homeegram.add_on_changed_listener(self._on_homeegram_updated)
+        )
+        self.async_on_remove(
+            self._entry.runtime_data.add_connection_listener(
+                self._on_connection_changed
+            )
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if homeegram is executing."""
+        return self._homeegram.play
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the homeegram based on host availability."""
+        return self._homeegram.active and self._host_connected
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Trigger Homeegram on switching on."""
+        await self._entry.runtime_data.play_homeegram(self._homeegram.id)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turning off homeegrams is not supported."""
+
+    def _on_homeegram_updated(self, homeegram: HomeeGram) -> None:
+        self.schedule_update_ha_state()
+
+    async def _on_connection_changed(self, connected: bool) -> None:
+        self._host_connected = connected
+        self.schedule_update_ha_state()
+
+    def add_as_enabled(self, homeegram: HomeeGram) -> bool:
+        """Get the number of actions in a homeegram."""
+        # We only enable if homeegram has more than one action and it is activated.
+        return (
+            sum(len(action_type) for action_type in homeegram.actions.data.values()) > 1
+            and homeegram.active
+        )
