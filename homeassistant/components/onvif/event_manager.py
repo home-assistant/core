@@ -422,9 +422,9 @@ class PullPointManager:
                 )
         except aiohttp.ServerDisconnectedError as err:
             # Either a shutdown event or the camera closed the connection. Because
-            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4
-            # allows the server
-            # to close the connection at any time, we treat this as a normal. Some
+            # servers are allowed to close the connection at any time:
+            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4  # noqa: E501
+            # we treat this as a normal. Some
             # cameras may close the connection if there are no messages to pull.
             LOGGER.debug(
                 "%s: PullPoint subscription encountered a server disconnected error "

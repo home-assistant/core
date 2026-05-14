@@ -22,7 +22,8 @@ PRESET_PROG = "prog"
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.EXTERNAL: HVACMode.HEAT,  # manu
-    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog (schedule, user program)
+    # prog (schedule, user program) - mapped as preset
+    OverkizCommandParam.INTERNAL: HVACMode.AUTO,
     OverkizCommandParam.AUTO: HVACMode.AUTO,  # auto (intelligent, user behavior)
     OverkizCommandParam.STANDBY: HVACMode.OFF,  # off
 }

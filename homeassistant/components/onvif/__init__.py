@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
         await async_populate_options(hass, entry)
 
     device = ONVIFDevice(hass, entry)
+    camera_address = f"{device.device.host}:{device.device.port}"
 
     async with AsyncExitStack() as stack:
         # Register cleanup callback for device
@@ -52,9 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
                 await async_populate_snapshot_auth(hass, device, entry)
         except (TimeoutError, aiohttp.ClientError) as err:
             raise ConfigEntryNotReady(
-                f"Could not connect to camera"
-                f" {device.device.host}:{device.device.port}:"
-                f" {err}"
+                f"Could not connect to camera {camera_address}: {err}"
             ) from err
         except Fault as err:
             if is_auth_error(err):
@@ -66,9 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
             ) from err
         except ONVIFError as err:
             raise ConfigEntryNotReady(
-                f"Could not setup camera"
-                f" {device.device.host}:{device.device.port}:"
-                f" {stringify_onvif_error(err)}"
+                f"Could not setup camera {camera_address}: {stringify_onvif_error(err)}"
             ) from err
         except TransportError as err:
             stringified_onvif_error = stringify_onvif_error(err)
@@ -80,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
                     f"Auth Failed: {stringified_onvif_error}"
                 ) from err
             raise ConfigEntryNotReady(
-                f"Could not setup camera"
-                f" {device.device.host}:{device.device.port}:"
-                f" {stringified_onvif_error}"
+                f"Could not setup camera {camera_address}: {stringified_onvif_error}"
             ) from err
         except asyncio.CancelledError as err:
             # After https://github.com/agronholm/anyio/issues/374 is resolved

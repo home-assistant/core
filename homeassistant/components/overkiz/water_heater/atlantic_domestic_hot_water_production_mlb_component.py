@@ -157,11 +157,13 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         This requires the start date and the end date to be
         also set, and those dates have to match the device
         datetime. The API accepts setting dates in the format
-        of the core:DateTimeState state for the DHW. The dict
-        is then passed as an actual device date, the away mode
-        start date, and then as an end date, but with the year
-        incremented by 1, so the away mode is getting turned
-        on for the next year.
+        of the core:DateTimeState state for the DHW:
+        {"day": 11, "hour": 21, "minute": 12, "month": 7,
+        "second": 53, "weekday": 3, "year": 2024}.
+        The dict is then passed as an actual device date, the
+        away mode start date, and then as an end date, but with
+        the year incremented by 1, so the away mode is getting
+        turned on for the next year.
 
         The weekday number seems to have no effect so the
         calculation of the future date's weekday number is
