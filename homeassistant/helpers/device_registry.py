@@ -410,8 +410,8 @@ class DeviceEntry:
             "configuration_url": self.configuration_url,
             "config_entries": list(self.config_entries),
             "config_entries_subentries": {
-                config_entry_id: list(subentries)
-                for config_entry_id, subentries in self.config_entries_subentries.items()
+                entry_id: list(subentries)
+                for entry_id, subentries in self.config_entries_subentries.items()
             },
             "connections": list(self.connections),
             "created_at": self.created_at.timestamp(),
@@ -460,8 +460,8 @@ class DeviceEntry:
                     # representation in HA Core 2026.2
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_entries_subentries.items()
+                        entry_id: list(subentries)
+                        for entry_id, subentries in self.config_entries_subentries.items()
                     },
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
@@ -559,8 +559,8 @@ class DeletedDeviceEntry:
                     # representation in HA Core 2026.2
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_entries_subentries.items()
+                        entry_id: list(subentries)
+                        for entry_id, subentries in self.config_entries_subentries.items()
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
@@ -1093,8 +1093,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Private update device attributes.
 
-        :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
+        :param add_config_subentry_id: Add the device to a specific
+            subentry of add_config_entry_id
+        :param remove_config_subentry_id: Remove the device from a
+            specific subentry of remove_config_entry_id
         """
         old = self.devices[device_id]
 
@@ -1126,7 +1128,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and add_config_subentry_id not in add_config_entry.subentries  # type: ignore[union-attr]
             ):
                 raise HomeAssistantError(
-                    f"Config entry {add_config_entry_id} has no subentry {add_config_subentry_id}"
+                    f"Config entry {add_config_entry_id} has no"
+                    f" subentry {add_config_subentry_id}"
                 )
 
         if (
@@ -1182,8 +1185,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # Enable the device if it was disabled by config entry and we're adding
                 # a non disabled config entry
                 if (
-                    # mypy says add_config_entry can be None. That's impossible, because we
-                    # raise above if that happens
+                    # mypy says add_config_entry can be None.
+                    # That's impossible, because we raise above if
+                    # that happens
                     not add_config_entry.disabled_by  # type: ignore[union-attr]
                     and old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
                 ):
@@ -1391,8 +1395,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Update device attributes.
 
-        :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
+        :param add_config_subentry_id: Add the device to a specific
+            subentry of add_config_entry_id
+        :param remove_config_subentry_id: Remove the device from a
+            specific subentry of remove_config_entry_id
         """
         if suggested_area is not UNDEFINED:
             report_usage(

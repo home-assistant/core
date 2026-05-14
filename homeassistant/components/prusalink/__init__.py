@@ -107,7 +107,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
                     },
                 )
-                # There is a check in the async_setup_entry to prevent the setup if minor_version < 2
+                # There is a check in the async_setup_entry to
+                # prevent the setup if minor_version < 2
                 # Currently we can't reload the config entry
                 # if the migration returns False.
                 # Return True here to workaround that.
