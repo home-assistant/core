@@ -59,7 +59,7 @@ async def test_log_on_disconnect_and_reconnect(
     mock_nobo_hub: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Disconnects log a warning; reconnects log info."""
+    """Disconnects and reconnects both log at info level."""
     with caplog.at_level(logging.INFO, logger="homeassistant.components.nobo_hub"):
         caplog.clear()
         await fire_hub_connection(hass, mock_nobo_hub, False)
