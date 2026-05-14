@@ -1,5 +1,6 @@
 """Test the Nobø Ecohub config flow."""
 
+import errno
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -592,7 +593,7 @@ async def test_reconfigure_flow_changes_ip(
     [
         (
             "192.168.1.200",
-            {"side_effect": ConnectionRefusedError(61, "")},
+            {"side_effect": ConnectionRefusedError(errno.ECONNREFUSED, "")},
             "cannot_connect_ip",
         ),
         ("not-an-ip", {"return_value": True}, "invalid_ip"),
