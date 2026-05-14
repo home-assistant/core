@@ -146,7 +146,8 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
             value = parse(payload)
         except ParserError:
             _LOGGER.warning(
-                "Invalid received date/time expression on topic %s for entity %s, got %s",
+                "Invalid received date/time expression on topic"
+                " %s for entity %s, got %s",
                 msg.topic,
                 self.entity_id,
                 msg.payload,

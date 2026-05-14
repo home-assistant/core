@@ -689,8 +689,9 @@ def _async_update_sensor_entity(
     # Replace existing pending update with the latest sensor data.
     hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type][unique_store_key] = data
 
-    # The signal might not be handled if the entity was just enabled, but the data is stored
-    # in pending updates and will be applied on entity initialization.
+    # The signal might not be handled if the entity was
+    # just enabled, but the data is stored in pending updates
+    # and will be applied on entity initialization.
     async_dispatcher_send(
         hass, f"{SIGNAL_SENSOR_UPDATE}-{entity_type}-{unique_store_key}"
     )

@@ -66,7 +66,11 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
             name=f"{account.institution_name} {account.name}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=account.data_provider,
-            model=f"{account.institution_name} - {account.type_name} - {account.subtype_name}",
+            model=(
+                f"{account.institution_name}"
+                f" - {account.type_name}"
+                f" - {account.subtype_name}"
+            ),
             configuration_url=account.institution_url,
         )
 

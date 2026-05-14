@@ -191,7 +191,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         )
 
     def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
-        """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
+        """Convert Modbus scale (0-100) to color temp in Kelvin (2000-7000 K)."""
         return round(
             self._attr_min_color_temp_kelvin
             + (

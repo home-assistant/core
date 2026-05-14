@@ -53,7 +53,8 @@ def _get_data_schema(
     hass: HomeAssistant, config_entry: ConfigEntry | None = None
 ) -> vol.Schema:
     """Get a schema with default values."""
-    # If tracking home or no config entry is passed in, default value come from Home location
+    # If tracking home or no config entry is passed in,
+    # default value come from Home location
     if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
         return vol.Schema(
             {

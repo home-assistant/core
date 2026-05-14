@@ -145,7 +145,8 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
         return config
     if not config.get(CONF_UNIQUE_ID):
         raise vol.Invalid(
-            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` requires `{CONF_UNIQUE_ID}` to be configured"
+            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}`"
+            f" requires `{CONF_UNIQUE_ID}` to be configured"
         )
 
     return config

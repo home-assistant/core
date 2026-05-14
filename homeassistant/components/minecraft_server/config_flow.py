@@ -38,7 +38,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: address,
             }
 
-            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            # Some Bedrock Edition servers mimic a Java Edition
+            # server, therefore check for Bedrock Edition first.
             for server_type in MinecraftServerType:
                 api = MinecraftServer(self.hass, server_type, address)
 

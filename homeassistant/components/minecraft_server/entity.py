@@ -28,7 +28,12 @@ class MinecraftServerEntity(CoordinatorEntity[MinecraftServerCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)})",
+            model=(
+                "Minecraft Server ("
+                f"{config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)})"
+            ),
             name=coordinator.name,
-            sw_version=f"{coordinator.data.version} ({coordinator.data.protocol_version})",
+            sw_version=(
+                f"{coordinator.data.version} ({coordinator.data.protocol_version})"
+            ),
         )

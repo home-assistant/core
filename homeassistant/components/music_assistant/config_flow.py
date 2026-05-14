@@ -145,9 +145,11 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Music Assistant app.
         """
         # Build URL from app discovery info
-        # The app exposes the API on port 8095, but also hosts an internal-only
-        # webserver (default at port 8094) for the Home Assistant integration to connect to.
-        # The info where the internal API is exposed is passed via discovery_info
+        # The app exposes the API on port 8095, but also
+        # hosts an internal-only webserver (default at port
+        # 8094) for the HA integration to connect to.
+        # The info where the internal API is exposed is
+        # passed via discovery_info
         host = discovery_info.config["host"]
         port = discovery_info.config["port"]
         self.url = f"http://{host}:{port}"
@@ -288,7 +290,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         state = _encode_jwt(
             self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
         )
-        # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+        # Music Assistant server will redirect to:
+        # {redirect_uri}?state={state}&code={token}
         params = urlencode(
             {
                 "return_url": f"{redirect_uri}?state={state}",

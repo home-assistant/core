@@ -144,7 +144,8 @@ def async_discover_entities(
             continue
 
         # BEGIN checks on actual attribute values
-        # these are the least likely to be used and least efficient, so they are checked last
+        # these are the least likely to be used and least
+        # efficient, so they are checked last
 
         # check if PRIMARY value exists but is none/null
         if not schema.allow_none_value and any(

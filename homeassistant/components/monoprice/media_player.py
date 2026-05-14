@@ -130,7 +130,7 @@ class MonopriceZone(MediaPlayerEntity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added."""
         return self._zone_id < 20 or self._update_success
 
     @property
