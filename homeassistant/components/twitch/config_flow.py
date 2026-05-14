@@ -6,13 +6,28 @@ from typing import Any, cast
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
+import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 
-from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
+from .const import (
+    CONF_CHANNELS,
+    CONF_CLEANUP_UNFOLLOWED,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    OAUTH_SCOPES,
+)
 
 
 class OAuth2FlowHandler(
@@ -112,3 +127,46 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow handler."""
+        return TwitchOptionsFlowHandler()
+
+
+class TwitchOptionsFlowHandler(OptionsFlow):
+    """Handle Twitch options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Twitch options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={
+                    **self.config_entry.options,
+                    CONF_CLEANUP_UNFOLLOWED: user_input[CONF_CLEANUP_UNFOLLOWED],
+                    CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                }
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CLEANUP_UNFOLLOWED,
+                        default=self.config_entry.options.get(
+                            CONF_CLEANUP_UNFOLLOWED, False
+                        ),
+                    ): bool,
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
+                }
+            ),
+        )

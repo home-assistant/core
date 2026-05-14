@@ -80,6 +80,16 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
+def mock_jitter_sleep() -> Generator[None]:
+    """Skip random jitter delays in the coordinator during tests."""
+    with patch(
+        "homeassistant.components.twitch.coordinator.asyncio.sleep",
+        return_value=None,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Twitch connection."""
     aioclient_mock.post(

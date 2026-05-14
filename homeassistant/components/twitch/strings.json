@@ -67,5 +67,20 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "cleanup_unfollowed": "Remove sensors for unfollowed channels",
+          "scan_interval": "Poll interval (minutes)"
+        },
+        "data_description": {
+          "cleanup_unfollowed": "When enabled, sensors for channels you have unfollowed on Twitch will be permanently removed from the entity registry.",
+          "scan_interval": "How often Home Assistant polls Twitch for updates. Lower values give faster updates but use more API quota. Minimum 1 minute, maximum 1440 minutes (24 hours)."
+        },
+        "title": "Twitch options"
+      }
+    }
   }
 }
