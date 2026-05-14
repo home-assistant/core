@@ -72,11 +72,6 @@ BUTTONS: tuple[KioskerButtonEntityDescription, ...] = (
         translation_key="screensaver_interact",
         action_fn=lambda api: api.screensaver_interact(),
     ),
-    KioskerButtonEntityDescription(
-        key="update",
-        translation_key="update",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
 
@@ -102,5 +97,3 @@ class KioskerButton(KioskerEntity, ButtonEntity):
         """Handle button press."""
         if action_fn := self.entity_description.action_fn:
             await self.hass.async_add_executor_job(action_fn, self.coordinator.api)
-        elif self.entity_description.key == "update":
-            await self.coordinator.async_refresh()

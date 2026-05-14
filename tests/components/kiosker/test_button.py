@@ -74,23 +74,3 @@ async def test_press_button(
     )
 
     getattr(mock_kiosker_api, api_method).assert_called_once()
-
-
-async def test_press_update_button(
-    hass: HomeAssistant,
-    mock_kiosker_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test pressing the update button triggers a coordinator refresh."""
-    await _setup_button(hass, mock_kiosker_api, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-    with patch.object(coordinator, "async_refresh") as mock_refresh:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.kiosker_a98be1ce_update"},
-            blocking=True,
-        )
-
-    mock_refresh.assert_called_once()

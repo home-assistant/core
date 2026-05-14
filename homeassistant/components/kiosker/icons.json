@@ -41,9 +41,6 @@
       },
       "screensaver_interact": {
         "default": "mdi:sleep-off"
-      },
-      "update": {
-        "default": "mdi:update"
       }
     },
     "sensor": {
