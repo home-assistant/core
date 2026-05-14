@@ -195,3 +195,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
         await entry.runtime_data.gateway.disconnect()
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> None:
+    """Clear persistent repair issues that belong to this entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"unsupported_firmware_{entry.entry_id}")
