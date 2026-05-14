@@ -39,6 +39,9 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .coordinator import GoodweConfigEntry, GoodweUpdateCoordinator
 
+# Coordinator handles all data updates, so parallel updates are not needed
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor name of battery SoC

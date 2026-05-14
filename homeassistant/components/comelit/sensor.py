@@ -151,7 +151,7 @@ class ComelitVedoSensorEntity(
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{zone.index}"
+        self._attr_unique_id = f"{config_entry_entry_id}-{description.key}-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
 
         self.entity_description = description

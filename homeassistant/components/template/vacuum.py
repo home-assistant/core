@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -23,14 +22,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -49,8 +41,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_attributes_schema,
@@ -60,26 +50,19 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_VACUUMS = "vacuums"
 CONF_BATTERY_LEVEL = "battery_level"
-CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
-CONF_FAN_SPEED_LIST = "fan_speeds"
+CONF_CLEAN_SEGMENTS = "clean_segments"
 CONF_FAN_SPEED = "fan_speed"
-CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
-CONF_SEGMENTS_TEMPLATE = "segments_template"
+CONF_FAN_SPEED_LIST = "fan_speeds"
+CONF_SEGMENTS = "segments"
+CONF_VACUUMS = "vacuums"
 
 DEFAULT_NAME = "Template Vacuum"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 
-LEGACY_FIELDS = {
-    CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
-    CONF_FAN_SPEED_TEMPLATE: CONF_FAN_SPEED,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
-
 SCRIPT_FIELDS = (
-    SERVICE_CLEAN_AREA,
+    CONF_CLEAN_SEGMENTS,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -98,9 +81,9 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_FAN_SPEED): cv.template,
         vol.Optional(CONF_STATE): cv.template,
         vol.Inclusive(
-            CONF_SEGMENTS_TEMPLATE,
+            CONF_SEGMENTS,
             CLEAN_AREA_GROUP,
-            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ): cv.template,
         vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
@@ -110,9 +93,9 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
         vol.Inclusive(
-            SERVICE_CLEAN_AREA,
+            CONF_CLEAN_SEGMENTS,
             CLEAN_AREA_GROUP,
-            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+            f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ): cv.SCRIPT_SCHEMA,
     }
 )
@@ -124,36 +107,8 @@ VACUUM_YAML_SCHEMA = vol.All(
             VACUUM_DOMAIN, DEFAULT_NAME
         ).schema
     ),
-    cv.key_dependency(CONF_SEGMENTS_TEMPLATE, CONF_UNIQUE_ID),
-    cv.key_dependency(SERVICE_CLEAN_AREA, CONF_UNIQUE_ID),
-)
-
-VACUUM_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-            vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
+    cv.key_dependency(CONF_SEGMENTS, CONF_UNIQUE_ID),
+    cv.key_dependency(CONF_CLEAN_SEGMENTS, CONF_UNIQUE_ID),
 )
 
 VACUUM_CONFIG_ENTRY_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
@@ -176,8 +131,6 @@ async def async_setup_platform(
         TriggerVacuumEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_VACUUMS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -318,9 +271,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         )
 
         self.setup_template(
-            CONF_SEGMENTS_TEMPLATE,
+            CONF_SEGMENTS,
             "_segments",
-            validate_segments(self, CONF_SEGMENTS_TEMPLATE),
+            validate_segments(self, CONF_SEGMENTS),
             self._update_segments,
         )
 
@@ -339,7 +292,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             (SERVICE_CLEAN_SPOT, VacuumEntityFeature.CLEAN_SPOT),
             (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
-            (SERVICE_CLEAN_AREA, VacuumEntityFeature.CLEAN_AREA),
+            (CONF_CLEAN_SEGMENTS, VacuumEntityFeature.CLEAN_AREA),
         ):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
@@ -367,7 +320,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
-        if script := self._action_scripts.get(SERVICE_CLEAN_AREA):
+        if script := self._action_scripts.get(CONF_CLEAN_SEGMENTS):
             await self.async_run_script(
                 script,
                 run_variables={"segment_ids": segment_ids},
