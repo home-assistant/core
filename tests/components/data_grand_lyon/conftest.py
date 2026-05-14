@@ -147,5 +147,5 @@ def mock_tcl_client() -> Generator[AsyncMock]:
     ) as mock_cls:
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
-        client.get_velov_station.return_value = MOCK_VELOV_STATION
+        client.get_velov_stations.return_value = [MOCK_VELOV_STATION]
         yield client
