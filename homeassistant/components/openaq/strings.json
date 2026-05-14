@@ -45,7 +45,8 @@
         "user": {
           "data": {
             "location": "[%key:common::config_flow::data::location%]"
-          }
+          },
+          "description": "Select a monitoring location."
         }
       }
     }

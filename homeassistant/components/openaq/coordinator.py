@@ -33,6 +33,8 @@ from homeassistant.util import location as location_util
 from .const import CONF_LOCATION_ID, DOMAIN, LOGGER
 
 UPDATE_INTERVAL = timedelta(minutes=10)
+AUTH_EXCEPTIONS = (ApiKeyMissingError, ForbiddenError, NotAuthorizedError)
+API_EXCEPTIONS = (APIError, OpenAQError, httpx.HTTPError)
 
 OPENAQ_UNIT_ALIASES = {
     "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -224,19 +226,22 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                         sensors_task = tg.create_task(
                             self.client.locations.sensors(self.location_id)
                         )
-                except* (
-                    ApiKeyMissingError,
-                    ForbiddenError,
-                    NotAuthorizedError,
-                ) as err:
-                    raise UpdateFailed(
-                        f"Authentication failed for location {self.location_id}: {err}"
-                    ) from err.exceptions[0]
-                except* (APIError, OpenAQError, httpx.HTTPError) as err:
+                except ExceptionGroup as err:
+                    first_exception = err.exceptions[0]
+                    if isinstance(first_exception, AUTH_EXCEPTIONS):
+                        raise UpdateFailed(
+                            f"Authentication failed for location {self.location_id}: "
+                            f"{first_exception}"
+                        ) from first_exception
+                    if isinstance(first_exception, API_EXCEPTIONS):
+                        raise UpdateFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="unable_to_fetch",
+                        ) from first_exception
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="unable_to_fetch",
-                    ) from err.exceptions[0]
+                    ) from first_exception
                 location_response = location_task.result()
                 latest_response = latest_task.result()
                 sensors_response = sensors_task.result()
@@ -253,11 +258,11 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 location = self._location
                 sensors = self._sensors
                 latest_response = await self.client.locations.latest(self.location_id)
-        except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
+        except AUTH_EXCEPTIONS as err:
             raise UpdateFailed(
                 f"Authentication failed for location {self.location_id}: {err}"
             ) from err
-        except (APIError, OpenAQError, httpx.HTTPError) as err:
+        except API_EXCEPTIONS as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",

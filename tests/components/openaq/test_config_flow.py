@@ -291,10 +291,10 @@ async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select"
     assert _get_select_options(result) == [
-        SelectOptionDict(value="9998", label="Nearby - 1 sensor: Ozone - 1.0 km"),
+        SelectOptionDict(value="9998", label="Nearby (O3) - 1.0 km"),
         SelectOptionDict(
             value="9999",
-            label="Pinecliff - 3 sensors: PM1, PM10, PM2.5 - 6.0 km",
+            label="Pinecliff (PM1, PM10, PM2.5) - 6.0 km",
         ),
     ]
     assert mock_openaq_client.locations.list.await_args_list == [
@@ -303,12 +303,12 @@ async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
     ]
 
 
-async def test_location_subentry_map_flow_labels_unknown_distance(
+async def test_location_subentry_map_flow_omits_unknown_distance(
     hass: HomeAssistant,
     mock_openaq_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test map search labels locations with unknown distances."""
+    """Test map search omits unknown distances from location labels."""
     mock_config_entry.add_to_hass(hass)
     mock_openaq_client.locations.list.return_value = make_response(
         [make_location(location_id=9999, distance=None)]
@@ -332,7 +332,7 @@ async def test_location_subentry_map_flow_labels_unknown_distance(
     assert _get_select_options(result) == [
         SelectOptionDict(
             value="9999",
-            label="Del Norte, Albuquerque - 1 sensor: PM2.5 - unknown distance",
+            label="Del Norte, Albuquerque (PM2.5)",
         )
     ]
 
