@@ -167,7 +167,7 @@ STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
         status_key=Attribute.DEHUMIDIFICATION_AVAILABLE,
         value_key=Attribute.DEHUMIDIFICATION_STATUS,
         status_map=DEHUMIDIFICATION_STATUS_MAP,
-        options=list(set(DEHUMIDIFICATION_STATUS_MAP.values())),
+        options=sorted(set(DEHUMIDIFICATION_STATUS_MAP.values())),
     ),
     AprilaireStatusSensorDescription(
         key="humidification_status",
@@ -176,7 +176,7 @@ STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
         status_key=Attribute.HUMIDIFICATION_AVAILABLE,
         value_key=Attribute.HUMIDIFICATION_STATUS,
         status_map=HUMIDIFICATION_STATUS_MAP,
-        options=list(set(HUMIDIFICATION_STATUS_MAP.values())),
+        options=sorted(set(HUMIDIFICATION_STATUS_MAP.values())),
     ),
     AprilaireStatusSensorDescription(
         key="ventilation_status",
@@ -185,7 +185,7 @@ STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
         status_key=Attribute.VENTILATION_AVAILABLE,
         value_key=Attribute.VENTILATION_STATUS,
         status_map=VENTILATION_STATUS_MAP,
-        options=list(set(VENTILATION_STATUS_MAP.values())),
+        options=sorted(set(VENTILATION_STATUS_MAP.values())),
     ),
     AprilaireStatusSensorDescription(
         key="air_cleaning_status",
@@ -194,7 +194,7 @@ STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
         status_key=Attribute.AIR_CLEANING_AVAILABLE,
         value_key=Attribute.AIR_CLEANING_STATUS,
         status_map=AIR_CLEANING_STATUS_MAP,
-        options=list(set(AIR_CLEANING_STATUS_MAP.values())),
+        options=sorted(set(AIR_CLEANING_STATUS_MAP.values())),
     ),
     AprilaireStatusSensorDescription(
         key="fan_status",
@@ -203,7 +203,7 @@ STATUS_SENSORS: tuple[AprilaireSensorDescription, ...] = (
         status_key=None,
         value_key=Attribute.FAN_STATUS,
         status_map=FAN_STATUS_MAP,
-        options=list(set(FAN_STATUS_MAP.values())),
+        options=sorted(set(FAN_STATUS_MAP.values())),
     ),
 )
 
