@@ -284,6 +284,7 @@ async def async_setup_entry(
 
             thermostat.schedule_update_ha_state(True)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_CREATE_VACATION,
@@ -291,6 +292,7 @@ async def async_setup_entry(
         schema=CREATE_VACATION_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_DELETE_VACATION,
@@ -298,6 +300,7 @@ async def async_setup_entry(
         schema=DELETE_VACATION_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_FAN_MIN_ON_TIME,
@@ -305,6 +308,7 @@ async def async_setup_entry(
         schema=SET_FAN_MIN_ON_TIME_SCHEMA,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_RESUME_PROGRAM,
