@@ -79,6 +79,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "name": "Station open"
+      }
+    },
     "sensor": {
       "available_bikes": {
         "name": "Available bikes",
