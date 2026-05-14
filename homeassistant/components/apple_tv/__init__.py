@@ -300,8 +300,10 @@ class AppleTVManager(DeviceListener):
             config_entry.title,
             address,
         )
-        # We no longer multicast scan for the device since as soon as async_step_zeroconf runs,
-        # it will update the address and reload the config entry when the device is found.
+        # We no longer multicast scan for the device since as
+        # soon as async_step_zeroconf runs, it will update the
+        # address and reload the config entry when the device
+        # is found.
         return None
 
     async def _connect(self, conf: AppleTV, raise_missing_credentials: bool) -> None:

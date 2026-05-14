@@ -72,9 +72,14 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await self.validate_input(user_input)
             if not errors:
+                cluster = user_input[CONF_ADX_CLUSTER_INGEST_URI].replace(
+                    "https://", ""
+                )
+                db = user_input[CONF_ADX_DATABASE_NAME]
+                table = user_input[CONF_ADX_TABLE_NAME]
                 return self.async_create_entry(
                     data=user_input,
-                    title=f"{user_input[CONF_ADX_CLUSTER_INGEST_URI].replace('https://', '')} / {user_input[CONF_ADX_DATABASE_NAME]} ({user_input[CONF_ADX_TABLE_NAME]})",
+                    title=f"{cluster} / {db} ({table})",
                     options=DEFAULT_OPTIONS,
                 )
 

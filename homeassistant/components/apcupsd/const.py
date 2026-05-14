@@ -8,7 +8,8 @@ CONNECTION_TIMEOUT: int = 10
 # Field name of last self test retrieved from apcupsd.
 LAST_S_TEST: Final = "laststest"
 
-# Mapping of deprecated sensor keys (as reported by apcupsd, lower-cased) to their deprecation
+# Mapping of deprecated sensor keys (as reported by apcupsd,
+# lower-cased) to their deprecation
 # repair issue translation keys.
 DEPRECATED_SENSORS: Final = {
     "apc": "apc_deprecated",

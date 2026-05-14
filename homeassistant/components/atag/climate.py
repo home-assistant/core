@@ -75,7 +75,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
+        """Return the current preset mode, e.g., auto, manual."""
         preset = self.coordinator.atag.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 

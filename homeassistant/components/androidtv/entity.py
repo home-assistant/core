@@ -94,10 +94,9 @@ def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
                 # it doesn't happen over and over again.
                 if self.available:
                     _LOGGER.error(
-                        (
-                            "Unexpected exception executing an ADB command. ADB connection"
-                            " re-establishing attempt in the next update. Error: %s"
-                        ),
+                        "Unexpected exception executing an ADB"
+                        " command. ADB connection re-establishing"
+                        " attempt in the next update. Error: %s",
                         err,
                     )
 

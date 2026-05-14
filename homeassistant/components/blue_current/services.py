@@ -13,7 +13,8 @@ from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN, SERVICE_START_CHARGE_SESSI
 SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
-        # When no charging card is provided, use no charging card (BCU_APP = no charging card).
+        # When no charging card is provided, use no charging card
+        # (BCU_APP = no charging card).
         vol.Optional(CHARGING_CARD_ID, default=BCU_APP): cv.string,
     }
 )
@@ -21,7 +22,8 @@ SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
 
 async def start_charge_session(service_call: ServiceCall) -> None:
     """Start a charge session with the provided device and charge card ID."""
-    # When no charge card is provided, use the default charge card set in the config flow.
+    # When no charge card is provided, use the default charge card
+    # set in the config flow.
     charging_card_id = service_call.data[CHARGING_CARD_ID]
     device_id = service_call.data[CONF_DEVICE_ID]
 

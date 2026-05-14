@@ -612,7 +612,8 @@ class Analytics:
 
                 else:
                     LOGGER.warning(
-                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        "Unexpected status code %s when submitting"
+                        " snapshot analytics to %s",
                         response.status,
                         url,
                     )
@@ -814,7 +815,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
-                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    "Calling async_modify_analytics for integration"
+                    " '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
                 integration_configs[integration_domain] = AnalyticsModifications(
@@ -828,7 +830,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    # instead we refer to devices by
+    # (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out information about devices

@@ -406,7 +406,8 @@ class APIDomainServicesView(HomeAssistantView):
                 is ha.SupportsResponse.NONE
             ):
                 return self.json_message(
-                    "Service does not support responses. Remove return_response from request.",
+                    "Service does not support responses."
+                    " Remove return_response from request.",
                     HTTPStatus.BAD_REQUEST,
                 )
         elif (

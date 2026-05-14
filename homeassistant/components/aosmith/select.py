@@ -45,7 +45,10 @@ class AOSmithHotWaterPlusSelectEntity(AOSmithStatusEntity, SelectEntity):
 
     @property
     def suggested_object_id(self) -> str | None:
-        """Override the suggested object id to make '+' get converted to 'plus' in the entity id."""
+        """Override the suggested object id.
+
+        Makes '+' get converted to 'plus' in the entity id.
+        """
         return "hot_water_plus_level"
 
     @property
