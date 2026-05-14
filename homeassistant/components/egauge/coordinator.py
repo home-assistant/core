@@ -76,7 +76,9 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             EgaugePermissionError,
             EgaugeException,
         ) as err:
-            # EgaugeAuthenticationError and EgaugePermissionError will raise ConfigEntryAuthFailed once reauth is implemented
+            # EgaugeAuthenticationError and
+            # EgaugePermissionError will raise
+            # ConfigEntryAuthFailed once reauth is implemented
             raise ConfigEntryError from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err

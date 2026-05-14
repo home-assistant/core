@@ -300,4 +300,4 @@ class CurrencyUnavailable(HomeAssistantError):
 
 
 class ExchangeRateUnavailable(HomeAssistantError):
-    """Error to indicate the requested exchange rate resource is not provided by the API."""
+    """Error to indicate the requested exchange rate is not provided by the API."""

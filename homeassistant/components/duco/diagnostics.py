@@ -34,7 +34,8 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     board = asdict(coordinator.board_info)
-    # `time` is a Unix epoch timestamp of the last board info fetch; not useful for support triage.
+    # `time` is a Unix epoch timestamp of the last board
+    # info fetch; not useful for support triage.
     board.pop("time")
     if board["public_api_version"] is None:
         board.pop("public_api_version")

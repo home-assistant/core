@@ -157,7 +157,8 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             LOGGER.warning(
-                "Updating Command Line Cover %s took longer than the scheduled update interval %s",
+                "Updating Command Line Cover %s took longer than"
+                " the scheduled update interval %s",
                 self.name,
                 self._scan_interval,
             )

@@ -15,7 +15,7 @@ async def async_setup_entry(
     config_entry: DynaliteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Record the async_add_entities function to add them later when received from Dynalite."""
+    """Record the async_add_entities function to add them later."""
     async_setup_entry_base(
         hass, config_entry, async_add_entities, "light", DynaliteLight
     )

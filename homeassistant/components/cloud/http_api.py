@@ -138,7 +138,8 @@ def async_setup(hass: HomeAssistant) -> None:
             ),
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
-                "Multi-factor authentication expired, or not started. Please try again.",
+                "Multi-factor authentication expired,"
+                " or not started. Please try again.",
             ),
             AlreadyConnectedError: (
                 HTTPStatus.CONFLICT,
@@ -561,7 +562,12 @@ class DownloadSupportPackageView(HomeAssistantView):
                 markdown += "--- | --- | --- | ---\n"
                 for integration in integration_info["custom_integrations"]:
                     doc_url = integration.get("documentation") or "N/A"
-                    markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
+                    markdown += (
+                        f"{integration['domain']} | "
+                        f"{integration['name']} | "
+                        f"{integration['version']} | "
+                        f"{doc_url}\n"
+                    )
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():

@@ -96,7 +96,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
             try:
                 retry_count += 1
                 async with self.device:
-                    # temperatures are required and must trigger a retry if not available
+                    # temperatures are required and must trigger
+                    # a retry if not available
                     if not data.temperatures:
                         data.temperatures = await self.device.get_temperature_async()
                     # holiday and battery are optional and should not trigger a retry

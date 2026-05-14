@@ -244,7 +244,10 @@ class EasyEnergySensorEntity(
         self.entity_id = (
             f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.service_type}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{description.service_type}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={

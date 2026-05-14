@@ -94,7 +94,8 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     },
                 ) from exc
             _LOGGER.debug(
-                "Authentication failed but re-authentication was successful, trying again later"
+                "Authentication failed but re-authentication"
+                " was successful, trying again later"
             )
             return self.data
         except CookidooException as e:

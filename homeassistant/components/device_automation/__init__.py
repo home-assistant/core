@@ -162,7 +162,8 @@ async def async_get_device_automation_platform(
 ) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
-    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    Throws InvalidDeviceAutomationConfig if the integration is not found
+    or does not support device automation.
     """
     platform_name = automation_type.value.section
     try:

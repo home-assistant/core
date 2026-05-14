@@ -182,7 +182,8 @@ class Control4Light(Control4Entity, LightEntity):
     def _create_api_object(self):
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Light(self.runtime_data.director, self._idx)
 

@@ -78,7 +78,7 @@ async def async_setup_entry(
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
-    """A number class, representing min time for an ecobee thermostat with ventilator attached."""
+    """Represent min time for an ecobee thermostat with ventilator."""
 
     entity_description: EcobeeNumberEntityDescription
 

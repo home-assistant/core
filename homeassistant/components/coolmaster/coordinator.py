@@ -54,7 +54,9 @@ class CoolmasterDataUpdateCoordinator(
             except OSError as error:
                 if retries_left == 0:
                     raise UpdateFailed(
-                        f"Error communicating with Coolmaster (aborting after {MAX_RETRIES} retries): {error}"
+                        "Error communicating with Coolmaster"
+                        f" (aborting after {MAX_RETRIES}"
+                        f" retries): {error}"
                     ) from error
                 _LOGGER.debug(
                     "Error communicating with coolmaster (%d retries left): %s",
@@ -66,7 +68,8 @@ class CoolmasterDataUpdateCoordinator(
                     return status
 
                 _LOGGER.debug(
-                    "Error communicating with coolmaster: empty status received (%d retries left)",
+                    "Error communicating with coolmaster:"
+                    " empty status received (%d retries left)",
                     retries_left,
                 )
 
@@ -74,5 +77,7 @@ class CoolmasterDataUpdateCoordinator(
             await asyncio.sleep(backoff)
 
         raise UpdateFailed(
-            f"Error communicating with Coolmaster (aborting after {MAX_RETRIES} retries): empty status received"
+            "Error communicating with Coolmaster"
+            f" (aborting after {MAX_RETRIES} retries):"
+            " empty status received"
         )

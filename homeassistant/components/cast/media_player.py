@@ -203,7 +203,8 @@ class CastDevice:
             self.hass, SIGNAL_CAST_REMOVED, self._async_cast_removed
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
-        # async_create_background_task is used to avoid delaying startup wrapup if the device
+        # async_create_background_task is used to avoid delaying
+        # startup wrapup if the device
         # is discovered already during startup but then fails to respond
         self.hass.async_create_background_task(
             async_create_catching_coro(self._async_connect_to_chromecast()),

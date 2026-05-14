@@ -596,13 +596,15 @@ class BaseCloudLLMEntity(Entity):
                     _convert_content_to_param(
                         [
                             content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(
-                                    chat_log,
-                                    raw_stream,
-                                    True,
-                                ),
+                            async for content in (
+                                chat_log.async_add_delta_content_stream(
+                                    self.entity_id,
+                                    _transform_stream(
+                                        chat_log,
+                                        raw_stream,
+                                        True,
+                                    ),
+                                )
                             )
                         ]
                     )

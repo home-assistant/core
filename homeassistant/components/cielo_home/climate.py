@@ -111,7 +111,8 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of temperature in Home Assistant format.
 
-        It can change over time based on the device settings, so we fetch it dynamically from the client.
+        It can change over time based on the device settings,
+        so we fetch it dynamically from the client.
         """
         unit = self.client.temperature_unit()
 

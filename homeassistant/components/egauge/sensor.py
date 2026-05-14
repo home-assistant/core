@@ -60,7 +60,7 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         native_value_fn=lambda data, register: data.measurements[register],
         available_fn=lambda data, register: register in data.measurements,
-        supported_fn=lambda register_info: register_info.type == RegisterType.VOLTAGE,
+        supported_fn=(lambda register_info: register_info.type == RegisterType.VOLTAGE),
     ),
     EgaugeSensorEntityDescription(
         key="current",
@@ -69,7 +69,7 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         native_value_fn=lambda data, register: data.measurements[register],
         available_fn=lambda data, register: register in data.measurements,
-        supported_fn=lambda register_info: register_info.type == RegisterType.CURRENT,
+        supported_fn=(lambda register_info: register_info.type == RegisterType.CURRENT),
     ),
 )
 

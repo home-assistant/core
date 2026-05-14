@@ -117,7 +117,9 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         if self.unique_id != uuid:
-            # The old user and the new user are not the same. This could mess-up everything as all unique IDs might change.
+            # The old user and the new user are not the same.
+            # This could mess-up everything as all
+            # unique IDs might change.
             raise UuidChanged
 
         reauth_entry = self._get_reauth_entry()

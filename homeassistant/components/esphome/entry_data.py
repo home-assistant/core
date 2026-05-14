@@ -212,7 +212,7 @@ class RuntimeEntryData:
         entity_info_type: type[EntityInfo],
         callback_: Callable[[list[EntityInfo]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info changes for an EntityInfo type."""
+        """Register to receive callbacks when static info changes."""
         callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
         callbacks.append(callback_)
         return partial(callbacks.remove, callback_)
@@ -223,7 +223,7 @@ class RuntimeEntryData:
         static_info: EntityInfo,
         callback_: Callable[[EntityInfo], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info is updated for a specific key."""
+        """Register callbacks when static info is updated for a specific key."""
         callback_key = (type(static_info), static_info.device_id, static_info.key)
         callbacks = self.entity_info_key_updated_callbacks.setdefault(callback_key, [])
         callbacks.append(callback_)
@@ -534,7 +534,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[AssistSatelliteConfiguration], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's configuration is updated."""
+        """Register callbacks when the Assist satellite's configuration is updated."""
         self.assist_satellite_config_update_callbacks.append(callback_)
         return partial(self.assist_satellite_config_update_callbacks.remove, callback_)
 
@@ -551,7 +551,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[list[str]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's wake word is set."""
+        """Register callbacks when the Assist satellite's wake word is set."""
         self.assist_satellite_set_wake_words_callbacks.append(callback_)
         return partial(self.assist_satellite_set_wake_words_callbacks.remove, callback_)
 

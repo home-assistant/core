@@ -25,7 +25,8 @@ async def async_subscription_info(cloud: Cloud[CloudClient]) -> SubscriptionInfo
         _LOGGER.error("Failed to fetch subscription information - %s", exception)
     except TimeoutError:
         _LOGGER.error(
-            "A timeout of %s was reached while trying to fetch subscription information",
+            "A timeout of %s was reached while trying to"
+            " fetch subscription information",
             REQUEST_TIMEOUT,
         )
     return None
