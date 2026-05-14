@@ -129,8 +129,8 @@ def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
 
 @dataclass(frozen=True, kw_only=True)
 class OmadaDevicePortSwitchEntityDescription[
-    TCoordinator: "OmadaCoordinator[Any]",
-    TDevice: "OmadaDevice",
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
     TPort,
 ](SwitchEntityDescription):
     """Entity description for a toggle switch derived from a network port on an Omada device."""
@@ -261,8 +261,8 @@ GATEWAY_PORT_CONFIG_SWITCHES: list[OmadaGatewayPortConfigSwitchEntityDescription
 
 
 class OmadaDevicePortSwitchEntity[
-    TCoordinator: "OmadaCoordinator[Any]",
-    TDevice: "OmadaDevice",
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
     TPort,
 ](
     OmadaDeviceEntity[TCoordinator],

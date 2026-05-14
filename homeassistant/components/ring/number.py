@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Generic, cast
 
 from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
 import ring_doorbell.const
@@ -43,9 +43,7 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingNumberEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
-    NumberEntityDescription
-):
+class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]

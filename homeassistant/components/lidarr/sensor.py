@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import dataclasses
-from typing import Any
+from typing import Any, Generic
 
 from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
 
@@ -47,15 +47,15 @@ def get_modified_description(
 
 
 @dataclasses.dataclass(frozen=True)
-class LidarrSensorEntityDescriptionMixIn[T]:
+class LidarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int]
 
 
 @dataclasses.dataclass(frozen=True)
-class LidarrSensorEntityDescription[T](
-    SensorEntityDescription, LidarrSensorEntityDescriptionMixIn[T]
+class LidarrSensorEntityDescription(
+    SensorEntityDescription, LidarrSensorEntityDescriptionMixIn[T], Generic[T]  # noqa: UP046
 ):
     """Class to describe a Lidarr sensor."""
 

@@ -2,9 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic, TypeVar
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Robot
 from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -13,17 +13,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, whisker_command
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
 
 PARALLEL_UPDATES = 1
 
+_CastTypeT = TypeVar("_CastTypeT", int, float, str)
+
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSelectEntityDescription[
-    _WhiskerEntityT: Robot | Pet,
-    _CastTypeT: (int, float, str),
-](
-    SelectEntityDescription,
+class RobotSelectEntityDescription(
+    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]  # noqa: UP046
 ):
     """A class that describes robot select entities."""
 
@@ -142,12 +141,10 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
-class LitterRobotSelectEntity[
-    _WhiskerEntityT: Robot | Pet,
-    _CastTypeT: (int, float, str),
-](
+class LitterRobotSelectEntity(
     LitterRobotEntity[_WhiskerEntityT],
     SelectEntity,
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """Litter-Robot Select."""
 

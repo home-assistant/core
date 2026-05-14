@@ -4,11 +4,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from ring_doorbell import RingDoorBell, RingGeneric
+from ring_doorbell import RingDoorBell
 from ring_doorbell.webrtcstream import RingWebRtcMessage
 
 from homeassistant.components import ffmpeg
@@ -31,7 +31,7 @@ from homeassistant.util import dt as dt_util
 from . import RingConfigEntry
 from .const import DOMAIN
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity, exception_wrap
+from .entity import RingDeviceT, RingEntity, exception_wrap
 
 # Coordinator is used to centralize the data updates
 # Actions restricted to 1 at a time
@@ -44,9 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingCameraEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
-    CameraEntityDescription
-):
+class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     exists_fn: Callable[[RingDoorBell], bool]

@@ -3,9 +3,9 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, time
-from typing import Any
+from typing import Any, Generic
 
-from pylitterbot import LitterRobot3, Pet, Robot
+from pylitterbot import LitterRobot3
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -14,13 +14,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, whisker_command
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotTimeEntityDescription[_WhiskerEntityT: Robot | Pet](TimeEntityDescription):
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot time entities."""
 
     value_fn: Callable[[_WhiskerEntityT], time | None]
@@ -76,9 +76,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
-class LitterRobotTimeEntity[_WhiskerEntityT: Robot | Pet](
-    LitterRobotEntity[_WhiskerEntityT], TimeEntity
-):
+class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
     """Litter-Robot time entity."""
 
     entity_description: RobotTimeEntityDescription[_WhiskerEntityT]

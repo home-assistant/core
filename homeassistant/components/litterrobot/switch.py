@@ -2,9 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Robot
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -12,15 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, whisker_command
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSwitchEntityDescription[_WhiskerEntityT: Robot | Pet](
-    SwitchEntityDescription
-):
+class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot switch entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
@@ -89,9 +87,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
-class RobotSwitchEntity[_WhiskerEntityT: Robot | Pet](
-    LitterRobotEntity[_WhiskerEntityT], SwitchEntity
-):
+class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
     """Litter-Robot switch entity."""
 
     entity_description: RobotSwitchEntityDescription[_WhiskerEntityT]

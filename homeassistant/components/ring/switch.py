@@ -3,9 +3,9 @@
 from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any, Self, cast
+from typing import Any, Generic, Self, cast
 
-from ring_doorbell import RingCapability, RingDoorBell, RingGeneric, RingStickUpCam
+from ring_doorbell import RingCapability, RingDoorBell, RingStickUpCam
 from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -35,8 +35,8 @@ IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k !=
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSwitchEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
-    SwitchEntityDescription, RingEntityDescription
+class RingSwitchEntityDescription(
+    SwitchEntityDescription, RingEntityDescription, Generic[RingDeviceT]  # noqa: UP046
 ):
     """Describes a Ring switch entity."""
 

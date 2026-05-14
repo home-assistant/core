@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,14 +16,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotBinarySensorEntityDescription[_WhiskerEntityT: Robot | Pet](
-    BinarySensorEntityDescription,
+class RobotBinarySensorEntityDescription(
+    BinarySensorEntityDescription, Generic[_WhiskerEntityT]  # noqa: UP046
 ):
     """A class that describes robot binary sensor entities."""
 
@@ -101,7 +102,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
-class LitterRobotBinarySensorEntity[_WhiskerEntityT: Robot | Pet](
+class LitterRobotBinarySensorEntity(
     LitterRobotEntity[_WhiskerEntityT], BinarySensorEntity
 ):
     """Litter-Robot binary sensor entity."""

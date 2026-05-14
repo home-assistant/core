@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, Generic, cast
 
 from ring_doorbell import (
     RingCapability,
@@ -42,8 +42,8 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSirenEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
-    SirenEntityDescription, RingEntityDescription
+class RingSirenEntityDescription(
+    SirenEntityDescription, RingEntityDescription, Generic[RingDeviceT]  # noqa: UP046
 ):
     """Describes a Ring siren entity."""
 

@@ -1,8 +1,9 @@
 """Component providing support for ring events."""
 
 from dataclasses import dataclass
+from typing import Generic
 
-from ring_doorbell import RingCapability, RingEvent as RingAlert, RingGeneric
+from ring_doorbell import RingCapability, RingEvent as RingAlert
 from ring_doorbell.const import KIND_DING, KIND_INTERCOM_UNLOCK, KIND_MOTION
 
 from homeassistant.components.event import (
@@ -23,9 +24,7 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEventEntityDescription[RingDeviceT: RingGeneric = RingGeneric](
-    EventEntityDescription
-):
+class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     capability: RingCapability
