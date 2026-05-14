@@ -69,7 +69,6 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self,
         hass: HomeAssistant,
         config_entry: VodafoneConfigEntry,
-        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
 
@@ -83,8 +82,6 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
         )
-
-        self.initialize_api(session)
 
         entity_reg = er.async_get(hass)
         self.previous_devices = {
@@ -155,8 +152,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             if isinstance(err, JSONDecodeError):
                 # Plain html response (usually occurs after a firmware update), requiring session reinitialization
                 _LOGGER.info("Stale session detected, reinitializing API session")
-                session = await async_client_session(self.hass)
-                self.initialize_api(session)
+                await self.initialize_api()
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -212,9 +208,10 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             serial_number=self.serial_number,
         )
 
-    def initialize_api(self, session: ClientSession) -> None:
+    async def initialize_api(self) -> None:
         """Init API session."""
         data = self.config_entry.data
+        session = await async_client_session(self.hass)
         self.api = init_device_class(
             URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
             data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
