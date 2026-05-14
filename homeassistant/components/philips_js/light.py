@@ -245,7 +245,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
                 *_average_pixels(self._tv.ambilight_cached)
             )
             self._attr_hs_color = hsv_h, hsv_s
-            self._attr_brightness = hsv_v * 255.0 / 100.0
+            self._attr_brightness = round(hsv_v * 255.0 / 100.0)
         else:
             self._attr_hs_color = None
             self._attr_brightness = None
