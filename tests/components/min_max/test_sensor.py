@@ -62,19 +62,22 @@ async def test_deprecation_warning(
         ]
     }
 
-    with patch("homeassistant.util.ulid.ulid", return_value="1234"):
-        assert await async_setup_component(hass, "sensor", config)
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
-    # Use ulid for issue id when unique_id is not set
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated-1234")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "yaml_deprecated-ddc87b71acd58a195502396b87387d910c36ff7c"
+    )
+    issue2 = issue_registry.async_get_issue(
+        DOMAIN, "yaml_deprecated-6e9186f09cfb0959d0fe420ef3b01e1b25899b2f"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "yaml_deprecated"
 
-    # Use unique_id for issue id if exist
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated-my_unique_id")
-    assert issue is not None
+    assert issue2 is not None
+    assert issue2.severity == ir.IssueSeverity.WARNING
+    assert issue2.translation_key == "yaml_deprecated"
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
