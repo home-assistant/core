@@ -27,12 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
         )
 
     try:
-        await asyncio.gather(
-            *[
-                coordinator.async_config_entry_first_refresh()
-                for coordinator in coordinators.values()
-            ]
-        )
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for coordinator in coordinators.values():
+                    tg.create_task(coordinator.async_config_entry_first_refresh())
+        except ExceptionGroup as err:
+            raise err.exceptions[0] from err
     except Exception:
         await client.close()
         raise
@@ -51,6 +51,6 @@ async def async_update_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> N
 async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and (runtime_data := getattr(entry, "runtime_data", None)):
-        await runtime_data.client.close()
+    if unload_ok:
+        await entry.runtime_data.client.close()
     return unload_ok
