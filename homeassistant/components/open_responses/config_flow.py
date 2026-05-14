@@ -48,6 +48,7 @@ from .const import (
 
 VALIDATION_TIMEOUT = 10.0
 STREAM_FAILURE_EVENTS = {
+    "error",
     "response.error",
     "response.failed",
     "response.incomplete",
@@ -370,7 +371,10 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                     default=form_options.get(
                         CONF_MAX_OUTPUT_TOKENS, RECOMMENDED_MAX_OUTPUT_TOKENS
                     ),
-                ): NumberSelector(NumberSelectorConfig(min=1, max=128000, step=100)),
+                ): vol.All(
+                    NumberSelector(NumberSelectorConfig(min=1, max=128000, step=100)),
+                    vol.Coerce(int),
+                ),
                 vol.Optional(
                     CONF_STORE_RESPONSES,
                     default=form_options.get(

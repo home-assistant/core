@@ -320,7 +320,7 @@ async def _transform_stream(
                 if error := response.get("error"):
                     reason = error.get("message") or reason
                 raise HomeAssistantError(f"Open Responses response failed: {reason}")
-        elif event_type == "response.error":
+        elif event_type in ("error", "response.error"):
             error = cast(dict[str, Any], event.get("error") or {})
             reason = error.get("message") or event.get("message") or "unknown reason"
             raise HomeAssistantError(f"Open Responses response error: {reason}")
