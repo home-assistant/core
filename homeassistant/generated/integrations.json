@@ -2731,6 +2731,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "guntamatic": {
+      "name": "Guntamatic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
