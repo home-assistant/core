@@ -1,6 +1,6 @@
 """Support for EnOcean binary sensors."""
 
-from enocean_async import ERP1Telegram
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -106,7 +106,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
             {
-                "id": self.address.to_bytelist(),
+                "id": self.address.bytelist,
                 "pushed": pushed,
                 "which": self.which,
                 "onoff": self.onoff,

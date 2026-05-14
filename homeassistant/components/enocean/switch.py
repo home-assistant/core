@@ -2,8 +2,11 @@
 
 from typing import Any
 
-from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
+from enocean_async import EEP, EEP_SPECIFICATIONS
+from enocean_async.eep.handler import EEPHandler
+from enocean_async.eep.message import EEPMessage
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -95,7 +98,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             return
 
         optional = [0x03]
-        optional.extend(self.address.to_bytelist())
+        optional.extend(self.address.bytelist)
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -109,7 +112,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         if not self.address:
             return
         optional = [0x03]
-        optional.extend(self.address.to_bytelist())
+        optional.extend(self.address.bytelist)
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -122,16 +125,16 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Update the internal state of the switch."""
         if telegram.rorg == 0xA5:
             # power meter telegram, turn on if > 1 watts
-            if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+            if (eep := EEP_SPECIFICATIONS.get(EEP("A5-12-01"))) is None:
                 LOGGER.warning("EEP A5-12-01 cannot be decoded")
                 return
 
             msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-            if "DT" in msg.values and msg.values["DT"].raw == 1:
+            if "DT" in msg.raw and msg.raw["DT"] == 1:
                 # this packet reports the current value
-                raw_val = msg.values["MR"].raw
-                divisor = msg.values["DIV"].raw
+                raw_val = msg.raw["MR"]
+                divisor = msg.raw["DIV"]
                 watts = raw_val / (10**divisor)
                 if watts > 1:
                     self._attr_is_on = True
@@ -139,14 +142,14 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
         elif telegram.rorg == 0xD2:
             # actuator status telegram
-            if (eep := EEP_SPECIFICATIONS.get(EEP(0xD2, 0x01, 0x01))) is None:
+            if (eep := EEP_SPECIFICATIONS.get(EEP("D2-01-01"))) is None:
                 LOGGER.warning("EEP D2-01-01 cannot be decoded")
                 return
 
             msg = EEPHandler(eep).decode(telegram)
-            if msg.values["CMD"].raw == 4:
-                channel = msg.values["I/O"].raw
-                output = msg.values["OV"].raw
+            if "CMD" in msg.raw and msg.raw["CMD"] == 4:
+                channel = msg.raw["I/O"]
+                output = msg.raw["OV"]
                 if channel == self.channel:
                     self._attr_is_on = output > 0
                     self.schedule_update_ha_state()
