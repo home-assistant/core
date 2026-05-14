@@ -73,7 +73,7 @@ class DataGrandLyonVelovBinarySensor(
 
     @property
     def available(self) -> bool:
-        """Return True if the station data is available."""
+        """Return true if the station data is available."""
         return (
             super().available
             and self._subentry_id in self.coordinator.data.velov_stations
