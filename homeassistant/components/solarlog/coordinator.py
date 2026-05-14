@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for solarlog integration."""
 
-from asyncio import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable
 from datetime import timedelta
 import logging
