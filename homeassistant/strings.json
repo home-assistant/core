@@ -28,7 +28,7 @@
         "no_devices_found": "No devices found on the network",
         "no_infrared_emitters": "No infrared transmitter entities found. Please set up an infrared device first.",
         "no_infrared_entities": "No infrared entities found. Please set up an infrared device first.",
-        "no_radio_frequency_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first.",
+        "no_radio_frequency_transmitters": "No radio frequency transmitters are available. Please set up a device first.",
         "oauth2_authorize_url_timeout": "Timeout while generating an authorization URL.",
         "oauth2_error": "Received invalid token data.",
         "oauth2_failed": "Error while obtaining access token.",
