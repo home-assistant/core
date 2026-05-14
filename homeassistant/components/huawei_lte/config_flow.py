@@ -367,7 +367,8 @@ class HuaweiLteOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
 
-        # Recipients are persisted as a list, but handled as comma separated string in UI
+        # Recipients are persisted as a list, but handled as comma
+        # separated string in UI
 
         if user_input is not None:
             # Preserve existing options, for example *_from_yaml markers
