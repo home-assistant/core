@@ -3,9 +3,10 @@
 from aiocomelit.const import BRIDGE
 
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import CONF_VEDO_PIN, DEFAULT_PORT
+from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DOMAIN
 from .coordinator import (
     ComelitBaseCoordinator,
     ComelitConfigEntry,
@@ -77,6 +78,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+
+    return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ComelitConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        device_registry = dr.async_get(hass)
+
+        @callback
+        def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+            if (
+                entry.domain != Platform.SENSOR
+                or entry.device_id is None
+                or not (device_entry := device_registry.async_get(entry.device_id))
+                or not any(
+                    platform == DOMAIN
+                    and identifier.startswith(f"{config_entry.entry_id}-zone-")
+                    for platform, identifier in device_entry.identifiers
+                )
+            ):
+                return None
+
+            _LOGGER.debug(
+                "Migrating from version %s.%s",
+                config_entry.version,
+                config_entry.minor_version,
+            )
+
+            zone_index = entry.unique_id.removeprefix(f"{config_entry.entry_id}-")
+            return {
+                "new_unique_id": f"{config_entry.entry_id}-human_status-{zone_index}"
+            }
+
+        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+        hass.config_entries.async_update_entry(config_entry, version=1, minor_version=2)
+
+        _LOGGER.info(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
 
     return True
 
