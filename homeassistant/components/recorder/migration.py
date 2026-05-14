@@ -1,7 +1,5 @@
 """Schema migration helpers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 import contextlib
@@ -2626,7 +2624,7 @@ class BaseMigration(ABC):
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate some data, return if the migration needs to run and if it is done."""
 
-    def migration_done(self, instance: Recorder, session: Session) -> None:
+    def migration_done(self, instance: Recorder, session: Session) -> None:  # noqa: B027
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod

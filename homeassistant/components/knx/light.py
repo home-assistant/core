@@ -1,7 +1,5 @@
 """Support for KNX light entities."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from propcache.api import cached_property

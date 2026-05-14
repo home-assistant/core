@@ -1,6 +1,5 @@
 """Config flow for Satel Integra."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import logging
 from typing import Any

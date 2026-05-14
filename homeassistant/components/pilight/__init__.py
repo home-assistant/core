@@ -1,7 +1,5 @@
 """Component to create an interface to a Pilight daemon."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools

@@ -1,7 +1,5 @@
 """Assist satellite entity for Wyoming integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 import io

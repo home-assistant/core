@@ -1,7 +1,5 @@
 """Tests for Tuya services."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import FeederSchedule

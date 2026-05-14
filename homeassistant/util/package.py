@@ -1,7 +1,5 @@
 """Helpers to install PyPi packages."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import cache
 from importlib.metadata import PackageNotFoundError, version

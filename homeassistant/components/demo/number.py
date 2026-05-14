@@ -1,7 +1,5 @@
 """Demo platform that offers a fake Number entity."""
 
-from __future__ import annotations
-
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature

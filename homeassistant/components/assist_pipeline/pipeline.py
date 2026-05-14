@@ -1,7 +1,5 @@
 """Classes for voice assistant pipelines."""
 
-from __future__ import annotations
-
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -945,7 +943,10 @@ class PipelineRun:
         try:
             # Transcribe audio stream
             stt_vad: VoiceCommandSegmenter | None = None
-            if self.audio_settings.is_vad_enabled:
+            if (
+                self.audio_settings.is_vad_enabled
+                and self.stt_provider.audio_processing.requires_external_vad
+            ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.audio_settings.silence_seconds
                 )

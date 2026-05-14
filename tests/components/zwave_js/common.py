@@ -1,7 +1,5 @@
 """Provide common test tools for Z-Wave JS."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 

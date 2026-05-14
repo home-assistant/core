@@ -1,7 +1,5 @@
 """Support for Bluesound devices."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from datetime import datetime, timedelta
 import logging
@@ -691,7 +689,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
-        volume = int(round(volume * 100))
+        volume = round(volume * 100)
         volume = min(100, volume)
         volume = max(0, volume)
 

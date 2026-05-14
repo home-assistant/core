@@ -1,7 +1,5 @@
 """Support for BSB-LAN services."""
 
-from __future__ import annotations
-
 from datetime import time
 import logging
 from typing import TYPE_CHECKING

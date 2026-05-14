@@ -1,7 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import logging

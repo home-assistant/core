@@ -1,7 +1,5 @@
 """Coordinator for Arcam FMJ integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
