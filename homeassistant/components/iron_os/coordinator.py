@@ -146,7 +146,9 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         device_registry.async_update_device(
             device_id=device.id,
             sw_version=self.device_info.build,
-            serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
+            serial_number=(
+                f"{self.device_info.device_sn} (ID:{self.device_info.device_id})"
+            ),
         )
 
 

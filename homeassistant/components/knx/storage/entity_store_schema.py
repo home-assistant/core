@@ -479,7 +479,8 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
             vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[cls.value for cls in NumberDeviceClass],
-                    translation_key="component.knx.selector.sensor_device_class",  # should align with sensor
+                    # should align with sensor
+                    translation_key="component.knx.selector.sensor_device_class",
                     sort=True,
                 )
             ),
@@ -683,7 +684,7 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
 
 
 def _sensor_attribute_sub_validator(config: dict) -> dict:
-    """Validate that state_class is compatible with device_class and unit_of_measurement."""
+    """Validate state_class, device_class and unit compatibility."""
     dpt = config[CONF_GA_SENSOR][CONF_DPT]
     dpt_metadata = get_supported_dpts()[dpt]
     return validate_sensor_attributes(dpt_metadata, config)

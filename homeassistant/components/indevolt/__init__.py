@@ -42,5 +42,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
-    """Unload a config entry / clean up resources (when integration is removed / reloaded)."""
+    """Unload a config entry.
+
+    Clean up resources when integration is removed or reloaded.
+    """
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

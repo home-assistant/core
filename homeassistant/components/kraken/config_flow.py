@@ -60,7 +60,8 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
         tradable_asset_pairs_for_multi_select = {v: v for v in tradable_asset_pairs}
 
-        # Ensure that a previously selected tracked asset pair is still available in multiselect
+        # Ensure that a previously selected tracked asset pair
+        # is still available in multiselect
         # even if it is not tradable anymore
         tracked_asset_pairs = self.config_entry.options.get(
             CONF_TRACKED_ASSET_PAIRS, []

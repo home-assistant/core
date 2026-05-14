@@ -98,8 +98,9 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
         As we set the override, we report back the override. The actual set point is
         is returned at a later time.
-        Some older thermostats do not clear the override setting in that case, in that case
-        we fallback to the returning actual setpoint.
+        Some older thermostats do not clear the override
+        setting in that case, so we fallback to the returning
+        actual setpoint.
         """
         if self._legacy_setpoint_status:
             return self._room.setpoint

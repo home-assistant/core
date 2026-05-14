@@ -119,7 +119,8 @@ class IrmKmiWeather(
         data: list[Forecast] = self.coordinator.data.daily_forecast
 
         # The data in daily_forecast might contain nighttime forecast.
-        # The following handle the lowest temperature attribute to be displayed correctly.
+        # The following handles the lowest temperature
+        # attribute to be displayed correctly.
         if (
             len(data) > 1
             and not data[0].get("is_daytime")

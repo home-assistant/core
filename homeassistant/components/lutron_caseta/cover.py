@@ -168,7 +168,8 @@ async def async_setup_entry(
     bridge = data.bridge
     cover_devices = bridge.get_devices_by_domain(COVER_DOMAIN)
     async_add_entities(
-        # default to standard LutronCasetaCover type if the pylutron type is not yet mapped
+        # default to standard LutronCasetaCover type if the
+        # pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(
             cover_device, data
         )

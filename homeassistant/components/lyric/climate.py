@@ -501,7 +501,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             _LOGGER.error(exception)
         except KeyError:
             _LOGGER.error(
-                "The fan mode requested does not have a corresponding mode in lyric: %s",
+                "The fan mode requested does not have a"
+                " corresponding mode in lyric: %s",
                 fan_mode,
             )
         await self.coordinator.async_refresh()

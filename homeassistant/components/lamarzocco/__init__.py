@@ -116,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 entry.async_on_unload(bluetooth_client.disconnect)
             else:
                 _LOGGER.info(
-                    "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
+                    "Bluetooth device not found during"
+                    " lamarzocco setup, continuing with"
+                    " cloud only"
                 )
 
     async def _get_thing_settings() -> None:
@@ -221,7 +223,9 @@ async def async_migrate_entry(
 
     if entry.version in (1, 2):
         _LOGGER.error(
-            "Migration from version 1 or 2 is no longer supported, please remove and re-add the integration"
+            "Migration from version 1 or 2 is no longer"
+            " supported, please remove and re-add"
+            " the integration"
         )
         return False
 

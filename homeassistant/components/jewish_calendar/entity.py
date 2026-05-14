@@ -52,8 +52,9 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # When coordinator updates (e.g., from tests forcing refresh or midnight update),
-        # reschedule our entity-specific updates
+        # When coordinator updates (e.g., from tests forcing
+        # refresh or midnight update), reschedule our
+        # entity-specific updates
         self._schedule_update()
         super()._handle_coordinator_update()
 

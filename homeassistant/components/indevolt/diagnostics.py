@@ -26,7 +26,10 @@ TO_REDACT = {
 
 
 def _redact_mac(mac_address: str) -> str:
-    """Redact the device-specific part of a MAC address (keep OUI, used for discovery)."""
+    """Redact the device-specific part of a MAC address.
+
+    Keeps the OUI, which is used for discovery.
+    """
     parts = mac_address.split(":")
     return ":".join([*parts[:3], "XX", "XX", "XX"])
 

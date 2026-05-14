@@ -19,7 +19,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up platform from a ConfigEntry."""
     hass.data.setdefault(DOMAIN, {})
-    # Verify the device is reachable with the given config before setting up the platform
+    # Verify the device is reachable with the given
+    # config before setting up the platform
     try:
         await hass.async_add_executor_job(
             test_connect, entry.data[CONF_HOST], entry.data[CONF_PORT]

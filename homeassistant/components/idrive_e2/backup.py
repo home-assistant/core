@@ -237,8 +237,10 @@ class IDriveE2BackupAgent(BackupAgent):
                 finally:
                     view.release()
 
-                # Compact the buffer if the consumed offset has grown large enough. This
-                # avoids unnecessary memory copies when compacting after every part upload.
+                # Compact the buffer if the consumed offset has
+                # grown large enough. This avoids unnecessary
+                # memory copies when compacting after every
+                # part upload.
                 if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
                     buffer = bytearray(buffer[offset:])
                     offset = 0
