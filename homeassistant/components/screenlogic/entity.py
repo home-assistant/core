@@ -138,7 +138,8 @@ class ScreenLogicPushEntity(ScreenLogicEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # For push entities, only take updates from the coordinator if availability changes.
+        # For push entities, only take updates from the
+        # coordinator if availability changes.
         if self.coordinator.last_update_success != self._last_update_success:
             self._async_data_updated()
 

@@ -135,7 +135,8 @@ async def async_migrate_entry(
                 SUBENTRY_TYPE_SWITCHABLE_OUTPUT: CONF_SWITCHABLE_OUTPUT_NUMBER,
             }
 
-            new_title = f"{subentry.title} ({subentry.data[property_map[subentry.subentry_type]]})"
+            prop = property_map[subentry.subentry_type]
+            new_title = f"{subentry.title} ({subentry.data[prop]})"
 
             hass.config_entries.async_update_subentry(
                 config_entry, subentry, title=new_title
@@ -143,7 +144,8 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
-    # 2.1 Migrate all entity unique IDs to replace "satel" prefix with config entry ID, allows multiple entries to be configured
+    # 2.1 Migrate all entity unique IDs to replace "satel" prefix
+    # with config entry ID, allows multiple entries to be configured
     if config_entry.version == 1:
 
         @callback

@@ -81,10 +81,12 @@ async def async_setup_entry(
         coordinator.async_add_listener(_async_listener)
 
         # If coordinator already has alarm data from the initial refresh,
-        # call the listener immediately to process existing alarms and create alarm entities.
+        # call the listener immediately to process existing
+        # alarms and create alarm entities.
         if coordinator.data["alarms"]:
             _LOGGER.debug(
-                "Coordinator has alarm data, calling _async_listener immediately for player %s",
+                "Coordinator has alarm data, calling"
+                " _async_listener immediately for player %s",
                 coordinator.player,
             )
             _async_listener()

@@ -64,7 +64,7 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 
 
 class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
-    """A StarlinkAccumulationSensor for Starlink devices. Handles creating unique IDs."""
+    """A StarlinkAccumulationSensor for Starlink devices."""
 
     _attr_native_value: int | float = 0
 

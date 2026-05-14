@@ -182,7 +182,9 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
-    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: (
+        switchbot.SwitchbotSmartThermostatRadiator
+    ),
     SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
     SwitchbotModel.KEYPAD_VISION: switchbot.SwitchbotKeypadVision,
     SwitchbotModel.KEYPAD_VISION_PRO: switchbot.SwitchbotKeypadVision,

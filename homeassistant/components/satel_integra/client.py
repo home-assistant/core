@@ -41,7 +41,8 @@ class SatelClient:
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
 
-        # Make sure we initialize the Satel controller with the configured entries to monitor
+        # Make sure we initialize the Satel controller
+        # with the configured entries to monitor
         partitions = [
             subentry.data[CONF_PARTITION_NUMBER]
             for subentry in entry.subentries.values()

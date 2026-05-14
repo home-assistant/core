@@ -312,7 +312,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -339,7 +341,10 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_PARTITION_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_PARTITION_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -425,7 +430,10 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_update_and_abort(
                     self._get_entry(),
                     subconfig_entry,
-                    title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({subconfig_entry.data[CONF_ZONE_NUMBER]})"
+                    ),
                     data_updates=user_input,
                 )
 
@@ -491,7 +499,10 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -516,7 +527,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            unique_id = (
+                f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}"
+                f"_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            )
 
             for existing_subentry in self._get_entry().subentries.values():
                 if existing_subentry.unique_id == unique_id:
@@ -524,7 +538,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -551,7 +568,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 

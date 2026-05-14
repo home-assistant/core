@@ -93,7 +93,7 @@ def soco_error[_T: _SonosEntitiesType, **_P, _R](
 
 
 def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
-    """Extract the best available target identifier from the provided instance object."""
+    """Extract the best target identifier from the instance."""
     if entity_id := getattr(instance, "entity_id", None):
         # SonosEntity instance
         return entity_id

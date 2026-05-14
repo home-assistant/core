@@ -68,7 +68,8 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     # Sort the schedule by start times
     schedule = sorted(schedule, key=lambda time_range: time_range[CONF_FROM])
 
-    # Check if the start time of the next event is before the end time of the previous event
+    # Check if the start time of the next event is before
+    # the end time of the previous event
     previous_to = None
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
@@ -269,7 +270,8 @@ class Schedule(CollectionEntity):
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
 
-        # Exclude any custom attributes that may be present on time ranges from recording.
+        # Exclude any custom attributes that may be present
+        # on time ranges from recording.
         self._unrecorded_attributes = self.all_custom_data_keys()
         self._Entity__combined_unrecorded_attributes = (
             self._entity_component_unrecorded_attributes | self._unrecorded_attributes

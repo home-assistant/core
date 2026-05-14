@@ -25,5 +25,8 @@ class SmEntity(CoordinatorEntity[SmBaseDataUpdateCoordinator]):
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=ATTR_MANUFACTURER,
             model=coordinator.data.info.model,
-            sw_version=f"core: {coordinator.data.info.sw_version} / zigbee: {coordinator.data.info.zb_version}",
+            sw_version=(
+                f"core: {coordinator.data.info.sw_version}"
+                f" / zigbee: {coordinator.data.info.zb_version}"
+            ),
         )

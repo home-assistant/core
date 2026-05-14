@@ -32,8 +32,12 @@ class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # super().available refers to CoordinatorEntity.available (self.coordinator.last_update_success)
-        # self.coordinator.available is the custom availability flag from SqueezeBoxPlayerUpdateCoordinator
+        # super().available refers to
+        # CoordinatorEntity.available
+        # (self.coordinator.last_update_success).
+        # self.coordinator.available is the custom
+        # availability flag from
+        # SqueezeBoxPlayerUpdateCoordinator
         return self.coordinator.available and super().available
 
 

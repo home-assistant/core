@@ -80,10 +80,12 @@ class RecorderOutput(StreamOutput):
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""
             # fmt: off
-            nonlocal output, output_v, output_a, last_stream_id, running_duration, last_sequence
+            nonlocal output, output_v, output_a
+            nonlocal last_stream_id, running_duration, last_sequence
             # fmt: on
-            # Because the stream_worker is in a different thread from the record service,
-            # the lookback segments may still have some overlap with the recorder segments
+            # Because the stream_worker is in a different
+            # thread from the record service, the lookback
+            # segments may still overlap with recorder ones
             if segment.sequence <= last_sequence:
                 return
             last_sequence = segment.sequence

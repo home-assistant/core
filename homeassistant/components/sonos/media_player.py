@@ -839,15 +839,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group.
 
-        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to allow use of SonosSpeaker.unjoin_multi()
-        which optimizes the order in which speakers are removed from their groups.
-        Removing coordinators last better preserves playqueues on the speakers.
+        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to
+        allow use of SonosSpeaker.unjoin_multi() which
+        optimizes the order in which speakers are removed
+        from their groups. Removing coordinators last better
+        preserves playqueues on the speakers.
         """
         sonos_data = self.config_entry.runtime_data
         household_id = self.speaker.household_id
 
         async def async_process_unjoin(now: datetime.datetime) -> None:
-            """Process the unjoin with all remove requests within the coalescing period."""
+            """Process the unjoin with all remove requests."""
             unjoin_data = sonos_data.unjoin_data.pop(household_id)
             _LOGGER.debug(
                 "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]

@@ -140,7 +140,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 },
             )
 
-        # For other errors where status is None (e.g., server error, connection refused by server)
+        # For other errors where status is None
+        # (e.g., server error, connection refused by server)
         _LOGGER.warning(
             "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
             host,
