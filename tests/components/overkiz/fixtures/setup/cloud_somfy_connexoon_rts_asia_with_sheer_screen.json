@@ -100,10 +100,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online"
-            ],
+            "values": ["offline", "online"],
             "qualifiedName": "core:ConnectivityState"
           },
           {
@@ -136,9 +133,7 @@
         ],
         "dataProperties": [],
         "widgetName": "Pod",
-        "uiProfiles": [
-          "UpdatableComponent"
-        ],
+        "uiProfiles": ["UpdatableComponent"],
         "uiClass": "Pod",
         "qualifiedName": "internal:PodMiniComponent",
         "type": "ACTUATOR"
@@ -231,10 +226,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -312,10 +304,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -377,9 +366,7 @@
         "attributes": [],
         "dataProperties": [],
         "widgetName": "TiltOnlyVenetianBlind",
-        "uiProfiles": [
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenClose"],
         "uiClass": "VenetianBlind",
         "qualifiedName": "rts:TiltOnlyVenetianBlindRTSComponent",
         "type": "ACTUATOR"
@@ -464,10 +451,7 @@
           }
         ],
         "widgetName": "UpDownVenetianBlind",
-        "uiProfiles": [
-          "OpenCloseBlind",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseBlind", "OpenClose"],
         "uiClass": "VenetianBlind",
         "qualifiedName": "rts:VenetianBlindRTSComponent",
         "type": "ACTUATOR"
@@ -546,10 +530,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "UpDownSheerScreen",
-        "uiProfiles": [
-          "OpenCloseBlind",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseBlind", "OpenClose"],
         "uiClass": "VenetianBlind",
         "qualifiedName": "rts:SheerBlindRTSComponent",
         "type": "ACTUATOR"
