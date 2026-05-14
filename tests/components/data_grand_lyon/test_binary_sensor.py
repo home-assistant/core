@@ -7,7 +7,7 @@ from data_grand_lyon_ha import VelovStationStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -78,4 +78,4 @@ async def test_velov_binary_sensor_no_data(
 
     state = hass.states.get("binary_sensor.velo_v_1001_station_open")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
