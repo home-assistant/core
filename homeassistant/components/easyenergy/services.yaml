@@ -15,11 +15,10 @@ get_gas_prices:
       default: market
       selector:
         select:
+          translation_key: price_type_selector
           options:
-            - label: Market price
-              value: market
-            - label: All-in price
-              value: invoice
+            - market
+            - invoice
     start:
       required: false
       example: "2024-01-01 00:00:00"
@@ -47,21 +46,19 @@ get_energy_usage_prices:
       default: hour
       selector:
         select:
+          translation_key: granularity_selector
           options:
-            - label: Hour
-              value: hour
-            - label: Quarter
-              value: quarter
+            - hour
+            - quarter
     price_type:
       required: false
       default: market
       selector:
         select:
+          translation_key: price_type_selector
           options:
-            - label: Market price
-              value: market
-            - label: All-in price
-              value: invoice
+            - market
+            - invoice
     start:
       required: false
       example: "2024-01-01 00:00:00"
@@ -84,11 +81,10 @@ get_energy_return_prices:
       default: hour
       selector:
         select:
+          translation_key: granularity_selector
           options:
-            - label: Hour
-              value: hour
-            - label: Quarter
-              value: quarter
+            - hour
+            - quarter
     start:
       required: false
       example: "2024-01-01 00:00:00"

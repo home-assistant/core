@@ -54,6 +54,20 @@
       "message": "Invalid date provided. Got {date}"
     }
   },
+  "selector": {
+    "granularity_selector": {
+      "options": {
+        "hour": "Hour",
+        "quarter": "Quarter"
+      }
+    },
+    "price_type_selector": {
+      "options": {
+        "invoice": "All-in price",
+        "market": "Market price"
+      }
+    }
+  },
   "services": {
     "get_energy_return_prices": {
       "description": "Requests return energy prices from easyEnergy.",
