@@ -74,7 +74,13 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_transmitters")
 
         if not transmitters:
-            return self.async_abort(reason="no_compatible_transmitters")
+            return self.async_abort(
+                reason="no_compatible_transmitters",
+                description_placeholders={
+                    "frequency": f"{FREQUENCY / 1_000_000} MHz",
+                    "modulation": MODULATION.name,
+                },
+            )
 
         if user_input is not None:
             registry = er.async_get(self.hass)
