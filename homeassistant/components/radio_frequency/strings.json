@@ -7,13 +7,13 @@
       "message": "Radio Frequency entity `{entity_id}` not found"
     },
     "no_transmitters": {
-      "message": "[%key:common::exceptions::radio_frequency_no_transmitters::message%]"
+      "message": "No Radio Frequency transmitters available"
     },
     "unsupported_frequency": {
-      "message": "[%key:common::exceptions::radio_frequency_unsupported_frequency::message%]"
+      "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
     },
     "unsupported_modulation": {
-      "message": "[%key:common::exceptions::radio_frequency_unsupported_modulation::message%]"
+      "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
     }
   }
 }

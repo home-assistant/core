@@ -225,15 +225,6 @@
     "exceptions": {
       "oauth2_implementation_unavailable": {
         "message": "OAuth2 implementation unavailable, will retry"
-      },
-      "radio_frequency_no_transmitters": {
-        "message": "No Radio Frequency transmitters available"
-      },
-      "radio_frequency_unsupported_frequency": {
-        "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
-      },
-      "radio_frequency_unsupported_modulation": {
-        "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
       }
     },
     "generic": {
