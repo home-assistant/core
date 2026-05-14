@@ -490,6 +490,123 @@ async def test_validate_trigger_config_missing_info(
         )
 
 
+async def test_if_fires_on_event_with_params(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    setup_zha: Callable[..., Coroutine[None]],
+) -> None:
+    """Test that PARAMS-based device triggers fire when the event params match.
+
+    ZHA trigger data may contain zigpy named types such as ClusterId that are
+    int subclasses but are rejected by voluptuous with SchemaError when used as
+    schema literals.  This only manifests when PARAMS is present because that
+    causes event_trigger to take the slow voluptuous-schema path instead of the
+    fast items-comparison path.  device_trigger converts all values to plain
+    Python primitives before passing them to event_trigger to avoid this.
+    """
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
+    ep = zigpy_device.add_endpoint(1)
+    ep.add_output_cluster(0x0005)  # Scenes cluster (client)
+    ep.profile_id = zigpy.profiles.zha.PROFILE_ID
+
+    # Use zigpy named types (ClusterId, uint16_t, Single) and plain Python bool
+    # to reproduce the SchemaError voluptuous raises for unrecognised types.
+    # list values (LVList subclass) must also be recursed into.
+    zigpy_device.device_automation_triggers = {
+        (DOUBLE_PRESS, DOUBLE_PRESS): {
+            COMMAND: "press",
+            "cluster_id": zigpy.types.ClusterId(5),  # int subclass
+            ATTR_ENDPOINT_ID: 1,
+            "params": {
+                "int_param": zigpy.types.uint16_t(256),  # int subclass
+                "float_param": zigpy.types.Single(1.5),  # float subclass
+                "bool_param": True,  # plain Python bool (fails as vol schema value without conversion)
+                "list_param": [zigpy.types.uint8_t(7)],  # list with int subclass inside
+            },
+        },
+    }
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": DOUBLE_PRESS,
+                        "subtype": DOUBLE_PRESS,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Fire an event with matching plain-Python params — trigger must fire.
+    zha_device.emit_zha_event(
+        {
+            "unique_id": f"{zha_device.ieee}:1:0x0005",
+            "endpoint_id": 1,
+            "cluster_id": 5,
+            "command": "press",
+            "args": [],
+            "params": {
+                "int_param": 256,
+                "float_param": 1.5,
+                "bool_param": True,
+                "list_param": [7],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"
+
+    # A non-matching param value must NOT fire the trigger.
+    zha_device.emit_zha_event(
+        {
+            "unique_id": f"{zha_device.ieee}:1:0x0005",
+            "endpoint_id": 1,
+            "cluster_id": 5,
+            "command": "press",
+            "args": [],
+            "params": {
+                "int_param": 999,
+                "float_param": 1.5,
+                "bool_param": True,
+                "list_param": [7],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
 async def test_validate_trigger_config_unloaded_bad_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
