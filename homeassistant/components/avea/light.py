@@ -109,7 +109,8 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
 
         if brightness is None:
             _LOGGER.warning(
-                "Skipping Avea bulb %s during YAML import due to read failure: brightness is None",
+                "Skipping Avea bulb %s during YAML import due to"
+                " read failure: brightness is None",
                 address,
             )
             continue
