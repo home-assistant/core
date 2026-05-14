@@ -4,7 +4,12 @@ import logging
 from typing import Any
 
 from duco_connectivity import DucoClient
-from duco_connectivity.exceptions import DucoConnectionError, DucoError
+from duco_connectivity.exceptions import (
+    DucoConnectionError,
+    DucoError,
+    DucoResponseError,
+)
+from duco_connectivity.models import BoardInfo
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,6 +28,24 @@ STEP_USER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
     }
 )
+
+_SUPPORTED_BOX_NAMES: frozenset[str] = frozenset({"ENERGY", "FOCUS", "SILENT_CONNECT"})
+_MIN_PUBLIC_API_VERSION: tuple[int, ...] = (2, 1)
+
+
+class _UnsupportedBoardError(Exception):
+    """Raised when the Duco board is not supported by this integration."""
+
+
+def _validate_board_support(board_info: BoardInfo) -> None:
+    """Raise _UnsupportedBoardError if the board does not meet support requirements."""
+    if board_info.box_name not in _SUPPORTED_BOX_NAMES:
+        raise _UnsupportedBoardError
+    if board_info.public_api_version is None:
+        raise _UnsupportedBoardError
+    version_tuple = tuple(int(x) for x in board_info.public_api_version.split("."))
+    if version_tuple < _MIN_PUBLIC_API_VERSION:
+        raise _UnsupportedBoardError
 
 
 class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,6 +66,11 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             box_name, _ = await self._validate_input(discovery_info.ip)
+        except _UnsupportedBoardError:
+            _LOGGER.warning(
+                "Unsupported Duco board discovered via DHCP at %s", discovery_info.ip
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
@@ -61,6 +89,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         try:
             box_name, mac = await self._validate_input(discovery_info.host)
+        except _UnsupportedBoardError:
+            _LOGGER.warning(
+                "Unsupported Duco board discovered via zeroconf at %s",
+                discovery_info.host,
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
@@ -102,6 +136,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except _UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
@@ -133,6 +169,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except _UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
@@ -162,6 +200,13 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
             host=host,
         )
-        board_info = await client.async_get_board_info()
+        try:
+            board_info = await client.async_get_board_info()
+        except DucoResponseError as err:
+            if err.status == 404:
+                # Old Communication Board V1 does not support the /info endpoint.
+                raise _UnsupportedBoardError from err
+            raise
+        _validate_board_support(board_info)
         lan_info = await client.async_get_lan_info()
         return board_info.box_name, lan_info.mac

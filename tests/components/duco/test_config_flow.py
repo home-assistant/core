@@ -3,7 +3,13 @@
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
-from duco_connectivity import BoardInfo, DucoConnectionError, DucoError, LanInfo
+from duco_connectivity import (
+    BoardInfo,
+    DucoConnectionError,
+    DucoError,
+    DucoResponseError,
+    LanInfo,
+)
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -34,6 +40,48 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     macaddress="aabbccddeeff",
 )
 
+_UNSUPPORTED_BOARD_INFOS = [
+    pytest.param(
+        BoardInfo(
+            box_name="UNSUPPORTED_BOX",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="unsupported-box-name",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.0",
+        ),
+        id="version-too-low",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version=None,
+        ),
+        id="missing-version",
+    ),
+]
+
 
 async def test_user_flow_success(
     hass: HomeAssistant,
@@ -63,6 +111,7 @@ async def test_user_flow_success(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
 async def test_user_flow_error(
@@ -192,6 +241,7 @@ async def test_zeroconf_discovery_already_configured_same_ip(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
 async def test_zeroconf_discovery_exceptions(
@@ -287,6 +337,7 @@ async def test_reconfigure_flow_wrong_device(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
 async def test_reconfigure_flow_error(
@@ -394,6 +445,7 @@ async def test_dhcp_discovery_already_configured_same_ip(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
 async def test_dhcp_discovery_exceptions(
@@ -451,6 +503,106 @@ async def test_dhcp_discovery_exception_recovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_MAC
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+async def test_user_flow_unsupported_board_from_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_board_info: BoardInfo,
+    unsupported_board_info: BoardInfo,
+) -> None:
+    """Test user flow shows unsupported_board error when board validation fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_duco_client.async_get_board_info.return_value = mock_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+async def test_reconfigure_flow_unsupported_board_from_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_board_info: BoardInfo,
+    unsupported_board_info: BoardInfo,
+) -> None:
+    """Test reconfigure flow shows unsupported_board error when board validation fails."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_duco_client.async_get_board_info.return_value = mock_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+async def test_zeroconf_discovery_unsupported_board_from_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    unsupported_board_info: BoardInfo,
+) -> None:
+    """Test zeroconf discovery aborts with unsupported_board when board validation fails."""
+    mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_board"
+
+
+@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+async def test_dhcp_discovery_unsupported_board_from_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    unsupported_board_info: BoardInfo,
+) -> None:
+    """Test DHCP discovery aborts with unsupported_board when board validation fails."""
+    mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_board"
 
 
 async def test_user_flow_initializes_client_with_host(
