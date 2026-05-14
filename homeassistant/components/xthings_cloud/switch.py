@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
+from .coordinator import XthingsCloudConfigEntry
 from .entity import XthingsCloudEntity
 
 
@@ -27,15 +27,6 @@ async def async_setup_entry(
 
 class XthingsCloudSwitch(XthingsCloudEntity, SwitchEntity):
     """Xthings Cloud switch entity."""
-
-    def __init__(
-        self,
-        coordinator: XthingsCloudCoordinator,
-        device_id: str,
-        device_data: dict[str, Any],
-    ) -> None:
-        """Initialize the switch entity."""
-        super().__init__(coordinator, device_id, device_data)
 
     @property
     def is_on(self) -> bool:
