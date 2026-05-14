@@ -125,7 +125,10 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     async def _async_step_apply_suggestion(
         self, suggestion: Suggestion, confirmed: bool = False
     ) -> RepairsFlowResult:
-        """Handle applying a suggestion as a flow step. Optionally request confirmation."""
+        """Handle applying a suggestion as a flow step.
+
+        Optionally request confirmation.
+        """
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 

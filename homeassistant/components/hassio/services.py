@@ -297,7 +297,8 @@ def async_register_app_services(
         addon_slug = service.data[ATTR_ADDON]
         data: dict | str = service.data[ATTR_INPUT]
 
-        # See explanation for why we make strings into json in async_app_stdin_service_handler
+        # See explanation for why we make strings into json
+        # in async_app_stdin_service_handler
         data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 

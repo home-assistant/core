@@ -133,7 +133,8 @@ def register_media_player_services() -> None:
 def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
     _LOGGER.warning(
-        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release"
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated"
+        " and will be removed in the 2025.8.0 release"
     )
     ir.async_create_issue(
         hass,

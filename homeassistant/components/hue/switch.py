@@ -74,7 +74,7 @@ async def async_setup_entry(
 
 
 class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
-    """Representation of a Switch entity from a Hue resource that can be toggled enabled."""
+    """Represent a Switch entity from a Hue resource that toggles."""
 
     controller: BehaviorInstanceController | LightLevelController | MotionController
     resource: BehaviorInstance | LightLevel | Motion

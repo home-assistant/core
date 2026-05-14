@@ -417,7 +417,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     def _update_router(*_: Any) -> None:
         """Update router data.
 
-        Separate passthrough function because lambdas don't work with track_time_interval.
+        Separate passthrough function because lambdas don't work
+        with track_time_interval.
         """
         router.update()
 

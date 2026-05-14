@@ -181,7 +181,10 @@ class HomematicipHAP:
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
     async def _try_get_state(self) -> None:
-        """Call get_state in a loop until no error occurs, using exponential backoff on error."""
+        """Call get_state in a loop until no error occurs.
+
+        Uses exponential backoff on error.
+        """
 
         # Wait until WebSocket connection is established.
         while not self.home.websocket_is_connected():
@@ -221,7 +224,8 @@ class HomematicipHAP:
             )
         else:
             _LOGGER.info(
-                "Updating state after HMIP access point reconnect finished successfully",
+                "Updating state after HMIP access point"
+                " reconnect finished successfully",
             )
 
     def set_all_to_unavailable(self) -> None:
@@ -282,9 +286,10 @@ class HomematicipHAP:
         self._ws_connection_closed.set()
 
     async def ws_reconnected_handler(self, reason: str) -> None:
-        """Handle websocket reconnection. Is called when Websocket tries to reconnect."""
+        """Handle websocket reconnection."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying to reconnect due to reason: %s",
+            "Websocket connection to HomematicIP Cloud trying"
+            " to reconnect due to reason: %s",
             reason,
         )
 

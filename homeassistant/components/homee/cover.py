@@ -44,7 +44,7 @@ def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
 def get_cover_features(
     node: HomeeNode, open_close_attribute: HomeeAttribute | None
 ) -> CoverEntityFeature:
-    """Determine the supported cover features of a homee node based on the available attributes."""
+    """Determine the supported cover features of a homee node."""
     features = CoverEntityFeature(0)
 
     if (open_close_attribute is not None) and open_close_attribute.editable:
@@ -100,7 +100,7 @@ async def async_setup_entry(
 
 
 def is_cover_node(node: HomeeNode) -> bool:
-    """Determine if a node is controllable as a homee cover based on its profile and attributes."""
+    """Determine if a node is controllable as a homee cover."""
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,

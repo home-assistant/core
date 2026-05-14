@@ -121,7 +121,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                         device_registered = await self.hive_auth.is_device_registered()
                     except HiveApiError as err:
                         _LOGGER.debug(
-                            "Failed to check whether the Hive device is registered during reauthentication: %s",
+                            "Failed to check whether the Hive device"
+                            " is registered during reauthentication: %s",
                             err,
                         )
                         errors["base"] = "no_internet_available"

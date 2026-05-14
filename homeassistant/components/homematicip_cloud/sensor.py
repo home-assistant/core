@@ -535,7 +535,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
 
     @property
     def native_value(self) -> int | None:
-        """Return the state of the floor terminal block mechanical channel valve position."""
+        """Return the floor terminal block valve position."""
         channel = next(
             channel
             for channel in self._device.functionalChannels

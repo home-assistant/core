@@ -96,9 +96,10 @@ class Fan(HomeAccessory):
             )
 
         if CHAR_ROTATION_SPEED in self.chars:
-            # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by async_update_state
-            # to set to the correct initial value.
+            # Initial value is set to 100 because 0 is a special
+            # value (off). 100 is an arbitrary non-zero value. It
+            # is updated immediately by async_update_state to set
+            # to the correct initial value.
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED,
                 value=100,

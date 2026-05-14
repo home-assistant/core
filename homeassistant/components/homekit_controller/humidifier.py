@@ -113,7 +113,9 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
         else:
             await self.async_put_characteristics(
                 {
-                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: self._on_mode_value,
+                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: (
+                        self._on_mode_value
+                    ),
                     CharacteristicsTypes.ACTIVE: True,
                 }
             )

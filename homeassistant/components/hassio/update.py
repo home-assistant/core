@@ -149,7 +149,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             return changelog
 
         regex_pattern = re.compile(
-            rf"^#* {re.escape(self.latest_version)}\n(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
+            rf"^#* {re.escape(self.latest_version)}\n"
+            rf"(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
             re.MULTILINE,
         )
         match = regex_pattern.search(changelog)
@@ -401,7 +402,8 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         version = AwesomeVersion(self.latest_version)
         if version.dev:
             return "https://github.com/home-assistant/core/commits/dev"
-        return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
+        subdomain = "rc" if version.beta else "www"
+        return f"https://{subdomain}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
