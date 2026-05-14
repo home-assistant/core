@@ -207,4 +207,3 @@ class GlutzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_invitation_confirm_schema(default_host, default_email),
             errors=errors,
         )
-

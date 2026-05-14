@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
 
-from homeassistant.components.glutz_eaccess.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -76,5 +75,3 @@ async def test_setup_connection_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-

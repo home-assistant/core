@@ -10,8 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import setup_integration
-
 from tests.common import MockConfigEntry
 
 VALID_CREDENTIALS = {
@@ -457,4 +455,3 @@ async def test_invitation_confirm_no_system_id_returns_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
-
