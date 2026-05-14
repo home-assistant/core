@@ -43,6 +43,8 @@ SOUNDCLOUD_TRACK_URI_PATTERN = re.compile(r"soundcloud:tracks:(\d+)", re.IGNOREC
 SOUNDCLOUD_OEMBED_URL = "https://soundcloud.com/oembed"
 SOUNDCLOUD_OEMBED_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
+EXTERNAL_SOURCE_SOUNDCLOUD = "soundcloud"
+
 
 def _extract_soundcloud_track_id(uri: str) -> str | None:
     """Extract the numeric SoundCloud track ID from a Sonos media URI.
@@ -59,8 +61,10 @@ def _extract_soundcloud_track_id(uri: str) -> str | None:
 
 def _log_artwork_resolution_error(future: concurrent.futures.Future) -> None:
     """Surface unexpected exceptions from background artwork resolution."""
+    if future.cancelled():
+        return
     if exc := future.exception():
-        _LOGGER.debug("External artwork resolution raised: %s", exc)
+        _LOGGER.debug("External artwork resolution raised: %s", exc, exc_info=exc)
 
 
 LINEIN_SOURCES = (MUSIC_SRC_TV, MUSIC_SRC_LINE_IN)
@@ -291,7 +295,7 @@ class SonosMedia:
             # return to a known external source can schedule a fresh fetch.
             self._pending_artwork_uri = None
             return
-        self._external_source = "soundcloud"
+        self._external_source = EXTERNAL_SOURCE_SOUNDCLOUD
         self.image_url = None
         if self._pending_artwork_uri == self.uri:
             return
