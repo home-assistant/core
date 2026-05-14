@@ -18,14 +18,14 @@ async def async_get_calendars(
 ) -> list[caldav.Calendar]:
     """Get all calendars that support the specified component."""
 
-    def _get_calendars() -> tuple[list[caldav.Calendar], list[tuple[str, str | None]]]:
+    def _get_calendars() -> tuple[list[caldav.Calendar], list[tuple[str, str | None, str]]]:
         calendars = []
-        needs_warning: list[tuple[str, str | None]] = []
+        needs_warning: list[tuple[str, str | None, str]] = []
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
             except KeyError:
-                needs_warning.append((str(calendar.url), calendar.name))
+                needs_warning.append((str(calendar.url), calendar.name, component))
 
                 if component in ASSUMED_COMPONENTS:
                     # If the server does not specify supported components, we assume
@@ -41,26 +41,26 @@ async def async_get_calendars(
     calendars, needs_warning = await hass.async_add_executor_job(_get_calendars)
 
     if needs_warning:
-        warned_calendars: set[str] = hass.data.setdefault(
-            f"{DOMAIN}_warned_calendars", set()
+        warned_calendars: set[tuple[str, str]] = hass.data.setdefault(DOMAIN, {}).setdefault(
+            "warned_calendars", set()
         )
-        for url, name in needs_warning:
+        for url, name, comp in needs_warning:
             # This workaround and warning can be removed when we upgrade to caldav 3.0
-            if url not in warned_calendars:
-                warned_calendars.add(url)
-                if component in ASSUMED_COMPONENTS:
+            if (url, comp) not in warned_calendars:
+                warned_calendars.add((url, comp))
+                if comp in ASSUMED_COMPONENTS:
                     _LOGGER.warning(
                         "CalDAV server does not report supported components for calendar %s, "
                         "assuming it supports the requested component '%s'",
                         name,
-                        component,
+                        comp,
                     )
                 else:
                     _LOGGER.warning(
                         "CalDAV server does not report supported components for calendar %s. "
                         "Not assuming support for requested component '%s'",
                         name,
-                        component,
+                        comp,
                     )
 
     return calendars

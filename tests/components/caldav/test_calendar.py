@@ -1291,6 +1291,15 @@ async def test_missing_supported_components(
     await async_get_calendars(hass, client, "VEVENT")
     assert warning_msg not in caplog.text
 
+    # Verify that querying a *different* component for the same calendar DOES log the warning again
+    # because de-duplication is keyed by (url, component).
+    vjournal_warning = (
+        "CalDAV server does not report supported components for calendar Example. "
+        "Not assuming support for requested component 'VJOURNAL'"
+    )
+    await async_get_calendars(hass, client, "VJOURNAL")
+    assert vjournal_warning in caplog.text
+
 
 async def test_missing_supported_components_not_assumed(
     hass: HomeAssistant,
