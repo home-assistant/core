@@ -1,13 +1,15 @@
 """BleBox light entities tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.blebox.const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -327,6 +329,73 @@ def wlightbox_fixture():
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
     return (feature, "light.my_wlightbox_wlightbox_color")
+
+
+@pytest.fixture(name="wlightbox_ct")
+def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
+    """Return a default light entity mock for color temperature testing."""
+
+    feature = mock_feature(
+        "lights",
+        blebox_uniapi.light.Light,
+        unique_id="BleBox-wLightBox-1afe34e750b8-color",
+        full_name="wLightBox-ct",
+        device_class=None,
+        is_on=None,
+        supports_color=True,
+        supports_white=True,
+        white_value=None,
+        rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.CT,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My wLightBox")
+    type(product).model = PropertyMock(return_value="wLightBox")
+    return feature, "light.my_wlightbox_wlightbox_ct"
+
+
+@pytest.mark.parametrize("kelvin_requested", [1000, 2700, 3000, 4000, 5000, 6500, 8000])
+async def test_wlightbox_on_color_temp(
+    hass: HomeAssistant,
+    wlightbox_ct: tuple[MagicMock, str],
+    kelvin_requested: int,
+) -> None:
+    """Test light on with color temperature change."""
+
+    feature_mock, entity_id = wlightbox_ct
+
+    # Capture the native scale value passed to the device to verify the
+    # conversion is correct without depending on blebox_uniapi internals.
+    transient_temp: int = -1
+
+    def return_color_temp_with_brightness(value: int, _brightness: int) -> list[int]:
+        nonlocal transient_temp
+        transient_temp = value
+        return [0x00, 0x39, 0xB0, 0xFF]
+
+    def turn_on(_: list[int]) -> None:
+        feature_mock.is_on = True
+        feature_mock.color_temp = transient_temp
+
+    feature_mock.return_color_temp_with_brightness = return_color_temp_with_brightness
+    feature_mock.async_on = AsyncMock(side_effect=turn_on)
+
+    await async_setup_entity(hass, entity_id)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, ATTR_COLOR_TEMP_KELVIN: kelvin_requested},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert 0 <= transient_temp <= 255
+
+    kelvin_actual = state.attributes[ATTR_COLOR_TEMP_KELVIN]
+    assert LIGHT_MIN_KELVINS <= kelvin_actual <= LIGHT_MAX_KELVINS
 
 
 async def test_wlightbox_init(
