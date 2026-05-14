@@ -1411,7 +1411,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         ),
         _HAS_ENTITY_SERVICE_FIELD,
     )
-    setattr(validator, "_entity_service_schema", True)
+    setattr(validator, "_entity_service_schema", True)  # noqa: B010
     return validator
 
 
@@ -1770,7 +1770,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
+            vol.Required(CONF_CONDITION): vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)

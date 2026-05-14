@@ -228,8 +228,8 @@ class HyperionLight(LightEntity):
                     and not await self._client.async_send_set_adjustment(
                         **{
                             const.KEY_ADJUSTMENT: {
-                                const.KEY_BRIGHTNESS: int(
-                                    round((float(brightness) * 100) / 255)
+                                const.KEY_BRIGHTNESS: round(
+                                    (float(brightness) * 100) / 255
                                 ),
                                 const.KEY_ID: item[const.KEY_ID],
                             }
@@ -295,7 +295,7 @@ class HyperionLight(LightEntity):
             if brightness_pct < 0 or brightness_pct > 100:
                 return
             self._set_internal_state(
-                brightness=int(round((brightness_pct * 255) / float(100)))
+                brightness=round((brightness_pct * 255) / float(100))
             )
             self.async_write_ha_state()
 
