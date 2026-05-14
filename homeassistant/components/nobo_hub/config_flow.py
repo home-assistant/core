@@ -192,7 +192,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         the new IP is probed here before updating. When the entry is
         loaded, probing is skipped to avoid competing with the active
         connection for the hub's limited concurrent-connection slots;
-         the reload's ``async_setup_entry`` re-validates the updated IP.
+        the reload's ``async_setup_entry`` re-validates the updated IP.
         """
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
