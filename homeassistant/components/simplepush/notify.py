@@ -96,6 +96,7 @@ class SimplePushNotificationService(BaseNotificationService):
                     event=event,
                 )
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")
         except UnknownError:

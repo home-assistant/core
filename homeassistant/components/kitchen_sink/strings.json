@@ -35,7 +35,7 @@
     },
     "infrared_fan": {
       "abort": {
-        "no_infrared_entities": "No infrared entities found. Please set up an infrared device first."
+        "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
       },
       "entry_type": "Infrared fan",
       "initiate_flow": {
@@ -44,8 +44,8 @@
       "step": {
         "user": {
           "data": {
-            "infrared_entity_id": "Infrared emitter",
-            "infrared_receiver_entity_id": "Infrared receiver",
+            "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+            "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]",
             "name": "[%key:common::config_flow::data::name%]"
           },
           "description": "Select infrared devices for the fan."

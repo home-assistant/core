@@ -696,6 +696,7 @@ select = [
   "D",      # docstrings
   "DTZ003", # Use datetime.now(tz=) instead of datetime.utcnow()
   "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
+  "DTZ011", # Use datetime.now(tz=).date() instead of date.today()
   "E",      # pycodestyle
   "F",      # pyflakes/autoflake
   "F541",   # f-string without any placeholders

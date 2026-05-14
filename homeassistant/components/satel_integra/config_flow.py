@@ -28,6 +28,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -87,7 +88,40 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
     }
 )
 
+ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
+            selector.BooleanSelector()
+        ),
+    }
+)
+
+
 SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+
+async def _async_validate_zone_temperature_sensor(
+    entry: SatelConfigEntry, zone_number: int
+) -> dict[str, str]:
+    """Validate that temperature reading can be fetched for the zone."""
+    errors: dict[str, str] = {}
+
+    try:
+        temperature = await entry.runtime_data.client.controller.read_temperature(
+            zone_number
+        )
+
+        if temperature is None:
+            errors[CONF_ENABLE_TEMPERATURE_SENSOR] = "zone_does_not_report_temperature"
+
+    except Exception:
+        _LOGGER.exception(
+            "Unexpected error while validating temperature sensor support for zone %s",
+            zone_number,
+        )
+        errors["base"] = "unknown"
+
+    return errors
 
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -99,7 +133,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self.connection_data: dict[str, Any] = {}
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -337,6 +371,15 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 if existing_subentry.unique_id == unique_id:
                     errors[CONF_ZONE_NUMBER] = "already_configured"
 
+            if not errors and user_input.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    user_input[CONF_ZONE_NUMBER],
+                )
+
             if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_NAME]} ({user_input[CONF_ZONE_NUMBER]})",
@@ -347,13 +390,16 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZONE_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
-            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ZONE_NUMBER): vol.All(
+                            vol.Coerce(int), vol.Range(min=1)
+                        ),
+                    }
+                ).extend(ZONE_SCHEMA.schema),
+                user_input or {},
+            ),
         )
 
     async def async_step_reconfigure(
@@ -361,19 +407,38 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Reconfigure existing zone."""
         subconfig_entry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            return self.async_update_and_abort(
-                self._get_entry(),
-                subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
-                data_updates=user_input,
-            )
+            if user_input.get(
+                CONF_ENABLE_TEMPERATURE_SENSOR, False
+            ) and not subconfig_entry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    subconfig_entry.data[CONF_ZONE_NUMBER],
+                )
+
+            if not errors:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subconfig_entry,
+                    title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
+                    data_updates=user_input,
+                )
+
+        suggested_values: dict[str, Any] = {
+            **subconfig_entry.data,
+            **(user_input or {}),
+        }
 
         return self.async_show_form(
             step_id="reconfigure",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
+                ZONE_SCHEMA, suggested_values
             ),
             description_placeholders={
                 CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]

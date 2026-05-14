@@ -68,7 +68,7 @@ class CommandLineNotificationService(BaseNotificationService):
                         command,
                     )
             except subprocess.TimeoutExpired as err:
-                _LOGGER.debug("Timeout for command: %s", command)
+                _LOGGER.error("Timeout for command: %s", command)
                 kill_subprocess(proc)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
