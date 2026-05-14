@@ -103,6 +103,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     duration = int(
                         data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
                     )
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", data.get(ATTR_DURATION)

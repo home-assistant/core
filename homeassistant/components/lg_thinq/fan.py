@@ -185,6 +185,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             value = percentage_to_ordered_list_item(
                 self._ordered_named_fan_speeds, percentage
             )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.exception("Failed to async_set_percentage")
             return

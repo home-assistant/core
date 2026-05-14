@@ -371,6 +371,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         ]
 
         if add_media_source:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(BrowseError):
                 item = await media_source.async_browse_media(
                     self.hass,
@@ -746,6 +747,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             if client != self:
                 try:
                     network_join = await client.async_client_join(group, self)
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except MusicCastGroupException:
                     _LOGGER.warning(
                         (

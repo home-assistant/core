@@ -66,6 +66,7 @@ class CommandLineNotificationService(BaseNotificationService):
                         proc.returncode,
                         command,
                     )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except subprocess.TimeoutExpired:
                 _LOGGER.error("Timeout for command: %s", command)
                 kill_subprocess(proc)

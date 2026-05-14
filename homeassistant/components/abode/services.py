@@ -44,6 +44,7 @@ def _change_setting(call: ServiceCall) -> None:
 
     try:
         _get_abode_system(call.hass).abode.set_setting(setting, value)
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     except AbodeException as ex:
         LOGGER.warning(ex)
 

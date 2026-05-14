@@ -89,6 +89,7 @@ class PushoverNotificationService(BaseNotificationService):
                     file_handle = open(data[ATTR_ATTACHMENT], "rb")
                     # Replace the attachment identifier with file object.
                     image = file_handle
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except OSError as ex_val:
                     _LOGGER.error(ex_val)
                     # Remove attachment key to send without attachment.

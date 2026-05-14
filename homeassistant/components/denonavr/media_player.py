@@ -390,66 +390,79 @@ class DenonDevice(MediaPlayerEntity):
         """Status of DynamicEQ."""
         return self._receiver.dynamic_eq
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._receiver.async_toggle_play_pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._receiver.async_play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._receiver.async_stop()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._receiver.async_previous_track()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._receiver.async_next_track()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._receiver.async_set_input_func(source)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._receiver.async_set_sound_mode(sound_mode)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._receiver.async_power_on()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._receiver.async_power_off()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._receiver.async_volume_up()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._receiver.async_volume_down()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -460,6 +473,7 @@ class DenonDevice(MediaPlayerEntity):
             volume_denon = float(18)
         await self._receiver.async_set_volume(volume_denon)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""

@@ -127,6 +127,7 @@ async def async_handle_service(service_call: ServiceCall) -> None:
                 _extract_color_from_path, service_call.hass, image_reference
             )
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     except UnidentifiedImageError as ex:
         _LOGGER.error(
             "Bad image from %s '%s' provided, are you sure it's an image? %s",

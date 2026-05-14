@@ -75,6 +75,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.enable()
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to enable Pi-hole: %s", err)
 
@@ -96,5 +97,6 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.disable(duration_seconds)
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to disable Pi-hole: %s", err)

@@ -100,6 +100,7 @@ async def async_setup_entry(
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
@@ -110,6 +111,7 @@ async def async_setup_entry(
         name = call.data[ATTR_NAME]
         try:
             await config_entry.runtime_data.async_complete(name)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NoMatchingShoppingListItem:
             _LOGGER.error("Completing of item failed: %s cannot be found", name)
 
@@ -120,6 +122,7 @@ async def async_setup_entry(
 
         try:
             item = [item for item in data.items if item["name"] == name][0]
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error("Restoring of item failed: %s cannot be found", name)
         else:

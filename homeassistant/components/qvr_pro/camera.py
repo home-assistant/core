@@ -98,6 +98,7 @@ class QVRProCamera(Camera):
         try:
             return self._client.get_snapshot(self.guid)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except QVRResponseError as ex:
             _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()

@@ -136,6 +136,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     self.profile.token, self._basic_auth
                 ):
                     return image
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",

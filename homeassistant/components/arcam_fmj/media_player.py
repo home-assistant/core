@@ -96,6 +96,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         """Select a specific source."""
         try:
             value = SourceCodes[source]
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except KeyError:
             _LOGGER.error("Unsupported source %s", source)
             return

@@ -56,5 +56,6 @@ class NetgearNotifyService(BaseNotificationService):
         for target in targets:
             try:
                 await self.modem.sms(target, message)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except eternalegypt.Error:
                 LOGGER.error("Unable to send to %s", target)

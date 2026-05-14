@@ -127,6 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Reload yaml resources."""
         try:
             conf = await async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return

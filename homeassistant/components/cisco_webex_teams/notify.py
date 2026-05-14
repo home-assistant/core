@@ -59,6 +59,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
 
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ApiError as api_error:
             _LOGGER.error(
                 "Could not send Cisco Webex notification. Error: %s", api_error

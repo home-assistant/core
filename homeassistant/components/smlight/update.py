@@ -241,6 +241,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                     ):
                         await self.coordinator.async_refresh()
                         await asyncio.sleep(1)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TimeoutError:
                 LOGGER.warning(
                     "Timeout waiting for %s to reboot after update",

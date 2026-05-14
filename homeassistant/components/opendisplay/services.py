@@ -177,6 +177,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         with contextlib.suppress(asyncio.CancelledError):
             await prev
     entry.runtime_data.upload_task = current

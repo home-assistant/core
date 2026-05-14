@@ -90,6 +90,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
             for single_command in command:
                 try:
                     await self.dtv.remote(single_command, self._address)
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except DIRECTVError:
                     _LOGGER.exception(
                         "Sending command %s to device %s failed",

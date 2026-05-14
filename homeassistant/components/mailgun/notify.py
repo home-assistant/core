@@ -111,5 +111,6 @@ class MailgunNotificationService(BaseNotificationService):
                 files=files,
             )
             _LOGGER.debug("Message sent: %s", resp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MailgunError:
             _LOGGER.exception("Failed to send message")

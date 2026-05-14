@@ -125,6 +125,7 @@ class SmLightEntity(SmEntity, LightEntity):
             effect_name: str = kwargs[ATTR_EFFECT]
             try:
                 idx = self.entity_description.effect_list.index(effect_name)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError:
                 _LOGGER.warning("Unknown effect: %s", effect_name)
                 return

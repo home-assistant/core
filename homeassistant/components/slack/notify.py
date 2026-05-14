@@ -277,6 +277,7 @@ class SlackNotificationService(BaseNotificationService):
 
         try:
             DATA_SCHEMA(data)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except vol.Invalid as err:
             _LOGGER.error("Invalid message data: %s", err)
             data = {}

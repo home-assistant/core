@@ -170,6 +170,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching on %s", self._resource)
 
@@ -185,6 +186,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching off %s", self._resource)
 
