@@ -313,6 +313,10 @@
     "raw_get_positions": {
       "description": "Retrieves a raw response containing the positions of the chargers and the device itself.",
       "name": "Get raw positions"
+    },
+    "mower_raw_get_positions": {
+      "description": "Retrieves a raw response containing the positions of the chargers and the mower itself (Ecovacs GOAT family). The payload includes RTK fix quality, satellite counts and signal strength when supported by the mower firmware.",
+      "name": "Get mower raw positions"
     }
   }
 }
