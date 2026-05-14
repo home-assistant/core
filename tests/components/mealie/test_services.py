@@ -56,7 +56,7 @@ async def test_service_mealplan(
 
     await setup_integration(hass, mock_config_entry)
 
-    freezer.move_to("2023-10-21")
+    freezer.move_to("2023-10-21T12:00:00-07:00")
 
     response = await hass.services.async_call(
         DOMAIN,
