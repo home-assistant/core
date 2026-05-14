@@ -65,7 +65,9 @@ EXPECTED_PROMPT_SUFFIX = """
 - names: Kitchen Light
   domain: light
   areas: Kitchen
-"""
+
+When a user asks to turn on all devices of a specific type, ask user to specify an area, unless there is only one device of that type.
+This device is not able to start timers."""
 
 
 class MockLLMAPI(llm.API):
