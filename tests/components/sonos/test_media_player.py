@@ -92,9 +92,10 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -1709,7 +1710,7 @@ async def test_async_resolve_soundcloud_artwork_sets_image_url(
     media.uri = uri
     media.image_url = "http://sonos-internal/unfetchable.jpg"
 
-    await media._async_resolve_soundcloud_artwork("42", uri)  # noqa: SLF001
+    await media._async_resolve_soundcloud_artwork("42", uri)
 
     assert media.image_url == thumbnail_url
 
