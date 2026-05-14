@@ -19,7 +19,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LINE, CONF_STOP_ID, DOMAIN, SUBENTRY_TYPE_STOP
+from .const import (
+    CONF_LINE,
+    CONF_STATION_ID,
+    CONF_STOP_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_STOP,
+    SUBENTRY_TYPE_VELOV_STATION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +50,12 @@ STEP_STOP_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_VELOV_STATION_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATION_ID): vol.Coerce(int),
+    }
+)
+
 
 class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Data Grand Lyon."""
@@ -57,6 +70,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentry types supported by this integration."""
         return {
             SUBENTRY_TYPE_STOP: StopSubentryFlowHandler,
+            SUBENTRY_TYPE_VELOV_STATION: VelovStationSubentryFlowHandler,
         }
 
     async def async_step_user(
@@ -194,4 +208,33 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_STOP_DATA_SCHEMA,
+        )
+
+
+class VelovStationSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for adding a Vélo'v station."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the user step to add a new Vélo'v station."""
+        entry = self._get_entry()
+
+        if user_input is not None:
+            station_id = user_input[CONF_STATION_ID]
+            unique_id = f"velov_{station_id}"
+
+            for subentry in entry.subentries.values():
+                if subentry.unique_id == unique_id:
+                    return self.async_abort(reason="already_configured")
+
+            return self.async_create_entry(
+                title=f"Vélo'v {station_id}",
+                data={CONF_STATION_ID: station_id},
+                unique_id=unique_id,
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_VELOV_STATION_DATA_SCHEMA,
         )
