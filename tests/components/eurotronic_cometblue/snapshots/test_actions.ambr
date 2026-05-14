@@ -1,0 +1,123 @@
+# serializer version: 1
+# name: test_get_schedule
+  dict({
+    'climate.comet_blue_aa_bb_cc_dd_ee_ff': dict({
+      'friday': dict({
+        'end1': '00:10',
+        'end2': '03:20',
+        'end3': '03:20',
+        'end4': '21:40',
+        'start1': '00:00',
+        'start2': '01:40',
+        'start3': '01:40',
+        'start4': '03:30',
+      }),
+      'monday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'saturday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'sunday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'thursday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'tuesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'wednesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+    }),
+  })
+# ---
+# name: test_set_schedule[changed]
+  dict({
+    'climate.comet_blue_aa_bb_cc_dd_ee_ff': dict({
+      'friday': dict({
+        'end1': '00:10',
+        'end2': '03:20',
+        'end3': '03:20',
+        'end4': '21:40',
+        'start1': '00:00',
+        'start2': '01:40',
+        'start3': '01:40',
+        'start4': '03:30',
+      }),
+      'monday': dict({
+        'end1': '17:00',
+        'start1': '08:00',
+      }),
+      'saturday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'sunday': dict({
+        'end1': '11:30',
+        'end2': '15:00',
+        'end3': '15:00',
+        'end4': '22:00',
+        'start1': '09:00',
+        'start2': '13:00',
+        'start3': '13:00',
+        'start4': '18:00',
+      }),
+      'thursday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'tuesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'wednesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+    }),
+  })
+# ---
+# name: test_set_schedule[deleted]
+  dict({
+    'climate.comet_blue_aa_bb_cc_dd_ee_ff': dict({
+      'friday': dict({
+      }),
+      'monday': dict({
+      }),
+      'saturday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'sunday': dict({
+        'end1': '11:30',
+        'end2': '15:00',
+        'end3': '15:00',
+        'end4': '22:00',
+        'start1': '09:00',
+        'start2': '13:00',
+        'start3': '13:00',
+        'start4': '18:00',
+      }),
+      'thursday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'tuesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+      'wednesday': dict({
+        'end1': '22:50',
+        'start1': '06:10',
+      }),
+    }),
+  })
+# ---
