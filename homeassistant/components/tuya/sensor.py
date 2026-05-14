@@ -110,7 +110,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
-# end up being a sensor.
+# end up being a sensor. test
 SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.AQCZ: (
         TuyaSensorEntityDescription(
