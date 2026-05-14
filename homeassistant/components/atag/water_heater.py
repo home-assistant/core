@@ -54,7 +54,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
 
     @property
     def target_temperature(self) -> float:
-        """Return the setpoint if water demand, otherwise return base temp (comfort level)."""
+        """Return the setpoint if water demand, otherwise base temp."""
         return self.coordinator.atag.dhw.target_temperature
 
     @property
