@@ -1276,10 +1276,20 @@ async def test_missing_supported_components(
     await setup_platform_cb()
 
     assert hass.states.get(TEST_ENTITY)
-    assert (
+
+    warning_msg = (
         "CalDAV server does not report supported components for calendar Example, "
-        "assuming it supports the requested component 'VEVENT'" in caplog.text
+        "assuming it supports the requested component 'VEVENT'"
     )
+    assert warning_msg in caplog.text
+
+    # Clear caplog and call async_get_calendars again to verify warning is not logged again
+    caplog.clear()
+    client = MagicMock()
+    client.principal().calendars.return_value = calendars
+
+    await async_get_calendars(hass, client, "VEVENT")
+    assert warning_msg not in caplog.text
 
 
 async def test_missing_supported_components_not_assumed(
@@ -1296,7 +1306,13 @@ async def test_missing_supported_components_not_assumed(
     returned_calendars = await async_get_calendars(hass, client, "VJOURNAL")
 
     assert len(returned_calendars) == 0
-    assert (
+    warning_msg = (
         "CalDAV server does not report supported components for calendar Example. "
-        "Not assuming support for requested component 'VJOURNAL'" in caplog.text
+        "Not assuming support for requested component 'VJOURNAL'"
     )
+    assert warning_msg in caplog.text
+
+    # Clear caplog and call async_get_calendars again to verify warning is not logged again
+    caplog.clear()
+    await async_get_calendars(hass, client, "VJOURNAL")
+    assert warning_msg not in caplog.text

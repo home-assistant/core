@@ -6,6 +6,8 @@ import caldav
 
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 ASSUMED_COMPONENTS = {"VEVENT", "VTODO"}
@@ -15,31 +17,15 @@ async def async_get_calendars(
     hass: HomeAssistant, client: caldav.DAVClient, component: str
 ) -> list[caldav.Calendar]:
     """Get all calendars that support the specified component."""
-    warned_calendars: set[str] = hass.data.setdefault("caldav_warned_calendars", set())
 
-    def _get_calendars() -> list[caldav.Calendar]:
+    def _get_calendars() -> tuple[list[caldav.Calendar], list[tuple[str, str]]]:
         calendars = []
+        needs_warning = []
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
             except KeyError:
-                # This workaround and warning can be removed when we upgrade to caldav 3.0
-                if str(calendar.url) not in warned_calendars:
-                    warned_calendars.add(str(calendar.url))
-                    if component in ASSUMED_COMPONENTS:
-                        _LOGGER.warning(
-                            "CalDAV server does not report supported components for calendar %s, "
-                            "assuming it supports the requested component '%s'",
-                            calendar.name,
-                            component,
-                        )
-                    else:
-                        _LOGGER.warning(
-                            "CalDAV server does not report supported components for calendar %s. "
-                            "Not assuming support for requested component '%s'",
-                            calendar.name,
-                            component,
-                        )
+                needs_warning.append((str(calendar.url), calendar.name))
 
                 if component in ASSUMED_COMPONENTS:
                     # If the server does not specify supported components, we assume
@@ -50,9 +36,34 @@ async def async_get_calendars(
 
             if component in supported_components:
                 calendars.append(calendar)
-        return calendars
+        return calendars, needs_warning
 
-    return await hass.async_add_executor_job(_get_calendars)
+    calendars, needs_warning = await hass.async_add_executor_job(_get_calendars)
+
+    if needs_warning:
+        warned_calendars: set[str] = hass.data.setdefault(
+            f"{DOMAIN}_warned_calendars", set()
+        )
+        for url, name in needs_warning:
+            # This workaround and warning can be removed when we upgrade to caldav 3.0
+            if url not in warned_calendars:
+                warned_calendars.add(url)
+                if component in ASSUMED_COMPONENTS:
+                    _LOGGER.warning(
+                        "CalDAV server does not report supported components for calendar %s, "
+                        "assuming it supports the requested component '%s'",
+                        name,
+                        component,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "CalDAV server does not report supported components for calendar %s. "
+                        "Not assuming support for requested component '%s'",
+                        name,
+                        component,
+                    )
+
+    return calendars
 
 
 def get_attr_value(obj: caldav.CalendarObjectResource, attribute: str) -> str | None:
