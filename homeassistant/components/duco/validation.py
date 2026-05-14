@@ -4,7 +4,7 @@ from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import DucoResponseError
 from duco_connectivity.models import BoardInfo
 
-_SUPPORTED_BOX_NAMES: frozenset[str] = frozenset({"ENERGY", "FOCUS", "SILENT_CONNECT"})
+_SUPPORTED_BOX_NAMES: frozenset[str] = frozenset({"SILENT_CONNECT"})
 _MIN_PUBLIC_API_VERSION: tuple[int, ...] = (2, 1)
 
 

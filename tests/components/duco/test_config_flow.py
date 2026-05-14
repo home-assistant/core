@@ -43,7 +43,7 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 _UNSUPPORTED_BOARD_INFOS = [
     pytest.param(
         BoardInfo(
-            box_name="UNSUPPORTED_BOX",
+            box_name="ENERGY",
             box_sub_type_name="Eu",
             serial_board_box="ABC123",
             serial_board_comm="DEF456",
@@ -52,7 +52,20 @@ _UNSUPPORTED_BOARD_INFOS = [
             time=1700000000,
             public_api_version="2.5",
         ),
-        id="unsupported-box-name",
+        id="energy-not-supported",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="FOCUS",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="focus-not-supported",
     ),
     pytest.param(
         BoardInfo(
