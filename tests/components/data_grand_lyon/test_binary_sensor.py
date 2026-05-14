@@ -53,9 +53,9 @@ async def test_velov_binary_sensor_status(
     expected_state: str,
 ) -> None:
     """Test Vélo'v binary sensor reflects station status."""
-    mock_tcl_client.get_velov_station.return_value = replace(
-        MOCK_VELOV_STATION, status=station_status
-    )
+    mock_tcl_client.get_velov_stations.return_value = [
+        replace(MOCK_VELOV_STATION, status=station_status)
+    ]
     mock_velov_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -71,7 +71,7 @@ async def test_velov_binary_sensor_no_data(
     mock_tcl_client: AsyncMock,
 ) -> None:
     """Test that Vélo'v binary sensor is unavailable when station not found."""
-    mock_tcl_client.get_velov_station.return_value = None
+    mock_tcl_client.get_velov_stations.return_value = []
     mock_velov_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
     await hass.async_block_till_done()
