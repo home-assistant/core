@@ -1639,6 +1639,11 @@ async def test_media_info_attributes(
             id="case_insensitive",
         ),
         pytest.param(
+            "x-sonosapi-hls-static:track%3esoundcloud%3atracks%3a629081730?sid=160&flags=8232&sn=25",
+            "629081730",
+            id="hls_static_stream",
+        ),
+        pytest.param(
             "x-file-cifs://192.168.42.10/music/track.mp3",
             None,
             id="non_soundcloud",
