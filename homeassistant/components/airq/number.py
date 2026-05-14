@@ -10,9 +10,10 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
+from . import AirQConfigEntry
+from .coordinator import AirQCoordinator
+from .entity import AirQEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,10 +51,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
+class AirQLEDBrightness(AirQEntity, NumberEntity):
     """Representation of the LEDs from a single AirQ."""
 
-    _attr_has_entity_name = True
+    entity_description: AirQBrightnessDescription
 
     def __init__(
         self,
@@ -61,11 +62,8 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
         description: AirQBrightnessDescription,
     ) -> None:
         """Initialize a single sensor."""
-        super().__init__(coordinator)
-        self.entity_description: AirQBrightnessDescription = description
-
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
 
     @property
     def native_value(self) -> float:
