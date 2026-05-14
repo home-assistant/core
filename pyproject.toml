@@ -176,6 +176,9 @@ disable = [
   "consider-using-assignment-expr",
   "possibly-used-before-assignment",
 
+  # Disabled while existing violations are being cleaned up
+  "home-assistant-unused-test-fixture-argument",
+
   # Handled by ruff
   # Ref: <https://github.com/astral-sh/ruff/issues/970>
   "await-outside-async",    # PLE1142
