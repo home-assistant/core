@@ -16,13 +16,6 @@ from .conftest import MOCK_VELOV_STATION
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    ("station_open", "expected_state"),
-    [
-        pytest.param(VelovStationStatus.OPEN, "on", id="open"),
-        pytest.param(VelovStationStatus.CLOSED, "off", id="closed"),
-    ],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_velov_binary_sensor_snapshot(
     hass: HomeAssistant,
@@ -30,13 +23,8 @@ async def test_velov_binary_sensor_snapshot(
     entity_registry: er.EntityRegistry,
     mock_velov_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
-    station_open: VelovStationStatus,
-    expected_state: str,
 ) -> None:
     """Test Vélo'v binary sensor entities with snapshot."""
-    mock_tcl_client.get_velov_station.return_value = replace(
-        MOCK_VELOV_STATION, status=station_open
-    )
     with patch(
         "homeassistant.components.data_grand_lyon.PLATFORMS",
         [Platform.BINARY_SENSOR],
@@ -48,6 +36,33 @@ async def test_velov_binary_sensor_snapshot(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_velov_config_entry.entry_id
     )
+
+
+@pytest.mark.parametrize(
+    ("station_status", "expected_state"),
+    [
+        pytest.param(VelovStationStatus.OPEN, "on", id="open"),
+        pytest.param(VelovStationStatus.CLOSED, "off", id="closed"),
+    ],
+)
+async def test_velov_binary_sensor_status(
+    hass: HomeAssistant,
+    mock_velov_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    station_status: VelovStationStatus,
+    expected_state: str,
+) -> None:
+    """Test Vélo'v binary sensor reflects station status."""
+    mock_tcl_client.get_velov_station.return_value = replace(
+        MOCK_VELOV_STATION, status=station_status
+    )
+    mock_velov_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.velo_v_1001_station_open")
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_velov_binary_sensor_no_data(
