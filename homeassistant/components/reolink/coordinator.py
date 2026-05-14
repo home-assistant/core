@@ -150,7 +150,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
             host,
             f"reolink.{host.api.nvr_name}.firmware",
             min_timeout=min_timeout,
-            update_interval=None,  # Do not fetch data automatically, resume 24h schedule
+            update_interval=None,  # Do not auto-fetch, resume 24h
         )
 
     async def _async_update_data(self) -> None:
@@ -168,7 +168,8 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
                     return
 
                 raise UpdateFailed(
-                    f"Error checking Reolink firmware update from {self._host.api.nvr_name}, "
+                    "Error checking Reolink firmware update"
+                    f" from {self._host.api.nvr_name}, "
                     "if the camera is blocked from accessing the internet, "
                     "disable the update entity"
                 ) from err

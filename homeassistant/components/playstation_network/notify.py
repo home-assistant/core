@@ -172,7 +172,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
 
 
 class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEntity):
-    """Representation of a PlayStation Network notify entity for sending direct messages."""
+    """PlayStation Network notify entity for direct messages."""
 
     coordinator: PlaystationNetworkFriendlistCoordinator
 

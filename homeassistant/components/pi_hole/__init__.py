@@ -106,7 +106,10 @@ def api_by_version(
     version: int,
     password: str | None = None,
 ) -> HoleV5 | HoleV6:
-    """Create a pi-hole API object by API version number. Once V5 is deprecated this function can be removed."""
+    """Create a pi-hole API object by API version number.
+
+    Once V5 is deprecated this function can be removed.
+    """
 
     if password is None:
         password = entry.get(CONF_API_KEY, "")
@@ -131,12 +134,16 @@ def api_by_version(
 async def determine_api_version(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> Literal[5, 6]:
-    """Determine the API version of the Pi-hole instance without requiring authentication.
+    """Determine the API version of the Pi-hole instance.
 
-    Neither API v5 or v6 provides an endpoint to check the version without authentication.
-    Version 6 provides other enddpoints that do not require authentication, so we can use those to determine the version
-    version 5 returns an empty list in response to unauthenticated requests.
-    Because we are using endpoints that are not designed for this purpose, we should log liberally to help with debugging.
+    Neither API v5 or v6 provides an endpoint to check the
+    version without authentication. Version 6 provides other
+    endpoints that do not require authentication, so we can
+    use those to determine the version. Version 5 returns an
+    empty list in response to unauthenticated requests.
+    Because we are using endpoints that are not designed for
+    this purpose, we should log liberally to help with
+    debugging.
     """
 
     holeV6 = api_by_version(hass, entry, 6, password="wrong_password")
@@ -144,7 +151,8 @@ async def determine_api_version(
         await holeV6.authenticate()
     except HoleConnectionError as err:
         _LOGGER.error(
-            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
+            "Unexpected error connecting to Pi-hole v6 API"
+            " at %s: %s. Trying version 5 API",
             holeV6.base_url,
             err,
         )
@@ -161,9 +169,12 @@ async def determine_api_version(
             "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
         )
     else:
-        # It seems that occasionally the auth can succeed unexpectedly when there is a valid session
+        # It seems that occasionally the auth can succeed
+        # unexpectedly when there is a valid session
         _LOGGER.warning(
-            "Authenticated with %s through v6 API, but succeeded with an incorrect password. This is a known bug",
+            "Authenticated with %s through v6 API, but"
+            " succeeded with an incorrect password."
+            " This is a known bug",
             holeV6.base_url,
         )
         return 6
@@ -179,7 +190,9 @@ async def determine_api_version(
         # V5 API returns [] to unauthenticated requests
         if not holeV5.data:
             _LOGGER.debug(
-                "Response '[]' from API without auth, pihole API version 5 probably detected at %s",
+                "Response '[]' from API without auth,"
+                " pihole API version 5 probably"
+                " detected at %s",
                 holeV5.base_url,
             )
             return 5

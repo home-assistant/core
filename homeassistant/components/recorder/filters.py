@@ -157,7 +157,8 @@ class Filters:
         # - All entities included
         if not have_include and not have_exclude:
             raise RuntimeError(
-                "No filter configuration provided, check has_config before calling this method."
+                "No filter configuration provided, check"
+                " has_config before calling this method."
             )
 
         # Case 2 - Only includes

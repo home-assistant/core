@@ -171,7 +171,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             longitude,
         )
 
-        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        # it is ensured, that distance can't be None,
+        # since zones must have lat/lon coordinates
         assert distance_to_centre is not None
 
         zone_radius: float = zone.attributes["radius"]
@@ -218,7 +219,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             new_longitude,
         )
 
-        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        # it is ensured, that distance can't be None,
+        # since zones must have lat/lon coordinates
         assert old_distance is not None
         assert new_distance is not None
         distance_travelled = round(new_distance - old_distance, 1)

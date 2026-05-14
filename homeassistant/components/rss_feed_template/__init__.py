@@ -79,7 +79,8 @@ class RssView(HomeAssistantView):
         response += '<rss version="2.0">\n'
         response += "  <channel>\n"
         if self._title is not None:
-            response += f"    <title>{escape(self._title.async_render(parse_result=False))}</title>\n"
+            rendered = escape(self._title.async_render(parse_result=False))
+            response += f"    <title>{rendered}</title>\n"
         else:
             response += "    <title>Home Assistant</title>\n"
 

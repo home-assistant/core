@@ -119,7 +119,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         entity_registry = er.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device in devices:
-            # This means it's an endpoint. This can be skipped, we're only interested in the containers
+            # This means it's an endpoint. This can be skipped,
+            # we're only interested in the containers
             if device.via_device_id is None:
                 continue
 
@@ -197,7 +198,8 @@ async def async_remove_config_entry_device(
     coordinator = entry.runtime_data
     valid_identifiers: set[tuple[str, str]] = set()
 
-    # The Portainer integration creates devices for both endpoints and containers. That's why we're doing it double
+    # The Portainer integration creates devices for both
+    # endpoints and containers. That's why we're doing it double
     valid_identifiers.update(
         (DOMAIN, f"{entry.entry_id}_{endpoint_id}") for endpoint_id in coordinator.data
     )

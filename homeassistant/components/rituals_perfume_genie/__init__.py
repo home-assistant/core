@@ -29,7 +29,8 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
-    # Initiate reauth for old config entries which don't have username / password in the entry data
+    # Initiate reauth for old config entries which don't have
+    # username / password in the entry data
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
         raise ConfigEntryAuthFailed("Missing credentials")
 

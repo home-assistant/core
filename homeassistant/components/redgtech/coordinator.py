@@ -35,7 +35,8 @@ type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
 class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevice]]):
     """Coordinator to manage fetching data from the Redgtech API.
 
-    Uses a dictionary keyed by unique_id for O(1) device lookup instead of O(n) list iteration.
+    Uses a dictionary keyed by unique_id for O(1) device lookup
+    instead of O(n) list iteration.
     """
 
     config_entry: RedgtechConfigEntry

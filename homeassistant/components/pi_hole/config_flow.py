@@ -166,13 +166,16 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {"base": "cannot_connect"}
             else:
                 _LOGGER.debug(
-                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    "Success connecting to, but necessarily"
+                    " authenticating with, pihole,"
+                    " API version is: %s",
                     5,
                 )
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(
-                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    "API version %s returned %s, '[]' is expected"
+                    " for unauthenticated requests",
                     5,
                     pi_hole.data,
                 )

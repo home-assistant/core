@@ -94,7 +94,11 @@ class AmbilightEffect:
         if self.mode == EFFECT_MODE:
             return f"{EFFECT_MODE}{EFFECT_PARTITION}{self.style}"
         if self.mode == EFFECT_EXPERT:
-            return f"{self.style}{EFFECT_PARTITION}{self.algorithm}{EFFECT_PARTITION}{EFFECT_EXPERT}"
+            return (
+                f"{self.style}{EFFECT_PARTITION}"
+                f"{self.algorithm}{EFFECT_PARTITION}"
+                f"{EFFECT_EXPERT}"
+            )
         return f"{self.style}{EFFECT_PARTITION}{self.algorithm}"
 
 

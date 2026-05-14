@@ -43,12 +43,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
-    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,  # "Attaching the mop"
-    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
+    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,
     RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
-    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
+    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,
     RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
-    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,  # "Detaching the mop"
+    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,
     RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
     RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
     RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
@@ -62,9 +62,9 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.going_to_target: VacuumActivity.CLEANING,  # "Going to target"
     RoborockStateCode.zoned_cleaning: VacuumActivity.CLEANING,  # "Zoned cleaning"
     RoborockStateCode.segment_cleaning: VacuumActivity.CLEANING,  # "Segment cleaning"
-    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,  # "Emptying the bin" on s7+
-    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,  # "Washing the mop" on s7maxV
-    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,  # "Going to wash the mop" on s7maxV
+    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,
+    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,
     RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }

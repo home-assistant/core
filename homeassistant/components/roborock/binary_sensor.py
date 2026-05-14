@@ -157,7 +157,8 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        # Note: Currently coordinator.data is always available on startup but won't be in the future
+        # Note: Currently coordinator.data is always available
+        # on startup but won't be in the future
         if (
             coordinator.data is not None
             and description.value_fn(coordinator.data) is not None

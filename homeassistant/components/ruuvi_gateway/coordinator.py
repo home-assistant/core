@@ -15,7 +15,7 @@ from .const import SCAN_INTERVAL
 
 
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
-    """Polls the gateway for data and returns a list of TagData objects that have changed since the last poll."""
+    """Poll the gateway for data and return changed TagData objects."""
 
     config_entry: ConfigEntry
 

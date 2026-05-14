@@ -120,8 +120,10 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=SCHEMA_DEVICE,
                     errors=errors,
-                    # Handle API version info for error display; pass version info when available
-                    # or None when api_versions is None to avoid displaying version details
+                    # Handle API version info for error display;
+                    # pass version info when available or None
+                    # when api_versions is None to avoid
+                    # displaying version details
                     description_placeholders={
                         "api_version_is": api_versions.get("api_version_is") or "",
                         "api_version_should": api_versions.get("api_version_should")
@@ -155,7 +157,8 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="reconfigure",
                     data_schema=SCHEMA_DEVICE,
                     errors=errors,
-                    # Handle API version info for error display identical to other steps
+                    # Handle API version info for error display
+                    # identical to other steps
                     description_placeholders={
                         "api_version_is": api_versions.get("api_version_is") or "",
                         "api_version_should": api_versions.get("api_version_should")
@@ -165,7 +168,8 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     else None,
                 )
 
-            # Ensure new serial number matches the existing entry unique_id (serial number)
+            # Ensure new serial number matches the existing
+            # entry unique_id (serial number)
             if serial_number != self._get_reconfigure_entry().unique_id:
                 return self.async_abort(reason="wrong_device")
 
