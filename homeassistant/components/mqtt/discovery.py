@@ -565,7 +565,10 @@ async def async_start(  # noqa: C901
             )
         elif already_discovered:
             # Dispatch update
-            message = f"Component has already been discovered: {component} {discovery_id}, sending update"
+            message = (
+                f"Component has already been discovered:"
+                f" {component} {discovery_id}, sending update"
+            )
             async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload

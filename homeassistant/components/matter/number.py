@@ -64,7 +64,8 @@ class MatterRangeNumberEntityDescription(
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the converted device value from ha_to_device
-    # if omitted the command will just be a write_attribute command to the primary attribute
+    # if omitted the command will just be a write_attribute
+    # command to the primary attribute
     command: Callable[[int], ClusterCommand] | None = None
 
 
@@ -90,7 +91,7 @@ class MatterNumber(MatterEntity, NumberEntity):
 
 
 class MatterRangeNumber(MatterEntity, NumberEntity):
-    """Representation of a Matter Attribute as a Number entity with min and max values."""
+    """Matter Attribute as a Number entity with min and max."""
 
     entity_description: MatterRangeNumberEntityDescription
 
@@ -111,7 +112,8 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        # get the value from the primary attribute and convert it to the HA value if needed
+        # get the value from the primary attribute and convert
+        # it to the HA value if needed
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
@@ -371,7 +373,8 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterNumberEntityDescription(
             key="PIROccupiedToUnoccupiedDelay",
             entity_category=EntityCategory.CONFIG,
-            translation_key="hold_time",  # pir_occupied_to_unoccupied_delay for old revisions
+            # pir_occupied_to_unoccupied_delay for old revisions
+            translation_key="hold_time",
             native_max_value=65534,
             native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -414,7 +417,8 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
-            # This attribute is mandatory when the PIRUnoccupiedToOccupiedDelay is present
+            # This attribute is mandatory when
+            # PIRUnoccupiedToOccupiedDelay is present
             clusters.OccupancySensing.Attributes.HoldTime,
         ),
         featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
