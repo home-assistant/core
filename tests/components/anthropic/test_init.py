@@ -102,7 +102,7 @@ async def test_init_repair_issue(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={
-            "chat_model": "claude-3-opus-20240229",
+            "chat_model": "claude-opus-4-20250514",
         },
     )
     await hass.async_block_till_done()

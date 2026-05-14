@@ -1,7 +1,5 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging

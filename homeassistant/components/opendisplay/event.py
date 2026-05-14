@@ -1,7 +1,5 @@
 """Event platform for OpenDisplay devices — button press/release events."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.event import (

@@ -1,7 +1,5 @@
 """Config flow for pushover integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,6 +14,8 @@ from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
 USER_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_USER_KEY): str,

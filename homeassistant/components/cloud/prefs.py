@@ -1,7 +1,5 @@
 """Preference management for cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
@@ -11,7 +9,7 @@ from hass_nabucasa.voice import MAP_VOICE, Gender
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
-from homeassistant.components.google_assistant.http import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.http import (  # pylint: disable=home-assistant-component-root-import
     async_get_users as async_get_google_assistant_users,
 )
 from homeassistant.core import HomeAssistant, callback

@@ -4,8 +4,6 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (
@@ -209,7 +207,7 @@ def validate_state(state: str) -> str:
 
 def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
-    setattr(func, "_hass_callback", True)
+    setattr(func, "_hass_callback", True)  # noqa: B010
     return func
 
 

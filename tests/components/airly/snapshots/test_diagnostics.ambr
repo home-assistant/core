@@ -6,7 +6,6 @@
         'api_key': '**REDACTED**',
         'latitude': '**REDACTED**',
         'longitude': '**REDACTED**',
-        'name': 'Home',
       }),
       'disabled_by': None,
       'discovery_keys': dict({

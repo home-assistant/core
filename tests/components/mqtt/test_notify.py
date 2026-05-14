@@ -79,7 +79,7 @@ async def test_sending_mqtt_commands(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "Beer message", 2, False
+        "command-topic", "Beer message", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("notify.test_notify")
@@ -118,7 +118,11 @@ async def test_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{ "notify.test": "Beer message" }', 0, False
+        "command-topic",
+        '{ "notify.test": "Beer message" }',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 

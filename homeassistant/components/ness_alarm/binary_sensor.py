@@ -1,7 +1,5 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

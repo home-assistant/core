@@ -1,7 +1,5 @@
 """Energy data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
@@ -165,6 +163,9 @@ class BatterySourceType(TypedDict):
     # User's original power sensor configuration
     power_config: NotRequired[PowerConfig]
 
+    # statistic_id of a sensor (unit %) reporting the battery state of charge
+    stat_soc: NotRequired[str]
+
 
 class GasSourceType(TypedDict):
     """Dictionary holding the source of gas consumption."""
@@ -185,6 +186,9 @@ class GasSourceType(TypedDict):
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
 
+    # An optional custom name for display in energy graphs
+    name: str | None
+
 
 class WaterSourceType(TypedDict):
     """Dictionary holding the source of water consumption."""
@@ -204,6 +208,9 @@ class WaterSourceType(TypedDict):
     # Used to generate costs if stat_cost is set to None
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
+
+    # An optional custom name for display in energy graphs
+    name: str | None
 
 
 type SourceType = (
@@ -485,6 +492,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         # If power_config is provided, it takes precedence and stat_rate is overwritten
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+        vol.Optional("stat_soc"): str,
     }
 )
 
@@ -500,6 +508,7 @@ GAS_SOURCE_SCHEMA = vol.All(
             vol.Remove("entity_energy_from"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -513,6 +522,7 @@ WATER_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_cost"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),

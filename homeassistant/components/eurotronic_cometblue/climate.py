@@ -1,7 +1,5 @@
 """Comet Blue climate integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -56,7 +54,6 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     ]
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
@@ -81,13 +78,19 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         return self.coordinator.data.temperatures["manualTemp"]
 
     @property
-    def target_temperature_high(self) -> float | None:
-        """Return the upper bound target temperature."""
+    def _device_comfort_setpoint(self) -> float | None:
+        """Return the comfort setpoint temperature.
+
+        Internally used for preset selection.
+        """
         return self.coordinator.data.temperatures["targetTempHigh"]
 
     @property
-    def target_temperature_low(self) -> float | None:
-        """Return the lower bound target temperature."""
+    def _device_eco_setpoint(self) -> float | None:
+        """Return the eco setpoint temperature.
+
+        Internally used for preset selection.
+        """
         return self.coordinator.data.temperatures["targetTempLow"]
 
     @property
@@ -113,9 +116,9 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return PRESET_AWAY
         if self.target_temperature == MAX_TEMP:
             return PRESET_BOOST
-        if self.target_temperature == self.target_temperature_high:
+        if self.target_temperature == self._device_comfort_setpoint:
             return PRESET_COMFORT
-        if self.target_temperature == self.target_temperature_low:
+        if self.target_temperature == self._device_eco_setpoint:
             return PRESET_ECO
         return PRESET_NONE
 
@@ -153,11 +156,11 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             )
         if preset_mode == PRESET_ECO:
             return await self.async_set_temperature(
-                temperature=self.target_temperature_low
+                temperature=self._device_eco_setpoint
             )
         if preset_mode == PRESET_COMFORT:
             return await self.async_set_temperature(
-                temperature=self.target_temperature_high
+                temperature=self._device_comfort_setpoint
             )
         if preset_mode == PRESET_BOOST:
             return await self.async_set_temperature(temperature=MAX_TEMP)
@@ -172,7 +175,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(temperature=MAX_TEMP)
         if hvac_mode == HVACMode.AUTO:
             return await self.async_set_temperature(
-                temperature=self.target_temperature_low
+                temperature=self._device_eco_setpoint
             )
         raise ServiceValidationError(f"Unknown HVAC mode '{hvac_mode}'")
 

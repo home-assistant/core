@@ -1,7 +1,5 @@
 """Generic Hue Entity Model."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aiohue.v2.controllers.base import BaseResourcesController
@@ -34,7 +32,7 @@ RESOURCE_TYPE_NAMES = {
 }
 
 
-class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Generic Entity Class for a Hue resource."""
 
     _attr_should_poll = False

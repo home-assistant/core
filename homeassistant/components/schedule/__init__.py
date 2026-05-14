@@ -1,7 +1,5 @@
 """Support for schedules in Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
@@ -390,7 +388,7 @@ class Schedule(CollectionEntity):
 
     def all_custom_data_keys(self) -> frozenset[str]:
         """Return the set of all currently used custom data attribute keys."""
-        data_keys = set()
+        data_keys: set[str] = set()
 
         for weekday in WEEKDAY_TO_CONF.values():
             if not (weekday_config := self._config.get(weekday)):

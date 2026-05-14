@@ -246,7 +246,11 @@ async def test_run_lawn_mower_service_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "start_mowing-test-topic", "start_mowing", 0, False
+        "start_mowing-test-topic",
+        "start_mowing",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
@@ -260,7 +264,7 @@ async def test_run_lawn_mower_service_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "pause-test-topic", "pause", 0, False
+        "pause-test-topic", "pause", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
@@ -273,7 +277,9 @@ async def test_run_lawn_mower_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("dock-test-topic", "dock", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "dock-test-topic", "dock", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
     assert state.state == "docked"
@@ -344,7 +350,11 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_start_mowing_cmd", '{"action": "start_mowing"}', 0, False
+        "test/lawn_mower_start_mowing_cmd",
+        '{"action": "start_mowing"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
@@ -358,7 +368,11 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_pause_cmd", '{"action": "pause"}', 0, False
+        "test/lawn_mower_pause_cmd",
+        '{"action": "pause"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
@@ -372,7 +386,11 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_dock_cmd", '{"action": "dock"}', 0, False
+        "test/lawn_mower_dock_cmd",
+        '{"action": "dock"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")

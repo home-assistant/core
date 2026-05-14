@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 from typing import Any
@@ -16,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (
@@ -403,12 +401,13 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
         """Set native value with possible timestamp.
 
-        If self.device_class is `date` or `timestamp`,
+        If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
         if self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             self._attr_native_value = value
         elif value is not None:

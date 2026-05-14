@@ -28,7 +28,15 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
     UnauthorizedError,
 )
-from aiohomeconnect.model.program import Option, OptionKey, Program, ProgramKey
+from aiohomeconnect.model.program import (
+    Option,
+    OptionKey,
+    Program,
+    ProgramDefinition,
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
+    ProgramKey,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -986,3 +994,99 @@ async def test_fetch_base_program_options_when_favorite_program_event(
     client.get_available_program.assert_awaited_once_with(
         appliance.ha_id, program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50
     )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_option_values_kept_after_changing_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test that when a program is changed, the options are kept and defaults are not used."""
+    appliance_ha_id = appliance.ha_id
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not hass.states.is_state(entity_id, "on")
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD,
+                            raw_key=EventKey.DISHCARE_DISHWASHER_OPTION_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=True,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(default=False),
+                )
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "on")
