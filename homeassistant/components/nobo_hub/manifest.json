@@ -13,5 +13,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["pynobo==1.8.1"]
+  "requirements": ["pynobo==1.9.0"]
 }

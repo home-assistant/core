@@ -2360,7 +2360,7 @@ pynintendoauth==1.0.2
 pynintendoparental==2.3.4
 
 # homeassistant.components.nobo_hub
-pynobo==1.8.1
+pynobo==1.9.0
 
 # homeassistant.components.nordpool
 pynordpool==0.4.0
