@@ -167,7 +167,8 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await super().async_internal_added_to_hass()
         if self.entity_category == EntityCategory.CONFIG:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+                f"Entity {self.entity_id} cannot be added as"
+                " the entity category is set to config"
             )
 
     def _default_to_device_class_name(self) -> bool:

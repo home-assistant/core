@@ -5110,6 +5110,43 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device"
 
+    # Check suggested values
+    base_schema_key_descriptions = {
+        key: key.description for key, value in result["data_schema"].schema.items()
+    }
+    assert base_schema_key_descriptions == {
+        "name": {"suggested_value": "Milk notifier"},
+        "model": {"suggested_value": "Model XL"},
+        "model_id": {"suggested_value": "mn002"},
+        "manufacturer": {"suggested_value": "Milk Masters"},
+        "configuration_url": {"suggested_value": "https://example.com"},
+        "advanced_settings": None,
+        "mqtt_settings": None,
+    }
+
+    advanced_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["advanced_settings"]
+        .schema.schema.items()
+    }
+    assert advanced_settings_key_descriptions == {
+        "sw_version": {"suggested_value": "1.0"},
+        "hw_version": {"suggested_value": "2.1 rev a"},
+    }
+    assert result["data_schema"].schema["advanced_settings"].options == {
+        "collapsed": False
+    }
+
+    mqtt_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["mqtt_settings"]
+        .schema.schema.items()
+    }
+    assert mqtt_settings_key_descriptions == {"qos": {"suggested_value": 2}}
+    assert result["data_schema"].schema["mqtt_settings"].options == {"collapsed": False}
+
     # Update the device details
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
