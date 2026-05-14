@@ -218,6 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN,
             SERVICE_CONNECT,

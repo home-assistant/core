@@ -75,6 +75,7 @@ async def async_setup_entry(
             room_name, sleep_temp, comfort_temp, away_temp
         )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
     )

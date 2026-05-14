@@ -243,6 +243,7 @@ async def async_setup_entry(
 
         for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )

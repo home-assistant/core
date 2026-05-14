@@ -156,6 +156,7 @@ async def async_setup_entry(
     if not zone_entities:
         return
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_START_MULTIPLE_ZONES,
