@@ -162,7 +162,9 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required("device"): vol.In(
                         {
                             key: (
-                                f"{key} ({formatted_category(discovery.description.category)})"
+                                f"{key} ({
+                                    formatted_category(discovery.description.category)
+                                })"
                             )
                             for key, discovery in self.devices.items()
                         }
