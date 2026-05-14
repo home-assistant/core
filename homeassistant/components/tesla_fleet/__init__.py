@@ -16,7 +16,7 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla import VehicleFleet
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -121,15 +121,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         )
         raise ConfigEntryAuthFailed from e
 
-    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+    oauth_session = OAuth2Session(hass, entry, implementation)
+    try:
+        await oauth_session.async_ensure_token_valid()
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
+        raise ConfigEntryNotReady from err
+
+    access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
     region_code = token["ou_code"].lower()
     region = region_code if is_valid_region(region_code) else None
-
-    oauth_session = OAuth2Session(hass, entry, implementation)
 
     async def _get_access_token() -> str:
         await oauth_session.async_ensure_token_valid()

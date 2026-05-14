@@ -11,6 +11,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -18,7 +19,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     UnitOfPrecipitationDepth,
@@ -35,14 +35,13 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTRIBUTION,
     CONDITION_MAP,
-    COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
     MANUFACTURER,
     MODEL,
 )
-from .coordinator import MeteoFranceForecastUpdateCoordinator
+from .coordinator import MeteoFranceConfigEntry, MeteoFranceForecastUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,13 +57,11 @@ def format_condition(condition: str, force_day: bool = False) -> str:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeteoFranceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator: MeteoFranceForecastUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][COORDINATOR_FORECAST]
+    coordinator = entry.runtime_data.forecast_coordinator
 
     async_add_entities(
         [
@@ -188,6 +185,9 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["value"],
                         ATTR_FORECAST_NATIVE_PRECIPITATION: forecast["rain"].get("1h"),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind"].get(
+                            "gust"
+                        ),
                         ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
                         if forecast["wind"]["direction"] != -1
                         else None,

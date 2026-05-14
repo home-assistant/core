@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -31,6 +29,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
+from paho.mqtt.client import MQTTMessage
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -305,6 +304,8 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
+        dr.async_setup(hass)
+
         with (
             patch.object(StoreWithoutWriteLoad, "async_load", return_value=None),
             patch(
@@ -453,11 +454,6 @@ def async_fire_mqtt_message(
     retain: bool = False,
 ) -> None:
     """Fire the MQTT message."""
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
-
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
@@ -1252,7 +1248,7 @@ def patch_yaml_files(files_dict, endswith=True):
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
-            setattr(res, "name", fname)
+            res.name = fname
             return res
 
         # Match using endswith
@@ -1260,7 +1256,7 @@ def patch_yaml_files(files_dict, endswith=True):
             if fname.endswith(ends):
                 _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
-                setattr(res, "name", fname)
+                res.name = fname
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)

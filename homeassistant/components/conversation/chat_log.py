@@ -1,7 +1,5 @@
 """Conversation chat log."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager

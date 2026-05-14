@@ -1,4 +1,63 @@
 {
+  "conditions": {
+    "is_co2_value": {
+      "condition": "mdi:molecule-co2"
+    },
+    "is_co_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_co_detected": {
+      "condition": "mdi:molecule-co"
+    },
+    "is_co_value": {
+      "condition": "mdi:molecule-co"
+    },
+    "is_gas_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_gas_detected": {
+      "condition": "mdi:gas-cylinder"
+    },
+    "is_n2o_value": {
+      "condition": "mdi:factory"
+    },
+    "is_no2_value": {
+      "condition": "mdi:factory"
+    },
+    "is_no_value": {
+      "condition": "mdi:factory"
+    },
+    "is_ozone_value": {
+      "condition": "mdi:weather-sunny-alert"
+    },
+    "is_pm10_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm1_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm25_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm4_value": {
+      "condition": "mdi:blur"
+    },
+    "is_smoke_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_smoke_detected": {
+      "condition": "mdi:smoke-detector-variant"
+    },
+    "is_so2_value": {
+      "condition": "mdi:factory"
+    },
+    "is_voc_ratio_value": {
+      "condition": "mdi:air-filter"
+    },
+    "is_voc_value": {
+      "condition": "mdi:air-filter"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:air-filter"

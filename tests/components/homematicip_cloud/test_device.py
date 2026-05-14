@@ -212,8 +212,8 @@ async def test_hap_with_name(
 ) -> None:
     """Test hap with name."""
     home_name = "TestName"
-    entity_id = f"light.{home_name.lower()}_treppe_ch"
-    entity_name = f"{home_name} Treppe CH"
+    entity_id = "light.treppe_testname_treppe_ch"
+    entity_name = "Treppe TestName Treppe CH"
     device_model = "HmIP-BSL"
 
     hmip_config_entry.add_to_hass(hass)

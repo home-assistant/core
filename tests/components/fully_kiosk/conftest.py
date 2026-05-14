@@ -1,7 +1,5 @@
 """Fixtures for the Fully Kiosk Browser integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch

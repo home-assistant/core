@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.custom_clusters import HeimanCluster
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -80,6 +81,40 @@ async def test_operational_state_buttons(
         endpoint_id=1,
         command=clusters.OperationalState.Commands.Pause(),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+async def test_heiman_temporary_mute_button(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test button entity for Heiman SmokeCoAlarm temporary mute request."""
+    state = hass.states.get("button.smoke_sensor_temporary_mute")
+    assert state
+    assert state.attributes["friendly_name"] == "Smoke sensor Temporary mute"
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": "button.smoke_sensor_temporary_mute"},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=HeimanCluster.Commands.MutingSensor(),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+@pytest.mark.parametrize("attributes", [{"1/302775297/65529": []}])
+@pytest.mark.usefixtures("matter_node")
+async def test_heiman_temporary_mute_button_not_discovered_without_muting_command(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the temporary mute button is not created when MutingSensor is absent from AcceptedCommandList."""
+    assert hass.states.get("button.smoke_sensor_temporary_mute") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])

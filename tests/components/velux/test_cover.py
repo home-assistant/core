@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -473,6 +474,77 @@ async def test_non_blind_has_no_tilt_position(
     state = hass.states.get(entity_id)
     assert state is not None
     assert "current_tilt_position" not in state.attributes
+
+
+# Unknown position tests
+
+
+async def test_window_unknown_position(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """When the device position is not known, state and position must be unknown."""
+
+    entity_id = "cover.test_window"
+
+    mock_window.position.known = False
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+
+@pytest.mark.parametrize(
+    ("unknown_attr", "unknown_entity_id"),
+    [
+        ("position", "cover.test_dual_roller_shutter"),
+        ("position_upper_curtain", "cover.test_dual_roller_shutter_upper_shutter"),
+        ("position_lower_curtain", "cover.test_dual_roller_shutter_lower_shutter"),
+    ],
+)
+async def test_dual_roller_shutter_unknown_position(
+    hass: HomeAssistant,
+    mock_dual_roller_shutter: AsyncMock,
+    unknown_attr: str,
+    unknown_entity_id: str,
+) -> None:
+    """Each part falls back to unknown independently when only its position is unknown."""
+
+    all_entity_ids = {
+        "cover.test_dual_roller_shutter",
+        "cover.test_dual_roller_shutter_upper_shutter",
+        "cover.test_dual_roller_shutter_lower_shutter",
+    }
+
+    getattr(mock_dual_roller_shutter, unknown_attr).known = False
+    await update_callback_entity(hass, mock_dual_roller_shutter)
+
+    state = hass.states.get(unknown_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+    for entity_id in all_entity_ids - {unknown_entity_id}:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNKNOWN
+        assert state.attributes.get("current_position") == 70
+
+
+async def test_blind_unknown_tilt_position(
+    hass: HomeAssistant, mock_blind: AsyncMock
+) -> None:
+    """Tilt position must be None when the orientation is not known."""
+
+    entity_id = "cover.test_blind"
+
+    mock_blind.orientation.known = False
+    await update_callback_entity(hass, mock_blind)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("current_tilt_position") is None
 
 
 # Exception handling tests

@@ -562,7 +562,7 @@ async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> 
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
-    assert lamp_2.name == "Hue Lamp 2 new"
+    assert lamp_2.name == "Hue Lamp 2 New"
     assert lamp_2.state == "on"
     assert lamp_2.attributes["brightness"] == 100
 

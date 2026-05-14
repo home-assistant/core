@@ -2578,7 +2578,11 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"67": "pending"}
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "rebuild routes progress"
+    assert msg["event"]["rebuild_routes_status"] == {"67": "pending"}
 
 
 async def test_stop_rebuilding_routes(
@@ -3515,10 +3519,8 @@ async def test_firmware_upload_view(
         )
 
         update_data = NodeFirmwareUpdateData(
-            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+            "file", b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", **expected_data
         )
-        for attr, value in expected_data.items():
-            setattr(update_data, attr, value)
 
         mock_controller_cmd.assert_not_called()
         assert mock_node_cmd.call_args[0][1:3] == (multisensor_6, [update_data])

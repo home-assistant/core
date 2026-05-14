@@ -11,7 +11,6 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -506,7 +505,7 @@ async def test_node_status_sensor_not_ready(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert f"There is no value to refresh for {node_status_entity_id}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -895,37 +894,6 @@ async def test_new_sensor_invalid_scale(
     mock_schedule_reload.assert_called_once_with(integration.entry_id)
 
 
-async def test_opening_state_sensor(
-    hass: HomeAssistant,
-    client,
-    hoppe_ehandle_connectsense_state,
-) -> None:
-    """Test Opening state is exposed as an enum sensor."""
-    node = Node(client, hoppe_ehandle_connectsense_state)
-    client.driver.controller.nodes[node.node_id] = node
-
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.ehandle_connectsense_opening_state")
-    assert state
-    assert state.state == "Closed"
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
-    assert state.attributes[ATTR_VALUE] == 0
-
-    # Make sure we're not accidentally creating enum sensors for legacy
-    # Door/Window notification variables.
-    legacy_sensor_ids = [
-        "sensor.ehandle_connectsense_door_state",
-        "sensor.ehandle_connectsense_door_state_simple",
-    ]
-    for entity_id in legacy_sensor_ids:
-        assert hass.states.get(entity_id) is None
-
-
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
 # controller statistics with initial state of 0
 CONTROLLER_STATISTICS_SUFFIXES = {
@@ -1157,7 +1125,7 @@ async def test_statistics_sensors(
                 blocking=True,
             )
     await hass.async_block_till_done()
-    assert caplog.text.count("There is no value to refresh for this entity") == len(
+    assert caplog.text.count("There is no value to refresh for") == len(
         [
             *CONTROLLER_STATISTICS_SUFFIXES,
             *CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,

@@ -2,13 +2,15 @@
 
 import logging
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .client import SatelClient
 from .const import (
+    CONF_ENABLE_TEMPERATURE_SENSOR,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -24,12 +26,18 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -42,20 +50,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
+
+    for coordinator in (
+        coordinator_zones,
+        coordinator_outputs,
+        coordinator_partitions,
+        coordinator_temperatures,
+    ):
+        coordinator.setup()
 
     await client.async_connect(
         coordinator_zones.zones_update_callback,
         coordinator_outputs.outputs_update_callback,
         coordinator_partitions.partitions_update_callback,
     )
+    await coordinator_temperatures.async_config_entry_first_refresh()
 
     entry.runtime_data = SatelIntegraData(
         client=client,
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_temperatures=coordinator_temperatures,
     )
+
+    async def async_close_connection(event: Event) -> None:
+        """Close Satel Integra connection on HA Stop."""
+        await client.async_close()
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -74,7 +101,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         runtime_data = entry.runtime_data
-        runtime_data.client.close()
+        await runtime_data.client.async_close()
 
     return unload_ok
 
@@ -130,6 +157,25 @@ async def async_migrate_entry(
 
         await async_migrate_entries(hass, config_entry.entry_id, migrate_unique_id)
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
+
+    # 2.2 Added encryption key to config entry data
+    if config_entry.version == 2 and config_entry.minor_version < 2:
+        new_data = {**config_entry.data, CONF_ENCRYPTION_KEY: None}
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
+
+    # 2.3 Added temperature sensor option to zone subentries
+    if config_entry.version == 2 and config_entry.minor_version < 3:
+        for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
+            hass.config_entries.async_update_subentry(
+                config_entry,
+                subentry,
+                data={CONF_ENABLE_TEMPERATURE_SENSOR: False} | subentry.data,
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

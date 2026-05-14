@@ -285,10 +285,10 @@ class HumidifierDehumidifier(HomeAccessory):
         """Return min and max humidity range."""
         attributes = state.attributes
         min_humidity = max(
-            int(round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY))), 0
+            round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)), 0
         )
         max_humidity = min(
-            int(round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY))), 100
+            round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)), 100
         )
         return min_humidity, max_humidity
 

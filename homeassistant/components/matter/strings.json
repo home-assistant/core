@@ -141,11 +141,23 @@
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
+      },
+      "temporary_mute_request": {
+        "name": "Temporary mute"
       }
     },
     "climate": {
       "thermostat": {
-        "name": "Thermostat"
+        "name": "Thermostat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "going_to_sleep": "Going to sleep",
+              "vacation": "Vacation",
+              "wake": "Wake"
+            }
+          }
+        }
       }
     },
     "cover": {
@@ -214,6 +226,12 @@
       "cook_time": {
         "name": "Cooking time"
       },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "detection_threshold": {
+        "name": "Detection threshold"
+      },
       "hold_time": {
         "name": "Hold time"
       },
@@ -243,6 +261,9 @@
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "sensitivity_level": {
+        "name": "Sensitivity"
       },
       "speaker_setpoint": {
         "name": "Volume"
@@ -548,6 +569,9 @@
       },
       "pump_speed": {
         "name": "Rotation speed"
+      },
+      "radon_concentration": {
+        "name": "Radon concentration"
       },
       "reactive_current": {
         "name": "Reactive current"

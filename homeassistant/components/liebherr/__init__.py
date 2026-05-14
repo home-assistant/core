@@ -1,7 +1,5 @@
 """The Liebherr integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 import logging
@@ -26,6 +24,7 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator, LiebherrData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

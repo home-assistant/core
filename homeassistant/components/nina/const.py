@@ -1,7 +1,5 @@
 """Constants for the Nina integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Final
@@ -14,6 +12,8 @@ DOMAIN: str = "nina"
 
 NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
+
+SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
 
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
@@ -33,6 +33,17 @@ ATTR_ID: str = "id"
 ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"
+
+SENSOR_SUFFIXES: list[str] = [
+    "headline",
+    "sender",
+    "severity",
+    "affected_areas",
+    "more_info_url",
+    "sent",
+    "start",
+    "expires",
+]
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]

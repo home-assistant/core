@@ -75,11 +75,11 @@
   "services": {
     "remote_connect": {
       "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection.",
-      "name": "Enable remote access"
+      "name": "Enable Home Assistant Cloud remote access"
     },
     "remote_disconnect": {
       "description": "Disconnects the instance UI from Home Assistant Cloud. This disables access to it from outside your local network.",
-      "name": "Disable remote access"
+      "name": "Disable Home Assistant Cloud remote access"
     }
   },
   "system_health": {

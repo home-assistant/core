@@ -1,7 +1,5 @@
 """Support for Etherscan sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pyetherscan import get_balance

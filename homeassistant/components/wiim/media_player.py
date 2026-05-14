@@ -1,7 +1,5 @@
 """Support for WiiM Media Players."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
@@ -66,7 +64,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE
-    | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.SEEK
 )
 

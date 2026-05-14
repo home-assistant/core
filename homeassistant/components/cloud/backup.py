@@ -1,7 +1,5 @@
 """Backup platform for the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 from http import HTTPStatus
@@ -138,6 +136,7 @@ class CloudBackupAgent(BackupAgent):
                     base64md5hash=base64md5hash,
                     metadata=metadata,
                     size=size,
+                    on_progress=on_progress,
                 )
                 break
             except CloudApiNonRetryableError as err:

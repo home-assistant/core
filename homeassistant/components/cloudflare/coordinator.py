@@ -1,7 +1,5 @@
 """Contains the Coordinator for updating the IP addresses of your Cloudflare DNS records."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from logging import getLogger

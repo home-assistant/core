@@ -18,6 +18,21 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "program_1": "Program 1",
+              "program_2": "Program 2",
+              "program_3": "Program 3"
+            }
+          }
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Home Assistant could not connect to the Roth Touchline controller while importing your YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",

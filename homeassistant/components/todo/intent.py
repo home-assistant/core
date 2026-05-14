@@ -1,7 +1,5 @@
 """Intents for the todo integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -91,7 +89,7 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
 
         # Add to list
         await target_list.async_create_todo_item(
-            TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION)
+            TodoItem(summary=item.capitalize(), status=TodoItemStatus.NEEDS_ACTION)
         )
 
 
@@ -108,9 +106,9 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
         matching_item = None
         for todo_item in target_list.todo_items or ():
             if (
-                item in (todo_item.uid, todo_item.summary)
-                and todo_item.status == TodoItemStatus.NEEDS_ACTION
-            ):
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ) and todo_item.status == TodoItemStatus.NEEDS_ACTION:
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:
@@ -140,7 +138,10 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
         # Find item in list
         matching_item = None
         for todo_item in target_list.todo_items or ():
-            if item in (todo_item.uid, todo_item.summary):
+            if (
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ):
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:

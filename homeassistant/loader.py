@@ -4,8 +4,6 @@ This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -767,6 +765,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        self.logger = logging.getLogger(pkg_path)
         manifest["is_built_in"] = self.is_built_in
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
@@ -1417,8 +1416,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:

@@ -1,7 +1,5 @@
 """Constants used by Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 

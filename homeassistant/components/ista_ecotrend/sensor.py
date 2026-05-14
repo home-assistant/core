@@ -1,7 +1,5 @@
 """Sensor platform for Ista EcoTrend integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import datetime

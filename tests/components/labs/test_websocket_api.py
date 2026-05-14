@@ -1,7 +1,5 @@
 """Tests for the Home Assistant Labs WebSocket API."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 

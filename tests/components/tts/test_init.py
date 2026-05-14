@@ -2115,7 +2115,6 @@ async def test_stream_override(
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message("beer")
 
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
         with wave.open(wav_file, "wb") as wav_writer:
@@ -2155,7 +2154,6 @@ async def test_stream_override_with_conversion(
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
         },
     )
-    stream.async_set_message("beer")
 
     # Use a temp file here since ffmpeg will read it directly
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:

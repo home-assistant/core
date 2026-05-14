@@ -1,7 +1,5 @@
 """Support for Hue lights."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Any
 
@@ -72,7 +70,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 

@@ -1,7 +1,5 @@
 """Utils for CO2 signal."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

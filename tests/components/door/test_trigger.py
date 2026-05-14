@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -15,6 +15,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -49,6 +50,31 @@ async def test_door_triggers_gated_by_labs_flag(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("door.closed", {}, True, True),
+        ("door.opened", {}, True, True),
+    ],
+)
+async def test_door_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that door triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
 )
@@ -77,7 +103,6 @@ async def test_door_triggers_gated_by_labs_flag(
 )
 async def test_door_trigger_binary_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -89,7 +114,6 @@ async def test_door_trigger_binary_sensor_behavior_any(
     """Test door trigger fires for binary_sensor entities with device_class door."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -147,7 +171,6 @@ async def test_door_trigger_binary_sensor_behavior_any(
 )
 async def test_door_trigger_cover_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -159,7 +182,6 @@ async def test_door_trigger_cover_behavior_any(
     """Test door trigger fires for cover entities with device_class door."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -200,7 +222,6 @@ async def test_door_trigger_cover_behavior_any(
 )
 async def test_door_trigger_binary_sensor_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -212,7 +233,6 @@ async def test_door_trigger_binary_sensor_behavior_first(
     """Test door trigger fires on the first binary_sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -253,7 +273,6 @@ async def test_door_trigger_binary_sensor_behavior_first(
 )
 async def test_door_trigger_binary_sensor_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -265,7 +284,6 @@ async def test_door_trigger_binary_sensor_behavior_last(
     """Test door trigger fires when the last binary_sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -323,7 +341,6 @@ async def test_door_trigger_binary_sensor_behavior_last(
 )
 async def test_door_trigger_cover_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -335,7 +352,6 @@ async def test_door_trigger_cover_behavior_first(
     """Test door trigger fires on the first cover state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -393,7 +409,6 @@ async def test_door_trigger_cover_behavior_first(
 )
 async def test_door_trigger_cover_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -405,7 +420,6 @@ async def test_door_trigger_cover_behavior_last(
     """Test door trigger fires when the last cover changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

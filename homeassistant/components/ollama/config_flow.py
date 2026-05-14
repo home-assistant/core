@@ -1,7 +1,5 @@
 """Config flow for Ollama integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -55,7 +53,6 @@ from .const import (
     DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    MAX_NUM_CTX,
     MIN_NUM_CTX,
     MODEL_NAMES,
 )
@@ -421,6 +418,8 @@ def ollama_config_option_schema(
             default_name = DEFAULT_CONVERSATION_NAME
 
         schema: dict = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:
@@ -478,7 +477,6 @@ def ollama_config_option_schema(
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=MIN_NUM_CTX,
-                    max=MAX_NUM_CTX,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )
