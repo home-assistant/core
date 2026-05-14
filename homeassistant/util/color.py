@@ -488,8 +488,8 @@ def color_rgbww_to_rgb(
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
-    """Return a RGB color from a hex color string."""
-    return f"{round(r):02x}{round(g):02x}{round(b):02x}"
+    """Return a hex color string from RGB integer values."""
+    return f"{r:02x}{g:02x}{b:02x}"
 
 
 def rgb_hex_to_rgb_list(hex_string: str) -> list[int]:
