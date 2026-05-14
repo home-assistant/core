@@ -122,6 +122,7 @@ async def test_evict_faked_translations(
     fake_domain = "test"
     real_domain = "homeassistant"
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "en" in cache.loaded:
         # Evict the real domain from the cache in case it's been loaded before
         cache.loaded["en"].discard(real_domain)
