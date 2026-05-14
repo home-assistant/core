@@ -445,7 +445,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None

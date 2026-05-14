@@ -740,6 +740,7 @@ select = [
   "RUF032", # Decimal() called with float literal argument
   "RUF033", # __post_init__ method with argument defaults
   "RUF034", # Useless if-else condition
+  "RUF037", # Unnecessary empty iterable within deque call
   "RUF046", # Unnecessary cast to int
   "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
   "RUF059", # unused-unpacked-variable

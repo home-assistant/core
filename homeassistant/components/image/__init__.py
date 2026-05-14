@@ -207,7 +207,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
         self._client = get_async_client(hass, verify_ssl=verify_ssl)
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self.async_update_token()
 
     @cached_property

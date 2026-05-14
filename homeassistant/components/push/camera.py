@@ -118,7 +118,7 @@ class PushCamera(Camera):
         self._filename = None
         self._expired_listener = None
         self._timeout = timeout
-        self.queue: deque[bytes] = deque([], buffer_size)
+        self.queue: deque[bytes] = deque(maxlen=buffer_size)
         self._current_image: bytes | None = None
         self._image_field = image_field
         self.webhook_id = webhook_id

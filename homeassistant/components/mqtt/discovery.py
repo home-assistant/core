@@ -555,7 +555,7 @@ async def async_start(  # noqa: C901
                     MQTT_DISCOVERY_DONE.format(*discovery_hash),
                     discovery_done,
                 ),
-                "pending": deque([]),
+                "pending": deque(),
             }
 
         if component not in mqtt_data.platforms_loaded and payload:
