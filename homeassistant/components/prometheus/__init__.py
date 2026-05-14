@@ -754,7 +754,7 @@ class PrometheusMetrics:
         metric.set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
-        self._numeric_metric(state, "binary_sensor", "binary boolean")
+        self._numeric_metric(state, "binary_sensor", "binary sensor")
 
     def _handle_input_boolean(self, state: State) -> None:
         self._numeric_metric(state, "input_boolean", "input boolean")
