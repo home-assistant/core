@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -22,18 +21,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
-    CONF_FRIENDLY_NAME_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_NAME,
     CONF_SENSORS,
     CONF_STATE,
-    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -54,8 +45,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -63,11 +52,6 @@ from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 DEFAULT_NAME = "Template Sensor"
-
-LEGACY_FIELDS = {
-    CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 
 def validate_last_reset(val):
@@ -111,29 +95,6 @@ SENSOR_CONFIG_ENTRY_SCHEMA = SENSOR_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
 
-SENSOR_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_LEGACY_YAML_SCHEMA)}
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -152,7 +113,6 @@ async def async_setup_platform(
         TriggerSensorEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
         legacy_key=CONF_SENSORS,
     )
 
@@ -191,7 +151,7 @@ def validate_datetime(
     """Converts the template result into a datetime or date."""
 
     def convert(result: Any) -> datetime | date | None:
-        if resolve_as == SensorDeviceClass.TIMESTAMP:
+        if resolve_as in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
             if isinstance(result, datetime):
                 return result
 
@@ -263,6 +223,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
         ):
             return result
 

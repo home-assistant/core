@@ -43,6 +43,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
 
     def __init__(self, serial: str, hub: nobo) -> None:
         """Initialize the temperature sensor."""
@@ -77,7 +78,4 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         if not self.available:
             return
         value = self._nobo.get_current_component_temperature(self._id)
-        if value is None:
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = round(float(value), 1)
+        self._attr_native_value = None if value is None else float(value)

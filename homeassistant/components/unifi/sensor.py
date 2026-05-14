@@ -518,8 +518,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
-        translation_key="client_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         allowed_fn=async_uptime_sensor_allowed_fn,
@@ -609,8 +608,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,

@@ -99,6 +99,7 @@ def _direction_value(field: VolvoCarsApiBaseModel) -> str | None:
 
 _CHARGING_POWER_STATUS_OPTIONS = [
     "fault",
+    "initialization",
     "power_available_but_not_activated",
     "providing_power",
     "no_power_available",

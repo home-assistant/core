@@ -15,7 +15,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_NAME, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_NAME,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -80,7 +85,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = PRECISION_WHOLE
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
@@ -99,12 +104,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._read_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target HVAC mode, if it's supported."""
-        if hvac_mode not in self.hvac_modes:
-            raise ValueError(
-                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode"
-                f" '{hvac_mode}'"
-            )
+        """Set new target HVAC mode."""
         if hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_NONE)
         elif hvac_mode == HVACMode.HEAT:
