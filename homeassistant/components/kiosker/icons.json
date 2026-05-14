@@ -14,6 +14,38 @@
         }
       }
     },
+    "button": {
+      "clear_cache": {
+        "default": "mdi:cached"
+      },
+      "clear_cookies": {
+        "default": "mdi:cookie-alert-outline"
+      },
+      "navigate_backward": {
+        "default": "mdi:arrow-left"
+      },
+      "navigate_forward": {
+        "default": "mdi:arrow-right"
+      },
+      "navigate_home": {
+        "default": "mdi:home-outline"
+      },
+      "navigate_refresh": {
+        "default": "mdi:refresh"
+      },
+      "ping": {
+        "default": "mdi:lan-pending"
+      },
+      "print": {
+        "default": "mdi:printer"
+      },
+      "screensaver_interact": {
+        "default": "mdi:sleep-off"
+      },
+      "update": {
+        "default": "mdi:update"
+      }
+    },
     "sensor": {
       "ambient_light": {
         "default": "mdi:brightness-6"
