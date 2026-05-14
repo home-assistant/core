@@ -717,6 +717,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 await self.hass.async_add_executor_job(
                     self._quick_play, app_name, app_data
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
             return

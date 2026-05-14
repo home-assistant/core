@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
