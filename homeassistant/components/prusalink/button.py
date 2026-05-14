@@ -56,6 +56,14 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
                 bool, data["printer"]["state"] == PrinterState.PAUSED.value
             ),
         ),
+        PrusaLinkButtonEntityDescription[PrinterStatus](
+            key="job.continue_job",
+            translation_key="continue_job",
+            press_fn=lambda api: api.continue_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.ATTENTION.value
+            ),
+        ),
     ),
 }
 

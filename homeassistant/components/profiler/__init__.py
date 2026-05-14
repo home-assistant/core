@@ -86,7 +86,7 @@ async def async_setup_entry(  # noqa: C901
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
