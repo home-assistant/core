@@ -24,6 +24,9 @@ class LgIrButtonEntityDescription(ButtonEntityDescription):
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     LgIrButtonEntityDescription(
+        key="power", translation_key="power", command_code=LGTVCode.POWER
+    ),
+    LgIrButtonEntityDescription(
         key="power_on", translation_key="power_on", command_code=LGTVCode.POWER_ON
     ),
     LgIrButtonEntityDescription(
