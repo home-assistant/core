@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.exceptions import DaliGatewayError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -220,8 +221,12 @@ async def test_firmware_listener_runtime_update(
     issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
-    # Capture the listener registered on the gateway during setup.
-    listener = mock_gateway.register_listener.call_args.args[1]
+    # Capture the VERSION_UPDATED listener registered on the gateway during setup.
+    listener = next(
+        call.args[1]
+        for call in mock_gateway.register_listener.call_args_list
+        if call.args[0] is CallbackEventType.VERSION_UPDATED
+    )
 
     # Simulate the gateway reporting an unsupported version (e.g. firmware downgrade).
     mock_gateway.software_version = "3.50"
