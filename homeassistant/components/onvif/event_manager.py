@@ -275,7 +275,7 @@ class EventManager:
 
     @callback
     def async_mark_events_stale(self) -> None:
-        """Mark all events as stale when the subscriptions fail since we are out of sync."""
+        """Mark all events as stale when subscriptions fail."""
         self._events.clear()
         self.async_callback_listeners()
 
@@ -353,7 +353,8 @@ class PullPointManager:
             await self._async_create_pullpoint_subscription()
         except CREATE_ERRORS as err:
             LOGGER.debug(
-                "%s: Device does not support PullPoint service or has too many subscriptions: %s",
+                "%s: Device does not support PullPoint service"
+                " or has too many subscriptions: %s",
                 self._name,
                 stringify_onvif_error(err),
             )
@@ -421,7 +422,8 @@ class PullPointManager:
                 )
         except aiohttp.ServerDisconnectedError as err:
             # Either a shutdown event or the camera closed the connection. Because
-            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
+            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4
+            # allows the server
             # to close the connection at any time, we treat this as a normal. Some
             # cameras may close the connection if there are no messages to pull.
             LOGGER.debug(
@@ -448,8 +450,9 @@ class PullPointManager:
             TransportError,
         ) as err:
             LOGGER.debug(
-                "%s: PullPoint subscription encountered an unexpected error and will be retried "
-                "(this is normal for some cameras): %s",
+                "%s: PullPoint subscription encountered an"
+                " unexpected error and will be retried"
+                " (this is normal for some cameras): %s",
                 self._name,
                 stringify_onvif_error(err),
             )
@@ -463,7 +466,8 @@ class PullPointManager:
             # If the webhook became started working during the long poll,
             # and we got paused, our data is stale and we should not process it.
             LOGGER.debug(
-                "%s: PullPoint state is %s (likely due to working webhook), skipping PullPoint messages",
+                "%s: PullPoint state is %s (likely due to working"
+                " webhook), skipping PullPoint messages",
                 self._name,
                 self.state,
             )
@@ -616,7 +620,8 @@ class WebHookManager:
         except CREATE_ERRORS as err:
             self._event_manager.async_webhook_failed()
             LOGGER.debug(
-                "%s: Device does not support notification service or too many subscriptions: %s",
+                "%s: Device does not support notification service"
+                " or too many subscriptions: %s",
                 self._name,
                 stringify_onvif_error(err),
             )

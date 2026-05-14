@@ -48,8 +48,10 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        # https://developers.openai.com/api/docs/guides/speech-to-text#supported-languages
-        # The model may also transcribe the audio in other languages but with lower quality
+        # https://developers.openai.com/api/docs/guides/speech-to-text
+        #   #supported-languages
+        # The model may also transcribe the audio in other
+        # languages but with lower quality
         return [
             "af-ZA",  # Afrikaans
             "ar-SA",  # Arabic
