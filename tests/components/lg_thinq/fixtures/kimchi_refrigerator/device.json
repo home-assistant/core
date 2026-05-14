@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F",
+  "deviceInfo": {
+    "deviceType": "DEVICE_KIMCHI_REFRIGERATOR",
+    "modelName": "2REB1KRS11__H",
+    "alias": "Test kimchi refrigerator",
+    "reportable": true
+  }
+}
