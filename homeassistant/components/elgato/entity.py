@@ -26,7 +26,10 @@ class ElgatoEntity(CoordinatorEntity[ElgatoDataUpdateCoordinator]):
             manufacturer="Elgato",
             model=coordinator.data.info.product_name,
             name=coordinator.data.info.display_name,
-            sw_version=f"{coordinator.data.info.firmware_version} ({coordinator.data.info.firmware_build_number})",
+            sw_version=(
+                f"{coordinator.data.info.firmware_version}"
+                f" ({coordinator.data.info.firmware_build_number})"
+            ),
             hw_version=str(coordinator.data.info.hardware_board_type),
         )
         if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:

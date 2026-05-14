@@ -18,10 +18,14 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Testing
 
+- Use `uv run pytest` to run tests
+- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `.venv/bin/python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
+- Prefer `@pytest.mark.usefixtures` over arguments, if the argument is not going to be used.
 - Avoid using conditions/branching in tests. Instead, either split tests or adjust the test parametrization to cover all cases without branching.
-- If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body.
+- If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body. Use `pytest.param` with an `id` parameter to name the test cases clearly.
+- We use Syrupy for snapshot testing. Leverage `.ambr` snapshots instead of repetitive and exhaustive generation of test data within Python code itself.
 
 ## Good practices
 

@@ -82,8 +82,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     @callback
     def _async_adjust_lru_sizes(_: Any) -> None:
         """Adjust the lru cache sizes."""
-        new_size = int(
-            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        new_size = round(
+            hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
@@ -359,7 +359,8 @@ class Template:
 
         if len(render_result) > MAX_TEMPLATE_OUTPUT:
             raise TemplateError(
-                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+                "Template output exceeded maximum size of"
+                f" {MAX_TEMPLATE_OUTPUT} characters"
             )
 
         render_result = render_result.strip()
@@ -674,7 +675,7 @@ def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
 
 
 class HassLoader(jinja2.BaseLoader):
-    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+    """An in-memory jinja loader that tracks templates needing reload."""
 
     def __init__(self, sources: dict[str, str]) -> None:
         """Initialize an empty HassLoader."""

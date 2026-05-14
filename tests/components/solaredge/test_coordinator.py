@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solaredge_web import EnergyData
@@ -18,6 +19,7 @@ from homeassistant.components.solaredge.const import (
     OVERVIEW_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
@@ -28,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -417,3 +420,17 @@ async def test_modules_coordinator_no_energy_data(
         {"state", "sum"},
     )
     assert not stats
+
+
+async def test_modules_coordinator_api_failure(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry_web_login: MockConfigEntry,
+    solaredge_web_api: AsyncMock,
+) -> None:
+    """Test the modules coordinator surfaces API failures via the config entry state."""
+    solaredge_web_api.async_get_equipment.side_effect = ClientError("boom")
+
+    await setup_integration(hass, mock_config_entry_web_login)
+
+    assert mock_config_entry_web_login.state is ConfigEntryState.SETUP_RETRY

@@ -116,6 +116,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
         """Turn off the switch."""
         try:
             await self.entity_description.turn_off_fn(self.adguard)()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AdGuardHomeError:
             LOGGER.error("An error occurred while turning off AdGuard Home switch")
             self._attr_available = False
@@ -124,6 +125,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
         """Turn on the switch."""
         try:
             await self.entity_description.turn_on_fn(self.adguard)()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AdGuardHomeError:
             LOGGER.error("An error occurred while turning on AdGuard Home switch")
             self._attr_available = False

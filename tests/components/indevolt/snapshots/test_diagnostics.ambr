@@ -42,6 +42,7 @@
     'device': dict({
       'firmware_version': '1.2.3',
       'generation': 1,
+      'mac_address': 'aa:bb:cc:XX:XX:XX',
       'model': 'BK1600',
       'serial_number': '**REDACTED**',
     }),
@@ -143,6 +144,7 @@
     'device': dict({
       'firmware_version': '1.2.3',
       'generation': 2,
+      'mac_address': 'aa:bb:cc:XX:XX:XX',
       'model': 'CMS-SF2000',
       'serial_number': '**REDACTED**',
     }),
