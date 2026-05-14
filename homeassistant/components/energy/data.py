@@ -138,6 +138,9 @@ class GridSourceType(TypedDict):
 
     cost_adjustment_day: float
 
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
 
 class SolarSourceType(TypedDict):
     """Dictionary holding the source of energy production."""
@@ -147,6 +150,9 @@ class SolarSourceType(TypedDict):
     stat_energy_from: str
     stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class BatterySourceType(TypedDict):
@@ -165,6 +171,9 @@ class BatterySourceType(TypedDict):
 
     # statistic_id of a sensor (unit %) reporting the battery state of charge
     stat_soc: NotRequired[str]
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -462,6 +471,7 @@ GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -481,6 +491,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
+        vol.Optional("name"): str,
     }
 )
 BATTERY_SOURCE_SCHEMA = vol.Schema(
@@ -493,6 +504,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         vol.Optional("stat_soc"): str,
+        vol.Optional("name"): str,
     }
 )
 
