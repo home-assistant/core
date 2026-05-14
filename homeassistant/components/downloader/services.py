@@ -124,6 +124,7 @@ def download_file(service: ServiceCall) -> None:
                     {"url": url, "filename": filename},
                 )
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("ConnectionError occurred for %s", url)
             service.hass.bus.fire(
@@ -134,6 +135,7 @@ def download_file(service: ServiceCall) -> None:
             # Remove file if we started downloading but failed
             if final_path and os.path.isfile(final_path):
                 os.remove(final_path)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.exception("Invalid value")
             service.hass.bus.fire(

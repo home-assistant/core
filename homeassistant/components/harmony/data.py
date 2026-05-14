@@ -238,6 +238,7 @@ class HarmonyData(HarmonySubscriberMixin):
         _LOGGER.debug("%s: Sending commands", self.name)
         try:
             result_list = await self._client.send_commands(snd_cmnd_list)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except aioexc.TimeOut:
             _LOGGER.error("%s: Sending commands timed-out", self.name)
             return

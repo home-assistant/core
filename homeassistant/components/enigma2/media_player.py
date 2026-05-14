@@ -68,6 +68,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         if self.coordinator.device.turn_off_to_deep:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(ServerDisconnectedError):
                 await self.coordinator.device.set_powerstate(PowerState.DEEP_STANDBY)
             self._attr_available = False
