@@ -14,7 +14,7 @@ from homeassistant.components.infrared import (
 )
 from homeassistant.components.marantz_infrared import PLATFORMS
 from homeassistant.components.marantz_infrared.const import (
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
     MODELS,
@@ -64,7 +64,7 @@ def mock_config_entry(model: str) -> MockConfigEntry:
         title=MODELS[model].name,
         data={
             CONF_MODEL: model,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
         unique_id=f"{model}_{MOCK_INFRARED_ENTITY_ID}",
     )

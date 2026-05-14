@@ -7,11 +7,11 @@
     "step": {
       "user": {
         "data": {
-          "infrared_entity_id": "Infrared transmitter",
+          "infrared_emitter_entity_id": "Infrared transmitter",
           "model": "Model"
         },
         "data_description": {
-          "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands.",
           "model": "The Marantz model to control."
         },
         "description": "Select the Marantz model and the infrared transmitter entity to use for controlling your Marantz device.",

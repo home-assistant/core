@@ -98,11 +98,12 @@ async def test_select_source_feature_matches_model(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_code"),
     [
-        (SERVICE_TURN_ON, {}, MarantzAudioCode.POWER),
-        (SERVICE_TURN_OFF, {}, MarantzAudioCode.POWER),
+        (SERVICE_TURN_ON, {}, MarantzAudioCode.POWER_ON),
+        (SERVICE_TURN_OFF, {}, MarantzAudioCode.POWER_OFF),
         (SERVICE_VOLUME_UP, {}, MarantzAudioCode.VOLUME_UP),
         (SERVICE_VOLUME_DOWN, {}, MarantzAudioCode.VOLUME_DOWN),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, MarantzAudioCode.MUTE),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, MarantzAudioCode.MUTE_ON),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": False}, MarantzAudioCode.MUTE_OFF),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -173,7 +174,7 @@ async def test_turn_on_off_update_assumed_state(
     hass: HomeAssistant,
     mock_infrared_entity: MockInfraredEntity,
 ) -> None:
-    """Both turn-on and turn-off send POWER but assume opposite states."""
+    """Turn-on sends POWER_ON and turn-off sends POWER_OFF."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_TURN_OFF,
@@ -195,8 +196,8 @@ async def test_turn_on_off_update_assumed_state(
     assert state.state == "on"
 
     assert mock_infrared_entity.send_command_calls == [
-        MarantzAudioCode.POWER,
-        MarantzAudioCode.POWER,
+        MarantzAudioCode.POWER_OFF,
+        MarantzAudioCode.POWER_ON,
     ]
 
 

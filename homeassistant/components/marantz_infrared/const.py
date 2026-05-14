@@ -5,7 +5,7 @@ from infrared_protocols.codes.marantz import models as marantz_models
 from homeassistant.util import slugify
 
 DOMAIN = "marantz_infrared"
-CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
+CONF_INFRARED_EMITTER_ENTITY_ID = "infrared_emitter_entity_id"
 CONF_MODEL = "model"
 
 MODELS: dict[str, marantz_models.MarantzModel] = {

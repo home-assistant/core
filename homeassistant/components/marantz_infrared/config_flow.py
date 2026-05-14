@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_INFRARED_ENTITY_ID, CONF_MODEL, DOMAIN, MODELS
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, CONF_MODEL, DOMAIN, MODELS
 
 
 class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -35,7 +35,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_emitters")
 
         if user_input is not None:
-            entity_id = user_input[CONF_INFRARED_ENTITY_ID]
+            entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
             model = user_input[CONF_MODEL]
 
             await self.async_set_unique_id(f"{model}_{entity_id}")
@@ -58,7 +58,7 @@ class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                    vol.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,

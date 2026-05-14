@@ -7,7 +7,7 @@ from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
 )
 from homeassistant.components.marantz_infrared.const import (
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_MODEL,
     DOMAIN,
 )
@@ -49,7 +49,7 @@ async def test_user_flow_success(
         result["flow_id"],
         user_input={
             CONF_MODEL: "pm6006_integrated_amplifier",
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
@@ -57,7 +57,7 @@ async def test_user_flow_success(
     assert result["title"] == "PM6006 Integrated Amplifier"
     assert result["data"] == {
         CONF_MODEL: "pm6006_integrated_amplifier",
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+        CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
     }
     assert (
         result["result"].unique_id
@@ -82,7 +82,7 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_MODEL: "pm6006_integrated_amplifier",
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
@@ -122,7 +122,7 @@ async def test_user_flow_title_from_model(
         result["flow_id"],
         user_input={
             CONF_MODEL: model,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
