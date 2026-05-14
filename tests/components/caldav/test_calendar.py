@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock
 import zoneinfo
 
-from caldav.objects import Event
+from caldav import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -1269,6 +1269,7 @@ async def test_missing_supported_components(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup works when calendar raises KeyError on get_supported_components."""
+    caplog.set_level("WARNING")
     calendars[0].get_supported_components.side_effect = KeyError()
     await setup_platform_cb()
 
