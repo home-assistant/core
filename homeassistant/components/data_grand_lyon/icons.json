@@ -2,10 +2,7 @@
   "entity": {
     "binary_sensor": {
       "station_open": {
-        "default": "mdi:alert",
-        "state": {
-          "on": "mdi:check-circle"
-        }
+        "default": "mdi:alert"
       }
     },
     "sensor": {
