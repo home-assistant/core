@@ -53,7 +53,9 @@ class RadarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
 
 @dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescription(
-    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]  # noqa: UP046
+    SensorEntityDescription,
+    RadarrSensorEntityDescriptionMixIn[T],
+    Generic[T],  # noqa: UP046
 ):
     """Class to describe a Radarr sensor."""
 

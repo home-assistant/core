@@ -22,7 +22,8 @@ _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 @dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
-    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]  # noqa: UP046
+    SelectEntityDescription,
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """A class that describes robot select entities."""
 
