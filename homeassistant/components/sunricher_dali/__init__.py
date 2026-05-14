@@ -157,7 +157,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         devices=devices,
         scenes=scenes,
     )
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    except Exception:
+        unsub_version()
+        raise
     entry.async_on_unload(unsub_version)
 
     return True
