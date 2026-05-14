@@ -1271,7 +1271,7 @@ async def test_missing_supported_components(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup works when calendar raises KeyError on get_supported_components."""
-    caplog.set_level(logging.WARNING)
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
     calendars[0].get_supported_components.side_effect = KeyError()
     await setup_platform_cb()
 
@@ -1307,7 +1307,7 @@ async def test_missing_supported_components_not_assumed(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_calendars excludes calendars when KeyError is raised for non-assumed components."""
-    caplog.set_level(logging.WARNING)
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
     calendars[0].get_supported_components.side_effect = KeyError()
     client = MagicMock()
     client.principal().calendars.return_value = calendars
