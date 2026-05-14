@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pynobo import PynoboConnectionError, nobo
+from pynobo import PynoboError, nobo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -254,7 +254,7 @@ async def test_climate_action_wraps_library_error(
     expected_key: str,
 ) -> None:
     """Library errors during climate actions are raised as HomeAssistantError."""
-    getattr(mock_nobo_hub, mock_attr).side_effect = PynoboConnectionError("boom")
+    getattr(mock_nobo_hub, mock_attr).side_effect = PynoboError("boom")
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
