@@ -56,20 +56,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
     entry.runtime_data = solarLogData
 
-    if basic_coordinator.solarlog.extended_data:
-        timeout = entry.data.get(CONF_TIMEOUT, 0)
-        if timeout <= 150:
-            # Increase timeout for next try, skip setup of LongtimeDataCoordinator,
-            # if timeout was not the issue (assumed when timeout > 150)
-            timeout = timeout + 30
-            new = {**entry.data}
-            new[CONF_TIMEOUT] = timeout
-            hass.config_entries.async_update_entry(entry, data=new)
+    _LOGGER.debug(
+        "Basic coordinator setup successful, extended data available: %s",
+        solarLogData.api.extended_data,
+    )
 
-            entry.runtime_data.longtime_data_coordinator = (
-                SolarLogLongtimeDataCoordinator(hass, entry, solarlog, timeout)
-            )
-            await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+    if solarLogData.api.extended_data:
+        timeout = entry.data.get(CONF_TIMEOUT, 30)
+
+        _LOGGER.debug("Setup of LongtimeDataCoordinator, saved timeout is %s", timeout)
+
+        entry.runtime_data.longtime_data_coordinator = SolarLogLongtimeDataCoordinator(
+            hass, entry, solarlog, timeout
+        )
+        await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+
+        _LOGGER.debug("Setup of DeviceDataCoordinator")
 
         entry.runtime_data.device_data_coordinator = SolarLogDeviceDataCoordinator(
             hass, entry, solarlog

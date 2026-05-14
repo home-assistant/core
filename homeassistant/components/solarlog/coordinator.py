@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for solarlog integration."""
 
+from asyncio import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -13,6 +14,7 @@ from solarlog_cli.solarlog_exceptions import (
 from solarlog_cli.solarlog_models import EnergyData, InverterData, SolarlogData
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -233,6 +235,37 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
 
         self.solarlog = api
         self.connection_timeout = timeout
+
+    async def _async_setup(self) -> None:
+        """Do initialization logic."""
+        _LOGGER.debug("Start SolarLogLongtimeDataCoordinator async_setup")
+
+        try:
+            await self.solarlog.update_energy_data(timeout=self.connection_timeout)
+        except SolarLogAuthenticationError as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
+        except (SolarLogConnectionError, SolarLogUpdateError) as ex:
+            if (
+                isinstance(ex.__cause__, AsyncioTimeoutError)
+                and self.connection_timeout <= 150
+            ):
+                # Increase timeout for next try
+                self.connection_timeout = self.connection_timeout + 30
+                _LOGGER.debug(
+                    "Connection failed, increased timeout to %s for next try",
+                    self.connection_timeout,
+                )
+                new = {**self.config_entry.data}
+                new[CONF_TIMEOUT] = self.connection_timeout
+                self.hass.config_entries.async_update_entry(self.config_entry, data=new)
+
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from ex
 
     async def _async_update_data(self) -> EnergyData:
         """Update the energy data from the SolarLog device."""
