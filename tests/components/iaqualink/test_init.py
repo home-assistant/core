@@ -19,7 +19,7 @@ from iaqualink.systems.iaqua.system import IaquaSystem
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
+from homeassistant.components.iaqualink.const import UPDATE_INTERVAL_BY_SYSTEM_TYPE
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -46,7 +46,7 @@ async def _advance_coordinator_time(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Advance time to trigger coordinator update interval."""
-    freezer.tick(delta=UPDATE_INTERVAL)
+    freezer.tick(delta=UPDATE_INTERVAL_BY_SYSTEM_TYPE["iaqua"])
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
