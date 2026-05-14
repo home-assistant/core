@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -788,6 +789,21 @@ async def test_send_message_local_push(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("domain", "service", "service_data"),
+    [
+        (
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_MESSAGE: "Hello world", ATTR_TITLE: "test"},
+        ),
+        (
+            DOMAIN,
+            "dismiss_message",
+            {"tag": "tag"},
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_push_receiver")
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_send_message_exceptions(
@@ -796,8 +812,11 @@ async def test_send_message_exceptions(
     exc: Exception | None,
     status: HTTPStatus,
     error_msg: str,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
-    """Test sending message via notify.send_message action with exceptions."""
+    """Test exception handling for notify.send_message and mobile_app.dismiss_message."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         "https://mobile-push.home-assistant.dev/push",
@@ -819,12 +838,11 @@ async def test_send_message_exceptions(
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            domain,
+            service,
             {
                 ATTR_ENTITY_ID: "notify.test",
-                ATTR_MESSAGE: "Hello world",
-                ATTR_TITLE: "test",
+                **service_data,
             },
             blocking=True,
         )
@@ -854,3 +872,29 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
     assert err.value.translation_placeholders == {
         "device_name": "websocket push test entry"
     }
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_dismiss_message(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test mobile_app.dismiss_message action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        "dismiss_message",
+        {
+            ATTR_ENTITY_ID: "notify.test",
+            "tag": "motion",
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["message"] == "clear_notification"
+    assert call_json["data"]["tag"] == "motion"
