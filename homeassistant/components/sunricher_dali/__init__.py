@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import logging
 
 from packaging.version import InvalidVersion, Version
-from PySrDaliGateway import DaliGateway, Device
+from PySrDaliGateway import CallbackEventType, DaliGateway, Device
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant.const import (
@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -128,16 +128,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    _async_check_firmware_version(hass, entry)
+    @callback
+    def _handle_version_update(_versions: tuple[str, str]) -> None:
+        _async_check_firmware_version(hass, entry, gateway)
+
+    entry.async_on_unload(
+        gateway.register_listener(
+            CallbackEventType.VERSION_UPDATED,
+            _handle_version_update,
+            gateway.gw_sn,
+        )
+    )
+    if gateway.software_version and gateway.firmware_version:
+        _async_check_firmware_version(hass, entry, gateway)
 
     return True
 
 
+@callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, entry: DaliCenterConfigEntry
+    hass: HomeAssistant, entry: DaliCenterConfigEntry, gateway: DaliGateway
 ) -> None:
     """Raise a repair issue if the gateway firmware is below supported minimums."""
-    gateway = entry.runtime_data.gateway
     sw_version = gateway.software_version
     fw_version = gateway.firmware_version
     issue_id = f"unsupported_firmware_{entry.entry_id}"
