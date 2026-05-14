@@ -419,7 +419,7 @@ def ollama_config_option_schema(
 
         schema: dict = {
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:

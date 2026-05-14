@@ -55,7 +55,7 @@ WARM_DEVICE_TYPES = {
 
 def to_lutron_level(level):
     """Convert the given Home Assistant light level (0-255) to Lutron (0-100)."""
-    return int(round((level * 100) / 255))
+    return round((level * 100) / 255)
 
 
 def to_hass_level(level):

@@ -1000,7 +1000,13 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Only check loggers relevant to this integration to avoid flaky failures
+    # from unrelated log sources (e.g. sqlalchemy pool cleanup on other threads).
+    _error_loggers = ("homeassistant", "zwave_js_server")
+    assert not any(
+        record.levelno == logging.ERROR and record.name.startswith(_error_loggers)
+        for record in caplog.records
+    )
 
     return entry
 

@@ -21,7 +21,6 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    async_get_hass_or_none,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -52,7 +51,8 @@ from .const import (
     MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
+from .coordinator import HassioMainDataUpdateCoordinator
+from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -111,25 +111,15 @@ def _normalize_partial_options_data(
     return data
 
 
-def valid_addon(value: Any) -> str:
-    """Validate value is a valid addon slug."""
-    value = VALID_ADDON_SLUG(value)
-    hass = async_get_hass_or_none()
-
-    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid app slug")
-    return value
-
-
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): VALID_ADDON_SLUG})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
-SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
+SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): VALID_ADDON_SLUG})
 
 SCHEMA_APP_STDIN = SCHEMA_APP.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
@@ -209,10 +199,9 @@ SCHEMA_MOUNT_RELOAD = vol.Schema(
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, supervisor_client: SupervisorClient
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Supervisor services."""
+    supervisor_client = get_supervisor_client(hass)
     async_register_app_services(hass, supervisor_client)
     async_register_host_services(hass, supervisor_client)
     async_register_backup_restore_services(hass, supervisor_client)

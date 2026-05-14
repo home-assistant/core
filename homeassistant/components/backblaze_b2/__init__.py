@@ -41,7 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     def _authorize_and_get_bucket_sync() -> Bucket:
         """Synchronously authorize the Backblaze B2 account and retrieve the bucket.
 
-        This function runs in the event loop's executor as b2sdk operations are blocking.
+        This function runs in the event loop's executor as
+        b2sdk operations are blocking.
         """
         b2_api.authorize_account(
             BACKBLAZE_REALM,
