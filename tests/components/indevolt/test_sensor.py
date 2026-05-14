@@ -68,7 +68,7 @@ async def test_realtime_sensor_energy_mode_availability(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    # Default fixture is not in RT mode, sensors should be unavailable
+    # Default fixture is not in RT mode (1), sensors should be unavailable
     assert (
         hass.states.get("sensor.cms_sf2000_real_time_mode").state == STATE_UNAVAILABLE
     )
@@ -81,7 +81,7 @@ async def test_realtime_sensor_energy_mode_availability(
         == STATE_UNAVAILABLE
     )
 
-    # Switch to RT mode, sensors should be available
+    # Switch to RT mode (4), sensors should be available
     mock_indevolt.fetch_data.return_value["7101"] = 4
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
@@ -91,7 +91,7 @@ async def test_realtime_sensor_energy_mode_availability(
     assert hass.states.get("sensor.cms_sf2000_real_time_target_soc").state == "80"
     assert hass.states.get("sensor.cms_sf2000_real_time_power_limit").state == "200"
 
-    # Switch back to a non-RT mode, sensors become unavailable again
+    # Switch back to a non-RT mode (1), sensors become unavailable again
     mock_indevolt.fetch_data.return_value["7101"] = 1
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
