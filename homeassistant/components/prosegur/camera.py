@@ -81,6 +81,7 @@ class ProsegurCamera(Camera):
         try:
             return await self._installation.get_image(self._auth, self._camera.id)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ProsegurException as err:
             _LOGGER.error("Image %s doesn't exist: %s", self._camera.description, err)
 

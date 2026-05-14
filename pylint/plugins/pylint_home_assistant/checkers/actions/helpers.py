@@ -53,8 +53,13 @@ def collect_action_handlers(module: nodes.Module) -> ActionHandlers:
     for call in module.nodes_of_class(nodes.Call):
         match call.func:
             case nodes.Attribute(attrname="async_register_entity_service"):
-                if len(call.args) >= 3 and isinstance(call.args[2], nodes.Const):
-                    result.registered_handlers.add(call.args[2].value)
+                if len(call.args) >= 3:
+                    # String method name: "async_set_speed"
+                    if isinstance(call.args[2], nodes.Const):
+                        result.registered_handlers.add(call.args[2].value)
+                    # Function reference: async_handle_snapshot_service
+                    elif isinstance(call.args[2], nodes.Name):
+                        result.registered_handlers.add(call.args[2].name)
             case nodes.Attribute(attrname="async_register"):
                 if len(call.args) >= 3 and isinstance(call.args[2], nodes.Name):
                     result.registered_handlers.add(call.args[2].name)

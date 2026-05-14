@@ -371,6 +371,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         ]
 
         if add_media_source:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(BrowseError):
                 item = await media_source.async_browse_media(
                     self.hass,
