@@ -50,6 +50,7 @@ from homeassistant.components.sonos.const import (
 )
 from homeassistant.components.sonos.media import (
     SOUNDCLOUD_OEMBED_URL,
+    SonosMedia,
     _extract_soundcloud_track_id,
 )
 from homeassistant.components.sonos.media_player import (
@@ -1686,6 +1687,26 @@ async def test_soundcloud_artwork_resolved_via_oembed(
     _, called_url, _ = aioclient_mock.mock_calls[0]
     assert str(called_url).startswith(SOUNDCLOUD_OEMBED_URL)
     assert "1233498328" in str(called_url)
+
+
+async def test_async_resolve_soundcloud_artwork_sets_image_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """The resolver must override media.image_url with the oEmbed thumbnail."""
+    thumbnail_url = "https://i1.sndcdn.com/test-thumbnail.jpg"
+    aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, json={"thumbnail_url": thumbnail_url})
+
+    soco = MagicMock()
+    soco.uid = "soundcloud-resolver-test"
+    media = SonosMedia(hass, soco)
+    uri = "x-sonos-http:track%3esoundcloud%3atracks%3a42.mp3?sid=160"
+    media.uri = uri
+    media.image_url = "http://sonos-internal/unfetchable.jpg"
+
+    await media._async_resolve_soundcloud_artwork("42", uri)  # noqa: SLF001
+
+    assert media.image_url == thumbnail_url
 
 
 async def test_soundcloud_artwork_oembed_failure_leaves_no_picture(

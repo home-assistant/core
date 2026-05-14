@@ -1,6 +1,7 @@
 """Support for media metadata handling."""
 
 import asyncio
+import concurrent.futures
 import datetime
 import logging
 import re
@@ -54,6 +55,12 @@ def _extract_soundcloud_track_id(uri: str) -> str | None:
     if match := SOUNDCLOUD_TRACK_URI_PATTERN.search(unquote(uri)):
         return match.group(1)
     return None
+
+
+def _log_artwork_resolution_error(future: concurrent.futures.Future) -> None:
+    """Surface unexpected exceptions from background artwork resolution."""
+    if exc := future.exception():
+        _LOGGER.debug("External artwork resolution raised: %s", exc)
 
 
 LINEIN_SOURCES = (MUSIC_SRC_TV, MUSIC_SRC_LINE_IN)
@@ -280,16 +287,20 @@ class SonosMedia:
         if not self.uri:
             return
         if (track_id := _extract_soundcloud_track_id(self.uri)) is None:
+            # Any pending external fetch is now stale; clear it so a future
+            # return to a known external source can schedule a fresh fetch.
+            self._pending_artwork_uri = None
             return
         self._external_source = "soundcloud"
         self.image_url = None
         if self._pending_artwork_uri == self.uri:
             return
         self._pending_artwork_uri = self.uri
-        asyncio.run_coroutine_threadsafe(
+        future = asyncio.run_coroutine_threadsafe(
             self._async_resolve_soundcloud_artwork(track_id, self.uri),
             self.hass.loop,
         )
+        future.add_done_callback(_log_artwork_resolution_error)
 
     async def _async_resolve_soundcloud_artwork(self, track_id: str, uri: str) -> None:
         """Fetch a SoundCloud track's thumbnail via its public oEmbed endpoint."""
