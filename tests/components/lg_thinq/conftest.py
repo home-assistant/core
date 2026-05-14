@@ -117,6 +117,7 @@ def mock_thinq_mqtt_client() -> Generator[None]:
         "air_conditioner",
         "washer",
         "dehumidifier",
+        "kimchi_refrigerator",
     ]
 )
 def device_fixture(request: pytest.FixtureRequest) -> Generator[str]:
