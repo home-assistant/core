@@ -53,14 +53,28 @@
   },
   "services": {
     "start_irrigation": {
-      "description": "Starts the irrigation.",
+      "name": "Start irrigation",
+      "description": "Starts the irrigation for a specific zone.",
       "fields": {
         "duration": {
-          "description": "Duration for the target to be turned on.",
-          "name": "Duration"
+          "name": "Duration",
+          "description": "The number of minutes to water the zone."
         }
-      },
-      "name": "Start irrigation"
+      }
+    },
+    "stop_irrigation": {
+      "name": "Stop irrigation",
+      "description": "Stops irrigation for a specific zone."
+    },
+    "stop_all_irrigation": {
+      "name": "Stop all irrigation",
+      "description": "Stops all active irrigation zones on a specific Yardian controller.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Yardian controller to stop."
+        }
+      }
     }
   }
 }

@@ -43,6 +43,12 @@
   "services": {
     "start_irrigation": {
       "service": "mdi:water"
+    },
+    "stop_irrigation": {
+      "service": "mdi:water-off"
+    },
+    "stop_all_irrigation": {
+      "service": "mdi:water-off"
     }
   }
 }

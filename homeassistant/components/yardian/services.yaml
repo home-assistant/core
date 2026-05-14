@@ -6,9 +6,23 @@ start_irrigation:
   fields:
     duration:
       required: true
-      default: 6
+      default: 20
       selector:
         number:
           min: 1
           max: 1440
-          unit_of_measurement: "minutes"
+          unit_of_measurement: minutes
+
+stop_irrigation:
+  target:
+    entity:
+      integration: yardian
+      domain: switch
+
+stop_all_irrigation:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: yardian

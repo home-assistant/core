@@ -36,10 +36,19 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
+
+    # Start a specific zone
     platform.async_register_entity_service(
         SERVICE_START_IRRIGATION,
         SERVICE_SCHEMA_START_IRRIGATION,
         "async_turn_on",
+    )
+
+    # Stop a specific zone (Entity Service)
+    platform.async_register_entity_service(
+        "stop_irrigation",
+        {},
+        "async_turn_off",
     )
 
 
@@ -71,6 +80,7 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
         """Return the switch is available or not."""
         return self.coordinator.data.zones[self._zone_id].is_enabled
 
+    # Start a zone
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.controller.start_irrigation(
@@ -79,7 +89,11 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    # Stop a zone
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.controller.stop_irrigation()
+        # Logic inside your library (pyyardian) should handle the distinction:
+        # 1. For Standalone: find the running task ID for this zone and call PATCH ...?action=stop
+        # 2. For Regular: call AE_IRR_STOP_INST_TASK (global stop)
+        await self.coordinator.controller.stop_zone(self._zone_id)
         await self.coordinator.async_request_refresh()
