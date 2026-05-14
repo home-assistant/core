@@ -1066,7 +1066,7 @@ def _validate_timespan(
 
     if event_in := values.get(EVENT_IN):
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
-        today = datetime.date.today()
+        today = datetime.date.today()  # noqa: DTZ011
         return (
             today + datetime.timedelta(days=days),
             today + datetime.timedelta(days=days + 1),
