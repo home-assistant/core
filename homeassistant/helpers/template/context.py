@@ -17,7 +17,7 @@ class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
     def set_template(self, template_str: str, action: str) -> None:
-        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        """Store template being parsed/rendered to aid error handling."""
         template_cv.set((template_str, action))
 
     def __exit__(

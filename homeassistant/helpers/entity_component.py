@@ -67,7 +67,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component, for example light.
+     - Process the configuration and set up a platform based component,
+       for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.

@@ -195,7 +195,8 @@ def get_url(
                 )
             except HassioNotReadyError:
                 _LOGGER.debug(
-                    "Could not retrieve Supervisor host information, list of known URLs will be incomplete"
+                    "Could not retrieve Supervisor host information,"
+                    " list of known URLs will be incomplete"
                 )
 
         if (

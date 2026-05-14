@@ -181,7 +181,10 @@ class Debouncer[_R_co]:
         if not self._execute_at_end_of_timer:
             return
         self._execute_at_end_of_timer = False
-        name = f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}"
+        name = (
+            f"debouncer {self._job} finish"
+            f" cooldown={self.cooldown}, immediate={self.immediate}"
+        )
         if not self._background:
             self.hass.async_create_task(
                 self._handle_timer_finish(), name, eager_start=True

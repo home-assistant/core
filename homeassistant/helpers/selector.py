@@ -55,9 +55,12 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
-    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
-    # Selectors can use the value of other fields in the same schema as context for filtering for example.
-    # The selector defines which context keys it supports and what selector types are allowed for each key.
+    # Context keys that are allowed to be used in the
+    # selector, with list of allowed selector types. Selectors
+    # can use the value of other fields in the same schema as
+    # context for filtering for example. The selector defines
+    # which context keys it supports and what selector types
+    # are allowed for each key.
     allowed_context_keys: dict[str, set[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
@@ -298,7 +301,11 @@ AddonSelectorConfig = AppSelectorConfig
 
 @SELECTORS.register("addon")
 class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of an add-on, kept for backward compatibility after add-ons -> apps rename."""
+    """Selector of an add-on.
+
+    Kept for backward compatibility after add-ons -> apps
+    rename.
+    """
 
     selector_type = "addon"
 

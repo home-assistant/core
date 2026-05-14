@@ -91,15 +91,19 @@ class ScriptVariables:
 class _ParallelData:
     """Data used in each parallel sequence."""
 
-    # `protected` is for variables that need special protection in parallel sequences.
-    # What this means is that such a variable defined in one parallel sequence will not be
-    # clobbered by the variable with the same name assigned in another parallel sequence.
-    # It also means that such a variable will not be visible in the outer scope.
+    # `protected` is for variables that need special protection
+    # in parallel sequences. What this means is that such a
+    # variable defined in one parallel sequence will not be
+    # clobbered by the variable with the same name assigned in
+    # another parallel sequence. It also means that such a
+    # variable will not be visible in the outer scope.
     # Currently the only such variable is `wait`.
     protected: dict[str, Any] = field(default_factory=dict)
-    # `outer_scope_writes` is for variables that are written to the outer scope from
-    # a parallel sequence. This is used for generating correct traces of changed variables
-    # for each of the parallel sequences, isolating them from one another.
+    # `outer_scope_writes` is for variables that are written
+    # to the outer scope from a parallel sequence. This is used
+    # for generating correct traces of changed variables for
+    # each of the parallel sequences, isolating them from one
+    # another.
     outer_scope_writes: dict[str, Any] = field(default_factory=dict)
 
 
@@ -107,11 +111,14 @@ class _ParallelData:
 class ScriptRunVariables(UserDict[str, Any]):
     """Class to hold script run variables.
 
-    The purpose of this class is to provide proper variable scoping semantics for scripts.
-    Each instance institutes a new local scope, in which variables can be defined.
-    Each instance has a reference to the previous instance, except for the top-level instance.
-    The instances therefore form a chain, in which variable lookup and assignment is performed.
-    The variables defined lower in the chain naturally override those defined higher up.
+    The purpose of this class is to provide proper variable
+    scoping semantics for scripts. Each instance institutes a
+    new local scope, in which variables can be defined. Each
+    instance has a reference to the previous instance, except
+    for the top-level instance. The instances therefore form a
+    chain, in which variable lookup and assignment is performed.
+    The variables defined lower in the chain naturally override
+    those defined higher up.
     """
 
     # _previous is the previous ScriptRunVariables in the chain
@@ -124,7 +131,8 @@ class ScriptRunVariables(UserDict[str, Any]):
     # _parallel_data is used for each parallel sequence
     _parallel_data: _ParallelData | None = None
 
-    # _non_parallel_scope includes all scopes all the way to the most recent parallel split
+    # _non_parallel_scope includes all scopes all the way to
+    # the most recent parallel split
     _non_parallel_scope: ChainMap[str, Any]
     # _full_scope includes all scopes (all the way to the top-level)
     _full_scope: ChainMap[str, Any]
@@ -202,10 +210,12 @@ class ScriptRunVariables(UserDict[str, Any]):
     def _assign(self, key: str, value: Any, *, parallel_protected: bool) -> None:
         """Assign value to a variable.
 
-        Value is always assigned to the variable in the nearest scope, in which it is defined.
-        If the variable is not defined at all, it is created in the top-level scope.
+        Value is always assigned to the variable in the nearest
+        scope, in which it is defined. If the variable is not
+        defined at all, it is created in the top-level scope.
 
-        :param parallel_protected: Whether variable is to be protected in parallel sequences.
+        :param parallel_protected: Whether variable is to be
+            protected in parallel sequences.
         """
         if self._local_data is not None and key in self._local_data:
             self._local_data[key] = value

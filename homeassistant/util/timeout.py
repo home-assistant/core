@@ -243,7 +243,8 @@ class _GlobalTaskContext:
         if self._task.done():
             return
         self._task.cancel(
-            f"Global task timeout{': ' + self._cancel_message if self._cancel_message else ''}"
+            "Global task timeout"
+            f"{': ' + self._cancel_message if self._cancel_message else ''}"
         )
 
     def pause(self) -> None:
