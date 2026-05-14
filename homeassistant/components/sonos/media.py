@@ -1,7 +1,6 @@
 """Support for media metadata handling."""
 
 import asyncio
-import concurrent.futures
 import datetime
 import logging
 import re
@@ -59,11 +58,11 @@ def _extract_soundcloud_track_id(uri: str) -> str | None:
     return None
 
 
-def _log_artwork_resolution_error(future: concurrent.futures.Future) -> None:
+def _log_artwork_resolution_error(task: asyncio.Task) -> None:
     """Surface unexpected exceptions from background artwork resolution."""
-    if future.cancelled():
+    if task.cancelled():
         return
-    if exc := future.exception():
+    if exc := task.exception():
         _LOGGER.debug("External artwork resolution raised: %s", exc, exc_info=exc)
 
 
@@ -300,11 +299,20 @@ class SonosMedia:
         if self._pending_artwork_uri == self.uri:
             return
         self._pending_artwork_uri = self.uri
-        future = asyncio.run_coroutine_threadsafe(
-            self._async_resolve_soundcloud_artwork(track_id, self.uri),
-            self.hass.loop,
+        # Scheduling indirectly via call_soon_threadsafe ensures the task is
+        # created via async_create_background_task (must be called from the
+        # event loop), which registers it for hass.async_block_till_done.
+        self.hass.loop.call_soon_threadsafe(
+            self._create_soundcloud_artwork_task, track_id, self.uri
         )
-        future.add_done_callback(_log_artwork_resolution_error)
+
+    def _create_soundcloud_artwork_task(self, track_id: str, uri: str) -> None:
+        """Create the artwork resolver as a tracked background task on the loop."""
+        task = self.hass.async_create_background_task(
+            self._async_resolve_soundcloud_artwork(track_id, uri),
+            name=f"sonos_soundcloud_artwork_{track_id}",
+        )
+        task.add_done_callback(_log_artwork_resolution_error)
 
     async def _async_resolve_soundcloud_artwork(self, track_id: str, uri: str) -> None:
         """Fetch a SoundCloud track's thumbnail via its public oEmbed endpoint."""
