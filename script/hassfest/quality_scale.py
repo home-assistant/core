@@ -13,12 +13,8 @@ from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
     action_setup,
-    config_entry_unloading,
     config_flow,
-    diagnostics,
     discovery,
-    parallel_updates,
-    reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
@@ -60,22 +56,18 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule(
-        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
-    ),
+    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
-    Rule(
-        "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
-    ),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
     Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),

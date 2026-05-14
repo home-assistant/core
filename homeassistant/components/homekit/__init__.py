@@ -932,7 +932,7 @@ class HomeKit:
 
     @callback
     def _async_register_bridge(self) -> None:
-        """Register the bridge as a device so homekit_controller and exclude it from discovery."""
+        """Register bridge as device for homekit_controller exclusion."""
         assert self.driver is not None
         dev_reg = dr.async_get(self.hass)
         formatted_mac = dr.format_mac(self.driver.state.mac)

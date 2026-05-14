@@ -118,7 +118,8 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
             self.entity_description.set_fn(self.coordinator.device),
             {
                 "values": {
-                    # manual temperature always needs to be set, otherwise TRV will turn OFF
+                    # manual temperature always needs to be set,
+                    # otherwise TRV will turn OFF
                     "manualTemp": self.coordinator.data.temperatures["manualTemp"],
                     self.entity_description.cometblue_key: value,
                 }

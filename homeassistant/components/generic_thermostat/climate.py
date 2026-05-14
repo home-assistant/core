@@ -696,7 +696,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 f" {self.preset_modes}"
             )
         if preset_mode == self._attr_preset_mode:
-            # I don't think we need to call async_write_ha_state if we didn't change the state
+            # I don't think we need to call async_write_ha_state
+            # if we didn't change the state
             return
         if preset_mode == PRESET_NONE:
             self._attr_preset_mode = PRESET_NONE
