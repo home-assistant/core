@@ -348,7 +348,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._queue["count"] >= 1
             and self._queue["items"][0]["data_kind"] == "pipe"
             and self._queue["items"][0]["title"] in KNOWN_PIPES
-        ):  # if we're playing a pipe, set the source automatically so we can forward controls
+        ):  # if playing a pipe, set source to forward controls
             self._source = f"{self._queue['items'][0]['title']} (pipe)"
         self._update_track_info()
         event.set()

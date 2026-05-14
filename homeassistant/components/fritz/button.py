@@ -188,15 +188,21 @@ class FritzButton(ButtonEntity):
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
             _LOGGER.warning(
-                "The 'cleanup' button is deprecated and will be removed in Home Assistant Core 2026.11.0. "
-                "Please update your automations and dashboards to remove any usage of this button. "
-                "The action is now performed automatically at each data refresh",
+                "The 'cleanup' button is deprecated and will"
+                " be removed in Home Assistant Core"
+                " 2026.11.0. Please update your automations"
+                " and dashboards to remove any usage of"
+                " this button. The action is now performed"
+                " automatically at each data refresh",
             )
         elif self.entity_description.key == "firmware_update":
             _LOGGER.warning(
-                "The 'firmware update' button is deprecated and will be removed in Home Assistant Core "
-                "2026.11.0. It has been superseded by an update entity. Please update your automations "
-                "and dashboards to remove any usage of this button",
+                "The 'firmware update' button is deprecated"
+                " and will be removed in Home Assistant"
+                " Core 2026.11.0. It has been superseded"
+                " by an update entity. Please update your"
+                " automations and dashboards to remove"
+                " any usage of this button",
             )
         await self.entity_description.press_action(self.avm_wrapper)
 

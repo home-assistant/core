@@ -49,8 +49,9 @@ def _wifi_naming(
     """Return a friendly name for a Wi-Fi network."""
 
     if wifi_index == 2 and wifi_count == 4:
-        # In case of 4 Wi-Fi networks, the 2nd one is used for internal communication
-        # between mesh devices and should not be named like the others to avoid confusion
+        # In case of 4 Wi-Fi networks, the 2nd one is used
+        # for internal communication between mesh devices and
+        # should not be named like the others to avoid confusion
         return None
 
     if (wifi_index + 1) == wifi_count:
@@ -110,7 +111,10 @@ async def _migrate_to_new_unique_id(
             description += f" ({WIFI_STANDARD[index]})"
 
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
-        new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
+        new_unique_id = (
+            f"{avm_wrapper.unique_id}-wi_fi_"
+            f"{slugify(_wifi_naming(network, index - 1, len(networks)))}"
+        )
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, old_unique_id
@@ -454,7 +458,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
 
         self._attributes = {}
         self.connection_type = connection_type
-        self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
+        # dict in the format as it comes from fritzconnection,
+        # eg: {"NewRemoteHost": "0.0.0.0", "NewExternalPort": 22, ...}
+        self.port_mapping = port_mapping
         self._idx = idx  # needed for update routine
         self._attr_entity_category = EntityCategory.CONFIG
 

@@ -188,7 +188,8 @@ class PairedSensorManager:
         try:
             uids = set(self._sensor_pair_dump_coordinator.data["paired_uids"])
         except KeyError:
-            # Sometimes the paired_uids key can fail to exist; the user can't do anything
+            # Sometimes the paired_uids key can fail to exist;
+            # the user can't do anything
             # about it, so in this case, we quietly abort and return:
             return
 

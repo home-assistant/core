@@ -69,7 +69,8 @@ async def async_setup_entry(
             )
         else:
             _LOGGER.warning(
-                "Active mode %s not found in Goodwe Inverter Operation Mode Entity. Skipping entity creation",
+                "Active mode %s not found in Goodwe Inverter Operation"
+                " Mode Entity. Skipping entity creation",
                 active_mode,
             )
 

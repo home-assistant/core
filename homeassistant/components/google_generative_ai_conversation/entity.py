@@ -368,7 +368,9 @@ async def _transform_stream(
                 thinking_content_index = 0
                 tool_call_index = 0
 
-            # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
+            # According to the API docs, this would mean no
+            # candidate is returned, so we can safely throw
+            # an error here.
             if response.prompt_feedback or not response.candidates:
                 reason = (
                     response.prompt_feedback.block_reason_message
@@ -376,7 +378,8 @@ async def _transform_stream(
                     else "unknown"
                 )
                 raise HomeAssistantError(
-                    f"The message got blocked due to content violations, reason: {reason}"
+                    "The message got blocked due to content"
+                    f" violations, reason: {reason}"
                 )
 
             candidate = response.candidates[0]
@@ -510,9 +513,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        # Using search grounding allows the model to retrieve information from the web,
-        # however, it may interfere with how the model decides to use some tools, or entities
-        # for example weather entity may be disregarded if the model chooses to Google it.
+        # Using search grounding allows the model to retrieve
+        # information from the web, however, it may interfere
+        # with how the model decides to use some tools, or
+        # entities for example weather entity may be
+        # disregarded if the model chooses to Google it.
         if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
@@ -548,8 +553,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 not isinstance(chat_content, conversation.ToolResultContent)
                 and chat_content.content == ""
             ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                # Skipping is not possible since the number of
+                # function calls need to match the number of
+                # function responses and skipping one would
+                # mean removing the other and hence this would
+                # prevent a proper chat log
                 chat_content = replace(chat_content, content=" ")
 
             if tool_results:
@@ -748,7 +756,9 @@ async def async_prepare_files_for_prompt(
 
         if uploaded_file.state == FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
+                f"File `{uploaded_file.name}` processing"
+                " failed, reason:"
+                f" {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)

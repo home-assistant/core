@@ -115,7 +115,11 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.device.set_air_temp_setpoint_away(temperature)
             else:
                 await self.device.set_air_temp_setpoint_home(temperature)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_temperature",
@@ -149,7 +153,11 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 # Set the desired ventilation mode
                 ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
                 await self.device.set_ventilation_mode(ventilation_mode)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode",
@@ -175,7 +183,11 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
                 await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_hvac_mode",

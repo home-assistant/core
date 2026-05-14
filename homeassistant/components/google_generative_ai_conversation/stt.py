@@ -216,8 +216,10 @@ class GoogleGenerativeAISttEntity(
     @property
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
-        # Per https://ai.google.dev/gemini-api/docs/audio
-        # If the audio source contains multiple channels, Gemini combines those channels into a single channel.
+        # Per
+        # https://ai.google.dev/gemini-api/docs/audio
+        # If the audio source contains multiple channels,
+        # Gemini combines those channels into a single channel.
         return [stt.AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(

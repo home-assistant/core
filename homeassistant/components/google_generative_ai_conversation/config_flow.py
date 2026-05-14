@@ -254,7 +254,8 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if not user_input.get(CONF_LLM_HASS_API):
                     user_input.pop(CONF_LLM_HASS_API, None)
-                # Don't allow to save options that enable the Google Search tool with an Assist API
+                # Don't allow to save options that enable the
+                # Google Search tool with an Assist API
                 if not (
                     user_input.get(CONF_LLM_HASS_API)
                     and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True

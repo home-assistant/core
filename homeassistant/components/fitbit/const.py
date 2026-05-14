@@ -50,7 +50,8 @@ class FitbitUnitSystem(StrEnum):
     This is used as a header to tell the Fitbit API which type of units to return.
     https://dev.fitbit.com/build/reference/web-api/developer-guide/application-design/#Units
 
-    Prefer to leave unset for newer configurations to use the Home Assistant default units.
+    Prefer to leave unset for newer configurations to use
+    the Home Assistant default units.
     """
 
     LEGACY_DEFAULT = "default"

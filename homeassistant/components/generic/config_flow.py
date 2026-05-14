@@ -345,7 +345,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         hass = self.hass
         if user_input:
-            # Secondary validation because serialised vol can't seem to handle this complexity:
+            # Secondary validation because serialised vol can't
+            # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
             ):
@@ -429,7 +430,8 @@ class GenericOptionsFlowHandler(OptionsFlow):
         hass = self.hass
 
         if user_input:
-            # Secondary validation because serialised vol can't seem to handle this complexity:
+            # Secondary validation because serialised vol can't
+            # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
             ):
@@ -580,7 +582,10 @@ async def ws_start_preview(
     ha_stream_url = None
 
     if user_input.get(CONF_STILL_IMAGE_URL):
-        ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
+        ha_still_url = (
+            "/api/generic/preview_flow_image"
+            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"
+        )
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 
     if ha_stream := flow.preview_stream:

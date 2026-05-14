@@ -84,8 +84,9 @@ class FroniusSolarNet:
         self.coordinator_lock = asyncio.Lock()
         self.fronius = fronius
         self.host: str = entry.data[CONF_HOST]
-        # entry.unique_id is either logger uid or first inverter uid if no logger available
-        # prepended by "solar_net_" to have individual device for whole system (power_flow)
+        # entry.unique_id is either logger uid or first inverter
+        # uid if no logger available prepended by "solar_net_"
+        # to have individual device for whole system (power_flow)
         self.solar_net_device_id = f"solar_net_{entry.unique_id}"
         self.system_device_info: DeviceInfo | None = None
 
@@ -217,7 +218,8 @@ class FroniusSolarNet:
                 await _coordinator.async_config_entry_first_refresh()
             self.inverter_coordinators.append(_coordinator)
 
-            # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
+            # Only for re-scans. Initial setup adds entities
+            # through sensor.async_setup_entry
             if self.config_entry.state == ConfigEntryState.LOADED:
                 async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
 

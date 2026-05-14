@@ -94,7 +94,10 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
                         {
-                            address: f"{device.get_device_name(None) or discovery_info.name} ({address})"
+                            address: (
+                                f"{device.get_device_name(None) or discovery_info.name}"
+                                f" ({address})"
+                            )
                             for address, (
                                 device,
                                 discovery_info,

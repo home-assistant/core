@@ -41,7 +41,7 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
 
 class FritzBoxDeviceEntity(FritzBoxEntity):
-    """Reflects FritzhomeDevice and uses its attributes to construct FritzBoxDeviceEntity."""
+    """Reflect FritzhomeDevice and construct FritzBoxDeviceEntity."""
 
     @property
     def available(self) -> bool:

@@ -185,7 +185,8 @@ class FeedReaderCoordinator(
             firstrun = True
             # Set last entry timestamp as epoch time if not available
             self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
-        # locally cache self._last_entry_timestamp so that entries published at identical times can be processed
+        # locally cache self._last_entry_timestamp so that
+        # entries published at identical times can be processed
         last_entry_timestamp = self._last_entry_timestamp
         for entry in self._feed.entries:
             if firstrun or (

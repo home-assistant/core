@@ -39,7 +39,8 @@ class FlexitNumberEntityDescription(NumberEntityDescription):
     set_native_value_fn: Callable[[FlexitBACnet], Callable[[int], Awaitable[None]]]
 
 
-# Setpoints for Away, Home and High are dependent of each other. Fireplace and Cooker Hood
+# Setpoints for Away, Home and High are dependent of each
+# other. Fireplace and Cooker Hood
 # have setpoints between 0 (MIN_FAN_SETPOINT) and 100 (MAX_FAN_SETPOINT).
 # See the table below for all the setpoints.
 #

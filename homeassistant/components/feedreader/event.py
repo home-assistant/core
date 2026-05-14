@@ -67,8 +67,9 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         if (data := self.coordinator.data) is None or not data:
             return
 
-        # RSS feeds are normally sorted reverse chronologically by published date
-        # so we always take the first entry in list, since we only care about the latest entry
+        # RSS feeds are normally sorted reverse chronologically
+        # by published date so we always take the first entry
+        # in list, since we only care about the latest entry
         feed_data: FeedParserDict = data[0]
 
         if description := feed_data.get("description"):

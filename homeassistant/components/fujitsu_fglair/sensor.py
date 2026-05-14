@@ -29,7 +29,10 @@ async def async_setup_entry(
 
 
 class FGLairOutsideTemperature(FGLairEntity, SensorEntity):
-    """Entity representing outside temperature sensed by the outside unit of a Fujitsu Heatpump."""
+    """Entity representing outside temperature.
+
+    Sensed by the outside unit of a Fujitsu Heatpump.
+    """
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
