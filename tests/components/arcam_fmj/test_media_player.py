@@ -209,10 +209,10 @@ async def test_select_valid_source(
     state_1.set_source.assert_called_with(value)
 
 
+@pytest.mark.usefixtures("player_setup")
 async def test_select_invalid_source(
     hass: HomeAssistant,
     state_1: State,
-    source: str,
 ) -> None:
     """Test selection of source."""
     with pytest.raises(
