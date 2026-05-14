@@ -26,7 +26,7 @@ class SmartThingsButtonDescription(ButtonEntityDescription):
     components: list[str] | None = None
     argument: int | str | list[Any] | dict[str, Any] | None = None
     requires_remote_control_status: bool = False
-    requires_dishwasher_machine_state: set[str] | None = None
+    requires_dishwasher_machine_state: str | None = None
 
 
 CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = {
@@ -73,21 +73,21 @@ DISHWASHER_OPERATION_COMMANDS_TO_BUTTONS: dict[
         translation_key="pause",
         command=Command.PAUSE,
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"run"},
+        requires_dishwasher_machine_state="run",
     ),
     Command.RESUME: SmartThingsButtonDescription(
         key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="resume",
         command=Command.RESUME,
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"pause"},
+        requires_dishwasher_machine_state="pause",
     ),
     Command.START: SmartThingsButtonDescription(
         key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
         translation_key="start",
         command=Command.START,
         requires_remote_control_status=True,
-        requires_dishwasher_machine_state={"stop"},
+        requires_dishwasher_machine_state="stop",
     ),
 }
 
@@ -162,9 +162,9 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         capabilities = set()
         if entity_description.requires_remote_control_status:
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
-        if entity_description.requires_dishwasher_machine_state:
+        if entity_description.requires_dishwasher_machine_state is not None:
             capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
-        super().__init__(client, device, capabilities)
+        super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
         self.button_capability = capability
         self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.command}"
@@ -193,15 +193,12 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
                 translation_domain=DOMAIN, translation_key="remote_control_status"
             )
         if (
-            self.entity_description.requires_dishwasher_machine_state
+            self.entity_description.requires_dishwasher_machine_state is not None
             and self.get_attribute_value(
                 Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
             )
-            not in self.entity_description.requires_dishwasher_machine_state
+            != self.entity_description.requires_dishwasher_machine_state
         ):
-            state_list = " or ".join(
-                self.entity_description.requires_dishwasher_machine_state
-            )
             raise ServiceValidationError(
-                f"Can only be updated when dishwasher machine state is {state_list}"
+                f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
             )

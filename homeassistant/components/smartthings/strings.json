@@ -265,6 +265,41 @@
           "standard": "Standard"
         }
       },
+      "dishwasher_washing_course": {
+        "name": "Cycle",
+        "state": {
+          "ai": "AI Wash",
+          "auto": "Auto",
+          "baby_bottle": "Baby bottle",
+          "babycare": "Baby care",
+          "chef": "Chef",
+          "cold_rinse": "Cold rinse",
+          "daily": "Daily",
+          "delicate": "Delicate",
+          "drinkware": "Drinkware",
+          "dry_only": "Dry only",
+          "eco": "Eco",
+          "express": "Express",
+          "extra_silence": "Extra silence",
+          "glasses": "Delicate",
+          "heavy": "Heavy",
+          "intensive": "Intensive",
+          "machine_care": "Machine care",
+          "night": "Night",
+          "night_silence": "Night silence",
+          "normal": "Normal",
+          "plastics": "Plastic",
+          "pots_and_pans": "Pots and pans",
+          "pre_blast": "Pre blast",
+          "pre_wash": "Pre wash",
+          "quick": "Quick",
+          "rinse_dry": "Rinse dry",
+          "rinse_only": "Rinse only",
+          "self_clean": "Self clean",
+          "steam_soak": "Steam soak",
+          "upper_express": "Upper express"
+        }
+      },
       "dust_filter_alarm": {
         "name": "Dust filter alarm threshold",
         "unit_of_measurement": "hours"

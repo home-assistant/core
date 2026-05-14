@@ -110,6 +110,44 @@ WASHER_WATER_TEMPERATURE_TO_HA = {
     "high": "high",
 }
 
+DISHWASHER_WASHING_COURSE_TO_HA = {
+    "auto": "auto",
+    "AI": "ai",
+    "normal": "normal",
+    "daily": "daily",
+    "daily_09": "daily",
+    "eco": "eco",
+    "eco_08": "eco",
+    "eco_10": "eco",
+    "intensive": "intensive",
+    "heavy": "heavy",
+    "chef": "chef",
+    "potsAndPans": "pots_and_pans",
+    "delicate": "delicate",
+    "glasses": "glasses",
+    "drinkware": "drinkware",
+    "express": "express",
+    "express_0C": "express",
+    "quick": "quick",
+    "quick_14": "quick",
+    "upperExpress": "upper_express",
+    "preWash": "pre_wash",
+    "preBlast": "pre_blast",
+    "rinseOnly": "rinse_only",
+    "coldRinse": "cold_rinse",
+    "babycare": "babycare",
+    "babyBottle": "baby_bottle",
+    "plastics": "plastics",
+    "steamSoak": "steam_soak",
+    "night": "night",
+    "nightSilence": "night_silence",
+    "extraSilence": "extra_silence",
+    "dryOnly": "dry_only",
+    "rinseDry": "rinse_dry",
+    "selfClean": "self_clean",
+    "machineCare": "machine_care",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -117,6 +155,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
 
     key: Capability
     requires_remote_control_status: bool = False
+    requires_dishwasher_machine_state: str | None = None
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
@@ -164,6 +203,16 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.AMOUNT,
         command=Command.SET_AMOUNT,
         entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        translation_key="dishwasher_washing_course",
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state="stop",
+        options_attribute=Attribute.SUPPORTED_COURSES,
+        status_attribute=Attribute.WASHING_COURSE,
+        command=Command.SET_WASHING_COURSE,
+        options_map=DISHWASHER_WASHING_COURSE_TO_HA,
     ),
     Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
@@ -279,6 +328,7 @@ DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
         command=Command.SET_SELECTED_ZONE,
         entity_category=EntityCategory.CONFIG,
         requires_remote_control_status=True,
+        requires_dishwasher_machine_state="stop",
     ),
     Attribute.ZONE_BOOSTER: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
@@ -288,6 +338,7 @@ DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
         command=Command.SET_ZONE_BOOSTER,
         entity_category=EntityCategory.CONFIG,
         requires_remote_control_status=True,
+        requires_dishwasher_machine_state="stop",
     ),
 }
 
@@ -299,7 +350,8 @@ async def async_setup_entry(
 ) -> None:
     """Add select entities for a config entry."""
     entry_data = entry.runtime_data
-    async_add_entities(
+    entities: list[SmartThingsEntity] = []
+    entities.extend(
         SmartThingsSelectEntity(entry_data.client, device, description, component)
         for capability, description in CAPABILITIES_TO_SELECT.items()
         for device in entry_data.devices.values()
@@ -320,7 +372,7 @@ async def async_setup_entry(
             )
         )
     )
-    async_add_entities(
+    entities.extend(
         SmartThingsDishwasherWashingOptionSelectEntity(
             entry_data.client,
             device,
@@ -338,12 +390,14 @@ async def async_setup_entry(
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SELECT
     )
+    async_add_entities(entities)
 
 
 class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
     """Define a SmartThings select."""
 
     entity_description: SmartThingsSelectDescription
+    _reverse_options: dict[str, str] = {}
 
     def __init__(
         self,
@@ -357,6 +411,8 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         capabilities = {entity_description.key}
         if entity_description.requires_remote_control_status:
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
+        if entity_description.requires_dishwasher_machine_state is not None:
+            capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
         if extra_capabilities is not None:
             capabilities.update(extra_capabilities)
         super().__init__(client, device, capabilities, component=component)
@@ -374,10 +430,12 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             or []
         )
         if self.entity_description.options_map:
-            options = [
+            mapped_options = [
                 self.entity_description.options_map.get(option, option)
                 for option in options
             ]
+            self._reverse_options = dict(zip(mapped_options, options, strict=True))
+            options = mapped_options
         if self.entity_description.value_is_integer:
             options = [str(option) for option in options]
         return options
@@ -389,7 +447,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             self.entity_description.key, self.entity_description.status_attribute
         )
         if self.entity_description.options_map:
-            option = self.entity_description.options_map.get(option)
+            option = self.entity_description.options_map.get(option, option)
         if self.entity_description.value_is_integer and option is not None:
             option = str(option)
         return option
@@ -407,19 +465,23 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
                 "Can only be updated when remote control is enabled"
             )
 
+        if (
+            self.entity_description.requires_dishwasher_machine_state is not None
+            and self.get_attribute_value(
+                Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
+            )
+            != self.entity_description.requires_dishwasher_machine_state
+        ):
+            raise ServiceValidationError(
+                f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
+            )
+
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._validate_before_select()
         new_option: str | int = option
         if self.entity_description.options_map:
-            new_option = next(
-                (
-                    key
-                    for key, value in self.entity_description.options_map.items()
-                    if value == option
-                ),
-                new_option,
-            )
+            new_option = self._reverse_options.get(option, option)
         if self.entity_description.value_is_integer:
             new_option = int(option)
         await self.execute_device_command(
@@ -445,7 +507,6 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
             entity_description,
             MAIN,
             {
-                Capability.DISHWASHER_OPERATING_STATE,
                 Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
                 Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
                 Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE_DETAILS,
@@ -485,19 +546,6 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
         return self.get_attribute_value(
             self.entity_description.key, self.entity_description.status_attribute
         )["value"]
-
-    def _validate_before_select(self) -> None:
-        """Validate that the select can be used."""
-        super()._validate_before_select()
-        if (
-            self.get_attribute_value(
-                Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
-            )
-            != "stop"
-        ):
-            raise ServiceValidationError(
-                "Can only be updated when dishwasher machine state is stop"
-            )
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
