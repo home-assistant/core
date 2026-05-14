@@ -72,7 +72,7 @@ async def _validate_input(
         LOGGER.error(error)
         raise UnknownAuth(
             "An unknown error occurred. Check your region"
-            " settings and open an issue on Github"
+            " settings and open an issue on GitHub"
             " if the issue persists."
         ) from error
 

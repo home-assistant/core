@@ -198,7 +198,7 @@ class Segment:
     def render_hls(
         self, last_stream_id: int, render_parts: bool, add_hint: bool
     ) -> str:
-        """Render the HLS playlist section for the Segment."""
+        """Render the HLS playlist section for the Segment, optionally adding a hint."""
         playlist_template = self._render_hls_template(last_stream_id, render_parts)
         playlist = playlist_template.format(
             self.hls_playlist_parts[0] if render_parts else ""

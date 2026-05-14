@@ -556,7 +556,7 @@ class SensorStateClass(StrEnum):
     """The state represents a measurement in present time."""
 
     MEASUREMENT_ANGLE = "measurement_angle"
-    """The state represents a angle measurement in present time.
+    """The state represents an angle measurement in present time.
 
     Currently only degrees are supported.
     """

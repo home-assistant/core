@@ -44,7 +44,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
                 "There is a billing issue with your SimpleFin"
-                " account, contact Simplefin to address"
+                " account, contact SimpleFin to address"
                 " this issue"
             )
             raise UpdateFailed from err
