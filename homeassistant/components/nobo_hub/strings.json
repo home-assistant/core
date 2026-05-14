@@ -63,6 +63,21 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, remove and re-add the integration."
+    },
+    "set_global_override_failed": {
+      "message": "Failed to set global override: {error}"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set HVAC mode: {error}"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode: {error}"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set target temperature: {error}"
+    },
+    "set_week_profile_failed": {
+      "message": "Failed to set week profile: {error}"
     }
   },
   "options": {

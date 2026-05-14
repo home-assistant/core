@@ -1,6 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from pynobo import nobo
+from pynobo import PynoboError, nobo
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import ATTR_NAME
@@ -83,8 +83,12 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
             await self._nobo.async_create_override(
                 mode, self._override_type, nobo.API.OVERRIDE_TARGET_GLOBAL
             )
-        except Exception as exp:
-            raise HomeAssistantError from exp
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_global_override_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
@@ -126,8 +130,12 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
             await self._nobo.async_update_zone(
                 self._id, week_profile_id=week_profile_id
             )
-        except Exception as exp:
-            raise HomeAssistantError from exp
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_week_profile_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
