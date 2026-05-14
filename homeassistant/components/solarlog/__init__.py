@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HAS_PWD
+from .const import CONF_HAS_PWD, DEFAULT_TIMEOUT
 from .coordinator import (
     SolarLogBasicDataCoordinator,
     SolarlogConfigEntry,
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
     )
 
     if solarLogData.api.extended_data:
-        timeout = entry.data.get(CONF_TIMEOUT, 30)
+        timeout = entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
         _LOGGER.debug("Setup of LongtimeDataCoordinator, saved timeout is %s", timeout)
 
