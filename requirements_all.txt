@@ -1740,6 +1740,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.cloud
+# homeassistant.components.open_responses
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==2.21.0
@@ -1749,9 +1750,6 @@ openerz-api==0.3.0
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
-
-# homeassistant.components.open_responses
-openresponses-types==2.3.0.post1
 
 # homeassistant.components.openrgb
 openrgb-python==0.3.6

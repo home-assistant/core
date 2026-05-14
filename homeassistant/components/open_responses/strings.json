@@ -8,6 +8,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_model": "The endpoint rejected the configured model.",
+      "rate_limited": "The endpoint is rate limited. Please try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -33,37 +34,13 @@
         "data_description": {
           "api_key": "The API key for your Open Responses-compatible endpoint.",
           "base_url": "The full API base URL for an endpoint that implements Open Responses.",
-          "model": "The model ID to validate and use for the default conversation and AI task entities."
+          "model": "The model ID to validate and use for the default conversation entity."
         },
         "description": "Set up Open Responses by providing an API key and an Open Responses-compatible base URL."
       }
     }
   },
   "config_subentries": {
-    "ai_task_data": {
-      "abort": {
-        "entry_not_loaded": "[%key:component::open_responses::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      },
-      "entry_type": "AI task",
-      "initiate_flow": {
-        "reconfigure": "Reconfigure AI task",
-        "user": "Add AI task"
-      },
-      "step": {
-        "init": {
-          "data": {
-            "max_output_tokens": "[%key:component::open_responses::config_subentries::conversation::step::init::data::max_output_tokens%]",
-            "model": "[%key:common::generic::model%]",
-            "name": "[%key:common::config_flow::data::name%]",
-            "store_responses": "[%key:component::open_responses::config_subentries::conversation::step::init::data::store_responses%]"
-          },
-          "data_description": {
-            "store_responses": "[%key:component::open_responses::config_subentries::conversation::step::init::data_description::store_responses%]"
-          }
-        }
-      }
-    },
     "conversation": {
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",

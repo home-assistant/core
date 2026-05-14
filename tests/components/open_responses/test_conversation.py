@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from copy import deepcopy
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import conversation
 from homeassistant.components.open_responses.const import (
@@ -21,11 +21,10 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-def _mock_response_stream(calls: list[dict[str, Any]], text: str) -> Any:
-    """Return a streaming response mock."""
+def _mock_response_create(calls: list[dict[str, Any]], text: str) -> Any:
+    """Return a response create mock."""
 
-    async def stream_response(**params: Any) -> AsyncGenerator[dict[str, Any]]:
-        calls.append(deepcopy(params))
+    async def stream_response() -> AsyncGenerator[dict[str, Any]]:
         yield {
             "type": "response.output_item.added",
             "item": {
@@ -52,7 +51,11 @@ def _mock_response_stream(calls: list[dict[str, Any]], text: str) -> Any:
             "response": {"usage": {"input_tokens": 1, "output_tokens": 1}},
         }
 
-    return stream_response
+    async def create(**params: Any) -> AsyncGenerator[dict[str, Any]]:
+        calls.append(deepcopy(params))
+        return stream_response()
+
+    return create
 
 
 async def test_conversation_turn(
@@ -62,17 +65,18 @@ async def test_conversation_turn(
 ) -> None:
     """Test a conversation turn reaches the Open Responses client."""
     calls: list[dict[str, Any]] = []
-    mock_config_entry.runtime_data.stream_response = _mock_response_stream(
-        calls, "Hello from Open Responses"
-    )
-
-    result = await conversation.async_converse(
-        hass,
-        "hello",
-        None,
-        Context(),
-        agent_id=mock_config_entry.entry_id,
-    )
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=_mock_response_create(calls, "Hello from Open Responses"),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
 
     assert result.response.speech["plain"]["speech"] == "Hello from Open Responses"
     assert calls[0]["model"] == "open-responses-model"

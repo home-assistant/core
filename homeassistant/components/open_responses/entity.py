@@ -7,6 +7,7 @@ from mimetypes import guess_file_type
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
+import openai
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -20,12 +21,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
-from .client import (
-    OpenResponsesAuthError,
-    OpenResponsesConnectionError,
-    OpenResponsesInvalidModelError,
-    OpenResponsesRateLimitError,
-)
 from .const import (
     CONF_MAX_OUTPUT_TOKENS,
     CONF_STORE_RESPONSES,
@@ -223,14 +218,15 @@ async def _async_prepare_message_attachments(
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
-    stream: AsyncIterable[dict[str, Any]],
+    stream: AsyncIterable[Any],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an Open Responses stream into Home Assistant chat deltas."""
     current_tool_calls: dict[str, dict[str, Any]] = {}
     last_summary_index: int | None = None
     last_role: Literal["assistant"] | None = None
 
-    async for event in stream:
+    async for raw_event in stream:
+        event = _event_to_dict(raw_event)
         LOGGER.debug("Received event: %s", event)
 
         event_type = event.get("type")
@@ -330,6 +326,17 @@ async def _transform_stream(
             raise HomeAssistantError(f"Open Responses response error: {reason}")
 
 
+def _event_to_dict(event: Any) -> dict[str, Any]:
+    """Convert OpenAI SDK stream events to plain Open Responses event dictionaries."""
+    if isinstance(event, dict):
+        return event
+    if hasattr(event, "model_dump"):
+        return cast(dict[str, Any], event.model_dump(mode="json", exclude_none=True))
+    if hasattr(event, "to_dict"):
+        return cast(dict[str, Any], event.to_dict())
+    raise HomeAssistantError("Received unknown Open Responses stream event")
+
+
 class OpenResponsesEntity(Entity):
     """Base Open Responses entity."""
 
@@ -397,7 +404,7 @@ class OpenResponsesEntity(Entity):
 
         for _iteration in range(max_iterations):
             try:
-                stream = client.stream_response(**model_args)
+                stream = await client.responses.create(**model_args, stream=True)
                 new_contents = [
                     content
                     async for content in chat_log.async_add_delta_content_stream(
@@ -405,19 +412,21 @@ class OpenResponsesEntity(Entity):
                         _transform_stream(chat_log, stream),
                     )
                 ]
-            except OpenResponsesAuthError as err:
+            except openai.AuthenticationError as err:
                 raise ConfigEntryAuthFailed(
                     "Authentication failed with Open Responses endpoint"
                 ) from err
-            except OpenResponsesRateLimitError as err:
+            except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Rate limited by Open Responses endpoint"
                 ) from err
-            except OpenResponsesInvalidModelError as err:
-                LOGGER.error("Invalid Open Responses model: %s", err)
-                raise HomeAssistantError("Invalid Open Responses model") from err
-            except OpenResponsesConnectionError as err:
+            except openai.BadRequestError as err:
+                LOGGER.error("Open Responses endpoint rejected request: %s", err)
+                raise HomeAssistantError(
+                    "Open Responses endpoint rejected request"
+                ) from err
+            except openai.OpenAIError as err:
                 LOGGER.error("Error talking to Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Error talking to Open Responses endpoint"
