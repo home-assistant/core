@@ -70,10 +70,9 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
                         and "/admin/api" in hint
                     ):
                         _LOGGER.warning(
-                            "Pi-hole API v6 returned an error that"
-                            " is expected when using v5 endpoints"
-                            " please re-configure your"
-                            " authentication"
+                            "Pi-hole API v6 returned an error that "
+                            "is expected when using v5 endpoints. "
+                            "Please reconfigure your authentication."
                         )
                         raise ConfigEntryAuthFailed
         except HoleError as err:

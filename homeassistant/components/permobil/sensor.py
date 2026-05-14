@@ -146,7 +146,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Largest number of adjustemnts in a single 24h period,
+        # Largest number of adjustments in a single 24h period,
         # monotonically increasing, never resets
         value_fn=lambda data: data.records[RECORDS_SEATING[0]],
         available_fn=lambda data: RECORDS_SEATING[0] in data.records,

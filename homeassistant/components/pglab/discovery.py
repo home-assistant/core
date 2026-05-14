@@ -115,7 +115,7 @@ async def create_discover_device_info(
 
 @dataclass
 class PGLabDiscovery:
-    """Discovery a PGLab device.
+    """Discover a PGLab device.
 
     Uses the MQTT topic format pglab/discovery/[device]/config.
     """
