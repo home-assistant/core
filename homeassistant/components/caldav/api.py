@@ -18,9 +18,9 @@ async def async_get_calendars(
 ) -> list[caldav.Calendar]:
     """Get all calendars that support the specified component."""
 
-    def _get_calendars() -> tuple[list[caldav.Calendar], list[tuple[str, str]]]:
+    def _get_calendars() -> tuple[list[caldav.Calendar], list[tuple[str, str | None]]]:
         calendars = []
-        needs_warning = []
+        needs_warning: list[tuple[str, str | None]] = []
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
