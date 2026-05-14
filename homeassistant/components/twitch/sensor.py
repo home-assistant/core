@@ -3,11 +3,13 @@
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_CLEANUP_UNFOLLOWED
 from .coordinator import TwitchConfigEntry, TwitchCoordinator, TwitchUpdate
 
 ATTR_GAME = "game"
@@ -35,10 +37,50 @@ async def async_setup_entry(
 ) -> None:
     """Initialize entries."""
     coordinator = entry.runtime_data
+    known_channel_ids: set[str] = set()
 
-    async_add_entities(
-        TwitchSensor(coordinator, channel_id) for channel_id in coordinator.data
-    )
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add sensor entities for new channels and remove unfollowed ones."""
+        current_ids = set(coordinator.data)
+        new_ids = current_ids - known_channel_ids
+        if new_ids:
+            known_channel_ids.update(new_ids)
+            async_add_entities(
+                TwitchSensor(coordinator, channel_id) for channel_id in sorted(new_ids)
+            )
+        if entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
+            removed_ids = known_channel_ids - current_ids
+            if removed_ids:
+                known_channel_ids.difference_update(removed_ids)
+                entity_registry = er.async_get(hass)
+                for entity_entry in er.async_entries_for_config_entry(
+                    entity_registry, entry.entry_id
+                ):
+                    if (
+                        entity_entry.domain == "sensor"
+                        and entity_entry.unique_id in removed_ids
+                    ):
+                        entity_registry.async_remove(entity_entry.entity_id)
+
+    # Remove stale entity registry entries left from a previous session
+    # (e.g. channels unfollowed while HA was offline).
+    if entry.options.get(CONF_CLEANUP_UNFOLLOWED, False):
+        entity_registry = er.async_get(hass)
+        current_channel_ids = set(coordinator.data)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if (
+                entity_entry.domain == "sensor"
+                and entity_entry.unique_id not in current_channel_ids
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
+
+    # Create entities for channels already known after first refresh.
+    _async_add_new_entities()
+    # On subsequent coordinator updates, add new / remove unfollowed entities.
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
 class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
@@ -95,6 +137,8 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the picture of the sensor."""
+        if self.channel_id not in self.coordinator.data:
+            return None
         if self.channel.is_streaming:
             assert self.channel.stream_picture is not None
             return self.channel.stream_picture
