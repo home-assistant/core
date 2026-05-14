@@ -58,18 +58,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 LOCATION_FETCH_LIMIT = 100
 LOCATION_SEARCH_RADII = (5000, 10000, MAX_RADIUS)
 MAX_LOCATION_OPTIONS = 10
-SENSOR_DISPLAY_NAMES = {
-    "bc": "Black carbon",
-    "co": "Carbon monoxide",
-    "co2": "Carbon dioxide",
-    "no": "Nitrogen monoxide",
-    "no2": "Nitrogen dioxide",
-    "nox": "Nitrogen oxides",
-    "o3": "Ozone",
+PARAMETER_DISPLAY_CODES = {
     "pm1": "PM1",
     "pm10": "PM10",
     "pm25": "PM2.5",
-    "so2": "Sulphur dioxide",
+    "nox": "NOx",
 }
 
 
@@ -88,18 +81,14 @@ class OpenAQLocationFlowData:
         if not self.supported_parameters:
             return self.title
 
-        sensor_names = sorted(
-            SENSOR_DISPLAY_NAMES[parameter] for parameter in self.supported_parameters
+        parameter_codes = sorted(
+            PARAMETER_DISPLAY_CODES.get(parameter, parameter.upper())
+            for parameter in self.supported_parameters
         )
-        sensor_count = len(sensor_names)
-        sensor_word = "sensor" if sensor_count == 1 else "sensors"
-        distance = "unknown distance"
+        label = f"{self.title} ({', '.join(parameter_codes)})"
         if self.distance is not None:
-            distance = f"{self.distance / 1000:.1f} km"
-        return (
-            f"{self.title} - {sensor_count} {sensor_word}: "
-            f"{', '.join(sensor_names)} - {distance}"
-        )
+            label = f"{label} - {self.distance / 1000:.1f} km"
+        return label
 
 
 async def _get_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:

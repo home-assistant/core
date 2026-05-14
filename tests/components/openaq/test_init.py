@@ -5,10 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from openaq import ServerError
 
-from homeassistant.components.openaq.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
+from homeassistant.components.openaq.coordinator import OpenAQDataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 from .conftest import (
@@ -61,6 +63,70 @@ async def test_setup_retry_on_empty_location_response(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_openaq_client.close.assert_awaited_once()
+
+
+async def test_setup_closes_client_after_sibling_refresh_finalizes(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+) -> None:
+    """Test setup closes the client after sibling refresh tasks finish."""
+    running_refresh_started = asyncio.Event()
+    running_refresh_finalized = asyncio.Event()
+    failing_refresh_started = asyncio.Event()
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            ),
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: 9999},
+                subentry_id="GHIJKL",
+                subentry_type="location",
+                title="South Valley",
+                unique_id="9999",
+            ),
+        ],
+    )
+
+    async def first_refresh(coordinator: OpenAQDataUpdateCoordinator) -> None:
+        """Refresh one coordinator while another fails."""
+        if coordinator.location_id == LOCATION_ID:
+            running_refresh_started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                running_refresh_finalized.set()
+            return
+
+        await running_refresh_started.wait()
+        failing_refresh_started.set()
+        raise ConfigEntryNotReady("API error")
+
+    async def close_client() -> None:
+        """Assert the sibling refresh finalized before closing the client."""
+        assert running_refresh_finalized.is_set()
+
+    mock_openaq_client.close.side_effect = close_client
+
+    with patch(
+        "homeassistant.components.openaq.OpenAQDataUpdateCoordinator.async_config_entry_first_refresh",
+        first_refresh,
+    ):
+        await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert failing_refresh_started.is_set()
+    assert running_refresh_finalized.is_set()
     mock_openaq_client.close.assert_awaited_once()
 
 
