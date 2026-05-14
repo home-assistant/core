@@ -20,7 +20,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_DEVICE_ID,
-    CONF_DEVICE_NAME,
     CONF_FW_VERSION,
     CONF_MAC,
     CONF_MODEL,
@@ -49,11 +48,8 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
         self.device_id: str = config_entry.data[CONF_DEVICE_ID]
         self.host: str = config_entry.data[CONF_HOST]
         self.model: str | None = config_entry.data.get(CONF_MODEL)
-        self.mac: str | None = config_entry.data.get(CONF_MAC)
+        self.mac: str = config_entry.data[CONF_MAC]
         self.fw_version: str | None = config_entry.data.get(CONF_FW_VERSION)
-        self.device_name: str = (
-            config_entry.data.get(CONF_DEVICE_NAME) or config_entry.title
-        )
 
         super().__init__(
             hass,

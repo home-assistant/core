@@ -46,7 +46,6 @@
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
-      "power_factor": { "name": "Power factor" },
       "power_factor_phase": { "name": "Power factor {phase}" },
       "voltage_phase": { "name": "Voltage {phase}" }
     }

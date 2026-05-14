@@ -168,7 +168,6 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Power factor - measurement
     "13.7.0": SensorEntityDescription(
         key="13.7.0",
-        translation_key="power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,

@@ -19,13 +19,9 @@ class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
-            name=coordinator.device_name,
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
             manufacturer=MANUFACTURER,
             model=coordinator.model,
             sw_version=coordinator.fw_version,
             configuration_url=f"http://{coordinator.host}",
         )
-        if coordinator.mac:
-            self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, coordinator.mac)
-            }

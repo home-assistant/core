@@ -16,7 +16,6 @@ import pytest
 
 from homeassistant.components.wattwaechter.const import (
     CONF_DEVICE_ID,
-    CONF_DEVICE_NAME,
     CONF_FW_VERSION,
     CONF_MAC,
     CONF_MODEL,
@@ -39,7 +38,6 @@ MOCK_CONFIG_DATA = {
     CONF_HOST: MOCK_HOST,
     CONF_TOKEN: MOCK_TOKEN,
     CONF_DEVICE_ID: MOCK_DEVICE_ID,
-    CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
     CONF_MODEL: MOCK_MODEL,
     CONF_FW_VERSION: MOCK_FW_VERSION,
     CONF_MAC: MOCK_MAC,
