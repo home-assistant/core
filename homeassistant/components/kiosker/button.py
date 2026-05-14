@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from kiosker import KioskerAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.components.logbook import async_log_entry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,7 +21,6 @@ class KioskerButtonEntityDescription(ButtonEntityDescription):
     """Describe a Kiosker button."""
 
     action_fn: Callable[[KioskerAPI], None] | None = None
-    success_message: str | None = None
 
 
 BUTTONS: tuple[KioskerButtonEntityDescription, ...] = (
@@ -31,7 +29,6 @@ BUTTONS: tuple[KioskerButtonEntityDescription, ...] = (
         translation_key="ping",
         entity_category=EntityCategory.DIAGNOSTIC,
         action_fn=lambda api: api.ping(),
-        success_message="The device responded to a ping request.",
     ),
     KioskerButtonEntityDescription(
         key="navigateRefresh",
@@ -107,11 +104,3 @@ class KioskerButton(KioskerEntity, ButtonEntity):
             await self.hass.async_add_executor_job(action_fn, self.coordinator.api)
         elif self.entity_description.key == "update":
             await self.coordinator.async_refresh()
-        if message := self.entity_description.success_message:
-            async_log_entry(
-                self.hass,
-                name=str(self.name),
-                message=message,
-                domain=self.platform.platform_name,
-                entity_id=self.entity_id,
-            )

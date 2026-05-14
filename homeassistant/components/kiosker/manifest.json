@@ -1,7 +1,6 @@
 {
   "domain": "kiosker",
   "name": "Kiosker",
-  "after_dependencies": ["logbook"],
   "codeowners": ["@Claeysson"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kiosker",

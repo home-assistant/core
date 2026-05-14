@@ -94,27 +94,3 @@ async def test_press_update_button(
         )
 
     mock_refresh.assert_called_once()
-
-
-async def test_press_ping_logs_success_message(
-    hass: HomeAssistant,
-    mock_kiosker_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that pressing ping logs a success message to the logbook."""
-    await _setup_button(hass, mock_kiosker_api, mock_config_entry)
-
-    with patch("homeassistant.components.kiosker.button.async_log_entry") as mock_log:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.kiosker_a98be1ce_ping"},
-            blocking=True,
-        )
-
-    mock_log.assert_called_once()
-    message = mock_log.call_args.kwargs["message"].lower()
-    assert "ping" in message
-    assert "respond" in message
-    assert mock_log.call_args.kwargs["entity_id"] == "button.kiosker_a98be1ce_ping"
-    assert mock_log.call_args.kwargs["domain"] == "kiosker"
