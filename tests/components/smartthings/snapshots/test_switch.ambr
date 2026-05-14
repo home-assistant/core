@@ -2446,7 +2446,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_wm_wm_100002][switch.washer_2-entry]
@@ -2496,7 +2496,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
