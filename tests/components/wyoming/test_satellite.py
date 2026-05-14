@@ -1022,6 +1022,55 @@ async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.error.code == "test code"
 
 
+async def test_satellite_restart_on_end_backs_off_after_early_abort(
+    hass: HomeAssistant,
+) -> None:
+    """Always-on satellite must back off when restart_on_end aborts before audio."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            restart_on_end=True,
+        ).event(),
+    ]
+
+    pipeline_call_count = 0
+
+    async def _async_pipeline_from_audio_stream(
+        *args: Any, event_callback: Any, **kwargs: Any
+    ) -> None:
+        nonlocal pipeline_call_count
+        pipeline_call_count += 1
+
+        # Abort before `WAKE_WORD_START`
+        event_callback(
+            assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
+        )
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            _async_pipeline_from_audio_stream,
+        ),
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+    ):
+        await setup_config_entry(hass)
+
+        # Wait a bit, the tight retry loop would have triggered 300+ times
+        await asyncio.sleep(0.2)
+        assert pipeline_call_count == 1
+
+
 async def test_tts_not_wav(hass: HomeAssistant) -> None:
     """Test satellite receiving non-WAV audio from text-to-speech."""
     assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})

@@ -49,6 +49,8 @@ _RECONNECT_SECONDS: Final = 10
 _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
+_RESTART_INITIAL_BACKOFF: Final = 1.0
+_RESTART_MAX_BACKOFF: Final = 30.0
 _PIPELINE_FINISH_TIMEOUT: Final = 1
 _TTS_SAMPLE_RATE: Final = 22050
 _AUDIO_CHUNK_BYTES: Final = 2048  # 1024 samples
@@ -133,6 +135,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._tts_stream_token: str | None = None
         self._is_tts_streaming: bool = False
 
+        # Set when the current pipeline run reaches `WAKE_WORD_START`. Used by the
+        # `restart_on_end` loop to detect runs that aborted before any audio was
+        # consumed.
+        self._wake_word_started: bool = False
+
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
@@ -200,6 +207,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 self._tts_stream_token = tts_output["token"]
                 self._is_tts_streaming = False
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
+            self._wake_word_started = True
             self.config_entry.async_create_background_task(
                 self.hass,
                 self._client.write_event(Detect().event()),
@@ -559,6 +567,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         run_pipeline: RunPipeline | None = None
         send_ping = True
         self._run_loop_id = ulid_now()
+        next_restart_backoff = _RESTART_INITIAL_BACKOFF
 
         # Read events and check for pipeline end in parallel
         pipeline_ended_task = self.config_entry.async_create_background_task(
@@ -604,6 +613,17 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     if (run_pipeline is not None) and run_pipeline.restart_on_end:
                         # Automatically restart pipeline.
                         # Used with "always on" streaming satellites.
+                        if self._wake_word_started:
+                            next_restart_backoff = _RESTART_INITIAL_BACKOFF
+                        else:
+                            # Run aborted before any audio was consumed (e.g. no wake
+                            # engine). Back off exponentially so a broken satellite
+                            # doesn't enter a tight retry loop.
+                            await asyncio.sleep(next_restart_backoff)
+                            next_restart_backoff = min(
+                                next_restart_backoff * 2, _RESTART_MAX_BACKOFF
+                            )
+                        self._wake_word_started = False
                         self._run_pipeline_once(run_pipeline)
                         continue
 
