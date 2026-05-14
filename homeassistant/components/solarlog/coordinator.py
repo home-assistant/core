@@ -248,7 +248,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
             ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
             if (
-                isinstance(ex.__cause__, AsyncioTimeoutError)
+                isinstance(ex.__cause__, TimeoutError)
                 and self.connection_timeout <= 150
             ):
                 # Increase timeout for next try
