@@ -9,10 +9,10 @@
   },
   "exceptions": {
     "component_not_loaded": {
-      "message": "[%key:common::exceptions::infrared_component_not_loaded::message%]"
+      "message": "Infrared component not loaded"
     },
     "entity_not_found": {
-      "message": "[%key:common::exceptions::infrared_entity_not_found::message%]"
+      "message": "Infrared entity `{entity_id}` not found"
     },
     "receiver_not_found": {
       "message": "[%key:common::exceptions::infrared_receiver_not_found::message%]"

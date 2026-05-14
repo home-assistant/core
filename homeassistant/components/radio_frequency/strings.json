@@ -1,10 +1,10 @@
 {
   "exceptions": {
     "component_not_loaded": {
-      "message": "[%key:common::exceptions::radio_frequency_component_not_loaded::message%]"
+      "message": "Radio Frequency component not loaded"
     },
     "entity_not_found": {
-      "message": "[%key:common::exceptions::radio_frequency_entity_not_found::message%]"
+      "message": "Radio Frequency entity `{entity_id}` not found"
     },
     "no_transmitters": {
       "message": "[%key:common::exceptions::radio_frequency_no_transmitters::message%]"

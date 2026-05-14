@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This LG device has already been configured with this transmitter.",
+      "already_configured": "This LG device has already been configured with this emitter.",
       "no_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
     },
     "step": {
@@ -14,7 +14,7 @@
           "device_type": "The type of LG device to control.",
           "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
         },
-        "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
+        "description": "Select the device type and the infrared emitter entity to use for controlling your LG device.",
         "title": "Set up LG IR Remote"
       }
     }
