@@ -44,7 +44,9 @@ async def test_switch_turn_on(
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {ATTR_ENTITY_ID: "switch.nano_color_2_holiday_mode"},  # Was off from conftest
+        {
+            ATTR_ENTITY_ID: "switch.r_900_force_domestic_hot_water"
+        },  # Was off from conftest
         blocking=True,
     )
 
@@ -52,7 +54,7 @@ async def test_switch_turn_on(
     call_args = mock_connector.select_device_option.call_args[0]
     assert call_args[2] == STATE_ON
 
-    state = hass.states.get("switch.nano_color_2_holiday_mode")
+    state = hass.states.get("switch.r_900_force_domestic_hot_water")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -67,16 +69,14 @@ async def test_switch_turn_off(
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {
-            ATTR_ENTITY_ID: "switch.nano_color_2_out_of_home_mode"
-        },  # Was on from conftest
+        {ATTR_ENTITY_ID: "switch.r_900_force_domestic_hot_water"},
         blocking=True,
     )
     mock_connector.select_device_option.assert_called_once()
     call_args = mock_connector.select_device_option.call_args[0]
     assert call_args[2] == STATE_OFF
 
-    state = hass.states.get("switch.nano_color_2_out_of_home_mode")
+    state = hass.states.get("switch.r_900_force_domestic_hot_water")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -100,6 +100,6 @@ async def test_switch_unknown_device_parameters(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("switch.nano_color_2_holiday_mode")
+    state = hass.states.get("switch.r_900_force_domestic_hot_water")
     assert state is not None
     assert state.state == STATE_UNKNOWN

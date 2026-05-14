@@ -30,10 +30,6 @@ class CompitDeviceDescription:
 
 
 DESCRIPTIONS: dict[CompitParameter, SwitchEntityDescription] = {
-    CompitParameter.HOLIDAY_MODE: SwitchEntityDescription(
-        key=CompitParameter.HOLIDAY_MODE.value,
-        translation_key="holiday_mode",
-    ),
     CompitParameter.DEVICE_ON_OFF: SwitchEntityDescription(
         key=CompitParameter.DEVICE_ON_OFF.value,
         translation_key="device_on_off",
@@ -42,72 +38,16 @@ DESCRIPTIONS: dict[CompitParameter, SwitchEntityDescription] = {
         key=CompitParameter.FORCE_DHW.value,
         translation_key="force_dhw",
     ),
-    CompitParameter.SUMMER_MODE: SwitchEntityDescription(
-        key=CompitParameter.SUMMER_MODE.value,
-        translation_key="summer_mode",
-    ),
-    CompitParameter.OUT_OF_HOME_MODE: SwitchEntityDescription(
-        key=CompitParameter.OUT_OF_HOME_MODE.value,
-        translation_key="out_of_home_mode",
-    ),
-    CompitParameter.PARTY_MODE: SwitchEntityDescription(
-        key=CompitParameter.PARTY_MODE.value,
-        translation_key="party_mode",
-    ),
 }
 
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
-    5: CompitDeviceDescription(
-        name="R350 T3",
-        parameters=[DESCRIPTIONS[CompitParameter.SUMMER_MODE]],
-    ),
-    7: CompitDeviceDescription(
-        name="Nano One",
-        parameters=[DESCRIPTIONS[CompitParameter.HOLIDAY_MODE]],
-    ),
-    12: CompitDeviceDescription(
-        name="Nano Color",
-        parameters=[DESCRIPTIONS[CompitParameter.HOLIDAY_MODE]],
-    ),
-    36: CompitDeviceDescription(
-        name="BioMax742",
-        parameters=[DESCRIPTIONS[CompitParameter.SUMMER_MODE]],
-    ),
-    75: CompitDeviceDescription(
-        name="BioMax772",
-        parameters=[DESCRIPTIONS[CompitParameter.SUMMER_MODE]],
-    ),
-    92: CompitDeviceDescription(
-        name="r490",
-        parameters=[DESCRIPTIONS[CompitParameter.HOLIDAY_MODE]],
-    ),
-    201: CompitDeviceDescription(
-        name="BioMax775",
-        parameters=[DESCRIPTIONS[CompitParameter.SUMMER_MODE]],
-    ),
     210: CompitDeviceDescription(
         name="EL750",
         parameters=[DESCRIPTIONS[CompitParameter.DEVICE_ON_OFF]],
     ),
-    215: CompitDeviceDescription(
-        name="R480",
-        parameters=[
-            DESCRIPTIONS[CompitParameter.HOLIDAY_MODE],
-            DESCRIPTIONS[CompitParameter.SUMMER_MODE],
-            DESCRIPTIONS[CompitParameter.PARTY_MODE],
-        ],
-    ),
-    223: CompitDeviceDescription(
-        name="Nano Color 2",
-        parameters=[
-            DESCRIPTIONS[CompitParameter.HOLIDAY_MODE],
-            DESCRIPTIONS[CompitParameter.OUT_OF_HOME_MODE],
-        ],
-    ),
     224: CompitDeviceDescription(
         name="R 900",
         parameters=[
-            DESCRIPTIONS[CompitParameter.HOLIDAY_MODE],
             DESCRIPTIONS[CompitParameter.FORCE_DHW],
         ],
     ),

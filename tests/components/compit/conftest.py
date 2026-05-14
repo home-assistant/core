@@ -49,6 +49,7 @@ def mock_connector():
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
     mock_device_1.state.params = [
+        MagicMock(code="__wym_cwu", value="off"),  # Force domestic hot water mode
         MagicMock(code="__tr_pracy_pc", value="eco"),
         MagicMock(
             code="__trybpracy", value="de_icing"
@@ -63,8 +64,6 @@ def mock_connector():
 
     mock_device_2 = MagicMock()
     mock_device_2.state.params = [
-        MagicMock(code="__trybpozadomemznano1", value="on"),  # Out of home mode
-        MagicMock(code="__urlop", value="off"),  # Holiday mode
         MagicMock(code="_jezyk", value="english"),
         MagicMock(code="__aerokonfbypass", value="off"),
         MagicMock(code="__rd_alarmwent", value="no_alarm"),

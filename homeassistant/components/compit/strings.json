@@ -428,18 +428,6 @@
       },
       "force_dhw": {
         "name": "Force domestic hot water"
-      },
-      "holiday_mode": {
-        "name": "Holiday mode"
-      },
-      "out_of_home_mode": {
-        "name": "Out of home mode"
-      },
-      "party_mode": {
-        "name": "Party mode"
-      },
-      "summer_mode": {
-        "name": "Summer mode"
       }
     }
   }
