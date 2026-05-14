@@ -57,6 +57,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_MSG_PASSWORD_NO_LONGER_WORKING = (
+    "Your password for '%s' is no longer working; go to the "
+    "Integrations menu and click Configure on the Apple "
+    "iCloud card to log in again"
+)
+
+_MSG_2FA_REQUIRED = (
+    "2FA authentication required for '%s'; go to the "
+    "Integrations menu and click Configure on the Apple "
+    "iCloud card to enter your verification code"
+)
+
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
@@ -86,6 +98,7 @@ class IcloudAccount:
         self._icloud_dir = icloud_dir
 
         self.api: PyiCloudService | None = None
+        self._setup_credential_failure: bool = False
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
@@ -109,17 +122,19 @@ class IcloudAccount:
                 raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
             self.api = None
-            # Login failed which means credentials need to be updated.
-            _LOGGER.error(
-                (
-                    "Your password for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
-
+            if requires_2fa:
+                _LOGGER.warning(
+                    _MSG_2FA_REQUIRED,
+                    self._config_entry.data[CONF_USERNAME],
+                )
+            else:
+                _LOGGER.error(
+                    _MSG_PASSWORD_NO_LONGER_WORKING,
+                    self._config_entry.data[CONF_USERNAME],
+                )
+                self._setup_credential_failure = True
             self._require_reauth()
             return
 
@@ -159,6 +174,8 @@ class IcloudAccount:
 
         if self.api.requires_2fa:
             self._require_reauth()
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
         api_devices = {}
@@ -304,12 +321,57 @@ class IcloudAccount:
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
-            self.setup()
+            try:
+                self.setup()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Failed to set up iCloud account in keep_alive, will retry: %s",
+                    err,
+                )
+                self.api = None  # clear any partially-initialized api
 
         if self.api is None:
+            if self._setup_credential_failure:
+                self._setup_credential_failure = False
+                return  # permanent credential failure — don't retry, wait for reauth
+            self._fetch_interval = self._max_interval
+            self._schedule_next_fetch()
             return
 
-        self.api.authenticate()
+        try:
+            self.api.authenticate()
+        except PyiCloudFailedLoginException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            self.api = None
+            if requires_2fa:
+                _LOGGER.warning(
+                    _MSG_2FA_REQUIRED,
+                    self._config_entry.data[CONF_USERNAME],
+                )
+                self._require_reauth()
+                self._fetch_interval = self._max_interval
+                self._schedule_next_fetch()
+            else:
+                _LOGGER.error(
+                    _MSG_PASSWORD_NO_LONGER_WORKING,
+                    self._config_entry.data[CONF_USERNAME],
+                )
+                self._require_reauth()
+            return
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning(
+                "Authentication failed in keep_alive, will retry next cycle: %s", err
+            )
+            self._fetch_interval = 2
+            self._schedule_next_fetch()
+            return
+
+        if not self.api.requires_2fa:
+            try:
+                self.api.devices.refresh(locate=True)
+                _LOGGER.debug("Triggered active location refresh (shouldLocate=True)")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Could not trigger active location refresh: %s", err)
         self.update_devices()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
