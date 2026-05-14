@@ -123,7 +123,7 @@ async def async_setup_platform(
             # Sensors with live values like "temperature" or "current_power"
             # will also be reset to None.
             if not success and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                (sensor.per_day_basis and date.today() > sensor.date_updated)  # noqa: DTZ011
                 or (not sensor.per_day_basis and not sensor.per_total_basis)
             ):
                 state_unknown = True

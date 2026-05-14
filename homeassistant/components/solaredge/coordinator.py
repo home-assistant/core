@@ -224,7 +224,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         try:
             now = datetime.now()
-            today = date.today()
+            today = date.today()  # noqa: DTZ011
             midnight = datetime.combine(today, datetime.min.time())
             data = await self.api.get_energy_details(
                 self.site_id,

@@ -52,7 +52,7 @@ class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent
             # This ensures that data about when the next pickup is will be
             # returned when the next pickup is the first day of the next month.
             # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
-            today = date.today()
+            today = date.today()  # noqa: DTZ011
             return await self._client.async_get_pickup_events(
                 start_date=today,
                 end_date=today + timedelta(days=35),

@@ -39,5 +39,5 @@ class RidwellEntity(CoordinatorEntity[RidwellDataUpdateCoordinator]):
         return next(
             event
             for event in self.coordinator.data[self._account.account_id]
-            if event.pickup_date >= date.today()
+            if event.pickup_date >= date.today()  # noqa: DTZ011
         )

@@ -270,7 +270,7 @@ class WithingsActivityDataUpdateCoordinator(
                 self._last_valid_update
             )
 
-        today = date.today()
+        today = date.today()  # noqa: DTZ011
         for activity in activities:
             if activity.date == today:
                 self._previous_data = activity
