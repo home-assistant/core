@@ -251,9 +251,10 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
 
     @callback
     def async_stop(self) -> None:
-        """Cancel any pending visibility persist before tearing down."""
+        """Flush any pending visibility persist before tearing down."""
         if (debouncer := getattr(self, "_visibility_debouncer", None)) is not None:
             debouncer.async_cancel()
+            self.hass.async_create_task(self._async_persist_hidden_sources())
         super().async_stop()
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:

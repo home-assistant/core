@@ -1,5 +1,7 @@
 """Test different accessory types: Media Players."""
 
+from datetime import timedelta
+
 import pytest
 
 from homeassistant.components.homekit.accessories import HomeDriver
@@ -48,8 +50,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 
 async def test_media_player_set_state(
@@ -791,8 +794,8 @@ async def test_television_input_visibility_setter_persists(
     await hass.async_block_till_done()
     assert char_current.value == 1
 
-    acc._visibility_debouncer.async_cancel()
-    await acc._async_persist_hidden_sources()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 2"]}
@@ -824,8 +827,8 @@ async def test_television_input_visibility_unhide(
     await hass.async_block_till_done()
     assert char_current.value == 0
 
-    acc._visibility_debouncer.async_cancel()
-    await acc._async_persist_hidden_sources()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 4"]}
@@ -854,8 +857,8 @@ async def test_television_input_visibility_unhide_last_clears_key(
     char_target.client_update_value(0)
     await hass.async_block_till_done()
 
-    acc._visibility_debouncer.async_cancel()
-    await acc._async_persist_hidden_sources()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert CONF_HOMEKIT_HIDDEN_SOURCES not in entry.options
@@ -880,8 +883,8 @@ async def test_television_input_visibility_round_trip(
     _, char_target = _input_visibility_chars(acc, "HDMI 4")
     char_target.client_update_value(1)
     await hass.async_block_till_done()
-    acc._visibility_debouncer.async_cancel()
-    await acc._async_persist_hidden_sources()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert entry.options[CONF_HOMEKIT_HIDDEN_SOURCES] == {entity_id: ["HDMI 4"]}

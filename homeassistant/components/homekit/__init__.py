@@ -420,8 +420,8 @@ async def _async_update_listener(
         new_without_visibility = {
             k: v for k, v in new_options.items() if k != CONF_HOMEKIT_HIDDEN_SOURCES
         }
-        entry_data.last_options = new_options
         if last_without_visibility == new_without_visibility:
+            entry_data.last_options = new_options
             return
     await hass.config_entries.async_reload(entry.entry_id)
 
