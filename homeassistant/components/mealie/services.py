@@ -137,8 +137,8 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    start_date = call.data.get(ATTR_START_DATE, date.today())
-    end_date = call.data.get(ATTR_END_DATE, date.today())
+    start_date = call.data.get(ATTR_START_DATE, date.today())  # noqa: DTZ011
+    end_date = call.data.get(ATTR_END_DATE, date.today())  # noqa: DTZ011
     if end_date < start_date:
         raise ServiceValidationError(
             translation_domain=DOMAIN,

@@ -98,7 +98,7 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
-        return py_datetime.datetime.combine(py_datetime.date.today(), time)
+        return py_datetime.datetime.combine(py_datetime.date.today(), time)  # noqa: DTZ011
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -285,7 +285,8 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             current_datetime = dt_util.parse_datetime(default_value)
         else:
             current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
+                py_datetime.date.today(),  # noqa: DTZ011
+                time,
             )
 
         self._current_datetime = current_datetime.replace(
