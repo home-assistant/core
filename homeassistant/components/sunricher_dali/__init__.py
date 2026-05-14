@@ -39,6 +39,9 @@ _PLATFORMS: list[Platform] = [
 ]
 _LOGGER = logging.getLogger(__name__)
 
+_MIN_SUPPORTED_SW = Version(MIN_SUPPORTED_SW_VERSION)
+_MIN_SUPPORTED_FW = Version(MIN_SUPPORTED_FW_VERSION)
+
 
 def _remove_missing_devices(
     hass: HomeAssistant,
@@ -167,9 +170,7 @@ def _async_check_firmware_version(
         )
         return
 
-    if sw_parsed < Version(MIN_SUPPORTED_SW_VERSION) or fw_parsed < Version(
-        MIN_SUPPORTED_FW_VERSION
-    ):
+    if sw_parsed < _MIN_SUPPORTED_SW or fw_parsed < _MIN_SUPPORTED_FW:
         ir.async_create_issue(
             hass,
             DOMAIN,
