@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import math
 from typing import Any
 
 import blebox_uniapi.light
@@ -22,9 +23,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import color as color_util
 
 from . import BleBoxConfigEntry
+from .const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
 from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +60,8 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
-    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 154 Mireds
+    _attr_min_color_temp_kelvin = LIGHT_MIN_KELVINS
+    _attr_max_color_temp_kelvin = LIGHT_MAX_KELVINS
 
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
@@ -78,10 +79,43 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         """Return the name."""
         return self._feature.brightness
 
+    def _color_temp_to_native_scale(self, x: int) -> int:
+        """Convert color temperature from Kelvin to native BleBox scale (0-255).
+
+        BleBox native scale is inverted relative to Kelvin: 0=warm (2700K), 255=cold (6500K).
+        """
+        scaled = (
+            (self._attr_max_color_temp_kelvin - x)
+            / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
+        ) * 255
+        # note: within the operating temperature range here the Kelvin
+        # scale has less "integer steps" than the native scale used
+        # by blebox devices. Thus we need to use rounding method that is opposite
+        # to the one used in _color_temp_from_native_scale in order to avoid
+        # temperature value jumping by one step when the temperature value is read
+        # back from the device
+        bounded = max(min(math.floor(scaled), 255), 0)
+        return int(bounded)
+
+    def _color_temp_from_native_scale(self, x: int) -> int:
+        """Convert color temperature from native BleBox scale (0-255) to Kelvin.
+
+        BleBox native scale is inverted relative to Kelvin: 0=warm (2700K), 255=cold (6500K).
+        """
+        scaled = self._attr_max_color_temp_kelvin - (x / 255) * (
+            self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
+        )
+        # note: see _color_temp_to_native_scale for explanation of rounding method
+        bounded = max(
+            min(math.ceil(scaled), self._attr_max_color_temp_kelvin),
+            self._attr_min_color_temp_kelvin,
+        )
+        return int(bounded)
+
     @property
     def color_temp_kelvin(self) -> int:
         """Return the color temperature value in Kelvin."""
-        return color_util.color_temperature_mired_to_kelvin(self._feature.color_temp)
+        return self._color_temp_from_native_scale(self._feature.color_temp)
 
     @property
     def color_mode(self) -> ColorMode:
@@ -139,15 +173,16 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         effect = kwargs.get(ATTR_EFFECT)
         color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         rgbww = kwargs.get(ATTR_RGBWW_COLOR)
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+
         feature = self._feature
         value = feature.sensible_on_value
-        rgb = kwargs.get(ATTR_RGB_COLOR)
 
         if rgbw is not None:
             value = list(rgbw)
         if color_temp_kelvin is not None:
             value = feature.return_color_temp_with_brightness(
-                int(color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)),
+                self._color_temp_to_native_scale(color_temp_kelvin),
                 self.brightness,
             )
 
@@ -162,9 +197,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         if brightness is not None:
             if self.color_mode == ColorMode.COLOR_TEMP:
                 value = feature.return_color_temp_with_brightness(
-                    color_util.color_temperature_kelvin_to_mired(
-                        self.color_temp_kelvin
-                    ),
+                    self._color_temp_to_native_scale(self.color_temp_kelvin),
                     brightness,
                 )
             else:
