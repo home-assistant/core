@@ -4,21 +4,30 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import httpx
+from openaq import NotAuthorizedError, ServerError
+import pytest
 
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
     HomeAssistantOpenAQTransport,
+    OpenAQDataUpdateCoordinator,
     OpenAQMeasurement,
     async_create_openaq_client,
     create_openaq_client,
     normalize_latest_measurements,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONF_API_KEY,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import make_latest, make_sensor
+from .conftest import API_KEY, LOCATION_ID, make_latest, make_sensor
+
+from tests.common import MockConfigEntry
 
 
 async def test_transport_sends_request_with_shared_httpx_client() -> None:
@@ -80,6 +89,60 @@ async def test_async_create_openaq_client_uses_shared_httpx_client(
         await client.close()
     finally:
         await httpx_client.aclose()
+
+
+@pytest.mark.parametrize(
+    ("first_exception", "expected_cause_type"),
+    [
+        (
+            NotAuthorizedError("Invalid API key"),
+            NotAuthorizedError,
+        ),
+        (
+            ServerError("API error"),
+            ServerError,
+        ),
+        (
+            RuntimeError("Unexpected error"),
+            RuntimeError,
+        ),
+    ],
+)
+async def test_initial_refresh_exception_group_maps_first_exception(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    first_exception: Exception,
+    expected_cause_type: type[Exception],
+) -> None:
+    """Test initial refresh TaskGroup errors raise UpdateFailed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            )
+        ],
+    )
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        config_entry,
+        next(iter(config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    mock_openaq_client.locations.get.side_effect = first_exception
+    mock_openaq_client.locations.latest.side_effect = RuntimeError("Unexpected error")
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert isinstance(err.value.__cause__, expected_cause_type)
 
 
 def test_normalize_latest_measurements() -> None:
