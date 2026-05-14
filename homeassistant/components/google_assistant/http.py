@@ -15,7 +15,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
@@ -25,6 +25,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSE_BY_LABEL,
     CONF_EXPOSED_DOMAINS,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
@@ -186,20 +187,46 @@ class GoogleConfig(AbstractConfig):
             expose_by_default and state.domain in exposed_domains
         )
 
+        has_label = self._entity_has_label(state)
+
         # Expose an entity by default if the entity's domain is exposed by default
         # and the entity is not a config or diagnostic entity
-        entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
+        entity_exposed_by_default = (
+            domain_exposed_by_default and has_label and not auxiliary_entity
+        )
 
         # Expose an entity if the entity's is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or explicit_expose is True
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True
+
+    def _entity_has_label(self, state):
+        """Return True if the entity (or parent device) has the correct label.
+
+        Returns True if expose_by_label is None.
+        """
+        expose_by_label = self._config.get(CONF_EXPOSE_BY_LABEL)
+        if not expose_by_label:
+            return True
+
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(state.entity_id)
+
+        if registry_entry and expose_by_label in registry_entry.labels:
+            return True
+
+        device_registry = dr.async_get(self.hass)
+        registry_device = device_registry.async_get(registry_entry.device_id)
+        if registry_device and expose_by_label in registry_device.labels:
+            return True
+
+        return False
 
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus:
         if CONF_SERVICE_ACCOUNT in self._config:
