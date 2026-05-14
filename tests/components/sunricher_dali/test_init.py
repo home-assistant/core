@@ -45,7 +45,7 @@ def _get_version_listener(
 ) -> Callable[[tuple[str, str]], None]:
     """Find the VERSION_UPDATED listener registered on the gateway."""
     for call in mock_gateway.register_listener.call_args_list:
-        if call.args[0] is CallbackEventType.VERSION_UPDATED:
+        if call.args[0] == CallbackEventType.VERSION_UPDATED:
             return call.args[1]
     raise AssertionError("VERSION_UPDATED listener was not registered")
 
@@ -116,6 +116,7 @@ async def test_setup_entry_discovery_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_gateway.connect.assert_called_once()
     mock_gateway.discover_devices.assert_called_once()
+    mock_gateway.disconnect.assert_called_once()
 
 
 async def test_unload_entry(
@@ -290,6 +291,7 @@ async def test_firmware_issue_raised_when_discover_fails(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    mock_gateway.disconnect.assert_called_once()
 
 
 async def test_firmware_listener_unsubscribed_when_forward_fails(
@@ -312,6 +314,7 @@ async def test_firmware_listener_unsubscribed_when_forward_fails(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     unsubscribe.assert_called_once()
+    mock_gateway.disconnect.assert_called_once()
 
 
 async def test_remove_entry_clears_firmware_issue(

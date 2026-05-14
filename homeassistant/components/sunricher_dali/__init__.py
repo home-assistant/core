@@ -1,7 +1,8 @@
 """The Sunricher DALI integration."""
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from contextlib import suppress
 import logging
 
 from packaging.version import InvalidVersion, Version
@@ -41,6 +42,15 @@ _LOGGER = logging.getLogger(__name__)
 
 _MIN_SUPPORTED_SW = Version(MIN_SUPPORTED_SW_VERSION)
 _MIN_SUPPORTED_FW = Version(MIN_SUPPORTED_FW_VERSION)
+
+
+async def _async_cleanup_failed_setup(
+    gateway: DaliGateway, unsub_version: Callable[[], None]
+) -> None:
+    """Clean up resources registered before config entry setup completed."""
+    unsub_version()
+    with suppress(DaliGatewayError):
+        await gateway.disconnect()
 
 
 def _remove_missing_devices(
@@ -89,8 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     gw_sn = gateway.gw_sn
 
     @callback
-    def _handle_version_update(_versions: tuple[str, str]) -> None:
-        _async_check_firmware_version(hass, entry, gateway, _versions)
+    def _handle_version_update(versions: tuple[str, str]) -> None:
+        _async_check_firmware_version(hass, entry, gateway, versions)
 
     unsub_version = gateway.register_listener(
         CallbackEventType.VERSION_UPDATED,
@@ -119,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     except DaliGatewayError as exc:
         # async_on_unload only fires after a successful load, so clean up
         # the listener manually before bailing out.
-        unsub_version()
+        await _async_cleanup_failed_setup(gateway, unsub_version)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_discover_devices",
@@ -147,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     try:
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     except Exception:
-        unsub_version()
+        await _async_cleanup_failed_setup(gateway, unsub_version)
         raise
     entry.async_on_unload(unsub_version)
 
