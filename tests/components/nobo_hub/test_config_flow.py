@@ -589,14 +589,15 @@ async def test_reconfigure_flow_changes_ip(
 
 
 @pytest.mark.parametrize(
-    ("submitted_ip", "connect_outcome", "expected_error"),
+    ("submitted_ip", "connect_outcome", "expected_error", "expected_connect_count"),
     [
         (
             "192.168.1.200",
             {"side_effect": ConnectionRefusedError(errno.ECONNREFUSED, "")},
             "cannot_connect_ip",
+            1,
         ),
-        ("not-an-ip", {"return_value": True}, "invalid_ip"),
+        ("not-an-ip", {"return_value": True}, "invalid_ip", 0),
     ],
     ids=["unreachable_ip", "invalid_format"],
 )
@@ -608,6 +609,7 @@ async def test_reconfigure_flow_rejects_bad_ip(
     submitted_ip: str,
     connect_outcome: dict[str, object],
     expected_error: str,
+    expected_connect_count: int,
 ) -> None:
     """A bad IP is rejected inline; resubmitting a good IP completes the reconfigure."""
     recovery_ip = "192.168.1.201"
@@ -617,15 +619,16 @@ async def test_reconfigure_flow_rejects_bad_ip(
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
         **connect_outcome,
-    ):
+    ) as mock_connect:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: submitted_ip},
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result2["errors"] == {CONF_IP_ADDRESS: expected_error}
     assert mock_config_entry.data[CONF_IP_ADDRESS] == STORED_IP
+    assert mock_connect.await_count == expected_connect_count
 
     with (
         patch(

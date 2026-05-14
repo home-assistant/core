@@ -203,7 +203,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 ipaddress.ip_address(new_ip)
             except ValueError:
-                errors["base"] = "invalid_ip"
+                errors[CONF_IP_ADDRESS] = "invalid_ip"
             else:
                 try:
                     # Probe the new IP only when the integration is not currently
@@ -217,7 +217,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 except NoboHubConnectError as error:
                     # The serial is fixed in reconfigure, so blame the IP rather
                     # than the (uneditable) serial number.
-                    errors["base"] = (
+                    errors[CONF_IP_ADDRESS] = (
                         "cannot_connect_ip"
                         if error.msg == "cannot_connect"
                         else error.msg
