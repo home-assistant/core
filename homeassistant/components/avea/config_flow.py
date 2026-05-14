@@ -164,17 +164,12 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         if self._discovery_info:
+            disc = self._discovery_info
+            label = f"{disc.name or disc.address} ({disc.address})"
             data_schema = vol.Schema(
                 {
-                    vol.Required(
-                        CONF_ADDRESS, default=self._discovery_info.address
-                    ): vol.In(
-                        {
-                            self._discovery_info.address: (
-                                f"{self._discovery_info.name or self._discovery_info.address}"
-                                f" ({self._discovery_info.address})"
-                            )
-                        }
+                    vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
+                        {disc.address: label}
                     )
                 }
             )

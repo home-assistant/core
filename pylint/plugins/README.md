@@ -98,6 +98,7 @@ Every check has a code following the
 | `W7406` | [`home-assistant-unique-id-ip-based`](#w7406-home-assistant-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
 | `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
+| `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 
 
 ## `home_assistant_logger` checker
@@ -323,4 +324,19 @@ subentry flows (`ConfigSubentryFlow` subclasses) are excluded.
 Config flow should not include a name field. Users should not set names
 in config flows; they come automatically from the device or are set by
 the integration.
+
+
+## `home_assistant_unused_test_fixture_args` checker
+
+**Disabled by default** while existing violations are being cleaned up.
+
+
+### `R7402`: `home-assistant-unused-test-fixture-argument`
+
+Test functions that receive a fixture argument but never reference it in
+the function body should use `@pytest.mark.usefixtures("name")` instead.
+This keeps the function signature clean and makes it clear the fixture is
+only needed for its side effects.
+
+This rule only applies to `test_*` functions, not to fixture functions.
 
