@@ -771,6 +771,10 @@ class PrometheusMetrics:
     def _handle_person(self, state: State) -> None:
         self._numeric_metric(state, "person", "person")
 
+    def _handle_geo_location(self, state: State) -> None:
+        self._numeric_metric(state, "geo_location", "geo location")
+        self._handle_attributes(state)
+
     def _handle_lock(self, state: State) -> None:
         self._numeric_metric(state, "lock", "lock")
 

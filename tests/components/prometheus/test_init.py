@@ -19,6 +19,7 @@ from homeassistant.components import (
     cover,
     device_tracker,
     fan,
+    geo_location,
     humidifier,
     input_boolean,
     input_number,
@@ -1339,6 +1340,36 @@ async def test_person(
         friendly_name="Alice",
         entity="person.alice",
     ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_geo_location(
+    client: ClientSessionGenerator,
+    geo_location_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test prometheus metrics for geo_location."""
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="geo_location_state",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+    ).withValue(25.5).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="geo_location_attr_latitude",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+    ).withValue(34.05).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="geo_location_attr_longitude",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+    ).withValue(-118.25).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2751,6 +2782,31 @@ async def device_tracker_fixture(
     )
     set_state_with_entry(hass, device_tracker_2, STATE_NOT_HOME)
     data["device_tracker_2"] = device_tracker_2
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="geo_location_entities")
+async def geo_location_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate geo_location entities."""
+    data = {}
+    geo_location_1 = entity_registry.async_get_or_create(
+        domain=geo_location.DOMAIN,
+        platform="test",
+        unique_id="geo_location_1",
+        suggested_object_id="earthquake",
+        original_name="Earthquake",
+    )
+    set_state_with_entry(
+        hass,
+        geo_location_1,
+        25.5,
+        {"source": "usgs_earthquakes", "latitude": 34.05, "longitude": -118.25},
+    )
+    data["geo_location_1"] = geo_location_1
 
     await hass.async_block_till_done()
     return data
