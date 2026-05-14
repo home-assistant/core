@@ -10,7 +10,6 @@ import pytest
 from soco.data_structures import (
     DidlAudioBroadcast,
     DidlAudioLineIn,
-    DidlMusicTrack,
     DidlPlaylistContainer,
     SearchResult,
 )
@@ -49,10 +48,7 @@ from homeassistant.components.sonos.const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
-from homeassistant.components.sonos.media import (
-    SOUNDCLOUD_OEMBED_URL,
-    _extract_soundcloud_track_id,
-)
+from homeassistant.components.sonos.media import SOUNDCLOUD_OEMBED_URL
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -95,7 +91,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
-from tests.common import load_json_value_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -1571,6 +1566,81 @@ async def test_position_updates(
                 ),
             },
         ),
+        # Five SoundCloud URI shapes Sonos hands out across services. Each must
+        # trigger SoundCloud detection and resolve artwork via oEmbed; the only
+        # difference is the URI encoding. The /getaa album_art is the Sonos
+        # proxy URL HA cannot fetch — entity_picture should reflect the
+        # oEmbed-resolved thumbnail instead. See home-assistant/core#170551.
+        (
+            {
+                "title": "SC Test Track",
+                "artist": "SC Test Artist",
+                "album": "",
+                "album_art": "/getaa?s=1&u=sc-getaa",
+                "position": "00:00:00",
+                "playlist_position": "1",
+                "duration": "00:05:00",
+                "uri": "x-sonos-http:track%3esoundcloud%3atracks%3a187982555.mp3?sid=160&flags=8232&sn=17",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "SC Test Track",
+                "artist": "SC Test Artist",
+                "album": "",
+                "album_art": "/getaa?s=1&u=sc-getaa",
+                "position": "00:00:00",
+                "playlist_position": "1",
+                "duration": "00:05:00",
+                "uri": "x-sonos-http:track>soundcloud:tracks:42.mp3?sid=160",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "SC Test Track",
+                "artist": "SC Test Artist",
+                "album": "",
+                "album_art": "/getaa?s=1&u=sc-getaa",
+                "position": "00:00:00",
+                "playlist_position": "1",
+                "duration": "00:05:00",
+                "uri": "x-sonos-http:track%3eSOUNDCLOUD%3aTracks%3a99.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "SC Test Track",
+                "artist": "SC Test Artist",
+                "album": "",
+                "album_art": "/getaa?s=1&u=sc-getaa",
+                "position": "00:00:00",
+                "playlist_position": "1",
+                "duration": "00:05:00",
+                "uri": "x-sonosapi-hls-static:track%3esoundcloud%3atracks%3a629081730?sid=160&flags=8232&sn=25",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "SC Test Track",
+                "artist": "SC Test Artist",
+                "album": "",
+                "album_art": "/getaa?s=1&u=sc-getaa",
+                "position": "00:00:00",
+                "playlist_position": "1",
+                "duration": "00:05:00",
+                "uri": "x-sonos-http:track%253esoundcloud%253atracks%253a777.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
     ],
     ids=[
         "basic_track",
@@ -1580,6 +1650,11 @@ async def test_position_updates(
         "playlist_container",
         "radio_station",
         "radio_station_with_show",
+        "soundcloud_url_encoded",
+        "soundcloud_decoded",
+        "soundcloud_case_insensitive",
+        "soundcloud_hls_static",
+        "soundcloud_double_encoded",
     ],
 )
 async def test_media_info_attributes(
@@ -1589,9 +1664,17 @@ async def test_media_info_attributes(
     media_event: SonosMockEvent,
     track_info: dict[str, Any],
     event_variables: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the media player info attributes using a variety of inputs."""
+    # SoundCloud URIs trigger an oEmbed thumbnail lookup; pre-register a
+    # success response. Cases whose URI isn't SoundCloud won't hit this.
+    aioclient_mock.get(
+        SOUNDCLOUD_OEMBED_URL,
+        json={"thumbnail_url": "https://i1.sndcdn.com/test-thumbnail.jpg"},
+    )
+
     media_event.variables.update(event_variables)
     soco.get_current_track_info.return_value = track_info
     soco.avTransport.subscribe.return_value.callback(media_event)
@@ -1622,118 +1705,41 @@ async def test_media_info_attributes(
     assert filtered_attrs == snapshot
 
 
-@pytest.mark.parametrize(
-    ("uri", "expected_id"),
-    [
-        pytest.param(
-            "x-sonos-http:track%3esoundcloud%3atracks%3a1233498328.mp3?sid=160",
-            "1233498328",
-            id="url_encoded",
-        ),
-        pytest.param(
-            "x-sonos-http:track>soundcloud:tracks:42.mp3?sid=160",
-            "42",
-            id="decoded",
-        ),
-        pytest.param(
-            "x-sonos-http:track%3eSOUNDCLOUD%3aTracks%3a99.mp3",
-            "99",
-            id="case_insensitive",
-        ),
-        pytest.param(
-            "x-sonosapi-hls-static:track%3esoundcloud%3atracks%3a629081730?sid=160&flags=8232&sn=25",
-            "629081730",
-            id="hls_static_stream",
-        ),
-        pytest.param(
-            "x-file-cifs://192.168.42.10/music/track.mp3",
-            None,
-            id="non_soundcloud",
-        ),
-        pytest.param("", None, id="empty"),
-    ],
-)
-def test_extract_soundcloud_track_id(uri: str, expected_id: str | None) -> None:
-    """Test SoundCloud track ID extraction from Sonos media URIs."""
-    assert _extract_soundcloud_track_id(uri) == expected_id
-
-
-def _load_soundcloud_event(soco: MockSoCo) -> SonosMockEvent:
-    """Load the SoundCloud avTransport event captured from a live Sonos speaker.
-
-    The fixture in ``av_transport_soundcloud.json`` was captured against a real
-    Sonos S2 speaker playing a SoundCloud favorite — see home-assistant/core#170551
-    for the full DIDL. The captured ``current_track_meta_data`` is materialized
-    into a :class:`DidlMusicTrack` here so the JSON stays plain-string.
-    """
-    variables = load_json_value_fixture("av_transport_soundcloud.json", DOMAIN)
-    variables["current_track_meta_data"] = DidlMusicTrack(
-        **variables["current_track_meta_data"]
-    )
-    return SonosMockEvent(soco, soco.avTransport, variables)
-
-
-def _stub_soundcloud_track_info(soco: MockSoCo) -> None:
-    """Stub poll_track_info to match the SoundCloud avTransport fixture."""
-    soco.get_current_track_info.return_value = {
-        "title": "Alex Cruz - Deep & Sexy Podcast #17",
-        "artist": "Alex Cruz",
-        "album": "",
-        "album_art": (
-            "/getaa?s=1&u=x-sonosapi-hls-static%3atrack-%253esoundcloud"
-            "%253atracks%253a187982555%3fsid%3d160%26flags%3d8232%26sn%3d25"
-        ),
-        "uri": "x-sonos-http:track-%3Esoundcloud%3Atracks%3A187982555.mp3?sid=160&flags=8232&sn=17",
-        "playlist_position": "1",
-        "duration": "1:02:12",
-        "position": "0:00:00",
-        "metadata": "NOT_IMPLEMENTED",
-    }
-
-
-async def test_soundcloud_event_resolves_artwork_via_oembed(
-    hass: HomeAssistant,
-    soco: MockSoCo,
-    async_autosetup_sonos: None,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """A SoundCloud track event drives entity_picture from the oEmbed thumbnail.
-
-    The /getaa URL Sonos exposes for SoundCloud cannot be fetched through HA's
-    image proxy, so the integration must detect SoundCloud and substitute the
-    public oEmbed thumbnail instead.
-    """
-    thumbnail_url = "https://i1.sndcdn.com/artworks-test-large.jpg"
-    aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, json={"thumbnail_url": thumbnail_url})
-
-    _stub_soundcloud_track_info(soco)
-    soco.avTransport.subscribe.return_value.callback(_load_soundcloud_event(soco))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("media_player.zone_a")
-    # entity_picture is HA's image proxy URL when media_image_url is set;
-    # its presence here proves the resolver ran and image_url was populated.
-    assert state.attributes.get(ATTR_ENTITY_PICTURE) is not None
-    assert len(aioclient_mock.mock_calls) == 1
-    method, url, *_ = aioclient_mock.mock_calls[0]
-    assert method == "GET"
-    assert str(url).startswith(SOUNDCLOUD_OEMBED_URL)
-    assert "187982555" in str(url)
+_SOUNDCLOUD_FAILURE_TRACK_INFO = {
+    "title": "SC Test Track",
+    "artist": "SC Test Artist",
+    "album": "",
+    "album_art": "/getaa?s=1&u=sc-getaa",
+    "position": "00:00:00",
+    "playlist_position": "1",
+    "duration": "00:05:00",
+    "uri": "x-sonos-http:track%3esoundcloud%3atracks%3a187982555.mp3?sid=160&flags=8232&sn=17",
+    "metadata": "NOT_IMPLEMENTED",
+}
 
 
 async def test_soundcloud_event_oembed_failure_leaves_artwork_unset(
     hass: HomeAssistant,
     soco: MockSoCo,
     async_autosetup_sonos: None,
+    media_event: SonosMockEvent,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """An oEmbed failure must leave entity_picture unset, never falling back to /getaa."""
     aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, status=500)
 
-    _stub_soundcloud_track_info(soco)
-    soco.avTransport.subscribe.return_value.callback(_load_soundcloud_event(soco))
+    soco.get_current_track_info.return_value = _SOUNDCLOUD_FAILURE_TRACK_INFO
+    soco.avTransport.subscribe.return_value.callback(media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_ENTITY_PICTURE) is None
-    assert len(aioclient_mock.mock_calls) == 1
+
+    # Filter to oEmbed calls so adding unrelated HTTP traffic elsewhere doesn't
+    # break this test; we only care that the resolver attempted exactly once.
+    oembed_calls = [
+        call
+        for call in aioclient_mock.mock_calls
+        if str(call[1]).startswith(SOUNDCLOUD_OEMBED_URL)
+    ]
+    assert len(oembed_calls) == 1

@@ -50,11 +50,18 @@ def _extract_soundcloud_track_id(uri: str) -> str | None:
     """Extract the numeric SoundCloud track ID from a Sonos media URI.
 
     Sonos encodes SoundCloud-sourced tracks as URIs containing the
-    substring ``soundcloud:tracks:<id>`` (often URL-encoded as
-    ``soundcloud%3Atracks%3A<id>``). Returns the ID, or None if the URI
-    isn't a SoundCloud track.
+    substring ``soundcloud:tracks:<id>``. The typical form is single
+    URL-encoded (``soundcloud%3Atracks%3A<id>``), but Sonos sometimes
+    nests a SoundCloud URI inside another encoded URL (e.g. via the
+    ``/getaa?u=...`` proxy) producing double-encoded sequences like
+    ``%253a``. We decode up to two levels so both shapes match.
+    Repeating decoding past a fixed point is a no-op, so this is safe
+    for already-decoded URIs.
     """
-    if match := SOUNDCLOUD_TRACK_URI_PATTERN.search(unquote(uri)):
+    decoded = uri
+    for _ in range(2):
+        decoded = unquote(decoded)
+    if match := SOUNDCLOUD_TRACK_URI_PATTERN.search(decoded):
         return match.group(1)
     return None
 
@@ -330,7 +337,10 @@ class SonosMedia:
             ) as response:
                 response.raise_for_status()
                 data = await response.json(content_type=None)
-            thumbnail_url = data.get("thumbnail_url")
+            # Defensive: oEmbed should return a JSON object, but a misbehaving
+            # endpoint (or proxy) could hand back a list/string.
+            if isinstance(data, dict):
+                thumbnail_url = data.get("thumbnail_url")
         except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as err:
             _LOGGER.debug(
                 "SoundCloud oEmbed lookup failed for track %s: %s", track_id, err

@@ -196,3 +196,83 @@
     'source': None,
   })
 # ---
+# name: test_media_info_attributes[soundcloud_case_insensitive]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=fcd38f7c5768acee',
+    'media_album_name': None,
+    'media_artist': 'SC Test Artist',
+    'media_channel': None,
+    'media_content_id': 'x-sonos-http:track%3eSOUNDCLOUD%3aTracks%3a99.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 300,
+    'media_playlist': None,
+    'media_position': 0,
+    'media_title': 'SC Test Track',
+    'queue_position': 1,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[soundcloud_decoded]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=fcd38f7c5768acee',
+    'media_album_name': None,
+    'media_artist': 'SC Test Artist',
+    'media_channel': None,
+    'media_content_id': 'x-sonos-http:track>soundcloud:tracks:42.mp3?sid=160',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 300,
+    'media_playlist': None,
+    'media_position': 0,
+    'media_title': 'SC Test Track',
+    'queue_position': 1,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[soundcloud_double_encoded]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=fcd38f7c5768acee',
+    'media_album_name': None,
+    'media_artist': 'SC Test Artist',
+    'media_channel': None,
+    'media_content_id': 'x-sonos-http:track%253esoundcloud%253atracks%253a777.mp3',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 300,
+    'media_playlist': None,
+    'media_position': 0,
+    'media_title': 'SC Test Track',
+    'queue_position': 1,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[soundcloud_hls_static]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=fcd38f7c5768acee',
+    'media_album_name': None,
+    'media_artist': 'SC Test Artist',
+    'media_channel': None,
+    'media_content_id': 'x-sonosapi-hls-static:track%3esoundcloud%3atracks%3a629081730?sid=160&flags=8232&sn=25',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 300,
+    'media_playlist': None,
+    'media_position': 0,
+    'media_title': 'SC Test Track',
+    'queue_position': 1,
+    'source': None,
+  })
+# ---
+# name: test_media_info_attributes[soundcloud_url_encoded]
+  dict({
+    'entity_picture': '/api/media_player_proxy/media_player.zone_a?token=123456789&cache=fcd38f7c5768acee',
+    'media_album_name': None,
+    'media_artist': 'SC Test Artist',
+    'media_channel': None,
+    'media_content_id': 'x-sonos-http:track%3esoundcloud%3atracks%3a187982555.mp3?sid=160&flags=8232&sn=17',
+    'media_content_type': <MediaType.MUSIC: 'music'>,
+    'media_duration': 300,
+    'media_playlist': None,
+    'media_position': 0,
+    'media_title': 'SC Test Track',
+    'queue_position': 1,
+    'source': None,
+  })
+# ---
