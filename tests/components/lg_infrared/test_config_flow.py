@@ -2,10 +2,6 @@
 
 import pytest
 
-from homeassistant.components.infrared import (
-    DATA_COMPONENT as INFRARED_DATA_COMPONENT,
-    DOMAIN as INFRARED_DOMAIN,
-)
 from homeassistant.components.lg_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
@@ -16,26 +12,14 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-
-from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
 
 from tests.common import MockConfigEntry
+from tests.components.infrared import (
+    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
+)
 
 
-@pytest.fixture
-async def setup_infrared(
-    hass: HomeAssistant, mock_infrared_entity: MockInfraredEntity
-) -> None:
-    """Set up the infrared component with a mock entity."""
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    component = hass.data[INFRARED_DATA_COMPONENT]
-    await component.async_add_entities([mock_infrared_entity])
-
-
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_user_flow_success(
     hass: HomeAssistant,
 ) -> None:
@@ -51,20 +35,20 @@ async def test_user_flow_success(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LG TV via Test IR transmitter"
+    assert result["title"] == "LG TV via Test IR emitter"
     assert result["data"] == {
         CONF_DEVICE_TYPE: LGDeviceType.TV,
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+        CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
     }
-    assert result["result"].unique_id == f"lg_ir_tv_{MOCK_INFRARED_ENTITY_ID}"
+    assert result["result"].unique_id == f"lg_ir_tv_{mock_infrared_emitter_entity_id}"
 
 
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -81,7 +65,7 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 
@@ -89,11 +73,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("init_infrared")
 async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     """Test user flow aborts when no infrared emitters exist."""
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -102,11 +84,11 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_emitters"
 
 
-@pytest.mark.usefixtures("setup_infrared")
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [
-        (None, "LG TV via Test IR transmitter"),
+        (None, "LG TV via Test IR emitter"),
         ("AC IR emitter", "LG TV via AC IR emitter"),
     ],
 )
@@ -117,7 +99,9 @@ async def test_user_flow_title_from_entity_name(
     expected_title: str,
 ) -> None:
     """Test config entry title uses the entity name."""
-    entity_registry.async_update_entity(MOCK_INFRARED_ENTITY_ID, name=entity_name)
+    entity_registry.async_update_entity(
+        mock_infrared_emitter_entity_id, name=entity_name
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -126,7 +110,7 @@ async def test_user_flow_title_from_entity_name(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         },
     )
 

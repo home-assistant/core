@@ -39,6 +39,7 @@ from .const import (
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_addons_list
+from .exceptions import HassioNotReadyError
 from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
@@ -174,7 +175,20 @@ async def websocket_update_addon(
     """Websocket handler to update an addon."""
     addon_name: str | None = None
     addon_version: str | None = None
-    addons_list: list[dict[str, Any]] = get_addons_list(hass) or []
+    try:
+        addons_list: list[dict[str, Any]] = get_addons_list(hass)
+    except HassioNotReadyError:
+        _LOGGER.error(
+            "Update command received for app %s but apps list is not available",
+            msg["addon"],
+        )
+        connection.send_error(
+            msg[WS_ID],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Apps list is not available",
+        )
+        return
+
     for addon in addons_list:
         if addon[ATTR_SLUG] == msg["addon"]:
             addon_name = addon[ATTR_NAME]

@@ -353,9 +353,14 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    # States filtered from the to_state pre-filter (and `_should_include`).
     _excluded_states: Final[frozenset[str]] = frozenset(
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
+    # States filtered from the from_state pre-filter. Defaults to
+    # `_excluded_states`. Subclasses can override to relax the origin
+    # check.
+    _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
@@ -389,13 +394,28 @@ class EntityTriggerBase(Trigger):
             return state.state
         return state.attributes.get(domain_spec.value_source)
 
-    @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
+        """Check if the transition should fire the trigger.
 
-    @abc.abstractmethod
+        Called only after `from_state.state` has been filtered against
+        `_excluded_from_states` and `to_state.state` against
+        `_excluded_states`, so subclasses don't need to repeat those
+        checks. Default: any state change. Override to add semantics
+        (specific from/to states, value changed across a threshold,
+        etc.).
+        """
+        return from_state.state != to_state.state
+
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state matches the expected state(s)."""
+        """Check if the state is a target state for the trigger.
+
+        Called only after `state.state` has been filtered against
+        `_excluded_states`, so subclasses don't need to repeat that
+        check. Default: any non-excluded state is a target. Override
+        to restrict (specific to_states, value within a threshold,
+        etc.).
+        """
+        return True
 
     def _should_include(self, state: State) -> bool:
         """Check if an entity should participate in all/count checks.
@@ -473,19 +493,26 @@ class EntityTriggerBase(Trigger):
                     )
                     return matches >= 1
                 # Behavior any: check the individual entity's state
-                if not to_state:
+                if not to_state or to_state.state in self._excluded_states:
                     return False
                 return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
                 return
 
-            # The trigger should never fire if the new state is not valid
-            if not self.is_valid_state(to_state):
+            # The trigger should never fire if the new state is excluded
+            # or not a target state.
+            if to_state.state in self._excluded_states or not self.is_valid_state(
+                to_state
+            ):
                 return
 
-            # The trigger should never fire if the transition is not valid
-            if not self.is_valid_transition(from_state, to_state):
+            # The trigger should never fire if the origin state is excluded
+            # or the transition is not valid.
+            if (
+                from_state.state in self._excluded_from_states
+                or not self.is_valid_transition(from_state, to_state)
+            ):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -570,10 +597,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
     _to_states: set[str]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
         return (
             from_value != self._get_tracked_value(to_state)
@@ -593,9 +617,6 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
         from_value = self._get_tracked_value(from_state)
         return (
             from_value != self._get_tracked_value(to_state)
@@ -620,10 +641,21 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state is valid."""
-        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN) and bool(
-            self._get_tracked_value(state) != self._from_state
-        )
+        """Check that the new state is different from the origin state."""
+        return bool(self._get_tracked_value(state) != self._from_state)
+
+
+class StatelessEntityTriggerBase(EntityTriggerBase):
+    """Trigger for entities that don't carry meaningful state.
+
+    Used for stateless entities (buttons, scenes, doorbells, events)
+    whose `state.state` is just a timestamp of the last activation.
+    `STATE_UNKNOWN` is a legitimate prior state — the first activation
+    after startup must still fire the trigger.
+    """
+
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
+    _excluded_from_states: ClassVar[frozenset[str]] = frozenset({STATE_UNAVAILABLE})
 
 
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
@@ -802,10 +834,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
 
 
@@ -864,10 +893,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the tracked value crossed into the threshold range."""
         return not self.is_valid_state(from_state)
 
 

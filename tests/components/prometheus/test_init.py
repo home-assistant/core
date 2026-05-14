@@ -2836,7 +2836,7 @@ def mock_client_fixture():
     with mock.patch(f"{PROMETHEUS_PATH}.prometheus_client") as client:
         counter_client = mock.MagicMock()
         client.Counter = mock.MagicMock(return_value=counter_client)
-        setattr(counter_client, "labels", mock.MagicMock(return_value=mock.MagicMock()))
+        counter_client.labels = mock.MagicMock(return_value=mock.MagicMock())
         yield counter_client
 
 
