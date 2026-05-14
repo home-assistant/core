@@ -207,7 +207,7 @@ def validate_state(state: str) -> str:
 
 def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
-    setattr(func, "_hass_callback", True)
+    setattr(func, "_hass_callback", True)  # noqa: B010
     return func
 
 
