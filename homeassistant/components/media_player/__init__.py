@@ -17,7 +17,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1449,6 +1449,43 @@ async def websocket_search_media(
 
 _FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
+# Trailer markers for image formats whose completeness we can verify cheaply.
+# Each entry maps a normalized image MIME type to the bytes the body must end
+# with for the image to be considered intact. Used to discard truncated bodies
+# that aiohttp accepts silently when an upstream chunked stream is reset
+# mid-body without raising (e.g. some Sonos /getaa artwork responses).
+_IMAGE_TRAILERS: Final[dict[str, bytes]] = {
+    "image/jpeg": b"\xff\xd9",
+    "image/png": b"\x49\x45\x4e\x44\xae\x42\x60\x82",
+    "image/gif": b"\x3b",
+}
+
+
+def _image_response_appears_complete(
+    response: aiohttp.ClientResponse, body: bytes, content_type: str | None
+) -> bool:
+    """Return False when the response body looks like it was truncated.
+
+    aiohttp does not always raise when an upstream connection drops mid-body:
+    a non-chunked source can close after some bytes but the advertised
+    Content-Length goes unchecked, and some chunked sources emit what looks
+    like a clean stream end while sending fewer bytes than the underlying
+    object. Both produce silently-truncated bodies that, if cached, leave
+    users with permanently broken artwork. This is a best-effort check that
+    catches the common shapes without per-source logic.
+    """
+    if (cl := response.headers.get(CONTENT_LENGTH)) is not None:
+        try:
+            expected = int(cl)
+        except ValueError:
+            pass
+        else:
+            if expected != len(body):
+                return False
+    if content_type and (trailer := _IMAGE_TRAILERS.get(content_type.lower())):
+        return body.endswith(trailer)
+    return True
+
 
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
@@ -1459,9 +1496,20 @@ async def async_fetch_image(
     with suppress(TimeoutError):
         response = await websession.get(url, timeout=_FETCH_TIMEOUT)
         if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+            body = await response.read()
+            ct_header = response.headers.get(CONTENT_TYPE)
+            ct = ct_header.split(";")[0] if ct_header else None
+            if _image_response_appears_complete(response, body, ct):
+                content = body
+                content_type = ct
+            else:
+                logger.warning(
+                    "Discarding truncated image response from %s "
+                    "(%d bytes, content-type %s)",
+                    url,
+                    len(body),
+                    ct,
+                )
 
     if content is None:
         url_parts = URL(url)

@@ -177,6 +177,81 @@ async def test_get_image_http_log_credentials_redacted(
     ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("response_body", "response_headers", "expect_status", "expect_log_fragment"),
+    [
+        pytest.param(
+            b"\xff\xd8\xff\xe0" + b"\x00" * 1024,
+            {"Content-Type": "image/jpeg"},
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Discarding truncated image response",
+            id="jpeg_missing_eoi",
+        ),
+        pytest.param(
+            b"\x89PNG\r\n\x1a\n" + b"\x00" * 1024,
+            {"Content-Type": "image/png"},
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Discarding truncated image response",
+            id="png_missing_iend",
+        ),
+        pytest.param(
+            b"hello-world",
+            {"Content-Type": "image/jpeg", "Content-Length": "9999"},
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "Discarding truncated image response",
+            id="content_length_mismatch",
+        ),
+        pytest.param(
+            b"\xff\xd8\xff\xe0" + b"\x00" * 1024 + b"\xff\xd9",
+            {"Content-Type": "image/jpeg"},
+            HTTPStatus.OK,
+            None,
+            id="jpeg_complete_with_eoi",
+        ),
+    ],
+)
+async def test_get_image_http_truncated_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    response_body: bytes,
+    response_headers: dict[str, str],
+    expect_status: HTTPStatus,
+    expect_log_fragment: str | None,
+) -> None:
+    """Test silently-truncated image responses are discarded, not cached.
+
+    aiohttp can return partial bytes without raising when an upstream
+    chunked stream is reset mid-body, or when a Content-Length is
+    advertised but the connection closes early. async_fetch_image must
+    detect this and avoid caching the partial body as if it were the
+    full image (which would otherwise persist for the cache lifetime).
+    """
+    url = "http://example.com/truncated.jpg"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=response_body, headers=response_headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == expect_status
+    if expect_log_fragment is not None:
+        assert expect_log_fragment in caplog.text
+    else:
+        assert "Discarding truncated image response" not in caplog.text
+        body = await resp.read()
+        assert body == response_body
+
+
 async def test_get_async_get_browse_image(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
