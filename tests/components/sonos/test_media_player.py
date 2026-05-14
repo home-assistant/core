@@ -95,6 +95,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
+from tests.common import load_json_value_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -1657,54 +1658,32 @@ def test_extract_soundcloud_track_id(uri: str, expected_id: str | None) -> None:
     assert _extract_soundcloud_track_id(uri) == expected_id
 
 
-# Captured from a live Sonos Office (S2) speaker playing a SoundCloud favorite,
-# May 2026. Documented on home-assistant/core#170551. The /getaa album_art_uri
-# is what Sonos hands out for SoundCloud tracks; HA's image proxy cannot satisfy
-# its authentication, so we replace it with the SoundCloud oEmbed thumbnail.
-_SOUNDCLOUD_TRACK_URI = (
-    "x-sonosapi-hls-static:track-%3esoundcloud%3atracks%3a187982555"
-    "?sid=160&flags=8232&sn=25"
-)
-_SOUNDCLOUD_ENQUEUED_URI = (
-    "x-sonos-http:track-%3Esoundcloud%3Atracks%3A187982555.mp3?sid=160&flags=8232&sn=17"
-)
-_SOUNDCLOUD_GETAA_URI = (
-    "/getaa?s=1&u=x-sonosapi-hls-static%3atrack-%253esoundcloud"
-    "%253atracks%253a187982555%3fsid%3d160%26flags%3d8232%26sn%3d25"
-)
+def _load_soundcloud_event(soco: MockSoCo) -> SonosMockEvent:
+    """Load the SoundCloud avTransport event captured from a live Sonos speaker.
 
-
-def _make_soundcloud_event(media_event: SonosMockEvent) -> SonosMockEvent:
-    """Mutate media_event so it reflects a SoundCloud HLS track."""
-    media_event.variables.update(
-        {
-            "current_track_uri": _SOUNDCLOUD_TRACK_URI,
-            "current_track_duration": "1:02:12",
-            "enqueued_transport_uri": _SOUNDCLOUD_ENQUEUED_URI,
-            "av_transport_uri": _SOUNDCLOUD_ENQUEUED_URI,
-            "current_track_meta_data": DidlMusicTrack(
-                title="Alex Cruz - Deep & Sexy Podcast #17",
-                creator="Alex Cruz",
-                parent_id="-1",
-                item_id="-1",
-                restricted=True,
-                resources=[],
-                desc=None,
-                album_art_uri=_SOUNDCLOUD_GETAA_URI,
-            ),
-        }
+    The fixture in ``av_transport_soundcloud.json`` was captured against a real
+    Sonos S2 speaker playing a SoundCloud favorite — see home-assistant/core#170551
+    for the full DIDL. The captured ``current_track_meta_data`` is materialized
+    into a :class:`DidlMusicTrack` here so the JSON stays plain-string.
+    """
+    variables = load_json_value_fixture("av_transport_soundcloud.json", DOMAIN)
+    variables["current_track_meta_data"] = DidlMusicTrack(
+        **variables["current_track_meta_data"]
     )
-    return media_event
+    return SonosMockEvent(soco, soco.avTransport, variables)
 
 
 def _stub_soundcloud_track_info(soco: MockSoCo) -> None:
-    """Make poll_track_info match the SoundCloud event."""
+    """Stub poll_track_info to match the SoundCloud avTransport fixture."""
     soco.get_current_track_info.return_value = {
         "title": "Alex Cruz - Deep & Sexy Podcast #17",
         "artist": "Alex Cruz",
         "album": "",
-        "album_art": _SOUNDCLOUD_GETAA_URI,
-        "uri": _SOUNDCLOUD_ENQUEUED_URI,
+        "album_art": (
+            "/getaa?s=1&u=x-sonosapi-hls-static%3atrack-%253esoundcloud"
+            "%253atracks%253a187982555%3fsid%3d160%26flags%3d8232%26sn%3d25"
+        ),
+        "uri": "x-sonos-http:track-%3Esoundcloud%3Atracks%3A187982555.mp3?sid=160&flags=8232&sn=17",
         "playlist_position": "1",
         "duration": "1:02:12",
         "position": "0:00:00",
@@ -1716,7 +1695,6 @@ async def test_soundcloud_event_resolves_artwork_via_oembed(
     hass: HomeAssistant,
     soco: MockSoCo,
     async_autosetup_sonos: None,
-    media_event: SonosMockEvent,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """A SoundCloud track event drives entity_picture from the oEmbed thumbnail.
@@ -1728,10 +1706,8 @@ async def test_soundcloud_event_resolves_artwork_via_oembed(
     thumbnail_url = "https://i1.sndcdn.com/artworks-test-large.jpg"
     aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, json={"thumbnail_url": thumbnail_url})
 
-    _make_soundcloud_event(media_event)
     _stub_soundcloud_track_info(soco)
-
-    soco.avTransport.subscribe.return_value.callback(media_event)
+    soco.avTransport.subscribe.return_value.callback(_load_soundcloud_event(soco))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("media_player.zone_a")
@@ -1749,16 +1725,13 @@ async def test_soundcloud_event_oembed_failure_leaves_artwork_unset(
     hass: HomeAssistant,
     soco: MockSoCo,
     async_autosetup_sonos: None,
-    media_event: SonosMockEvent,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """An oEmbed failure must leave entity_picture unset — never falling back to /getaa."""
+    """An oEmbed failure must leave entity_picture unset, never falling back to /getaa."""
     aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, status=500)
 
-    _make_soundcloud_event(media_event)
     _stub_soundcloud_track_info(soco)
-
-    soco.avTransport.subscribe.return_value.callback(media_event)
+    soco.avTransport.subscribe.return_value.callback(_load_soundcloud_event(soco))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("media_player.zone_a")
