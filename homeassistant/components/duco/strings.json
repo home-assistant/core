@@ -7,7 +7,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device you entered belongs to a different Duco box.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unsupported_board": "This Duco board is not supported by this integration. Only the Duco Connectivity Board is supported."
+      "unsupported_board": "This Duco system is not supported by this integration. Supported systems are Duco Energy, Duco Focus, and Duco Silent Connect equipped with a Duco Connectivity Board running public API 2.1 or newer."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
