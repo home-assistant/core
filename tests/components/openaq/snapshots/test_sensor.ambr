@@ -197,7 +197,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Distance',
+    'object_id_base': 'Distance from Home Assistant',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -205,7 +205,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Distance',
+    'original_name': 'Distance from Home Assistant',
     'platform': 'openaq',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -220,7 +220,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenAQ',
       'device_class': 'distance',
-      'friendly_name': 'Del Norte Distance',
+      'friendly_name': 'Del Norte Distance from Home Assistant',
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
