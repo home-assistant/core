@@ -1,7 +1,5 @@
 """Coordinator for lifx."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -382,7 +380,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if update_rssi:
             # We always send the rssi request second
-            self._rssi = int(floor(10 * log10(responses[1].signal) + 0.5))
+            self._rssi = floor(10 * log10(responses[1].signal) + 0.5)
 
         if self.is_matrix or self.is_extended_multizone or self.is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]

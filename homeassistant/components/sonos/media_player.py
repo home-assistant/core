@@ -1,7 +1,5 @@
 """Support to interface with Sonos players."""
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 import logging
@@ -40,7 +38,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.plex.services import (  # pylint: disable=home-assistant-component-root-import
     process_plex_payload,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -309,7 +307,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = int(round(volume * 100))
+        self.soco.volume = round(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_shuffle(self, shuffle: bool) -> None:

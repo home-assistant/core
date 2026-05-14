@@ -1,7 +1,5 @@
 """Support for azure service bus notification."""
 
-from __future__ import annotations
-
 import json
 import logging
 from typing import Any

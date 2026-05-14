@@ -1,7 +1,5 @@
 """Entities for SolarLog integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

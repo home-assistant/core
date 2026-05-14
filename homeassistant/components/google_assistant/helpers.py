@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Collection, Mapping

@@ -1,7 +1,5 @@
 """Component to make instant statistics about your history."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 import datetime

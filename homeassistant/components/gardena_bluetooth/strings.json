@@ -134,6 +134,9 @@
       "remaining_open_timestamp": {
         "name": "Valve closing"
       },
+      "remaining_watering_timestamp": {
+        "name": "Watering finished"
+      },
       "sensor_battery_level": {
         "name": "Sensor battery"
       },

@@ -1,13 +1,13 @@
 """Test service helpers."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 import dataclasses
 import io
 import threading
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -47,6 +48,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import (
     Integration,
     async_get_integration,
@@ -72,17 +74,6 @@ from tests.common import (
 SUPPORT_A = 1
 SUPPORT_B = 2
 SUPPORT_C = 4
-
-
-@pytest.fixture
-def mock_handle_entity_call():
-    """Mock service platform call."""
-    with patch(
-        "homeassistant.helpers.service._handle_entity_call",
-        new_callable=AsyncMock,
-        return_value=None,
-    ) as mock_call:
-        yield mock_call
 
 
 @pytest.fixture
@@ -124,6 +115,18 @@ def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
     for entity in entities.values():
         entity.hass = hass
     return entities
+
+
+@pytest.fixture
+def mock_entities_method() -> Generator[AsyncMock]:
+    """Patch test_method on the base Entity class."""
+    mock = AsyncMock()
+
+    async def _stub(self: Entity, **kwargs: Any) -> None:
+        await mock(self, **kwargs)
+
+    with patch.object(Entity, "test_method", _stub, create=True):
+        yield mock
 
 
 @pytest.fixture
@@ -1685,7 +1688,9 @@ async def test_call_with_sync_attr(hass: HomeAssistant, mock_entities) -> None:
 
 
 async def test_call_single_entity_uses_parallel_updates(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check that single entity calls go through async_request_call."""
     entity = mock_entities["light.kitchen"]
@@ -1697,7 +1702,7 @@ async def test_call_single_entity_uses_parallel_updates(
     service_call = service.entity_service_call(
         hass,
         mock_entities,
-        Mock(),
+        "test_method",
         ServiceCall(
             hass,
             "test_domain",
@@ -1709,13 +1714,13 @@ async def test_call_single_entity_uses_parallel_updates(
 
     # Give the event loop a chance to progress; the call should be blocked
     await asyncio.sleep(0)
-    assert mock_handle_entity_call.await_count == 0
+    mock_entities_method.assert_not_called()
 
     # Release the semaphore so the call can proceed
     entity.parallel_updates.release()
     await task
 
-    assert mock_handle_entity_call.await_count == 1
+    mock_entities_method.assert_called_once_with(entity)
 
 
 async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
@@ -1737,7 +1742,9 @@ async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
 
 
 async def test_call_context_target_all(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check we only target allowed entities if targeting all."""
     with patch(
@@ -1752,7 +1759,7 @@ async def test_call_context_target_all(
         await service.entity_service_call(
             hass,
             mock_entities,
-            Mock(),
+            "test_method",
             ServiceCall(
                 hass,
                 "test_domain",
@@ -1762,12 +1769,13 @@ async def test_call_context_target_all(
             ),
         )
 
-    assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    mock_entities_method.assert_called_once_with(mock_entities["light.kitchen"])
 
 
 async def test_call_context_target_specific(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check targeting specific entities."""
     with patch(
@@ -1781,7 +1789,7 @@ async def test_call_context_target_specific(
         await service.entity_service_call(
             hass,
             mock_entities,
-            Mock(),
+            "test_method",
             ServiceCall(
                 hass,
                 "test_domain",
@@ -1791,12 +1799,12 @@ async def test_call_context_target_specific(
             ),
         )
 
-    assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    mock_entities_method.assert_called_once_with(mock_entities["light.kitchen"])
 
 
 async def test_call_context_target_specific_no_auth(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
 ) -> None:
     """Check targeting specific entities without auth."""
     with (
@@ -1809,7 +1817,7 @@ async def test_call_context_target_specific_no_auth(
         await service.entity_service_call(
             hass,
             mock_entities,
-            Mock(),
+            "test_method",
             ServiceCall(
                 hass,
                 "test_domain",
@@ -1824,32 +1832,35 @@ async def test_call_context_target_specific_no_auth(
 
 
 async def test_call_no_context_target_all(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check we target all if no user context given."""
     await service.entity_service_call(
         hass,
         mock_entities,
-        Mock(),
+        "test_method",
         ServiceCall(
             hass, "test_domain", "test_service", data={"entity_id": ENTITY_MATCH_ALL}
         ),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 4
-    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
-        mock_entities.values()
+    assert mock_entities_method.call_args_list == unordered(
+        mock_call(entity) for entity in mock_entities.values()
     )
 
 
 async def test_call_no_context_target_specific(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check we can target specified entities."""
     await service.entity_service_call(
         hass,
         mock_entities,
-        Mock(),
+        "test_method",
         ServiceCall(
             hass,
             "test_domain",
@@ -1858,42 +1869,23 @@ async def test_call_no_context_target_specific(
         ),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 1
-    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
-
-
-async def test_call_with_match_all(
-    hass: HomeAssistant,
-    mock_handle_entity_call,
-    mock_entities,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Check we only target allowed entities if targeting all."""
-    await service.entity_service_call(
-        hass,
-        mock_entities,
-        Mock(),
-        ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
-    )
-
-    assert len(mock_handle_entity_call.mock_calls) == 4
-    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
-        mock_entities.values()
-    )
+    mock_entities_method.assert_called_once_with(mock_entities["light.kitchen"])
 
 
 async def test_call_with_omit_entity_id(
-    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
 ) -> None:
     """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
         mock_entities,
-        Mock(),
+        "test_method",
         ServiceCall(hass, "test_domain", "test_service"),
     )
 
-    assert len(mock_handle_entity_call.mock_calls) == 0
+    mock_entities_method.assert_not_called()
 
 
 async def test_register_admin_service(
@@ -3104,10 +3096,114 @@ async def test_register_platform_entity_service_limited_to_matching_platforms(
     }
 
 
+async def test_register_batched_platform_entity_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a batched platform entity service."""
+    calls: list[tuple[list[MockEntity], ServiceCall]] = []
+
+    async def handle_service(
+        batch_entities: list[MockEntity], call: ServiceCall
+    ) -> None:
+        calls.append((batch_entities, call))
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={},
+        func=handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions["mock_platform"]["hello"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+    assert calls == []
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": entity1.entity_id}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0][0] == [entity1]
+    # Verify entity service fields are stripped from the ServiceCall
+    assert calls[0][1].data == {}
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+    assert len(calls) == 2
+    assert calls[1][0] == unordered([entity1, entity2])
+
+
+async def test_register_batched_platform_entity_service_response_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test a batched platform entity service that supports response data."""
+
+    async def handle_service(
+        entities: list[MockEntity], call: ServiceCall
+    ) -> EntityServiceResponse:
+        assert call.return_response
+        return {
+            e.entity_id: {"response-key": f"response-value-{e.entity_id}"}
+            for e in entities
+        }
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={"some": str},
+        func=handle_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity1": {
+            "response-key": "response-value-mock_integration.entity1"
+        },
+        "mock_integration.entity2": {
+            "response-key": "response-value-mock_integration.entity2"
+        },
+    }
+
+
 async def test_register_platform_entity_service_none_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test registering a service with schema set to None."""
+    """Test registering a service with schema set to None.
+
+    Also tests the batched variant.
+    """
     entities = []
 
     @callback
@@ -3121,6 +3217,22 @@ async def test_register_platform_entity_service_none_schema(
         entity_domain="mock_integration",
         schema=None,
         func=handle_service,
+    )
+
+    batched_entities: list[list[MockEntity]] = []
+
+    async def handle_batched_service(
+        batch: list[MockEntity], call: ServiceCall
+    ) -> None:
+        batched_entities.append(batch)
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello_batched",
+        entity_domain="mock_integration",
+        schema=None,
+        func=handle_batched_service,
     )
 
     entity_platform = MockEntityPlatform(
@@ -3138,11 +3250,21 @@ async def test_register_platform_entity_service_none_schema(
     assert entity1 in entities
     assert entity2 in entities
 
+    await hass.services.async_call(
+        "mock_platform", "hello_batched", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(batched_entities) == 1
+    assert len(batched_entities[0]) == 2
+
 
 async def test_register_platform_entity_service_non_entity_service_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test attempting to register a service with a non entity service schema."""
+    """Test attempting to register a service with a non entity service schema.
+
+    Also tests the batched variant.
+    """
     expected_message = "registers an entity service with a non entity service schema"
 
     for idx, schema in enumerate(
@@ -3161,6 +3283,15 @@ async def test_register_platform_entity_service_non_entity_service_schema(
                 schema=schema,
                 func=Mock(),
             )
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            service.async_register_batched_platform_entity_service(
+                hass,
+                "mock_platform",
+                f"hello_batched_{idx}",
+                entity_domain="mock_integration",
+                schema=schema,
+                func=AsyncMock(),
+            )
 
     for idx, schema in enumerate(
         (
@@ -3177,6 +3308,49 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             schema=schema,
             func=Mock(),
         )
+        service.async_register_batched_platform_entity_service(
+            hass,
+            "mock_platform",
+            f"test_service_batched_{idx}",
+            entity_domain="mock_integration",
+            schema=schema,
+            func=AsyncMock(),
+        )
+
+
+async def test_async_handle_entity_calls(hass: HomeAssistant) -> None:
+    """Test async_handle_entity_calls dispatches calls to individual entities."""
+    entity1 = MockEntity(entity_id="light.entity1", available=True, should_poll=False)
+    entity2 = MockEntity(entity_id="light.entity2", available=True, should_poll=False)
+    entity1.hass = hass
+    entity2.hass = hass
+
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    async def mock_method1(**kwargs: Any) -> None:
+        calls.append(("light.entity1", kwargs))
+
+    async def mock_method2(**kwargs: Any) -> None:
+        calls.append(("light.entity2", kwargs))
+
+    entity1.async_test_method = mock_method1
+    entity2.async_test_method = mock_method2
+
+    context = Context()
+    result = await service.async_handle_entity_calls(
+        "async_test_method",
+        [
+            (entity1, {"brightness": 100}),
+            (entity2, {"brightness": 200}),
+        ],
+        context=context,
+    )
+
+    assert len(calls) == 2
+    assert calls[0] == ("light.entity1", {"brightness": 100})
+    assert calls[1] == ("light.entity2", {"brightness": 200})
+    assert "light.entity1" in result
+    assert "light.entity2" in result
 
 
 async def test_get_service_config_entry(hass: HomeAssistant) -> None:

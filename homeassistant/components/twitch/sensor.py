@@ -1,7 +1,5 @@
 """Support for the Twitch stream status."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

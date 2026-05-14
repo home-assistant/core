@@ -1,15 +1,13 @@
 """Issue repair flow for Anthropic."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import anthropic
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -19,7 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHAT_MODEL, DEPRECATED_MODELS, DOMAIN
+from .const import CONF_CHAT_MODEL, DOMAIN
 from .coordinator import model_alias
 
 if TYPE_CHECKING:
@@ -42,9 +40,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         self._current_subentry_id = None
         self._model_list_cache = None
 
-    async def async_step_init(
-        self, user_input: dict[str, str]
-    ) -> data_entry_flow.FlowResult:
+    async def async_step_init(self, user_input: dict[str, str]) -> RepairsFlowResult:
         """Handle the steps of a fix flow."""
         if user_input.get(CONF_CHAT_MODEL):
             self._async_update_current_subentry(user_input)
@@ -63,7 +59,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             model_list = [
                 model_option
                 for model_option in await self.get_model_list(client)
-                if not model_option["value"].startswith(tuple(DEPRECATED_MODELS))
+                if model_option["value"] not in DEPRECATED_MODELS
             ]
             self._model_list_cache[entry.entry_id] = model_list
 
@@ -105,6 +101,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 "model": model,
                 "subentry_name": subentry.title,
                 "subentry_type": self._format_subentry_type(subentry.subentry_type),
+                "retirement_date": DEPRECATED_MODELS[model],
             },
         )
 
@@ -131,7 +128,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 continue
             for subentry in entry.subentries.values():
                 model = subentry.data.get(CONF_CHAT_MODEL)
-                if model and model.startswith(tuple(DEPRECATED_MODELS)):
+                if model and model in DEPRECATED_MODELS:
                     yield entry.entry_id, subentry.subentry_id
 
     async def _async_next_target(
@@ -158,7 +155,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 continue
 
             model = subentry.data.get(CONF_CHAT_MODEL)
-            if not model or not model.startswith(tuple(DEPRECATED_MODELS)):
+            if not model or model not in DEPRECATED_MODELS:
                 continue
 
             self._current_entry_id = entry_id

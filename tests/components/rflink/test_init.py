@@ -58,7 +58,7 @@ async def mock_rflink(
         # failures can be a list of booleans indicating in which sequence
         # creating a connection should success or fail
         if failures:
-            fail = failures.pop()
+            fail = failures.pop(0)  # removes from left to right
         else:
             fail = False
 

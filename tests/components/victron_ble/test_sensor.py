@@ -41,6 +41,7 @@ from .fixtures import (
     VICTRON_VEBUS_BAD_KEY_SERVICE_INFO,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
+    VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -150,6 +151,28 @@ def _inject_bad_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
     """
     info = VICTRON_VEBUS_BAD_KEY_SERVICE_INFO
     # Vary the last byte so each injection is unique
+    raw = bytearray(info.manufacturer_data[VICTRON_IDENTIFIER])
+    raw[-1] = seq & 0xFF
+    device = generate_ble_device(address=info.address, name=info.name, details={})
+    adv = generate_advertisement_data(
+        local_name=info.name,
+        manufacturer_data={VICTRON_IDENTIFIER: bytes(raw)},
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+        rssi=-60,
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, adv, time.monotonic(), "local", True
+    )
+
+
+def _inject_unrecognized_mode_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
+    """Inject a Victron advertisement with an unrecognized mode byte.
+
+    detect_device_type returns None for this payload so the reauth guard
+    must treat it as neutral (neither increment nor reset the failure counter).
+    """
+    info = VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO
     raw = bytearray(info.manufacturer_data[VICTRON_IDENTIFIER])
     raw[-1] = seq & 0xFF
     device = generate_ble_device(address=info.address, name=info.name, details={})
@@ -323,3 +346,76 @@ async def test_charger_error_state(
     state = hass.states.get("sensor.solar_charger_charger_error")
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reauth_not_triggered_on_unrecognized_mode(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+) -> None:
+    """Test reauth is NOT triggered by advertisements with unrecognized mode bytes.
+
+    Some Victron devices broadcast advertisements with mode bytes that
+    detect_device_type does not recognize (returns None).
+    validate_advertisement_key also returns False for these, but that does
+    not mean the encryption key is wrong.
+
+    Regression test for https://github.com/home-assistant/core/issues/168019
+    """
+    entry = mock_config_entry_added_to_hass
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # First inject a valid advertisement so update.devices is populated
+    inject_bluetooth_service_info(hass, VICTRON_VEBUS_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    # Now send many unrecognized-mode advertisements
+    for i in range(REAUTH_AFTER_FAILURES + 5):
+        _inject_unrecognized_mode_advertisement(hass, seq=i)
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reauth_still_triggers_across_unrecognized_mode(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+) -> None:
+    """Test that unrecognized-mode advertisements are neutral for the failure counter.
+
+    The sequence bad → bad → unrecognized → bad must still trigger reauth
+    because unrecognized advertisements should neither increment nor reset the
+    consecutive failure counter.
+
+    Regression test for https://github.com/home-assistant/core/issues/168019
+    """
+    entry = mock_config_entry_added_to_hass
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # First inject a valid advertisement so update.devices is populated
+    inject_bluetooth_service_info(hass, VICTRON_VEBUS_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    # bad, bad (2 failures)
+    _inject_bad_advertisement(hass, seq=100)
+    await hass.async_block_till_done()
+    _inject_bad_advertisement(hass, seq=101)
+    await hass.async_block_till_done()
+
+    # unrecognized mode — should be neutral
+    _inject_unrecognized_mode_advertisement(hass, seq=50)
+    await hass.async_block_till_done()
+
+    # one more bad → 3 consecutive failures → reauth
+    _inject_bad_advertisement(hass, seq=102)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

@@ -1,7 +1,5 @@
 """Debounce helper."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
@@ -195,8 +193,9 @@ class Debouncer[_R_co]:
 
     @callback
     def _schedule_timer(self) -> None:
-        """Schedule a timer."""
-        if not self._shutdown_requested:
-            self._timer_task = self.hass.loop.call_later(
-                self.cooldown, self._on_debounce
-            )
+        """Schedule a timer, cancelling any previously-scheduled handle."""
+        if self._shutdown_requested:
+            return
+        if self._timer_task is not None:
+            self._timer_task.cancel()
+        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)

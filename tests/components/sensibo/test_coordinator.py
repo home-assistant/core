@@ -1,7 +1,5 @@
 """The test for the sensibo coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock

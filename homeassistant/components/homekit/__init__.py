@@ -1,7 +1,5 @@
 """Support for Apple HomeKit."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
@@ -27,7 +25,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.device_automation.trigger import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.device_automation.trigger import (  # pylint: disable=home-assistant-component-root-import
     async_validate_trigger_config,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass

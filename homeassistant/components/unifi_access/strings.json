@@ -136,11 +136,48 @@
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
+    "invalid_lock_rule_type": {
+      "message": "The provided lock rule type is invalid."
+    },
+    "invalid_target": {
+      "message": "The selected device is not a UniFi Access door."
+    },
     "lock_rule_failed": {
       "message": "Failed to update the door lock rule."
     },
     "unlock_failed": {
       "message": "Failed to unlock the door."
+    }
+  },
+  "selector": {
+    "rule": {
+      "options": {
+        "custom": "Custom",
+        "keep_lock": "Keep locked",
+        "keep_unlock": "Keep unlocked",
+        "lock_early": "Lock early",
+        "reset": "Reset"
+      }
+    }
+  },
+  "services": {
+    "set_lock_rule": {
+      "description": "Apply a temporary lock rule to a UniFi Access door.",
+      "fields": {
+        "device_id": {
+          "description": "The UniFi Access door to update.",
+          "name": "Door"
+        },
+        "interval": {
+          "description": "How long the rule stays active. Defaults to 10 minutes.",
+          "name": "Interval"
+        },
+        "rule": {
+          "description": "The lock rule to apply.",
+          "name": "Rule"
+        }
+      },
+      "name": "Set lock rule"
     }
   }
 }

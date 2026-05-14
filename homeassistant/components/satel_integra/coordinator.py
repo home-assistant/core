@@ -1,7 +1,5 @@
 """Coordinator for Satel Integra."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
@@ -49,6 +47,17 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             config_entry=entry,
             name=f"{entry.entry_id} {self.__class__.__name__}",
         )
+
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        self.client.controller.add_connection_status_callback(
+            self._async_handle_connection_state_update
+        )
+
+    @callback
+    def _async_handle_connection_state_update(self) -> None:
+        """Notify listeners on connection state changes from the client."""
+        self.async_update_listeners()
 
 
 class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
