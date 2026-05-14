@@ -1,7 +1,5 @@
 """Sensor platform for Met Office Weather Warnings."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any

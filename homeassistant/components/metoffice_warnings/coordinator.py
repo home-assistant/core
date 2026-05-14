@@ -1,22 +1,25 @@
 """Data update coordinator for Met Office Weather Warnings."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from logging import getLogger
 import re
+from xml.etree import ElementTree as ET
 
 import aiohttp
-from defusedxml import ElementTree as ET
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.update_coordinator import (
+    REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import BASE_URL, CONF_REGION, DOMAIN, SCAN_INTERVAL
+from .const import BASE_URL, CONF_REGION, DOMAIN, REFRESH_COOLDOWN, SCAN_INTERVAL
 
 _LOGGER = getLogger(__name__)
 
@@ -63,6 +66,12 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
             config_entry=config_entry,
             name=f"{DOMAIN} {self._region}",
             update_interval=SCAN_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=REFRESH_COOLDOWN,
+                immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+            ),
         )
 
     async def _async_update_data(self) -> MetOfficeWarningsData:
@@ -74,18 +83,28 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
                 resp.raise_for_status()
                 text = await resp.text()
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise UpdateFailed(f"Error fetching feed from {self._url}: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"url": self._url, "error": str(err)},
+            ) from err
 
         try:
-            root = ET.fromstring(text)
+            root = ET.fromstring(text)  # noqa: S314
         except ET.ParseError as err:
             raise UpdateFailed(
-                f"Error parsing feed XML from {self._url}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="parse_error",
+                translation_placeholders={"url": self._url, "error": str(err)},
             ) from err
 
         channel = root.find("channel")
         if channel is None:
-            raise UpdateFailed(f"No channel element found in feed from {self._url}")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_channel",
+                translation_placeholders={"url": self._url},
+            )
 
         pub_date: datetime | None = None
         pub_date_text = channel.findtext("pubDate")

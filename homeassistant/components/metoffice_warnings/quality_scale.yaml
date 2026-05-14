@@ -66,7 +66,7 @@ rules:
     status: exempt
     comment: Only one entity per config entry.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
@@ -79,4 +79,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

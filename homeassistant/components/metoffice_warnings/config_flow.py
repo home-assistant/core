@@ -1,7 +1,5 @@
 """Config flow for Met Office Weather Warnings."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import aiohttp
