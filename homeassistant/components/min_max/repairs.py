@@ -1,7 +1,7 @@
 """Repairs platform for the Min/Max integration."""
 
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -40,7 +40,6 @@ class MigrateToGroupSensorFlow(RepairsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the migration step of a fix flow."""
-        errors: dict[str, str] = {}
         entity_reg = er.async_get(self.hass)
         old_entity = entity_reg.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, self.entry.entry_id
@@ -71,14 +70,18 @@ class MigrateToGroupSensorFlow(RepairsFlow):
                 disabled_by=ConfigEntryDisabler.USER,
             )
 
-            await self.hass.config_entries.async_unload(self.entry.entry_id)
+            if not await self.hass.config_entries.async_unload(self.entry.entry_id):
+                return self.async_abort(reason="unload_failed")
             await self.hass.config_entries.async_add(new_config_entry)
-            entity_reg.async_update_entity_platform(
-                old_entity,
-                GROUP_DOMAIN,
-                new_config_entry_id=new_config_entry.entry_id,
-                new_unique_id=new_config_entry.entry_id,
-            )
+            try:
+                entity_reg.async_update_entity_platform(
+                    old_entity,
+                    GROUP_DOMAIN,
+                    new_config_entry_id=new_config_entry.entry_id,
+                    new_unique_id=new_config_entry.entry_id,
+                )
+            except ValueError:
+                return self.async_abort(reason="entity_update_failed")
             await self.hass.config_entries.async_set_disabled_by(
                 entry_id=new_config_entry.entry_id, disabled_by=None
             )
@@ -87,13 +90,13 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             return self.async_create_entry(data={})
 
         entity_info = entity_reg.async_get(old_entity)
-        assert entity_info
+        if TYPE_CHECKING:
+            assert entity_info
         title = er.async_get_full_entity_name(self.hass, entity_info)
 
         return self.async_show_form(
             step_id="migrate",
             data_schema=vol.Schema({}),
-            errors=errors,
             description_placeholders={"title": title},
         )
 
@@ -107,7 +110,8 @@ async def async_create_fix_flow(
     if data and (entry_id := data.get("entry_id")):
         entry_id = cast(str, entry_id)
         entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
+        if TYPE_CHECKING:
+            assert entry
         return MigrateToGroupSensorFlow(entry)
 
     return ConfirmRepairFlow()

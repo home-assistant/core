@@ -1,5 +1,7 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
+import hashlib
+import json
 import logging
 import statistics
 from datetime import datetime
@@ -29,7 +31,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -39,7 +42,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import ulid as ulid_util
 from homeassistant.util import yaml as yaml_util
 
 from . import PLATFORMS
@@ -123,11 +125,11 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     yaml_config = yaml_config.replace("\n", "\n    ")
     yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
 
-    issue_id = "yaml_deprecated-"
-    if platform_config.get(CONF_UNIQUE_ID):
-        issue_id += f"{platform_config[CONF_UNIQUE_ID]}"
-    else:
-        issue_id += ulid_util.ulid()
+    def make_hash(config: dict[str, Any]) -> str:
+        d = hashlib.sha1(json.dumps(config, sort_keys=True).encode())
+        return d.hexdigest()
+
+    issue_id = f"yaml_deprecated-{make_hash(platform_config)}"
     async_create_issue(
         hass,
         DOMAIN,
