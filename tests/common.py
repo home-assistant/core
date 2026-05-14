@@ -1248,7 +1248,7 @@ def patch_yaml_files(files_dict, endswith=True):
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
-            setattr(res, "name", fname)
+            res.name = fname
             return res
 
         # Match using endswith
@@ -1256,7 +1256,7 @@ def patch_yaml_files(files_dict, endswith=True):
             if fname.endswith(ends):
                 _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
-                setattr(res, "name", fname)
+                res.name = fname
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)

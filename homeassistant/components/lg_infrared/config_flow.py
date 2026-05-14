@@ -44,7 +44,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         emitter_entity_ids = async_get_emitters(self.hass)
         receiver_entity_ids = async_get_receivers(self.hass)
         if not emitter_entity_ids and not receiver_entity_ids:
-            return self.async_abort(reason="no_emitters_receivers")
+            return self.async_abort(reason="no_infrared_entities")
 
         errors: dict[str, str] = {}
 
