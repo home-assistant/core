@@ -30,8 +30,6 @@ COUNTRY_DOMAINS = {
 CATEGORY_SENSORS = "sensors"
 CATEGORY_NOTIFICATIONS = "notifications"
 
-HTTP2_RECONNECT_DELAY = 30
-
 # Map service translation keys to Alexa API
 INFO_SKILLS_MAPPING = {
     "calendar_today": "Alexa.Calendar.PlayToday",
