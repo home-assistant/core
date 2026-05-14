@@ -29,7 +29,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 ## Testing
 
 - Use `uv run pytest` to run tests
-- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `.venv/bin/python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
+- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `uv run python3 -m script.translations develop --all`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 - Prefer `@pytest.mark.usefixtures` over arguments, if the argument is not going to be used.
