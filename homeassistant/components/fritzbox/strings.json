@@ -1,4 +1,9 @@
 {
+  "common": {
+    "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
+    "data_description_password": "Password for the user to connect Home Assistant to your FRITZ!Box.",
+    "data_description_username": "Name of the user to connect Home Assistant to your FRITZ!Box."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -20,12 +25,20 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
+        },
         "description": "Do you want to set up {name}?"
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
         },
         "description": "Update your login information for {name}."
       },
@@ -34,7 +47,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "[%key:component::fritzbox::common::data_description_host%]"
         },
         "description": "Update your configuration information for {name}."
       },
@@ -45,7 +58,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "[%key:component::fritzbox::common::data_description_host%]",
+          "password": "[%key:component::fritzbox::common::data_description_password%]",
+          "username": "[%key:component::fritzbox::common::data_description_username%]"
         },
         "description": "Enter your FRITZ!Box information."
       }
