@@ -1,4 +1,5 @@
 """Config flow for konnected.io integration."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import asyncio
 import copy
