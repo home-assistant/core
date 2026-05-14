@@ -19,12 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import MAX_TEMP, MIN_TEMP
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
 PARALLEL_UPDATES = 1
-MIN_TEMP = 7.5
-MAX_TEMP = 28.5
 
 
 async def async_setup_entry(
