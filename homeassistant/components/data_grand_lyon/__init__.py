@@ -6,7 +6,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import DataGrandLyonConfigEntry, DataGrandLyonCoordinator
+from .coordinator import (
+    DataGrandLyonConfigEntry,
+    DataGrandLyonData,
+    DataGrandLyonTclCoordinator,
+    DataGrandLyonVelovCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -22,10 +27,16 @@ async def async_setup_entry(
         password=entry.data[CONF_PASSWORD],
     )
 
-    coordinator = DataGrandLyonCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
+    tcl_coordinator = DataGrandLyonTclCoordinator(hass, entry, client)
+    velov_coordinator = DataGrandLyonVelovCoordinator(hass, entry, client)
 
-    entry.runtime_data = coordinator
+    await tcl_coordinator.async_config_entry_first_refresh()
+    await velov_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = DataGrandLyonData(
+        tcl_coordinator=tcl_coordinator,
+        velov_coordinator=velov_coordinator,
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
