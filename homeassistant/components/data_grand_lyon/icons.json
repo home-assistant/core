@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "default": "mdi:alert"
+      }
+    },
     "sensor": {
       "available_bikes": {
         "default": "mdi:bike"
