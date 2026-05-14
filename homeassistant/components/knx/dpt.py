@@ -139,9 +139,12 @@ _sensor_state_class_overrides: Mapping[str, SensorStateClass | None] = {
 }
 
 _sensor_unit_overrides: Mapping[str, str] = {
-    "13.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergy (VARh in KNX)
-    "13.015": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergykVARh (kVARh in KNX)
-    "29.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,  # DPTReactiveEnergy8Byte (VARh in KNX)
+    # DPTReactiveEnergy (VARh in KNX)
+    "13.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+    # DPTReactiveEnergykVARh (kVARh in KNX)
+    "13.015": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+    # DPTReactiveEnergy8Byte (VARh in KNX)
+    "29.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
 }
 
 
