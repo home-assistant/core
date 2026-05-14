@@ -458,7 +458,8 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
 
         self._attributes = {}
         self.connection_type = connection_type
-        # dict in the format as it comes from fritzconnection
+        # dict in the format as it comes from fritzconnection,
+        # eg: {"NewRemoteHost": "0.0.0.0", "NewExternalPort": 22, ...}
         self.port_mapping = port_mapping
         self._idx = idx  # needed for update routine
         self._attr_entity_category = EntityCategory.CONFIG

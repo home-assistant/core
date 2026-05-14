@@ -298,7 +298,7 @@ class GoogleWeatherEntity(
                     item.precipitation.probability.percent
                 ),
                 ATTR_FORECAST_CLOUD_COVERAGE: item.cloud_cover,
-                ATTR_FORECAST_NATIVE_PRECIPITATION: (item.precipitation.qpf.quantity),
+                ATTR_FORECAST_NATIVE_PRECIPITATION: item.precipitation.qpf.quantity,
                 ATTR_FORECAST_NATIVE_PRESSURE: (
                     item.air_pressure.mean_sea_level_millibars
                 ),
@@ -371,7 +371,7 @@ class GoogleWeatherEntity(
                     ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
                         item.feels_like_min_temperature.degrees
                     ),
-                    ATTR_FORECAST_WIND_BEARING: (night_forecast.wind.direction.degrees),
+                    ATTR_FORECAST_WIND_BEARING: night_forecast.wind.direction.degrees,
                     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: (
                         night_forecast.wind.gust.value
                     ),
