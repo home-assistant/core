@@ -15,7 +15,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import ENTITY_COMPONENTS, QualityScaleRule
-from pylint_home_assistant.helpers.module_info import parse_module
+from pylint_home_assistant.helpers.module_info import get_module_platform
 from pylint_home_assistant.helpers.quality_scale import quality_scale_rule_is_done
 
 
@@ -39,8 +39,10 @@ class ParallelUpdatesChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Check that platform modules define PARALLEL_UPDATES."""
-        parsed = parse_module(node.name)
-        if parsed is None or parsed.module not in ENTITY_COMPONENTS:
+        # get_module_platform only matches exact platform modules
+        # (e.g., sensor.py), not sub-modules (e.g., sensor/storage.py)
+        platform = get_module_platform(node.name)
+        if platform is None or platform not in ENTITY_COMPONENTS:
             return
 
         if not quality_scale_rule_is_done(node, QualityScaleRule.PARALLEL_UPDATES):
