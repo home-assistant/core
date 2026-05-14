@@ -54,6 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         ),
     )
 
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
+
     try:
         await avm_wrapper.async_setup(entry.options)
     except FRITZ_AUTH_EXCEPTIONS as ex:
@@ -68,12 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         raise ConfigEntryAuthFailed("Missing UPnP configuration")
 
     await avm_wrapper.async_config_entry_first_refresh()
-    await avm_wrapper.async_trigger_cleanup()
 
     entry.runtime_data = avm_wrapper
-
-    if FRITZ_DATA_KEY not in hass.data:
-        hass.data[FRITZ_DATA_KEY] = FritzData()
 
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -20,10 +20,12 @@ from homeassistant.components.fritz.const import (
     DOMAIN,
 )
 from homeassistant.components.fritz.coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
     ClassSetupMissing,
     FritzBoxTools,
     FritzConnectionCached,
+    FritzData,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -35,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FritzConnectionMock, FritzServiceMock
 from .const import MOCK_SERIAL_NUMBER, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
@@ -81,6 +83,8 @@ async def fixture_fritz_tools(
         password=mock_config_entry.data["password"],
         port=mock_config_entry.data["port"],
     )
+
+    hass.data[FRITZ_DATA_KEY] = FritzData()
 
     await coordinator.async_setup()
     return coordinator
@@ -565,6 +569,55 @@ async def test_avmwrapper_passthrough_methods(
     )
     assert await wrapper.async_set_allow_wan_access("192.168.178.2", True) == {}
     assert await wrapper.async_wake_on_lan("AA:BB:CC:DD:EE:FF") == {}
+
+
+async def test_async_trigger_cleanup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test the cleanup of orphan devices."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    wrapper: AvmWrapper = entry.runtime_data
+    tracked_devices = hass.data[FRITZ_DATA_KEY].tracked[wrapper.unique_id]
+
+    # Verify the tracked device was registered
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    )
+    assert entity_registry.async_get("device_tracker.printer")
+    assert entity_registry.async_get("switch.printer_internet_access")
+    assert "AA:BB:CC:00:11:22" in tracked_devices
+
+    # Simulate a host scan that does NOT include the tracked device
+    client_hosts = {
+        "AA:BB:CC:DD:EE:01": MagicMock(connected=True),
+    }
+    with patch.object(
+        wrapper,
+        "_async_update_hosts_info",
+        AsyncMock(return_value=client_hosts),
+    ):
+        await wrapper.async_trigger_cleanup()
+
+    # Verify the tracked device was removed
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+        )
+        is None
+    )
+    assert entity_registry.async_get("device_tracker.printer") is None
+    assert entity_registry.async_get("switch.printer_internet_access") is None
+    assert "AA:BB:CC:00:11:22" not in tracked_devices
 
 
 async def test_async_trigger_cleanup_preserves_fritz_device(

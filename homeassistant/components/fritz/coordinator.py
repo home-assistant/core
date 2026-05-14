@@ -248,6 +248,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         if not self._unique_id:
             self._unique_id = info.serial_number
 
+        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+
         self._model = info.model_name
         if (
             version_normalized := re.search(r"^\d+\.[0]?(.*)", info.software_version)
@@ -728,6 +730,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
+
+        tracked_devices = self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id]
+        for mac in tracked_devices.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from tracked devices", mac)
+            tracked_devices.remove(mac)
 
 
 class AvmWrapper(FritzBoxTools):
