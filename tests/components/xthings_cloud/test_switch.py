@@ -1,13 +1,13 @@
 """Tests for Xthings Cloud switch platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    Platform,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
 
 
 async def test_switches(
@@ -27,12 +27,32 @@ async def test_switches(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch entities are created correctly."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    entry_50 = entity_registry.async_get("switch.smart_plug_50")
+    assert entry_50 is not None
+    assert entry_50.unique_id == "dev_plug_001"
+    assert entry_50.platform == "xthings_cloud"
+    assert entry_50.config_entry_id == mock_config_entry.entry_id
+
+    entry_100 = entity_registry.async_get("switch.smart_plug_100")
+    assert entry_100 is not None
+    assert entry_100.unique_id == "dev_plug_002"
+    assert entry_100.platform == "xthings_cloud"
+    assert entry_100.config_entry_id == mock_config_entry.entry_id
+
+    state_50 = hass.states.get("switch.smart_plug_50")
+    assert state_50 is not None
+    assert state_50.state == STATE_ON
+    assert state_50.attributes["friendly_name"] == "Smart Plug 50"
+
+    state_100 = hass.states.get("switch.smart_plug_100")
+    assert state_100 is not None
+    assert state_100.state == STATE_OFF
+    assert state_100.attributes["friendly_name"] == "Smart Plug 100"
 
 
 @pytest.mark.parametrize(

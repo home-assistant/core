@@ -1,6 +1,6 @@
 """Tests for Xthings Cloud light platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    Platform,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
@@ -35,9 +36,12 @@ async def test_lights(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test light entities are created correctly."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LIGHT]):
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize(
