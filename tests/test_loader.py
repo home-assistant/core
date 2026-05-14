@@ -1297,7 +1297,7 @@ async def test_config_folder_not_in_path() -> None:
         import check_config_not_in_path  # noqa: F401, PLC0415
 
     # Verify that we are able to load the file with absolute path
-    # pylint: disable-next=hass-relative-import
+    # pylint: disable-next=home-assistant-relative-import
     import tests.testing_config.check_config_not_in_path  # noqa: F401, PLC0415
 
 

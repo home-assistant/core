@@ -1305,6 +1305,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/osoenergy/ @osohotwateriot
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
+/homeassistant/components/ouman_eh_800/ @Markus98
+/tests/components/ouman_eh_800/ @Markus98
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
@@ -2058,8 +2060,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove
 /tests/components/zerproc/ @emlove
-/homeassistant/components/zeversolar/ @kvanzuijlen
-/tests/components/zeversolar/ @kvanzuijlen
+/homeassistant/components/zeversolar/ @kvanzuijlen @mhuiskes
+/tests/components/zeversolar/ @kvanzuijlen @mhuiskes
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /homeassistant/components/zimi/ @markhannon

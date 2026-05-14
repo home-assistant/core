@@ -60,10 +60,59 @@
           }
         }
       }
+    },
+    "velov_station": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      },
+      "entry_type": "Vélo'v station",
+      "initiate_flow": {
+        "user": "Add Vélo'v station"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "station_id": "Station ID"
+          }
+        }
+      }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "name": "Station open"
+      }
+    },
     "sensor": {
+      "available_bikes": {
+        "name": "Available bikes",
+        "unit_of_measurement": "bikes"
+      },
+      "available_electrical_bikes": {
+        "name": "Available electrical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_mechanical_bikes": {
+        "name": "Available mechanical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_stands": {
+        "name": "Available stands",
+        "unit_of_measurement": "stands"
+      },
+      "capacity": {
+        "name": "Capacity",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_stands::unit_of_measurement%]"
+      },
+      "electrical_internal_battery_bikes": {
+        "name": "Electrical internal battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "electrical_removable_battery_bikes": {
+        "name": "Electrical removable battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
       "next_departure_1": {
         "name": "Next departure 1"
       },
@@ -108,6 +157,9 @@
   "exceptions": {
     "auth_failed": {
       "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_all": {
+      "message": "[%key:component::data_grand_lyon::exceptions::update_failed_all_stops::message%]"
     },
     "update_failed_all_stops": {
       "message": "Error fetching Data Grand Lyon data: all requests failed."

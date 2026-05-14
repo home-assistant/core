@@ -3836,7 +3836,7 @@ def data_schema_from_fields(
         if not data_schema_element:
             # Do not show empty sections
             continue
-        # Collapse if values are changed or required fields need to be set
+        # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
@@ -4546,7 +4546,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, data_schema: vol.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
-        device_data = self._subentry_data["device"]
+        device_data = deepcopy(self._subentry_data["device"])
+        device_data.update(device_data.get("mqtt_settings", {}))
         return {
             field_key: self.get_suggested_values_from_device_data(value.schema)
             if isinstance(value, section)
@@ -5157,7 +5158,7 @@ def _validate_pki_file(
     return True
 
 
-async def async_get_broker_settings(  # noqa: C901
+async def async_get_broker_settings(
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -5283,15 +5284,11 @@ async def async_get_broker_settings(  # noqa: C901
             errors["base"] = error
             return False
 
-        if SET_CA_CERT in validated_user_input:
-            del validated_user_input[SET_CA_CERT]
-        if SET_CLIENT_CERT in validated_user_input:
-            del validated_user_input[SET_CLIENT_CERT]
+        validated_user_input.pop(SET_CA_CERT, None)
+        validated_user_input.pop(SET_CLIENT_CERT, None)
         if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
-            if CONF_WS_PATH in validated_user_input:
-                del validated_user_input[CONF_WS_PATH]
-            if CONF_WS_HEADERS in validated_user_input:
-                del validated_user_input[CONF_WS_HEADERS]
+            validated_user_input.pop(CONF_WS_PATH, None)
+            validated_user_input.pop(CONF_WS_HEADERS, None)
             return True
         try:
             validated_user_input[CONF_WS_HEADERS] = json_loads(
