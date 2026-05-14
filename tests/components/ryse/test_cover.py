@@ -5,23 +5,22 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntityFeature
+from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.components.ryse.cover import RyseCoverEntity
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a minimal mock ConfigEntry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain="ryse", title="Test Device", data={}, unique_id="AA:BB:CC:DD:EE:FF"
     )
-    entry.add_to_hass = lambda hass: None
-    return entry
 
 
 @pytest.fixture
-def mock_device():
+def mock_device() -> MagicMock:
     """Mock RyseBLEDevice."""
     device = MagicMock()
     device.address = "AA:BB:CC:DD:EE:FF"
@@ -31,27 +30,33 @@ def mock_device():
     return device
 
 
-async def test_cover_properties(mock_device, mock_config_entry) -> None:
+async def test_cover_properties(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test properties of RyseCoverEntity."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
 
     info = entity.device_info
     assert info["manufacturer"] == "RYSE"
-    assert "AA:BB" in info["identifiers"].pop()[1]
+    assert (DOMAIN, "AA:BB:CC:DD:EE:FF") in info["identifiers"]
     assert entity._attr_supported_features & CoverEntityFeature.OPEN
 
 
-async def test_update_position_valid(mock_device, mock_config_entry) -> None:
+async def test_update_position_valid(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test updating position calls HA state write."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
-    entity.async_write_ha_state = AsyncMock()
+    entity.async_write_ha_state = MagicMock()
 
     await entity._update_position(50)
     mock_device.is_valid_position.assert_called_with(50)
     entity.async_write_ha_state.assert_called()
 
 
-async def test_async_open_close_and_set_cover(mock_device, mock_config_entry) -> None:
+async def test_async_open_close_and_set_cover(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test open, close and set cover methods."""
     mock_device.send_open = AsyncMock()
     mock_device.send_close = AsyncMock()
@@ -67,7 +72,9 @@ async def test_async_open_close_and_set_cover(mock_device, mock_config_entry) ->
     mock_device.send_set_position.assert_awaited()
 
 
-async def test_async_update_handles_exceptions(mock_device, mock_config_entry) -> None:
+async def test_async_update_handles_exceptions(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test BLE communication errors handled gracefully."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
     mock_device.client = None
@@ -78,7 +85,9 @@ async def test_async_update_handles_exceptions(mock_device, mock_config_entry) -
 
 
 async def test_current_cover_position_invalid(
-    mock_device, caplog: pytest.LogCaptureFixture, mock_config_entry
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test invalid position returns None."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
@@ -96,7 +105,7 @@ async def test_current_cover_position_invalid(
 
 
 async def test_async_update_connected_triggers_available_and_get_position(
-    mock_device, mock_config_entry
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Covers: `self._attr_available = True` and `send_get_position()`."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
@@ -116,7 +125,11 @@ async def test_async_update_connected_triggers_available_and_get_position(
     mock_device.send_get_position.assert_awaited_once()
 
 
-async def test_async_update_timeout_error(mock_device, mock_config_entry) -> None:
+async def test_async_update_timeout_error(
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Covers: `except TimeoutError` block."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
 
@@ -127,11 +140,16 @@ async def test_async_update_timeout_error(mock_device, mock_config_entry) -> Non
 
     await entity.async_update()
 
-    # No crash = test success
-    assert True
+    mock_device.send_get_position.assert_awaited_once()
+    assert "BLE communication error while reading device data" in caplog.text
+    assert entity.available is False
 
 
-async def test_async_update_generic_exception(mock_device, mock_config_entry) -> None:
+async def test_async_update_generic_exception(
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Covers: `except Exception` block."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
 
@@ -142,11 +160,14 @@ async def test_async_update_generic_exception(mock_device, mock_config_entry) ->
 
     await entity.async_update()
 
-    # No crash = test success
-    assert True
+    mock_device.send_get_position.assert_awaited_once()
+    assert "Unexpected error while reading device data" in caplog.text
+    assert entity.available is False
 
 
-async def test_current_cover_position_valid(mock_device, mock_config_entry) -> None:
+async def test_current_cover_position_valid(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Covers final line: `return self._current_position`."""
     entity = RyseCoverEntity(mock_device, mock_config_entry)
     entity._current_position = 42

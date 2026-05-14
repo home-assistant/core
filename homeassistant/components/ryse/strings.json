@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "Already configured",
-      "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and try again."
+      "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and retry."
     },
     "error": {
       "bluetooth_error": "Bluetooth error occurred during pairing. Please ensure the device is in range and try again.",
@@ -16,21 +16,6 @@
       "bluetooth_confirm": {
         "description": "Please press the PAIR button on your RYSE device, then click Submit to start pairing.",
         "title": "Pair your RYSE device"
-      },
-      "pair": {
-        "description": "Pairing failed. Please press the PAIR button and try again.",
-        "title": "Pairing RYSE Device"
-      },
-      "pairing_search": {
-        "description": "No RYSE devices in pairing mode found. Please press the PAIR button and try again.",
-        "title": "Search for RYSE Devices"
-      },
-      "scan": {
-        "data": {
-          "device_address": "RYSE Devices:"
-        },
-        "submit": "PAIR",
-        "title": "Pairing RYSE device"
       },
       "user": {
         "data": {

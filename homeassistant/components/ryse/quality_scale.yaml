@@ -62,10 +62,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device.
+  dynamic-devices: done
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: done # No entities qualify to be disabled by default
@@ -74,10 +71,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
