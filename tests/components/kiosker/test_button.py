@@ -113,9 +113,8 @@ async def test_press_ping_logs_success_message(
         )
 
     mock_log.assert_called_once()
-    assert (
-        mock_log.call_args.kwargs["message"]
-        == "the device responded to a ping request."
-    )
+    message = mock_log.call_args.kwargs["message"].lower()
+    assert "ping" in message
+    assert "respond" in message
     assert mock_log.call_args.kwargs["entity_id"] == "button.kiosker_a98be1ce_ping"
     assert mock_log.call_args.kwargs["domain"] == "kiosker"

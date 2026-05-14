@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import KioskerConfigEntry
 from .entity import KioskerEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,7 +31,7 @@ BUTTONS: tuple[KioskerButtonEntityDescription, ...] = (
         translation_key="ping",
         entity_category=EntityCategory.DIAGNOSTIC,
         action_fn=lambda api: api.ping(),
-        success_message="the device responded to a ping request.",
+        success_message="The device responded to a ping request.",
     ),
     KioskerButtonEntityDescription(
         key="navigateRefresh",
