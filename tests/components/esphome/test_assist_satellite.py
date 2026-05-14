@@ -29,7 +29,7 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     KEY_ASSIST_PIPELINE,
 )
 from homeassistant.components.assist_satellite import (
@@ -38,7 +38,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.esphome.const import NO_WAKE_WORD
