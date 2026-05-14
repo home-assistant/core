@@ -47,7 +47,7 @@ async def test_button_press(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test pressing a Victron GX button triggers the metric write."""
-    victron_hub, mock_config_entry = init_integration
+    victron_hub, _mock_config_entry = init_integration
 
     await inject_message(
         victron_hub,
@@ -57,10 +57,7 @@ async def test_button_press(
     await finalize_injection(victron_hub, disconnect=False)
     await hass.async_block_till_done()
 
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    button_entity = next(e for e in entities if e.domain == "button")
+    button_entity = entity_registry.async_get("button.victron_venus_device_reboot")
 
     with patch.object(WritableMetric, "set") as set_mock:
         await hass.services.async_call(
