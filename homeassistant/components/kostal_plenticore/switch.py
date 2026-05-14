@@ -251,7 +251,7 @@ class PlenticoreShadowMgmtSwitch(
     single settings value, bit 0 for DC string 1, bit 1 for
     DC string 2, etc.
 
-    Not all DC strings are available for shadown management,
+    Not all DC strings are available for shadow management,
     for example if one of them is used for a battery.
     """
 
