@@ -60,7 +60,11 @@ def collect_action_handlers(module: nodes.Module) -> ActionHandlers:
                     # Function reference: async_handle_snapshot_service
                     elif isinstance(call.args[2], nodes.Name):
                         result.registered_handlers.add(call.args[2].name)
-            case nodes.Attribute(attrname="async_register"):
+            # hass.services.async_register(DOMAIN, "name", handler)
+            case nodes.Attribute(
+                attrname="async_register",
+                expr=nodes.Attribute(attrname="services"),
+            ):
                 if len(call.args) >= 3 and isinstance(call.args[2], nodes.Name):
                     result.registered_handlers.add(call.args[2].name)
             case nodes.Name(name="async_register_admin_service"):

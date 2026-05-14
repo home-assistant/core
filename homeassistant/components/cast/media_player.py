@@ -768,7 +768,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     media_id,
                     err,
                 )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except PlaylistError as err:
                 _LOGGER.warning(
                     "[%s %s] Failed to parse playlist %s: %s",

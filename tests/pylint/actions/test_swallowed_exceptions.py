@@ -66,17 +66,6 @@ class MySwitch(SwitchEntity):
         pytest.param(
             """
 class MySwitch(SwitchEntity):
-    async def async_turn_on(self, **kwargs) -> None:
-        try:
-            await self.device.turn_on()
-        except DeviceError:
-            pass
-""",
-            id="pass_only_no_logging",
-        ),
-        pytest.param(
-            """
-class MySwitch(SwitchEntity):
     def helper_method(self) -> None:
         try:
             self.device.do_something()
@@ -107,17 +96,6 @@ class ApiClient:
             _LOGGER.error("Failed")
 """,
             id="non_entity_class_no_bases_ignored",
-        ),
-        pytest.param(
-            """
-class ApiClient(BaseClient):
-    async def async_turn_on(self) -> None:
-        try:
-            await self.api.enable()
-        except ApiError:
-            _LOGGER.error("Failed")
-""",
-            id="non_entity_class_with_bases_ignored",
         ),
         pytest.param(
             """
@@ -207,6 +185,31 @@ class MySwitch(SwitchEntity):
 
     messages = linter.release_messages()
     assert len(messages) == 1
+
+
+def test_except_pass_flagged(
+    linter: UnittestLinter,
+    error_propagation_checker: SwallowedActionExceptionsChecker,
+) -> None:
+    """Test that except with only pass is flagged."""
+    root_node = astroid.parse(
+        """
+class MySwitch(SwitchEntity):
+    async def async_turn_on(self, **kwargs) -> None:
+        try:
+            await self.device.turn_on()
+        except DeviceError:
+            pass
+""",
+        "homeassistant.components.test_integration.switch",
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(error_propagation_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].args == ("async_turn_on",)
 
 
 def test_try_except_inside_with_flagged(

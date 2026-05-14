@@ -167,7 +167,7 @@ PLATFORM_ACTION_METHODS: dict[str, set[str]] = {
         "async_browse_media",
         "async_clear_playlist",
         "async_join_players",
-        "async_media_next_trackasync_media_pause",
+        "async_media_next_track",
         "async_media_pause",
         "async_media_play_pause",
         "async_media_play",

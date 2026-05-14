@@ -189,7 +189,6 @@ class DiscordNotificationService(BaseNotificationService):
                 except nextcord.NotFound:
                     try:
                         channel = await discord_bot.fetch_user(channelid)
-                    # pylint: disable-next=home-assistant-action-swallowed-exception
                     except nextcord.NotFound:
                         _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue

@@ -205,33 +205,24 @@ async def async_send_message(  # noqa: C901
                     message["oob"]["url"] = url
                     try:
                         message.send()
-                    # pylint: disable-next=home-assistant-action-swallowed-exception
                     except (IqError, IqTimeout, XMPPError) as ex:
                         _LOGGER.error("Could not send image message %s", ex)
                     if room:
                         break
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("Upload error, could not send message %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NotConnectedError as ex:
                 _LOGGER.error("Connection error %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, could not upload file %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except UploadServiceNotFound as ex:
                 _LOGGER.error("UploadServiceNotFound, could not upload file %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except requests.exceptions.SSLError as ex:
                 _LOGGER.error("Cannot establish SSL connection %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except requests.exceptions.ConnectionError as ex:
                 _LOGGER.error("Cannot connect to server %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (
                 FileNotFoundError,
                 PermissionError,
@@ -239,7 +230,6 @@ async def async_send_message(  # noqa: C901
                 TimeoutError,
             ) as ex:
                 _LOGGER.error("Error reading file %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except FutTimeoutError as ex:
                 _LOGGER.error("The server did not respond in time, %s", ex)
 
@@ -361,10 +351,8 @@ async def async_send_message(  # noqa: C901
                     for recipient in recipients:
                         _LOGGER.debug("Sending message to %s", recipient)
                         self.send_message(mto=recipient, mbody=message, mtype="chat")
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (IqError, IqTimeout, XMPPError) as ex:
                 _LOGGER.error("Could not send text message %s", ex)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NotConnectedError as ex:
                 _LOGGER.error("Connection error %s", ex)
 

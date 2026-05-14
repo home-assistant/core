@@ -376,7 +376,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     await self._update_thermostat(
                         self.location, device, heat_setpoint=temp
                     )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
             await self.coordinator.async_refresh()
@@ -500,7 +499,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         # pylint: disable-next=home-assistant-action-swallowed-exception
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except KeyError:
             _LOGGER.error(
                 "The fan mode requested does not have a corresponding mode in lyric: %s",

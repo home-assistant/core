@@ -361,7 +361,6 @@ class BraavaJet(IRobotVacuum):
                 fan_speed,
             )
             return
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.error("Spray amount error: expected integer, got '%s'", split[1])
             return

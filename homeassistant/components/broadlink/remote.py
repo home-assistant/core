@@ -307,7 +307,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break
 
-                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except BroadlinkException as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     continue

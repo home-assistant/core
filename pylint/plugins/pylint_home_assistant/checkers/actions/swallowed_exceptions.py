@@ -20,21 +20,25 @@ from pylint.lint import PyLinter
 from .helpers import ActionHandlers, collect_action_handlers
 
 
-def _except_block_only_logs(handler: nodes.ExceptHandler) -> bool:
-    """Return True if the except block only logs (no raise).
+def _except_block_swallows(handler: nodes.ExceptHandler) -> bool:
+    """Return True if the except block swallows the exception.
 
     Flags blocks that:
+    - Are empty (just ``pass``)
     - Call ``_LOGGER.error/exception/warning`` and nothing else
     - Log then ``return`` (silently swallowing the error)
 
     Does NOT flag blocks that:
     - Contain a ``raise`` statement (any kind)
-    - Are empty (just ``pass``)
     """
     has_log_call = False
+    has_any_statement = False
     for child in handler.body:
         if isinstance(child, nodes.Raise):
             return False
+        if isinstance(child, nodes.Pass):
+            continue
+        has_any_statement = True
         if isinstance(child, nodes.Expr) and isinstance(child.value, nodes.Call):
             call = child.value
             if (
@@ -45,14 +49,11 @@ def _except_block_only_logs(handler: nodes.ExceptHandler) -> bool:
             ):
                 has_log_call = True
                 continue
-        if isinstance(child, nodes.Return):
-            if has_log_call:
-                return True
-            continue
-        if isinstance(child, nodes.Expr):
-            continue
+        if isinstance(child, nodes.Return) and has_log_call:
+            return True
 
-    return has_log_call
+    # Empty body (just pass) or log-only body
+    return not has_any_statement or has_log_call
 
 
 def _is_contextlib_suppress(node: nodes.NodeNG) -> bool:
@@ -74,42 +75,19 @@ def _is_contextlib_suppress(node: nodes.NodeNG) -> bool:
 def _is_action_handler(node: nodes.FunctionDef, handlers: ActionHandlers) -> bool:
     """Return True if *node* is a registered action handler.
 
-    Platform action methods (``async_turn_on``, etc.) must be on an entity
-    class — verified via astroid ancestor inference. Dynamically registered
-    handlers (``hass.services.async_register``) can be standalone functions
-    or methods on any class.
+    Platform action methods are scoped by module (the ``ActionHandlers``
+    only contains methods for the current platform), so any method on a
+    class with base classes is accepted. Dynamically registered handlers
+    can be standalone functions or methods on any class.
     """
     if isinstance(node.parent, nodes.ClassDef):
-        # Method — check if it's a platform action on an entity class
+        # Method on a class — accept if name matches platform or registered
+        # handlers AND the class has base classes (not a plain helper class)
         if node.name in handlers.platform_methods:
-            return _is_entity_class(node.parent)
-        # Or a dynamically registered entity service method
+            return bool(node.parent.bases)
         return node.name in handlers.registered_handlers
     # Standalone function — only valid if dynamically registered
     return node.name in handlers.registered_handlers
-
-
-def _is_entity_class(class_node: nodes.ClassDef) -> bool:
-    """Return True if the class inherits from an Entity base class."""
-    # Try full ancestor inference first
-    try:
-        for ancestor in class_node.ancestors():
-            if ancestor.name == "Entity" or ancestor.name.endswith("Entity"):
-                return True
-    except Exception:  # noqa: BLE001
-        pass
-
-    # Fall back to checking direct base class names (handles cases where
-    # the base class can't be resolved, e.g., in tests or partial ASTs)
-    for base in class_node.bases:
-        match base:
-            case nodes.Name(name=name) if name == "Entity" or name.endswith("Entity"):
-                return True
-            case nodes.Attribute(attrname=name) if name == "Entity" or name.endswith(
-                "Entity"
-            ):
-                return True
-    return False
 
 
 def _check_body_shallow(
@@ -126,7 +104,7 @@ def _check_body_shallow(
     for child in body:
         if isinstance(child, nodes.Try):
             for handler in child.handlers:
-                if _except_block_only_logs(handler):
+                if _except_block_swallows(handler):
                     return handler
         elif isinstance(child, (nodes.With, nodes.AsyncWith)):
             # Check the context manager for contextlib.suppress
@@ -203,6 +181,8 @@ class SwallowedActionExceptionsChecker(BaseChecker):
 
         Uses astroid's inference to resolve the decorator function — works
         across modules (e.g., a decorator imported from ``entity.py``).
+        Only checks decorators defined in ``homeassistant`` code, not
+        stdlib or third-party decorators.
         """
         infer_node = decorator
         if isinstance(decorator, nodes.Call):
@@ -210,14 +190,21 @@ class SwallowedActionExceptionsChecker(BaseChecker):
 
         try:
             for inferred in infer_node.infer():
-                if isinstance(inferred, nodes.FunctionDef):
-                    if _decorator_swallows(inferred):
-                        self.add_message(
-                            "home-assistant-action-swallowed-exception",
-                            node=decorator,
-                            args=(node.name,),
-                        )
-                        return
+                if not isinstance(inferred, nodes.FunctionDef):
+                    continue
+                # Skip decorators not defined in homeassistant code
+                # (stdlib decorators like @final, @override, @cache have
+                # internal try/except that would cause false positives)
+                module_name = inferred.root().name
+                if not module_name.startswith("homeassistant."):
+                    continue
+                if _decorator_swallows(inferred):
+                    self.add_message(
+                        "home-assistant-action-swallowed-exception",
+                        node=decorator,
+                        args=(node.name,),
+                    )
+                    return
         except Exception:  # noqa: BLE001
             pass
 
