@@ -5,10 +5,8 @@ import pytest
 from homeassistant.components.open_responses.const import (
     CONF_BASE_URL,
     CONF_GENERATED_DEFAULT_SUBENTRY,
-    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -40,16 +38,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 },
                 subentry_type="conversation",
                 title=DEFAULT_CONVERSATION_NAME,
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    **RECOMMENDED_AI_TASK_OPTIONS,
-                    CONF_GENERATED_DEFAULT_SUBENTRY: True,
-                    CONF_MODEL: "open-responses-model",
-                },
-                subentry_type="ai_task_data",
-                title=DEFAULT_AI_TASK_NAME,
                 unique_id=None,
             ),
         ],

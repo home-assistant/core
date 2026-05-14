@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+import openai
+from openai.types.responses import EasyInputMessageParam, ResponseInputParam
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -31,26 +33,25 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
-from .client import (
-    OpenResponsesAuthError,
-    OpenResponsesClient,
-    OpenResponsesConnectionError,
-    OpenResponsesInvalidModelError,
-)
 from .const import (
     CONF_BASE_URL,
     CONF_GENERATED_DEFAULT_SUBENTRY,
     CONF_MAX_OUTPUT_TOKENS,
     CONF_PROMPT,
     CONF_STORE_RESPONSES,
-    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_OUTPUT_TOKENS,
     RECOMMENDED_STORE_RESPONSES,
 )
+
+VALIDATION_TIMEOUT = 10.0
+STREAM_FAILURE_EVENTS = {
+    "response.error",
+    "response.failed",
+    "response.incomplete",
+}
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -63,33 +64,68 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+class OpenResponsesStreamValidationError(Exception):
+    """Raised when streaming validation reports a failed response."""
+
+
 def _is_default_subentry(subentry: ConfigSubentry) -> bool:
     """Return whether a subentry is the generated default subentry."""
     return subentry.data.get(CONF_GENERATED_DEFAULT_SUBENTRY) is True
 
 
+def _stream_event_to_dict(event: Any) -> dict[str, Any]:
+    """Convert OpenAI SDK stream events to Open Responses event dictionaries."""
+    if isinstance(event, dict):
+        return event
+    if hasattr(event, "model_dump"):
+        return event.model_dump(mode="json", exclude_none=True)
+    if hasattr(event, "to_dict"):
+        return event.to_dict()
+    return {}
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate Open Responses connection details."""
-    client = OpenResponsesClient(
-        get_async_client(hass),
+    client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY],
         base_url=data[CONF_BASE_URL],
+        http_client=get_async_client(hass),
     )
-    ping_input = [{"type": "message", "role": "user", "content": "ping"}]
+    ping_input: ResponseInputParam = [
+        EasyInputMessageParam(type="message", role="user", content="ping")
+    ]
 
-    await client.create_response(
+    await client.responses.create(
         model=data[CONF_MODEL],
         input=ping_input,
         max_output_tokens=16,
         store=False,
+        timeout=VALIDATION_TIMEOUT,
     )
-    async for _event in client.stream_response(
+    stream = await client.responses.create(
         model=data[CONF_MODEL],
         input=ping_input,
         max_output_tokens=16,
         store=False,
-    ):
-        pass
+        stream=True,
+        timeout=VALIDATION_TIMEOUT,
+    )
+    async for raw_event in stream:
+        event = _stream_event_to_dict(raw_event)
+        if event.get("type") in STREAM_FAILURE_EVENTS:
+            raise OpenResponsesStreamValidationError
+
+
+def _error_mentions_model(err: openai.BadRequestError) -> bool:
+    """Return whether an OpenAI SDK error points at the requested model."""
+    error = err.body.get("error") if isinstance(err.body, dict) else None
+    if not isinstance(error, dict):
+        return False
+
+    return any(
+        "model" in str(error.get(key, "")).lower()
+        for key in ("code", "param", "message")
+    )
 
 
 def _async_update_default_subentry_models(
@@ -140,20 +176,24 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match(entry_identity)
             try:
                 await validate_input(self.hass, user_input)
-            except OpenResponsesAuthError:
+            except openai.AuthenticationError:
                 errors["base"] = "invalid_auth"
-            except OpenResponsesInvalidModelError:
-                errors[CONF_MODEL] = "invalid_model"
-            except OpenResponsesConnectionError:
+            except openai.RateLimitError:
+                errors["base"] = "rate_limited"
+            except openai.BadRequestError as err:
+                if _error_mentions_model(err):
+                    errors[CONF_MODEL] = "invalid_model"
+                else:
+                    errors["base"] = "unknown"
+            except openai.APIConnectionError:
                 errors["base"] = "cannot_connect"
+            except OpenResponsesStreamValidationError:
+                errors["base"] = "unknown"
+            except openai.OpenAIError:
+                errors["base"] = "unknown"
             else:
                 default_conversation_options = {
                     **RECOMMENDED_CONVERSATION_OPTIONS,
-                    CONF_GENERATED_DEFAULT_SUBENTRY: True,
-                    CONF_MODEL: user_input[CONF_MODEL],
-                }
-                default_ai_task_options = {
-                    **RECOMMENDED_AI_TASK_OPTIONS,
                     CONF_GENERATED_DEFAULT_SUBENTRY: True,
                     CONF_MODEL: user_input[CONF_MODEL],
                 }
@@ -173,12 +213,6 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
                             "subentry_type": "conversation",
                             "data": default_conversation_options,
                             "title": DEFAULT_CONVERSATION_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "ai_task_data",
-                            "data": default_ai_task_options,
-                            "title": DEFAULT_AI_TASK_NAME,
                             "unique_id": None,
                         },
                     ],
@@ -223,7 +257,6 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {
             "conversation": OpenResponsesSubentryFlowHandler,
-            "ai_task_data": OpenResponsesSubentryFlowHandler,
         }
 
 
@@ -241,10 +274,7 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a subentry."""
-        if self._subentry_type == "ai_task_data":
-            self.options = RECOMMENDED_AI_TASK_OPTIONS.copy()
-        else:
-            self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
+        self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         return await self.async_step_init(user_input)
 
     async def async_step_reconfigure(
@@ -274,12 +304,21 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_MODEL: user_input[CONF_MODEL],
                     },
                 )
-            except OpenResponsesAuthError:
+            except openai.AuthenticationError:
                 errors["base"] = "invalid_auth"
-            except OpenResponsesInvalidModelError:
-                errors[CONF_MODEL] = "invalid_model"
-            except OpenResponsesConnectionError:
+            except openai.RateLimitError:
+                errors["base"] = "rate_limited"
+            except openai.BadRequestError as err:
+                if _error_mentions_model(err):
+                    errors[CONF_MODEL] = "invalid_model"
+                else:
+                    errors["base"] = "unknown"
+            except openai.APIConnectionError:
                 errors["base"] = "cannot_connect"
+            except OpenResponsesStreamValidationError:
+                errors["base"] = "unknown"
+            except openai.OpenAIError:
+                errors["base"] = "unknown"
             else:
                 subentry_data = user_input.copy()
                 if not self._is_new and self._get_reconfigure_subentry().data.get(
@@ -314,14 +353,11 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                 api for api in suggested_llm_apis if api in valid_apis
             ]
 
-        default_name = (
-            DEFAULT_AI_TASK_NAME
-            if self._subentry_type == "ai_task_data"
-            else DEFAULT_CONVERSATION_NAME
-        )
         step_schema: VolDictType = {}
         if self._is_new:
-            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+            step_schema[vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME)] = (
+                str
+            )
 
         step_schema.update(
             {
@@ -344,28 +380,27 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
             }
         )
 
-        if self._subentry_type == "conversation":
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_PROMPT,
-                        description={
-                            "suggested_value": form_options.get(
-                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                            )
-                        },
-                    ): TemplateSelector(),
-                    vol.Optional(
+        step_schema.update(
+            {
+                vol.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": form_options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        )
+                    },
+                ): TemplateSelector(),
+                vol.Optional(
+                    CONF_LLM_HASS_API,
+                    default=form_options.get(
                         CONF_LLM_HASS_API,
-                        default=form_options.get(
-                            CONF_LLM_HASS_API,
-                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                     ),
-                }
-            )
+                ): SelectSelector(
+                    SelectSelectorConfig(options=hass_apis, multiple=True)
+                ),
+            }
+        )
 
         return self.async_show_form(
             step_id="init",

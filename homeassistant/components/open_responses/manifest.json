@@ -9,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["openresponses-types==2.3.0.post1"]
+  "requirements": ["openai==2.21.0"]
 }
