@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 
 class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
-    """Representation of a Lutron Light, including dimmable, white tune, and spectrum tune."""
+    """Representation of a Lutron Light, including dimmable."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
 
