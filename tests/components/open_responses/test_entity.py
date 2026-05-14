@@ -2,21 +2,28 @@
 
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
+import httpx
+import openai
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.open_responses.entity import (
+    OpenResponsesEntity,
     _async_prepare_message_attachments,
     _convert_content_to_param,
+    _event_to_dict,
+    _format_structured_output,
     _format_tool,
     _transform_stream,
     async_prepare_files_for_prompt,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import llm
 
 
@@ -32,11 +39,69 @@ class EnumTool(llm.Tool):
         return {"mode": "auto"}
 
 
+def _api_request() -> httpx.Request:
+    """Return a mock Open Responses request."""
+    return httpx.Request("POST", "https://example.local/v1/responses")
+
+
+def _authentication_error() -> openai.AuthenticationError:
+    """Return a mock OpenAI SDK authentication error."""
+    return openai.AuthenticationError(
+        message="invalid api key",
+        response=httpx.Response(401, request=_api_request()),
+        body={"error": {"type": "authentication_error"}},
+    )
+
+
+def _bad_request_error() -> openai.BadRequestError:
+    """Return a mock OpenAI SDK bad request error."""
+    return openai.BadRequestError(
+        message="bad request",
+        response=httpx.Response(400, request=_api_request()),
+        body={"error": {"message": "bad request"}},
+    )
+
+
+def _rate_limit_error() -> openai.RateLimitError:
+    """Return a mock OpenAI SDK rate limit error."""
+    return openai.RateLimitError(
+        message="rate limited",
+        response=httpx.Response(429, request=_api_request()),
+        body=None,
+    )
+
+
 def test_format_tool_strips_unsupported_schema_keywords() -> None:
     """Test unsupported JSON Schema keywords are removed from tool schemas."""
     tool = _format_tool(EnumTool(), None)
 
     assert "enum" not in tool["parameters"]["properties"]["mode"]
+
+
+def test_format_structured_output_adjusts_nested_schema() -> None:
+    """Test structured output schemas are adjusted for Open Responses."""
+    schema = _format_structured_output(
+        vol.Schema(
+            {
+                vol.Required("name"): str,
+                vol.Optional("tags"): [str],
+                vol.Optional("details"): {vol.Optional("room"): str},
+            }
+        ),
+        None,
+    )
+
+    assert schema["strict"] is True
+    assert schema["additionalProperties"] is False
+    assert schema["required"] == ["name", "tags", "details"]
+    assert schema["properties"]["tags"]["type"] == ["array", "null"]
+    assert schema["properties"]["tags"]["items"]["type"] == "string"
+    assert schema["properties"]["details"]["type"] == ["object", "null"]
+    assert schema["properties"]["details"]["required"] == ["room"]
+    assert schema["properties"]["details"]["properties"]["room"]["type"] == [
+        "string",
+        "null",
+    ]
 
 
 def test_convert_content_preserves_system_role() -> None:
@@ -166,6 +231,28 @@ def test_convert_content_preserves_native_dict_output_message() -> None:
     assert messages == [native_message]
 
 
+def test_convert_content_includes_tool_result_output() -> None:
+    """Test tool results are included as function call outputs."""
+    messages = _convert_content_to_param(
+        [
+            conversation.ToolResultContent(
+                agent_id="agent",
+                tool_call_id="call_1",
+                tool_name="HassTurnOn",
+                tool_result={"state": "on"},
+            )
+        ]
+    )
+
+    assert messages == [
+        {
+            "type": "function_call_output",
+            "call_id": "call_1",
+            "output": '{"state":"on"}',
+        }
+    ]
+
+
 async def test_prepare_message_attachments_preserves_earlier_turns(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
@@ -208,6 +295,45 @@ async def test_prepare_message_attachments_preserves_earlier_turns(
     }
 
 
+async def test_prepare_message_attachments_skips_tool_results(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test attachment insertion indexes past tool result messages."""
+    image_path = tmp_path / "door.jpg"
+    image_path.write_bytes(b"image")
+    chat_content = [
+        conversation.ToolResultContent(
+            agent_id="agent",
+            tool_call_id="call_1",
+            tool_name="HassTurnOn",
+            tool_result={"state": "on"},
+        ),
+        conversation.UserContent(
+            content="What changed?",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="media-source://media/door.jpg",
+                    mime_type="image/jpeg",
+                    path=image_path,
+                )
+            ],
+        ),
+    ]
+    messages = _convert_content_to_param(chat_content)
+
+    await _async_prepare_message_attachments(hass, chat_content, messages)
+
+    assert messages[0]["type"] == "function_call_output"
+    assert messages[1]["content"] == [
+        {"type": "input_text", "text": "What changed?"},
+        {
+            "type": "input_image",
+            "image_url": "data:image/jpeg;base64,aW1hZ2U=",
+            "detail": "auto",
+        },
+    ]
+
+
 async def test_prepare_pdf_file_uses_basename(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
@@ -224,6 +350,41 @@ async def test_prepare_pdf_file_uses_basename(
             "file_data": "data:application/pdf;base64,JVBERi0xLjQ=",
         }
     ]
+
+
+async def test_prepare_file_guesses_image_mime_type(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test image MIME types can be inferred from filenames."""
+    image_path = tmp_path / "door.png"
+    image_path.write_bytes(b"image")
+
+    assert await async_prepare_files_for_prompt(hass, [(image_path, None)]) == [
+        {
+            "type": "input_image",
+            "image_url": "data:image/png;base64,aW1hZ2U=",
+            "detail": "auto",
+        }
+    ]
+
+
+async def test_prepare_file_rejects_missing_file(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test missing files fail before request assembly."""
+    with pytest.raises(HomeAssistantError, match="does not exist"):
+        await async_prepare_files_for_prompt(hass, [(tmp_path / "missing.jpg", None)])
+
+
+async def test_prepare_file_rejects_unsupported_mime_type(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test unsupported file MIME types fail before request assembly."""
+    text_path = tmp_path / "note.txt"
+    text_path.write_text("hello")
+
+    with pytest.raises(HomeAssistantError, match="Only images and PDF are supported"):
+        await async_prepare_files_for_prompt(hass, [(text_path, "text/plain")])
 
 
 async def test_transform_stream_preserves_native_output_message() -> None:
@@ -254,6 +415,27 @@ async def test_transform_stream_preserves_native_output_message() -> None:
     ]
 
     assert deltas == [{"native": native_message}]
+
+
+async def test_transform_stream_handles_sdk_event_objects() -> None:
+    """Test SDK stream events are converted before handling."""
+
+    class Event:
+        def model_dump(self, **kwargs):
+            return {"type": "response.output_text.delta", "delta": "hello"}
+
+    async def stream() -> AsyncGenerator[Event]:
+        yield Event()
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            Mock(),
+            stream(),
+        )
+    ]
+
+    assert deltas == [{"content": "hello"}]
 
 
 async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
@@ -363,6 +545,50 @@ async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
     ]
 
 
+async def test_transform_stream_rejects_tool_call_without_item_id() -> None:
+    """Test tool calls must include an item ID for delta correlation."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "item": {
+                "arguments": "",
+                "call_id": "call_1",
+                "name": "HassTurnOn",
+                "type": "function_call",
+            },
+            "type": "response.output_item.added",
+        }
+
+    with pytest.raises(HomeAssistantError, match="without an item ID"):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]
+
+
+async def test_transform_stream_rejects_tool_arguments_without_tool_call() -> None:
+    """Test completed tool arguments must reference a known tool call."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "arguments": "{}",
+            "item_id": "missing",
+            "type": "response.function_call_arguments.done",
+        }
+
+    with pytest.raises(HomeAssistantError, match="without a tool call"):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]
+
+
 async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
     """Test each reasoning item starts a separate assistant message."""
     first_reasoning = {
@@ -428,6 +654,109 @@ async def test_transform_stream_starts_new_message_for_reasoning_item() -> None:
     ]
 
 
+async def test_transform_stream_starts_new_message_for_reasoning_summary_index() -> (
+    None
+):
+    """Test reasoning summary index changes start a new assistant message."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "item": {"id": "reasoning_1", "summary": ["first"], "type": "reasoning"},
+            "type": "response.output_item.done",
+        }
+        yield {
+            "delta": "first",
+            "summary_index": 0,
+            "type": "response.reasoning_summary.delta",
+        }
+        yield {
+            "delta": "second",
+            "summary_index": 1,
+            "type": "response.reasoning_summary_text.delta",
+        }
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            Mock(),
+            stream(),
+        )
+    ]
+
+    assert deltas == [
+        {
+            "native": {
+                "encrypted_content": None,
+                "id": "reasoning_1",
+                "summary": ["first"],
+                "type": "reasoning",
+            }
+        },
+        {"thinking_content": "first"},
+        {"role": "assistant"},
+        {"thinking_content": "second"},
+    ]
+
+
+async def test_transform_stream_traces_usage() -> None:
+    """Test completed responses trace token usage."""
+    chat_log = Mock()
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "response": {"usage": {"input_tokens": 2, "output_tokens": 3}},
+            "type": "response.completed",
+        }
+
+    assert [
+        delta
+        async for delta in _transform_stream(
+            chat_log,
+            stream(),
+        )
+    ] == []
+    chat_log.async_trace.assert_called_once_with(
+        {"stats": {"input_tokens": 2, "output_tokens": 3}}
+    )
+
+
+@pytest.mark.parametrize(
+    ("event", "message"),
+    [
+        (
+            {
+                "response": {"incomplete_details": {"reason": "max_output_tokens"}},
+                "type": "response.incomplete",
+            },
+            "Open Responses response incomplete: max_output_tokens",
+        ),
+        (
+            {
+                "response": {"error": {"message": "tool output rejected"}},
+                "type": "response.failed",
+            },
+            "Open Responses response failed: tool output rejected",
+        ),
+    ],
+)
+async def test_transform_stream_rejects_terminal_failure_events(
+    event: dict[str, Any], message: str
+) -> None:
+    """Test terminal failure events raise Home Assistant errors."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield event
+
+    with pytest.raises(HomeAssistantError, match=message):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]
+
+
 async def test_transform_stream_handles_spec_error_envelope() -> None:
     """Test streaming error events use the Open Responses error envelope."""
 
@@ -454,3 +783,156 @@ async def test_transform_stream_handles_spec_error_envelope() -> None:
                 stream(),
             )
         ]
+
+
+async def test_transform_stream_handles_sdk_error_event() -> None:
+    """Test SDK streaming error events use the top-level message."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {
+            "code": "server_error",
+            "message": "Stream failed.",
+            "sequence_number": 0,
+            "type": "error",
+        }
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Open Responses response error: Stream failed.",
+    ):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]
+
+
+def test_event_to_dict_uses_to_dict() -> None:
+    """Test SDK events with to_dict are converted."""
+
+    class Event:
+        def to_dict(self) -> dict[str, str]:
+            return {"type": "response.completed"}
+
+    assert _event_to_dict(Event()) == {"type": "response.completed"}
+
+
+def test_event_to_dict_rejects_unknown_event() -> None:
+    """Test unknown SDK event types fail loudly."""
+    with pytest.raises(
+        HomeAssistantError, match="Received unknown Open Responses stream event"
+    ):
+        _event_to_dict(object())
+
+
+async def test_handle_chat_log_passes_structured_output_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test structured output options are sent to the endpoint."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {"type": "response.completed"}
+
+    async def add_delta_content_stream(
+        entity_id: str,
+        delta_stream: AsyncGenerator[conversation.AssistantContentDeltaDict],
+    ) -> AsyncGenerator[conversation.AssistantContent]:
+        async for _delta in delta_stream:
+            pass
+        if entity_id == "":
+            yield conversation.AssistantContent(agent_id=entity_id, content="")
+
+    responses = Mock()
+    responses.create = AsyncMock(return_value=stream())
+    entity = Mock()
+    entity.hass = hass
+    entity.entity_id = "conversation.open_responses"
+    entity.entry = Mock(
+        data={CONF_MODEL: "open-responses-model"},
+        runtime_data=Mock(responses=responses),
+    )
+    entity.subentry = Mock(data={})
+    chat_log = Mock(
+        content=[],
+        conversation_id="conversation-id",
+        llm_api=None,
+        unresponded_tool_results=False,
+    )
+    chat_log.async_add_delta_content_stream = add_delta_content_stream
+
+    await OpenResponsesEntity._async_handle_chat_log(
+        entity,
+        chat_log,
+        structure_name="Response Format",
+        structure=vol.Schema({vol.Required("answer"): str}),
+    )
+
+    responses.create.assert_awaited_once()
+    assert responses.create.await_args.kwargs["text"] == {
+        "format": {
+            "type": "json_schema",
+            "name": "response_format",
+            "schema": {
+                "additionalProperties": False,
+                "properties": {"answer": {"type": "string"}},
+                "required": ["answer"],
+                "strict": True,
+                "type": "object",
+            },
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("api_error", "expected_error", "message"),
+    [
+        (
+            _authentication_error(),
+            ConfigEntryAuthFailed,
+            "Authentication failed with Open Responses endpoint",
+        ),
+        (
+            _rate_limit_error(),
+            HomeAssistantError,
+            "Rate limited by Open Responses endpoint",
+        ),
+        (
+            _bad_request_error(),
+            HomeAssistantError,
+            "Open Responses endpoint rejected request",
+        ),
+        (
+            openai.OpenAIError("boom"),
+            HomeAssistantError,
+            "Error talking to Open Responses endpoint",
+        ),
+    ],
+)
+async def test_handle_chat_log_maps_openai_errors(
+    hass: HomeAssistant,
+    api_error: openai.OpenAIError,
+    expected_error: type[Exception],
+    message: str,
+) -> None:
+    """Test OpenAI SDK errors are mapped to Home Assistant errors."""
+    responses = Mock()
+    responses.create = AsyncMock(side_effect=api_error)
+    entity = Mock()
+    entity.hass = hass
+    entity.entity_id = "conversation.open_responses"
+    entity.entry = Mock(
+        data={CONF_MODEL: "open-responses-model"},
+        runtime_data=Mock(responses=responses),
+    )
+    entity.subentry = Mock(data={})
+    chat_log = Mock(
+        content=[],
+        conversation_id="conversation-id",
+        llm_api=None,
+        unresponded_tool_results=False,
+    )
+
+    with pytest.raises(expected_error, match=message):
+        await OpenResponsesEntity._async_handle_chat_log(entity, chat_log)

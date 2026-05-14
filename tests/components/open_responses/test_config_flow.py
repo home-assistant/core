@@ -9,10 +9,14 @@ import openai
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.open_responses.config_flow import VALIDATION_TIMEOUT
+from homeassistant.components.open_responses.config_flow import (
+    VALIDATION_TIMEOUT,
+    _stream_event_to_dict,
+)
 from homeassistant.components.open_responses.const import (
     CONF_BASE_URL,
     CONF_GENERATED_DEFAULT_SUBENTRY,
+    CONF_MAX_OUTPUT_TOKENS,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
@@ -32,6 +36,15 @@ def _api_request() -> httpx.Request:
 def _api_connection_error() -> openai.APIConnectionError:
     """Return a mock OpenAI SDK connection error."""
     return openai.APIConnectionError(request=_api_request())
+
+
+def _authentication_error() -> openai.AuthenticationError:
+    """Return a mock OpenAI SDK authentication error."""
+    return openai.AuthenticationError(
+        message="invalid api key",
+        response=httpx.Response(401, request=_api_request()),
+        body={"error": {"type": "authentication_error"}},
+    )
 
 
 def _bad_request_error(error: dict[str, Any]) -> openai.BadRequestError:
@@ -136,6 +149,22 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+def test_stream_event_to_dict_converts_sdk_events() -> None:
+    """Test SDK stream event models are converted to dictionaries."""
+
+    class ModelDumpEvent:
+        def model_dump(self, **kwargs: Any) -> dict[str, str]:
+            return {"type": "response.completed"}
+
+    class ToDictEvent:
+        def to_dict(self) -> dict[str, str]:
+            return {"type": "response.failed"}
+
+    assert _stream_event_to_dict(ModelDumpEvent()) == {"type": "response.completed"}
+    assert _stream_event_to_dict(ToDictEvent()) == {"type": "response.failed"}
+    assert _stream_event_to_dict(object()) == {}
+
+
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(
@@ -237,6 +266,30 @@ async def test_form_validates_endpoint(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_handles_auth_error(hass: HomeAssistant) -> None:
+    """Test authentication errors are shown on the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=_authentication_error(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "open-responses-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
 async def test_form_handles_invalid_model(hass: HomeAssistant) -> None:
     """Test model validation errors are shown on the model field."""
     result = await hass.config_entries.flow.async_init(
@@ -259,6 +312,56 @@ async def test_form_handles_invalid_model(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_MODEL: "invalid_model"}
+
+
+async def test_form_handles_bad_request_without_model_reference(
+    hass: HomeAssistant,
+) -> None:
+    """Test non-model bad requests are shown as unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=_bad_request_error({"message": "Invalid payload"}),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "open-responses-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_handles_openai_error(hass: HomeAssistant) -> None:
+    """Test generic OpenAI SDK errors are shown as unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=openai.OpenAIError("boom"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "open-responses-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_handles_rate_limit(hass: HomeAssistant) -> None:
@@ -326,6 +429,36 @@ async def test_form_rejects_stream_error_events(hass: HomeAssistant) -> None:
         yield {
             "type": "response.failed",
             "response": {"error": {"message": "stream failed"}},
+        }
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
+        mock_create.side_effect = [object(), failing_stream_response()]
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+                CONF_BASE_URL: "https://example.local/v1",
+                CONF_MODEL: "open-responses-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_rejects_sdk_stream_error_events(hass: HomeAssistant) -> None:
+    """Test SDK stream error events are rejected before creating an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    async def failing_stream_response() -> AsyncGenerator[dict[str, Any]]:
+        yield {
+            "type": "error",
+            "message": "stream failed",
         }
 
     with patch(
@@ -464,12 +597,18 @@ async def test_creating_conversation_subentry(
         _mock_successful_validation(mock_create)
         result2 = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {CONF_NAME: "My Custom Agent", **RECOMMENDED_CONVERSATION_OPTIONS},
+            {
+                CONF_NAME: "My Custom Agent",
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_MAX_OUTPUT_TOKENS: "2500",
+            },
         )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Custom Agent"
+    assert result2["data"][CONF_MAX_OUTPUT_TOKENS] == 2500
+    assert isinstance(result2["data"][CONF_MAX_OUTPUT_TOKENS], int)
     mock_create.assert_any_await(
         model=mock_config_entry.data[CONF_MODEL],
         input=[{"type": "message", "role": "user", "content": "ping"}],
@@ -509,6 +648,36 @@ async def test_creating_subentry_validates_model(
     assert result2["errors"] == {CONF_MODEL: "invalid_model"}
 
 
+async def test_creating_subentry_handles_auth_error(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation handles authentication errors."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=_authentication_error(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My Custom Agent",
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_MODEL: "auth-error-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "init"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
 async def test_creating_subentry_handles_rate_limit(
     hass: HomeAssistant,
     mock_init_component: None,
@@ -537,6 +706,66 @@ async def test_creating_subentry_handles_rate_limit(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "init"
     assert result2["errors"] == {"base": "rate_limited"}
+
+
+async def test_creating_subentry_handles_bad_request_without_model_reference(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation handles non-model bad requests."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=_bad_request_error({"message": "Invalid payload"}),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My Custom Agent",
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_MODEL: "bad-request-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "init"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_creating_subentry_handles_openai_error(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test subentry creation handles generic OpenAI SDK errors."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new_callable=AsyncMock,
+        side_effect=openai.OpenAIError("boom"),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My Custom Agent",
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_MODEL: "error-model",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "init"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_reconfiguring_default_subentry_preserves_marker(
