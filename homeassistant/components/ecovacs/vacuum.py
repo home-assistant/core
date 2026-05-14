@@ -182,7 +182,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         """Get bot and chargers positions."""
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="vacuum_raw_get_positions_not_supported",
+            translation_key="raw_get_positions_not_supported",
         )
 
 
@@ -391,7 +391,7 @@ class EcovacsVacuum(
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="vacuum_raw_get_positions_not_supported",
+                translation_key="raw_get_positions_not_supported",
             )
 
         return await self._device.execute_command(position_commands[0])

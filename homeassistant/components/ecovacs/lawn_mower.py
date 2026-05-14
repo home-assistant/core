@@ -1,6 +1,7 @@
 """Ecovacs mower entity."""
 
 import logging
+from typing import Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
@@ -14,9 +15,11 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
+from .const import DOMAIN
 from .entity import EcovacsEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,3 +95,27 @@ class EcovacsMower(
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self._device.execute_command(self._capability.charge.execute())
+
+    async def async_raw_get_positions(
+        self,
+    ) -> dict[str, Any]:
+        """Get the raw positions response for the mower and its charging dock.
+
+        Mirrors the modern vacuum implementation so service
+        `ecovacs.raw_get_positions` works on `lawn_mower.*` ecovacs entities.
+        Useful for inspecting additional payload fields the cloud may return
+        for RTK GOAT mowers (e.g. satellite counts, fix quality, signal
+        strength), which can then be parsed and exposed by deebot-client and
+        this integration in follow-up changes.
+        """
+        _LOGGER.debug("async_raw_get_positions")
+
+        if not (map_cap := self._capability.map) or not (
+            position_commands := map_cap.position.get
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="raw_get_positions_not_supported",
+            )
+
+        return await self._device.execute_command(position_commands[0])
