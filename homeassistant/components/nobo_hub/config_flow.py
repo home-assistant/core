@@ -1,6 +1,6 @@
 """Config flow for Nobø Ecohub integration."""
 
-import socket
+import ipaddress
 from typing import TYPE_CHECKING, Any
 
 from pynobo import nobo
@@ -201,40 +201,43 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             new_ip = user_input[CONF_IP_ADDRESS]
             is_loaded = reconfigure_entry.state == ConfigEntryState.LOADED
             try:
-                socket.inet_aton(new_ip)
-                # Probe the new IP only when the integration is not currently
-                # loaded — if it were, the running connection would compete
-                # with the probe for the hub's limited concurrent-connection
-                # slots.
-                if not is_loaded:
-                    await self._test_connection(
-                        reconfigure_entry.data[CONF_SERIAL], new_ip
-                    )
-            except OSError:
+                ipaddress.ip_address(new_ip)
+            except ValueError:
                 errors["base"] = "invalid_ip"
-            except NoboHubConnectError as error:
-                # The serial is fixed in reconfigure, so blame the IP rather
-                # than the (uneditable) serial number.
-                errors["base"] = (
-                    "cannot_connect_ip" if error.msg == "cannot_connect" else error.msg
-                )
             else:
-                if new_ip == reconfigure_entry.data[CONF_IP_ADDRESS] and is_loaded:
-                    # No-op: IP unchanged and the running integration already
-                    # proves it works. Skip the reload to avoid a needless
-                    # reconnect.
-                    return self.async_abort(reason="reconfigure_successful")
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates={CONF_IP_ADDRESS: new_ip},
-                )
+                try:
+                    # Probe the new IP only when the integration is not currently
+                    # loaded — if it were, the running connection would compete
+                    # with the probe for the hub's limited concurrent-connection
+                    # slots.
+                    if not is_loaded:
+                        await self._test_connection(
+                            reconfigure_entry.data[CONF_SERIAL], new_ip
+                        )
+                except NoboHubConnectError as error:
+                    # The serial is fixed in reconfigure, so blame the IP rather
+                    # than the (uneditable) serial number.
+                    errors["base"] = (
+                        "cannot_connect_ip"
+                        if error.msg == "cannot_connect"
+                        else error.msg
+                    )
+                else:
+                    if new_ip == reconfigure_entry.data[CONF_IP_ADDRESS] and is_loaded:
+                        # No-op: IP unchanged and the running integration already
+                        # proves it works. Skip the reload to avoid a needless
+                        # reconnect.
+                        return self.async_abort(reason="reconfigure_successful")
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_IP_ADDRESS: new_ip},
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
-                user_input
-                or {CONF_IP_ADDRESS: reconfigure_entry.data[CONF_IP_ADDRESS]},
+                user_input or reconfigure_entry.data,
             ),
             errors=errors,
             description_placeholders={
@@ -288,8 +291,8 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         if not len(serial) == 12 or not serial.isdigit():
             raise NoboHubConnectError("invalid_serial")
         try:
-            socket.inet_aton(ip_address)
-        except OSError as err:
+            ipaddress.ip_address(ip_address)
+        except ValueError as err:
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
         # pynobo distinguishes the two failure modes: TCP-level errors
