@@ -2185,16 +2185,23 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             integration.add_error(
                 "quality_scale",
                 (
-                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
+                    "New integrations marked as internal"
+                    " should be added to NO_QUALITY_SCALE"
+                    " in script/hassfest/quality_scale.py."
                     if integration.quality_scale == "internal"
-                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                    else "Quality scale definition not found."
+                    " New integrations are required to at"
+                    " least reach the Bronze tier."
                 ),
             )
             return
         if declared_quality_scale is not None:
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
+                "Quality scale definition not found."
+                " Integrations that set a manifest quality"
+                " scale must have a quality scale"
+                " definition.",
             )
             return
         return
@@ -2213,7 +2220,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     if integration.domain in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE:
         integration.add_error(
             "quality_scale",
-            "Quality scale file found! Please remove from `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
+            "Quality scale file found! Please remove"
+            " from"
+            " `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2223,7 +2232,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "This integration is graded and should be removed from `INTEGRATIONS_WITHOUT_SCALE`"
+            "This integration is graded and should be"
+            " removed from `INTEGRATIONS_WITHOUT_SCALE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2234,7 +2244,10 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         integration.add_error(
             "quality_scale",
             (
-                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                "New integrations marked as internal"
+                " should be added to"
+                " INTEGRATIONS_WITHOUT_SCALE in"
+                " script/hassfest/quality_scale.py."
                 if integration.quality_scale == "internal"
                 else "New integrations are required to at least reach the Bronze tier."
             ),
@@ -2288,7 +2301,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             )
             integration.add_error(
                 "quality_scale",
-                f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
+                f"Quality scale tier {scale.name.lower()}"
+                " requires quality scale rules to be"
+                f" met:\n{friendly_rule_str}",
             )
 
 
