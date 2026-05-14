@@ -19,11 +19,32 @@ import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
+from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, load_fixture
 
 SHOPPING_LIST_ID = "list-id-1"
 SHOPPING_ITEM_NOTE = "Shopping Item 1"
+
+
+@pytest.fixture(autouse=True)
+def mock_get_url() -> Generator[None]:
+    """Mock get_url to raise NoURLAvailableError for consistent test behavior."""
+    with patch(
+        "homeassistant.components.mealie.services.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_async_sign_path() -> Generator[None]:
+    """Mock async_sign_path to return a deterministic path for snapshot stability."""
+    with patch(
+        "homeassistant.components.mealie.services.async_sign_path",
+        side_effect=lambda _hass, path, _expiry, **_kwargs: path,
+    ):
+        yield
 
 
 @pytest.fixture

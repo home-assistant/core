@@ -19,4 +19,6 @@ ATTR_NOTE_TEXT = "note_text"
 ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
 
+MEALIE_IMAGE_PROXY_PATH = "/api/mealie_image_proxy"
+
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v2.0.0")

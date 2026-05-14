@@ -24,6 +24,7 @@ from .coordinator import (
 )
 from .services import async_setup_services
 from .utils import create_version
+from .view import MealieImageView
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.TODO]
 
@@ -33,6 +34,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Mealie component."""
     async_setup_services(hass)
+    hass.http.register_view(MealieImageView())
     return True
 
 
