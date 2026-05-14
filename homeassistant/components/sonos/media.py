@@ -1,8 +1,13 @@
 """Support for media metadata handling."""
 
+import asyncio
 import datetime
+import logging
+import re
 from typing import Any
+from urllib.parse import unquote
 
+import aiohttp
 from soco.core import (
     MUSIC_SRC_AIRPLAY,
     MUSIC_SRC_LINE_IN,
@@ -15,6 +20,7 @@ from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.music_library import MusicLibrary
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import dt as dt_util
@@ -29,6 +35,26 @@ from .const import (
     SOURCE_TV,
 )
 from .helpers import soco_error
+
+_LOGGER = logging.getLogger(__name__)
+
+SOUNDCLOUD_TRACK_URI_PATTERN = re.compile(r"soundcloud:tracks:(\d+)", re.IGNORECASE)
+SOUNDCLOUD_OEMBED_URL = "https://soundcloud.com/oembed"
+SOUNDCLOUD_OEMBED_TIMEOUT = aiohttp.ClientTimeout(total=10)
+
+
+def _extract_soundcloud_track_id(uri: str) -> str | None:
+    """Extract the numeric SoundCloud track ID from a Sonos media URI.
+
+    Sonos encodes SoundCloud-sourced tracks as URIs containing the
+    substring ``soundcloud:tracks:<id>`` (often URL-encoded as
+    ``soundcloud%3Atracks%3A<id>``). Returns the ID, or None if the URI
+    isn't a SoundCloud track.
+    """
+    if match := SOUNDCLOUD_TRACK_URI_PATTERN.search(unquote(uri)):
+        return match.group(1)
+    return None
+
 
 LINEIN_SOURCES = (MUSIC_SRC_TV, MUSIC_SRC_LINE_IN)
 SOURCE_MAPPING = {
@@ -75,6 +101,9 @@ class SonosMedia:
         self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
 
+        self._external_source: str | None = None
+        self._pending_artwork_uri: str | None = None
+
     def clear(self) -> None:
         """Clear basic media info."""
         self.album_name = None
@@ -88,6 +117,7 @@ class SonosMedia:
         self.source_name = None
         self.title = None
         self.uri = None
+        self._external_source = None
 
     def clear_position(self) -> None:
         """Clear the position attributes."""
@@ -133,6 +163,7 @@ class SonosMedia:
         title = track_info.get("title") or ""
         self.title = title.strip() or None
         self.image_url = track_info.get("album_art")
+        self._maybe_resolve_external_artwork()
 
         playlist_position = int(track_info.get("playlist_position", -1))
         if playlist_position > 0:
@@ -154,7 +185,7 @@ class SonosMedia:
         self.set_basic_track_info(update_position=state_changed)
 
         if ct_md := evars["current_track_meta_data"]:
-            if not self.image_url:
+            if not self.image_url and not self._external_source:
                 if album_art_uri := getattr(ct_md, "album_art_uri", None):
                     self.image_url = self.library.build_album_art_full_uri(
                         album_art_uri
@@ -235,3 +266,57 @@ class SonosMedia:
         elif should_update:
             self.position = current_position
             self.position_updated_at = dt_util.utcnow()
+
+    def _maybe_resolve_external_artwork(self) -> None:
+        """Schedule async artwork resolution for tracks from non-native sources.
+
+        Sonos does not expose a usable ``album_art`` URL for tracks sourced
+        from third-party services like SoundCloud — the URL it returns
+        requires authentication that HA's image proxy can't satisfy. For
+        known external sources we mark the source, clear the unfetchable
+        URL, and resolve real artwork out-of-band via the service's public
+        API.
+        """
+        if not self.uri:
+            return
+        if (track_id := _extract_soundcloud_track_id(self.uri)) is None:
+            return
+        self._external_source = "soundcloud"
+        self.image_url = None
+        if self._pending_artwork_uri == self.uri:
+            return
+        self._pending_artwork_uri = self.uri
+        asyncio.run_coroutine_threadsafe(
+            self._async_resolve_soundcloud_artwork(track_id, self.uri),
+            self.hass.loop,
+        )
+
+    async def _async_resolve_soundcloud_artwork(self, track_id: str, uri: str) -> None:
+        """Fetch a SoundCloud track's thumbnail via its public oEmbed endpoint."""
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        thumbnail_url: str | None = None
+        try:
+            async with session.get(
+                SOUNDCLOUD_OEMBED_URL,
+                params={
+                    "format": "json",
+                    "url": f"https://api.soundcloud.com/tracks/{track_id}",
+                },
+                timeout=SOUNDCLOUD_OEMBED_TIMEOUT,
+            ) as response:
+                response.raise_for_status()
+                data = await response.json(content_type=None)
+            thumbnail_url = data.get("thumbnail_url")
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.debug(
+                "SoundCloud oEmbed lookup failed for track %s: %s", track_id, err
+            )
+        finally:
+            if self._pending_artwork_uri == uri:
+                self._pending_artwork_uri = None
+
+        if not thumbnail_url or self.uri != uri:
+            return
+
+        self.image_url = thumbnail_url
+        self.write_media_player_states()

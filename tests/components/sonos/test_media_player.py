@@ -48,6 +48,10 @@ from homeassistant.components.sonos.const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
+from homeassistant.components.sonos.media import (
+    SOUNDCLOUD_OEMBED_URL,
+    _extract_soundcloud_track_id,
+)
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -87,6 +91,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
@@ -1612,3 +1617,100 @@ async def test_media_info_attributes(
 
     # Use the snapshot assertion
     assert filtered_attrs == snapshot
+
+
+@pytest.mark.parametrize(
+    ("uri", "expected_id"),
+    [
+        pytest.param(
+            "x-sonos-http:track%3esoundcloud%3atracks%3a1233498328.mp3?sid=160",
+            "1233498328",
+            id="url_encoded",
+        ),
+        pytest.param(
+            "x-sonos-http:track>soundcloud:tracks:42.mp3?sid=160",
+            "42",
+            id="decoded",
+        ),
+        pytest.param(
+            "x-sonos-http:track%3eSOUNDCLOUD%3aTracks%3a99.mp3",
+            "99",
+            id="case_insensitive",
+        ),
+        pytest.param(
+            "x-file-cifs://192.168.42.10/music/track.mp3",
+            None,
+            id="non_soundcloud",
+        ),
+        pytest.param("", None, id="empty"),
+    ],
+)
+def test_extract_soundcloud_track_id(uri: str, expected_id: str | None) -> None:
+    """Test SoundCloud track ID extraction from Sonos media URIs."""
+    assert _extract_soundcloud_track_id(uri) == expected_id
+
+
+async def test_soundcloud_artwork_resolved_via_oembed(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """SoundCloud tracks should resolve artwork via the public oEmbed endpoint.
+
+    Sonos returns an unfetchable URL in ``album_art`` for SoundCloud-sourced
+    tracks, so the integration must override it with the public thumbnail
+    from SoundCloud's oEmbed response.
+    """
+    thumbnail_url = "https://i1.sndcdn.com/artworks-000099563946-2kd7qt-t500x500.jpg"
+    aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, json={"thumbnail_url": thumbnail_url})
+
+    soco.get_current_track_info.return_value = {
+        "title": "Deep & Sexy Podcast #49",
+        "artist": "Alex Cruz",
+        "album": "",
+        "album_art": "http://sonos-internal/unfetchable.jpg",
+        "position": "00:00:00",
+        "playlist_position": "1",
+        "duration": "01:01:05",
+        "uri": "x-sonos-http:track%3esoundcloud%3atracks%3a1233498328.mp3?sid=160",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_ENTITY_PICTURE) is not None
+    assert len(aioclient_mock.mock_calls) == 1
+    _, called_url, _ = aioclient_mock.mock_calls[0]
+    assert str(called_url).startswith(SOUNDCLOUD_OEMBED_URL)
+    assert "1233498328" in str(called_url)
+
+
+async def test_soundcloud_artwork_oembed_failure_leaves_no_picture(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A failed oEmbed lookup should not crash; entity_picture stays absent."""
+    aioclient_mock.get(SOUNDCLOUD_OEMBED_URL, status=500)
+
+    soco.get_current_track_info.return_value = {
+        "title": "Track",
+        "artist": "Artist",
+        "album": "",
+        "album_art": "http://sonos-internal/unfetchable.jpg",
+        "position": "00:00:00",
+        "playlist_position": "1",
+        "duration": "00:03:00",
+        "uri": "x-sonos-http:track%3esoundcloud%3atracks%3a42.mp3?sid=160",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_ENTITY_PICTURE) is None
