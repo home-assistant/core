@@ -151,4 +151,4 @@ class ZerprocLight(LightEntity):
         self._attr_is_on = state.is_on
         hsv = color_util.color_RGB_to_hsv(*state.color)
         self._attr_hs_color = hsv[:2]
-        self._attr_brightness = int(round((hsv[2] / 100) * 255))
+        self._attr_brightness = round((hsv[2] / 100) * 255)

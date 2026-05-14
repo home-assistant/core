@@ -61,7 +61,7 @@ dependencies = [
   "Pillow==12.2.0",
   "propcache==0.4.1",
   "pyOpenSSL==26.2.0",
-  "orjson==3.11.8",
+  "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.10",
+  "uv==0.11.11",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
@@ -175,6 +175,9 @@ disable = [
   "consider-using-namedtuple-or-dataclass",
   "consider-using-assignment-expr",
   "possibly-used-before-assignment",
+
+  # Disabled while existing violations are being cleaned up
+  "home-assistant-unused-test-fixture-argument",
 
   # Handled by ruff
   # Ref: <https://github.com/astral-sh/ruff/issues/970>
@@ -658,6 +661,7 @@ select = [
   "B006",   # Do not use mutable data structures for argument defaults
   "B007",   # Loop control variable {name} not used within loop body
   "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
+  "B010",   # Do not call setattr with a constant attribute value. It is not any safer than normal property access.
   "B011",   # Do not call assert False since python -O removes these calls
   "B012",   # Use of break/continue/return inside a finally block
   "B013",   # A length-one tuple literal is redundant in exception handlers
@@ -735,6 +739,8 @@ select = [
   "RUF032", # Decimal() called with float literal argument
   "RUF033", # __post_init__ method with argument defaults
   "RUF034", # Useless if-else condition
+  "RUF046", # Unnecessary cast to int
+  "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
   "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
