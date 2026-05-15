@@ -8,12 +8,12 @@ import pytest
 from rf_protocols import ModulationType
 
 from homeassistant.components import radio_frequency, rfm_gateway
+from homeassistant.components.rfm_gateway import radio_frequency as rfm_radio_frequency
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from homeassistant.components.rfm_gateway import radio_frequency as rfm_radio_frequency
 
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyCommand

@@ -6,11 +6,11 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import rfm_gateway
+from homeassistant.components.rfm_gateway.config_flow import RfmGatewayConfigFlow
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.components.rfm_gateway.config_flow import RfmGatewayConfigFlow
 
 TEST_HOST = "192.0.2.10"
 TEST_OTHER_HOST = "192.0.2.11"

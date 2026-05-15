@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
 from aiohttp import ClientError
+import pytest
 
 from homeassistant.components import rfm_gateway
 from homeassistant.core import HomeAssistant
