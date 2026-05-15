@@ -283,6 +283,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update the home data from Tado."""
 
         def _get_home_data() -> tuple[dict, dict]:
+            """Get the weather and geofence data for the home."""
             return self._tado.get_weather(), self._tado.get_home_state()
 
         try:
