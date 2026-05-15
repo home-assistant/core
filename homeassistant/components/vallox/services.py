@@ -7,6 +7,7 @@ from vallox_websocket_api import Profile, ValloxApiException
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
@@ -65,7 +66,14 @@ async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> N
     try:
         await coordinator.client.set_fan_speed(profile, fan_speed)
     except ValloxApiException as err:
-        _LOGGER.error("Error setting fan speed for %s profile: %s", profile.name, err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_set_fan_speed_for_profile",
+            translation_placeholders={
+                "profile": profile.name,
+                "fan_speed": str(fan_speed),
+            },
+        ) from err
     else:
         await coordinator.async_request_refresh()
 
@@ -96,14 +104,21 @@ async def _async_set_profile(call: ServiceCall) -> None:
         await coordinator.client.set_profile(
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     except ValloxApiException as err:
-        _LOGGER.error(
-            "Error setting profile %s for duration %s: %s",
-            profile_key,
-            duration,
-            err,
-        )
+        if duration is None:
+            translation_key = "failed_to_set_profile"
+            translation_placeholders = {"profile": profile_key}
+        else:
+            translation_key = "failed_to_set_profile_for_duration"
+            translation_placeholders = {
+                "profile": profile_key,
+                "duration": str(duration),
+            }
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        ) from err
     else:
         await coordinator.async_request_refresh()
 
