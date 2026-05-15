@@ -26,7 +26,6 @@ DHCP_SERVICE_INFO = DhcpServiceInfo(
 )
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_combined(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -53,7 +52,6 @@ async def test_form_combined(hass: HomeAssistant) -> None:
     assert result2["data"] == {"host": "1.1.1.1"}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_duplicates(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -124,7 +122,6 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
     assert result2["data"] == {"host": "1.1.1.1"}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test DHCP discovery shows a confirmation form and creates an entry."""
     with patch(
@@ -162,7 +159,6 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_already_configured_updates_host(
     hass: HomeAssistant,
 ) -> None:

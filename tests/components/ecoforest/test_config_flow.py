@@ -46,7 +46,6 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_device_already_configured(
     hass: HomeAssistant, config_entry, mock_device, config
 ) -> None:
