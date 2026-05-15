@@ -64,6 +64,7 @@ async def test_device_entry_migration_confirm_flow(
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="device_migration",
+        translation_placeholders={"name": "Test MQTT Device"},
         data={
             "entry_id": entry.entry_id,
             "subentry_id": "test-subentry-id",
