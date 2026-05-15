@@ -126,7 +126,8 @@ class MatterEntity(Entity):
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        # mark endpoint postfix if the device has the primary
+        # attribute on multiple endpoints
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
@@ -212,8 +213,9 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
-        # Subscribe to BridgedDeviceBasicInformation Reachable attribute (AttributeId: 17)
-        # for devices connected via a Matter bridge, to reflect real reachability status.
+        # Subscribe to BridgedDeviceBasicInformation Reachable
+        # attribute (AttributeId: 17) for devices connected via a
+        # Matter bridge, to reflect real reachability status.
         if self._endpoint.has_attribute(
             None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
         ):
@@ -342,7 +344,7 @@ class MatterEntity(Entity):
     ) -> Any:
         """Write an attribute(value) on the primary endpoint.
 
-        If matter_attribute is not provided, the primary attribute of the entity is used.
+        If matter_attribute is not provided, the primary attribute is used.
         """
         if matter_attribute is None:
             matter_attribute = self._entity_info.primary_attribute

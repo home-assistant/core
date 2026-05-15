@@ -130,7 +130,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         # Store a dictionary for fast endpoint state access
         self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
 
-        # If panel supports it and a it hasn't been registered yet, register the push notification handler
+        # If panel supports it and it hasn't been registered yet,
+        # register the push notification handler
         if status.push_feature and self._push_notification_handler is None:
             self._register_push_notification_handler()
 

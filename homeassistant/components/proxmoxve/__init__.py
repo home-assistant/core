@@ -197,7 +197,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
 
         realm = data[CONF_REALM].lower()
 
-        # If the realm is one of the base providers, set the provider to match the realm.
+        # If the realm is one of the base providers,
+        # set the provider to match the realm.
         data[CONF_AUTH_METHOD] = realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
         data.setdefault(CONF_TOKEN, False)
 

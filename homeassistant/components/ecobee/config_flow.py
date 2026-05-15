@@ -71,7 +71,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Present the user with the PIN so that the app can be authorized on ecobee.com."""
+        """Present the user with the PIN to authorize on ecobee.com."""
         errors = {}
 
         if user_input is not None:

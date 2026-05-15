@@ -58,6 +58,7 @@ async def _service_handler(call: ServiceCall) -> None:
         dsm_api = dsm_device.api
         try:
             await getattr(dsm_api, f"async_{call.service}")()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except SynologyDSMException as ex:
             LOGGER.error(
                 "%s of DSM with serial %s not possible, because of %s",
