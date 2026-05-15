@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 
@@ -34,15 +33,11 @@ class MQTTDeviceEntryMigration(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            device_registry = dr.async_get(self.hass)
-            subentry_device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self.subentry_id)}
-            )
             entry = self.hass.config_entries.async_get_entry(self.entry_id)
             if TYPE_CHECKING:
                 assert entry is not None
-                assert subentry_device is not None
-            self.hass.config_entries.async_remove_subentry(entry, self.subentry_id)
+            if self.subentry_id in entry.subentries:
+                self.hass.config_entries.async_remove_subentry(entry, self.subentry_id)
             return self.async_create_entry(data={})
 
         return self.async_show_form(

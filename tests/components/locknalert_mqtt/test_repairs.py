@@ -17,6 +17,7 @@ from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
@@ -45,6 +46,7 @@ async def test_device_entry_migration_confirm_flow(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """MQTTDeviceEntryMigration flow shows confirm form then removes subentry."""
+    assert await async_setup_component(hass, "repairs", {})
     await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 

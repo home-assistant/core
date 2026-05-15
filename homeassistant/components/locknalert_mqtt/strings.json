@@ -1112,6 +1112,17 @@
     }
   },
   "issues": {
+    "device_migration": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Select **Submit** to remove the MQTT device subentry for \"{name}\" and allow it to be managed via MQTT discovery.",
+            "title": "Migrate MQTT device \"{name}\" to discovery"
+          }
+        }
+      },
+      "title": "MQTT device \"{name}\" requires migration"
+    },
     "invalid_platform_config": {
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
