@@ -15,6 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+TEST_HOST = "192.0.2.10"
+TEST_OTHER_HOST = "192.0.2.11"
+
 
 def _mock_caps() -> RfmCapabilities:
     return RfmCapabilities(
@@ -40,12 +43,12 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "192.168.178.102"},
+            user_input={CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFM Gateway"
-    assert result["data"] == {CONF_HOST: "192.168.178.102"}
+    assert result["data"] == {CONF_HOST: TEST_HOST}
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -61,7 +64,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "192.168.178.102"},
+            user_input={CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -72,8 +75,8 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     """Test successful zeroconf setup."""
     discovery = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.178.102"),
-        ip_addresses=[ip_address("192.168.178.102")],
+        ip_address=ip_address(TEST_HOST),
+        ip_addresses=[ip_address(TEST_HOST)],
         hostname="rfm-gateway.local.",
         name="RFM Gateway",
         port=80,
@@ -100,14 +103,14 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: "192.168.178.102"}
+    assert result["data"] == {CONF_HOST: TEST_HOST}
 
 
 async def test_zeroconf_ignores_non_rfm_device(hass: HomeAssistant) -> None:
     """Test zeroconf abort for unrelated devices."""
     discovery = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.178.103"),
-        ip_addresses=[ip_address("192.168.178.103")],
+        ip_address=ip_address(TEST_OTHER_HOST),
+        ip_addresses=[ip_address(TEST_OTHER_HOST)],
         hostname="not-rfm.local.",
         name="Other Device",
         port=80,

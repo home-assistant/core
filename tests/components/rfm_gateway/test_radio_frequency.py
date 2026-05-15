@@ -24,6 +24,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyCommand
 
+TEST_HOST = "192.0.2.10"
+
 
 def _mock_caps(
     *,
@@ -42,8 +44,8 @@ def _mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="RFM Gateway",
-        data={CONF_HOST: "192.168.178.102"},
-        unique_id="192.168.178.102",
+        data={CONF_HOST: TEST_HOST},
+        unique_id=TEST_HOST,
     )
 
 
@@ -155,7 +157,7 @@ async def test_send_command_failure_marks_entity_unavailable(hass: HomeAssistant
         "homeassistant.components.rfm_gateway.client.RfmGatewayClient.async_send_raw",
         new=AsyncMock(side_effect=RfmGatewayProtocolError("parameter error")),
     ):
-        with pytest.raises(HomeAssistantError, match="RF transmit via 192.168.178.102 failed"):
+        with pytest.raises(HomeAssistantError, match="RF transmit via 192.0.2.10 failed"):
             await radio_frequency.async_send_command(hass, entity_id, command)
 
     state = hass.states.get(entity_id)

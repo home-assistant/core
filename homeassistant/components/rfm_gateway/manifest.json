@@ -10,7 +10,9 @@
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
-      "name": "*"
+      "properties": {
+        "model": "rfm-gateway"
+      }
     }
   ],
   "requirements": ["rf-protocols==3.1.0"]

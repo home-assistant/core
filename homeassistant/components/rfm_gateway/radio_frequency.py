@@ -70,7 +70,6 @@ class RfmGatewayTransmitter(RadioFrequencyTransmitterEntity):
             name=name,
             manufacturer="Seegel Systeme",
             model="RFM Gateway",
-            hw_version=freq_ranges or None,
             configuration_url=self._client.base_url,
         )
         self._attr_available = True

@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+TEST_HOST = "192.0.2.10"
+
 
 def _mock_caps() -> RfmCapabilities:
     """Return mocked gateway capabilities."""
@@ -26,8 +28,8 @@ async def test_load_unload_config_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="RFM Gateway",
-        data={CONF_HOST: "192.168.178.102"},
-        unique_id="192.168.178.102",
+        data={CONF_HOST: TEST_HOST},
+        unique_id=TEST_HOST,
     )
     entry.add_to_hass(hass)
 

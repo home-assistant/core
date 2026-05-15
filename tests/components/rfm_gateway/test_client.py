@@ -13,7 +13,7 @@ from homeassistant.components.rfm_gateway.client import (
 )
 from homeassistant.core import HomeAssistant
 
-BASE_URL = "http://192.168.178.102"
+BASE_URL = "http://192.0.2.10"
 
 
 async def test_get_capabilities_success(
