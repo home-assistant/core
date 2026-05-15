@@ -20,11 +20,3 @@ class ImgwPibEntity(CoordinatorEntity[ImgwPibDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._attr_device_info = coordinator.device_info
-
-    @property
-    def available(self) -> bool:
-        """Return the value reported by the sensor."""
-        if self.state is not None:
-            return super().available
-
-        return False
