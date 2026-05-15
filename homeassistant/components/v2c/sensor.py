@@ -13,13 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    EntityCategory,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfTime,
-)
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -52,15 +46,6 @@ TRYDAN_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.charge_power,
-    ),
-    V2CSensorEntityDescription(
-        key="voltage_installation",
-        translation_key="voltage_installation",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        value_fn=lambda evse_data: evse_data.voltage_installation,
-        entity_registry_enabled_default=False,
     ),
     V2CSensorEntityDescription(
         key="charge_energy",

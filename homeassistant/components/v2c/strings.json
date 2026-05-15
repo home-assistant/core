@@ -47,6 +47,9 @@
       },
       "min_intensity": {
         "name": "Min intensity"
+      },
+      "voltage_installation": {
+        "name": "Installation voltage"
       }
     },
     "sensor": {
@@ -116,9 +119,6 @@
       },
       "ssid": {
         "name": "SSID"
-      },
-      "voltage_installation": {
-        "name": "Installation voltage"
       }
     },
     "switch": {
