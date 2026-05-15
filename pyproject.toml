@@ -33,6 +33,7 @@ dev = [
   "paho-mqtt>=2.1.0",
   "aiohasupervisor>=0.4.3",
   "ha-ffmpeg>=3.2.2",
+  "pytest-freezer>=0.4.9",
 ]
 
 [tool.setuptools]

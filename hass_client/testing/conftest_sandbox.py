@@ -5,12 +5,30 @@ RemoteHomeAssistant, this boots a host HA Core with websocket_api + sandbox
 integration, starts a real aiohttp test server, creates a sandbox auth token,
 and connects the sandbox RemoteHomeAssistant to it via a live websocket.
 
+Tests that use the ``freezer`` fixture (pytest-freezer's FrozenDateTimeFactory)
+fall back to the base plugin without a real websocket, because mid-test time
+jumps hang live async connections.
+
 Usage:
     pytest -p hass_client.testing.conftest_sandbox \
            ../core/tests/components/input_boolean/test_init.py
 """
 
 from __future__ import annotations
+
+import threading
+
+_state = threading.local()
+
+
+def pytest_runtest_setup(item) -> None:
+    """Detect tests that use the freezer fixture before hass setup runs."""
+    _state.uses_freezer = "freezer" in getattr(item, "fixturenames", ())
+
+
+def pytest_runtest_teardown(item, nextitem) -> None:
+    """Clear per-test flag."""
+    _state.uses_freezer = False
 
 
 def pytest_configure() -> None:
@@ -52,12 +70,14 @@ def pytest_configure() -> None:
     async def sandbox_async_test_home_assistant(*args, **kwargs):
         """Create a sandbox-connected test HA instance with a real websocket.
 
-        Creates two HA instances via the patched factory:
-        1. A host HA with websocket_api + sandbox integration
-        2. A sandbox HA (RemoteHomeAssistant) connected to the host via websocket
-
-        The sandbox HA is yielded as the test's hass fixture.
+        Falls back to the base plugin (no websocket) when the test uses the
+        freezer fixture, since freezer.move_to() hangs live connections.
         """
+        if getattr(_state, "uses_freezer", False):
+            async with patched_async_test_home_assistant(*args, **kwargs) as hass:
+                yield hass
+            return
+
         saved_socket = _socket_mod.socket
         _socket_mod.socket = _real_socket
 
@@ -101,12 +121,9 @@ def pytest_configure() -> None:
                 async with patched_async_test_home_assistant(
                     *args, **kwargs
                 ) as sandbox_hass:
-                    # Remove the host from INSTANCES tracking so verify_cleanup
-                    # doesn't see two instances and abort.
                     if host_hass in tests_common.INSTANCES:
                         tests_common.INSTANCES.remove(host_hass)
 
-                    # Shut down the host's import executor to avoid lingering threads.
                     host_hass.import_executor.shutdown(wait=False)
 
                     sandbox_hass.remote_config = RemoteConfig(
