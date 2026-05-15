@@ -98,7 +98,7 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot number entities based on a config entry and device status/features."""
+    """Set up LetPot number entities."""
     coordinators = entry.runtime_data
     async_add_entities(
         LetPotNumberEntity[LetPotGardenStatus](coordinator, description)
@@ -123,7 +123,11 @@ class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot number entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
     def native_max_value(self) -> float:

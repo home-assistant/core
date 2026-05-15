@@ -131,6 +131,7 @@ class XeomaCamera(Camera):
                 self._image, self._username, self._password
             )
             self._last_image = image
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except XeomaError as err:
             _LOGGER.error("Error fetching image: %s", err.message)
 

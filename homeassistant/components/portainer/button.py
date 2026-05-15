@@ -181,7 +181,10 @@ async def async_setup_entry(
 
 
 class PortainerBaseButton(ButtonEntity):
-    """Common base for Portainer buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Portainer buttons.
+
+    Ensures the async_press logic isn't duplicated.
+    """
 
     entity_description: PortainerButtonDescription
     coordinator: PortainerCoordinator

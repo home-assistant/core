@@ -152,7 +152,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
                         _LOGGER.debug(
-                            "Growatt V1 API error during credential update: %s (Code: %s)",
+                            "Growatt V1 API error during credential"
+                            " update: %s (Code: %s)",
                             err.error_msg or str(err),
                             err.error_code,
                         )
