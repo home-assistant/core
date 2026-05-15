@@ -11,6 +11,7 @@ from pymiele import (
     MieleAction,
     MieleAPI,
     MieleDevice,
+    MieleFailureData,
     MieleFillingLevel,
     MieleFillingLevels,
 )
@@ -31,6 +32,7 @@ class MieleRuntimeData:
     api: MieleAPI
     coordinator: MieleDataUpdateCoordinator
     aux_coordinator: MieleAuxDataUpdateCoordinator
+    failure_coordinator: MieleFailureDataUpdateCoordinator
 
 
 type MieleConfigEntry = ConfigEntry[MieleRuntimeData]
@@ -74,6 +76,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             update_interval=timedelta(seconds=120),
         )
         self.api = api
+        self.failing_devices: set[str] = set()
 
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""
@@ -87,7 +90,8 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             self.devices = devices
             actions = {}
 
-            for device_id in devices:
+            for device_id, device in devices.items():
+                # actions are fetched separately
                 try:
                     actions_json = await self.api.get_actions(device_id)
                 except ClientResponseError as err:
@@ -105,7 +109,25 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                     )
                     actions_json = {}
                 actions[device_id] = MieleAction(actions_json)
+
+                # failures are fetched only if needed
+                self._handle_device_failure(device_id, device)
+
             return MieleCoordinatorData(devices=devices, actions=actions)
+
+    def _handle_device_failure(self, device_id: str, device: MieleDevice) -> None:
+        """Handle failures that are fetched from separate API only when needed."""
+        has_failure = device.state_signal_failure
+        if has_failure and device_id not in self.failing_devices:
+            self.failing_devices.add(device_id)
+            self.hass.async_create_task(
+                self.config_entry.runtime_data.failure_coordinator.async_fetch_failure(
+                    device_id
+                )
+            )
+        elif not has_failure and device_id in self.failing_devices:
+            self.failing_devices.remove(device_id)
+            self.config_entry.runtime_data.failure_coordinator.clear_failure(device_id)
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
@@ -122,6 +144,9 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         self.async_set_updated_data(
             MieleCoordinatorData(devices=devices, actions=self.data.actions)
         )
+        for device_id, device in devices.items():
+            # failures are fetched only if needed
+            self._handle_device_failure(device_id, device)
 
     async def callback_update_actions(self, actions_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
@@ -160,3 +185,57 @@ class MieleAuxDataUpdateCoordinator(DataUpdateCoordinator[MieleAuxCoordinatorDat
         return MieleAuxCoordinatorData(
             filling_levels=MieleFillingLevels(filling_levels_json).filling_levels
         )
+
+
+class MieleFailureDataUpdateCoordinator(DataUpdateCoordinator):
+    """Coordinator for Miele data for failure endpoint, polled when needed."""
+
+    config_entry: MieleConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: MieleConfigEntry,
+        api: MieleAPI,
+    ) -> None:
+        """Initialize the Miele data coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=None,
+        )
+        self.api = api
+        self.data: dict[str, MieleFailureData | None] = {}
+
+    async def _async_update_data(self) -> dict[str, MieleFailureData | None]:
+        """Update data is not fetched on an interval, but on demand."""
+        return self.data
+
+    async def async_fetch_failure(self, device_id: str) -> None:
+        """Fetch failure data for a device from the Miele API."""
+        try:
+            failure_json = await self.api.get_failure_details(device_id)
+            self.data[device_id] = MieleFailureData(failure_json)
+        except ClientResponseError as err:
+            _LOGGER.debug(
+                "Error fetching failure data for device %s: Status: %s, Message: %s",
+                device_id,
+                str(err.status),
+                err.message,
+            )
+            self.data[device_id] = None
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout fetching failure data for device %s",
+                device_id,
+            )
+            self.data[device_id] = None
+        self.async_set_updated_data(self.data)
+
+    def clear_failure(self, device_id: str) -> None:
+        """Clear failure data for a device."""
+        if device_id in self.data:
+            self.data[device_id] = None
+            self.async_set_updated_data(self.data)

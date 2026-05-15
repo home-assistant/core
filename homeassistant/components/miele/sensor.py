@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
-from pymiele import MieleDevice, MieleFillingLevel, MieleTemperature
+from pymiele import MieleDevice, MieleFailureData, MieleFillingLevel, MieleTemperature
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -46,8 +46,9 @@ from .coordinator import (
     MieleAuxDataUpdateCoordinator,
     MieleConfigEntry,
     MieleDataUpdateCoordinator,
+    MieleFailureDataUpdateCoordinator,
 )
-from .entity import MieleAuxEntity, MieleEntity
+from .entity import MieleAuxEntity, MieleEntity, MieleFailureEntity
 
 PARALLEL_UPDATES = 0
 
@@ -150,7 +151,7 @@ def _convert_finish_timestamp(
 
 
 @dataclass(frozen=True, kw_only=True)
-class MieleSensorDescription[T: (MieleDevice, MieleFillingLevel)](
+class MieleSensorDescription[T: (MieleDevice, MieleFillingLevel, MieleFailureData)](
     SensorEntityDescription
 ):
     """Class describing Miele sensor entities."""
@@ -164,7 +165,7 @@ class MieleSensorDescription[T: (MieleDevice, MieleFillingLevel)](
 
 
 @dataclass
-class MieleSensorDefinition[T: (MieleDevice, MieleFillingLevel)]:
+class MieleSensorDefinition[T: (MieleDevice, MieleFillingLevel, MieleFailureData)]:
     """Class for defining sensor entities."""
 
     types: tuple[MieleAppliance, ...]
@@ -798,6 +799,91 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
     ),
 )
 
+FAILURE_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFailureData], ...]] = (
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.HOB_HIGHLIGHT,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.COFFEE_SYSTEM,
+            MieleAppliance.HOOD,
+            MieleAppliance.FRIDGE,
+            MieleAppliance.FREEZER,
+            MieleAppliance.FRIDGE_FREEZER,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.HOB_INDUCTION,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.WINE_CABINET,
+            MieleAppliance.WINE_CONDITIONING_UNIT,
+            MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.WINE_CABINET_FREEZER,
+            MieleAppliance.STEAM_OVEN_MK2,
+            MieleAppliance.HOB_INDUCT_EXTR,
+        ),
+        description=MieleSensorDescription[MieleFailureData](
+            key="fault_code",
+            translation_key="fault_code",
+            value_fn=lambda value: (
+                None
+                if not value
+                or value.error_number() is None
+                or value.error_number() == 0
+                else f"F{value.error_number()}"
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.HOB_HIGHLIGHT,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.COFFEE_SYSTEM,
+            MieleAppliance.HOOD,
+            MieleAppliance.FRIDGE,
+            MieleAppliance.FREEZER,
+            MieleAppliance.FRIDGE_FREEZER,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.HOB_INDUCTION,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.WINE_CABINET,
+            MieleAppliance.WINE_CONDITIONING_UNIT,
+            MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.WINE_CABINET_FREEZER,
+            MieleAppliance.STEAM_OVEN_MK2,
+            MieleAppliance.HOB_INDUCT_EXTR,
+        ),
+        description=MieleSensorDescription[MieleFailureData](
+            key="fault_message",
+            translation_key="fault_message",
+            value_fn=lambda value: value.message() if value else None,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -807,6 +893,7 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
     aux_coordinator = config_entry.runtime_data.aux_coordinator
+    failure_coordinator = config_entry.runtime_data.failure_coordinator
     added_devices: set[str] = set()  # device_id
     added_entities: set[str] = set()  # unique_id
 
@@ -870,44 +957,72 @@ async def async_setup_entry(
             and definition.description.value_fn(level) is None
         )
 
+    def _should_add_entity(
+        device: MieleDevice,
+        device_id: str,
+        definition: MieleSensorDefinition,
+        unique_id: str,
+        new_devices_set: set[str],
+    ) -> bool:
+        nonlocal added_entities
+
+        # device is not supported, should not add entity
+        if device.device_type not in definition.types:
+            return False
+
+        # entity was already added, should not add entity
+        if device_id not in new_devices_set and unique_id in added_entities:
+            return False
+
+        # Regular sensors: optional temperature/plate rules use value_fn(MieleDevice).
+        # Failure sensors use value_fn(MieleFailureData); never pass device into that.
+        if definition not in FAILURE_SENSOR_TYPES and not _is_sensor_enabled(
+            cast(MieleSensorDefinition[MieleDevice], definition),
+            device,
+            unique_id,
+        ):
+            return False
+
+        # entity must be added
+        return True
+
+    def _get_unique_id(device_id: str, definition: MieleSensorDefinition) -> str:
+        return (
+            definition.description.unique_id_fn(device_id, definition.description)
+            if definition.description.unique_id_fn is not None
+            else MieleEntity.get_unique_id(device_id, definition.description)
+        )
+
     def _async_add_devices() -> None:
         nonlocal added_devices, added_entities
         entities: list = []
-        entity_class: type[MieleSensor]
         new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
         added_devices = current_devices
 
         for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
-                # device is not supported, skip
-                if device.device_type not in definition.types:
-                    continue
-
-                entity_class = _get_entity_class(definition)
-                unique_id = (
-                    definition.description.unique_id_fn(
-                        device_id, definition.description
-                    )
-                    if definition.description.unique_id_fn is not None
-                    else MieleEntity.get_unique_id(device_id, definition.description)
-                )
-
-                # entity was already added, skip
-                if device_id not in new_devices_set and unique_id in added_entities:
-                    continue
-
-                # sensors is not enabled, skip
-                if not _is_sensor_enabled(
-                    definition,
-                    device,
-                    unique_id,
+                unique_id = _get_unique_id(device_id, definition)
+                if _should_add_entity(
+                    device, device_id, definition, unique_id, new_devices_set
                 ):
-                    continue
-
-                added_entities.add(unique_id)
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
+                    added_entities.add(unique_id)
+                    entity_class = _get_entity_class(definition)
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+            for failure_definition in FAILURE_SENSOR_TYPES:
+                unique_id = _get_unique_id(device_id, failure_definition)
+                if _should_add_entity(
+                    device, device_id, failure_definition, unique_id, new_devices_set
+                ):
+                    added_entities.add(unique_id)
+                    entities.append(
+                        MieleFailureSensor(
+                            failure_coordinator,
+                            device_id,
+                            failure_definition.description,
+                        )
+                    )
         async_add_entities(entities)
 
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
@@ -1041,6 +1156,32 @@ class MieleAuxSensor(MieleAuxEntity, SensorEntity):
         """Return the state of the level sensor."""
         return (
             self.entity_description.value_fn(self.levels)
+            if self.entity_description.value_fn is not None
+            else None
+        )
+
+
+class MieleFailureSensor(MieleFailureEntity, SensorEntity):
+    """Representation of a failure Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    def __init__(
+        self,
+        coordinator: MieleFailureDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        if description.unique_id_fn is not None:
+            self._attr_unique_id = description.unique_id_fn(device_id, description)
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the failure sensor."""
+        return (
+            self.entity_description.value_fn(self.failure)
             if self.entity_description.value_fn is not None
             else None
         )
