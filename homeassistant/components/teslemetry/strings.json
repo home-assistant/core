@@ -1066,6 +1066,9 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "name": "Charge on solar"
+      },
       "charge_state_charging_state": {
         "name": "Charge"
       },
@@ -1184,6 +1187,14 @@
     },
     "wake_up_timeout": {
       "message": "Timed out trying to wake up vehicle"
+    }
+  },
+  "preview_features": {
+    "charge_on_solar": {
+      "description": "Adds a vehicle switch to enable and disable Tesla's charge on solar mode.\n\nThis feature does not currently expose a reliable state from the API, so the switch uses an assumed state.",
+      "disable_confirmation": "The charge-on-solar switch will be removed from your Teslemetry vehicles.",
+      "enable_confirmation": "The charge-on-solar switch will be added to your Teslemetry vehicles.",
+      "name": "Charge on solar switch"
     }
   },
   "selector": {

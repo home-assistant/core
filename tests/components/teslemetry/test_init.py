@@ -17,7 +17,12 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+from homeassistant.components.labs import async_update_preview_feature
+from homeassistant.components.teslemetry.const import (
+    CLIENT_ID,
+    DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
+)
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -38,6 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import setup_platform
 from .const import (
@@ -978,3 +984,20 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
 
     # Verify reload was NOT triggered since no subscription changes
     mock_reload.assert_not_called()
+
+
+async def test_labs_charge_on_solar_toggle_triggers_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test labs charge-on-solar feature toggle schedules an integration reload."""
+    assert await async_setup_component(hass, "labs", {})
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
