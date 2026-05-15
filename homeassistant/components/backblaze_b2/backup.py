@@ -179,6 +179,7 @@ class BackblazeBackupAgent(BackupAgent):
             uploaded_main_file_info = await self._hass.async_add_executor_job(
                 self._bucket.get_file_info_by_name, filename
             )
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
         except B2Error:
             _LOGGER.warning(
@@ -386,6 +387,7 @@ class BackblazeBackupAgent(BackupAgent):
         )
 
         await self._hass.async_add_executor_job(file.delete)
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self._hass.async_add_executor_job(metadata_file.delete)
 
         self._invalidate_caches(

@@ -284,6 +284,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             weather = await self.hass.async_add_executor_job(self._tado.get_weather)
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             geofence = await self.hass.async_add_executor_job(self._tado.get_home_state)
         except RequestException as err:
             _LOGGER.error("Error updating Tado home: %s", err)

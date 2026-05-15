@@ -127,11 +127,13 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.hass.async_add_executor_job(ezviz_client.login)
 
         # Secondly try to wake hybernating camera.
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
         )
 
         # Thirdly attempts an authenticated RTSP DESCRIBE request.
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
 
         return self.async_create_entry(
