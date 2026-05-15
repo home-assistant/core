@@ -2683,6 +2683,9 @@ thermopro-ble==1.1.4
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.12
 
+# homeassistant.components.threema
+threema.gateway==8.0.0
+
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
 

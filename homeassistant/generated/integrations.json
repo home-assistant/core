@@ -7187,6 +7187,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "threema": {
+      "name": "Threema",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "tibber": {
       "name": "Tibber",
       "integration_type": "hub",

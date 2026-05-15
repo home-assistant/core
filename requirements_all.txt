@@ -3153,6 +3153,9 @@ thingspeak==1.0.0
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.12
 
+# homeassistant.components.threema
+threema.gateway==8.0.0
+
 # homeassistant.components.tikteck
 tikteck==0.4
 

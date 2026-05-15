@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: Integration only sends messages, no polling required.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not use event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Notify entities are stateless send-only, availability is not applicable.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: Notify entities are stateless send-only.
+  parallel-updates:
+    status: exempt
+    comment: No polling or data updates.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Cloud service, not discoverable on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud service, not discoverable on the network.
+  docs-data-update:
+    status: exempt
+    comment: Integration does not poll or update data.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: Service integration, no physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: No devices in current scope.
+  entity-category:
+    status: exempt
+    comment: Notify entities have no applicable category.
+  entity-device-class:
+    status: exempt
+    comment: No applicable device class for notify entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Notify entities should be enabled by default for immediate use.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Notify entities use default platform icon.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No scenarios requiring repair issues.
+  stale-devices:
+    status: exempt
+    comment: No devices in current scope.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo

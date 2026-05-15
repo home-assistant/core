@@ -1,0 +1,82 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "key_generation_failed": "Failed to generate encryption keys."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_gateway_id": "Gateway ID must be 8 characters long and start with *.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "credentials": {
+        "data": {
+          "api_secret": "API secret",
+          "gateway_id": "Gateway ID",
+          "private_key": "Private key (mandatory for E2E encryption)",
+          "public_key": "Public key (mandatory for E2E encryption)"
+        },
+        "data_description": {
+          "api_secret": "Secret you received from Threema",
+          "gateway_id": "ID of your Gateway, including '*', e.g.: *ABCD123",
+          "private_key": "Private key, including 'private:' prefix",
+          "public_key": "Public key, including 'public:' prefix"
+        },
+        "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch.",
+        "title": "Gateway credentials"
+      },
+      "setup_new": {
+        "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste only the hex part of the public key (without the `public:` prefix). Store the private key securely.",
+        "title": "Keys generated"
+      },
+      "user": {
+        "menu_options": {
+          "credentials": "Add existing Gateway ID",
+          "setup_new": "Generate new encryption keys"
+        },
+        "title": "Threema setup"
+      }
+    }
+  },
+  "config_subentries": {
+    "recipient": {
+      "abort": {
+        "already_configured": "This recipient is already configured."
+      },
+      "entry_type": "Recipient",
+      "error": {
+        "invalid_recipient_id": "Threema ID must be exactly 8 alphanumeric characters."
+      },
+      "initiate_flow": {
+        "user": "Add recipient"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "Display name",
+            "recipient": "Threema ID"
+          },
+          "data_description": {
+            "name": "Optional friendly name for this recipient (e.g. 'Dad').",
+            "recipient": "The 8-character Threema ID of the recipient."
+          },
+          "description": "Enter the Threema ID of the person you want to send messages to.",
+          "title": "Add recipient"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "send_error": {
+      "message": "Error sending message: {error}"
+    }
+  }
+}
