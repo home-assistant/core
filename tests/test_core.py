@@ -654,7 +654,7 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_generic_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+    """Simulate a shutdown, test generic error doesn't prevent it."""
 
     task = asyncio.Future()
     hass._tasks.add(task)
@@ -713,7 +713,7 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
     hass: HomeAssistant,
 ) -> None:
-    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    """Ensure shutdown_run_callback_threadsafe is called first."""
     stop_calls = []
 
     async def _record_block_till_done(wait_background_tasks: bool = False):
@@ -932,7 +932,7 @@ async def test_add_job_partial_callback(hass: HomeAssistant) -> None:
 async def test_add_job_partial_coroutine_function(
     hass: HomeAssistant,
 ) -> None:
-    """Test add_job with a partial-wrapped coroutine function from an executor thread."""
+    """Test add_job with a partial-wrapped coroutine function."""
     result: list[tuple[str, int]] = []
 
     async def my_coro(name: str, value: int) -> None:
@@ -1222,7 +1222,10 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = (
+        b'"happy.happy":{"s":"on","a":{"pig":"dog"}'
+        b',"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    )
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -1458,8 +1461,8 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
         hass.bus.async_fire(long_evt_name)
 
     assert (
-        str(exc_info.value)
-        == f"Value {long_evt_name} for property event_type has a maximum length of 64 characters"
+        str(exc_info.value) == f"Value {long_evt_name} for property event_type"
+        " has a maximum length of 64 characters"
     )
     assert exc_info.value.translation_key == "max_length_exceeded"
     assert exc_info.value.property_name == "event_type"
@@ -2315,7 +2318,7 @@ async def test_log_blocking_events(
 async def test_chained_logging_hits_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Ensure we log which task is blocking startup when there is a task chain and debug logging is on."""
+    """Ensure we log which task is blocking startup on chain."""
     caplog.set_level(logging.DEBUG)
 
     created = 0
@@ -2344,7 +2347,7 @@ async def test_chained_logging_hits_log_timeout(
 async def test_chained_logging_misses_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Ensure we do not log which task is blocking startup if we do not hit the timeout."""
+    """Ensure we do not log blocking task if no timeout hit."""
     caplog.set_level(logging.DEBUG)
 
     created = 0
@@ -3174,7 +3177,8 @@ async def test_async_add_hass_job_deprecated(
 
     hass.async_add_hass_job(HassJob(_test))
     assert (
-        "Detected code that calls `async_add_hass_job`, which should be reviewed against "
+        "Detected code that calls `async_add_hass_job`,"
+        " which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text

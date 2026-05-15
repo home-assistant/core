@@ -82,5 +82,6 @@ def test_is_hidden_entity(
 
     assert not render(
         hass,
-        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
+        f"{{{{ ['{visible_entity.entity_id}']"
+        " | select('is_hidden_entity') | first }}}}",
     )
