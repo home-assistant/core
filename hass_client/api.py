@@ -333,6 +333,104 @@ class HomeAssistantAPI:
             await self.send_command("config/entity_registry/get", entity_id=entity_id),
         )
 
+    # -- Sandbox API methods --
+
+    async def async_sandbox_get_entries(self) -> list[dict[str, Any]]:
+        """Fetch config entries assigned to this sandbox token."""
+        return cast(
+            list[dict[str, Any]],
+            await self.send_command("sandbox/get_entries"),
+        )
+
+    async def async_sandbox_update_entry(
+        self,
+        sandbox_entry_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Update a sandbox config entry's stored data."""
+        await self.send_command(
+            "sandbox/update_entry",
+            sandbox_entry_id=sandbox_entry_id,
+            **kwargs,
+        )
+
+    async def async_sandbox_register_device(
+        self,
+        sandbox_entry_id: str,
+        identifiers: list[dict[str, str]],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Register a device in HA Core via the sandbox API."""
+        return cast(
+            dict[str, Any],
+            await self.send_command(
+                "sandbox/register_device",
+                sandbox_entry_id=sandbox_entry_id,
+                identifiers=identifiers,
+                **kwargs,
+            ),
+        )
+
+    async def async_sandbox_update_device(
+        self, device_id: str, **kwargs: Any
+    ) -> None:
+        """Update a device in HA Core via the sandbox API."""
+        await self.send_command(
+            "sandbox/update_device", device_id=device_id, **kwargs
+        )
+
+    async def async_sandbox_remove_device(self, device_id: str) -> None:
+        """Remove a device from HA Core via the sandbox API."""
+        await self.send_command("sandbox/remove_device", device_id=device_id)
+
+    async def async_sandbox_register_entity(
+        self,
+        sandbox_entry_id: str,
+        domain: str,
+        platform: str,
+        unique_id: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Register an entity in HA Core via the sandbox API."""
+        return cast(
+            dict[str, Any],
+            await self.send_command(
+                "sandbox/register_entity",
+                sandbox_entry_id=sandbox_entry_id,
+                domain=domain,
+                platform=platform,
+                unique_id=unique_id,
+                **kwargs,
+            ),
+        )
+
+    async def async_sandbox_update_entity(
+        self, entity_id: str, **kwargs: Any
+    ) -> None:
+        """Update an entity registry entry in HA Core via the sandbox API."""
+        await self.send_command(
+            "sandbox/update_entity", entity_id=entity_id, **kwargs
+        )
+
+    async def async_sandbox_update_state(
+        self,
+        entity_id: str,
+        state: str,
+        attributes: dict[str, Any] | None = None,
+    ) -> None:
+        """Push an entity state update to HA Core via the sandbox API."""
+        kwargs: dict[str, Any] = {
+            "entity_id": entity_id,
+            "state": state,
+        }
+        if attributes is not None:
+            kwargs["attributes"] = attributes
+        await self.send_command("sandbox/update_state", **kwargs)
+
+    async def async_sandbox_remove_entity(self, entity_id: str) -> None:
+        """Remove a sandbox entity from HA Core."""
+        await self.send_command("sandbox/remove_entity", entity_id=entity_id)
+
     async def send_command(self, command: str, **payload: Any) -> Any:
         """Send a command and await the result."""
         if not self.connected:

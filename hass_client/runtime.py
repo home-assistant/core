@@ -221,6 +221,10 @@ class HybridServiceRegistry(ServiceRegistry):
 class RemoteHomeAssistant(CoreHomeAssistant):
     """Home Assistant subclass with remote websocket sync hooks."""
 
+    def __new__(cls, config_dir: str, **_kwargs: Any) -> RemoteHomeAssistant:
+        """Allow extra keyword arguments through __new__."""
+        return super().__new__(cls, config_dir)
+
     def __init__(
         self,
         config_dir: str,
