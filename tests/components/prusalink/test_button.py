@@ -1,5 +1,6 @@
 """Test Prusalink buttons."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 from pyprusalink.types import Conflict
@@ -19,7 +20,9 @@ def setup_button_platform_only():
 
 
 @pytest.fixture
-def press_button_and_verify(hass: HomeAssistant):
+def press_button_and_verify(
+    hass: HomeAssistant,
+) -> Callable[[str, str], Awaitable[None]]:
     """Return a helper that asserts the press path for a PrusaLink button.
 
     The helper verifies the entity is in the `unknown` state, that pressing it
