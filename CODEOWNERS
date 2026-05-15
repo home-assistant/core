@@ -1440,8 +1440,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/radio_browser/ @frenck
 /homeassistant/components/radio_frequency/ @home-assistant/core
 /tests/components/radio_frequency/ @home-assistant/core
-/homeassistant/components/rfm_gateway/ @home-assistant/core
-/tests/components/rfm_gateway/ @home-assistant/core
 /homeassistant/components/radiotherm/ @vinnyfuria
 /tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
@@ -1490,6 +1488,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/rest_command/ @jpbede
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
+/homeassistant/components/rfm_gateway/ @home-assistant/core
+/tests/components/rfm_gateway/ @home-assistant/core
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /tests/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /homeassistant/components/rhasspy/ @synesthesiam
