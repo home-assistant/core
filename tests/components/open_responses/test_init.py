@@ -17,16 +17,17 @@ async def test_setup_entry_passes_base_url(
     mock_client = Mock()
 
     with patch(
-        "homeassistant.components.open_responses.openai.AsyncOpenAI",
+        "homeassistant.components.open_responses.AsyncOpenResponsesClient",
         return_value=mock_client,
-    ) as mock_openai_client:
+    ) as mock_open_responses_client:
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    mock_openai_client.assert_called_once()
-    assert mock_openai_client.call_args.kwargs[CONF_API_KEY] == "bla"
+    mock_open_responses_client.assert_called_once()
+    assert mock_open_responses_client.call_args.kwargs[CONF_API_KEY] == "bla"
     assert (
-        mock_openai_client.call_args.kwargs[CONF_BASE_URL] == "https://example.local/v1"
+        mock_open_responses_client.call_args.kwargs[CONF_BASE_URL]
+        == "https://example.local"
     )
     assert mock_config_entry.data[CONF_MODEL] == "open-responses-model"
     assert mock_config_entry.runtime_data is mock_client

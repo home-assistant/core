@@ -71,7 +71,7 @@ async def test_conversation_turn(
     """Test a conversation turn reaches the Open Responses client."""
     calls: list[dict[str, Any]] = []
     with patch(
-        "openai.resources.responses.AsyncResponses.create",
+        "openresponses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_mock_response_create(calls, "Hello from Open Responses"),
     ):

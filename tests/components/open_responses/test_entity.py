@@ -5,8 +5,12 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-import httpx
-import openai
+from openresponses.exceptions import (
+    AuthenticationError,
+    BadRequestError,
+    OpenResponsesError,
+    RateLimitError,
+)
 import pytest
 import voluptuous as vol
 
@@ -39,35 +43,30 @@ class EnumTool(llm.Tool):
         return {"mode": "auto"}
 
 
-def _api_request() -> httpx.Request:
-    """Return a mock Open Responses request."""
-    return httpx.Request("POST", "https://example.local/v1/responses")
-
-
-def _authentication_error() -> openai.AuthenticationError:
-    """Return a mock OpenAI SDK authentication error."""
-    return openai.AuthenticationError(
+def _authentication_error() -> AuthenticationError:
+    """Return a mock API authentication error."""
+    return AuthenticationError(
         message="invalid api key",
-        response=httpx.Response(401, request=_api_request()),
-        body={"error": {"type": "authentication_error"}},
+        status_code=401,
+        response_body={"error": {"type": "authentication_error"}},
     )
 
 
-def _bad_request_error() -> openai.BadRequestError:
-    """Return a mock OpenAI SDK bad request error."""
-    return openai.BadRequestError(
+def _bad_request_error() -> BadRequestError:
+    """Return a mock API bad request error."""
+    return BadRequestError(
         message="bad request",
-        response=httpx.Response(400, request=_api_request()),
-        body={"error": {"message": "bad request"}},
+        status_code=400,
+        response_body={"error": {"message": "bad request"}},
     )
 
 
-def _rate_limit_error() -> openai.RateLimitError:
-    """Return a mock OpenAI SDK rate limit error."""
-    return openai.RateLimitError(
+def _rate_limit_error() -> RateLimitError:
+    """Return a mock API rate limit error."""
+    return RateLimitError(
         message="rate limited",
-        response=httpx.Response(429, request=_api_request()),
-        body=None,
+        status_code=429,
+        response_body=None,
     )
 
 
@@ -436,6 +435,45 @@ async def test_transform_stream_handles_sdk_event_objects() -> None:
     ]
 
     assert deltas == [{"content": "hello"}]
+
+
+async def test_transform_stream_handles_open_responses_event_names() -> None:
+    """Test Open Responses semantic stream events produce chat deltas."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {"type": "response.reasoning.delta", "delta": "checking"}
+        yield {"type": "response.text.delta", "delta": "hello"}
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            Mock(),
+            stream(),
+        )
+    ]
+
+    assert deltas == [
+        {"thinking_content": "checking"},
+        {"content": "hello"},
+    ]
+
+
+async def test_transform_stream_handles_refusal_delta() -> None:
+    """Test streamed refusals produce assistant content."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {"type": "response.refusal.delta", "delta": "I cannot help with that."}
+        yield {"type": "response.refusal.done", "refusal": "I cannot help with that."}
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            Mock(),
+            stream(),
+        )
+    ]
+
+    assert deltas == [{"content": "I cannot help with that."}]
 
 
 async def test_transform_stream_correlates_tool_deltas_by_item_id() -> None:
@@ -844,14 +882,14 @@ async def test_handle_chat_log_passes_structured_output_schema(
         if entity_id == "":
             yield conversation.AssistantContent(agent_id=entity_id, content="")
 
-    responses = Mock()
-    responses.create = AsyncMock(return_value=stream())
+    client = Mock()
+    client.create = AsyncMock(return_value=stream())
     entity = Mock()
     entity.hass = hass
     entity.entity_id = "conversation.open_responses"
     entity.entry = Mock(
         data={CONF_MODEL: "open-responses-model"},
-        runtime_data=Mock(responses=responses),
+        runtime_data=client,
     )
     entity.subentry = Mock(data={})
     chat_log = Mock(
@@ -869,8 +907,8 @@ async def test_handle_chat_log_passes_structured_output_schema(
         structure=vol.Schema({vol.Required("answer"): str}),
     )
 
-    responses.create.assert_awaited_once()
-    assert responses.create.await_args.kwargs["text"] == {
+    client.create.assert_awaited_once()
+    assert client.create.await_args.kwargs["text"] == {
         "format": {
             "type": "json_schema",
             "name": "response_format",
@@ -904,27 +942,27 @@ async def test_handle_chat_log_passes_structured_output_schema(
             "Open Responses endpoint rejected request",
         ),
         (
-            openai.OpenAIError("boom"),
+            OpenResponsesError("boom"),
             HomeAssistantError,
             "Error talking to Open Responses endpoint",
         ),
     ],
 )
-async def test_handle_chat_log_maps_openai_errors(
+async def test_handle_chat_log_maps_api_errors(
     hass: HomeAssistant,
-    api_error: openai.OpenAIError,
+    api_error: OpenResponsesError,
     expected_error: type[Exception],
     message: str,
 ) -> None:
-    """Test OpenAI SDK errors are mapped to Home Assistant errors."""
-    responses = Mock()
-    responses.create = AsyncMock(side_effect=api_error)
+    """Test API errors are mapped to Home Assistant errors."""
+    client = Mock()
+    client.create = AsyncMock(side_effect=api_error)
     entity = Mock()
     entity.hass = hass
     entity.entity_id = "conversation.open_responses"
     entity.entry = Mock(
         data={CONF_MODEL: "open-responses-model"},
-        runtime_data=Mock(responses=responses),
+        runtime_data=client,
     )
     entity.subentry = Mock(data={})
     chat_log = Mock(
@@ -936,3 +974,34 @@ async def test_handle_chat_log_maps_openai_errors(
 
     with pytest.raises(expected_error, match=message):
         await OpenResponsesEntity._async_handle_chat_log(entity, chat_log)
+
+
+async def test_handle_chat_log_starts_reauth_on_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test runtime authentication failures start the reauth flow."""
+    client = Mock()
+    client.create = AsyncMock(side_effect=_authentication_error())
+    entry = Mock(
+        data={CONF_MODEL: "open-responses-model"},
+        runtime_data=client,
+    )
+    entity = Mock()
+    entity.hass = hass
+    entity.entity_id = "conversation.open_responses"
+    entity.entry = entry
+    entity.subentry = Mock(data={})
+    chat_log = Mock(
+        content=[],
+        conversation_id="conversation-id",
+        llm_api=None,
+        unresponded_tool_results=False,
+    )
+
+    with pytest.raises(
+        ConfigEntryAuthFailed,
+        match="Authentication failed with Open Responses endpoint",
+    ):
+        await OpenResponsesEntity._async_handle_chat_log(entity, chat_log)
+
+    entry.async_start_reauth.assert_called_once_with(hass)

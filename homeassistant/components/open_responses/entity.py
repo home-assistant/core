@@ -7,7 +7,12 @@ from mimetypes import guess_file_type
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-import openai
+from openresponses.exceptions import (
+    AuthenticationError,
+    BadRequestError,
+    OpenResponsesError,
+    RateLimitError,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -260,9 +265,14 @@ async def _transform_stream(
                 last_summary_index = len(item.get("summary") or []) - 1
             elif item_type != "function_call":
                 yield {"native": item}
-        elif event_type == "response.output_text.delta":
+        elif event_type in (
+            "response.output_text.delta",
+            "response.refusal.delta",
+            "response.text.delta",
+        ):
             yield {"content": event["delta"]}
         elif event_type in (
+            "response.reasoning.delta",
             "response.reasoning_summary.delta",
             "response.reasoning_summary_text.delta",
         ):
@@ -327,9 +337,13 @@ async def _transform_stream(
 
 
 def _event_to_dict(event: Any) -> dict[str, Any]:
-    """Convert OpenAI SDK stream events to plain Open Responses event dictionaries."""
+    """Convert stream events to plain Open Responses event dictionaries."""
     if isinstance(event, dict):
         return event
+    if hasattr(event, "event") and hasattr(event, "data"):
+        data = cast(dict[str, Any], event.data.copy())
+        data.setdefault("type", event.event)
+        return data
     if hasattr(event, "model_dump"):
         return cast(dict[str, Any], event.model_dump(mode="json", exclude_none=True))
     if hasattr(event, "to_dict"):
@@ -404,7 +418,7 @@ class OpenResponsesEntity(Entity):
 
         for _iteration in range(max_iterations):
             try:
-                stream = await client.responses.create(**model_args, stream=True)
+                stream = await client.create(**model_args, stream=True)
                 new_contents = [
                     content
                     async for content in chat_log.async_add_delta_content_stream(
@@ -412,21 +426,22 @@ class OpenResponsesEntity(Entity):
                         _transform_stream(chat_log, stream),
                     )
                 ]
-            except openai.AuthenticationError as err:
+            except AuthenticationError as err:
+                self.entry.async_start_reauth(self.hass)
                 raise ConfigEntryAuthFailed(
                     "Authentication failed with Open Responses endpoint"
                 ) from err
-            except openai.RateLimitError as err:
+            except RateLimitError as err:
                 LOGGER.error("Rate limited by Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Rate limited by Open Responses endpoint"
                 ) from err
-            except openai.BadRequestError as err:
+            except BadRequestError as err:
                 LOGGER.error("Open Responses endpoint rejected request: %s", err)
                 raise HomeAssistantError(
                     "Open Responses endpoint rejected request"
                 ) from err
-            except openai.OpenAIError as err:
+            except OpenResponsesError as err:
                 LOGGER.error("Error talking to Open Responses endpoint: %s", err)
                 raise HomeAssistantError(
                     "Error talking to Open Responses endpoint"

@@ -3,8 +3,15 @@
 from collections.abc import Mapping
 from typing import Any
 
-import openai
-from openai.types.responses import EasyInputMessageParam, ResponseInputParam
+from openresponses.client import AsyncOpenResponsesClient
+from openresponses.exceptions import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    ModelError,
+    OpenResponsesError,
+    RateLimitError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -45,6 +52,7 @@ from .const import (
     RECOMMENDED_MAX_OUTPUT_TOKENS,
     RECOMMENDED_STORE_RESPONSES,
 )
+from .helpers import client_base_url
 
 VALIDATION_TIMEOUT = 10.0
 STREAM_FAILURE_EVENTS = {
@@ -74,10 +82,21 @@ def _is_default_subentry(subentry: ConfigSubentry) -> bool:
     return subentry.data.get(CONF_GENERATED_DEFAULT_SUBENTRY) is True
 
 
+def _entry_matches_auth(entry: ConfigEntry, data: dict[str, Any]) -> bool:
+    """Return whether a config entry uses the same auth endpoint."""
+    return entry.data.get(CONF_API_KEY) == data[CONF_API_KEY] and client_base_url(
+        entry.data.get(CONF_BASE_URL, "")
+    ) == client_base_url(data[CONF_BASE_URL])
+
+
 def _stream_event_to_dict(event: Any) -> dict[str, Any]:
-    """Convert OpenAI SDK stream events to Open Responses event dictionaries."""
+    """Convert stream events to Open Responses event dictionaries."""
     if isinstance(event, dict):
         return event
+    if hasattr(event, "event") and hasattr(event, "data"):
+        data = event.data.copy()
+        data.setdefault("type", event.event)
+        return data
     if hasattr(event, "model_dump"):
         return event.model_dump(mode="json", exclude_none=True)
     if hasattr(event, "to_dict"):
@@ -85,25 +104,40 @@ def _stream_event_to_dict(event: Any) -> dict[str, Any]:
     return {}
 
 
+def _stream_validation_failed(event: dict[str, Any]) -> bool:
+    """Return whether a validation stream event should fail setup."""
+    event_type = event.get("type")
+    if event_type == "response.incomplete":
+        response = event.get("response")
+        incomplete_details = (
+            response.get("incomplete_details") if isinstance(response, dict) else None
+        )
+        if (
+            isinstance(incomplete_details, dict)
+            and incomplete_details.get("reason") == "max_output_tokens"
+        ):
+            return False
+
+    return event_type in STREAM_FAILURE_EVENTS
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate Open Responses connection details."""
-    client = openai.AsyncOpenAI(
+    client = AsyncOpenResponsesClient(
         api_key=data[CONF_API_KEY],
-        base_url=data[CONF_BASE_URL],
+        base_url=client_base_url(data[CONF_BASE_URL]),
         http_client=get_async_client(hass),
     )
-    ping_input: ResponseInputParam = [
-        EasyInputMessageParam(type="message", role="user", content="ping")
-    ]
+    ping_input = [{"type": "message", "role": "user", "content": "ping"}]
 
-    await client.responses.create(
+    await client.create(
         model=data[CONF_MODEL],
         input=ping_input,
         max_output_tokens=16,
         store=False,
         timeout=VALIDATION_TIMEOUT,
     )
-    stream = await client.responses.create(
+    stream = await client.create(
         model=data[CONF_MODEL],
         input=ping_input,
         max_output_tokens=16,
@@ -113,13 +147,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
     async for raw_event in stream:
         event = _stream_event_to_dict(raw_event)
-        if event.get("type") in STREAM_FAILURE_EVENTS:
+        if _stream_validation_failed(event):
             raise OpenResponsesStreamValidationError
 
 
-def _error_mentions_model(err: openai.BadRequestError) -> bool:
-    """Return whether an OpenAI SDK error points at the requested model."""
-    error = err.body.get("error") if isinstance(err.body, dict) else None
+def _error_mentions_model(err: BadRequestError) -> bool:
+    """Return whether an API error points at the requested model."""
+    error = (
+        err.response_body.get("error") if isinstance(err.response_body, dict) else None
+    )
     if not isinstance(error, dict):
         return False
 
@@ -161,36 +197,41 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            entry_identity = {
-                CONF_API_KEY: user_input[CONF_API_KEY],
-                CONF_BASE_URL: user_input[CONF_BASE_URL],
-            }
             if self.source == SOURCE_REAUTH:
                 reauth_entry = self._get_reauth_entry()
                 for entry in self._async_current_entries(include_ignore=False):
-                    if entry.entry_id != reauth_entry.entry_id and all(
-                        entry.data.get(key) == value
-                        for key, value in entry_identity.items()
+                    if entry.entry_id != reauth_entry.entry_id and _entry_matches_auth(
+                        entry, user_input
                     ):
                         return self.async_abort(reason="already_configured")
             else:
-                self._async_abort_entries_match(entry_identity)
+                for entry in self._async_current_entries(include_ignore=False):
+                    if _entry_matches_auth(entry, user_input):
+                        return self.async_abort(reason="already_configured")
+                self._async_abort_entries_match(
+                    {
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_BASE_URL: user_input[CONF_BASE_URL],
+                    }
+                )
             try:
                 await validate_input(self.hass, user_input)
-            except openai.AuthenticationError:
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
-            except openai.RateLimitError:
+            except RateLimitError:
                 errors["base"] = "rate_limited"
-            except openai.BadRequestError as err:
+            except BadRequestError as err:
                 if _error_mentions_model(err):
                     errors[CONF_MODEL] = "invalid_model"
                 else:
                     errors["base"] = "unknown"
-            except openai.APIConnectionError:
+            except ModelError:
+                errors[CONF_MODEL] = "invalid_model"
+            except APIConnectionError:
                 errors["base"] = "cannot_connect"
             except OpenResponsesStreamValidationError:
                 errors["base"] = "unknown"
-            except openai.OpenAIError:
+            except OpenResponsesError:
                 errors["base"] = "unknown"
             else:
                 default_conversation_options = {
@@ -305,20 +346,22 @@ class OpenResponsesSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_MODEL: user_input[CONF_MODEL],
                     },
                 )
-            except openai.AuthenticationError:
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
-            except openai.RateLimitError:
+            except RateLimitError:
                 errors["base"] = "rate_limited"
-            except openai.BadRequestError as err:
+            except BadRequestError as err:
                 if _error_mentions_model(err):
                     errors[CONF_MODEL] = "invalid_model"
                 else:
                     errors["base"] = "unknown"
-            except openai.APIConnectionError:
+            except ModelError:
+                errors[CONF_MODEL] = "invalid_model"
+            except APIConnectionError:
                 errors["base"] = "cannot_connect"
             except OpenResponsesStreamValidationError:
                 errors["base"] = "unknown"
-            except openai.OpenAIError:
+            except OpenResponsesError:
                 errors["base"] = "unknown"
             else:
                 subentry_data = user_input.copy()

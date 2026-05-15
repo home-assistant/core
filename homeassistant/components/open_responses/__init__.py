@@ -1,6 +1,6 @@
 """The Open Responses integration."""
 
-import openai
+from openresponses.client import AsyncOpenResponsesClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -10,11 +10,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_BASE_URL, DOMAIN
+from .helpers import client_base_url
 
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type OpenResponsesConfigEntry = ConfigEntry[openai.AsyncOpenAI]
+type OpenResponsesConfigEntry = ConfigEntry[AsyncOpenResponsesClient]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -26,9 +27,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: OpenResponsesConfigEntry
 ) -> bool:
     """Set up Open Responses from a config entry."""
-    client = openai.AsyncOpenAI(
+    client = AsyncOpenResponsesClient(
         api_key=entry.data[CONF_API_KEY],
-        base_url=entry.data[CONF_BASE_URL],
+        base_url=client_base_url(entry.data[CONF_BASE_URL]),
         http_client=get_async_client(hass),
     )
 
