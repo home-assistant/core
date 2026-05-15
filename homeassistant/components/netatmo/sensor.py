@@ -655,18 +655,18 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state (the legacy way)."""
-        # Keep the last known value for these legacy sensors when the device is
-        # unreachable to preserve the historical behavior expected by existing entities.
+
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
-            return
+                self._attr_native_value = None
 
-        if (state := getattr(self.device, self.entity_description.key)) is None:
-            return
-
-        self._attr_available = True
-        self._attr_native_value = state
+        elif (state := getattr(self.device, self.entity_description.key)) is None:
+            self._attr_available = False
+            self._attr_native_value = None
+        else:
+            self._attr_available = True
+            self._attr_native_value = state
 
         self.async_write_ha_state()
 
@@ -702,16 +702,23 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        value = cast(
-            StateType,
-            getattr(
-                self.device,
-                self.entity_description.netatmo_name or self.entity_description.key,
-            ),
-        )
-        if value is not None:
-            value = self.entity_description.value_fn(value)
-        self._attr_native_value = value
+
+        if not self.device.reachable:
+            self._attr_available = False
+            self._attr_native_value = None
+        else:
+            value = cast(
+                StateType,
+                getattr(
+                    self.device,
+                    self.entity_description.netatmo_name or self.entity_description.key,
+                ),
+            )
+            if value is not None:
+                value = self.entity_description.value_fn(value)
+            self._attr_native_value = value
+            self._attr_available = True
+
         self.async_write_ha_state()
 
 
@@ -777,10 +784,10 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
-            return
+        else:
+            self._attr_available = True
+            self._attr_native_value = self.device.battery
 
-        self._attr_available = True
-        self._attr_native_value = self.device.battery
         self.async_write_ha_state()
 
 
@@ -872,9 +879,11 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (state := getattr(self.device, self.entity_description.key)) is None:
-            return
-
-        self._attr_native_value = state
+            self._attr_available = False
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = state
+            self._attr_available = True
 
         self.async_write_ha_state()
 
@@ -977,15 +986,18 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 )
 
             self._attr_available = False
-            return
 
-        if values := [x for x in data.values() if x is not None]:
+        elif values := [x for x in data.values() if x is not None]:
             if self._mode == "avg":
                 self._attr_native_value = round(sum(values) / len(values), 1)
             elif self._mode == "max":
                 self._attr_native_value = max(values)
             elif self._mode == "min":
                 self._attr_native_value = min(values)
+            self._attr_available = self.native_value is not None
 
-        self._attr_available = self.native_value is not None
+        else:
+            self._attr_native_value = None
+            self._attr_available = False
+
         self.async_write_ha_state()
