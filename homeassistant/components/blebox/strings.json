@@ -45,6 +45,7 @@
       "reactive_power_n": { "name": "Reactive power {index}" },
       "reverse_active_energy": { "name": "Reverse active energy" },
       "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
+      "temperature_n": { "name": "Temperature {index}" },
       "voltage_n": { "name": "Voltage {index}" }
     }
   }

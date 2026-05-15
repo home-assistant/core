@@ -60,6 +60,7 @@ SENSOR_TYPES = (
     ),
     BleBoxSensorEntityDescription(
         key="temperature",
+        indexed_translation_key="temperature_n",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
