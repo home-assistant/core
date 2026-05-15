@@ -288,7 +288,7 @@ def test_color_rgb_to_hex() -> None:
     assert color_util.color_rgb_to_hex(255, 255, 255) == "ffffff"
     assert color_util.color_rgb_to_hex(0, 0, 0) == "000000"
     assert color_util.color_rgb_to_hex(51, 153, 255) == "3399ff"
-    assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == "ff4400"
+    assert color_util.color_rgb_to_hex(255, 68, 0) == "ff4400"
 
 
 def test_match_max_scale() -> None:

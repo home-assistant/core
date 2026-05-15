@@ -499,7 +499,7 @@ async def test_controlling_valve_by_state(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -654,7 +654,7 @@ async def test_controlling_valve_by_state_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -705,7 +705,7 @@ async def test_controlling_valve_by_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -752,7 +752,7 @@ async def test_controlling_valve_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -806,7 +806,7 @@ async def test_controlling_valve_optimistic_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -856,7 +856,7 @@ async def test_controlling_valve_with_alt_range_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -907,7 +907,7 @@ async def test_controlling_valve_with_alt_range_by_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -971,7 +971,7 @@ async def test_controlling_valve_by_position_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -1029,7 +1029,7 @@ async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")

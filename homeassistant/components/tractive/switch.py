@@ -110,6 +110,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         """Turn on a switch."""
         try:
             result = await self._method(True)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TractiveError as error:
             _LOGGER.error(error)
             return
@@ -122,6 +123,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         """Turn off a switch."""
         try:
             result = await self._method(False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TractiveError as error:
             _LOGGER.error(error)
             return

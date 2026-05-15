@@ -366,6 +366,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except vol.Invalid:
             LOGGER.error("Media ID must be positive integer")
             return
