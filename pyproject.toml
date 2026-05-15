@@ -23,6 +23,16 @@ test = [
 [dependency-groups]
 dev = [
   "pytest>=8.3.0",
+  "pytest-asyncio>=1.3.0",
+  "pytest-socket>=0.7.0",
+  "freezegun>=1.5.0",
+  "bcrypt>=4.0.0",
+  "requests-mock>=1.12.0",
+  "respx>=0.23.0",
+  "syrupy>=5.0.0",
+  "paho-mqtt>=2.1.0",
+  "aiohasupervisor>=0.4.3",
+  "ha-ffmpeg>=3.2.2",
 ]
 
 [tool.setuptools]
@@ -37,3 +47,6 @@ hass_client = ["py.typed"]
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.uv.sources]
+homeassistant = { path = "../core", editable = true }
