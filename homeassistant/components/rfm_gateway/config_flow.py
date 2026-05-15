@@ -165,10 +165,22 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def _normalize_host(host: str) -> str:
         result = host.strip().rstrip(".")
+        if not result:
+            return result
         if result.endswith(".local"):
             return result
-        if ":" in result and not result.startswith("["):
-            return result.split(":", 1)[0]
+        if result.startswith("["):
+            end = result.find("]")
+            if end != -1:
+                return result[1:end]
+            return result
+        try:
+            ipaddress.ip_address(result)
+            return result
+        except ValueError:
+            pass
+        if result.count(":") == 1:
+            return result.rsplit(":", 1)[0]
         return result
 
     @staticmethod
