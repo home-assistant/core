@@ -1,7 +1,5 @@
 """Support for OpenAQ sensors."""
 
-from dataclasses import dataclass
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,73 +19,68 @@ from .coordinator import OpenAQConfigEntry, OpenAQDataUpdateCoordinator
 DISTANCE_FROM_HOME = "distance_from_home"
 
 
-@dataclass(frozen=True, kw_only=True)
-class OpenAQSensorEntityDescription(SensorEntityDescription):
-    """Description for an OpenAQ sensor entity."""
-
-
-SENSOR_DESCRIPTIONS: dict[str, OpenAQSensorEntityDescription] = {
-    "pm1": OpenAQSensorEntityDescription(
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "pm1": SensorEntityDescription(
         key="pm1",
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "pm25": OpenAQSensorEntityDescription(
+    "pm25": SensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "pm10": OpenAQSensorEntityDescription(
+    "pm10": SensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "co": OpenAQSensorEntityDescription(
+    "co": SensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
-    "co2": OpenAQSensorEntityDescription(
+    "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "no2": OpenAQSensorEntityDescription(
+    "no2": SensorEntityDescription(
         key="no2",
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "o3": OpenAQSensorEntityDescription(
+    "o3": SensorEntityDescription(
         key="o3",
         device_class=SensorDeviceClass.OZONE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "so2": OpenAQSensorEntityDescription(
+    "so2": SensorEntityDescription(
         key="so2",
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "no": OpenAQSensorEntityDescription(
+    "no": SensorEntityDescription(
         key="no",
         device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "nox": OpenAQSensorEntityDescription(
+    "nox": SensorEntityDescription(
         key="nox",
         translation_key="nox",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "bc": OpenAQSensorEntityDescription(
+    "bc": SensorEntityDescription(
         key="bc",
         translation_key="bc",
         state_class=SensorStateClass.MEASUREMENT,
@@ -128,12 +121,12 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    entity_description: OpenAQSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         coordinator: OpenAQDataUpdateCoordinator,
-        entity_description: OpenAQSensorEntityDescription,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
