@@ -265,6 +265,59 @@
     'state': '2',
   })
 # ---
+# name: test_all_entities[sensor.joost_puzzle_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_puzzle_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Puzzle rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Puzzle rating',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_rating',
+    'unique_id': '532748851.puzzle_rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.joost_puzzle_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Puzzle rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_puzzle_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1735',
+  })
+# ---
 # name: test_all_entities[sensor.joost_rapid_chess_rating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -964,6 +1017,168 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_failed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_puzzles_failed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total puzzles failed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total puzzles failed',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_failed_count',
+    'unique_id': '532748851.puzzle_failed_count',
+    'unit_of_measurement': 'puzzles',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_failed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total puzzles failed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'puzzles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_puzzles_failed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1880',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_played-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.joost_total_puzzles_played',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total puzzles played',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total puzzles played',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_game_count',
+    'unique_id': '532748851.puzzle_game_count',
+    'unit_of_measurement': 'puzzles',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_played-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total puzzles played',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'puzzles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_puzzles_played',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4430',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_solved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.joost_total_puzzles_solved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total puzzles solved',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total puzzles solved',
+    'platform': 'chess_com',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_passed_count',
+    'unique_id': '532748851.puzzle_passed_count',
+    'unit_of_measurement': 'puzzles',
+  })
+# ---
+# name: test_all_entities[sensor.joost_total_puzzles_solved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Joost Total puzzles solved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'puzzles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.joost_total_puzzles_solved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2550',
   })
 # ---
 # name: test_all_entities[sensor.joost_total_rapid_chess_games_drawn-entry]

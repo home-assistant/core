@@ -1,0 +1,18 @@
+{
+  "statsInfo": {
+    "key": "tactics",
+    "stats": {
+      "rating": 1735,
+      "highest_rating": 1746,
+      "highest_rating_date": 1769412627,
+      "lowest_rating": 1631,
+      "lowest_rating_date": 1761375890,
+      "attempt_count": 4430,
+      "passed_count": 2550,
+      "failed_count": 1880,
+      "total_seconds": 614517
+    },
+    "gameCount": 4430,
+    "lastPlayed": true
+  }
+}

@@ -7,6 +7,7 @@ from chess_com_api import Player, PlayerStats
 import pytest
 
 from homeassistant.components.chess_com.const import DOMAIN
+from homeassistant.components.chess_com.puzzle_api import PuzzleStats
 from homeassistant.const import CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -44,10 +45,21 @@ def mock_chess_client() -> Generator[AsyncMock]:
             "homeassistant.components.chess_com.config_flow.ChessComClient",
             new=mock_client,
         ),
+        patch(
+            "homeassistant.components.chess_com.coordinator.PuzzleStatsClient",
+            autospec=True,
+        ) as mock_puzzle_client,
     ):
         client = mock_client.return_value
         player_data = load_json_object_fixture("player.json", DOMAIN)
         client.get_player.return_value = Player.from_dict(player_data)
         stats_data = load_json_object_fixture("stats.json", DOMAIN)
         client.get_player_stats.return_value = PlayerStats.from_dict(stats_data)
+
+        puzzle_client = mock_puzzle_client.return_value
+        puzzle_data = load_json_object_fixture("puzzle_stats.json", DOMAIN)
+        puzzle_client.async_get_puzzle_stats.return_value = PuzzleStats.from_dict(
+            puzzle_data
+        )
+
         yield client
