@@ -71,7 +71,6 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
             if self.coordinator.curtain_speed is not None
             else 255
         )
-        # _LOGGER.info(f"speed {speed} real {self.coordinator.curtain_speed}")
         return int(speed)
 
     async def async_added_to_hass(self) -> None:
