@@ -61,6 +61,33 @@ async def test_cloud_user_fix(
     assert any(ufp.entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
+async def test_repair_camera_unavailable(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the repair flow aborts gracefully when the camera is unavailable."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    empty_bootstrap = ufp.api.bootstrap
+    empty_bootstrap.cameras = {}
+    ufp.api.get_bootstrap = AsyncMock(return_value=empty_bootstrap)
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "camera_unavailable"
+
+
 async def test_rtsp_read_only_ignore(
     hass: HomeAssistant,
     ufp: MockUFPFixture,

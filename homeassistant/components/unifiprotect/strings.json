@@ -737,6 +737,9 @@
     },
     "rtsp_disabled_readonly": {
       "fix_flow": {
+        "abort": {
+          "camera_unavailable": "The camera is no longer available."
+        },
         "step": {
           "confirm": {
             "description": "Are you sure you want to leave RTSPS disabled for {camera}?",
@@ -752,6 +755,9 @@
     },
     "rtsp_disabled_writable": {
       "fix_flow": {
+        "abort": {
+          "camera_unavailable": "The camera is no longer available."
+        },
         "step": {
           "confirm": {
             "description": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::confirm::description%]",
