@@ -19,6 +19,7 @@
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+            "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
             "cannot_connect": "Failed to connect",
             "client_key_error": "Invalid private key file or invalid password supplied",
             "invalid_auth": "Invalid authentication",

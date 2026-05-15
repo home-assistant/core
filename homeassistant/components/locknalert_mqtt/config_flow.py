@@ -928,8 +928,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             async with ClientSession(connector=TCPConnector(ssl=False)) as session:
-                await self._bridge_api.async_get_info(session)
-                mqtt_config = await self._bridge_api.async_bootstrap(session)
+                mqtt_config = await self._bridge_api.async_bootstrap(session, self._bridge_serial)
         except LocknAlertCannotConnect:
             return self.async_abort(reason="cannot_connect")
         except LocknAlertInvalidResponse:
@@ -1059,7 +1058,20 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         )
 
                     # Then bootstrap MQTT credentials
-                    mqtt_config = await bridge_api.async_bootstrap(session)
+                    serial_number = validated_user_input.get(CONF_BRIDGE_SERIAL)
+                    if not serial_number:
+                        errors[CONF_BRIDGE_SERIAL] = "bridge_serial_required"
+                        return self.async_show_form(
+                            step_id="broker",
+                            data_schema=vol.Schema(
+                                {
+                                    vol.Required(CONF_BROKER): TEXT_SELECTOR,
+                                    vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR,
+                                }
+                            ),
+                            errors=errors,
+                        )
+                    mqtt_config = await bridge_api.async_bootstrap(session, serial_number)
 
                 # Update validated_user_input with fetched credentials
                 validated_user_input.update(

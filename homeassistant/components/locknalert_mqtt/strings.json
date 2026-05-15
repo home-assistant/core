@@ -13,6 +13,7 @@
     },
     "error": {
       "bad_birth": "Invalid birth topic",
+      "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
       "bad_certificate": "The CA certificate is invalid",
       "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
       "bad_client_cert_key": "Client certificate and private key are not a valid pair",
