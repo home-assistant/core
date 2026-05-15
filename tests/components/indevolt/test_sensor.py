@@ -60,7 +60,7 @@ async def test_sensor_availability(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("generation", [2, 1], indirect=True)
 async def test_realtime_sensor_energy_mode_availability(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
