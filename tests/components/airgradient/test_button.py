@@ -106,11 +106,14 @@ async def test_cloud_creates_no_button(
     [
         (
             AirGradientConnectionError("Something happened"),
-            "An error occurred while communicating with the Airgradient device: Something happened",
+            "An error occurred while communicating with the"
+            " Airgradient device: Something happened",
         ),
         (
             AirGradientError("Something else happened"),
-            "An unknown error occurred while communicating with the Airgradient device: Something else happened",
+            "An unknown error occurred while communicating"
+            " with the Airgradient device:"
+            " Something else happened",
         ),
     ],
 )

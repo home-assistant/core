@@ -308,6 +308,7 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "vacHigh", str(high_perf)
         )
@@ -389,6 +390,7 @@ class BraavaJet(IRobotVacuum):
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "rankOverlap", overlap
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference,
             "padWetness",

@@ -1281,7 +1281,7 @@ lacrosse-view==1.1.2
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.7
+lcn-frontend==0.2.9
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -2763,7 +2763,7 @@ unifi-discovery==1.4.0
 universal-silabs-flasher==1.1.0
 
 # homeassistant.components.upb
-upb-lib==0.7.0
+upb-lib==0.7.1
 
 # homeassistant.components.upcloud
 upcloud-api==2.9.0
