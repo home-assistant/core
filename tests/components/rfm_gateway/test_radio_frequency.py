@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from rf_protocols import ModulationType
@@ -13,6 +13,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.components.rfm_gateway import radio_frequency as rfm_radio_frequency
 
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyCommand
@@ -166,3 +167,58 @@ async def test_send_command_failure_marks_entity_unavailable(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_entity_send_command_unsupported_modulation_direct_call() -> None:
+    """Test entity-level unsupported modulation branch directly."""
+    client = AsyncMock()
+    client.base_url = "http://192.0.2.10"
+    entry = _mock_config_entry()
+    entry.runtime_data = rfm_gateway.RuntimeData(
+        client=client,
+        capabilities=_mock_caps(supported_modulations=["ook"]),
+    )
+    entity = rfm_radio_frequency.RfmGatewayTransmitter(entry)
+
+    with pytest.raises(HomeAssistantError, match="Gateway does not support modulation"):
+        await entity.async_send_command(
+            MockRadioFrequencyCommand(
+                frequency=433_920_000,
+                modulation="unsupported",  # type: ignore[arg-type]
+            )
+        )
+
+
+async def test_entity_send_command_recovers_availability_writes_state() -> None:
+    """Test state write occurs when entity recovers from unavailable state."""
+    client = AsyncMock()
+    client.base_url = "http://192.0.2.10"
+    entry = _mock_config_entry()
+    entry.runtime_data = rfm_gateway.RuntimeData(
+        client=client,
+        capabilities=_mock_caps(),
+    )
+    entity = rfm_radio_frequency.RfmGatewayTransmitter(entry)
+    entity._attr_available = False
+    entity.async_write_ha_state = Mock()
+
+    await entity.async_send_command(
+        MockRadioFrequencyCommand(
+            frequency=433_920_000,
+            modulation=ModulationType.OOK,
+        )
+    )
+
+    entity.async_write_ha_state.assert_called_once()
+
+
+def test_modulation_to_str_and_frequency_format_helpers() -> None:
+    """Test helper normalization and range formatting utility paths."""
+    assert rfm_radio_frequency._modulation_to_str(ModulationType.OOK) == "ook"
+    assert rfm_radio_frequency._modulation_to_str("ModulationType.FSK") == "fsk"
+
+    assert rfm_radio_frequency._format_frequency_ranges([]) == ""
+    assert (
+        rfm_radio_frequency._format_frequency_ranges([(433_050_000, 434_790_000)])
+        == "433-435 MHz"
+    )

@@ -45,3 +45,11 @@ async def test_load_unload_config_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+def test_build_base_url_ipv6() -> None:
+    """Test IPv6 host is bracketed in base URL."""
+    assert (
+        rfm_gateway._build_base_url("2001:db8::1")
+        == f"http://[2001:db8::1]:{rfm_gateway.DEFAULT_PORT_HTTP}"
+    )
