@@ -158,6 +158,8 @@ class HybridServiceRegistry(ServiceRegistry):
             remote_api = self.remote_api
             if remote_api is None or not remote_api.connected:
                 raise
+            if service.lower() not in self._remote_services.get(domain.lower(), {}):
+                raise
 
         context = context or Context()
         merged_service_data = dict(service_data or {})

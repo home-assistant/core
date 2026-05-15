@@ -121,11 +121,6 @@ def pytest_configure() -> None:
                 async with patched_async_test_home_assistant(
                     *args, **kwargs
                 ) as sandbox_hass:
-                    if host_hass in tests_common.INSTANCES:
-                        tests_common.INSTANCES.remove(host_hass)
-
-                    host_hass.import_executor.shutdown(wait=False)
-
                     sandbox_hass.remote_config = RemoteConfig(
                         websocket_url=ws_url,
                         token=access_token,
@@ -145,6 +140,7 @@ def pytest_configure() -> None:
                     finally:
                         await sandbox_hass.async_teardown_remote()
                         await server.close()
+                        await host_hass.async_stop(force=True)
         finally:
             _socket_mod.socket = saved_socket
 

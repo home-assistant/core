@@ -6,78 +6,89 @@ with the sandbox integration.
 
 ## Results Summary
 
-| Integration    | Tests | Passed | Failed | Status |
-|----------------|-------|--------|--------|--------|
-| input_boolean  | 16    | 16     | 0      | PASS   |
-| input_button   | 14    | 14     | 0      | PASS   |
-| input_datetime | 26    | 26     | 0      | PASS   |
-| input_number   | 22    | 22     | 0      | PASS   |
-| input_select   | 24    | 24     | 0      | PASS   |
-| input_text     | 21    | 21     | 0      | PASS   |
-| counter        | 18    | 18     | 0      | PASS   |
-| timer          | 30    | 30     | 0      | PASS   |
-| schedule       | 18    | 13     | 5 hang | PARTIAL |
+| Integration          | Tests | Passed | Failed | Status |
+|----------------------|-------|--------|--------|--------|
+| input_boolean        | 16    | 16     | 0      | PASS   |
+| input_button         | 14    | 14     | 0      | PASS   |
+| input_datetime       | 26    | 26     | 0      | PASS   |
+| input_number         | 22    | 22     | 0      | PASS   |
+| input_select         | 24    | 24     | 0      | PASS   |
+| input_text           | 21    | 21     | 0      | PASS   |
+| counter              | 18    | 18     | 0      | PASS   |
+| timer                | 30    | 30     | 0      | PASS   |
+| schedule             | 25    | 25     | 0      | PASS   |
+| zone                 | 22    | 22     | 0      | PASS   |
+| tag                  | 7     | 7      | 0      | PASS   |
+| group                | 130   | 130    | 0      | PASS   |
+| person               | 32    | 32     | 0      | PASS   |
+| scene                | 7     | 7      | 0      | PASS   |
+| todo                 | 71    | 71     | 0      | PASS   |
+| automation           | 112   | 111    | 1      | PARTIAL |
+| script               | 62    | 61     | 1      | PARTIAL |
+| alert                | 17    | 17     | 0      | PASS   |
+| template             | 20    | 20     | 0      | PASS   |
+| plant                | 11    | 11     | 0      | PASS   |
+| proximity            | 22    | 22     | 0      | PASS   |
+| min_max              | 1     | 1      | 0      | PASS   |
+| statistics           | 8     | 8      | 0      | PASS   |
+| utility_meter        | 25    | 25     | 0      | PASS   |
+| derivative           | 13    | 13     | 0      | PASS   |
+| integration          | 9     | 9      | 0      | PASS   |
+| generic_thermostat   | 13    | 13     | 0      | PASS   |
+| generic_hygrostat    | 12    | 12     | 0      | PASS   |
+| history_stats        | 9     | 9      | 0      | PASS   |
+| threshold            | 9     | 9      | 0      | PASS   |
+| filter               | 1     | 1      | 0      | PASS   |
+| mqtt_statestream     | 18    | 18     | 0      | PASS   |
+| recorder             | 93    | 93     | 0      | PASS   |
 
-**8 of 9 integrations fully pass. 184 of 189 tests pass (97.4%).**
+**31 of 33 integrations fully pass. 878 of 880 tests pass (99.8%).**
 
-## Failure Details
+## Remaining Failures
 
-### schedule: 5 tests hang (killed after 10s)
+### automation: 1 failure (pre-existing)
 
-Affected tests:
-- `test_events_one_day`
-- `test_adjacent_cross_midnight`
-- `test_adjacent_within_day`
-- `test_non_adjacent_within_day`
-- `test_to_midnight`
+- `test_logbook_humanify_automation_triggered_event`: `mock_humanify` returns 0
+  events. The logbook platform discovery doesn't find the automation logbook
+  callback. This also fails with the base plugin (no websocket) — it is a
+  pre-existing issue in the hass-client test environment, not a sandbox bug.
 
-**Root cause:** These tests use `freezer.move_to()` from pytest-freezer to jump
-time forward while the event loop is running. The sandbox conftest_sandbox plugin
-maintains a live aiohttp websocket connection between the sandbox hass and the
-host hass. When `freezer.move_to()` jumps the clock, the websocket's async
-heartbeat/keep-alive timers fire incorrectly or the connection's internal timeout
-machinery hangs.
+### script: 1 failure (pre-existing)
 
-**Evidence:** The same tests pass with `pytest_plugin` (no real websocket) and
-also pass in core's native test suite. Other schedule tests that use
-`@pytest.mark.freeze_time` (static freeze, no mid-test time jumps) work fine
-through the sandbox websocket.
+- `test_logbook_humanify_script_started_event`: Same root cause as the automation
+  logbook test. Also fails with the base plugin.
 
-**Impact:** These 5 tests exercise schedule state transitions across time
-boundaries. The schedule integration itself works correctly through the sandbox;
-only the test's time manipulation is incompatible with a live connection.
+## Not Tested (missing dependencies)
 
-## Fix Plan
+These integrations fail to collect or import in the hass-client environment:
+- `conversation` — requires `hassil`
+- `rest` — requires `xmltodict`
+- `logbook` — requires `sqlalchemy` (test infrastructure, not the integration)
+- `command_line` — 2 test failures also present with the base plugin
+- `trend` — config entry setup failures also present with the base plugin
 
-### Phase 1: Fix schedule freezer hangs
+## Fixes Applied
 
-The freezer hangs because `freezer.move_to()` manipulates `datetime.now()` while
-the asyncio event loop still tracks real monotonic time. The websocket client's
-internal heartbeat callback fires based on real time, but any datetime-based
-logic in the connection sees frozen time, causing a deadlock.
+### Fix 1: Freezer detection fallback (conftest_sandbox.py)
 
-Options:
-1. **Disconnect websocket before freezer.move_to, reconnect after.** The sandbox
-   hass doesn't use the websocket during these tests (schedule runs locally), so
-   we could tear down and re-establish the connection around time jumps. Downside:
-   complex lifecycle management.
-2. **Skip real websocket for tests that use freezer.move_to().** Detect the
-   `freezer` fixture in the test's parameters and fall back to the base plugin
-   (no websocket). This is clean and correct — if the test needs time manipulation,
-   the live connection is a liability, not a feature.
-3. **Use a mock websocket transport.** Replace the TCP socket with an in-process
-   mock that isn't affected by time. This is the most thorough fix but requires
-   significant refactoring.
+Tests using `freezer.move_to()` hang with live websocket connections because
+time jumps break async heartbeat timers. The sandbox plugin detects the `freezer`
+fixture in `pytest_runtest_setup` and falls back to the base plugin (no websocket)
+for those tests.
 
-**Recommended: Option 2.** Detect `freezer` fixture usage and skip the websocket
-layer for those tests. This keeps the sandbox test infrastructure simple and
-correctly reflects that frozen-time tests are fundamentally incompatible with
-real network connections.
+### Fix 2: Host HA cleanup (conftest_sandbox.py)
 
-### Phase 2: Expand to more integrations
+The host HA instance (running websocket_api + sandbox) was never explicitly
+stopped after tests. Its scheduled timers (storage delayed writes, cleanup
+intervals) lingered on the event loop, causing `verify_cleanup` teardown errors
+in integrations that load more components. Fixed by calling
+`await host_hass.async_stop(force=True)` in the sandbox teardown.
 
-After fixing schedule, expand testing to:
-- More complex integrations (automation, script, scene)
-- Config-entry-based integrations
-- Integrations with device/entity registry usage
-- Integrations that depend on other integrations
+### Fix 3: Service fallback guard (runtime.py)
+
+`HybridServiceRegistry.async_call` caught `ServiceNotFound` for any service and
+tried the remote API, even for services that don't exist anywhere. This broke
+tests that expect `ServiceNotFound` for genuinely nonexistent services (e.g.,
+`non.existing` in a script action). Fixed by checking the remote service cache
+before falling through — only attempt remote calls for services known to exist
+remotely.
