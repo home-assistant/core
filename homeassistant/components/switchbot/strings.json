@@ -276,6 +276,9 @@
       }
     },
     "number": {
+      "curtain_speed": {
+        "name": "Curtain speed"
+      },
       "display_time_offset": {
         "name": "Display time offset"
       }
