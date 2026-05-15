@@ -1,6 +1,4 @@
 """Radio frequency transmitter platform for RFM Gateway."""
-
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -13,45 +11,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 if TYPE_CHECKING:
     from rf_protocols import RadioFrequencyCommand
 
-from .client import (
-    RfmCapabilities,
-    RfmGatewayClient,
-    RfmGatewayConnectionError,
-    RfmGatewayProtocolError,
-)
-from .const import CONF_HOST, DEFAULT_PORT_HTTP, DOMAIN
-
-
-@dataclass(slots=True)
-class RuntimeData:
-    """Runtime data for an RFM Gateway config entry."""
-
-    client: RfmGatewayClient
-    capabilities: RfmCapabilities
+from . import RuntimeData
+from .client import RfmGatewayConnectionError, RfmGatewayProtocolError
+from .const import CONF_HOST, DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the RFM Gateway radio frequency platform."""
-    host = entry.data[CONF_HOST]
-
-    base_url = _build_base_url(host)
-    client = RfmGatewayClient(
-        hass=hass,
-        base_url=base_url,
-    )
-
-    try:
-        capabilities = await client.async_get_capabilities()
-    except (RfmGatewayConnectionError, RfmGatewayProtocolError) as err:
-        raise HomeAssistantError(
-            f"Could not initialize RFM Gateway at {base_url}: {err}"
-        ) from err
-
-    entry.runtime_data = RuntimeData(client=client, capabilities=capabilities)
     async_add_entities([RfmGatewayTransmitter(entry)])
 
 
@@ -115,13 +85,6 @@ class RfmGatewayTransmitter(RadioFrequencyTransmitterEntity):
             raise HomeAssistantError(
                 f"RF transmit via {self._host} failed: {err}"
             ) from err
-
-
-def _build_base_url(host: str) -> str:
-    """Build the gateway base URL from host."""
-    if ":" in host and not host.startswith("["):
-        return f"http://[{host}]:{DEFAULT_PORT_HTTP}"
-    return f"http://{host}:{DEFAULT_PORT_HTTP}"
 
 
 def _modulation_to_str(modulation) -> str:

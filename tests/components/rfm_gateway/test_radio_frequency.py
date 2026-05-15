@@ -66,7 +66,7 @@ async def _setup_entry(
     return_value = None if isinstance(capabilities, Exception) else capabilities
 
     with patch(
-        "homeassistant.components.rfm_gateway.radio_frequency.RfmGatewayClient.async_get_capabilities",
+        "homeassistant.components.rfm_gateway.RfmGatewayClient.async_get_capabilities",
         new=AsyncMock(side_effect=side_effect, return_value=return_value),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -86,14 +86,14 @@ async def test_setup_entry_creates_entity(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_setup_entry_failure_sets_setup_error(hass: HomeAssistant) -> None:
-    """Test capability fetch failure leaves the entry in setup error."""
+async def test_setup_entry_failure_sets_setup_retry(hass: HomeAssistant) -> None:
+    """Test capability fetch failure leaves the entry in setup retry."""
     entry = await _setup_entry(
         hass,
         capabilities=rfm_gateway.RfmGatewayConnectionError("cannot_connect"),
     )
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_send_command_success_forwards_payload(hass: HomeAssistant) -> None:

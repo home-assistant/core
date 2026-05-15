@@ -33,13 +33,14 @@ async def test_load_unload_config_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.rfm_gateway.radio_frequency.RfmGatewayClient.async_get_capabilities",
+        "homeassistant.components.rfm_gateway.RfmGatewayClient.async_get_capabilities",
         new=AsyncMock(return_value=_mock_caps()),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
