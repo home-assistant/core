@@ -354,6 +354,7 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error(
                 "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",

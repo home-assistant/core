@@ -143,7 +143,9 @@ class PassiveBluetoothDataUpdate[_T]:
     def update(
         self, new_data: PassiveBluetoothDataUpdate[_T]
     ) -> set[PassiveBluetoothEntityKey] | None:
-        """Update the data and returned changed PassiveBluetoothEntityKey or None on device change.
+        """Update the data and return changed PassiveBluetoothEntityKey.
+
+        Returns None on device change.
 
         The changed PassiveBluetoothEntityKey can be used to filter
         which listeners are called.
@@ -622,7 +624,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class PassiveBluetoothProcessorEntity[
     _PassiveBluetoothDataProcessorT: PassiveBluetoothDataProcessor[Any, Any]
 ](Entity):

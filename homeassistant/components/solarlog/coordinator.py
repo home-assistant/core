@@ -74,7 +74,8 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             ) from ex
         except SolarLogAuthenticationError as ex:
             if await self.renew_authentication():
-                # login was successful, update availability of extended data, retry data update
+                # login was successful, update availability
+                # of extended data, retry data update
                 await self.solarlog.test_extended_data_available()
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
@@ -258,7 +259,9 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         if energy_data is None:
             energy_data = EnergyData(None, None)
 
-        self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year = energy_data.self_consumption
+        (
+            self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year
+        ) = energy_data.self_consumption
 
         _LOGGER.debug("Energy data successfully updated")
 

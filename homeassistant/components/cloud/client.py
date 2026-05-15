@@ -372,7 +372,11 @@ class CloudClient(Interface):
             method=payload["method"],
             query_string=payload["query"],
             mock_source=DOMAIN,
-            remote=None,  # Remote will be used for the local_only check, but since this is from the cloud we want it to be None to mark it as non-local and bypass the ip parsing and remote checks
+            # Remote will be used for the local_only check, but
+            # since this is from the cloud we want it to be None
+            # to mark it as non-local and bypass the ip parsing
+            # and remote checks
+            remote=None,
         )
 
         response = await webhook.async_handle_webhook(

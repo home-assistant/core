@@ -207,7 +207,10 @@ TRIGGER_FINDERS = {
 async def async_setup_triggers_for_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Triggers aren't entities as they have no state, but we still need to set them up for a config entry."""
+    """Set up triggers for a config entry.
+
+    Triggers aren't entities as they have no state.
+    """
     hkid = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 

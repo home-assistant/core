@@ -41,6 +41,9 @@
       "heat_index": {
         "name": "Heat index"
       },
+      "illuminance": {
+        "name": "Illuminance"
+      },
       "lightning_strike_count": {
         "name": "Lightning count"
       },
@@ -84,8 +87,17 @@
       "precip_minutes_local_yesterday_final": {
         "name": "Nearcast precipitation duration yesterday"
       },
+      "relative_humidity": {
+        "name": "Relative humidity"
+      },
       "sea_level_pressure": {
         "name": "Pressure sea level"
+      },
+      "solar_radiation": {
+        "name": "Solar radiation"
+      },
+      "uv_index": {
+        "name": "UV index"
       },
       "wet_bulb_globe_temperature": {
         "name": "Wet bulb globe temperature"
