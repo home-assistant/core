@@ -245,7 +245,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.24.1
+aioesphomeapi==45.0.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1130,7 +1130,7 @@ hole==0.9.0
 holidays==0.96
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260429.3
+home-assistant-frontend==20260429.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.5.5
@@ -1202,7 +1202,7 @@ imgw_pib==2.2.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.7.2
+indevolt-api==1.8.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -2237,7 +2237,7 @@ python-citybikes==0.3.3
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-connectivity==0.2.0
+python-duco-connectivity==0.4.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2867,7 +2867,7 @@ wolf-comm==0.0.48
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.7.2
+wyoming==1.9.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.11.0

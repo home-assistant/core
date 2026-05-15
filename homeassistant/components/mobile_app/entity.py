@@ -83,7 +83,8 @@ class MobileAppEntity(RestoreEntity):
         """Restore previous state."""
         config = self._config
 
-        # Only restore state if we don't have one already, since it can be set by a pending update
+        # Only restore state if we don't have one already,
+        # since it can be set by a pending update
         if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
             config[ATTR_SENSOR_STATE] = last_state.state
             config[ATTR_SENSOR_ATTRIBUTES] = {
