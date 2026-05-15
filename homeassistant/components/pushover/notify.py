@@ -104,7 +104,7 @@ class PushoverNotificationService(BaseNotificationService):
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
         encrypted_key = data.get(ATTR_ENCRYPTED_KEY)
-        encrypted = 1 if encrypted_key else 0,
+        encrypted = 1 if encrypted_key else 0
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
