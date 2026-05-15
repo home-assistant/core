@@ -1060,7 +1060,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                                 "LocknAlert bridge serial discovered via API: %s",
                                 serial_found,
                             )
-                    except LocknAlertCannotConnect, LocknAlertInvalidAuth, LocknAlertInvalidResponse, LocknAlertPairingRequired:
+                    except (
+                        LocknAlertCannotConnect,
+                        LocknAlertInvalidAuth,
+                        LocknAlertInvalidResponse,
+                        LocknAlertPairingRequired,
+                    ):
                         raise
                     except Exception as _err:  # noqa: BLE001  # still attempt bootstrap even if identity fetch fails
                         _LOGGER.debug(
