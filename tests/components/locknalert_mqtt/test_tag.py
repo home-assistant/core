@@ -686,10 +686,12 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     }
 
     config3 = {
-        "name": "test_binary_sensor",
+        "name": "test_alarm_control_panel",
         "state_topic": "test-topic",
+        "command_topic": "test-topic/set",
         "device": {"identifiers": ["helloworld"]},
         "unique_id": "veryunique",
+        "supported_features": [],
     }
 
     data1 = json.dumps(config1)
@@ -699,7 +701,7 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla3/config", data3)
+    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", data3)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
@@ -710,7 +712,7 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
+    assert len(triggers) == 4  # 3 alarm_control_panel triggers + device trigger
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", "")
     await hass.async_block_till_done()
@@ -723,7 +725,7 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", "")
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla3/config", "")
+    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", "")
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
@@ -756,10 +758,12 @@ async def test_cleanup_device_with_entity2(
     }
 
     config3 = {
-        "name": "test_binary_sensor",
+        "name": "test_alarm_control_panel",
         "state_topic": "test-topic",
+        "command_topic": "test-topic/set",
         "device": {"identifiers": ["helloworld"]},
         "unique_id": "veryunique",
+        "supported_features": [],
     }
 
     data1 = json.dumps(config1)
@@ -769,7 +773,7 @@ async def test_cleanup_device_with_entity2(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla3/config", data3)
+    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", data3)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
@@ -780,12 +784,12 @@ async def test_cleanup_device_with_entity2(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 3  # 2 binary_sensor triggers + device trigger
+    assert len(triggers) == 4  # 3 alarm_control_panel triggers + device trigger
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", "")
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla3/config", "")
+    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", "")
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
