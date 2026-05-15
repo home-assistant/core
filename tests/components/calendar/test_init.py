@@ -57,7 +57,7 @@ async def mock_setup_platform(
     mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Fixture to setup platforms used in the test.
+    """Fixture to set up platforms used in the test.
 
     Ensures fixtures are set up in the right order.
     """

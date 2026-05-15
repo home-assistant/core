@@ -456,7 +456,7 @@ async def test_initialize_flow_unmet_dependency(
         hass, MockModule(domain="dependency_1", config_schema=config_schema)
     )
     # The test2 config flow should fail because
-    # dependency_1 can't be automatically setup
+    # dependency_1 can't be automatically set up
     mock_integration(
         hass,
         MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),

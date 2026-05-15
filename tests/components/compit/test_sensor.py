@@ -102,7 +102,7 @@ async def test_sensor_number_value_cannot_return_enum(
     mock_config_entry: MockConfigEntry,
     mock_connector: MagicMock,
 ) -> None:
-    """Test sensor shows unknown when value is enum not number."""
+    """Test sensor shows unknown when value is an enum, not a number."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         "eco"  # Invalid number value
     )

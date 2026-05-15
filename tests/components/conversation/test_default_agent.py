@@ -1024,7 +1024,7 @@ async def test_error_no_domain_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error when floor entities exist but not exposed."""
+    """Test error when floor entities exist but are not exposed."""
     floor_ground = floor_registry.async_create("ground")
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(
@@ -1170,7 +1170,7 @@ async def test_error_no_device_class_in_area_exposed(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test error when device class entities in area not exposed."""
+    """Test error when device class entities in area are not exposed."""
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
     area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
     bedroom_window = entity_registry.async_get_or_create("cover", "demo", "1234")
@@ -1206,7 +1206,7 @@ async def test_error_no_device_class_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error when device class entities on floor not exposed."""
+    """Test error when device class entities on floor are not exposed."""
     floor_ground = floor_registry.async_create("ground")
 
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
@@ -1475,7 +1475,7 @@ async def test_duplicate_names_different_areas(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test preferred area with duplicate names in areas."""
+    """Test preferred area with duplicate names in different areas."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
