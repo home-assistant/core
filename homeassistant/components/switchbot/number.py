@@ -117,7 +117,7 @@ class SwitchBotCurtainSpeedNumber(SwitchbotEntity, RestoreNumber):
         if (last_number_data is not None) and (
             last_number_data.native_value is not None
         ):
-            await self.async_set_native_value(last_number_data.native_value)
+            await self.async_set_native_value(float(last_number_data.native_value))
 
     @exception_handler
     async def async_set_native_value(self, value: float) -> None:

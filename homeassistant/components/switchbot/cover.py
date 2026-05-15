@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DEFAULT_CURTAIN_SPEED
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -69,7 +70,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         speed = (
             self.coordinator.curtain_speed
             if self.coordinator.curtain_speed is not None
-            else 255
+            else DEFAULT_CURTAIN_SPEED
         )
         return int(speed)
 

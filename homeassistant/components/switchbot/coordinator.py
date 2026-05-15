@@ -29,7 +29,7 @@ type SwitchbotConfigEntry = ConfigEntry[SwitchbotDataUpdateCoordinator]
 class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
     """Class to manage fetching switchbot data."""
 
-    curtain_speed: int | None = None
+    curtain_speed: float | None = None
 
     def __init__(
         self,
@@ -61,7 +61,6 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self.config_entry = config_entry
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
-        self.curtain_speed: None | float = None
 
     @callback
     def _needs_poll(
