@@ -107,7 +107,7 @@ class SwitchBotCurtainSpeedNumber(SwitchbotEntity, RestoreNumber):
         """Initialize the number entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.base_unique_id}_curtain_speed"
-        if not self.coordinator.curtain_speed:
+        if self.coordinator.curtain_speed is None:
             self.coordinator.curtain_speed = self.native_value
 
     async def async_added_to_hass(self) -> None:
