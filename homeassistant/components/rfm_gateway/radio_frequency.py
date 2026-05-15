@@ -47,7 +47,9 @@ async def async_setup_entry(
     try:
         capabilities = await client.async_get_capabilities()
     except (RfmGatewayConnectionError, RfmGatewayProtocolError) as err:
-        raise HomeAssistantError(f"Could not initialize RFM Gateway at {base_url}: {err}") from err
+        raise HomeAssistantError(
+            f"Could not initialize RFM Gateway at {base_url}: {err}"
+        ) from err
 
     entry.runtime_data = RuntimeData(client=client, capabilities=capabilities)
     async_add_entities([RfmGatewayTransmitter(entry)])
@@ -110,7 +112,9 @@ class RfmGatewayTransmitter(RadioFrequencyTransmitterEntity):
         except (RfmGatewayConnectionError, RfmGatewayProtocolError) as err:
             self._attr_available = False
             self.async_write_ha_state()
-            raise HomeAssistantError(f"RF transmit via {self._host} failed: {err}") from err
+            raise HomeAssistantError(
+                f"RF transmit via {self._host} failed: {err}"
+            ) from err
 
 
 def _build_base_url(host: str) -> str:

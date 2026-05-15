@@ -88,7 +88,9 @@ class RfmGatewayClient:
         if not isinstance(modulations_raw, list):
             raise RfmGatewayProtocolError("supported_modulations must be a list")
 
-        modulations = [str(x).strip().lower() for x in modulations_raw if str(x).strip()]
+        modulations = [
+            str(x).strip().lower() for x in modulations_raw if str(x).strip()
+        ]
         if not modulations:
             modulations = ["ook"]
 
@@ -160,7 +162,7 @@ class RfmGatewayClient:
             try:
                 low = int(item[0])
                 high = int(item[1])
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 continue
 
             if low <= 0 or high <= 0 or low > high:

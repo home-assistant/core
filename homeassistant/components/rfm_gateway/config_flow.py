@@ -39,7 +39,9 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_HOST: host})
 
                 title = capabilities.device_name or f"RFM Gateway ({host})"
-                freq_range = self._format_frequency_range(capabilities.supported_frequency_ranges)
+                freq_range = self._format_frequency_range(
+                    capabilities.supported_frequency_ranges
+                )
                 return self.async_create_entry(
                     title=title,
                     data={
@@ -55,7 +57,9 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if discovery_info.properties.get("model") != "rfm-gateway":
             return self.async_abort(reason="not_rfm_gateway")
@@ -126,7 +130,9 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_response"
             else:
                 title = capabilities.device_name or f"RFM Gateway ({host})"
-                freq_range = self._format_frequency_range(capabilities.supported_frequency_ranges)
+                freq_range = self._format_frequency_range(
+                    capabilities.supported_frequency_ranges
+                )
                 return self.async_create_entry(
                     title=title,
                     data={CONF_HOST: host},

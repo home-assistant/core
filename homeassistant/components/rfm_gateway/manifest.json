@@ -7,12 +7,13 @@
   "documentation": "https://www.home-assistant.io/integrations/rfm_gateway",
   "integration_type": "hub",
   "iot_class": "local_push",
+  "quality_scale": "bronze",
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
       "properties": {
         "model": "rfm-gateway"
-      }
+      },
+      "type": "_http._tcp.local."
     }
   ]
 }
