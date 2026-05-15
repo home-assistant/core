@@ -761,7 +761,8 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test async_config_entry_first_refresh passes through ConfigEntryError.
+    """Test async_config_entry_first_refresh passes through ConfigEntryError and
+    ConfigEntryAuthFailed.
 
     Verify we do not log the exception since it
     will be caught by config_entries.async_setup which will log it with

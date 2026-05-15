@@ -713,7 +713,7 @@ async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
     hass: HomeAssistant,
 ) -> None:
-    """Ensure shutdown_run_callback_threadsafe is called first."""
+    """Ensure shutdown_run_callback_threadsafe precedes final async_block_till_done."""
     stop_calls = []
 
     async def _record_block_till_done(wait_background_tasks: bool = False):

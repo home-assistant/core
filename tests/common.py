@@ -1445,18 +1445,12 @@ class MockEntity(entity.Entity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added.
-
-        When first added to the entity registry.
-        """
+        """Return if the entity should be enabled in the registry when first added."""
         return self._handle("entity_registry_enabled_default")
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added.
-
-        When first added to the entity registry.
-        """
+        """Return if the entity should be visible in the registry when first added."""
         return self._handle("entity_registry_visible_default")
 
     @property
