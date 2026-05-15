@@ -11,11 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    MetOfficeWarningsConfigEntry,
-    MetOfficeWarningsCoordinator,
-    MetOfficeWarningsData,
-)
+from .coordinator import MetOfficeWarningsConfigEntry, MetOfficeWarningsCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -57,15 +53,12 @@ class MetOfficeWarningsSensor(
     @property
     def native_value(self) -> datetime | None:
         """Return the last updated time of the feed."""
-        data: MetOfficeWarningsData | None = self.coordinator.data
-        if data is None:
-            return None
-        return data.pub_date
+        return self.coordinator.data.pub_date
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return warning details as attributes."""
-        data: MetOfficeWarningsData | None = self.coordinator.data
-        if data is None or not data.warnings:
+        warnings = self.coordinator.data.warnings
+        if not warnings:
             return None
-        return {"warnings": [asdict(w) for w in data.warnings]}
+        return {"warnings": [asdict(w) for w in warnings]}

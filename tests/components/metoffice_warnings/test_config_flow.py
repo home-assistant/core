@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_REGION, TEST_URL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -61,11 +61,12 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_cannot_connect(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test we show error on connection failure."""
+    """Test we show error on connection failure and recover."""
     aioclient_mock.get(TEST_URL, exc=TimeoutError)
 
     result = await hass.config_entries.flow.async_init(
@@ -80,3 +81,17 @@ async def test_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        TEST_URL, text=await async_load_fixture(hass, "warnings.xml", DOMAIN)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_REGION: TEST_REGION},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "South West England"
+    assert result["data"] == {CONF_REGION: TEST_REGION}

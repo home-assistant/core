@@ -1,17 +1,16 @@
 """Data update coordinator for Met Office Weather Warnings."""
 
 from dataclasses import dataclass
-from datetime import datetime
-from email.utils import parsedate_to_datetime
+from datetime import UTC, datetime, timedelta
 from logging import getLogger
 import re
+from typing import Final
 from xml.etree import ElementTree as ET
 
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import (
     REQUEST_REFRESH_DEFAULT_IMMEDIATE,
@@ -19,9 +18,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BASE_URL, CONF_REGION, DOMAIN, REFRESH_COOLDOWN, SCAN_INTERVAL
+from .const import BASE_URL, CONF_REGION, DOMAIN
 
 _LOGGER = getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(hours=1)
+REFRESH_COOLDOWN: Final = 120
 
 type MetOfficeWarningsConfigEntry = ConfigEntry[MetOfficeWarningsCoordinator]
 
@@ -55,11 +57,12 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
         self,
         hass: HomeAssistant,
         config_entry: MetOfficeWarningsConfigEntry,
+        session: aiohttp.ClientSession,
     ) -> None:
         """Initialize the coordinator."""
         self._region = config_entry.data[CONF_REGION]
         self._url = BASE_URL.format(region=self._region)
-        self._session = async_get_clientsession(hass)
+        self._session = session
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -110,7 +113,9 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
         pub_date_text = channel.findtext("pubDate")
         if pub_date_text:
             try:
-                pub_date = parsedate_to_datetime(pub_date_text)
+                pub_date = datetime.strptime(
+                    pub_date_text, "%a, %d %b %Y %H:%M:%S GMT"
+                ).replace(tzinfo=UTC)
             except ValueError:
                 _LOGGER.warning("Invalid pubDate format: %s", pub_date_text)
 
@@ -169,43 +174,10 @@ def _parse_validity(
     return start, end
 
 
-def _parse_warning_time(time_str: str, year: int | None) -> str | None:
+def _parse_warning_time(time_str: str, year: int | None) -> str:
     """Parse a time string like '0800 Wed 12 Mar' into ISO format."""
-    if year is None:
-        return time_str
-
-    match = re.match(r"(\d{4})\s+\w{3}\s+(\d{1,2})\s+(\w{3})", time_str.strip())
-    if not match:
-        return time_str
-
-    time_part = match.group(1)
-    day = match.group(2)
-    month_str = match.group(3)
-
-    months = {
-        "Jan": 1,
-        "Feb": 2,
-        "Mar": 3,
-        "Apr": 4,
-        "May": 5,
-        "Jun": 6,
-        "Jul": 7,
-        "Aug": 8,
-        "Sep": 9,
-        "Oct": 10,
-        "Nov": 11,
-        "Dec": 12,
-    }
-    month = months.get(month_str)
-    if month is None:
-        return time_str
-
-    hour = int(time_part[:2])
-    minute = int(time_part[2:])
-
     try:
-        dt = datetime(year, month, int(day), hour, minute)
+        dt = datetime.strptime(f"{year} {time_str}", "%Y %H%M %a %d %b")
     except ValueError:
         return time_str
-
     return dt.isoformat()

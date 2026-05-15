@@ -1,15 +1,8 @@
 """Constants for the Met Office Weather Warnings integration."""
 
-from datetime import timedelta
-from typing import Final
-
 DOMAIN = "metoffice_warnings"
 
 CONF_REGION = "region"
-
-SCAN_INTERVAL = timedelta(hours=1)
-
-REFRESH_COOLDOWN: Final = 120
 
 BASE_URL = (
     "https://weather.metoffice.gov.uk/public/data/PWSCache/WarningsRSS/Region/{region}"
