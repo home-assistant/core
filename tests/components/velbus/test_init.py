@@ -201,7 +201,7 @@ async def test_api_call(
         )
 
 
-_PROPERTY_KEY_MAP = {"selected_program": "SelectedProgram"}
+_PROPERTY_KEY_MAP = {"select": "SelectedProgram", "LightSensor": "LightValue"}
 
 
 async def test_migrate_property_unique_ids_rename(
@@ -223,7 +223,7 @@ async def test_migrate_property_unique_ids_rename(
         "test_serial-old_format",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="selected_program",
+        original_name="select",
     )
 
     with patch(
@@ -260,7 +260,7 @@ async def test_migrate_property_unique_ids_remove_stale(
         "test_serial-SelectedProgram",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="selected_program",
+        original_name="select",
     )
     # The stale entity with an old unique_id also exists
     entity_registry.async_get_or_create(
@@ -269,7 +269,7 @@ async def test_migrate_property_unique_ids_remove_stale(
         "test_serial-old_format",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="selected_program",
+        original_name="select",
     )
 
     with patch(
@@ -305,7 +305,7 @@ async def test_migrate_property_unique_ids_already_correct(
         "test_serial-SelectedProgram",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="selected_program",
+        original_name="select",
     )
 
     with patch(
@@ -337,7 +337,7 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
         "old-unique-id",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="selected_program",
+        original_name="select",
     )
 
     with patch(
@@ -485,3 +485,39 @@ async def test_stale_device_issue_cleared_when_device_deleted(
 
     # Issue must be cleaned up since the device no longer exists in the registry
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_migrate_property_unique_ids_rename_sensor(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a LightValue sensor entity with an outdated unique_id gets renamed."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "test_serial-old_format",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="LightSensor",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert not entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "test_serial-old_format"
+    )
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "test_serial-LightValue"
+    )
