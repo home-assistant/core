@@ -163,6 +163,9 @@ class BatterySourceType(TypedDict):
     # User's original power sensor configuration
     power_config: NotRequired[PowerConfig]
 
+    # statistic_id of a sensor (unit %) reporting the battery state of charge
+    stat_soc: NotRequired[str]
+
 
 class GasSourceType(TypedDict):
     """Dictionary holding the source of gas consumption."""
@@ -182,6 +185,9 @@ class GasSourceType(TypedDict):
     # Used to generate costs if stat_cost is set to None
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
 
 
 class WaterSourceType(TypedDict):
@@ -203,6 +209,9 @@ class WaterSourceType(TypedDict):
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
 
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
 
 type SourceType = (
     GridSourceType
@@ -223,7 +232,7 @@ class DeviceConsumption(TypedDict):
     stat_rate: NotRequired[str]
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
@@ -359,8 +368,9 @@ POWER_CONFIG_SCHEMA = vol.All(
 GRID_POWER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
-            # stat_rate and power_config are both optional schema keys, but the validator
-            # requires that at least one is provided; power_config takes precedence
+            # stat_rate and power_config are both optional
+            # schema keys, but the validator requires that at
+            # least one is provided; power_config takes precedence
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
@@ -422,7 +432,8 @@ def _grid_ensure_at_least_one_stat(
         and val.get("power_config") is None
     ):
         raise vol.Invalid(
-            "Grid must have at least one of: import meter, export meter, or power sensor"
+            "Grid must have at least one of: import meter,"
+            " export meter, or power sensor"
         )
     return val
 
@@ -483,6 +494,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         # If power_config is provided, it takes precedence and stat_rate is overwritten
         vol.Optional("stat_rate"): str,
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+        vol.Optional("stat_soc"): str,
     }
 )
 
@@ -498,6 +510,7 @@ GAS_SOURCE_SCHEMA = vol.All(
             vol.Remove("entity_energy_from"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -511,6 +524,7 @@ WATER_SOURCE_SCHEMA = vol.All(
             vol.Optional("stat_cost"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("name"): str,
         }
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
@@ -603,7 +617,8 @@ def _migrate_legacy_grid_to_unified(
     Migration pairs arrays by index position:
     - flow_from[i], flow_to[i], and power[i] combine into grid connection i
     - If arrays have different lengths, missing entries get None for that field
-    - The number of grid connections equals max(len(flow_from), len(flow_to), len(power))
+    - The number of grid connections equals
+      max(len(flow_from), len(flow_to), len(power))
     """
     flow_from = old_grid.get("flow_from", [])
     flow_to = old_grid.get("flow_to", [])

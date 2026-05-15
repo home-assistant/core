@@ -180,7 +180,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 await self.async_set_hvac_mode(mode)
             else:
                 raise ServiceValidationError(
-                    f"[{self._eq3_config.mac_address}] Can't change HVAC mode to off while changing temperature",
+                    f"[{self._eq3_config.mac_address}]"
+                    " Can't change HVAC mode to off while"
+                    " changing temperature",
                 )
 
         temperature: float | None
@@ -194,6 +196,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         try:
             await self._thermostat.async_set_temperature(temperature)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except Eq3Exception:
             _LOGGER.error(
                 "[%s] Failed setting temperature", self._eq3_config.mac_address
@@ -211,6 +214,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except Eq3Exception:
             _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.mac_address)
 

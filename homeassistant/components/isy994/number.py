@@ -195,8 +195,9 @@ class ISYVariableNumberEntity(NumberEntity):
         self.entity_description = description
         self._change_handler: EventListener | None = None
 
-        # Two entities are created for each variable, one for current value and one for initial.
-        # Initial value entities are disabled by default
+        # Two entities are created for each variable, one for
+        # current value and one for initial. Initial value
+        # entities are disabled by default
         self._init_entity = init_entity
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
