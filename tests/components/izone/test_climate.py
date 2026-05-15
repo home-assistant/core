@@ -291,10 +291,15 @@ async def test_setup_entry_only_adds_entities_for_matching_config_entry(
     ) as mock_disco:
         mock_disco.return_value.start_discovery = AsyncMock()
         mock_disco.return_value.close = AsyncMock()
-        mock_disco.return_value.controllers = {
-            matching_controller.device_uid: matching_controller,
-            other_controller.device_uid: other_controller,
-        }
+        mock_disco.return_value.fetch_controller = AsyncMock(
+            return_value=matching_controller
+        )
+        mock_disco.return_value.fetch_controllers = AsyncMock(
+            return_value={
+                matching_controller.device_uid: matching_controller,
+                other_controller.device_uid: other_controller,
+            }
+        )
 
         await setup_integration(hass, entry)
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 
@@ -37,9 +37,12 @@ def _setup_shared_discovery(hass: HomeAssistant, *controllers: Mock) -> Mock:
     """Install a mock shared discovery service in hass.data and return it."""
     service = Mock()
     service.pi_disco.controllers = {c.device_uid: c for c in controllers}
-    service.pi_disco.add_listener = Mock()
-    service.pi_disco.remove_listener = Mock()
-    service.pi_disco.rescan = AsyncMock()
+    service.pi_disco.fetch_controller = AsyncMock(
+        side_effect=lambda uid, timeout=None: service.pi_disco.controllers.get(uid)
+    )
+    service.pi_disco.fetch_controllers = AsyncMock(
+        side_effect=lambda timeout=None: dict(service.pi_disco.controllers)
+    )
     hass.data["izone_discovery"] = service
     return service
 
@@ -587,10 +590,10 @@ async def test_homekit_fans_out_other_discovered_controllers(
     assert fanout_flow["context"]["unique_id"] == "000000002"
 
 
-async def test_homekit_sets_advertised_uid_before_lock_id(
+async def test_homekit_flow_sets_device_uid_once(
     hass: HomeAssistant,
 ) -> None:
-    """HomeKit flow should expose controller UID for matching before lock serialization."""
+    """HomeKit flow sets unique_id to the device UID exactly once (no lock-ID swap)."""
     controller = _make_controller("000000001", "192.0.2.3")
     set_unique_id_calls: list[str] = []
     original_set_unique_id = config_flow.IZoneConfigFlow.async_set_unique_id
@@ -620,10 +623,7 @@ async def test_homekit_sets_advertised_uid_before_lock_id(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert set_unique_id_calls[:2] == [
-        "000000001",
-        config_flow.HOMEKIT_DISCOVERY_LOCK_ID,
-    ]
+    assert set_unique_id_calls == ["000000001"]
 
 
 async def test_homekit_proceeds_while_user_confirm_is_open(
@@ -1224,6 +1224,9 @@ async def test_async_maybe_stop_stops_when_only_disabled_entry_matches_controlle
 
     service = Mock()
     service.pi_disco.controllers = {"000000001": _make_controller("000000001")}
+    service.pi_disco.fetch_controllers = AsyncMock(
+        return_value=service.pi_disco.controllers
+    )
     service.async_schedule_idle_stop = Mock()
     hass.data[DATA_DISCOVERY_SERVICE] = service
 
@@ -1258,105 +1261,61 @@ async def test_async_discover_controllers_starts_shared_service_when_missing(
 
     assert list(controllers) == ["000000001"]
     mock_start.assert_awaited_once()
-    service.pi_disco.rescan.assert_not_awaited()
-    service.pi_disco.add_listener.assert_not_called()
-    service.pi_disco.remove_listener.assert_not_called()
+    service.pi_disco.fetch_controller.assert_not_awaited()
+    service.pi_disco.fetch_controllers.assert_awaited_once_with()
 
 
-async def test_async_discover_controllers_refresh_after_start_waits_without_rescan(
+async def test_async_discover_controllers_refresh_after_start_calls_fetch_controllers(
     hass: HomeAssistant,
 ) -> None:
-    """Refresh after start waits for discovery but skips a duplicate rescan."""
+    """Refresh after starting discovery delegates to fetch_controllers with timeout."""
     controller = _make_controller(ip="192.0.2.3")
     service = _setup_shared_discovery(hass, controller)
     del hass.data[DATA_DISCOVERY_SERVICE]
 
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_start_discovery_service",
-            return_value=service,
-        ) as mock_start,
-        patch(
-            "homeassistant.components.izone.config_flow.asyncio.sleep",
-            new=AsyncMock(),
-        ) as mock_sleep,
-    ):
+    with patch(
+        "homeassistant.components.izone.discovery.async_start_discovery_service",
+        return_value=service,
+    ) as mock_start:
         controllers = await config_flow.async_discover_controllers(hass, refresh=True)
 
     assert list(controllers) == ["000000001"]
     mock_start.assert_awaited_once()
-    mock_sleep.assert_awaited_once()  # Called with mocked timeout constant
-    service.pi_disco.rescan.assert_not_awaited()
-    service.pi_disco.add_listener.assert_not_called()
-    service.pi_disco.remove_listener.assert_not_called()
+    service.pi_disco.fetch_controllers.assert_awaited_once_with(timeout=ANY)
 
 
-async def test_async_discover_controllers_refresh_rescans_shared_service(
+async def test_async_discover_controllers_refresh_calls_fetch_controllers(
     hass: HomeAssistant,
 ) -> None:
-    """Refresh without UID waits the full timeout after rescan."""
+    """Refresh without UID delegates to fetch_controllers with timeout."""
     service = _setup_shared_discovery(hass)  # start with no controllers
 
-    with patch(
-        "homeassistant.components.izone.config_flow.asyncio.sleep",
-        new=AsyncMock(),
-    ) as mock_sleep:
-        controllers = await config_flow.async_discover_controllers(hass, refresh=True)
+    controllers = await config_flow.async_discover_controllers(hass, refresh=True)
 
     assert controllers == {}
-    service.pi_disco.rescan.assert_awaited_once()
-    mock_sleep.assert_awaited_once()  # Called with mocked timeout constant
-    service.pi_disco.add_listener.assert_not_called()
-    service.pi_disco.remove_listener.assert_not_called()
-
-
-async def test_async_discover_controllers_refresh_skips_when_uid_already_known(
-    hass: HomeAssistant,
-) -> None:
-    """Skip rescan when caller only needs a UID that is already known."""
-    known = _make_controller("000000001", "192.0.2.3")
-    service = _setup_shared_discovery(hass, known)
-
-    controllers = await config_flow.async_discover_controllers(
-        hass,
-        refresh=True,
-        wait_for_uid="000000001",
-    )
-
-    assert controllers == {"000000001": known}
-    service.pi_disco.rescan.assert_not_awaited()
-    service.pi_disco.add_listener.assert_not_called()
-    service.pi_disco.remove_listener.assert_not_called()
+    service.pi_disco.fetch_controllers.assert_awaited_once_with(timeout=ANY)
 
 
 async def test_async_discover_controllers_waits_for_requested_uid(
     hass: HomeAssistant,
 ) -> None:
-    """Refresh listener completes early when the requested UID is discovered."""
+    """Refresh with wait_for_uid calls fetch_controller and returns all controllers."""
     service = _setup_shared_discovery(hass)
     requested = _make_controller("000000777", "192.0.2.77")
 
-    def _add_listener(listener: object) -> None:
-        service.pi_disco.controllers[requested.device_uid] = requested
-        listener.controller_discovered(requested)
+    async def _fetch_and_add(uid: str, timeout: float | None = None) -> None:
+        service.pi_disco.controllers[uid] = requested
 
-    service.pi_disco.add_listener.side_effect = _add_listener
+    service.pi_disco.fetch_controller.side_effect = _fetch_and_add
 
-    with patch(
-        "homeassistant.components.izone.config_flow.asyncio.sleep",
-        new=AsyncMock(),
-    ) as mock_sleep:
-        controllers = await config_flow.async_discover_controllers(
-            hass,
-            refresh=True,
-            wait_for_uid="000000777",
-        )
+    controllers = await config_flow.async_discover_controllers(
+        hass,
+        refresh=True,
+        wait_for_uid="000000777",
+    )
 
     assert controllers == {requested.device_uid: requested}
-    service.pi_disco.rescan.assert_awaited_once()
-    service.pi_disco.add_listener.assert_called_once()
-    service.pi_disco.remove_listener.assert_called_once()
-    mock_sleep.assert_not_awaited()
+    service.pi_disco.fetch_controller.assert_awaited_once_with("000000777", timeout=ANY)
 
 
 async def test_async_discover_controllers_returns_empty_when_start_fails(
@@ -1372,52 +1331,9 @@ async def test_async_discover_controllers_returns_empty_when_start_fails(
     assert controllers == {}
 
 
-async def test_async_discover_controllers_returns_empty_when_rescan_fails(
-    hass: HomeAssistant,
-) -> None:
-    """Rescan errors in refresh mode return an empty result."""
-    service = _setup_shared_discovery(hass)
-    service.pi_disco.rescan.side_effect = OSError
-
-    controllers = await config_flow.async_discover_controllers(hass, refresh=True)
-
-    assert controllers == {}
-
-
-async def test_async_discover_controllers_wait_for_uid_returns_empty_on_rescan_error(
-    hass: HomeAssistant,
-) -> None:
-    """Wait-for-UID branch returns empty on rescan errors and removes listener."""
-    service = _setup_shared_discovery(hass)
-    service.pi_disco.rescan.side_effect = OSError
-
-    controllers = await config_flow.async_discover_controllers(
-        hass,
-        refresh=True,
-        wait_for_uid="000000777",
-    )
-
-    assert controllers == {}
-    service.pi_disco.add_listener.assert_called_once()
-    service.pi_disco.remove_listener.assert_called_once()
-
-
-def test_flow_uid_for_matching_falls_back_to_init_data() -> None:
-    """Flow UID extraction should use init_data when lock UID is set."""
-    flow = SimpleNamespace(
-        context={"unique_id": config_flow.HOMEKIT_DISCOVERY_LOCK_ID},
-        init_data={config_flow.DISCOVERY_DATA_UID: "000000321"},
-    )
-
-    assert config_flow._flow_uid_for_matching(flow) == "000000321"
-
-
-def test_flow_uid_for_matching_returns_none_for_invalid_init_data() -> None:
-    """Flow UID extraction should return None for invalid init_data payloads."""
-    flow = SimpleNamespace(
-        context={"unique_id": config_flow.HOMEKIT_DISCOVERY_LOCK_ID},
-        init_data={config_flow.DISCOVERY_DATA_UID: 123},
-    )
+def test_flow_uid_for_matching_returns_none_when_no_uid() -> None:
+    """Flow UID extraction returns None when context has no unique_id."""
+    flow = SimpleNamespace(context={}, init_data=None)
 
     assert config_flow._flow_uid_for_matching(flow) is None
 
@@ -1796,6 +1712,7 @@ async def test_async_maybe_stop_stops_when_no_controllers_remain(
     """Discovery stops when no controllers are tracked and nothing is actionable."""
     service = Mock()
     service.pi_disco.controllers = {}
+    service.pi_disco.fetch_controllers = AsyncMock(return_value={})
     service.async_schedule_idle_stop = Mock()
     hass.data[DATA_DISCOVERY_SERVICE] = service
 
@@ -1821,6 +1738,9 @@ async def test_async_maybe_stop_keeps_running_when_controller_not_ignored(
     """Discovery remains active if at least one discovered controller is still actionable."""
     service = Mock()
     service.pi_disco.controllers = {"000000001": _make_controller("000000001")}
+    service.pi_disco.fetch_controllers = AsyncMock(
+        return_value=service.pi_disco.controllers
+    )
     service.async_schedule_idle_stop = Mock()
     hass.data[DATA_DISCOVERY_SERVICE] = service
 
