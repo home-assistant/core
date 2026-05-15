@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.downloader.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -132,10 +132,14 @@ async def test_download_headers_schema(
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
-    ("exception"),
+    ("exception", "expected_error"),
     [
-        requests.exceptions.ConnectionError,
-        ValueError,
+        pytest.param(
+            requests.exceptions.ConnectionError,
+            HomeAssistantError,
+            id="connection_error",
+        ),
+        pytest.param(ValueError, ServiceValidationError, id="value_error"),
     ],
 )
 async def test_download_exceptions(
@@ -143,11 +147,13 @@ async def test_download_exceptions(
     requests_mock: Mocker,
     download_url: str,
     download_failed: asyncio.Event,
-    exception: Exception,
+    exception: type[Exception],
+    expected_error: type[Exception],
 ) -> None:
-    """Test that connection exceptions during download are handled."""
+    """Test that exceptions during download propagate to the caller."""
     requests_mock.get(download_url, exc=exception)
-    await hass.services.async_call(
-        DOMAIN, "download_file", {"url": download_url}, blocking=True
-    )
+    with pytest.raises(expected_error):
+        await hass.services.async_call(
+            DOMAIN, "download_file", {"url": download_url}, blocking=True
+        )
     await download_failed.wait()

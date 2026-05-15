@@ -3,7 +3,6 @@
 from http import HTTPStatus
 import os
 import re
-import threading
 
 import requests
 import voluptuous as vol
@@ -29,8 +28,8 @@ from .const import (
 )
 
 
-def download_file(service: ServiceCall) -> None:
-    """Start thread to download file specified in the URL."""
+async def download_file(service: ServiceCall) -> None:
+    """Download file specified in the URL."""
 
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
@@ -157,7 +156,7 @@ def download_file(service: ServiceCall) -> None:
                 translation_placeholders={"url": url},
             ) from err
 
-    threading.Thread(target=do_download).start()
+    await service.hass.async_add_executor_job(do_download)
 
 
 @callback
