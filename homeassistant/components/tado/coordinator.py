@@ -282,10 +282,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_home(self) -> dict[str, dict]:
         """Update the home data from Tado."""
 
+        def _get_home_data() -> tuple[dict, dict]:
+            return self._tado.get_weather(), self._tado.get_home_state()
+
         try:
-            weather = await self.hass.async_add_executor_job(self._tado.get_weather)
-            # pylint: disable-next=home-assistant-sequential-executor-jobs
-            geofence = await self.hass.async_add_executor_job(self._tado.get_home_state)
+            weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
         except RequestException as err:
             _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
