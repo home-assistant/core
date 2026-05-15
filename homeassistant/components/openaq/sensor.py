@@ -164,7 +164,6 @@ class OpenAQDistanceSensor(
     _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
     _attr_native_unit_of_measurement = UnitOfLength.KILOMETERS
-    _attr_should_poll = False
     _attr_suggested_display_precision = 1
     _attr_translation_key = DISTANCE_FROM_HOME
 
