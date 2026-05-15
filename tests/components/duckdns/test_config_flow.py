@@ -150,7 +150,7 @@ async def test_flow_reconfigure(
         ([False, True], "update_failed"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_reconfigure_errors(
     hass: HomeAssistant,
     mock_update_duckdns: AsyncMock,

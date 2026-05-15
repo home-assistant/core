@@ -67,7 +67,7 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("platform", "data", "options"),
     [
@@ -112,7 +112,7 @@ async def test_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize("is_allowed", [False], ids=["not_allowed"])
 @pytest.mark.parametrize(
     ("platform", "data", "options"),
