@@ -983,7 +983,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'False',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.bedroom_temperature-entry]
@@ -1146,7 +1146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'High',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.bureau_modulate_battery-entry]
@@ -7308,7 +7308,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_humidity-entry]
@@ -7415,7 +7415,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'False',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_rf_strength-entry]
@@ -7466,7 +7466,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'High',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_temperature-entry]
