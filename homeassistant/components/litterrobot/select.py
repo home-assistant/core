@@ -17,12 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import (
-    LitterRobotEntity,
-    _WhiskerEntityT,
-    async_update_night_light_settings,
-    whisker_command,
-)
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
 
 PARALLEL_UPDATES = 1
 
@@ -121,8 +116,8 @@ ROBOT_SELECT_MAP: dict[
             ),
             options_fn=lambda _: [mode.name.lower() for mode in LR5NightLightMode],
             select_fn=(
-                lambda robot, opt: async_update_night_light_settings(
-                    robot, mode=LR5NightLightMode[opt.upper()].value.capitalize()
+                lambda robot, opt: robot.set_night_light_mode(
+                    LR5NightLightMode[opt.upper()]
                 )
             ),
         ),
