@@ -1176,6 +1176,7 @@ async def test_migration_from_v1_disabled(
         for subentry in entry.subentries.values()
         if subentry.subentry_type == "tts"
     ]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if entry.minor_version == 4:
         assert len(stt_subentries) == 0
         assert len(tts_subentries) == 0

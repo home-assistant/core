@@ -529,12 +529,7 @@ async def test_duplicate_usb_discovery_aborts_early(
             "serial_number": usb_data.serial_number,
             "vid": usb_data.vid,
         },
-        unique_id=(
-            f"{usb_data.vid}:{usb_data.pid}_"
-            f"{usb_data.serial_number}_"
-            f"{usb_data.manufacturer}_"
-            f"{usb_data.description}"
-        ),
+        unique_id=usb_data.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -576,12 +571,7 @@ async def test_firmware_callback_updates_existing_entry(
             "description": usb_data.description,
             "product": usb_data.description,
         },
-        unique_id=(
-            f"{usb_data.vid}:{usb_data.pid}_"
-            f"{usb_data.serial_number}_"
-            f"{usb_data.manufacturer}_"
-            f"{usb_data.description}"
-        ),
+        unique_id=usb_data.serial_number,
     )
     config_entry.add_to_hass(hass)
 

@@ -636,7 +636,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
+                        description=(
+                            "Free text input for the city, e.g. `San Francisco`"
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_WEB_SEARCH_REGION,

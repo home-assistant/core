@@ -24,7 +24,7 @@ ZONE_NS = f"{COMPONENTS_NS}.zone"
 GROUP_NS = f"{COMPONENTS_NS}.group"
 CONFIGED_NS = "otherlibx"
 UNCONFIG_NS = "unconfigurednamespace"
-INTEGRATION = "test_component"
+INTEGRATION = "test_logging"
 INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
