@@ -19,6 +19,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -27,10 +28,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, INTEGRATION_TITLE, UNKNOWN_NAME
+from .const import DOMAIN, INTEGRATION_TITLE, MANUFACTURER, MODEL, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
+DEVICE_INFO_EXCEPTIONS = (*UPDATE_EXCEPTIONS, AttributeError)
 BREAKS_IN_HA_VERSION = "2026.12.0"
 
 
@@ -84,7 +86,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities([AveaLight(entry.runtime_data)], update_before_add=True)
+    await hass.async_add_executor_job(_update_bulb_device_info, entry.runtime_data)
+    async_add_entities(
+        [AveaLight(entry.runtime_data, entry.data[CONF_ADDRESS])],
+        update_before_add=True,
+    )
+
+
+def _update_bulb_device_info(light: avea.Bulb) -> None:
+    """Update device info details from an Avea bulb."""
+    with suppress(*DEVICE_INFO_EXCEPTIONS):
+        light.get_name()
+    with suppress(*DEVICE_INFO_EXCEPTIONS):
+        light.get_fw_version()
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -169,11 +183,23 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb) -> None:
+    def __init__(self, light: avea.Bulb, address: str) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = light.name
+        self._attr_unique_id = address
+        name = _normalize_name(light.name)
+        self._attr_name = name or light.name
         self._attr_brightness = light.brightness
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, address)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
+        if name:
+            self._attr_device_info["name"] = name
+        firmware_version = light.fw_version
+        if firmware_version and firmware_version != UNKNOWN_NAME:
+            self._attr_device_info["sw_version"] = firmware_version
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

@@ -15,7 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import AVEA_DISCOVERY_INFO
 
@@ -26,9 +26,21 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
-    bulb.name = "Bedroom"
+    bulb.name = "Unknown"
+    bulb.fw_version = "Unknown"
     bulb.brightness = 0
     bulb.get_brightness.return_value = 0
+
+    def get_name() -> str:
+        bulb.name = "Bedroom"
+        return bulb.name
+
+    def get_fw_version() -> str:
+        bulb.fw_version = "1.2.3 (456)"
+        return bulb.fw_version
+
+    bulb.get_name.side_effect = get_name
+    bulb.get_fw_version.side_effect = get_fw_version
     return bulb
 
 
@@ -62,6 +74,19 @@ async def test_init_state(
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_device_info(device_registry: dr.DeviceRegistry) -> None:
+    """Test the device info."""
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)}
+    )
+    assert device_entry
+    assert device_entry.manufacturer == "Elgato"
+    assert device_entry.model == "Avea"
+    assert device_entry.name == "Bedroom"
+    assert device_entry.sw_version == "1.2.3 (456)"
 
 
 async def test_turn_on_and_off(
