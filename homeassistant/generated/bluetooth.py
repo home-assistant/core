@@ -748,6 +748,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0",
     },
     {
+        "connectable": True,
+        "domain": "svs_subwoofer",
+        "service_uuid": "1fee6acf-a826-4e37-9635-4d8a01642c5d",
+    },
+    {
         "connectable": False,
         "domain": "switchbot",
         "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",

@@ -594,9 +594,11 @@ beautifulsoup4==4.13.3
 bleak-esphome==3.7.3
 
 # homeassistant.components.bluetooth
+# homeassistant.components.svs_subwoofer
 bleak-retry-connector==4.6.0
 
 # homeassistant.components.bluetooth
+# homeassistant.components.svs_subwoofer
 bleak==2.1.1
 
 # homeassistant.components.blebox

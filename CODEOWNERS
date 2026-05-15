@@ -1713,6 +1713,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
+/homeassistant/components/svs_subwoofer/ @dangerouslaser
+/tests/components/svs_subwoofer/ @dangerouslaser
 /homeassistant/components/swiss_hydrological_data/ @fabaff
 /homeassistant/components/swiss_public_transport/ @fabaff @miaucl
 /tests/components/swiss_public_transport/ @fabaff @miaucl
