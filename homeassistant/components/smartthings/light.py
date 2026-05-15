@@ -304,6 +304,8 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
             )
             or []
         )
+        # If "off" is in supported levels, the switch doesn't control the lamp
+        self._use_switch = "off" not in levels
         color_modes = set()
         if "off" not in levels or len(levels) > 2:
             color_modes.add(ColorMode.BRIGHTNESS)
@@ -318,7 +320,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             await self.async_set_level(kwargs[ATTR_BRIGHTNESS])
             return
-        if self.supports_capability(Capability.SWITCH):
+        if self._use_switch and self.supports_capability(Capability.SWITCH):
             await self.execute_device_command(Capability.SWITCH, Command.ON)
         # if no switch, turn on via brightness level
         else:
@@ -326,7 +328,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the lamp off."""
-        if self.supports_capability(Capability.SWITCH):
+        if self._use_switch and self.supports_capability(Capability.SWITCH):
             await self.execute_device_command(Capability.SWITCH, Command.OFF)
             return
         await self.execute_device_command(
@@ -356,7 +358,8 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
         )
         # turn on switch separately if needed
         if (
-            self.supports_capability(Capability.SWITCH)
+            self._use_switch
+            and self.supports_capability(Capability.SWITCH)
             and not self.is_on
             and brightness > 0
         ):
@@ -387,7 +390,7 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if lamp is on."""
-        if self.supports_capability(Capability.SWITCH):
+        if self._use_switch and self.supports_capability(Capability.SWITCH):
             state = self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
             if state is None:
                 return None

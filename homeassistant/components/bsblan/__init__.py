@@ -38,7 +38,14 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DEFAULT_HEATING_CIRCUITS,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
@@ -118,7 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
         # Read available heating circuits from config entry data
         # (populated by config flow or migration)
-        circuits: list[int] = entry.data[CONF_HEATING_CIRCUITS]
+        circuits: list[int] = entry.data[CONF_HEATING_CIRCUITS] or list(
+            DEFAULT_HEATING_CIRCUITS
+        )
 
         # Fetch required device metadata in parallel for faster startup
         device, info = await asyncio.gather(
@@ -229,7 +238,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
     # heating circuits from the device; fall back to [1] (pre-multi-circuit
     # default) if the device is unreachable or the endpoint is unsupported.
     if entry.version == 1 and entry.minor_version < 2:
-        circuits: list[int] = [1]
+        circuits: list[int] = list(DEFAULT_HEATING_CIRCUITS)
         config = BSBLANConfig(
             host=entry.data[CONF_HOST],
             passkey=entry.data[CONF_PASSKEY],
@@ -245,11 +254,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
         except (BSBLANError, TimeoutError) as err:
             LOGGER.warning(
                 "Circuit discovery during migration failed for %s (%s); "
-                "defaulting to single circuit [1]. Use Reconfigure to "
+                "defaulting to a single circuit. Use Reconfigure to "
                 "rediscover additional circuits later",
                 entry.data[CONF_HOST],
                 err,
             )
+        if not circuits:
+            LOGGER.warning(
+                "Circuit discovery during migration returned no heating circuits "
+                "for %s; defaulting to a single circuit",
+                entry.data[CONF_HOST],
+            )
+            circuits = list(DEFAULT_HEATING_CIRCUITS)
 
         hass.config_entries.async_update_entry(
             entry,
@@ -262,5 +278,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> 
             entry.minor_version,
             circuits,
         )
+
+    # 1.2 -> 1.3: Repair entries that stored an empty circuit list during
+    # discovery. Every BSB-LAN setup has at least one heating circuit.
+    if entry.version == 1 and entry.minor_version < 3:
+        if not entry.data[CONF_HEATING_CIRCUITS]:
+            LOGGER.warning(
+                "Stored heating circuits for %s are empty; defaulting to a "
+                "single circuit",
+                entry.data[CONF_HOST],
+            )
+            data = {
+                **entry.data,
+                CONF_HEATING_CIRCUITS: list(DEFAULT_HEATING_CIRCUITS),
+            }
+        else:
+            data = {**entry.data}
+
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=3)
 
     return True
