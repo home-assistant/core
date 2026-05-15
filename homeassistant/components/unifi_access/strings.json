@@ -136,6 +136,9 @@
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
+    "fetch_thumbnail_failed": {
+      "message": "Failed to fetch door thumbnail."
+    },
     "invalid_lock_rule_type": {
       "message": "The provided lock rule type is invalid."
     },
