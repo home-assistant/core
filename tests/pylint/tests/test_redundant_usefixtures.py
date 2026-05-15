@@ -1,5 +1,7 @@
 """Tests for the redundant usefixtures checker."""
 
+from pathlib import Path
+
 import astroid
 from pylint.testutils import UnittestLinter
 from pylint.utils.ast_walker import ASTWalker
@@ -9,12 +11,6 @@ from pylint_home_assistant.checkers.tests.redundant_usefixtures import (
 import pytest
 
 from tests.pylint import assert_no_messages
-
-
-@pytest.fixture(name="usefixtures_checker")
-def usefixtures_checker_fixture(linter: UnittestLinter) -> RedundantUsefixtures:
-    """Fixture to provide a redundant usefixtures checker."""
-    return RedundantUsefixtures(linter)
 
 
 @pytest.mark.parametrize(
@@ -181,6 +177,104 @@ async def test_b(hass: HomeAssistant) -> None:
 
     messages = linter.release_messages()
     assert len(messages) == 2
+
+
+def test_conftest_pytestmark_redundant(
+    linter: UnittestLinter,
+    usefixtures_checker: RedundantUsefixtures,
+    tmp_path: Path,
+) -> None:
+    """Test that pytestmark from a parent conftest.py is detected."""
+    test_dir = tmp_path / "tests" / "components" / "test_int"
+    test_dir.mkdir(parents=True)
+
+    (test_dir / "conftest.py").write_text(
+        'import pytest\npytestmark = pytest.mark.usefixtures("init_integration")\n'
+    )
+
+    root_node = astroid.parse(
+        """
+@pytest.mark.usefixtures("init_integration")
+async def test_something(hass: HomeAssistant) -> None:
+    pass
+""",
+        "tests.components.test_int.test_init",
+    )
+    root_node.file = str(test_dir / "test_init.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(usefixtures_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].args == ("init_integration",)
+
+
+def test_conftest_autouse_fixture_redundant(
+    linter: UnittestLinter,
+    usefixtures_checker: RedundantUsefixtures,
+    tmp_path: Path,
+) -> None:
+    """Test that autouse fixtures from conftest.py are detected."""
+    test_dir = tmp_path / "tests" / "components" / "test_int"
+    test_dir.mkdir(parents=True)
+
+    (test_dir / "conftest.py").write_text(
+        "import pytest\n\n@pytest.fixture(autouse=True)\n"
+        "def mock_setup_entry():\n    yield\n"
+    )
+
+    root_node = astroid.parse(
+        """
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_something(hass: HomeAssistant) -> None:
+    pass
+""",
+        "tests.components.test_int.test_init",
+    )
+    root_node.file = str(test_dir / "test_init.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(usefixtures_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].args == ("mock_setup_entry",)
+
+
+def test_conftest_autouse_named_fixture_redundant(
+    linter: UnittestLinter,
+    usefixtures_checker: RedundantUsefixtures,
+    tmp_path: Path,
+) -> None:
+    """Test that autouse fixtures with name= override are detected by their public name."""
+    test_dir = tmp_path / "tests" / "components" / "test_int"
+    test_dir.mkdir(parents=True)
+
+    (test_dir / "conftest.py").write_text(
+        'import pytest\n\n@pytest.fixture(name="mock_setup_entry", autouse=True)\n'
+        "def mock_setup_entry_fixture():\n    yield\n"
+    )
+
+    root_node = astroid.parse(
+        """
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_something(hass: HomeAssistant) -> None:
+    pass
+""",
+        "tests.components.test_int.test_init",
+    )
+    root_node.file = str(test_dir / "test_init.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(usefixtures_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].args == ("mock_setup_entry",)
 
 
 def test_not_test_module_ignored(
