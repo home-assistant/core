@@ -185,7 +185,7 @@ async def test_switch_on_with_exception(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"An error occurred while trying to turn on {entity_id}: TractiveError()",
+        match=f"An error occurred while trying to turn on {entity_id}",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -223,7 +223,7 @@ async def test_switch_off_with_exception(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"An error occurred while trying to turn off {entity_id}: TractiveError()",
+        match=f"An error occurred while trying to turn off {entity_id}",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

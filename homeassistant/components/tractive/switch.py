@@ -116,10 +116,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_turn_on",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "error": repr(error),
-                },
+                translation_placeholders={"entity": self.entity_id},
             ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
@@ -134,10 +131,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_turn_off",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "error": repr(error),
-                },
+                translation_placeholders={"entity": self.entity_id},
             ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
