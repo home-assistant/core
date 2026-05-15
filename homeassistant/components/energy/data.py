@@ -187,7 +187,7 @@ class GasSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 class WaterSourceType(TypedDict):
@@ -210,7 +210,7 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
 
 type SourceType = (
@@ -232,7 +232,7 @@ class DeviceConsumption(TypedDict):
     stat_rate: NotRequired[str]
 
     # An optional custom name for display in energy graphs
-    name: str | None
+    name: NotRequired[str]
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
