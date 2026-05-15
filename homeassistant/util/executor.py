@@ -50,9 +50,9 @@ def join_or_interrupt_threads(
             _log_thread_running_at_shutdown(thread.name, thread.ident)
 
         with contextlib.suppress(SystemError, ValueError):
-            # SystemError at this stage is usually a race condition
-            # where the thread happens to die right before we force
-            # it to raise the exception
+            # SystemError or ValueError at this stage is usually a benign
+            # race condition where the thread dies right before we force
+            # it to raise the exception.
             async_raise(thread.ident, SystemExit)
 
     return joined
