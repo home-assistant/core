@@ -25,9 +25,15 @@ def _mock_caps() -> rfm_gateway.RfmCapabilities:
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful manual setup."""
-    with patch(
-        "homeassistant.components.rfm_gateway.config_flow.RfmGatewayConfigFlow._async_get_capabilities",
-        new=AsyncMock(return_value=_mock_caps()),
+    with (
+        patch(
+            "homeassistant.components.rfm_gateway.config_flow.RfmGatewayConfigFlow._async_get_capabilities",
+            new=AsyncMock(return_value=_mock_caps()),
+        ),
+        patch(
+            "homeassistant.components.rfm_gateway.RfmGatewayClient.async_get_capabilities",
+            new=AsyncMock(return_value=_mock_caps()),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             rfm_gateway.DOMAIN,
@@ -80,9 +86,15 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         type="_http._tcp.local.",
     )
 
-    with patch(
-        "homeassistant.components.rfm_gateway.config_flow.RfmGatewayConfigFlow._async_get_capabilities",
-        new=AsyncMock(return_value=_mock_caps()),
+    with (
+        patch(
+            "homeassistant.components.rfm_gateway.config_flow.RfmGatewayConfigFlow._async_get_capabilities",
+            new=AsyncMock(return_value=_mock_caps()),
+        ),
+        patch(
+            "homeassistant.components.rfm_gateway.RfmGatewayClient.async_get_capabilities",
+            new=AsyncMock(return_value=_mock_caps()),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             rfm_gateway.DOMAIN,
