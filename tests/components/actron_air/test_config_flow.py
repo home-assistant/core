@@ -151,7 +151,10 @@ async def test_user_flow_token_polling_error(
 async def test_user_flow_duplicate_account(
     hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test duplicate account handling - should abort when same account is already configured."""
+    """Test duplicate account handling.
+
+    Should abort when same account is already configured.
+    """
     # Create an existing config entry for the same user account
     mock_config_entry.add_to_hass(hass)
 

@@ -313,7 +313,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": ["on", "auto"],
                 "operation_mode": "auto",
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             True,
         ),
@@ -323,7 +325,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": ["on"],
                 "operation_mode": None,
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             True,
         ),
@@ -333,7 +337,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": [],
                 "operation_mode": None,
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             False,
         ),
@@ -346,10 +352,12 @@ async def test_mode_controller_is_omitted_if_no_modes_are_set(
     state_attributes: dict[str, Any],
     mode_controller_exists: bool,
 ) -> None:
-    """Test we do not generate an invalid discovery with AlexaModeController during serialize discovery.
+    """Test we do not generate an invalid AlexaModeController discovery.
 
-    AlexModeControllers need at least 2 modes. If one mode is set, an extra mode will be added for compatibility.
-    If no modes are offered, the mode controller should be omitted to prevent schema validations.
+    AlexModeControllers need at least 2 modes. If one mode is
+    set, an extra mode will be added for compatibility. If no
+    modes are offered, the mode controller should be omitted to
+    prevent schema validations.
     """
     request = get_new_request("Alexa.Discovery", "Discover")
 

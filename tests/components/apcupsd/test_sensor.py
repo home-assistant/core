@@ -93,9 +93,11 @@ async def test_manual_update_entity(
     hass: HomeAssistant,
     mock_request_status: AsyncMock,
 ) -> None:
-    """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
+    """Test multiple simultaneous manual update entity.
 
-    We should only do network call once for the multiple simultaneous update entity services.
+    Uses the service homeassistant/update_entity. We should only do
+    network call once for the multiple simultaneous update entity
+    services.
     """
     device_slug = slugify(mock_request_status.return_value["UPSNAME"])
     # Assert the initial state of sensor.ups_load.
@@ -142,7 +144,8 @@ async def test_manual_update_entity(
     ("mock_request_status", "entity_id", "known_status"),
     [
         pytest.param(
-            # Even though the "LASTSTEST" field is not available, we should still create the entity.
+            # Even though the "LASTSTEST" field is not available,
+            # we should still create the entity.
             MOCK_MINIMAL_STATUS,
             "sensor.apc_ups_last_self_test",
             MOCK_MINIMAL_STATUS | {"LASTSTEST": "1970-01-01 00:00:00 +0000"},
@@ -169,7 +172,7 @@ async def test_sensor_unknown(
     entity_id: str,
     known_status: dict[str, str],
 ) -> None:
-    """Test if our integration can properly mark certain sensors as known/unknown when it becomes so."""
+    """Test marking sensors as known/unknown when status changes."""
     base_status = mock_request_status.return_value
 
     # The state should be unknown initially.
@@ -208,7 +211,7 @@ async def test_deprecated_sensor_issue(
     entity_key: str,
     issue_key: str,
 ) -> None:
-    """Ensure the issue lists automations and scripts referencing a deprecated sensor."""
+    """Ensure issue lists automations/scripts referencing deprecated sensor."""
     issue_registry = ir.async_get(hass)
     unique_id = f"{mock_request_status.return_value['SERIALNO']}_{entity_key}"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)

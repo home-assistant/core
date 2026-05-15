@@ -1053,7 +1053,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
     mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
-    """Test that sentence triggers are checked before a non-default conversation agent."""
+    """Test sentence triggers checked before non-default agent."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -1281,7 +1281,8 @@ async def test_intent_continue_conversation(
     ]
     assert results[1]["intent_output"]["continue_conversation"] is True
 
-    # Change conversation agent to default one and register sentence trigger that should not be called
+    # Change conversation agent to default one and register
+    # sentence trigger that should not be called
     await assist_pipeline.pipeline.async_update_pipeline(
         hass, pipeline, conversation_engine=None
     )
@@ -1367,7 +1368,7 @@ async def test_stt_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the STT language is used first when the conversation language is '*' (all languages)."""
+    """Test STT language is used first when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1443,7 +1444,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the TTS language is used after STT when the conversation language is '*' (all languages)."""
+    """Test TTS language used after STT when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -1519,7 +1520,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the pipeline language is used last when the conversation language is '*' (all languages)."""
+    """Test pipeline language used last when conversation language is '*'."""
     client = await hass_ws_client(hass)
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -2042,7 +2043,7 @@ async def test_acknowledge_other_agents(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that acknowledge sound is only played when intents are processed locally for other agents."""
+    """Test acknowledge sound only plays for locally processed intents."""
     area_1 = area_registry.async_get_or_create("area_1")
 
     light_1 = entity_registry.async_get_or_create(
@@ -2163,7 +2164,7 @@ async def test_stt_vad_enabled_based_on_audio_processing(
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     mock_chat_session: chat_session.ChatSession,
 ) -> None:
-    """Test that VAD is enabled only when audio_processing.requires_external_vad is True."""
+    """Test VAD enabled only when requires_external_vad is True."""
 
     async def audio_data():
         yield make_10ms_chunk(b"silence!")

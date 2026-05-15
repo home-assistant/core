@@ -3505,7 +3505,10 @@ async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> Non
 
 
 async def test_thermostat_dual(hass: HomeAssistant) -> None:
-    """Test thermostat discovery with auto mode, with upper and lower target temperatures."""
+    """Test thermostat discovery with auto mode.
+
+    Uses upper and lower target temperatures.
+    """
     hass.config.units = US_CUSTOMARY_SYSTEM
     device = (
         "climate.test_thermostat",

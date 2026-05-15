@@ -110,7 +110,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
+    """Test assist satellite trigger fires when any satellite changes state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_assist_satellites,
@@ -163,7 +163,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
+    """Test assist satellite trigger fires when first satellite changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_assist_satellites,
@@ -216,7 +216,7 @@ async def test_assist_satellite_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
+    """Test assist satellite trigger fires when last satellite changes state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_assist_satellites,

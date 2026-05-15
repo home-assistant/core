@@ -101,7 +101,9 @@ async def test_generate_data_preferred_entity(
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
         HomeAssistantError,
-        match="AI Task entity ai_task.test_task_entity does not support generating data",
+        match=(
+            "AI Task entity ai_task.test_task_entity does not support generating data"
+        ),
     ):
         await async_generate_data(
             hass,
@@ -433,7 +435,9 @@ async def test_generate_image(
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
         HomeAssistantError,
-        match="AI Task entity ai_task.test_task_entity does not support generating images",
+        match=(
+            "AI Task entity ai_task.test_task_entity does not support generating images"
+        ),
     ):
         await async_generate_image(
             hass,

@@ -118,7 +118,10 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
 
 
 async def test_silence_can_acknowledge_false(hass: HomeAssistant) -> None:
-    """Test that attempting to silence an alert with can_acknowledge=False will not silence."""
+    """Test silencing an alert with can_acknowledge=False.
+
+    Attempting to silence should not silence.
+    """
     # Create copy of config where can_acknowledge is False
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME]["can_acknowledge"] = False

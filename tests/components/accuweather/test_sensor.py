@@ -53,7 +53,10 @@ async def test_availability(
     mock_accuweather_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     entity_id = "sensor.home_cloud_ceiling"
     await init_integration(hass)
 
@@ -99,7 +102,10 @@ async def test_availability_forecast(
     mock_accuweather_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     entity_id = "sensor.home_hours_of_sun_day_2"
 
     await init_integration(hass)

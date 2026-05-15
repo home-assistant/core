@@ -43,7 +43,11 @@ MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
         (APITimeoutError(request=None), "Request timed out"),
         (
             BadRequestError(
-                message="Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits.",
+                message=(
+                    "Your credit balance is too low to access"
+                    " the Claude API. Please go to Plans &"
+                    " Billing to upgrade or purchase credits."
+                ),
                 response=Response(
                     status_code=400,
                     request=Request(method="POST", url=URL()),
@@ -558,7 +562,10 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 1 to version 2 with same API keys consolidates entries."""
+    """Test migration v1 to v2 with same API keys.
+
+    Consolidates entries.
+    """
     # Create two v1 config entries with the same API key
     options = {
         "recommended": True,

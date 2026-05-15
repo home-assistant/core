@@ -148,7 +148,7 @@ async def test_api_state_change_with_invalid_json(
 async def test_api_state_change_with_string_body(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
-    """Test if API sends appropriate error if we send a string instead of a JSON object."""
+    """Test API error when sending a string instead of a JSON object."""
     resp = await mock_api_client.post(
         "/api/states/bad.entity.id", json='"{"state": "new_state"}"'
     )
@@ -442,7 +442,9 @@ RESP_REQUIRED = {
     )
 }
 RESP_UNSUPPORTED = {
-    "message": "Service does not support responses. Remove return_response from request."
+    "message": (
+        "Service does not support responses. Remove return_response from request."
+    )
 }
 
 
@@ -621,7 +623,7 @@ async def test_api_template_with_invalid_json(
 async def test_api_template_error_with_string_body(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
-    """Test that the API returns an appropriate error when a string is sent in the body."""
+    """Test the API returns an error when a string is sent in the body."""
     hass.states.async_set("sensor.temperature", 10)
 
     resp = await mock_api_client.post(
