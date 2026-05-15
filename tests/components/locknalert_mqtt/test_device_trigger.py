@@ -1689,7 +1689,9 @@ async def test_trigger_debug_info(
 
 
 @patch("homeassistant.components.locknalert_mqtt.client.DISCOVERY_COOLDOWN", 0.0)
-@patch("homeassistant.components.locknalert_mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch(
+    "homeassistant.components.locknalert_mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
+)
 @patch("homeassistant.components.locknalert_mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.locknalert_mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_unload_entry(

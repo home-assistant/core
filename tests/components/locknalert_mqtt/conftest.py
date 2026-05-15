@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from random import getrandbits
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -211,14 +211,18 @@ async def mqtt_mock_entry(
         )
         return mock_mqtt_instance
 
-    async def _async_setup_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def _async_setup_config_entry(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         return True
 
     async def setup() -> MqttMockHAClient:
         assert await _async_setup_config_entry(hass, entry)
-        assert real_mqtt_instance is not None, "locknalert_mqtt was not set up correctly"
+        assert real_mqtt_instance is not None, (
+            "locknalert_mqtt was not set up correctly"
+        )
         mock_mqtt_instance._mqttc = mqtt_client_mock
         mock_mqtt_instance.connected = True
         mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, MockMqttReasonCode())
@@ -291,10 +295,3 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
         recorded_calls.append(msg)
 
     return record_calls
-
-
-@pytest.fixture
-def tag_mock() -> Generator[AsyncMock]:
-    """Fixture to mock tag."""
-    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
-        yield mock_tag
