@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):
+class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot switch entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG

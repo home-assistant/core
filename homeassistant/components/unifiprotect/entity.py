@@ -369,7 +369,7 @@ class EventEntityMixin(ProtectDeviceEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectEntityDescription(EntityDescription, Generic[T]):
+class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     """Base class for protect entity descriptions."""
 
     ufp_required_field: str | None = None

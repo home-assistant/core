@@ -34,7 +34,9 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    BinarySensorEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring binary sensor entity."""
 

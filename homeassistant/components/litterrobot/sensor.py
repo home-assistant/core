@@ -36,7 +36,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):
+class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None

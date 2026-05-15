@@ -332,7 +332,7 @@ class EsphomeBaseEntity(Entity):
     device_entry: dr.DeviceEntry
 
 
-class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
+class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     """Define an esphome entity."""
 
     _static_info: _InfoT

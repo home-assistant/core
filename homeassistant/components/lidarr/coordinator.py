@@ -33,7 +33,7 @@ T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum 
 type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: LidarrConfigEntry
