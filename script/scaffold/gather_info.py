@@ -142,11 +142,10 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                         " required in some cases."
                         " To intentionally leave it"
                         " unset, type 'omit'."
-                        "\n\nMore info @\n"
+                        "\n\nMore info @ "
                         "https://developers.home-assistant.io"
                         "/docs/creating_integration_manifest"
-                        "/#integration-type"
-                        "\n"
+                        "/#integration-type\n"
                     ),
                     "validators": [
                         [

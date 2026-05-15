@@ -75,18 +75,14 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                         context_key, set()
                     ):
                         allowed_types = ", ".join(allowed_keys.get(context_key, set()))
+                        sel_type = field_selector_class.selector_type
                         raise vol.Invalid(
-                            f"The context"
-                            f" '{context_key}' for"
-                            f" '{field_name}'"
-                            f" references"
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
                             f" '{field_ref}', but"
-                            f" '{context_key}' does"
-                            " not allow selectors"
-                            " of type"
-                            f" '{field_selector_class.selector_type}'."
-                            " Allowed selector"
-                            f" types: {allowed_types}"
+                            f" '{context_key}' does not allow"
+                            f" selectors of type '{sel_type}'."
+                            f" Allowed types: {allowed_types}"
                         )
                 if not field_exists and "target" in condition_schema:
                     # Target is a special field that always exists when defined
@@ -96,15 +92,11 @@ def validate_field_schema(condition_schema: dict[str, Any]) -> dict[str, Any]:
                     ):
                         allowed_types = ", ".join(allowed_keys.get(context_key, set()))
                         raise vol.Invalid(
-                            f"The context"
-                            f" '{context_key}' for"
-                            f" '{field_name}'"
-                            " references 'target',"
-                            f" but '{context_key}'"
-                            " does not allow"
-                            " 'target'. Allowed"
-                            " selector types:"
-                            f" {allowed_types}"
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
+                            f" 'target', but '{context_key}'"
+                            " does not allow 'target'."
+                            f" Allowed types: {allowed_types}"
                         )
 
                 if not field_exists:
@@ -124,6 +116,8 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("default"): exists,
         vol.Optional("required"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        # key is context key, value is field name in schema
+        # Validated in validate_field_schema
         vol.Optional("context"): {str: str},
     }
 )

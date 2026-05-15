@@ -383,8 +383,7 @@ def run():
     # rename_keys(
     #     CORE_PROJECT_ID,
     #     {
-    #         "component::blebox::config::step::user::data::host":
-    #             "common::config_flow::data::ip",
+    #         "component::blebox::config::step::user::data::host": "common::config_flow::data::ip",
     #     },
     # )
 

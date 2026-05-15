@@ -111,6 +111,7 @@ def main() -> int:
             "--integration-path",
             str(info.integration_dir),
             "--skip-plugins",
+            # Skip quality scale; it fails for newly generated integrations.
             "quality_scale",
         ],
         info,
