@@ -41,8 +41,8 @@ class Channel(StrEnum):
     SUBWOOFER_2 = "subwoofer_2"
 
 
-ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
-ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
+type ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
+type ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
 
 
 class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
@@ -67,8 +67,8 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
 
         self.manager = manager
 
-        self.data = ChannelMutingData()
-        self._desired = ChannelMutingDesired()
+        self.data: ChannelMutingData = {}
+        self._desired: ChannelMutingDesired = {}
 
         self._entities_added = False
 

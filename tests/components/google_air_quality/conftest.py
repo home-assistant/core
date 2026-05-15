@@ -93,7 +93,7 @@ async def mock_setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: Mock,
-) -> AsyncGenerator[Any, Any]:
+) -> AsyncGenerator[Any]:
     """Fixture to set up the integration."""
     mock_config_entry.add_to_hass(hass)
     with patch(
