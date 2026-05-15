@@ -62,13 +62,13 @@ async def test_diagnostics_connection_error(
     assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_diagnostics_without_optional_board_metadata(
+async def test_diagnostics_without_optional_software_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test that None board fields are omitted from the diagnostics payload."""
+    """Test that an optional software version is omitted from diagnostics."""
     # BoardInfo is a frozen dataclass, so the mock must be updated before
     # integration setup — the coordinator stores board_info during async_setup.
     mock_duco_client.async_get_board_info.return_value = replace(

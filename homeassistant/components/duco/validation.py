@@ -18,9 +18,12 @@ def validate_board_support(board_info: BoardInfo) -> None:
         raise UnsupportedBoardError
     if board_info.public_api_version is None:
         raise UnsupportedBoardError
-    version_tuple = tuple(
-        int(part) for part in board_info.public_api_version.split(".")
-    )
+    try:
+        version_tuple = tuple(
+            int(part) for part in board_info.public_api_version.split(".")
+        )
+    except (AttributeError, ValueError) as err:
+        raise UnsupportedBoardError from err
     if version_tuple < _MIN_PUBLIC_API_VERSION:
         raise UnsupportedBoardError
 
@@ -31,6 +34,7 @@ async def async_get_supported_board_info(client: DucoClient) -> BoardInfo:
         board_info = await client.async_get_board_info()
     except DucoResponseError as err:
         if err.status == 404:
+            # Older unsupported boards are known to miss the /info endpoint.
             raise UnsupportedBoardError from err
         raise
 

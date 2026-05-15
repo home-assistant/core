@@ -45,7 +45,7 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             box_name, _ = await self._validate_input(discovery_info.ip)
         except UnsupportedBoardError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Unsupported Duco board discovered via DHCP at %s", discovery_info.ip
             )
             return self.async_abort(reason="unsupported_board")
@@ -68,7 +68,7 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             box_name, mac = await self._validate_input(discovery_info.host)
         except UnsupportedBoardError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Unsupported Duco board discovered via zeroconf at %s",
                 discovery_info.host,
             )
