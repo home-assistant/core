@@ -45,8 +45,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "name": "Bonnet removed"
+      },
+      "drawer_removed": {
+        "name": "Drawer removed"
+      },
       "hopper_connected": {
         "name": "Hopper connected"
+      },
+      "laser_dirty": {
+        "name": "Laser dirty"
+      },
+      "online": {
+        "name": "Online"
       },
       "power_status": {
         "name": "Power status"
@@ -59,8 +71,14 @@
       }
     },
     "button": {
+      "change_filter": {
+        "name": "Change filter"
+      },
       "give_snack": {
         "name": "Give snack"
+      },
+      "recalibrate": {
+        "name": "Recalibrate"
       },
       "reset": {
         "name": "Reset"
@@ -132,8 +150,15 @@
       "next_feeding": {
         "name": "Next feeding"
       },
+      "next_filter_replacement": {
+        "name": "Next filter replacement"
+      },
       "pet_weight": {
         "name": "Pet weight"
+      },
+      "scoops_saved_count": {
+        "name": "Scoops saved",
+        "unit_of_measurement": "scoops"
       },
       "sleep_mode_end_time": {
         "name": "Sleep mode end time"

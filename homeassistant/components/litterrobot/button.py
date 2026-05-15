@@ -24,28 +24,46 @@ class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEnti
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
 
 
-ROBOT_BUTTON_MAP: dict[tuple[type[Robot], ...], RobotButtonEntityDescription] = {
-    (LitterRobot3, LitterRobot5): RobotButtonEntityDescription[
-        LitterRobot3 | LitterRobot5
-    ](
-        key="reset_waste_drawer",
-        translation_key="reset_waste_drawer",
-        entity_category=EntityCategory.CONFIG,
-        press_fn=lambda robot: robot.reset_waste_drawer(),
-    ),
-    (LitterRobot4, LitterRobot5): RobotButtonEntityDescription[
-        LitterRobot4 | LitterRobot5
-    ](
-        key="reset",
-        translation_key="reset",
-        entity_category=EntityCategory.CONFIG,
-        press_fn=lambda robot: robot.reset(),
-    ),
-    (FeederRobot,): RobotButtonEntityDescription[FeederRobot](
-        key="give_snack",
-        translation_key="give_snack",
-        press_fn=lambda robot: robot.give_snack(),
-    ),
+ROBOT_BUTTON_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...], list[RobotButtonEntityDescription]
+] = {
+    LitterRobot3: [
+        RobotButtonEntityDescription[LitterRobot3](
+            key="reset_waste_drawer",
+            translation_key="reset_waste_drawer",
+            entity_category=EntityCategory.CONFIG,
+            press_fn=lambda robot: robot.reset_waste_drawer(),
+        ),
+    ],
+    LitterRobot4: [
+        RobotButtonEntityDescription[LitterRobot4](
+            key="reset",
+            translation_key="reset",
+            entity_category=EntityCategory.CONFIG,
+            press_fn=lambda robot: robot.reset(),
+        ),
+    ],
+    LitterRobot5: [
+        RobotButtonEntityDescription[LitterRobot5](
+            key="recalibrate",
+            translation_key="recalibrate",
+            entity_category=EntityCategory.CONFIG,
+            press_fn=lambda robot: robot.reset(),
+        ),
+        RobotButtonEntityDescription[LitterRobot5](
+            key="change_filter",
+            translation_key="change_filter",
+            entity_category=EntityCategory.CONFIG,
+            press_fn=lambda robot: robot.change_filter(),
+        ),
+    ],
+    FeederRobot: [
+        RobotButtonEntityDescription[FeederRobot](
+            key="give_snack",
+            translation_key="give_snack",
+            press_fn=lambda robot: robot.give_snack(),
+        ),
+    ],
 }
 
 
@@ -70,8 +88,9 @@ async def async_setup_entry(
                 )
                 for robot in all_robots
                 if robot.serial in new_robots
-                for robot_type, description in ROBOT_BUTTON_MAP.items()
+                for robot_type, entity_descriptions in ROBOT_BUTTON_MAP.items()
                 if isinstance(robot, robot_type)
+                for description in entity_descriptions
             )
 
     _check_robots()

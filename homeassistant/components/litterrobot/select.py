@@ -46,8 +46,8 @@ ROBOT_SELECT_MAP: dict[
             select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    (LitterRobot4, LitterRobot5): (
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
@@ -64,7 +64,7 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_light",
             translation_key="globe_light",
             current_fn=(
@@ -81,7 +81,43 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="panel_brightness",
+            translation_key="brightness_level",
+            current_fn=(
+                lambda robot: (
+                    bri.name.lower()
+                    if (bri := robot.panel_brightness) is not None
+                    else None
+                )
+            ),
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_panel_brightness(
+                    BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+    ),
+    LitterRobot5: (
+        RobotSelectEntityDescription[LitterRobot5, str](
+            key="globe_light",
+            translation_key="globe_light",
+            current_fn=(
+                lambda robot: (
+                    mode.name.lower()
+                    if (mode := robot.night_light_mode) is not None
+                    else None
+                )
+            ),
+            options_fn=lambda _: [mode.name.lower() for mode in NightLightMode],
+            select_fn=(
+                lambda robot, opt: robot.set_night_light_mode(
+                    NightLightMode[opt.upper()]
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot5, str](
             key="panel_brightness",
             translation_key="brightness_level",
             current_fn=(
