@@ -1187,10 +1187,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
+        kind = "Automatic" if with_automatic_settings else "Custom"
         backup_name = (
-            (name if name is None else name.strip())
-            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
-        )
+            name if name is None else name.strip()
+        ) or f"{kind} backup {HAVERSION}"
         extra_metadata = extra_metadata or {}
 
         try:
@@ -1287,7 +1287,8 @@ class BackupManager:
             )
             if not agent_errors:
                 if with_automatic_settings:
-                    # create backup was successful, update last_completed_automatic_backup
+                    # create backup was successful, update
+                    # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
                 backup_success = True
@@ -2157,7 +2158,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             return
 
         LOGGER.info(
-            "Adjusting backup settings to not include addons, folders or supervisor locations"
+            "Adjusting backup settings to not include addons,"
+            " folders or supervisor locations"
         )
         automatic_agents = [
             agent_id

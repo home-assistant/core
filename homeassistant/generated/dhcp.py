@@ -304,6 +304,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "guntamatic",
+        "hostname": "kessel*",
+        "macaddress": "0024BD*",
+    },
+    {
         "domain": "home_connect",
         "hostname": "balay-*",
         "macaddress": "C8D778*",
@@ -474,6 +479,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*",
+    },
+    {
+        "domain": "nobo_hub",
+        "registered_devices": True,
+    },
+    {
+        "domain": "nobo_hub",
+        "hostname": "hub*",
+        "macaddress": "7C8306*",
     },
     {
         "domain": "nuheat",

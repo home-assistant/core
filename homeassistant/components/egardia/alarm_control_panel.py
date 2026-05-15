@@ -132,6 +132,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending disarm command: %s",
@@ -142,6 +143,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending arm home command: %s",
@@ -152,6 +154,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending arm away command: %s",
