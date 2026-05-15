@@ -1,0 +1,122 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mertik Maxitrol Fireplace",
+        "description": "Enter the IP address of your myfire WiFi box and thermostatic control thresholds.",
+        "data": {
+          "name": "Fireplace name",
+          "host": "IP address of the WiFi box",
+          "low_threshold": "Low heat threshold (degrees C below setpoint)",
+          "high_threshold": "Full heat threshold (degrees C below setpoint, must be greater than Low)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Mertik Maxitrol",
+        "description": "Update the IP address or name of your fireplace.",
+        "data": {
+          "name": "Fireplace name",
+          "host": "IP address of the WiFi box",
+          "low_threshold": "Low heat threshold (degrees C below setpoint)",
+          "high_threshold": "Full heat threshold (degrees C below setpoint, must be greater than Low)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the fireplace WiFi box. Check the IP address and that the device is powered on and connected to your network.",
+      "invalid_thresholds": "Thresholds must be positive numbers, and the Low threshold must be less than the Full threshold."
+    },
+    "abort": {
+      "already_configured": "This fireplace is already configured.",
+      "reconfigure_successful": "Fireplace configuration updated successfully."
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "title": "Cannot connect to Mertik Maxitrol fireplace",
+      "description": "Home Assistant cannot reach the fireplace WiFi box at {host}. Check that the device is powered on and connected to your network. If the IP address has changed, use **Reconfigure** to update it."
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the fireplace. Check the IP address and that the device is powered on and connected to your network."
+    },
+    "update_failed": {
+      "message": "Error communicating with the fireplace."
+    }
+  },
+  "entity": {
+    "switch": {
+      "aux": {
+        "name": "Aux"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "select": {
+      "heating_mode": {
+        "name": "Heating Mode"
+      }
+    },
+    "number": {
+      "flame_height": {
+        "name": "Flame Height"
+      }
+    },
+    "sensor": {
+      "handset_temperature": {
+        "name": "Handset Temperature"
+      },
+      "fault_code": {
+        "name": "Fault Code",
+        "state": {
+          "none": "No fault",
+          "f02": "F02 – Motor / microswitch fault",
+          "f03": "F03 – Thermocouple wiring or ON/OFF switch fault",
+          "f04": "F04 – Ignition sequence malfunction (wait 1 min, retry)",
+          "f06": "F06 – 3 failed ignition sequences",
+          "f10": "F10 – Main burner ignition failure (2nd thermocouple)",
+          "f12": "F12 – Receiver overtemperature (60 °C)",
+          "f13": "F13 – Receiver overtemperature (80 °C)",
+          "f14": "F14 – Receiver hardware incompatibility",
+          "f15": "F15 – 2nd thermocouple not connected",
+          "f16": "F16 – Handset out of range",
+          "f17": "F17 – Inlet voltage fault",
+          "f19": "F19 – Pilot dropout / insufficient thermo-voltage",
+          "f26": "F26 – Receiver overtemperature 60 °C (flame height blocked)",
+          "f28": "F28 – On-demand pilot timeout",
+          "f31": "F31 – Receiver malfunction",
+          "f41": "F41 – Wi-Fi connectivity fault",
+          "f43": "F43 – No receiver connected",
+          "f44": "F44 – Handset not in range or low battery"
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fireplace Options",
+        "description": "Choose the temperature sensor used for thermostatic control and adjust the heating thresholds.",
+        "data": {
+          "temperature_sensor": "Temperature sensor (leave blank to use the fireplace handset)",
+          "low_threshold": "Low heat threshold (degrees C below setpoint)",
+          "high_threshold": "Full heat threshold (degrees C below setpoint, must be greater than Low)",
+          "temperature_step": "Thermostat setpoint step (degrees C)"
+        }
+      }
+    },
+    "error": {
+      "invalid_thresholds": "Thresholds must be positive numbers, and the Low threshold must be less than the Full threshold.",
+      "invalid_temp_step": "Setpoint step must be a positive number."
+    }
+  }
+}

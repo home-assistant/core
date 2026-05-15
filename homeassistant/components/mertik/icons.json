@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "switch": {
+      "aux": {
+        "default": "mdi:light"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "default": "mdi:thermostat"
+      }
+    },
+    "select": {
+      "heating_mode": {
+        "default": "mdi:fire-off",
+        "state": {
+          "Standby": "mdi:fire-off",
+          "Low Heat": "mdi:campfire",
+          "Medium Heat": "mdi:fire",
+          "Full Heat": "mdi:fire-circle",
+          "Thermostatic": "mdi:thermostat"
+        }
+      }
+    }
+  }
+}
