@@ -55,10 +55,10 @@ async def test_device_entry_migration_confirm_flow(
         name="Test MQTT Device",
     )
 
-    issue_registry = ir.async_get(hass)
-    issue_registry.async_create_issue(
-        domain=DOMAIN,
-        issue_id="device_migration_test",
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "device_migration_test",
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="device_migration",

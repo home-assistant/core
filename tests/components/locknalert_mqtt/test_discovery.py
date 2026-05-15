@@ -2914,9 +2914,9 @@ async def test_discovery_dispatcher_signal_type_messages(
             '  "unique_id": "unique3"'
             "}}}",
             [
-                "alarm_control_panel.sensor1",
-                "alarm_control_panel.sensor2",
-                "alarm_control_panel.sensor3",
+                "alarm_control_panel.test_device_sensor1",
+                "alarm_control_panel.test_device_sensor2",
+                "alarm_control_panel.test_device_sensor3",
             ],
         ),
     ],
@@ -2995,6 +2995,7 @@ async def test_discovery_with_late_via_device_discovery(
             discovery_topic,
             payload,
         )
+        await hass.async_block_till_done()
         via_device_entry = device_registry.async_get_device(
             {(mqtt.DOMAIN, "id_via_very_unique")}
         )
