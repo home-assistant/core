@@ -58,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
         await account.update()
         await account.update_obd()
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, async_update)
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCAN_INTERVAL,
@@ -71,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
             }
         ),
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCAN_OBD_INTERVAL,

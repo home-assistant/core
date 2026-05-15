@@ -27,7 +27,10 @@ def process_service_info(
     entry: GoveeBLEConfigEntry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak.
+
+    Runs side effects and returns sensor data.
+    """
     coordinator = entry.runtime_data
     data = coordinator.device_data
     update = data.update(service_info)

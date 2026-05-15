@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/novy_cooker_hood",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "bronze",
+  "quality_scale": "gold",
   "requirements": ["rf-protocols==3.0.0"]
 }

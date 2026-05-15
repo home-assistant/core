@@ -35,7 +35,7 @@ DESCRIPTIONS = [
         key="offset",
         cometblue_key="tempOffset",
         translation_key="offset",
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -118,7 +118,8 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
             self.entity_description.set_fn(self.coordinator.device),
             {
                 "values": {
-                    # manual temperature always needs to be set, otherwise TRV will turn OFF
+                    # manual temperature always needs to be set,
+                    # otherwise TRV will turn OFF
                     "manualTemp": self.coordinator.data.temperatures["manualTemp"],
                     self.entity_description.cometblue_key: value,
                 }

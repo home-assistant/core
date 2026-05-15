@@ -2731,6 +2731,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "guntamatic": {
+      "name": "Guntamatic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
@@ -5153,6 +5159,12 @@
     "otbr": {
       "name": "Open Thread Border Router",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "ouman_eh_800": {
+      "name": "Ouman EH-800",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8068,6 +8080,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "xthings_cloud": {
+      "name": "Xthings Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "yale": {
       "name": "Yale (non-US/Canada)",

@@ -90,7 +90,8 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.11
             ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.11
             ATTR_SEVERITY: data.severity or "Unknown",  # Deprecated, remove in 2026.11
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # Deprecated, remove in 2026.11
+            # Deprecated, remove in 2026.11
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.11
             ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.11
             ATTR_ID: data.id,
