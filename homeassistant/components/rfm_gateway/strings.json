@@ -15,6 +15,9 @@
         "data": {
           "host": "Gateway host or IP"
         },
+        "data_description": {
+          "host": "Enter the hostname or IP address of the gateway."
+        },
         "description": "Connect Home Assistant to your RFM Gateway RF raw API.",
         "title": "Set up RFM Gateway"
       },

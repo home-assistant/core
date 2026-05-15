@@ -94,7 +94,7 @@ async def test_send_raw_success_with_non_json_response(
     aioclient_mock.post(
         f"{BASE_URL}/api/rf/transmit",
         status=200,
-        body="ok",
+        text="ok",
         headers={"Content-Type": "text/plain"},
     )
 
@@ -115,7 +115,7 @@ async def test_send_raw_error_status(
     aioclient_mock.post(
         f"{BASE_URL}/api/rf/transmit",
         status=400,
-        body="parameter error",
+        text="parameter error",
     )
 
     client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)

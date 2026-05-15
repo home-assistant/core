@@ -132,7 +132,10 @@ async def test_send_command_rejects_unsupported_modulation(hass: HomeAssistant) 
         modulation="unsupported",  # type: ignore[arg-type]
     )
 
-    with pytest.raises(HomeAssistantError, match="Gateway does not support modulation"):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"does not support modulation unsupported",
+    ):
         await radio_frequency.async_send_command(hass, entity_id, command)
 
 
