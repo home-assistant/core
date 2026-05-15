@@ -354,7 +354,8 @@ async def test_adapter_recovery(hass: HomeAssistant) -> None:
 
         assert called_start == 1
 
-        # We hit the timer with no detections, so we reset the adapter and restart the scanner
+        # We hit the timer with no detections, so we reset
+        # the adapter and restart the scanner
         with (
             patch_bluetooth_time(
                 start_time_monotonic
@@ -374,7 +375,7 @@ async def test_adapter_recovery(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("one_adapter")
 async def test_adapter_scanner_fails_to_start_first_time(hass: HomeAssistant) -> None:
-    """Test we can recover when the adapter stops responding and the first recovery fails."""
+    """Test recovery when adapter stops and first recovery fails."""
 
     called_start = 0
     called_stop = 0
@@ -443,7 +444,8 @@ async def test_adapter_scanner_fails_to_start_first_time(hass: HomeAssistant) ->
 
         assert called_start == 1
 
-        # We hit the timer with no detections, so we reset the adapter and restart the scanner
+        # We hit the timer with no detections, so we reset
+        # the adapter and restart the scanner
         with (
             patch_bluetooth_time(
                 start_time_monotonic
@@ -553,7 +555,7 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
 async def test_restart_takes_longer_than_watchdog_time(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we do not try to recover the adapter again if the restart is still in progress."""
+    """Test no recovery attempt while restart is in progress."""
 
     release_start_event = asyncio.Event()
     called_start = 0
