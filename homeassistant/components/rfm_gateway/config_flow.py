@@ -60,6 +60,11 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.properties.get("model") != "rfm-gateway":
             return self.async_abort(reason="not_rfm_gateway")
 
+        # Zeroconf service instance names are stable identifiers for discovered devices.
+        unique_id = str(discovery_info.name).rstrip(".")
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
         host = ""
 
         ip_address = getattr(discovery_info, "ip_address", None)
@@ -95,7 +100,7 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not host:
             return self.async_abort(reason="not_rfm_gateway")
 
-        self._async_abort_entries_match({CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         pretty_name = f"RFM Gateway {host}"
 

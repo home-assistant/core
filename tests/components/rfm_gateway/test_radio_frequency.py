@@ -136,7 +136,9 @@ async def test_send_command_rejects_unsupported_modulation(hass: HomeAssistant) 
         await radio_frequency.async_send_command(hass, entity_id, command)
 
 
-async def test_send_command_failure_marks_entity_unavailable(hass: HomeAssistant) -> None:
+async def test_send_command_failure_marks_entity_unavailable(
+    hass: HomeAssistant,
+) -> None:
     """Test transmit failure marks the entity unavailable."""
     entry = await _setup_entry(hass, capabilities=_mock_caps())
     assert entry.state is ConfigEntryState.LOADED
@@ -147,10 +149,15 @@ async def test_send_command_failure_marks_entity_unavailable(hass: HomeAssistant
         modulation=ModulationType.OOK,
     )
 
-    with patch(
-        "homeassistant.components.rfm_gateway.client.RfmGatewayClient.async_send_raw",
-        new=AsyncMock(side_effect=rfm_gateway.RfmGatewayProtocolError("parameter error")),
-    ), pytest.raises(HomeAssistantError, match="RF transmit via 192.0.2.10 failed"):
+    with (
+        patch(
+            "homeassistant.components.rfm_gateway.client.RfmGatewayClient.async_send_raw",
+            new=AsyncMock(
+                side_effect=rfm_gateway.RfmGatewayProtocolError("parameter error")
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="RF transmit via 192.0.2.10 failed"),
+    ):
         await radio_frequency.async_send_command(hass, entity_id, command)
 
     state = hass.states.get(entity_id)
