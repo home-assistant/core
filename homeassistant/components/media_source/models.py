@@ -41,6 +41,7 @@ class RootBrowseMediaSource(BrowseMedia):
     """Represent the root media source browse node."""
 
     domain: None = None
+    identifier: None = None
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize root media source browse media."""
