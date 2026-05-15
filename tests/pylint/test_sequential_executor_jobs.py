@@ -152,6 +152,81 @@ async def async_setup(hass, config):
     assert len(messages) == 1
 
 
+def test_inside_except_block_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+) -> None:
+    """Test that sequential calls inside an except block are flagged."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    try:
+        pass
+    except Exception:
+        await hass.async_add_executor_job(call_a)
+        await hass.async_add_executor_job(call_b)
+""",
+        "homeassistant.components.test_integration",
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(executor_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
+
+
+def test_inside_finally_block_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+) -> None:
+    """Test that sequential calls inside a finally block are flagged."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    try:
+        pass
+    finally:
+        await hass.async_add_executor_job(call_a)
+        await hass.async_add_executor_job(call_b)
+""",
+        "homeassistant.components.test_integration",
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(executor_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
+
+
+def test_inside_for_else_block_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+) -> None:
+    """Test that sequential calls inside a for/else block are flagged."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    for item in items:
+        pass
+    else:
+        await hass.async_add_executor_job(call_a)
+        await hass.async_add_executor_job(call_b)
+""",
+        "homeassistant.components.test_integration",
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(executor_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
+
+
 def test_not_integration_module_ignored(
     linter: UnittestLinter,
     executor_checker: SequentialExecutorJobsChecker,

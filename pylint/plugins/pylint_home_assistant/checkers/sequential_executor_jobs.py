@@ -73,38 +73,46 @@ class SequentialExecutorJobsChecker(BaseChecker):
     def _check_body(self, body: list[nodes.NodeNG]) -> None:
         """Check a list of statements for sequential executor job calls."""
         prev_was_executor = False
-        prev_node: nodes.NodeNG | None = None
 
         for stmt in body:
             if _is_executor_job_await(stmt):
-                if prev_was_executor and prev_node is not None:
-                    # Flag the second (and subsequent) calls
+                if prev_was_executor:
                     self.add_message(
                         "home-assistant-sequential-executor-jobs",
                         node=stmt,
                     )
                 prev_was_executor = True
-                prev_node = stmt
             else:
                 prev_was_executor = False
-                prev_node = None
 
                 # Recurse into control flow blocks (but not nested functions)
                 if isinstance(stmt, nodes.If):
                     self._check_body(stmt.body)
                     self._check_body(stmt.orelse)
+                elif isinstance(stmt, nodes.Try):
+                    self._check_body(stmt.body)
+                    for handler in stmt.handlers:
+                        self._check_body(handler.body)
+                    self._check_body(stmt.orelse)
+                    self._check_body(stmt.finalbody)
                 elif isinstance(
                     stmt,
                     (
-                        nodes.Try,
                         nodes.With,
                         nodes.AsyncWith,
+                    ),
+                ):
+                    self._check_body(stmt.body)
+                elif isinstance(
+                    stmt,
+                    (
                         nodes.For,
                         nodes.AsyncFor,
                         nodes.While,
                     ),
                 ):
                     self._check_body(stmt.body)
+                    self._check_body(stmt.orelse)
 
 
 def register(linter: PyLinter) -> None:
