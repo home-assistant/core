@@ -183,6 +183,7 @@ class SmappeeFlowHandler(
             serial_number = await self.hass.async_add_executor_job(
                 smappee_mqtt.start_and_wait_for_config
             )
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             await self.hass.async_add_executor_job(smappee_mqtt.stop)
             if serial_number is None:
                 return self.async_abort(reason="cannot_connect")
