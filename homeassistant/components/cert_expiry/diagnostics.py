@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import CertExpiryConfigEntry
 
-REDACT_LIST = {CONF_HOST, "host", "name", "title", "unique_id"}
+TO_REDACT = {CONF_HOST, "name", "title", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,17 +24,13 @@ async def async_get_config_entry_diagnostics(
     )
 
     # Build entry and coordinator diagnostics.
-    entry_diagnostics = {
-        "data": entry.data,
-        "options": entry.options,
-        "title": entry.title,
-        "unique_id": entry.unique_id,
-    }
+    entry_diagnostics = entry.as_dict()
+
     coordinator_diagnostics = {
         "host": coordinator.host,
         "port": coordinator.port,
         "name": coordinator.name,
-        "data": expiry,
+        "expiry_datetime": expiry,
         "is_cert_valid": coordinator.is_cert_valid,
         "cert_error": cert_error,
         "last_update_success": coordinator.last_update_success,
@@ -42,6 +38,6 @@ async def async_get_config_entry_diagnostics(
     }
 
     return {
-        "entry": async_redact_data(entry_diagnostics, REDACT_LIST),
-        "coordinator": async_redact_data(coordinator_diagnostics, REDACT_LIST),
+        "entry": async_redact_data(entry_diagnostics, TO_REDACT),
+        "coordinator": async_redact_data(coordinator_diagnostics, TO_REDACT),
     }
