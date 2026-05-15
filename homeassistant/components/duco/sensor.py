@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,11 +20,11 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -38,7 +39,7 @@ PARALLEL_UPDATES = 0
 class DucoSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description."""
 
-    value_fn: Callable[[Node], int | float | str | None]
+    value_fn: Callable[[Node], datetime | int | float | str | None]
     node_types: tuple[NodeType, ...]
 
 
@@ -54,29 +55,40 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="ventilation_state",
         translation_key="ventilation_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[s.lower() for s in VentilationState],
+        options=[
+            state.lower()
+            for state in VentilationState
+            if state != VentilationState.UNKNOWN
+        ],
         value_fn=lambda node: (
-            node.ventilation.state.lower() if node.ventilation else None
+            node.ventilation.state.lower()
+            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            else None
         ),
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        key="target_flow_level",
+        translation_key="target_flow_level",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda node: (
+            node.ventilation.flow_lvl_tgt if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
-        key="box_temperature",
-        translation_key="box_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
+        key="time_state_end",
+        translation_key="time_state_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda node: (
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
+                second=0, microsecond=0
+            )
+            if node.ventilation and node.ventilation.time_state_end != 0
+            else None
+        ),
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
@@ -216,7 +228,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | float | str | None:
+    def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
 
