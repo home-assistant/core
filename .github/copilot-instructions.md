@@ -23,7 +23,8 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
-.vscode/tasks.json contains useful commands used for development.
+- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing.
+- .vscode/tasks.json contains useful commands used for development.
 
 ## Python Syntax Notes
 
