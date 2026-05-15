@@ -134,7 +134,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         self.update_manager = update_manager
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 

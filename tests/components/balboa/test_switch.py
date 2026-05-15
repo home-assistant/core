@@ -41,7 +41,7 @@ async def test_switch(hass: HomeAssistant, client: MagicMock) -> None:
     await common.async_turn_off(hass, ENTITY_SWITCH)
     client.configure_filter_cycle.assert_called_with(2, enabled=False)
 
-    setattr(client, "filter_cycle_2_enabled", False)
+    client.filter_cycle_2_enabled = False
     client.emit("")
     await hass.async_block_till_done()
 
