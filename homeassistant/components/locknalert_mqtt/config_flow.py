@@ -17,7 +17,9 @@ from aiohttp import ClientSession, TCPConnector
 from aiolocknalert import (
     LocknAlertBridgeApi,
     LocknAlertCannotConnect,
+    LocknAlertInvalidAuth,
     LocknAlertInvalidResponse,
+    LocknAlertPairingRequired,
 )
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -933,6 +935,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         except LocknAlertCannotConnect:
             return self.async_abort(reason="cannot_connect")
+        except LocknAlertInvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except LocknAlertPairingRequired:
+            return self.async_abort(reason="bridge_pairing_required")
         except LocknAlertInvalidResponse:
             return self.async_abort(reason="invalid_response")
 
@@ -1054,7 +1060,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                                 "LocknAlert bridge serial discovered via API: %s",
                                 serial_found,
                             )
-                    except LocknAlertCannotConnect, LocknAlertInvalidResponse:
+                    except LocknAlertCannotConnect, LocknAlertInvalidAuth, LocknAlertInvalidResponse, LocknAlertPairingRequired:
                         raise
                     except Exception as _err:  # noqa: BLE001  # still attempt bootstrap even if identity fetch fails
                         _LOGGER.debug(
@@ -1088,6 +1094,40 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: mqtt_config.get("username"),
                         CONF_PASSWORD: mqtt_config.get("password"),
                     }
+                )
+            except LocknAlertInvalidAuth as err:
+                _LOGGER.error(
+                    "Invalid serial for LocknAlert bridge at %s: %s",
+                    validated_user_input.get(CONF_BROKER),
+                    err,
+                )
+                errors[CONF_BRIDGE_SERIAL] = "invalid_auth"
+                return self.async_show_form(
+                    step_id="broker",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_BROKER): TEXT_SELECTOR,
+                            vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR,
+                        }
+                    ),
+                    errors=errors,
+                )
+            except LocknAlertPairingRequired as err:
+                _LOGGER.error(
+                    "LocknAlert bridge at %s requires pairing: %s",
+                    validated_user_input.get(CONF_BROKER),
+                    err,
+                )
+                errors["base"] = "bridge_pairing_required"
+                return self.async_show_form(
+                    step_id="broker",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_BROKER): TEXT_SELECTOR,
+                            vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR,
+                        }
+                    ),
+                    errors=errors,
                 )
             except (LocknAlertCannotConnect, LocknAlertInvalidResponse) as err:
                 _LOGGER.error(

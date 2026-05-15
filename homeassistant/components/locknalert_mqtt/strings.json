@@ -3,9 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "bridge_not_configured": "Bridge configuration error: contact developer.",
+      "bridge_pairing_required": "The LocknAlert bridge requires pairing before it can be used.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_connect_mqtt": "Unable to connect to MQTT broker with provided credentials.",
       "cannot_determine_serial": "Unable to determine bridge serial from discovery.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_response": "Bridge returned invalid response.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -13,6 +15,7 @@
     },
     "error": {
       "bad_birth": "Invalid birth topic",
+      "bridge_pairing_required": "The LocknAlert bridge requires pairing before it can be used.",
       "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
       "bad_certificate": "The CA certificate is invalid",
       "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
