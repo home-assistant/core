@@ -230,7 +230,6 @@ async def test_hassio_addon_no_supported_services(hass: HomeAssistant) -> None:
     assert result2.get("reason") == "no_services"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
@@ -256,7 +255,6 @@ async def test_zeroconf_discovery(
     assert result2 == snapshot
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_no_port(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
@@ -278,7 +276,6 @@ async def test_zeroconf_discovery_no_port(
     assert result.get("reason") == "no_port"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_no_services(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
@@ -297,7 +294,6 @@ async def test_zeroconf_discovery_no_services(
     assert result.get("reason") == "no_services"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_already_configured(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:

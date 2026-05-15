@@ -94,7 +94,6 @@ async def test_invalid(
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_setup(hass: HomeAssistant) -> None:
     """Test duoteco flow - already setup."""
     entry = MockConfigEntry(
