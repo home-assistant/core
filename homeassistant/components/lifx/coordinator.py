@@ -278,7 +278,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 callb: Callable[[Message, dict[str, Any] | None], None],
                 get_color_zones_args: dict[str, Any],
             ) -> None:
-                """Capture the callback and make sure resp_set_multizonemultizone is called before."""
+                """Capture the callback for resp_set_multizone."""
 
                 def _wrapped_callback(
                     bulb: Light,
@@ -323,7 +323,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             )
         )
         if self.is_128zone_matrix:
-            # For 128-zone ceiling devices, we need another get64 request for the next set of zones
+            # For 128-zone ceiling devices, we need another
+            # get64 request for the next set of zones
             calls.append(
                 partial(
                     self.device.get64,

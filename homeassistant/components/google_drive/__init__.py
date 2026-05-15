@@ -42,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) 
         OAuth2Session(hass, entry, implementation),
     )
 
-    # Test we can refresh the token and raise ConfigEntryAuthFailed or ConfigEntryNotReady if not
+    # Test we can refresh the token and raise
+    # ConfigEntryAuthFailed or ConfigEntryNotReady if not
     await auth.async_get_access_token()
 
     client = DriveClient(await instance_id.async_get(hass), auth)
