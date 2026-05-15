@@ -21,8 +21,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 COORDINATOR_NAME = f"{DOMAIN} Coordinator"
-# Maximum update frequency is every 6 hours. The API will return 429 Too Many Requests if polled frequently.
-# The device updates its data every 8-12 hours, so there's no need to poll more frequently.
+# Maximum update frequency is every 6 hours. The API will
+# return 429 Too Many Requests if polled frequently.
+# The device updates its data every 8-12 hours, so there's
+# no need to poll more frequently.
 UPDATE_INTERVAL = timedelta(hours=6)
 
 type CentriConnectConfigEntry = ConfigEntry[CentriConnectCoordinator]

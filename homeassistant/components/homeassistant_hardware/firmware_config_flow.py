@@ -279,7 +279,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
                 if probed_fw_version >= fw_version:
                     _LOGGER.debug(
-                        "Not downgrading firmware, installed %s is newer than available %s",
+                        "Not downgrading firmware, installed %s"
+                        " is newer than available %s",
                         probed_fw_version,
                         fw_version,
                     )
