@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'coordinator': dict({
+      'cert_error': None,
+      'data': '2020-09-20T15:01:00+00:00',
+      'host': '**REDACTED**',
+      'is_cert_valid': True,
+      'last_update_success': True,
+      'name': '**REDACTED**',
+      'port': 443,
+      'update_interval': '12:00:00',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 443,
+      }),
+      'options': dict({
+      }),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+    }),
+  })
+# ---
