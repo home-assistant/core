@@ -658,6 +658,12 @@ ZEROCONF = {
             "name": "rachio*",
         },
         {
+            "domain": "rfm_gateway",
+            "properties": {
+                "model": "rfm-gateway",
+            },
+        },
+        {
             "domain": "rainmachine",
             "name": "rainmachine*",
         },
