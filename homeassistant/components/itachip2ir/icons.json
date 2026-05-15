@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "infrared": {
+      "ir_blaster_port": {
+        "default": "mdi:remote"
+      },
+      "ir_port": {
+        "default": "mdi:remote"
+      }
+    }
+  }
+}

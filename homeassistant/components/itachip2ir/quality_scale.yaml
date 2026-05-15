@@ -1,0 +1,112 @@
+# Home Assistant Integration Quality Scale tracking for iTach IP2IR.
+# Target tier: gold.
+#
+# Notes:
+# - Test coverage is 95%.
+# - The manifest intentionally uses integration_type: device. Each config entry
+#   represents one physical Global Caché iTach IP2IR device. The IR outputs are
+#   connectors/entities on that device, not separate managed downstream devices.
+# - Home Assistant's Gold tier expects firmware/software updates when possible.
+#   The Global Caché iTach IP2IR local TCP API used by this integration does not
+#   expose a documented firmware update mechanism. Firmware updates, when offered
+#   by the vendor, must be performed outside Home Assistant using Global Caché
+#   tooling or the device web interface. This limitation is documented in
+#   README.md. There is no dedicated hassfest quality-scale rule ID for firmware
+#   updates, so this is recorded here as the required rationale rather than as an
+#   unsupported extra rule key.
+
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: exempt
+    comment: |
+      The integration exposes two distinct entity models.
+
+      Infrared entities represent physical iTach infrared-capable output ports
+      and use Home Assistant entity naming conventions.
+
+      Remote entities are user-created virtual remotes whose names are fully
+      user-defined and intentionally represent logical devices rather than
+      physical hardware entities. Automatically prepending the device name would
+      result in redundant and awkward entity names such as:
+
+        Living Room TV Living Room TV
+
+      Therefore the remote entities intentionally disable has_entity_name.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      The iTach IP2IR local TCP API used by this integration does not require
+      authentication credentials or tokens. There is no authentication state
+      that can expire or require reauthentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: done
+  discovery-update-info: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: |
+      The integration only exposes user-facing infrared output entities. It does
+      not create diagnostic, configuration, or system entities that should be
+      assigned an entity category.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Home Assistant's infrared entity platform does not define a device class
+      that applies to these IR output entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Every entity created by this integration represents a usable IR output
+      connector. These entities are the primary purpose of the integration and
+      should be enabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      The integration represents a single physical iTach IP2IR device per
+      config entry and creates entities from the currently detected IR output
+      connectors. Discovery updates the host for the same device ID instead of
+      creating duplicate devices. There are no dynamically disappearing child
+      devices that require stale-device cleanup.

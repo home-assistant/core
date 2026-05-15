@@ -365,6 +365,7 @@ FLOWS = {
         "iss",
         "ista_ecotrend",
         "isy994",
+        "itachip2ir",
         "ituran",
         "izone",
         "jellyfin",
