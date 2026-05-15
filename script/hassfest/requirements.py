@@ -281,8 +281,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
-    # https://github.com/danifus/pyzipper
-    "knx": {"xknxproject": {"pyzipper"}},
     # https://github.com/hthiery/python-lacrosse
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
