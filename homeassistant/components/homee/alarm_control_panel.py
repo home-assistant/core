@@ -33,7 +33,6 @@ class HomeeAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription
 ALARM_DESCRIPTIONS = {
     AttributeType.HOMEE_MODE: HomeeAlarmControlPanelEntityDescription(
         key="homee_mode",
-        code_arm_required=False,
         state_list=[
             AlarmControlPanelState.ARMED_HOME,
             AlarmControlPanelState.ARMED_NIGHT,

@@ -190,9 +190,7 @@ class HueMotionAwareSensor(HueMotionSensor):
     resource: SecurityAreaMotion
 
     entity_description = BinarySensorEntityDescription(
-        key="motion_sensor",
-        device_class=BinarySensorDeviceClass.MOTION,
-        has_entity_name=False,
+        key="motion_sensor", device_class=BinarySensorDeviceClass.MOTION
     )
 
     @property
@@ -237,9 +235,7 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     resource: EntertainmentConfiguration
 
     entity_description = BinarySensorEntityDescription(
-        key="entertainment_active_sensor",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        has_entity_name=False,
+        key="entertainment_active_sensor", device_class=BinarySensorDeviceClass.RUNNING
     )
 
     @property
