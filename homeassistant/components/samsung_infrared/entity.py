@@ -23,10 +23,10 @@ class SamsungIrEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, entry: ConfigEntry, infrared_entity_id: str, unique_id_suffix: str
+        self, entry: ConfigEntry, infrared_emitter_entity_id: str, unique_id_suffix: str
     ) -> None:
         """Initialize Samsung IR entity."""
-        self._infrared_entity_id = infrared_entity_id
+        self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -48,7 +48,7 @@ class SamsungIrEntity(Entity):
             if ir_available != self.available:
                 _LOGGER.info(
                     "Infrared entity %s used by %s is %s",
-                    self._infrared_entity_id,
+                    self._infrared_emitter_entity_id,
                     self.entity_id,
                     "available" if ir_available else "unavailable",
                 )
@@ -58,12 +58,12 @@ class SamsungIrEntity(Entity):
 
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, [self._infrared_entity_id], _async_ir_state_changed
+                self.hass, [self._infrared_emitter_entity_id], _async_ir_state_changed
             )
         )
 
         # Set initial availability based on current infrared entity state
-        ir_state = self.hass.states.get(self._infrared_entity_id)
+        ir_state = self.hass.states.get(self._infrared_emitter_entity_id)
         self._attr_available = (
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
@@ -72,7 +72,7 @@ class SamsungIrEntity(Entity):
         """Send an IR command using the Samsung protocol."""
         await async_send_command(
             self.hass,
-            self._infrared_entity_id,
+            self._infrared_emitter_entity_id,
             code.to_command(),
             context=self._context,
         )

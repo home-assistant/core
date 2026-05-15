@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.samsung_infrared import PLATFORMS
 from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
     SamsungDeviceType,
 )
@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Samsung TV via Test IR transmitter",
         data={
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
         unique_id=f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}",
     )

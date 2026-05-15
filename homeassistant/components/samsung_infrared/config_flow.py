@@ -18,7 +18,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, SamsungDeviceType
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
+    DOMAIN,
+    SamsungDeviceType,
+)
 
 DEVICE_TYPE_NAMES: dict[SamsungDeviceType, str] = {
     SamsungDeviceType.TV: "TV",
@@ -39,7 +44,7 @@ class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_emitters")
 
         if user_input is not None:
-            entity_id = user_input[CONF_INFRARED_ENTITY_ID]
+            entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
             device_type = user_input[CONF_DEVICE_TYPE]
 
             await self.async_set_unique_id(
@@ -71,7 +76,7 @@ class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                    vol.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,

@@ -4,7 +4,7 @@ import pytest
 
 from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
     SamsungDeviceType,
 )
@@ -33,7 +33,7 @@ async def test_user_flow_success(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
@@ -41,7 +41,7 @@ async def test_user_flow_success(
     assert result["title"] == "Samsung TV via Test IR transmitter"
     assert result["data"] == {
         CONF_DEVICE_TYPE: SamsungDeviceType.TV,
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+        CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
     }
     assert (
         result["result"].unique_id == f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}"
@@ -65,7 +65,7 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 
@@ -108,7 +108,7 @@ async def test_user_flow_title_from_entity_name(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
     )
 

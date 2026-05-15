@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, SamsungDeviceType
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
 from .entity import SamsungIrEntity
 
 PARALLEL_UPDATES = 1
@@ -24,10 +24,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Samsung IR media player from config entry."""
-    infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
+    infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == SamsungDeviceType.TV:
-        async_add_entities([SamsungIrTvMediaPlayer(entry, infrared_entity_id)])
+        async_add_entities([SamsungIrTvMediaPlayer(entry, infrared_emitter_entity_id)])
 
 
 class SamsungIrTvMediaPlayer(SamsungIrEntity, MediaPlayerEntity):
@@ -48,9 +48,11 @@ class SamsungIrTvMediaPlayer(SamsungIrEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
     )
 
-    def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
+    def __init__(self, entry: ConfigEntry, infrared_emitter_entity_id: str) -> None:
         """Initialize Samsung IR media player."""
-        super().__init__(entry, infrared_entity_id, unique_id_suffix="media_player")
+        super().__init__(
+            entry, infrared_emitter_entity_id, unique_id_suffix="media_player"
+        )
         self._attr_state = MediaPlayerState.ON
 
     async def async_turn_on(self) -> None:
