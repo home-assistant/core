@@ -352,11 +352,12 @@ def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
         color_mode=blebox_uniapi.light.BleboxColorMode.CT,
         effect="NONE",
         effect_list=["NONE", "PL", "POLICE"],
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
-    return feature, "light.my_wlightbox_wlightbox_ct"
+    return feature, "light.my_wlightbox"
 
 
 @pytest.mark.parametrize("kelvin_requested", [1000, 2700, 3000, 4000, 5000, 6500, 8000])
