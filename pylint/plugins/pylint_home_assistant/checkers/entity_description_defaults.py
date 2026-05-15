@@ -44,25 +44,27 @@ def _collect_defaults(class_node: nodes.ClassDef) -> dict[str, object]:
     if qname in _defaults_cache:
         return _defaults_cache[qname]
 
-    # Collect from ancestors first (parents before children),
-    # then the class itself so child defaults win.
+    # Collect from ancestors in reverse MRO order (most distant first)
+    # so closer ancestors overwrite, then the class itself wins last.
     defaults: dict[str, object] = {}
 
     try:
-        for ancestor in class_node.ancestors():
-            for item in ancestor.body:
-                if (
-                    isinstance(item, nodes.AnnAssign)
-                    and isinstance(item.target, nodes.AssignName)
-                    and item.value is not None
-                    and isinstance(item.value, nodes.Const)
-                    and _is_flaggable(item.value.value)
-                ):
-                    defaults[item.target.name] = item.value.value
+        ancestors = list(class_node.ancestors())
     except astroid.exceptions.InferenceError:
-        pass
+        ancestors = []
 
-    # Now the class itself (overrides ancestors)
+    for ancestor in reversed(ancestors):
+        for item in ancestor.body:
+            if (
+                isinstance(item, nodes.AnnAssign)
+                and isinstance(item.target, nodes.AssignName)
+                and item.value is not None
+                and isinstance(item.value, nodes.Const)
+                and _is_flaggable(item.value.value)
+            ):
+                defaults[item.target.name] = item.value.value
+
+    # The class itself overrides all ancestors
     for item in class_node.body:
         if (
             isinstance(item, nodes.AnnAssign)
