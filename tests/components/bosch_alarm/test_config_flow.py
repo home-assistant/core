@@ -320,7 +320,7 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
     panel_model: PanelModel,
     config_flow_data: dict[str, Any],
 ) -> None:
-    """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
+    """Test DHCP discovery doesn't fail if a different panel was set up."""
     await setup_integration(hass, mock_config_entry)
 
     # change out the serial number so we can test discovery for a different panel
@@ -400,7 +400,7 @@ async def test_dhcp_updates_mac(
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
-    """Test DHCP discovery flow updates mac if the previous entry did not have a mac address."""
+    """Test DHCP discovery flow updates mac if previous entry had no mac address."""
     await setup_integration(hass, mock_config_entry)
     assert CONF_MAC not in mock_config_entry.data
 
