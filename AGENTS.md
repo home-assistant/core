@@ -6,6 +6,11 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 - **Do NOT amend, squash, or rebase commits that have already been pushed to the PR branch after the PR is opened** - Reviewers need to follow the commit history, as well as see what changed since their last review
 
+## Pull Requests
+
+- When opening a pull request, use the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`). Do not remove any sections from the template.
+- Do not remove checkboxes that are not checked — leave all unchecked checkboxes in place so reviewers can see which options were not selected.
+
 ## Development Commands
 
 .vscode/tasks.json contains useful commands used for development.
@@ -18,6 +23,8 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Testing
 
+- Use `uv run pytest` to run tests
+- After modifying `strings.json` for an integration, regenerate the English translation file before running tests: `.venv/bin/python3 -m script.translations develop --integration <integration_name>`. Tests load translations from the generated `translations/en.json`, not directly from `strings.json`.
 - When writing or modifying tests, ensure all test function parameters have type annotations.
 - Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 - Prefer `@pytest.mark.usefixtures` over arguments, if the argument is not going to be used.

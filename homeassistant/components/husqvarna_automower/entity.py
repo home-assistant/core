@@ -83,8 +83,9 @@ def handle_sending_exception(
                 ) from exception
             else:
                 if poll_after_sending:
-                    # As there are no updates from the websocket for this attribute,
-                    # we need to wait until the command is executed and then poll the API.
+                    # As there are no updates from the websocket for
+                    # this attribute, we need to wait until the
+                    # command is executed and then poll the API.
                     await asyncio.sleep(EXECUTION_TIME_DELAY)
                     await self.coordinator.async_request_refresh()
 

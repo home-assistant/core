@@ -100,6 +100,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     shutil.rmtree,
                     hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except FileNotFoundError:
             pass  # It's okay if the file doesn't exist
         except OSError as exc:

@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
-from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType
+from data_grand_lyon_ha import DataGrandLyonClient
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -163,11 +163,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
             password=user_input[CONF_PASSWORD],
         )
         try:
-            # the upstream library filters in memory so these placeholder values
-            # won't trigger an exception ; the returned list will be empty
-            await client.get_tcl_passages(
-                ligne="__test__", stop_id=0, passage_type=TclPassageType.ESTIMATED
-            )
+            await client.get_tcl_passages()
         except ClientResponseError as err:
             if err.status in (401, 403):
                 return "invalid_auth"

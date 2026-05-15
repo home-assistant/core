@@ -109,6 +109,7 @@ async def test_agents_get_backup(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if response["result"]["backup"]:
         assert response["result"]["backup"]["backup_id"] == TEST_BACKUP.backup_id
 

@@ -816,7 +816,8 @@ async def async_setup_entry(
                     (
                         "Ignoring unknown sensor %s.%s. "
                         "Opening an issue at GitHub against the "
-                        "huawei_lte integration would be appreciated, so we may be able to "
+                        "huawei_lte integration would be appreciated, "
+                        "so we may be able to "
                         "add support for it in a future release. "
                         'Include the sensor name "%s.%s" in the issue, '
                         "as well as any information you may have about it, "
