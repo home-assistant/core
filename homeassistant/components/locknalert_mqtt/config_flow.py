@@ -1046,7 +1046,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                             serial_found = (
                                 info.get("serial") if isinstance(info, dict) else None
                             )
-                        if serial_found:
+                        if serial_found and not validated_user_input.get(
+                            CONF_BRIDGE_SERIAL
+                        ):
                             validated_user_input[CONF_BRIDGE_SERIAL] = serial_found
                             _LOGGER.debug(
                                 "LocknAlert bridge serial discovered via API: %s",
