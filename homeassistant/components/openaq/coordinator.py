@@ -233,11 +233,6 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                             f"Authentication failed for location {self.location_id}: "
                             f"{first_exception}"
                         ) from first_exception
-                    if isinstance(first_exception, API_EXCEPTIONS):
-                        raise UpdateFailed(
-                            translation_domain=DOMAIN,
-                            translation_key="unable_to_fetch",
-                        ) from first_exception
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="unable_to_fetch",
