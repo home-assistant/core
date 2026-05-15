@@ -1,7 +1,5 @@
 """Config flow for MQTT."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from copy import deepcopy
@@ -87,7 +85,6 @@ from homeassistant.helpers.selector import (
 
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
-_LOGGER = logging.getLogger(__name__)
 
 from aiolocknalert import (
     LocknAlertBridgeApi,
@@ -1037,14 +1034,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     # First try to obtain bridge identity (serial) where possible
                     try:
                         info = await bridge_api.async_get_info(session)
-                        serial_found = info.get(getattr(__import__('..const', fromlist=['DISCOVERY_ATTR_SERIAL']).DISCOVERY_ATTR_SERIAL, None)) if isinstance(info, dict) else None
+                        serial_found = info.get(DISCOVERY_ATTR_SERIAL) if isinstance(info, dict) else None
                         # common keys fallback
                         if not serial_found:
                             serial_found = info.get("serial") if isinstance(info, dict) else None
                         if serial_found:
                             validated_user_input[CONF_BRIDGE_SERIAL] = serial_found
                             _LOGGER.debug("LocknAlert bridge serial discovered via API: %s", serial_found)
-                    except Exception as _err:  # still attempt bootstrap even if identity fetch fails
+                    except Exception as _err:  # noqa: BLE001  # still attempt bootstrap even if identity fetch fails
                         _LOGGER.debug("Could not fetch bridge identity from %s: %s", validated_user_input[CONF_BROKER], _err)
 
                     # Then bootstrap MQTT credentials
@@ -2271,7 +2268,7 @@ def try_connection(
         _LOGGER.debug(
             "Attempting MQTT connection to %s:%s as user=%s", user_input[CONF_BROKER], port, user
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         _LOGGER.debug("Attempting MQTT connection (failed to extract details)")
 
     client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
@@ -2280,18 +2277,19 @@ def try_connection(
     try:
         success = result.get(timeout=MQTT_TIMEOUT)
         _LOGGER.debug("MQTT connect result for %s: %s", user_input[CONF_BROKER], success)
-        return success
     except queue.Empty:
         _LOGGER.debug("MQTT connection attempt to %s timed out after %s seconds", user_input[CONF_BROKER], MQTT_TIMEOUT)
         return False
+    else:
+        return success
     finally:
         try:
             client.disconnect()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug("Error while disconnecting MQTT client", exc_info=True)
         try:
             client.loop_stop()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug("Error while stopping MQTT loop", exc_info=True)
 
 

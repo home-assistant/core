@@ -1,7 +1,5 @@
 """Support for LocknAlert MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
@@ -467,7 +465,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Filter to only platforms implemented by this integration — entity
     # registry entries from previously-supported platforms must not trigger
     # imports of modules that no longer exist.
-    _implemented = {p for p in ENTITY_PLATFORMS} | {p.value for p in ENTITY_PLATFORMS}
+    _implemented = set(ENTITY_PLATFORMS) | {p.value for p in ENTITY_PLATFORMS}
     platforms_used = {p for p in platforms_used if p in _implemented}
     integration = async_get_loaded_integration(hass, DOMAIN)
     # Preload platforms we know we are going to use so
@@ -532,7 +530,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
     # Setup reload service after all platforms have loaded
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)  # pylint: disable=home-assistant-service-registered-in-setup-entry
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(

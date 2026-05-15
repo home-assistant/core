@@ -321,7 +321,7 @@ aiolifx-themes==1.0.2
 aiolifx==1.2.1
 
 # homeassistant.components.locknalert_mqtt
-aiolocknalert==0.1.0
+aiolocknalert==0.1.1
 
 # homeassistant.components.lookin
 aiolookin==1.0.0

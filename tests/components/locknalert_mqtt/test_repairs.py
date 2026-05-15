@@ -9,6 +9,10 @@ from homeassistant.components.locknalert_mqtt.const import (
     CONFIG_ENTRY_VERSION,
     DOMAIN,
 )
+from homeassistant.components.locknalert_mqtt.repairs import (
+    MQTTDeviceEntryMigration,
+    async_create_fix_flow,
+)
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -20,7 +24,7 @@ from tests.components.repairs import (
     process_repair_fix_flow,
     start_repair_fix_flow,
 )
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 
 @pytest.fixture
@@ -38,14 +42,14 @@ def mqtt_config_entry_options() -> dict:
 async def test_device_entry_migration_confirm_flow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """MQTTDeviceEntryMigration flow shows confirm form then removes subentry."""
     await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "test-subentry-id")},
         name="Test MQTT Device",
@@ -78,8 +82,6 @@ async def test_async_create_fix_flow_returns_migration_flow(
     hass: HomeAssistant,
 ) -> None:
     """async_create_fix_flow creates a MQTTDeviceEntryMigration instance."""
-    from homeassistant.components.locknalert_mqtt.repairs import async_create_fix_flow
-
     flow = await async_create_fix_flow(
         hass,
         issue_id="test_issue",
@@ -89,8 +91,6 @@ async def test_async_create_fix_flow_returns_migration_flow(
             "name": "Test Device",
         },
     )
-    from homeassistant.components.locknalert_mqtt.repairs import MQTTDeviceEntryMigration
-
     assert isinstance(flow, MQTTDeviceEntryMigration)
     assert flow.entry_id == "test-entry-id"
     assert flow.subentry_id == "test-subentry-id"

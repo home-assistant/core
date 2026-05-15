@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
@@ -181,7 +179,6 @@ async def async_publish(
                     topic,
                     encoding,
                 )
-                return
                 return
 
     await mqtt_data.client.async_publish(
@@ -1356,7 +1353,7 @@ class MQTT:
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
     from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
 
-    matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
+    matcher = MQTTMatcher()
     matcher[subscription] = True
 
-    return lambda topic: next(matcher.iter_match(topic), False)  # type: ignore[no-untyped-call]
+    return lambda topic: next(matcher.iter_match(topic), False)
