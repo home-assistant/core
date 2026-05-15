@@ -36,7 +36,8 @@ async def test_unload_entry_while_player_is_offline(
     )
     player_mocks.player_data.status_long_polling_mock.trigger()
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)

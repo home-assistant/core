@@ -247,8 +247,8 @@ async def test_downloading_backup_not_found_get_backup_returns_none(
     resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
     assert resp.status == 404
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )
 
 

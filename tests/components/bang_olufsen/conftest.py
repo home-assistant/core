@@ -305,7 +305,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 fixed=False,
                 id="b6591565-80f4-4356-bcd9-c92ca247f0a9",
             ),
-            # The parent remote menu item. Has the TV label and should therefore not be included in video sources
+            # The parent remote menu item. Has the TV label and
+            # should therefore not be included in video sources
             "b66c835b-6b98-4400-8f84-6348043792c7": RemoteMenuItem(
                 action_list=[],
                 scene_list=None,

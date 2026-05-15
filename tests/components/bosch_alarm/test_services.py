@@ -57,7 +57,7 @@ async def test_set_date_time_service_fails_bad_entity(
     area: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the service calls fail if the service call is done for an incorrect entity."""
+    """Test that the service calls fail if done for an incorrect entity."""
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -79,7 +79,7 @@ async def test_set_date_time_service_fails_bad_params(
     area: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the service calls fail if the service call is done with incorrect params."""
+    """Test that the service calls fail if done with incorrect params."""
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(
         vol.MultipleInvalid,

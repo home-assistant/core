@@ -190,7 +190,7 @@ def inject_advertisement_with_time_and_source_connectable(
     connectable: bool,
     raw: bytes | None = None,
 ) -> None:
-    """Inject an advertisement into the manager from a specific source at a time and connectable status."""
+    """Inject an advertisement at a time from a source with connectable status."""
     async_get_advertisement_callback(hass)(
         BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,

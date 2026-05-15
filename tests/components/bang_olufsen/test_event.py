@@ -76,7 +76,11 @@ async def test_button_event_creation_balance(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+    """Test button event entities are created.
+
+    Uses a Balance (Most devices support all buttons
+    like the Balance).
+    """
 
     await _check_button_event_creation(
         hass,
@@ -95,7 +99,10 @@ async def test_no_button_and_remote_key_event_creation_core(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event entities are not created when using a Beoconnect Core with no Beoremote One connected."""
+    """Test button event entities are not created.
+
+    Uses a Beoconnect Core with no Beoremote One connected.
+    """
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
         items=[]
     )
@@ -117,7 +124,10 @@ async def test_button_event_creation_premiere(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Bluetooth and Microphone button event entities are not created when using a Beosound Premiere."""
+    """Test Bluetooth and Microphone button event entities.
+
+    These are not created when using a Beosound Premiere.
+    """
     mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
         friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3
     )

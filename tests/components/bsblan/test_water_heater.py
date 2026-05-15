@@ -181,7 +181,11 @@ async def test_set_invalid_operation_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Operation mode invalid_mode is not valid for water_heater\.water_heater\. Valid operation modes are: off, performance, eco",
+        match=(
+            r"Operation mode invalid_mode is not valid for"
+            r" water_heater\.water_heater\."
+            r" Valid operation modes are: off, performance, eco"
+        ),
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
