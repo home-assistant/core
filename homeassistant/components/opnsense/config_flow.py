@@ -87,13 +87,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _show_interfaces_form(
         self,
-        user_input: dict[Any, Any] | None = None,
+        user_input: dict[Any, Any],
         errors: dict[Any, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the tracker interfaces selection form to the user."""
-        if user_input is None:
-            user_input = {}
-
         return self.async_show_form(
             step_id="interfaces",
             data_schema=self.add_suggested_values_to_schema(
