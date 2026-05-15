@@ -170,10 +170,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "service_unavailable"
 
-            else:
-                if errors:
-                    pass
-                elif (
+            if not errors:
+                if (
                     self.source == SOURCE_REAUTH
                     and (
                         (reauth_unique_id := self._get_reauth_entry().unique_id)
@@ -185,8 +183,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 ):
                     return await self.async_step_site({CONF_SITE_ID: reauth_site_id})
 
-                if not errors:
-                    return await self.async_step_site()
+                return await self.async_step_site()
 
         if not (host := self.config.get(CONF_HOST, "")) and await _async_discover_unifi(
             self.hass
@@ -231,9 +228,9 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 config_entry = self._get_reauth_entry()
                 abort_reason = "reauth_successful"
             else:
-                config_entry = await self.async_set_unique_id(unique_id)
+                config_entry = self._find_matching_entry(host, site_id, site.name)
                 if config_entry is None:
-                    config_entry = self._find_matching_entry(host, site_id, site.name)
+                    config_entry = await self.async_set_unique_id(unique_id)
 
             if config_entry:
                 if (

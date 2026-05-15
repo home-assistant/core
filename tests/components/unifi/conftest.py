@@ -214,7 +214,11 @@ def fixture_request(
         )
 
         mock_get_request("/api/self/sites", site_payload)
-        mock_get_request("/api/s/default/stat/sysinfo", system_information_payload)
+        for sysinfo_site_id in dict.fromkeys(("default", DEFAULT_SITE, site_id)):
+            mock_get_request(
+                f"/api/s/{sysinfo_site_id}/stat/sysinfo",
+                system_information_payload,
+            )
         mock_get_request(f"/api/s/{site_id}/stat/sta", client_payload)
         mock_get_request(f"/api/s/{site_id}/rest/user", clients_all_payload)
         mock_get_request(f"/api/s/{site_id}/stat/device", device_payload)
@@ -224,7 +228,6 @@ def fixture_request(
             f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
         )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
-        mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficroutes", traffic_route_payload)

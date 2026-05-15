@@ -46,7 +46,7 @@ async def async_migrate_entry(
             api = await get_unifi_api(hass, config_entry.data)
             await api.system_information.update()
 
-        except AuthenticationRequired, CannotConnect:
+        except (AuthenticationRequired, CannotConnect):
             return True
 
         controller_info = next(iter(api.system_information.values()), None)
