@@ -139,7 +139,11 @@ async def test_download_headers_schema(
             HomeAssistantError,
             id="connection_error",
         ),
-        pytest.param(ValueError, ServiceValidationError, id="value_error"),
+        pytest.param(
+            ValueError,
+            ServiceValidationError,
+            id="value_error",
+        ),
     ],
 )
 async def test_download_exceptions(
