@@ -418,6 +418,7 @@ FLOWS = {
         "local_ip",
         "local_todo",
         "locative",
+        "locknalert_mqtt",
         "lojack",
         "london_underground",
         "lookin",
