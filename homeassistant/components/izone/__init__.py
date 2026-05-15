@@ -84,17 +84,6 @@ async def _async_pick_legacy_migration_controller(
     return eligible[0]
 
 
-async def _async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Upgrade entries that still use the domain string as ``unique_id`` (no version bump)."""
-    controller = await _async_pick_legacy_migration_controller(hass, entry)
-    hass.config_entries.async_update_entry(
-        entry,
-        unique_id=controller.device_uid,
-        data={},
-        title=f"iZone {controller.device_uid}",
-    )
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
