@@ -17,7 +17,7 @@
       "message": "Connection error occurred while downloading {url}"
     },
     "invalid_value": {
-      "message": "Invalid value for {url}"
+      "message": "Invalid filename derived from {url}"
     },
     "subdir_invalid": {
       "message": "Invalid subdirectory, got: {subdir}"
