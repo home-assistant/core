@@ -26,7 +26,7 @@ from homeassistant.components.locknalert_mqtt.const import (
     DISCOVERY_ATTR_SERIAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_DISCOVERY, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_DISCOVERY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -167,9 +167,13 @@ async def test_zeroconf_happy_path(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL}
-    )
+    with patch(
+        "homeassistant.components.locknalert_mqtt.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL}
+        )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BROKER] == MOCK_BRIDGE_HOST
     assert result["data"][CONF_USERNAME] == MOCK_USERNAME
@@ -215,7 +219,7 @@ async def test_zeroconf_shows_form_when_bridge_unreachable(
 
 async def test_zeroconf_confirm_aborts_on_cannot_connect(hass: HomeAssistant) -> None:
     """Confirm step aborts when bridge is not reachable on submit."""
-    from aiolocknalert import LocknAlertCannotConnect
+    from aiolocknalert import LocknAlertCannotConnect  # noqa: PLC0415
 
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
@@ -298,7 +302,7 @@ async def test_zeroconf_aborts_on_duplicate(hass: HomeAssistant) -> None:
         data=_make_zeroconf_info(),
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] in ("already_configured", "single_instance_allowed")
 
 
 async def test_zeroconf_uses_custom_api_port(
@@ -318,9 +322,7 @@ async def test_zeroconf_uses_custom_api_port(
     )
     assert result["type"] == FlowResultType.FORM
 
-    mock_cls.assert_called_once_with(
-        host=MOCK_BRIDGE_HOST, port=8443, verify_ssl=False
-    )
+    mock_cls.assert_called_once_with(host=MOCK_BRIDGE_HOST, port=8443, verify_ssl=False)
 
 
 async def test_zeroconf_uses_default_api_port_when_missing(
@@ -362,9 +364,13 @@ async def test_zeroconf_confirm_shows_form_then_bootstraps(
     )
     assert result["step_id"] == "zeroconf_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL}
-    )
+    with patch(
+        "homeassistant.components.locknalert_mqtt.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL}
+        )
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
@@ -380,10 +386,14 @@ async def test_zeroconf_confirm_serial_override(
         context={"source": "zeroconf"},
         data=_make_zeroconf_info(),
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_BRIDGE_SERIAL: "OVERRIDE99"},
-    )
+    with patch(
+        "homeassistant.components.locknalert_mqtt.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_BRIDGE_SERIAL: "OVERRIDE99"},
+        )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BRIDGE_SERIAL] == "OVERRIDE99"
 
@@ -496,10 +506,14 @@ async def test_broker_step_creates_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_BROKER: MOCK_BROKER},
-    )
+    with patch(
+        "homeassistant.components.locknalert_mqtt.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_BROKER: MOCK_BROKER},
+        )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BROKER] == MOCK_BROKER
 

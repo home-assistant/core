@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "bridge_not_configured": "Bridge configuration error: contact developer.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_connect_mqtt": "Unable to connect to MQTT broker with provided credentials.",
       "cannot_determine_serial": "Unable to determine bridge serial from discovery.",
       "invalid_response": "Bridge returned invalid response.",

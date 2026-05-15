@@ -8,8 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import alarm_control_panel
-from homeassistant.components import locknalert_mqtt
+from homeassistant.components import alarm_control_panel, locknalert_mqtt
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
@@ -34,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from tests.common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -966,7 +965,9 @@ async def test_discovery_removal_alarm(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered alarm_control_panel."""
-    data = json.dumps(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    data = json.dumps(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
     await help_test_discovery_removal(
         hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, data
     )
@@ -976,8 +977,12 @@ async def test_discovery_update_alarm_topic_and_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
+    config2 = copy.deepcopy(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
@@ -1010,8 +1015,12 @@ async def test_discovery_update_alarm_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
+    config2 = copy.deepcopy(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
@@ -1042,7 +1051,9 @@ async def test_discovery_update_unchanged_alarm(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(
+        DEFAULT_CONFIG[locknalert_mqtt.DOMAIN][alarm_control_panel.DOMAIN]
+    )
     config1["name"] = "Beer"
 
     data1 = json.dumps(config1)

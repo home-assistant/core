@@ -88,12 +88,12 @@ from .models import (
 )
 from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
 
+from .async_client import AsyncMQTTClient
+
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
-
-    from .async_client import AsyncMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -329,8 +329,6 @@ class MqttClientSetup:
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         from paho.mqtt import client as mqtt  # noqa: PLC0415
-
-        from .async_client import AsyncMQTTClient  # noqa: PLC0415
 
         config = self._config
         clean_session: bool | None = None

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Service is already configured",
             "bridge_not_configured": "Bridge configuration error: contact developer.",
+            "cannot_connect": "Failed to connect",
             "cannot_connect_mqtt": "Unable to connect to MQTT broker with provided credentials.",
             "cannot_determine_serial": "Unable to determine bridge serial from discovery.",
             "invalid_response": "Bridge returned invalid response.",
@@ -48,8 +49,8 @@
                 },
                 "data_description": {
                     "advanced_options": "Enable and select **Submit** to set advanced options.",
-                    "broker": "The hostname or IP address of your MQTT broker.",
                     "bridge_serial": "The serial number of your LocknAlert bridge (optional, auto-detected if left empty).",
+                    "broker": "The hostname or IP address of your MQTT broker.",
                     "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
                     "client_cert": "The client certificate to authenticate against your MQTT broker.",
                     "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
@@ -85,14 +86,14 @@
                 "description": "Please enter the connection information of your MQTT broker."
             },
             "zeroconf_confirm": {
-                "description": "A LocknAlert Bridge was discovered on your network. Enter the serial number printed on your bridge to confirm and connect.",
-                "title": "LocknAlert Bridge discovered",
                 "data": {
                     "bridge_serial": "Bridge Serial Number"
                 },
                 "data_description": {
                     "bridge_serial": "The serial number printed on your LocknAlert bridge (auto-detected from the network name, edit if incorrect)."
-                }
+                },
+                "description": "A LocknAlert Bridge was discovered on your network. Enter the serial number printed on your bridge to confirm and connect.",
+                "title": "LocknAlert Bridge discovered"
             }
         }
     },
@@ -1179,7 +1180,7 @@
                 "data_description": {
                     "advanced_options": "Enable and select **Submit** to set advanced options.",
                     "broker": "The hostname or IP address of your MQTT broker.",
-                    "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+                    "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
                     "client_cert": "The client certificate to authenticate against your MQTT broker.",
                     "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
                     "client_key": "The private key file that belongs to your client certificate.",
@@ -1187,7 +1188,7 @@
                     "password": "The password to log in to your MQTT broker.",
                     "port": "The port your MQTT broker listens to. For example 1883.",
                     "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-                    "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+                    "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
                     "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
                     "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
                     "transport": "The transport to be used for the connection to your MQTT broker.",
