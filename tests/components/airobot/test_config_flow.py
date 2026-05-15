@@ -224,7 +224,8 @@ async def test_dhcp_discovery_duplicate(
     )
     await hass.async_block_till_done()
 
-    # Should abort immediately since device_id extracted from hostname matches existing entry
+    # Should abort immediately since device_id extracted from
+    # hostname matches existing entry
     # and update the IP address
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

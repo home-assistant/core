@@ -10,7 +10,7 @@ from xknx.dpt.dpt_16 import DPTString
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfReactiveEnergy
 
-HaDptClass = Literal["numeric", "enum", "complex", "string"]
+type HaDptClass = Literal["numeric", "enum", "complex", "string"]
 
 
 class DPTInfo(TypedDict):
