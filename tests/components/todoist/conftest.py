@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator, Callable, Generator
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -28,14 +29,14 @@ async def _async_generator[T](items: list[T]) -> AsyncGenerator[list[T]]:
     yield items
 
 
-def make_api_response[T](items: list[T]) -> Callable[[], AsyncGenerator[list[T]]]:
+def make_api_response[T](items: list[T]) -> Callable[..., AsyncGenerator[list[T]]]:
     """Create a callable that returns a fresh async generator each time.
 
     This is needed because async generators can only be iterated once,
     but mocks may be called multiple times.
     """
 
-    async def _generator(*args, **kwargs) -> AsyncGenerator[list[T]]:
+    async def _generator(*args: Any, **kwargs: Any) -> AsyncGenerator[list[T]]:
         async for page in _async_generator(items):
             yield page
 
