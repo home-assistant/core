@@ -16,10 +16,9 @@ from pylint_home_assistant.helpers.module_info import is_integration_module
 
 def _is_executor_job_await(node: nodes.NodeNG) -> bool:
     """Return True if *node* is ``await *.async_add_executor_job(...)``."""
-    if not isinstance(node, (nodes.Assign, nodes.AnnAssign, nodes.Expr)):
+    if not isinstance(node, (nodes.Assign, nodes.AnnAssign, nodes.Expr, nodes.Return)):
         return False
 
-    # Get the value (Assign has .value, Expr has .value)
     value = node.value
     if value is None:
         return False

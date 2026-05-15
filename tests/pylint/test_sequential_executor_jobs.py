@@ -227,6 +227,28 @@ async def async_setup(hass, config):
     assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
 
 
+def test_return_await_sequential_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+) -> None:
+    """Test that return await following an executor job is flagged."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    return await hass.async_add_executor_job(call_b)
+""",
+        "homeassistant.components.test_integration",
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(executor_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
+
+
 def test_not_integration_module_ignored(
     linter: UnittestLinter,
     executor_checker: SequentialExecutorJobsChecker,
