@@ -5900,6 +5900,12 @@
       "config_flow": false,
       "iot_class": "assumed_state"
     },
+    "rfm_gateway": {
+      "name": "RFM Gateway",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "rfxtrx": {
       "name": "RFXCOM RFXtrx",
       "integration_type": "hub",
