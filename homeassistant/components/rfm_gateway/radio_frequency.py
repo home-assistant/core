@@ -1,4 +1,5 @@
 """Radio frequency transmitter platform for RFM Gateway."""
+
 from typing import TYPE_CHECKING
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
