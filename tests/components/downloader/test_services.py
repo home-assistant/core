@@ -4,6 +4,7 @@ import asyncio
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 
 import pytest
+import requests
 from requests_mock import Mocker
 import voluptuous as vol
 
@@ -127,3 +128,26 @@ async def test_download_headers_schema(
 
     with expected_result:
         await call_service()
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        requests.exceptions.ConnectionError,
+        ValueError,
+    ],
+)
+async def test_download_exceptions(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    download_url: str,
+    download_failed: asyncio.Event,
+    exception: Exception,
+) -> None:
+    """Test that connection exceptions during download are handled."""
+    requests_mock.get(download_url, exc=exception)
+    await hass.services.async_call(
+        DOMAIN, "download_file", {"url": download_url}, blocking=True
+    )
+    await download_failed.wait()
