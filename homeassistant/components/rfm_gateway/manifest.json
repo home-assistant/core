@@ -1,0 +1,17 @@
+{
+  "domain": "rfm_gateway",
+  "name": "RFM Gateway",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/rfm_gateway",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*"
+    }
+  ],
+  "requirements": ["rf-protocols==3.1.0"]
+}

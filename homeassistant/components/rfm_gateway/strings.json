@@ -1,0 +1,27 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Set up RFM Gateway",
+        "description": "Connect Home Assistant to your RFM Gateway RF raw API.",
+        "data": {
+          "host": "Gateway host or IP"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered RFM Gateway",
+        "description": "RFM Gateway found at {host}:{port}. Do you want to add it?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the gateway",
+      "invalid_response": "Gateway responded with invalid data",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured",
+      "not_rfm_gateway": "Discovered device does not match RFM Gateway"
+    }
+  }
+}
