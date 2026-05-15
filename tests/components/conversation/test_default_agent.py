@@ -278,7 +278,7 @@ async def test_expose_flag_automatically_set(
 
     assert await async_setup_component(hass, "conversation", {})
     await hass.async_block_till_done()
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         await hass.async_start()
 
     # After setting up conversation, the expose flag should now be set on all entities
