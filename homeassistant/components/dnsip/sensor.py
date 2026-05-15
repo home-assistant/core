@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import aiodns
 from aiodns.error import DNSError
@@ -127,7 +127,8 @@ class WanIpSensor(SensorEntity):
             if self.ipv6
             else self.entry.runtime_data.resolver_ipv4
         )
-        assert resolver is not None
+        if TYPE_CHECKING:
+            assert resolver is not None
         return resolver
 
     def create_dns_resolver(self) -> None:

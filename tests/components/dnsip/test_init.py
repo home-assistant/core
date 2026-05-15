@@ -1,8 +1,11 @@
 """Test for DNS IP integration Init."""
 
+import asyncio
 from unittest.mock import patch
 
 from aiodns.error import DNSError
+from pycares import AresError
+import pytest
 
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
@@ -47,7 +50,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        side_effect=[RetrieveDNS(), RetrieveDNS()],
+        return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -163,7 +166,7 @@ async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        side_effect=[RetrieveDNS(), RetrieveDNS()],
+        return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -172,7 +175,16 @@ async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_setup_dns_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        TimeoutError(),
+        DNSError(),
+        AresError(),
+        asyncio.CancelledError(),
+    ],
+)
+async def test_setup_dns_error(hass: HomeAssistant, error: Exception) -> None:
     """Test setup raises ConfigEntryNotReady when DNS lookup fails."""
 
     entry = MockConfigEntry(
@@ -197,7 +209,7 @@ async def test_setup_dns_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        side_effect=[RetrieveDNS(error=DNSError()), RetrieveDNS(error=DNSError())],
+        return_value=RetrieveDNS(error=error),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -206,7 +218,7 @@ async def test_setup_dns_error(hass: HomeAssistant) -> None:
 
 
 async def test_setup_ipv6_only(hass: HomeAssistant) -> None:
-    """Test setup with only IPv6 enabled exercises the IPv6 lookup branch."""
+    """Test setup with only IPv6 enabled creates only the IPv6 entity."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -230,12 +242,14 @@ async def test_setup_ipv6_only(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.dnsip.aiodns.DNSResolver",
-        side_effect=[RetrieveDNS(), RetrieveDNS()],
+        return_value=RetrieveDNS(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.home_assistant_io_ipv6") is not None
+    assert hass.states.get("sensor.home_assistant_io") is None
 
 
 async def test_setup_dns_timeout(hass: HomeAssistant) -> None:
