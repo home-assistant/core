@@ -27,6 +27,7 @@ async def async_setup_entry(
     added_outputs: list[QbusMqttOutput] = []
 
     def _check_outputs() -> None:
+        """Add newly discovered outputs as entities."""
         entities = create_new_entities(
             coordinator,
             added_outputs,
@@ -83,6 +84,7 @@ class QbusStepper(QbusEntity, SelectEntity):
         await self._async_publish_output_state(state)
 
     async def _handle_state_received(self, state: QbusMqttStepperState) -> None:
+        """Update the state from a received Qbus state."""
         value = state.read_value()
 
         if value is not None:
