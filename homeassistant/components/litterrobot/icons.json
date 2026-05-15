@@ -69,9 +69,6 @@
       }
     },
     "sensor": {
-      "firmware": {
-        "default": "mdi:chip"
-      },
       "food_dispensed_today": {
         "default": "mdi:counter"
       },
@@ -98,9 +95,6 @@
       "visits_today": {
         "default": "mdi:counter"
       },
-      "wifi_rssi": {
-        "default": "mdi:wifi"
-      }
     },
     "switch": {
       "night_light_mode": {

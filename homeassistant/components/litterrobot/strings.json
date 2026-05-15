@@ -120,9 +120,6 @@
       }
     },
     "sensor": {
-      "firmware": {
-        "name": "Firmware"
-      },
       "food_dispensed_today": {
         "name": "Food dispensed today",
         "unit_of_measurement": "cups"
@@ -162,9 +159,6 @@
       "scoops_saved_count": {
         "name": "Scoops saved",
         "unit_of_measurement": "scoops"
-      },
-      "setup_date": {
-        "name": "Setup date"
       },
       "sleep_mode_end_time": {
         "name": "Sleep mode end time"
@@ -212,9 +206,6 @@
       },
       "waste_drawer": {
         "name": "Waste drawer"
-      },
-      "wifi_rssi": {
-        "name": "Wi-Fi signal"
       }
     },
     "switch": {

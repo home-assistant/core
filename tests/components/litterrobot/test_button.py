@@ -64,7 +64,7 @@ async def test_button_command_exception(
 @pytest.mark.parametrize(
     ("entity_id", "robot_command"),
     [
-        ("button.test", "reset"),
+        ("button.test_recalibrate", "reset"),
         ("button.test_change_filter", "change_filter"),
     ],
 )

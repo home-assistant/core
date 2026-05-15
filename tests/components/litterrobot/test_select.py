@@ -1,8 +1,9 @@
 """Test the Litter-Robot select entity."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from pylitterbot import LitterRobot3, LitterRobot4, LitterRobot5
+from pylitterbot.robot.litterrobot4 import NightLightMode
 import pytest
 
 from homeassistant.components.select import (
@@ -151,26 +152,20 @@ async def test_litterrobot_5_globe_light(
 
     robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
 
-    with patch(
-        "homeassistant.components.litterrobot.select.async_update_night_light_settings",
-        new_callable=AsyncMock,
-        return_value=True,
-    ) as mock_update:
-        for option in select.attributes[ATTR_OPTIONS]:
-            data[ATTR_OPTION] = option
+    for option in select.attributes[ATTR_OPTIONS]:
+        data[ATTR_OPTION] = option
 
-            await hass.services.async_call(
-                SELECT_DOMAIN,
-                SERVICE_SELECT_OPTION,
-                data,
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            data,
+            blocking=True,
+        )
 
-        assert mock_update.call_count == 3
-        # Verify the mode value is capitalized to match API format (On/Off/Auto)
-        mock_update.assert_any_call(robot, mode="Off")
-        mock_update.assert_any_call(robot, mode="On")
-        mock_update.assert_any_call(robot, mode="Auto")
+    assert robot.set_night_light_mode.call_count == 3
+    robot.set_night_light_mode.assert_any_call(NightLightMode.OFF)
+    robot.set_night_light_mode.assert_any_call(NightLightMode.ON)
+    robot.set_night_light_mode.assert_any_call(NightLightMode.AUTO)
 
 
 async def test_litterrobot_5_panel_brightness(

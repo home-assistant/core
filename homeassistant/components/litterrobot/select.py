@@ -6,10 +6,6 @@ from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Robot
 from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
-from pylitterbot.robot.litterrobot5 import (
-    BrightnessLevel as LR5BrightnessLevel,
-    NightLightMode as LR5NightLightMode,
-)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfTime
@@ -105,7 +101,7 @@ ROBOT_SELECT_MAP: dict[
     ),
     LitterRobot5: (
         RobotSelectEntityDescription[LitterRobot5, str](
-            key="night_light_mode",
+            key="globe_light",
             translation_key="globe_light",
             current_fn=(
                 lambda robot: (
@@ -114,10 +110,10 @@ ROBOT_SELECT_MAP: dict[
                     else None
                 )
             ),
-            options_fn=lambda _: [mode.name.lower() for mode in LR5NightLightMode],
+            options_fn=lambda _: [mode.name.lower() for mode in NightLightMode],
             select_fn=(
                 lambda robot, opt: robot.set_night_light_mode(
-                    LR5NightLightMode[opt.upper()]
+                    NightLightMode[opt.upper()]
                 )
             ),
         ),
@@ -131,10 +127,10 @@ ROBOT_SELECT_MAP: dict[
                     else None
                 )
             ),
-            options_fn=lambda _: [level.name.lower() for level in LR5BrightnessLevel],
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
             select_fn=(
                 lambda robot, opt: robot.set_panel_brightness(
-                    LR5BrightnessLevel[opt.upper()]
+                    BrightnessLevel[opt.upper()]
                 )
             ),
         ),
@@ -211,4 +207,3 @@ class LitterRobotSelectEntity(
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.robot, option)
-        await self.coordinator.async_request_refresh()
