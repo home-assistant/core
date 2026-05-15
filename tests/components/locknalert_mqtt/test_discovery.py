@@ -1578,7 +1578,7 @@ async def test_duplicate_removal(
                 '"name": "sensor2"'
                 "}",
             },
-            ["alarm_control_panel.sensor1", "alarm_control_panel.sensor2"],
+            ["alarm_control_panel.test_device_sensor1", "alarm_control_panel.test_device_sensor2"],
         ),
         (
             {
@@ -1599,7 +1599,7 @@ async def test_duplicate_removal(
                 '"unique_id": "unique2"'
                 "}}}"
             },
-            ["alarm_control_panel.sensor1", "alarm_control_panel.sensor2"],
+            ["alarm_control_panel.test_device_sensor1", "alarm_control_panel.test_device_sensor2"],
         ),
     ],
 )
@@ -1673,7 +1673,7 @@ async def test_cleanup_device_manual(
             '  "state_topic": "foobar/sensor",'
             '  "command_topic": "foobar/sensor/cmd",'
             '  "unique_id": "unique" }',
-            ["alarm_control_panel.mqtt_alarm"],
+            ["alarm_control_panel.test_device_mqtt_alarm"],
         ),
         (
             "homeassistant/device/bla/config",
@@ -1692,7 +1692,7 @@ async def test_cleanup_device_manual(
             '  "command_topic": "foobar/sensor2/cmd",'
             '  "unique_id": "unique2"'
             "}}}",
-            ["alarm_control_panel.sensor1", "alarm_control_panel.sensor2"],
+            ["alarm_control_panel.test_device_sensor1", "alarm_control_panel.test_device_sensor2"],
         ),
     ],
 )
@@ -1717,7 +1717,7 @@ async def test_cleanup_device_mqtt(
         '  "unique_id": "unique_base" }'
     )
     base_discovery_topic = "homeassistant/alarm_control_panel/bla_base/config"
-    base_entity_id = "alarm_control_panel.sensor_base"
+    base_entity_id = "alarm_control_panel.test_device_base_sensor_base"
     async_fire_mqtt_message(hass, base_discovery_topic, data)
     await hass.async_block_till_done()
 
@@ -1803,7 +1803,7 @@ async def test_cleanup_device_mqtt_device_discovery(
         '  "unique_id": "unique2"'
         "}}}"
     )
-    entity_ids = ["alarm_control_panel.sensor1", "alarm_control_panel.sensor2"]
+    entity_ids = ["alarm_control_panel.test_device_sensor1", "alarm_control_panel.test_device_sensor2"]
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload)
     await hass.async_block_till_done()
 
@@ -2319,6 +2319,9 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_CLIENT_KEY",
     "CONF_CLIENT_CERT",
     "CONF_TLS_INSECURE",
+    # LockNAlert-specific settings
+    "CONF_BRIDGE_SERIAL",
+    "CONF_VERIFY_SSL",
 ]
 
 EXCLUDED_MODULES = {
