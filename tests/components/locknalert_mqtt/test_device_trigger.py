@@ -1273,7 +1273,7 @@ async def test_entity_device_info_with_identifier(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "helloworld")})
     assert device is not None
-    assert device.identifiers == {("mqtt", "helloworld")}
+    assert device.identifiers == {(DOMAIN, "helloworld")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"

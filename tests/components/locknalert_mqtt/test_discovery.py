@@ -95,7 +95,7 @@ async def help_check_discovered_items(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Help checking discovered test alarm control panel is still available."""
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
 
     state = hass.states.get("alarm_control_panel.test_device_mqtt_sensor")
@@ -385,7 +385,7 @@ async def test_correct_config_discovery_component(
     assert state.name == "test_device1 Beer"
     assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     assert device_entry.name == "test_device1"
 
@@ -411,7 +411,7 @@ async def test_correct_config_discovery_component(
     assert state.name == "test_device2 Milk"
     assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     assert device_entry.name == "test_device2"
 
@@ -427,7 +427,7 @@ async def test_correct_config_discovery_component(
 
     assert state is None
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
 
 
@@ -477,7 +477,7 @@ async def test_correct_config_discovery_device(
     assert state.name == "test_device1 Beer"
     assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     assert device_entry.name == "test_device1"
 
@@ -508,7 +508,7 @@ async def test_correct_config_discovery_device(
     assert state.name == "test_device2 Milk"
     assert discovery_hash in hass.data["mqtt"].discovery_already_discovered
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     assert device_entry.name == "test_device2"
 
@@ -524,7 +524,7 @@ async def test_correct_config_discovery_device(
 
     assert state is None
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
 
 
@@ -679,7 +679,7 @@ async def test_discovery_migration_to_device_base(
     await hass.async_block_till_done()
 
     # Assert we still have our device entry
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     # Check the alarm_control_panel was unloaded
     state = hass.states.get("alarm_control_panel.test_device_mqtt_sensor")
@@ -770,7 +770,7 @@ async def test_discovery_migration_to_device_base(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     # Check the device was removed as all device components were removed
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -894,7 +894,7 @@ async def test_discovery_rollback_to_single_base(
     )
 
     # Assert we still have our device entry
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     # Check the alarm_control_panel was unloaded
     state = hass.states.get("alarm_control_panel.test_device_mqtt_sensor")
@@ -959,7 +959,7 @@ async def test_discovery_rollback_to_single_base(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     # Check the device was removed as all device components were removed
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
 
 
@@ -1624,7 +1624,7 @@ async def test_cleanup_device_manual(
     await mock_debouncer.wait()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
 
     for entity_id in entity_ids:
@@ -1645,7 +1645,7 @@ async def test_cleanup_device_manual(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get(entity_ids[0])
     assert entity_entry is None
@@ -1723,7 +1723,7 @@ async def test_cleanup_device_mqtt(
 
     # Verify the base entity has been created and it has a state
     base_device_entry = device_registry.async_get_device(
-        identifiers={("mqtt", "0AFFD3")}
+        identifiers={(mqtt.DOMAIN, "0AFFD3")}
     )
     assert base_device_entry is not None
     entity_entry = entity_registry.async_get(base_entity_id)
@@ -1735,7 +1735,7 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     for entity_id in entity_ids:
         entity_entry = entity_registry.async_get(entity_id)
@@ -1749,7 +1749,7 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is None
 
     for entity_id in entity_ids:
@@ -1766,7 +1766,7 @@ async def test_cleanup_device_mqtt(
 
     # Verify the base entity still exists and it has a state
     base_device_entry = device_registry.async_get_device(
-        identifiers={("mqtt", "0AFFD3")}
+        identifiers={(mqtt.DOMAIN, "0AFFD3")}
     )
     assert base_device_entry is not None
     entity_entry = entity_registry.async_get(base_entity_id)
@@ -1808,7 +1808,7 @@ async def test_cleanup_device_mqtt_device_discovery(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     for entity_id in entity_ids:
         entity_entry = entity_registry.async_get(entity_id)
@@ -1858,7 +1858,7 @@ async def test_cleanup_device_mqtt_device_discovery(
     )
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload_update2)
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     # Verify the device entry was removed with the last sensor
     assert device_entry is None
     for entity_id in entity_ids:
@@ -2934,7 +2934,7 @@ async def test_shared_state_topic(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, "0AFFD2")})
     assert device_entry is not None
     for entity_id in entity_ids:
         entity_entry = entity_registry.async_get(entity_id)
@@ -2980,7 +2980,7 @@ async def test_discovery_with_late_via_device_discovery(
     await hass.async_block_till_done()
 
     via_device_entry = device_registry.async_get_device(
-        {("mqtt", "id_via_very_unique")}
+        {(mqtt.DOMAIN, "id_via_very_unique")}
     )
     assert via_device_entry is None
     # Discovery single config schema
@@ -2993,7 +2993,7 @@ async def test_discovery_with_late_via_device_discovery(
             payload,
         )
         via_device_entry = device_registry.async_get_device(
-            {("mqtt", "id_via_very_unique")}
+            {(mqtt.DOMAIN, "id_via_very_unique")}
         )
         assert via_device_entry is not None
         assert via_device_entry.name is None
@@ -3018,7 +3018,7 @@ async def test_discovery_with_late_via_device_discovery(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     via_device_entry = device_registry.async_get_device(
-        {("mqtt", "id_via_very_unique")}
+        {(mqtt.DOMAIN, "id_via_very_unique")}
     )
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
