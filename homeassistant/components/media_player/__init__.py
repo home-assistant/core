@@ -1454,7 +1454,12 @@ async def websocket_search_media(
     connection.send_result(msg["id"], result)
 
 
-_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+# Total budget for a proxied image fetch. The previous 10 second value was too
+# short for several real upstream sources: Sonos for instance regularly takes
+# 8 to 9 seconds to stream a 2 to 4 MB album cover via /getaa, with no headroom
+# for retries or slow links. 30 seconds is conservative enough to cover those
+# cases while still bounding obviously stuck fetches.
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 # Trailer markers for image formats whose completeness we can verify cheaply.
 # Each entry maps a normalized image MIME type to the bytes the body must end
