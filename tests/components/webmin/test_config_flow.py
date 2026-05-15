@@ -107,7 +107,6 @@ async def test_form_user_errors(
     assert result["options"] == TEST_USER_INPUT
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(hass: HomeAssistant, user_flow: str) -> None:
     """Test a successful user initiated flow."""
     with patch(

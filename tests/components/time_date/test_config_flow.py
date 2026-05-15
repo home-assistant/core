@@ -35,7 +35,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 

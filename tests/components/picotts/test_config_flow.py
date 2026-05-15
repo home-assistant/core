@@ -47,7 +47,6 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_binary_not_found(hass: HomeAssistant) -> None:
     """Test user step aborts when binary not found."""
     with patch(

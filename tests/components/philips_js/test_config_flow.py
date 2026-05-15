@@ -158,7 +158,6 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_pair_request_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
@@ -184,7 +183,6 @@ async def test_pair_request_failed(hass: HomeAssistant, mock_tv_pairable) -> Non
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable

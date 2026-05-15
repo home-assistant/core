@@ -149,7 +149,6 @@ async def test_reauth(
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_invalid_auth(
     hass: HomeAssistant,
     mock_added_config_entry: MockSchlageConfigEntry,
