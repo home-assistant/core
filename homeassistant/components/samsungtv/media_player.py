@@ -366,10 +366,12 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except vol.Invalid:
+        except vol.Invalid as err:
             LOGGER.error("Media ID must be positive integer")
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="media_id_invalid",
+            ) from err
 
         await self._async_send_keys(
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
