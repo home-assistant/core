@@ -21,6 +21,7 @@ class SamsungIrEntity(Entity):
     """Samsung IR base entity."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(
         self, entry: ConfigEntry, infrared_emitter_entity_id: str, unique_id_suffix: str
