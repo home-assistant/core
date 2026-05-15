@@ -211,7 +211,7 @@ async def test_user_adds_dmap_device_failed(
     assert result2["reason"] == "device_did_not_pair"
 
 
-@pytest.mark.usefixtures("dmap_device_with_credentials", "mock_scan")
+@pytest.mark.usefixtures("dmap_device_with_credentials")
 async def test_user_adds_device_with_ip_filter(hass: HomeAssistant) -> None:
     """Test add device filtering by IP."""
     result = await hass.config_entries.flow.async_init(
@@ -837,7 +837,6 @@ async def test_zeroconf_add_existing_aborts(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("mock_scan")
 async def test_zeroconf_add_but_device_not_found(hass: HomeAssistant) -> None:
     """Test add device which is not found with another scan."""
     result = await hass.config_entries.flow.async_init(

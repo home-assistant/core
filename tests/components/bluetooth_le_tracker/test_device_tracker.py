@@ -67,7 +67,7 @@ class MockBleakClientBattery5(MockBleakClient):
         return b"\x05"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> None:
     """Test device going not_home after consider_home threshold from first scan if the subsequent scans have not incremented last seen time."""
 
@@ -132,7 +132,7 @@ async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> Non
     assert state.state == "not_home"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
     """Test device remaining home after consider_home threshold from first scan if the subsequent scans have incremented last seen time."""
 
@@ -213,7 +213,7 @@ async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
     assert state.state == "home"
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
     """Test preserving tracked device name across new seens."""  # codespell:ignore seens
 
@@ -282,7 +282,7 @@ async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
     assert state.name == name
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     """Test tracking the battery times out."""
 
@@ -350,7 +350,7 @@ async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     assert "battery" not in state.attributes
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     """Test tracking the battery fails."""
 
@@ -417,7 +417,7 @@ async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     assert "battery" not in state.attributes
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_tracking_battery_successful(hass: HomeAssistant) -> None:
     """Test tracking the battery gets a value."""
 

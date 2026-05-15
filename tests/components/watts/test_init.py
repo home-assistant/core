@@ -57,7 +57,6 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -87,7 +86,6 @@ async def test_setup_entry_auth_failed(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -136,7 +134,6 @@ async def test_setup_entry_hub_coordinator_update_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_server_error_5xx(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
