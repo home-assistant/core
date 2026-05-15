@@ -96,9 +96,9 @@ async def _get_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
     return await async_create_openaq_client(hass, api_key)
 
 
-async def validate_input(_hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    client = await _get_client(_hass, data[CONF_API_KEY])
+    client = await _get_client(hass, data[CONF_API_KEY])
     try:
         await client.parameters.list(limit=1)
     except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
