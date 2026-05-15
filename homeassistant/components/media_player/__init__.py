@@ -1213,10 +1213,17 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         (content, content_type) = await self._async_fetch_image(url)
 
-        async with cache_images[url][CACHE_LOCK]:
-            cache_images[url][CACHE_CONTENT] = content, content_type
-            while len(cache_images) > cache_maxsize:
-                cache_images.popitem(last=False)
+        # Only cache successful fetches. Caching a failed fetch (None) makes
+        # the failure permanent until the URL changes or the cache is evicted,
+        # which is especially harmful for intermittent upstream issues such as
+        # the truncated-chunked-stream case async_fetch_image now detects.
+        # Letting failures fall through means the next request retries from
+        # the source, which usually succeeds.
+        if content is not None:
+            async with cache_images[url][CACHE_LOCK]:
+                cache_images[url][CACHE_CONTENT] = content, content_type
+                while len(cache_images) > cache_maxsize:
+                    cache_images.popitem(last=False)
 
         return content, content_type
 
