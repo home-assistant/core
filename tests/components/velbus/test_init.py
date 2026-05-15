@@ -287,3 +287,27 @@ async def test_remove_config_entry_device_removes_subdevices(
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, "999-1")}) is None
     assert sub_device.id not in device_registry.devices
+
+
+async def test_remove_config_entry_device_not_associated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a device not associated with this config entry cannot be removed."""
+    await init_integration(hass, config_entry)
+
+    other_entry = MockConfigEntry(domain=DOMAIN, data={})
+    other_entry.add_to_hass(hass)
+
+    unrelated_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "777")},
+        name="Other Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    result = await async_remove_config_entry_device(
+        hass, config_entry, unrelated_device
+    )
+    assert result is False
