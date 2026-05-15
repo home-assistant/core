@@ -5,9 +5,7 @@ module scope so tests and ``__init__.py`` migration can patch them without depen
 on :class:`IZoneConfigFlow`.
 """
 
-import asyncio
 from collections.abc import Iterable
-from contextlib import suppress
 import logging
 from typing import Any, Self
 
@@ -28,13 +26,11 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_CONFIG, DATA_DISCOVERY_SERVICE, IZONE, TIMEOUT_DISCOVERY
+from .const import DATA_CONFIG, IZONE, TIMEOUT_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
-# --- Flow identifiers and context keys (also used in tests) ---
-
-HOMEKIT_DISCOVERY_LOCK_ID = f"{IZONE}_homekit_discovery"
+# --- Flow context keys (also used in tests) ---
 
 DISCOVERY_DATA_UID = "uid"
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
@@ -52,72 +48,28 @@ async def async_discover_controllers(
 ) -> dict[str, pizone.Controller]:
     """Return currently known controllers, optionally waiting for a UID during rescan.
 
-    If ``refresh`` is true, this helper waits for fresh discovery data. When discovery
-    was already running, a rescan is requested first. When discovery was just started,
-    the helper waits without issuing a second rescan (to avoid duplicate pings).
+    If ``refresh`` is true, waits for fresh discovery data using the pizone library's
+    built-in coalescing and cool-down logic.  When ``wait_for_uid`` is provided, returns
+    as soon as that specific controller appears (or after the timeout).
 
-    For ``wait_for_uid`` it waits up to :data:`~.const.TIMEOUT_DISCOVERY` seconds for
-    that UID to be discovered. Otherwise it waits the full timeout to let broadcast
-    responses arrive.
-
-    If discovery is not yet running, it is started and the initial discovery cycle is
-    trusted instead of issuing an immediate second rescan.
+    If discovery is not yet running, it is started first.
     """
-    started_now = False
+    from .discovery import async_start_discovery_service  # noqa: PLC0415
 
-    if hass.data.get(DATA_DISCOVERY_SERVICE):
-        disco = hass.data[DATA_DISCOVERY_SERVICE]
-
-        # Do not refresh if the requested UID is already known.
-        if wait_for_uid and wait_for_uid in disco.pi_disco.controllers:
-            return dict(disco.pi_disco.controllers)
-    else:
-        from .discovery import async_start_discovery_service  # noqa: PLC0415
-
-        try:
-            disco = await async_start_discovery_service(hass)
-            started_now = True
-        except OSError:
-            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
-            return {}
+    try:
+        disco = await async_start_discovery_service(hass)
+    except OSError:
+        _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+        return {}
 
     if not refresh:
-        return dict(disco.pi_disco.controllers)
+        return await disco.pi_disco.fetch_controllers()
 
-    if wait_for_uid is None:
-        try:
-            if not started_now:
-                await disco.pi_disco.rescan()
-            await asyncio.sleep(TIMEOUT_DISCOVERY)
-        except OSError:
-            _LOGGER.debug("iZone discovery rescan failed", exc_info=True)
-            return {}
-    else:
-        controller_ready = asyncio.Event()
+    if wait_for_uid is not None:
+        await disco.pi_disco.fetch_controller(wait_for_uid, timeout=TIMEOUT_DISCOVERY)
+        return await disco.pi_disco.fetch_controllers()
 
-        class _DiscoveryWaitListener(pizone.Listener):
-            """Set the wait-event when discovery sees the requested UID."""
-
-            @callback
-            def controller_discovered(self, ctrl: pizone.Controller) -> None:
-                if ctrl.device_uid == wait_for_uid:
-                    controller_ready.set()
-
-        listener = _DiscoveryWaitListener()
-        disco.pi_disco.add_listener(listener)
-        try:
-            if not started_now:
-                await disco.pi_disco.rescan()
-            with suppress(TimeoutError):
-                async with asyncio.timeout(TIMEOUT_DISCOVERY):
-                    await controller_ready.wait()
-        except OSError:
-            _LOGGER.debug("iZone discovery rescan failed", exc_info=True)
-            return {}
-        finally:
-            disco.pi_disco.remove_listener(listener)
-
-    return dict(disco.pi_disco.controllers)
+    return await disco.pi_disco.fetch_controllers(timeout=TIMEOUT_DISCOVERY)
 
 
 def _yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
@@ -165,13 +117,8 @@ def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
 def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
     """Return a stable controller UID for deduplicating in-progress flows."""
     ctx_uid = flow.context.get("unique_id")
-    if isinstance(ctx_uid, str) and ctx_uid != HOMEKIT_DISCOVERY_LOCK_ID:
+    if isinstance(ctx_uid, str):
         return ctx_uid
-    init = flow.init_data
-    if isinstance(init, dict):
-        u = init.get(DISCOVERY_DATA_UID)
-        if isinstance(u, str):
-            return u
     return None
 
 
@@ -265,9 +212,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         sole = self._user_discovered_controllers[0]
         await self.async_set_unique_id(sole.device_uid)
         self._discovered_controller_ip = sole.device_ip
-        self.context["title_placeholders"] = {
-            "name": self._entry_title(sole.device_uid),
-        }
         return await self.async_step_confirm()
 
     async def async_step_select_controller(
@@ -353,15 +297,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         if self.hass.config_entries.async_entry_for_domain_unique_id(IZONE, device_uid):
             return self.async_abort(reason="already_configured")
 
-        # Expose advertised UID for matching before switching to the shared lock.
         await self.async_set_unique_id(device_uid)
         self._abort_if_unique_id_configured()
 
-        # Serialize HomeKit-driven discovery until the real UID is known.
-        await self.async_set_unique_id(HOMEKIT_DISCOVERY_LOCK_ID)
-
-        # A HomeKit advertisement implies a specific UID has appeared. Request a
-        # refresh, but if that UID is already known we skip the rescan and continue.
+        # A HomeKit advertisement implies a specific UID is on the LAN.  Wait for it.
         controllers = await async_discover_controllers(
             self.hass,
             refresh=True,
@@ -373,15 +312,13 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
 
         self._discovered_controller_ip = controller.device_ip
 
+        # Re-check after awaiting discovery to catch mid-flight configuration.
+        self._abort_if_unique_id_configured()
+
         self._async_fan_out_discovered_controllers(
             controllers.values(),
             selected_uid=device_uid,
         )
-
-        await self.async_set_unique_id(device_uid)
-        self._abort_if_unique_id_configured()
-
-        self.context["title_placeholders"] = {"name": model}
 
         return await self.async_step_confirm()
 
@@ -401,7 +338,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         # Discovery host is for confirm-step context only; runtime discovery owns
         # current device IP state and keeps it up to date independently of entry data.
         self._discovered_controller_ip = host
-        self.context["title_placeholders"] = {"name": self._entry_title(uid)}
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -422,6 +358,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                     self.context.get("source"),
                 )
                 return self.async_abort(reason="invalid_flow_state")
+            if "title_placeholders" not in self.context:
+                self.context["title_placeholders"] = {
+                    "name": self._entry_title(controller_uid),
+                }
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={

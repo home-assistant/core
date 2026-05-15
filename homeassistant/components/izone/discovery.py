@@ -174,7 +174,7 @@ async def async_maybe_stop_discovery_service(hass: HomeAssistant) -> None:
         disco.async_schedule_idle_stop()
         return
 
-    controllers = list(disco.pi_disco.controllers.values())
+    controllers = (await disco.pi_disco.fetch_controllers()).values()
     if not controllers:
         await async_stop_discovery_service(hass)
         return
