@@ -2258,7 +2258,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.0.1
 
 # homeassistant.components.izone
-python-izone==1.2.9
+python-izone==1.2.10
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
