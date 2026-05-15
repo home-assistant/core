@@ -1107,7 +1107,9 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
         "-4",
     ],
 )
-async def test_play_media_content_invalid_id(hass: HomeAssistant, content_id) -> None:
+async def test_play_media_content_invalid_id(
+    hass: HomeAssistant, content_id: str
+) -> None:
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
