@@ -75,5 +75,13 @@
         "name": "Tracker LED"
       }
     }
+  },
+  "exceptions": {
+    "failed_to_turn_off": {
+      "message": "An error occurred while trying to turn off {entity}: {error}"
+    },
+    "failed_to_turn_on": {
+      "message": "An error occurred while trying to turn on {entity}: {error}"
+    }
   }
 }
