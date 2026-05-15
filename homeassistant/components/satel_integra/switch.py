@@ -17,6 +17,8 @@ from .const import (
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,6 +55,8 @@ class SatelIntegraSwitch(
     SatelIntegraEntity[SatelIntegraOutputsCoordinator], SwitchEntity
 ):
     """Representation of an Satel Integra switch."""
+
+    _attr_name = None
 
     def __init__(
         self,

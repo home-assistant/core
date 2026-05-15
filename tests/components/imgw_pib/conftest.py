@@ -34,6 +34,12 @@ HYDROLOGICAL_DATA = HydrologicalData(
         level="yellow",
         probability=80,
     ),
+    submerged_vegetation_cover=SensorData(
+        name="Submerged Vegetation Cover", value=33.0
+    ),
+    floating_vegetation_cover=SensorData(name="Floating Vegetation Cover", value=67.0),
+    emergent_vegetation_cover=SensorData(name="Emergent Vegetation Cover", value=100.0),
+    vegetation_phenomena_measurement_date=datetime(2024, 4, 27, 10, 0, tzinfo=UTC),
 )
 
 

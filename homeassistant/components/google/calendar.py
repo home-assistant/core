@@ -510,7 +510,8 @@ class GoogleCalendarEntity(
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     rrule: str | None = None
-    # Home Assistant expects a single RRULE: and all other rule types are unsupported or ignored
+    # Home Assistant expects a single RRULE: and all other
+    # rule types are unsupported or ignored
     if (
         len(event.recurrence) == 1
         and (raw_rule := event.recurrence[0])

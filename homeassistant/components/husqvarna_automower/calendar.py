@@ -82,8 +82,9 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             work_area_name = self.mower_attributes.work_area_dict[
                 program_event.work_area_id
             ]
+        name_str = make_name_string(work_area_name, program_event.schedule_no)
         return CalendarEvent(
-            summary=f"{self.device_name} {make_name_string(work_area_name, program_event.schedule_no)}",
+            summary=f"{self.device_name} {name_str}",
             start=program_event.start,
             end=program_event.end,
             rrule=program_event.rrule_str,
@@ -110,9 +111,10 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
                 work_area_name = self.mower_attributes.work_area_dict[
                     program_event.work_area_id
                 ]
+            name_str = make_name_string(work_area_name, program_event.schedule_no)
             calendar_events.append(
                 CalendarEvent(
-                    summary=f"{self.device_name} {make_name_string(work_area_name, program_event.schedule_no)}",
+                    summary=f"{self.device_name} {name_str}",
                     start=program_event.start.replace(tzinfo=start_date.tzinfo),
                     end=program_event.end.replace(tzinfo=start_date.tzinfo),
                     rrule=program_event.rrule_str,
