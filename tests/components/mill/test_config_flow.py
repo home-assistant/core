@@ -16,7 +16,6 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
@@ -27,7 +26,6 @@ async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) ->
     assert result["step_id"] == "user"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
@@ -63,7 +61,6 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_entry_already_exists(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -106,7 +103,6 @@ async def test_flow_entry_already_exists(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -136,7 +132,6 @@ async def test_connection_error(recorder_mock: Recorder, hass: HomeAssistant) ->
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
@@ -177,7 +172,6 @@ async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) 
     assert result["data"] == test_data
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_local_flow_entry_already_exists(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -230,7 +224,6 @@ async def test_local_flow_entry_already_exists(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_local_connection_error(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
