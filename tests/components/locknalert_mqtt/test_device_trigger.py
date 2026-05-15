@@ -671,7 +671,9 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla0/config", data0)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla0/config", data0
+    )
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "0AFFD2")})
 
@@ -1085,7 +1087,9 @@ async def test_attach_remove_late(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla0/config", data0)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla0/config", data0
+    )
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "0AFFD2")})
 
@@ -1152,7 +1156,9 @@ async def test_attach_remove_late2(
         '  "type": "button_short_press",'
         '  "subtype": "button_1" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla0/config", data0)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla0/config", data0
+    )
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "0AFFD2")})
 
@@ -1512,7 +1518,9 @@ async def test_cleanup_device_with_entity1(
     data2 = json.dumps(config2)
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla2/config", data2)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla2/config", data2
+    )
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
@@ -1581,7 +1589,9 @@ async def test_cleanup_device_with_entity2(
     data2 = json.dumps(config2)
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla2/config", data2)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla2/config", data2
+    )
     await hass.async_block_till_done()
 
     # Verify device registry entry is created

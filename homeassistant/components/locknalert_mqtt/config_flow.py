@@ -14,6 +14,11 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from aiohttp import ClientSession, TCPConnector
+from aiolocknalert import (
+    LocknAlertBridgeApi,
+    LocknAlertCannotConnect,
+    LocknAlertInvalidResponse,
+)
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -82,15 +87,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
-from aiolocknalert import (
-    LocknAlertBridgeApi,
-    LocknAlertCannotConnect,
-    LocknAlertInvalidResponse,
-)
 from .client import MqttClientSetup
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
@@ -383,7 +382,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except (ValueError, vol.Error, vol.Invalid):
+    except ValueError, vol.Error, vol.Invalid:
         errors[field] = error
 
 
@@ -744,7 +743,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except (ValueError, vol.Error, vol.Invalid):
+        except ValueError, vol.Error, vol.Invalid:
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -883,7 +882,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             api_port = int(
                 discovery_info.properties.get(DISCOVERY_ATTR_API_PORT, DEFAULT_API_PORT)
             )
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             api_port = DEFAULT_API_PORT
 
         # Store discovery info — connectivity is validated on confirm submit.
@@ -1017,7 +1016,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_BRIDGE_SERIAL): TEXT_SELECTOR,
                 }
             )
-            return self.async_show_form(step_id="broker", data_schema=schema, errors=errors)
+            return self.async_show_form(
+                step_id="broker", data_schema=schema, errors=errors
+            )
         if await async_get_broker_settings(
             self,
             fields,
@@ -1034,15 +1035,28 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     # First try to obtain bridge identity (serial) where possible
                     try:
                         info = await bridge_api.async_get_info(session)
-                        serial_found = info.get(DISCOVERY_ATTR_SERIAL) if isinstance(info, dict) else None
+                        serial_found = (
+                            info.get(DISCOVERY_ATTR_SERIAL)
+                            if isinstance(info, dict)
+                            else None
+                        )
                         # common keys fallback
                         if not serial_found:
-                            serial_found = info.get("serial") if isinstance(info, dict) else None
+                            serial_found = (
+                                info.get("serial") if isinstance(info, dict) else None
+                            )
                         if serial_found:
                             validated_user_input[CONF_BRIDGE_SERIAL] = serial_found
-                            _LOGGER.debug("LocknAlert bridge serial discovered via API: %s", serial_found)
+                            _LOGGER.debug(
+                                "LocknAlert bridge serial discovered via API: %s",
+                                serial_found,
+                            )
                     except Exception as _err:  # noqa: BLE001  # still attempt bootstrap even if identity fetch fails
-                        _LOGGER.debug("Could not fetch bridge identity from %s: %s", validated_user_input[CONF_BROKER], _err)
+                        _LOGGER.debug(
+                            "Could not fetch bridge identity from %s: %s",
+                            validated_user_input[CONF_BROKER],
+                            _err,
+                        )
 
                     # Then bootstrap MQTT credentials
                     mqtt_config = await bridge_api.async_bootstrap(session)
@@ -1900,7 +1914,7 @@ def async_convert_to_pem(
             encryption_algorithm=NoEncryption(),
         )
         return pem_key_data.decode("utf-8")
-    except (TypeError, ValueError, SSLError):
+    except TypeError, ValueError, SSLError:
         _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
         return None
 
@@ -1925,7 +1939,7 @@ def _validate_pki_file(
     return True
 
 
-async def async_get_broker_settings(  # noqa: C901
+async def async_get_broker_settings(
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -2049,15 +2063,11 @@ async def async_get_broker_settings(  # noqa: C901
             errors["base"] = error
             return False
 
-        if SET_CA_CERT in validated_user_input:
-            del validated_user_input[SET_CA_CERT]
-        if SET_CLIENT_CERT in validated_user_input:
-            del validated_user_input[SET_CLIENT_CERT]
+        validated_user_input.pop(SET_CA_CERT, None)
+        validated_user_input.pop(SET_CLIENT_CERT, None)
         if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
-            if CONF_WS_PATH in validated_user_input:
-                del validated_user_input[CONF_WS_PATH]
-            if CONF_WS_HEADERS in validated_user_input:
-                del validated_user_input[CONF_WS_HEADERS]
+            validated_user_input.pop(CONF_WS_PATH, None)
+            validated_user_input.pop(CONF_WS_HEADERS, None)
             return True
         try:
             validated_user_input[CONF_WS_HEADERS] = json_loads(
@@ -2266,7 +2276,10 @@ def try_connection(
         user = user_input.get(CONF_USERNAME)
         port = user_input.get(CONF_PORT)
         _LOGGER.debug(
-            "Attempting MQTT connection to %s:%s as user=%s", user_input[CONF_BROKER], port, user
+            "Attempting MQTT connection to %s:%s as user=%s",
+            user_input[CONF_BROKER],
+            port,
+            user,
         )
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Attempting MQTT connection (failed to extract details)")
@@ -2276,9 +2289,15 @@ def try_connection(
 
     try:
         success = result.get(timeout=MQTT_TIMEOUT)
-        _LOGGER.debug("MQTT connect result for %s: %s", user_input[CONF_BROKER], success)
+        _LOGGER.debug(
+            "MQTT connect result for %s: %s", user_input[CONF_BROKER], success
+        )
     except queue.Empty:
-        _LOGGER.debug("MQTT connection attempt to %s timed out after %s seconds", user_input[CONF_BROKER], MQTT_TIMEOUT)
+        _LOGGER.debug(
+            "MQTT connection attempt to %s timed out after %s seconds",
+            user_input[CONF_BROKER],
+            MQTT_TIMEOUT,
+        )
         return False
     else:
         return success
@@ -2306,7 +2325,7 @@ def check_certicate_chain() -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)

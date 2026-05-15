@@ -47,6 +47,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
 
+from .async_client import AsyncMQTTClient
 from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
@@ -85,8 +86,6 @@ from .models import (
     ReceiveMessage,
 )
 from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
-
-from .async_client import AsyncMQTTClient
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -172,7 +171,7 @@ async def async_publish(
             # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except (AttributeError, LookupError, UnicodeEncodeError):
+            except AttributeError, LookupError, UnicodeEncodeError:
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,
@@ -1171,7 +1170,7 @@ class MQTT:
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
-                except (AttributeError, UnicodeDecodeError):
+                except AttributeError, UnicodeDecodeError:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],

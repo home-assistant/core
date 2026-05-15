@@ -701,7 +701,9 @@ async def test_cleanup_device_with_entity_and_trigger_1(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", data3)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla3/config", data3
+    )
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
@@ -773,7 +775,9 @@ async def test_cleanup_device_with_entity2(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "homeassistant/alarm_control_panel/bla3/config", data3)
+    async_fire_mqtt_message(
+        hass, "homeassistant/alarm_control_panel/bla3/config", data3
+    )
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
