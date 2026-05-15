@@ -243,6 +243,41 @@ async def test_homeegram_connection_listener(
     assert states.state is not STATE_UNAVAILABLE
 
 
+async def test_homeegram_playing_in_homee(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if homeegram playing in homee is sensed correctly for homeegram buttons."""
+    mock_homee.nodes = [build_mock_node("switches.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    mock_homee.homeegrams = build_homeegrams()
+    await setup_integration(hass, mock_config_entry)
+
+    states = hass.states.get("switch.homeegrams_test_hg_2")
+    assert states.state is not None
+
+    # Simulate homeegram playing in homee
+    mock_homee.homeegrams[1].play = True
+    mock_homee.homeegrams[1].add_on_changed_listener.call_args_list[0][0][0](
+        mock_homee.homeegrams[1]
+    )
+    await hass.async_block_till_done()
+
+    states = hass.states.get("switch.homeegrams_test_hg_2")
+    assert states.state == STATE_ON
+
+    # Simulate homeegram stopped in homee
+    mock_homee.homeegrams[1].play = False
+    mock_homee.homeegrams[1].add_on_changed_listener.call_args_list[0][0][0](
+        mock_homee.homeegrams[1]
+    )
+    await hass.async_block_till_done()
+
+    states = hass.states.get("switch.homeegrams_test_hg_2")
+    assert states.state is not STATE_ON
+
+
 async def test_homeegram_inactive(
     hass: HomeAssistant,
     mock_homee: MagicMock,
