@@ -57,7 +57,7 @@ def mock_lg_tv_code_to_command() -> Generator[None]:
     rather than the raw NEC timings.
     """
     with patch(
-        "homeassistant.components.lg_infrared.entity.LGTVCode.to_command",
+        "infrared_protocols.codes.lg.tv.LGTVCode.to_command",
         autospec=True,
         side_effect=lambda self, **kwargs: self,
     ):
