@@ -6,8 +6,10 @@ from qbusmqttapi.state import QbusMqttStepperState, StateType
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, create_new_entities
 
@@ -63,6 +65,18 @@ class QbusStepper(QbusEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        value = self._name_to_value.get(option)
+
+        if value is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_option",
+                translation_placeholders={
+                    "option": option,
+                    "options": ", ".join(self._attr_options),
+                },
+            )
+
         state = QbusMqttStepperState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_value(self._name_to_value[option])
 

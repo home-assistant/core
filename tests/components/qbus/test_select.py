@@ -3,14 +3,16 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    DOMAIN as SELET_DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
@@ -61,7 +63,7 @@ async def test_select_option_updates_stepper(
     # Select option
     mqtt_mock.reset_mock()
     await hass.services.async_call(
-        SELET_DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: _STEPPER_ENTITY_ID,
@@ -86,3 +88,22 @@ async def test_select_option_updates_stepper(
 
     entity = hass.states.get(_STEPPER_ENTITY_ID)
     assert entity.state == "the hotstepper"
+
+
+async def test_select_with_unknown_option(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_integration: None,
+) -> None:
+    """Test select with passing an unknown option value."""
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: _STEPPER_ENTITY_ID,
+                ATTR_OPTION: "I'm the lyrical gangster",
+            },
+            blocking=True,
+        )
