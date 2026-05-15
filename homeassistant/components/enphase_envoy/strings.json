@@ -732,13 +732,11 @@
       "init": {
         "data": {
           "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
-          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares.",
-          "set_retry_attempts": "Number of data request attempts"
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
         },
         "data_description": {
           "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
-          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares.",
-          "set_retry_attempts": "Number of data request attempts before failure is signaled. Each request attempt waits 45 seconds for a reply. Increasing this value means Home Assistant waits longer before giving up on a request, which can also delay sensor updates while retries are in progress. Default is 4 attempts, and the configurable range is 2-10. For instance, increase this value when daily outages still occur around 11 PM, the time when the Envoy recycles internal tasks."
+          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
         },
         "title": "Envoy {serial} {host} options"
       }

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -13,10 +13,10 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
+    DEFAULT_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
-    OPTION_SET_RETRY_ATTEMPTS,
-    OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
+    SETUP_RETRY_TIMEOUT,
     Platform,
 )
 from homeassistant.components.enphase_envoy.coordinator import (
@@ -635,8 +635,9 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
 async def test_retry_option_in_config_file(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test coordinator with retry option provided from config."""
+    """Test coordinator with token provided from config."""
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -654,77 +655,16 @@ async def test_retry_option_in_config_file(
             CONF_PASSWORD: "test-password",
             CONF_TOKEN: token,
         },
-        options={OPTION_SET_RETRY_ATTEMPTS: 6},
     )
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
     await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
-    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=240, max_attempts=8)
 
-
-@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
-async def test_default_retry_option_in_config_file(
-    hass: HomeAssistant,
-    mock_envoy: AsyncMock,
-) -> None:
-    """Test coordinator with default retry option provided from config."""
-    token = encode(
-        payload={"name": "envoy", "exp": 1907837780},
-        key="secret",
-        algorithm="HS256",
+    assert mock_envoy.mock_calls[0] == call.set_retry_policy(
+        max_delay=SETUP_RETRY_TIMEOUT
     )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-        title="Envoy 1234",
-        unique_id="1234",
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Envoy 1234",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_TOKEN: token,
-        },
-        options={OPTION_SET_RETRY_ATTEMPTS: OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE},
+    assert mock_envoy.mock_calls[-1] == call.set_retry_policy(
+        max_delay=DEFAULT_RETRY_TIMEOUT
     )
-    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
-    await setup_integration(hass, entry)
-
-    assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "116"
-    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=150, max_attempts=6)
-
-
-@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
-async def test_retry_option_not_in_config_file(
-    hass: HomeAssistant,
-    mock_envoy: AsyncMock,
-) -> None:
-    """Test coordinator when the retry option is absent from config."""
-    token = encode(
-        payload={"name": "envoy", "exp": 1907837780},
-        key="secret",
-        algorithm="HS256",
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-        title="Envoy 1234",
-        unique_id="1234",
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Envoy 1234",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_TOKEN: token,
-        },
-        options={},
-    )
-    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
-    await setup_integration(hass, entry)
-
-    assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "116"
-    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=150, max_attempts=6)

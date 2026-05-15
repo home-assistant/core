@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
-from pyenphase.const import LOCAL_TIMEOUT
 from pyenphase.models.home import EnvoyInterfaceInformation
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,10 +21,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DEFAULT_RETRY_TIMEOUT,
     DOMAIN,
     INVALID_AUTH_ERRORS,
-    OPTION_SET_RETRY_ATTEMPTS,
-    OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
+    SETUP_RETRY_TIMEOUT,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -58,6 +57,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
         self._setup_complete = False
+        self._default_timeout = False
         self.envoy_firmware = ""
         self.interface = None
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
@@ -220,45 +220,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             cancel_on_shutdown=True,
         )
 
-    def _set_retry_policy(self) -> None:
-        """Set the Envoy retry policy from options or the default value."""
-        retries: int = self.config_entry.options.get(
-            OPTION_SET_RETRY_ATTEMPTS, OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE
-        )
-        # Pyenphase Envoy class uses tenacity retry stop_after_delay and
-        # stop_after_attempt to end failing request retries. Timeouts used
-        # are 45 seconds request timeout and 10 sec connection timeout.
-        # stop_after_delay limits total time spent retrying requests that
-        # keep timing out, while stop_after_attempt limits retries for
-        # fast failures that do not consume the full timeout.
-        #
-        # In HA we expose a simpler "number of request attempts" option
-        # based on the 45 second request timeout. Pyenphase's default
-        # max_delay of 150 seconds therefore maps to roughly
-        # OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE timeout-length attempts,
-        # while its default max_attempts of 6 remains higher so fast
-        # failures can still be retried more times.
-        #
-        # Envoy uses 45 sec timeouts. Add a 15 second buffer to
-        # account for random wait time between attempts, then add
-        # 45 seconds for each additional timeout-length attempt.
-        # For example, 60 seconds allows 2 timeout-length attempts
-        # plus up to 15 seconds of wait time between them.
-        # use timeout value defined by pyenphase in calculation.
-        timeout = int(45 if LOCAL_TIMEOUT.total is None else LOCAL_TIMEOUT.total)
-        retry_delay: int = 15 + max(0, (retries - 1) * timeout)
-        # set attempts no lower than 4 and add 2 extra
-        # to match pyenphase value logic. this one is used for
-        # retry on fast failures.
-        retry_attempts = max(4, retries + 2)
-        self.envoy.set_retry_policy(max_delay=retry_delay, max_attempts=retry_attempts)
-        _LOGGER.debug(
-            "Set retry policy step %s: %s and %s",
-            retries,
-            retry_delay,
-            retry_attempts,
-        )
-
     async def _async_setup_and_authenticate(self) -> None:
         """Set up and authenticate with the envoy."""
         envoy = self.envoy
@@ -312,11 +273,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 if not self._setup_complete:
                     _LOGGER.debug("update on try %s, setup not complete", tries)
+                    self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
+                    self._default_timeout = False
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
-                    self._set_retry_policy()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
+                if not self._default_timeout:
+                    self.envoy.set_retry_policy(max_delay=DEFAULT_RETRY_TIMEOUT)
+                    self._default_timeout = True
             except INVALID_AUTH_ERRORS as err:
                 _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
                 if self._setup_complete and tries == 0:
