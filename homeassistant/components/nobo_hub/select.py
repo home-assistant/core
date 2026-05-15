@@ -87,7 +87,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_global_override_failed",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"option": option},
             ) from err
 
     async def async_update(self) -> None:
@@ -134,7 +134,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_week_profile_failed",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"option": option},
             ) from err
 
     async def async_update(self) -> None:

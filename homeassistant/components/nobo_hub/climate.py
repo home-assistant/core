@@ -106,16 +106,23 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
-        if hvac_mode == HVACMode.AUTO:
-            await self._apply_preset(PRESET_NONE, "set_hvac_mode_failed")
-        elif hvac_mode == HVACMode.HEAT:
-            await self._apply_preset(PRESET_COMFORT, "set_hvac_mode_failed")
+        preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
+        await self._apply_preset(
+            preset, "set_hvac_mode_failed", {"hvac_mode": str(hvac_mode)}
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
-        await self._apply_preset(preset_mode, "set_preset_mode_failed")
+        await self._apply_preset(
+            preset_mode, "set_preset_mode_failed", {"preset_mode": preset_mode}
+        )
 
-    async def _apply_preset(self, preset_mode: str, translation_key: str) -> None:
+    async def _apply_preset(
+        self,
+        preset_mode: str,
+        translation_key: str,
+        translation_placeholders: dict[str, str],
+    ) -> None:
         if preset_mode == PRESET_ECO:
             mode = nobo.API.OVERRIDE_MODE_ECO
         elif preset_mode == PRESET_AWAY:
@@ -135,7 +142,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
-                translation_placeholders={"error": str(err)},
+                translation_placeholders=translation_placeholders,
             ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -151,7 +158,6 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_temperature_failed",
-                    translation_placeholders={"error": str(err)},
                 ) from err
 
     async def async_update(self) -> None:
