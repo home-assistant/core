@@ -212,13 +212,13 @@ def async_setup_non_entity_entry_helper(
     async_setup: _SetupNonEntityHelperCallbackProtocol,
     discovery_schema: vol.Schema,
 ) -> None:
-    """Set up automation or tag creation dynamically through MQTT discovery."""
+    """Set up automation creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
 
     async def _async_setup_non_entity_entry_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
-        """Set up an MQTT entity, automation or tag from discovery."""
+        """Set up an MQTT entity or automation from discovery."""
         if not _verify_mqtt_config_entry_enabled_for_discovery(
             hass, domain, discovery_payload
         ):
