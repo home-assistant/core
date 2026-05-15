@@ -7,11 +7,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'item 0',
-        'item 1 met een naam',
-        '2',
+        '0',
+        'Here comes',
+        'the hotstepper',
         '3',
-        'item 4, skipped 2',
+        'item 4',
         '5',
         '6',
         '7',
@@ -55,11 +55,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'CTD 000001 Stepper',
       'options': list([
-        'item 0',
-        'item 1 met een naam',
-        '2',
+        '0',
+        'Here comes',
+        'the hotstepper',
         '3',
-        'item 4, skipped 2',
+        'item 4',
         '5',
         '6',
         '7',

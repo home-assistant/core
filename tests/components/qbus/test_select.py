@@ -5,11 +5,28 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.select import (
+    DOMAIN as SELET_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
+from tests.typing import MqttMockHAClient
+
+_PAYLOAD_STEPPER_STATE_THE_HOTSTEPPER = (
+    '{"id":"UL90","properties":{"value":2},"type":"state"}'
+)
+_PAYLOAD_STEPPER_SET_THE_HOTSTEPPER = (
+    '{"id": "UL90", "type": "state", "properties": {"value": 2}}'
+)
+
+_TOPIC_STEPPER_STATE = "cloudapp/QBUSMQTTGW/UL1/UL90/state"
+_TOPIC_STEPPER_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL90/setState"
+
+_STEPPER_ENTITY_ID = "select.ctd_000001_stepper"
 
 
 async def test_select(
@@ -25,3 +42,47 @@ async def test_select(
         await setup_integration_deferred()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_select_option_updates_stepper(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_integration: None,
+) -> None:
+    """Test selecting an option."""
+
+    entity_id = "select.ctd_000001_stepper"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    options = state.attributes["options"]
+    assert options
+
+    # Select option
+    mqtt_mock.reset_mock()
+    await hass.services.async_call(
+        SELET_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: _STEPPER_ENTITY_ID,
+            ATTR_OPTION: "the hotstepper",
+        },
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        _TOPIC_STEPPER_SET_STATE,
+        _PAYLOAD_STEPPER_SET_THE_HOTSTEPPER,
+        0,
+        False,
+        message_expiry_interval=None,
+    )
+
+    # Simulate response
+    async_fire_mqtt_message(
+        hass, _TOPIC_STEPPER_STATE, _PAYLOAD_STEPPER_STATE_THE_HOTSTEPPER
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(_STEPPER_ENTITY_ID)
+    assert entity.state == "the hotstepper"
