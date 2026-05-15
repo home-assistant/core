@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared.common import MockInfraredEntity
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.samsung_tv"
 
@@ -74,7 +74,7 @@ async def test_entities(
 @pytest.mark.usefixtures("init_integration")
 async def test_media_player_action_sends_correct_code(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
     service_data: dict[str, bool],
     expected_code: SamsungTVCode,
@@ -87,5 +87,5 @@ async def test_media_player_action_sends_correct_code(
         blocking=True,
     )
 
-    assert len(mock_infrared_entity.send_command_calls) == 1
-    assert mock_infrared_entity.send_command_calls[0] == expected_code
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code

@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.infrared import ENTITY_ID as MOCK_INFRARED_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
-        title="Samsung TV via Test IR transmitter",
+        title="Samsung TV via Test IR emitter",
         data={
             CONF_DEVICE_TYPE: SamsungDeviceType.TV,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
@@ -59,7 +59,7 @@ def mock_make_samsung_tv_command() -> Generator[None]:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_infrared_entity,
+    mock_infrared_emitter_entity,
     mock_make_samsung_tv_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
