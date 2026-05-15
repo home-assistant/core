@@ -19,7 +19,9 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     expiry = coordinator.data.isoformat() if coordinator.data else None
-    cert_error = str(coordinator.cert_error) if coordinator.cert_error else None
+    cert_error = (
+        type(coordinator.cert_error).__name__ if coordinator.cert_error else None
+    )
 
     # Build entry and coordinator diagnostics.
     entry_diagnostics = {
