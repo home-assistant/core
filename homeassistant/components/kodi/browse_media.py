@@ -225,7 +225,8 @@ async def library_payload(hass):
         item = await media_source.async_browse_media(
             hass, None, content_filter=media_source_content_filter
         )
-        if item.is_root:
+        # If domain is None, it's overview of available sources
+        if item.domain is None:
             library_info.children.extend(item.children)
         else:
             library_info.children.append(item)

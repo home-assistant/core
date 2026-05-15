@@ -37,6 +37,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -598,7 +599,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         # Append media source items
         with suppress(BrowseError):
             browse = await self._async_browse_media_source()
-            if browse.is_root and browse.children:
+            # If domain is None, it's an overview of available sources
+            if browse.domain is None and browse.children:
                 children.extend(browse.children)
             else:
                 children.append(browse)
@@ -622,7 +624,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
-    ) -> media_source.BrowseMediaSource | media_source.RootBrowseMediaSource:
+    ) -> BrowseMediaSource:
         """Browse a media source item."""
         return await media_source.async_browse_media(
             self.hass,

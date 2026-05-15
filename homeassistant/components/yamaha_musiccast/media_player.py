@@ -380,7 +380,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                         "audio/"
                     ),
                 )
-                if item.is_root:
+                # If domain is None, it's overview of available sources
+                if item.domain is None:
                     children.extend(item.children)
                 else:
                     children.append(item)

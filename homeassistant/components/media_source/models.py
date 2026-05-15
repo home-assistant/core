@@ -25,8 +25,6 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    is_root: bool = False
-
     def __init__(self, *, domain: str, identifier: str | None, **kwargs: Any) -> None:
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain}"
@@ -42,7 +40,7 @@ class BrowseMediaSource(BrowseMedia):
 class RootBrowseMediaSource(BrowseMedia):
     """Represent the root media source browse node."""
 
-    is_root: bool = True
+    domain: None = None
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize root media source browse media."""
