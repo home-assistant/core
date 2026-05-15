@@ -33,7 +33,6 @@ def mock_setup_entry() -> Generator[Mock]:
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -100,7 +99,6 @@ async def test_full_flow(
     }
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow_already_exists(
     hass: HomeAssistant,
@@ -154,7 +152,6 @@ async def test_full_flow_already_exists(
     assert result2["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
@@ -214,7 +211,6 @@ async def test_reauth(
     assert mock_config_entry.data["token"]["access_token"] == reauth_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,

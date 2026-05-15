@@ -32,7 +32,6 @@ def mock_setup_entry() -> Generator[Mock]:
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
@@ -98,7 +97,6 @@ async def test_full_flow(
     }
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_already_exists(
@@ -152,7 +150,6 @@ async def test_full_flow_already_exists(
     assert result2["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
@@ -212,7 +209,6 @@ async def test_reauth(
     assert mock_config_entry.data["token"]["access_token"] == reauth_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_wrong_account(
@@ -273,7 +269,6 @@ async def test_reauth_wrong_account(
     assert mock_config_entry.data["token"]["access_token"] == jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_with_email_match(
@@ -335,7 +330,6 @@ async def test_legacy_migration_with_email_match(
     assert mock_legacy_config_entry.data["token"]["access_token"] == migration_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_wrong_email(
@@ -394,7 +388,6 @@ async def test_legacy_migration_wrong_email(
     assert "token" not in mock_legacy_config_entry.data  # Still legacy data
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_legacy_migration_no_email_in_jwt(

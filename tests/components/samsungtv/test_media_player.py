@@ -1332,7 +1332,7 @@ async def test_upnp_not_available(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "upnp_factory")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_upnp_missing_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
