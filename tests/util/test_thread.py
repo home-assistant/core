@@ -50,7 +50,7 @@ async def test_thread_fails_raise(hass: HomeAssistant) -> None:
     await asyncio.wait_for(finish_event.wait(), timeout=0.1)
     test_thread.join()
 
-    with pytest.raises(SystemError):
+    with pytest.raises(ValueError, match="Thread not found"):
         test_thread.raise_exc(ValueError)
 
 
