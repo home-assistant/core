@@ -361,6 +361,7 @@ async def test_ssdp(
 
     for k, v in expected_result.items():
         assert result[k] == v  # type: ignore[literal-required] # expected is a subset
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if result.get("data_schema"):
         assert result["data_schema"] is not None
         assert result["data_schema"]({})[CONF_URL] == url + "/"

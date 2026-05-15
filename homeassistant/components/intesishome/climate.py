@@ -247,7 +247,8 @@ class IntesisAC(ClimateEntity):
             await self._controller.set_temperature(self._device_id, temperature)
             self._attr_target_temperature = temperature
 
-        # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
+        # Write updated temperature to HA state to avoid
+        # flapping (API confirmation is slow)
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
