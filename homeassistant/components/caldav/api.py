@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ASSUMED_COMPONENTS = {"VEVENT", "VTODO"}
+ASSUMED_COMPONENTS = frozenset({"VEVENT", "VTODO"})
 
 
 async def async_get_calendars(
