@@ -2,7 +2,8 @@
 
 from typing import Any
 
-from rf_protocols import ModulationType, OOKCommand
+from rf_protocols.commands import ModulationType
+from rf_protocols.commands.ook import OOKCommand
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import async_get_transmitters
@@ -24,6 +25,7 @@ from .const import (
     DOMAIN,
     FREQUENCY_HZ,
 )
+
 
 _SAMPLE_COMMAND = OOKCommand(
     frequency=FREQUENCY_HZ,
@@ -205,8 +207,8 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=-1_000_000_000,
-                            max=1_000_000_000,
+                            min=0,
+                            max=0x3FFFFFF,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -218,8 +220,8 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=-1_000,
-                            max=1_000,
+                            min=1,
+                            max=16,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -305,8 +307,8 @@ class KakuRcOptionsFlow(OptionsFlow):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=-1_000_000_000,
-                            max=1_000_000_000,
+                            min=0,
+                            max=0x3FFFFFF,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -318,8 +320,8 @@ class KakuRcOptionsFlow(OptionsFlow):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=-1_000,
-                            max=1_000,
+                            min=1,
+                            max=16,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),

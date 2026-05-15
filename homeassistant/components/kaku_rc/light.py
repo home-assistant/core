@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from rf_protocols import OOKCommand
+from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command

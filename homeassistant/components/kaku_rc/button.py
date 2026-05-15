@@ -1,6 +1,6 @@
 """Button platform for Kaku RC 32 bit."""
 
-from rf_protocols import OOKCommand
+from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.radio_frequency import async_send_command
