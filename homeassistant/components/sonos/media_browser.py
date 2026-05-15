@@ -374,8 +374,7 @@ async def root_payload(
         item = await media_source.async_browse_media(
             hass, None, content_filter=media_source_filter
         )
-        # If domain is None, it's overview of available sources
-        if item.domain is None and item.children is not None:
+        if item.is_root and item.children is not None:
             children.extend(item.children)
         else:
             children.append(item)
