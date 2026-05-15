@@ -566,6 +566,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
     # Setup reload service after all platforms have loaded
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):

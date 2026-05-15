@@ -557,7 +557,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
-        metric.replace("\u03bc", "\u00b5")
+        metric = metric.replace("\u03bc", "\u00b5")
         return "".join(
             [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
@@ -754,7 +754,7 @@ class PrometheusMetrics:
         metric.set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
-        self._numeric_metric(state, "binary_sensor", "binary boolean")
+        self._numeric_metric(state, "binary_sensor", "binary sensor")
 
     def _handle_input_boolean(self, state: State) -> None:
         self._numeric_metric(state, "input_boolean", "input boolean")
@@ -905,7 +905,7 @@ class PrometheusMetrics:
             state,
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
-            "Target temperature in degrees Celsius",
+            "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,

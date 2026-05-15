@@ -297,7 +297,8 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         """Select new option."""
         if option not in self.options:
             raise HomeAssistantError(
-                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
+                f"Invalid option: {option} (possible options:"
+                f" {', '.join(self.options)})"
             )
         self._attr_current_option = option
         self.async_write_ha_state()
