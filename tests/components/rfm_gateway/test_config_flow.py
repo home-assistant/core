@@ -5,11 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.rfm_gateway.client import (
-    RfmCapabilities,
-    RfmGatewayConnectionError,
-)
-from homeassistant.components.rfm_gateway.const import CONF_HOST, DOMAIN
+from homeassistant.components import rfm_gateway
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,8 +15,8 @@ TEST_HOST = "192.0.2.10"
 TEST_OTHER_HOST = "192.0.2.11"
 
 
-def _mock_caps() -> RfmCapabilities:
-    return RfmCapabilities(
+def _mock_caps() -> rfm_gateway.RfmCapabilities:
+    return rfm_gateway.RfmCapabilities(
         supported_frequency_ranges=[(433050000, 434790000)],
         supported_modulations=["ook"],
         device_name="RFM Gateway",
@@ -34,7 +30,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         new=AsyncMock(return_value=_mock_caps()),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
+            rfm_gateway.DOMAIN,
             context={"source": SOURCE_USER},
         )
 
@@ -43,28 +39,28 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST},
+            user_input={rfm_gateway.CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFM Gateway"
-    assert result["data"] == {CONF_HOST: TEST_HOST}
+    assert result["data"] == {rfm_gateway.CONF_HOST: TEST_HOST}
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test manual setup connection failure."""
     with patch(
         "homeassistant.components.rfm_gateway.config_flow.RfmGatewayConfigFlow._async_get_capabilities",
-        new=AsyncMock(side_effect=RfmGatewayConnectionError("boom")),
+        new=AsyncMock(side_effect=rfm_gateway.RfmGatewayConnectionError("boom")),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
+            rfm_gateway.DOMAIN,
             context={"source": SOURCE_USER},
         )
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST},
+            user_input={rfm_gateway.CONF_HOST: TEST_HOST},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -89,7 +85,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         new=AsyncMock(return_value=_mock_caps()),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
+            rfm_gateway.DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=discovery,
         )
@@ -103,7 +99,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: TEST_HOST}
+    assert result["data"] == {rfm_gateway.CONF_HOST: TEST_HOST}
 
 
 async def test_zeroconf_ignores_non_rfm_device(hass: HomeAssistant) -> None:
@@ -119,7 +115,7 @@ async def test_zeroconf_ignores_non_rfm_device(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        rfm_gateway.DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery,
     )

@@ -14,6 +14,5 @@
         "model": "rfm-gateway"
       }
     }
-  ],
-  "requirements": ["rf-protocols==3.1.0"]
+  ]
 }

@@ -7,14 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from rf_protocols import ModulationType
 
-from homeassistant.components import radio_frequency
-from homeassistant.components.radio_frequency.const import DOMAIN as RF_DOMAIN
-from homeassistant.components.rfm_gateway.client import (
-    RfmCapabilities,
-    RfmGatewayConnectionError,
-    RfmGatewayProtocolError,
-)
-from homeassistant.components.rfm_gateway.const import CONF_HOST, DOMAIN
+from homeassistant.components import radio_frequency, rfm_gateway
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -25,14 +18,15 @@ from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyCommand
 
 TEST_HOST = "192.0.2.10"
+RF_DOMAIN = radio_frequency.DOMAIN
 
 
 def _mock_caps(
     *,
     supported_modulations: list[str] | None = None,
-) -> RfmCapabilities:
+) -> rfm_gateway.RfmCapabilities:
     """Return mocked gateway capabilities."""
-    return RfmCapabilities(
+    return rfm_gateway.RfmCapabilities(
         supported_frequency_ranges=[(433_050_000, 434_790_000)],
         supported_modulations=supported_modulations or ["ook"],
         device_name="RFM Gateway",
@@ -42,9 +36,9 @@ def _mock_caps(
 def _mock_config_entry() -> MockConfigEntry:
     """Return a config entry for the RFM Gateway integration."""
     return MockConfigEntry(
-        domain=DOMAIN,
+        domain=rfm_gateway.DOMAIN,
         title="RFM Gateway",
-        data={CONF_HOST: TEST_HOST},
+        data={rfm_gateway.CONF_HOST: TEST_HOST},
         unique_id=TEST_HOST,
     )
 
@@ -59,7 +53,7 @@ def _entity_id(hass: HomeAssistant) -> str:
 async def _setup_entry(
     hass: HomeAssistant,
     *,
-    capabilities: RfmCapabilities | Exception,
+    capabilities: rfm_gateway.RfmCapabilities | Exception,
 ) -> MockConfigEntry:
     """Set up the config entry with patched capabilities lookup."""
     assert await async_setup_component(hass, RF_DOMAIN, {})
@@ -96,7 +90,7 @@ async def test_setup_entry_failure_sets_setup_error(hass: HomeAssistant) -> None
     """Test capability fetch failure leaves the entry in setup error."""
     entry = await _setup_entry(
         hass,
-        capabilities=RfmGatewayConnectionError("cannot_connect"),
+        capabilities=rfm_gateway.RfmGatewayConnectionError("cannot_connect"),
     )
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -155,10 +149,9 @@ async def test_send_command_failure_marks_entity_unavailable(hass: HomeAssistant
 
     with patch(
         "homeassistant.components.rfm_gateway.client.RfmGatewayClient.async_send_raw",
-        new=AsyncMock(side_effect=RfmGatewayProtocolError("parameter error")),
-    ):
-        with pytest.raises(HomeAssistantError, match="RF transmit via 192.0.2.10 failed"):
-            await radio_frequency.async_send_command(hass, entity_id, command)
+        new=AsyncMock(side_effect=rfm_gateway.RfmGatewayProtocolError("parameter error")),
+    ), pytest.raises(HomeAssistantError, match="RF transmit via 192.0.2.10 failed"):
+        await radio_frequency.async_send_command(hass, entity_id, command)
 
     state = hass.states.get(entity_id)
     assert state is not None

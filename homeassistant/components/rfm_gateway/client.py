@@ -1,14 +1,16 @@
-from __future__ import annotations
+"""Client for communicating with an RFM Gateway device."""
 
 from dataclasses import dataclass
-import asyncio
 from typing import Any
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientTimeout
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_TIMEOUT_S
+
+TIMEOUT = ClientTimeout(total=DEFAULT_TIMEOUT_S)
 
 
 class RfmGatewayError(Exception):
@@ -25,28 +27,35 @@ class RfmGatewayProtocolError(RfmGatewayError):
 
 @dataclass(slots=True)
 class RfmCapabilities:
+    """Gateway capabilities used to validate and send RF commands."""
+
     supported_frequency_ranges: list[tuple[int, int]]
     supported_modulations: list[str]
     device_name: str | None = None
 
 
 class RfmGatewayClient:
+    """HTTP API client for an RFM Gateway."""
+
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         base_url: str,
     ) -> None:
+        """Initialize the client with Home Assistant and base URL."""
         self._hass = hass
         self._base_url = base_url.rstrip("/")
 
     @property
     def base_url(self) -> str:
+        """Return the normalized base URL for the gateway."""
         return self._base_url
 
     def _headers(self) -> dict[str, str]:
         return {"Content-Type": "application/json"}
 
     async def async_get_capabilities(self) -> RfmCapabilities:
+        """Fetch gateway capabilities and validate the payload."""
         session = async_get_clientsession(self._hass)
         url = f"{self._base_url}/api/rf/capabilities"
 
@@ -54,7 +63,7 @@ class RfmGatewayClient:
             async with session.get(
                 url,
                 headers=self._headers(),
-                timeout=DEFAULT_TIMEOUT_S,
+                timeout=TIMEOUT,
             ) as resp:
                 if resp.status != 200:
                     txt = await resp.text()
@@ -63,7 +72,7 @@ class RfmGatewayClient:
                     )
 
                 payload = await resp.json(content_type=None)
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise RfmGatewayConnectionError(f"Timeout while requesting {url}") from err
         except ClientError as err:
             raise RfmGatewayConnectionError(str(err)) from err
@@ -101,6 +110,7 @@ class RfmGatewayClient:
         repeat_count: int,
         timings_us: list[int],
     ) -> None:
+        """Send raw RF timings to the gateway transmit endpoint."""
         session = async_get_clientsession(self._hass)
         url = f"{self._base_url}/api/rf/transmit"
         payload: dict[str, Any] = {
@@ -115,7 +125,7 @@ class RfmGatewayClient:
                 url,
                 json=payload,
                 headers=self._headers(),
-                timeout=DEFAULT_TIMEOUT_S,
+                timeout=TIMEOUT,
             ) as resp:
                 if resp.status != 200:
                     txt = await resp.text()
@@ -133,7 +143,7 @@ class RfmGatewayClient:
                     if not ok:
                         msg = str(body.get("error", "gateway returned ok=false"))
                         raise RfmGatewayProtocolError(msg)
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise RfmGatewayConnectionError(f"Timeout while requesting {url}") from err
         except ClientError as err:
             raise RfmGatewayConnectionError(str(err)) from err

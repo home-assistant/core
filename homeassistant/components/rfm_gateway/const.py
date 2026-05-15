@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Constants for the RFM Gateway integration."""
 
 from typing import Final
 

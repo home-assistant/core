@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
-from homeassistant.components.rfm_gateway.client import (
-    RfmGatewayClient,
-    RfmGatewayConnectionError,
-    RfmGatewayProtocolError,
-)
+from homeassistant.components import rfm_gateway
 from homeassistant.core import HomeAssistant
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 BASE_URL = "http://192.0.2.10"
 
 
 async def test_get_capabilities_success(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test fetching capabilities successfully."""
     aioclient_mock.get(
@@ -29,7 +25,7 @@ async def test_get_capabilities_success(
         },
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
     capabilities = await client.async_get_capabilities()
 
     assert capabilities.device_name == "RFM Gateway"
@@ -38,7 +34,7 @@ async def test_get_capabilities_success(
 
 
 async def test_get_capabilities_invalid_response(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test invalid capabilities payload handling."""
     aioclient_mock.get(
@@ -50,35 +46,37 @@ async def test_get_capabilities_invalid_response(
         },
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
-    with pytest.raises(RfmGatewayProtocolError):
+    with pytest.raises(rfm_gateway.RfmGatewayProtocolError):
         await client.async_get_capabilities()
 
 
 async def test_get_capabilities_timeout(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test timeout handling when fetching capabilities."""
     aioclient_mock.get(
         f"{BASE_URL}/api/rf/capabilities",
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
-    with pytest.raises(RfmGatewayConnectionError):
+    with pytest.raises(rfm_gateway.RfmGatewayConnectionError):
         await client.async_get_capabilities()
 
 
-async def test_send_raw_success(hass: HomeAssistant, aioclient_mock) -> None:
+async def test_send_raw_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending raw RF command successfully."""
     aioclient_mock.post(
         f"{BASE_URL}/api/rf/transmit",
         json={"ok": True},
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
     await client.async_send_raw(
         frequency_hz=433920000,
@@ -89,7 +87,8 @@ async def test_send_raw_success(hass: HomeAssistant, aioclient_mock) -> None:
 
 
 async def test_send_raw_success_with_non_json_response(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test sending raw RF command with non-JSON success response."""
     aioclient_mock.post(
@@ -99,7 +98,7 @@ async def test_send_raw_success_with_non_json_response(
         headers={"Content-Type": "text/plain"},
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
     await client.async_send_raw(
         frequency_hz=433920000,
@@ -109,7 +108,9 @@ async def test_send_raw_success_with_non_json_response(
     )
 
 
-async def test_send_raw_error_status(hass: HomeAssistant, aioclient_mock) -> None:
+async def test_send_raw_error_status(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test failed raw RF transmit request."""
     aioclient_mock.post(
         f"{BASE_URL}/api/rf/transmit",
@@ -117,9 +118,9 @@ async def test_send_raw_error_status(hass: HomeAssistant, aioclient_mock) -> Non
         body="parameter error",
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
-    with pytest.raises(RfmGatewayProtocolError):
+    with pytest.raises(rfm_gateway.RfmGatewayProtocolError):
         await client.async_send_raw(
             frequency_hz=433920000,
             modulation="ook",
@@ -128,16 +129,18 @@ async def test_send_raw_error_status(hass: HomeAssistant, aioclient_mock) -> Non
         )
 
 
-async def test_send_raw_timeout(hass: HomeAssistant, aioclient_mock) -> None:
+async def test_send_raw_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test timeout handling when sending raw RF command."""
     aioclient_mock.post(
         f"{BASE_URL}/api/rf/transmit",
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
-    client = RfmGatewayClient(hass=hass, base_url=BASE_URL)
+    client = rfm_gateway.RfmGatewayClient(hass=hass, base_url=BASE_URL)
 
-    with pytest.raises(RfmGatewayConnectionError):
+    with pytest.raises(rfm_gateway.RfmGatewayConnectionError):
         await client.async_send_raw(
             frequency_hz=433920000,
             modulation="ook",
