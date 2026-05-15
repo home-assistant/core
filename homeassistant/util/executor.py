@@ -49,7 +49,7 @@ def join_or_interrupt_threads(
         if log:
             _log_thread_running_at_shutdown(thread.name, thread.ident)
 
-        with contextlib.suppress(SystemError):
+        with contextlib.suppress(SystemError, ValueError):
             # SystemError at this stage is usually a race condition
             # where the thread happens to die right before we force
             # it to raise the exception
