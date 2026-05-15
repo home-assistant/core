@@ -212,7 +212,7 @@ aiobafi6==0.9.0
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
 # homeassistant.components.idrive_e2
-aiobotocore==2.21.1
+aiobotocore==3.7.0
 
 # homeassistant.components.centriconnect
 aiocentriconnect==0.2.3
@@ -631,9 +631,6 @@ bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.107
-
-# homeassistant.components.aws
-botocore==1.37.1
 
 # homeassistant.components.bring
 bring-api==1.1.2
@@ -1465,7 +1462,7 @@ nhc==0.8.0
 nibe==2.22.0
 
 # homeassistant.components.nice_go
-nice-go==1.0.1
+nice-go==1.0.2
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
