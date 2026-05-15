@@ -777,7 +777,7 @@ async def test_brightness_not_supported(hass: HomeAssistant) -> None:
 
 
 async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
-    """Tests that turn on on a dimmable light delegates to API and parses brightness."""
+    """Tests turning on a dimmable light delegates to API and parses brightness."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
