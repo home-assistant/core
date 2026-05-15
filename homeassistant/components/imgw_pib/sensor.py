@@ -118,9 +118,7 @@ async def async_setup_entry(
             entity_reg.async_remove(entity_id)
 
     async_add_entities(
-        ImgwPibSensorEntity(coordinator, description)
-        for description in SENSOR_TYPES
-        if getattr(coordinator.data, description.key).value is not None
+        ImgwPibSensorEntity(coordinator, description) for description in SENSOR_TYPES
     )
 
 
