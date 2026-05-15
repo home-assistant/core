@@ -124,7 +124,6 @@ async def download_file(service: ServiceCall) -> None:
                 )
 
         except requests.exceptions.ConnectionError as err:
-            _LOGGER.exception("ConnectionError occurred for %s", url)
             service.hass.bus.fire(
                 f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                 {"url": url, "filename": filename},
@@ -140,7 +139,6 @@ async def download_file(service: ServiceCall) -> None:
                 translation_placeholders={"url": url},
             ) from err
         except ValueError as err:
-            _LOGGER.exception("Invalid value")
             service.hass.bus.fire(
                 f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                 {"url": url, "filename": filename},
