@@ -1,10 +1,13 @@
 """The Data Grand Lyon integration."""
 
+import asyncio
+
 from data_grand_lyon_ha import DataGrandLyonClient
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .coordinator import (
     DataGrandLyonConfigEntry,
@@ -30,8 +33,8 @@ async def async_setup_entry(
     tcl_coordinator = DataGrandLyonTclCoordinator(hass, entry, client)
     velov_coordinator = DataGrandLyonVelovCoordinator(hass, entry, client)
 
-    await tcl_coordinator.async_config_entry_first_refresh()
-    await velov_coordinator.async_config_entry_first_refresh()
+    coordinators: list[DataUpdateCoordinator] = [tcl_coordinator, velov_coordinator]
+    await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
     entry.runtime_data = DataGrandLyonData(
         tcl_coordinator=tcl_coordinator,
