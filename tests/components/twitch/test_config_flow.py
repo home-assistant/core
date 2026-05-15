@@ -120,13 +120,12 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_from_import(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    mock_setup_entry,
     twitch_mock: AsyncMock,
-    expires_at,
+    expires_at: float,
     scopes: list[str],
 ) -> None:
     """Check reauth flow."""
@@ -150,7 +149,6 @@ async def test_reauth_from_import(
         hass,
         hass_client_no_auth,
         config_entry,
-        mock_setup_entry,
         twitch_mock,
         scopes,
     )
