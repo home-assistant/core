@@ -68,6 +68,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         if self.coordinator.device.turn_off_to_deep:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(ServerDisconnectedError):
                 await self.coordinator.device.set_powerstate(PowerState.DEEP_STANDBY)
             self._attr_available = False
@@ -148,7 +149,9 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         if not self.coordinator.data.in_standby:
             self._attr_extra_state_attributes = {
                 ATTR_MEDIA_CURRENTLY_RECORDING: self.coordinator.data.is_recording,
-                ATTR_MEDIA_DESCRIPTION: self.coordinator.data.currservice.fulldescription,
+                ATTR_MEDIA_DESCRIPTION: (
+                    self.coordinator.data.currservice.fulldescription
+                ),
                 ATTR_MEDIA_START_TIME: self.coordinator.data.currservice.begin,
                 ATTR_MEDIA_END_TIME: self.coordinator.data.currservice.end,
             }

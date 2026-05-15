@@ -414,6 +414,7 @@ async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if out_of_order_index % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
         longer_segment_index = int((out_of_order_index - 1) * SEGMENTS_PER_PACKET)

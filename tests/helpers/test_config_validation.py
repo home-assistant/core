@@ -1128,8 +1128,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     option_status = "is deprecated"
     replacement = f"'mars' option near {file}:{line} {option_status}, please replace it with '{replacement_key}'"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.deprecated("mars", replacement_key=replacement_key, default=False)(
         config
@@ -1146,8 +1146,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     option_status = "has been removed"
     replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.removed("mars", default=False, raise_if_present=False)(config)
     assert "mars" not in validated  # Removed because by cv.removed
@@ -1167,7 +1167,7 @@ def test_deprecated_logger_with_one_config_attribute(
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
+    config.__config_file__ = file
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 
@@ -1181,7 +1181,7 @@ def test_deprecated_logger_with_one_config_attribute(
     assert len(caplog.records) == 0
 
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__line__", line)
+    config.__line__ = line
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 

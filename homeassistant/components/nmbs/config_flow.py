@@ -82,7 +82,10 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
-                config_entry_name = f"Train from {station_from.standard_name} to {station_to.standard_name}"
+                config_entry_name = (
+                    f"Train from {station_from.standard_name}"
+                    f" to {station_to.standard_name}"
+                )
                 return self.async_create_entry(
                     title=config_entry_name,
                     data=user_input,
