@@ -37,8 +37,13 @@ def _collect_defaults(class_node: nodes.ClassDef) -> dict[str, object]:
     """Collect flaggable default values from a class and its ancestors.
 
     Walks the MRO (via astroid ancestors) and collects ``AnnAssign``
-    nodes that have a ``Const`` default value in ``_FLAGGABLE_DEFAULTS``.
+    nodes that have a ``Const`` default in ``_FLAGGABLE_DEFAULTS``.
     Child class defaults override parent defaults.
+
+    When a subclass overrides a field with a non-flaggable or non-Const
+    default (e.g., ``entity_category = EntityCategory.DIAGNOSTIC``), the
+    field is removed from the result so we do not incorrectly flag
+    instances that set it back to a parent's default value.
     """
     qname = class_node.qname()
     if qname in _defaults_cache:
@@ -54,29 +59,38 @@ def _collect_defaults(class_node: nodes.ClassDef) -> dict[str, object]:
         ancestors = []
 
     for ancestor in reversed(ancestors):
-        for item in ancestor.body:
-            if (
-                isinstance(item, nodes.AnnAssign)
-                and isinstance(item.target, nodes.AssignName)
-                and item.value is not None
-                and isinstance(item.value, nodes.Const)
-                and _is_flaggable(item.value.value)
-            ):
-                defaults[item.target.name] = item.value.value
+        _update_defaults(defaults, ancestor)
 
     # The class itself overrides all ancestors
-    for item in class_node.body:
-        if (
-            isinstance(item, nodes.AnnAssign)
-            and isinstance(item.target, nodes.AssignName)
-            and item.value is not None
-            and isinstance(item.value, nodes.Const)
-            and _is_flaggable(item.value.value)
-        ):
-            defaults[item.target.name] = item.value.value
+    _update_defaults(defaults, class_node)
 
     _defaults_cache[qname] = defaults
     return defaults
+
+
+def _update_defaults(defaults: dict[str, object], class_node: nodes.ClassDef) -> None:
+    """Update defaults dict from a single class body.
+
+    Flaggable Const defaults are added. Any field that is redefined with
+    a non-flaggable value (non-Const or a Const outside the flaggable set)
+    is removed so that parent defaults do not leak through.
+    """
+    for item in class_node.body:
+        if not isinstance(item, nodes.AnnAssign):
+            continue
+        if not isinstance(item.target, nodes.AssignName):
+            continue
+        if item.value is None:
+            # Annotation-only (no default), leave existing entry untouched
+            continue
+
+        name = item.target.name
+        if isinstance(item.value, nodes.Const) and _is_flaggable(item.value.value):
+            defaults[name] = item.value.value
+        else:
+            # Subclass overrides with a non-flaggable value; remove
+            # so we don't flag instances using the parent's default.
+            defaults.pop(name, None)
 
 
 _ENTITY_DESCRIPTION_QNAME = "homeassistant.helpers.entity.EntityDescription"

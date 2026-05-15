@@ -69,6 +69,7 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="actual_departure",
         translation_key="departure",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=None,
         value_fn=get_departure_time,
     ),
     NSSensorEntityDescription(

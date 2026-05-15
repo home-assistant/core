@@ -10,6 +10,15 @@ import pytest
 
 from . import assert_no_messages
 
+# Pre-load EntityDescription so astroid can resolve it in parsed snippets.
+# This avoids depending on component-level imports which may not be
+# available in all CI test buckets.
+_ENTITY_DESCRIPTION_MODULE = astroid.MANAGER.ast_from_module_name(
+    "homeassistant.helpers.entity"
+)
+
+_IMPORT = "from homeassistant.helpers.entity import EntityDescription"
+
 
 @pytest.fixture(name="defaults_checker")
 def defaults_checker_fixture(
@@ -23,22 +32,20 @@ def defaults_checker_fixture(
     "code",
     [
         pytest.param(
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
-    device_class=SensorDeviceClass.TEMPERATURE,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
 )
 """,
             id="no_defaults_set",
         ),
         pytest.param(
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="signal",
     entity_registry_enabled_default=False,
 )
@@ -46,15 +53,18 @@ SensorEntityDescription(
             id="non_default_value",
         ),
         pytest.param(
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
-    key="signal",
-    entity_category=EntityCategory.DIAGNOSTIC,
+class MySensorDescription(EntityDescription):
+    entity_category: str | None = "diagnostic"
+
+MySensorDescription(
+    key="departure",
+    entity_category=None,
 )
 """,
-            id="non_default_category",
+            id="subclass_overrides_parent_default",
         ),
     ],
 )
@@ -78,10 +88,10 @@ def test_no_warning(
         pytest.param(
             "entity_registry_enabled_default",
             "True",
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
     entity_registry_enabled_default=True,
 )
@@ -91,10 +101,10 @@ SensorEntityDescription(
         pytest.param(
             "device_class",
             "None",
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
     device_class=None,
 )
@@ -104,10 +114,10 @@ SensorEntityDescription(
         pytest.param(
             "icon",
             "None",
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
     icon=None,
 )
@@ -117,10 +127,10 @@ SensorEntityDescription(
         pytest.param(
             "force_update",
             "False",
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
     force_update=False,
 )
@@ -128,17 +138,17 @@ SensorEntityDescription(
             id="force_update_false",
         ),
         pytest.param(
-            "state_class",
+            "translation_key",
             "None",
-            """
-from homeassistant.components.sensor import SensorEntityDescription
+            f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
-    state_class=None,
+    translation_key=None,
 )
 """,
-            id="state_class_none",
+            id="translation_key_none",
         ),
     ],
 )
@@ -212,37 +222,11 @@ def test_aliased_description_flagged(
 ) -> None:
     """Test that aliased EntityDescription constructors are still flagged."""
     root_node = astroid.parse(
-        """
-from homeassistant.components.sensor import SensorEntityDescription
+        f"""
+{_IMPORT}
 
-Alias = SensorEntityDescription
+Alias = EntityDescription
 Alias(key="temperature", icon=None)
-""",
-        "homeassistant.components.test_integration.sensor",
-    )
-    walker = ASTWalker(linter)
-    walker.add_checker(defaults_checker)
-    walker.walk(root_node)
-
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].msg_id == "home-assistant-entity-description-redundant-default"
-    assert messages[0].args == ("icon", "None")
-
-
-def test_module_qualified_description_flagged(
-    linter: UnittestLinter,
-    defaults_checker: EntityDescriptionDefaultsChecker,
-) -> None:
-    """Test that module-qualified EntityDescription constructors are flagged."""
-    root_node = astroid.parse(
-        """
-from homeassistant.components import sensor
-
-sensor.SensorEntityDescription(
-    key="temperature",
-    icon=None,
-)
 """,
         "homeassistant.components.test_integration.sensor",
     )
@@ -262,10 +246,10 @@ def test_not_integration_ignored(
 ) -> None:
     """Test that non-integration modules are ignored."""
     root_node = astroid.parse(
-        """
-from homeassistant.components.sensor import SensorEntityDescription
+        f"""
+{_IMPORT}
 
-SensorEntityDescription(
+EntityDescription(
     key="temperature",
     entity_registry_enabled_default=True,
 )
