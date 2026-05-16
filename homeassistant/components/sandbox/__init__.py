@@ -1,8 +1,10 @@
 """The Sandbox integration.
 
 Manages config entries that should run in isolated sandbox processes.
-Spawns sandbox processes and provides a websocket API for them to
-register entities and push state back into HA Core.
+Config entries with options["sandbox"] set to a string value are grouped
+by that value — entries sharing the same string run in the same sandbox
+process. The sandbox integration spawns one process per group and provides
+a websocket API for sandbox clients to register entities and push state.
 """
 
 from __future__ import annotations
@@ -26,27 +28,6 @@ from . import websocket_api as sandbox_ws
 _LOGGER = logging.getLogger(__name__)
 
 type SandboxConfigEntry = ConfigEntry[SandboxEntryData]
-
-
-@dataclass
-class SandboxEntryConfig:
-    """Configuration for a single entry that runs inside a sandbox."""
-
-    entry_id: str
-    domain: str
-    title: str
-    data: dict[str, Any]
-    options: dict[str, Any] = field(default_factory=dict)
-
-    def as_dict(self) -> dict[str, Any]:
-        """Serialize to dict for the websocket API."""
-        return {
-            "entry_id": self.entry_id,
-            "domain": self.domain,
-            "title": self.title,
-            "data": self.data,
-            "options": self.options,
-        }
 
 
 @dataclass
@@ -77,7 +58,7 @@ class SandboxData:
     sandboxes: dict[str, SandboxInstance] = field(default_factory=dict)
     token_to_sandbox: dict[str, str] = field(default_factory=dict)
     host_entry_ids: dict[str, str] = field(default_factory=dict)
-    entity_managers: dict[str, Any] = field(default_factory=dict)
+    entity_managers: dict[str, SandboxEntityManager] = field(default_factory=dict)
 
     def get_host_entry_id(self, sandbox_id: str) -> str | None:
         """Return the HA Core config entry ID that hosts this sandbox."""
@@ -92,12 +73,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SandboxConfigEntry) -> bool:
-    """Set up a sandbox from a config entry."""
+    """Set up a sandbox from a config entry.
+
+    Supports two modes:
+    1. Explicit entries: entry.data["entries"] contains a list of entry configs
+       (used by test infrastructure).
+    2. Discovery: entry.data["group"] names a sandbox group. All config entries
+       with options["sandbox"] == group are collected automatically.
+    """
     sandbox_data = hass.data[DATA_SANDBOX]
 
-    sandbox_entries = entry.data.get("entries", [])
+    group = entry.data.get("group")
+    if group:
+        sandbox_entries = _discover_group_entries(hass, group)
+    else:
+        sandbox_entries = entry.data.get("entries", [])
+
     if not sandbox_entries:
-        _LOGGER.warning("Sandbox config entry %s has no entries to run", entry.entry_id)
+        _LOGGER.warning("Sandbox %s has no entries to run", entry.entry_id)
         return True
 
     sandbox_id = entry.entry_id
@@ -161,8 +154,35 @@ async def async_unload_entry(hass: HomeAssistant, entry: SandboxConfigEntry) -> 
         await hass.auth.async_remove_user(instance.user)
 
     sandbox_data.host_entry_ids.pop(sandbox_id, None)
+    sandbox_data.entity_managers.pop(sandbox_id, None)
 
     return True
+
+
+def _discover_group_entries(
+    hass: HomeAssistant, group: str
+) -> list[dict[str, Any]]:
+    """Find all config entries whose options.sandbox matches the group string."""
+    entries = []
+    for entry in hass.config_entries.async_entries():
+        if entry.domain == DOMAIN:
+            continue
+        sandbox_opt = entry.options.get("sandbox")
+        if sandbox_opt == group:
+            entries.append(
+                {
+                    "entry_id": entry.entry_id,
+                    "domain": entry.domain,
+                    "title": entry.title,
+                    "data": dict(entry.data),
+                    "options": {
+                        k: v
+                        for k, v in entry.options.items()
+                        if k != "sandbox"
+                    },
+                }
+            )
+    return entries
 
 
 @callback
