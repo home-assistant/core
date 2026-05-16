@@ -218,13 +218,14 @@ async def async_search_media(
     query: SearchMediaQuery,
 ) -> SearchMedia:
     """Search media."""
-    search_type = MEDIA_TYPES_TO_SONOS.get(query.media_content_type or MediaType.TRACK)
+    media_content_type = query.media_content_type or MediaType.TRACK
+    search_type = MEDIA_TYPES_TO_SONOS.get(media_content_type)
     if search_type is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_media_content_type",
             translation_placeholders={
-                "media_content_type": query.media_content_type,
+                "media_content_type": media_content_type,
             },
         )
     items = await hass.async_add_executor_job(
