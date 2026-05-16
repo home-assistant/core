@@ -59,6 +59,28 @@ from .models import (
 
 _LOGGER = logging.getLogger(__name__)
 BLE_STALE_READ_GRACE_POLLS = 3
+_UNSUPPORTED_DEVICE_IDENTIFICATION_SLAVES = (
+    "_inepro_unsupported_device_identification_slaves"
+)
+
+
+def _get_unsupported_device_identification_slaves(
+    client: IneproModbusClient,
+) -> set[int]:
+    """Return cached slaves that do not support device identification."""
+    return getattr(client, _UNSUPPORTED_DEVICE_IDENTIFICATION_SLAVES, set())
+
+
+def _set_unsupported_device_identification_slaves(
+    client: IneproModbusClient,
+    unsupported_slaves: set[int],
+) -> None:
+    """Cache slaves that do not support device identification."""
+    object.__setattr__(
+        client,
+        _UNSUPPORTED_DEVICE_IDENTIFICATION_SLAVES,
+        unsupported_slaves,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -562,11 +584,7 @@ async def _async_read_profile(
     if successful_blocks == 0 and last_error is not None:
         raise last_error
 
-    unsupported_slaves: set[int] = getattr(
-        client,
-        "_inepro_unsupported_device_identification_slaves",
-        set(),
-    )
+    unsupported_slaves = _get_unsupported_device_identification_slaves(client)
     if slave_id not in unsupported_slaves:
         try:
             # Device-identification data is transport-derived metadata layered onto
@@ -577,18 +595,10 @@ async def _async_read_profile(
             )
         except AttributeError:
             unsupported_slaves.add(slave_id)
-            setattr(
-                client,
-                "_inepro_unsupported_device_identification_slaves",
-                unsupported_slaves,
-            )
+            _set_unsupported_device_identification_slaves(client, unsupported_slaves)
         except IneproMeteringError as err:
             unsupported_slaves.add(slave_id)
-            setattr(
-                client,
-                "_inepro_unsupported_device_identification_slaves",
-                unsupported_slaves,
-            )
+            _set_unsupported_device_identification_slaves(client, unsupported_slaves)
             _LOGGER.debug(
                 "Modbus device-identification read disabled for slave %s: %s",
                 slave_id,

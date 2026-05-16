@@ -136,7 +136,7 @@ def build_device_kind_schema() -> vol.Schema:
 
 
 def build_family_schema(
-    supported_families: list[MeterFamily],
+    supported_families: Sequence[MeterFamily],
     default_family: MeterFamily,
 ) -> vol.Schema:
     """Build the meter family selection form."""
