@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import NamedTuple
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -45,6 +45,16 @@ MOCK_DEVICE_2 = MockDevice(
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.luci.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
@@ -63,10 +73,20 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_luci_client() -> Generator[MagicMock]:
     """Return a mock OpenWrtRpc client."""
-    with patch(
-        "homeassistant.components.luci.coordinator.OpenWrtRpc",
-        autospec=True,
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.luci.coordinator.OpenWrtRpc",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.luci.config_flow.OpenWrtRpc",
+            new=mock_client_class,
+        ),
+        patch(
+            "homeassistant.components.luci.OpenWrtRpc",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
         client.is_logged_in.return_value = True
         client.get_all_connected_devices.return_value = [MOCK_DEVICE_1, MOCK_DEVICE_2]
