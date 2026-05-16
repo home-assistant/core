@@ -245,6 +245,8 @@ async def test_usb_discovery_already_configured_updates_path(
     assert result["reason"] == "already_configured"
     # Path updated without ever opening the serial port.
     assert existing_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB-new"
+    # Title is refreshed so it no longer disagrees with the configured path.
+    assert existing_entry.title == "Teleinfo (/dev/ttyUSB-new)"
     assert mock_serial_port.call_count == 0
 
 
@@ -301,6 +303,9 @@ async def test_usb_discovery_manual_entry_duplicate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    # The USB serial number is backfilled onto the manually-added entry so a
+    # future rediscovery can match it without opening the port.
+    assert mock_config_entry.data[CONF_USB_SERIAL_NUMBER] == "TINFO-144"
 
 
 async def test_usb_discovery_decode_error_aborts(

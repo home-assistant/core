@@ -110,21 +110,24 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             usb.get_serial_by_id, discovery_info.device
         )
         usb_serial_number = discovery_info.serial_number
+        # The USB matcher in manifest.json requires a `tinfo-*` serial number,
+        # so discovery is only ever invoked for devices that expose one.
+        assert usb_serial_number is not None
 
         # If a config entry already exists for this dongle, update its serial
         # port path (the dongle may have been re-plugged) and abort. The entry
         # is keyed by the meter ADCO, which we cannot read without opening the
         # port, so the dongle USB serial stored in the entry is used to match.
-        if usb_serial_number is not None:
-            for entry in self._async_current_entries(include_ignore=False):
-                if entry.data.get(CONF_USB_SERIAL_NUMBER) != usb_serial_number:
-                    continue
-                if entry.data.get(CONF_SERIAL_PORT) != dev_path:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={**entry.data, CONF_SERIAL_PORT: dev_path},
-                    )
-                return self.async_abort(reason="already_configured")
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_USB_SERIAL_NUMBER) != usb_serial_number:
+                continue
+            if entry.data.get(CONF_SERIAL_PORT) != dev_path:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_SERIAL_PORT: dev_path},
+                    title=f"Teleinfo ({dev_path})",
+                )
+            return self.async_abort(reason="already_configured")
 
         # Dedupe concurrent discovery flows for the same dongle. The entry's
         # unique_id becomes the meter ADCO once the user confirms.
@@ -161,11 +164,15 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             adco = decoded_data["ADCO"]
             await self.async_set_unique_id(adco)
-            self._abort_if_unique_id_configured()
-
             data: dict[str, str] = {CONF_SERIAL_PORT: self._discovered_device}
             if self._discovered_usb_serial_number is not None:
                 data[CONF_USB_SERIAL_NUMBER] = self._discovered_usb_serial_number
+            # If an entry already exists for this meter (e.g. added manually,
+            # or the dongle was replaced), refresh its serial port path and
+            # backfill the USB serial number so future rediscovery can match
+            # it without opening the port.
+            self._abort_if_unique_id_configured(updates=data)
+
             return self.async_create_entry(
                 title=f"Teleinfo ({self._discovered_device})",
                 data=data,
