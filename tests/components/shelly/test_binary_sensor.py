@@ -864,7 +864,7 @@ async def test_rpc_occupancy_component(
         }
     }
     monkeypatch.setattr(mock_rpc_device, "status", status)
-    await init_integration(hass, 4, model=MODEL_WALL_DISPLAY)
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
 
