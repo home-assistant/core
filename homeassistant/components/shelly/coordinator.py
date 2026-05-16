@@ -122,8 +122,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
-        # The device has come online at least once. In the case of a sleeping RPC
-        # device, this means that the device has connected to the WS server at least once.
+        # The device has come online at least once. In the case
+        # of a sleeping RPC device, this means that the device
+        # has connected to the WS server at least once.
         self._came_online_once = False
         super().__init__(
             hass,

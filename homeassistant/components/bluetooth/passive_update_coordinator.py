@@ -88,11 +88,9 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity[
+class PassiveBluetoothCoordinatorEntity[  # pylint: disable=home-assistant-enforce-class-module
     _PassiveBluetoothDataUpdateCoordinatorT: PassiveBluetoothDataUpdateCoordinator = PassiveBluetoothDataUpdateCoordinator
-](  # pylint: disable=hass-enforce-class-module
-    BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
-):
+](BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
     async def async_update(self) -> None:

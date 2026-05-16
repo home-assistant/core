@@ -97,6 +97,7 @@ class ComfoConnectFan(FanEntity):
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_OPERATING_MODE_BIS
         )

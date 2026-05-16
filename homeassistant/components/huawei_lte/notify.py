@@ -60,5 +60,6 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
                 phone_numbers=targets, message=message
             )
             _LOGGER.debug("Sent to %s: %s", targets, resp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)

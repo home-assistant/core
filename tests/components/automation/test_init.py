@@ -2892,7 +2892,7 @@ async def test_automation_bad_trigger_variables(
 async def test_automation_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test automation always has reference to this, even with no variable or trigger variables configured."""
+    """Test automation always has reference to this, even without variables."""
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -3899,7 +3899,10 @@ async def test_action_backward_compatibility(
                 "condition": {"condition": "template", "value_template": "{{ True }}"},
                 "conditions": {"condition": "template", "value_template": "{{ True }}"},
             },
-            "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only.",
+            (
+                "Cannot specify both 'condition' and 'conditions'."
+                " Please use 'conditions' only."
+            ),
         ),
         (
             {

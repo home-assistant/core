@@ -2395,6 +2395,7 @@ async def test_list_statistic_ids(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if has_mean:
         assert response["result"] == [
             {
@@ -2417,6 +2418,7 @@ async def test_list_statistic_ids(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if has_sum:
         assert response["result"] == [
             {
