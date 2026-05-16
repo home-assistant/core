@@ -20,7 +20,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-type ScorpionTrackConfigEntry = ConfigEntry[ScorpionTrackCoordinator]
+type ScorpionTrackConfigEntry = ConfigEntry["ScorpionTrackCoordinator"]
 
 
 class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
