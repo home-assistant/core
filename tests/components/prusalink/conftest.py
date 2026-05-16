@@ -123,7 +123,7 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_job_api_idle() -> Generator[None]:
+def mock_job_api_idle() -> Generator[None, None, None]:
     """Mock PrusaLink job API having no job.
 
     pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
