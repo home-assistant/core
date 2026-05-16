@@ -22,6 +22,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
+from homeassistant.components.device_tracker import SourceType
+from homeassistant.components.device_tracker.config_entry import ScannerEntity, TrackerEntity
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.components.date import DateEntity
 from homeassistant.components.datetime import DateTimeEntity
@@ -65,6 +67,7 @@ from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.components.time import TimeEntity
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.todo import TodoItem, TodoItemStatus, TodoListEntity, TodoListEntityFeature
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntity, WaterHeaterEntityFeature
 from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
@@ -1717,6 +1720,141 @@ class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
         return events
 
 
+class SandboxTrackerEntity(SandboxProxyEntity, TrackerEntity):
+    """Proxy for a GPS device tracker entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy tracker entity."""
+        super().__init__(description, manager)
+        if source_type := description.capabilities.get("source_type"):
+            self._attr_source_type = SourceType(source_type)
+
+    @property
+    def latitude(self) -> float | None:
+        """Return the latitude."""
+        return self._state_cache.get("latitude")
+
+    @property
+    def longitude(self) -> float | None:
+        """Return the longitude."""
+        return self._state_cache.get("longitude")
+
+    @property
+    def location_accuracy(self) -> float:
+        """Return the location accuracy."""
+        return self._state_cache.get("location_accuracy", 0)
+
+    @property
+    def location_name(self) -> str | None:
+        """Return the location name."""
+        return self._state_cache.get("location_name")
+
+    @property
+    def battery_level(self) -> int | None:
+        """Return the battery level."""
+        return self._state_cache.get("battery_level")
+
+
+class SandboxScannerEntity(SandboxProxyEntity, ScannerEntity):
+    """Proxy for a scanner device tracker entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy scanner entity."""
+        super().__init__(description, manager)
+        if source_type := description.capabilities.get("source_type"):
+            self._attr_source_type = SourceType(source_type)
+
+    @property
+    def is_connected(self) -> bool:
+        """Return if the device is connected."""
+        state = self._state_cache.get("state")
+        return state == "home"
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the IP address."""
+        return self._state_cache.get("ip_address")
+
+    @property
+    def mac_address(self) -> str | None:
+        """Return the MAC address."""
+        return self._state_cache.get("mac_address")
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname."""
+        return self._state_cache.get("hostname")
+
+
+class SandboxTodoListEntity(SandboxProxyEntity, TodoListEntity):
+    """Proxy for a todo list entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy todo entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = TodoListEntityFeature(
+            description.supported_features
+        )
+        self._attr_todo_items: list[TodoItem] | None = None
+
+    @callback
+    def sandbox_update_state(self, state: str, attributes: dict[str, Any]) -> None:
+        """Update todo items from sandbox push."""
+        if "todo_items" in attributes:
+            items = []
+            for item_data in attributes["todo_items"]:
+                items.append(TodoItem(
+                    uid=item_data.get("uid"),
+                    summary=item_data.get("summary", ""),
+                    status=TodoItemStatus(item_data["status"]) if "status" in item_data else None,
+                    description=item_data.get("description"),
+                    due=item_data.get("due"),
+                ))
+            self._attr_todo_items = items
+        self._state_cache["state"] = state
+        self.async_write_ha_state()
+
+    @property
+    def todo_items(self) -> list[TodoItem] | None:
+        """Return the todo items."""
+        return self._attr_todo_items
+
+    async def async_create_todo_item(self, item: TodoItem) -> None:
+        """Forward create_todo_item to sandbox."""
+        await self._forward_method("async_create_todo_item", item={
+            "summary": item.summary,
+            "status": item.status.value if item.status else None,
+            "description": item.description,
+            "due": item.due,
+        })
+
+    async def async_update_todo_item(self, item: TodoItem) -> None:
+        """Forward update_todo_item to sandbox."""
+        await self._forward_method("async_update_todo_item", item={
+            "uid": item.uid,
+            "summary": item.summary,
+            "status": item.status.value if item.status else None,
+            "description": item.description,
+            "due": item.due,
+        })
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Forward delete_todo_items to sandbox."""
+        await self._forward_method("async_delete_todo_items", uids=uids)
+
+
 _DOMAIN_ENTITY_MAP: dict[str, type[SandboxProxyEntity]] = {
     "alarm_control_panel": SandboxAlarmControlPanelEntity,
     "binary_sensor": SandboxBinarySensorEntity,
@@ -1726,6 +1864,7 @@ _DOMAIN_ENTITY_MAP: dict[str, type[SandboxProxyEntity]] = {
     "cover": SandboxCoverEntity,
     "date": SandboxDateEntity,
     "datetime": SandboxDateTimeEntity,
+    "device_tracker": SandboxTrackerEntity,
     "event": SandboxEventEntity,
     "fan": SandboxFanEntity,
     "humidifier": SandboxHumidifierEntity,
@@ -1743,6 +1882,7 @@ _DOMAIN_ENTITY_MAP: dict[str, type[SandboxProxyEntity]] = {
     "switch": SandboxSwitchEntity,
     "text": SandboxTextEntity,
     "time": SandboxTimeEntity,
+    "todo": SandboxTodoListEntity,
     "update": SandboxUpdateEntity,
     "vacuum": SandboxVacuumEntity,
     "valve": SandboxValveEntity,
