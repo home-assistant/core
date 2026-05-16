@@ -79,7 +79,7 @@ async def test_async_create_fix_flow_returns_migration_flow(
     """async_create_fix_flow creates a MQTTDeviceEntryMigration instance."""
     flow = await async_create_fix_flow(
         hass,
-        issue_id="test_issue",
+        _issue_id="test_issue",
         data={
             "entry_id": "test-entry-id",
             "subentry_id": "test-subentry-id",
