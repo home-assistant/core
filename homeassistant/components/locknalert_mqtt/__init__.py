@@ -198,11 +198,11 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
-# We accept 2 schemes for configuring manual MQTT items
+# We accept 2 schemes for configuring manual locknalert_mqtt items
 #
 # Preferred style:
 #
-# mqtt:
+# locknalert_mqtt:
 #   - {domain}:
 #       name: ""
 #       ...

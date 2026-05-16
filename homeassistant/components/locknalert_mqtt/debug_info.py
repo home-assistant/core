@@ -75,6 +75,8 @@ def remove_subscription(
         debug_info_entities := hass.data[DATA_MQTT].debug_info_entities
     ):
         subscriptions = debug_info_entities[entity_id]["subscriptions"]
+        if subscription not in subscriptions:
+            return
         subscriptions[subscription]["count"] -= 1
         if not subscriptions[subscription]["count"]:
             del subscriptions[subscription]

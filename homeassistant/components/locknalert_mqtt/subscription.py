@@ -28,7 +28,7 @@ class EntitySubscription:
     job_type: HassJobType | None
 
     def resubscribe_if_necessary(
-        self, hass: HomeAssistant, other: EntitySubscription | None
+        self, _hass: HomeAssistant, other: EntitySubscription | None
     ) -> None:
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
@@ -39,8 +39,8 @@ class EntitySubscription:
 
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
-            # Clear debug data if it exists
-            debug_info.remove_subscription(self.hass, str(other.topic), other.entity_id)
+            if other.topic is not None:
+                debug_info.remove_subscription(self.hass, other.topic, other.entity_id)
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it

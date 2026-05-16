@@ -45,7 +45,7 @@ class MQTTDeviceEntryMigration(RepairsFlow):
 
 async def async_create_fix_flow(
     hass: HomeAssistant,
-    issue_id: str,
+    _issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
