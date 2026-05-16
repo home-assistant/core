@@ -60,9 +60,9 @@ async def test_serial_open_logs(caplog: pytest.LogCaptureFixture, uri: str) -> N
     assert f"Opening serial port {uri}" in caplog.text
 
 
-async def test_enable_multiple_times() -> None:
-    """Calling enable() twice raises RuntimeError."""
+async def test_enable_is_idempotent() -> None:
+    """Calling enable() twice leaves the existing wrappers in place."""
     block_shared_serial.enable()
-
-    with pytest.raises(RuntimeError, match="Shared serial blocking is already enabled"):
-        block_shared_serial.enable()
+    wrapped_open = SocketSerial.open
+    block_shared_serial.enable()
+    assert SocketSerial.open is wrapped_open

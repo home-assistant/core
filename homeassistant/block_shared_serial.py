@@ -42,7 +42,7 @@ def _logged_rfc2217_open(self: Rfc2217Serial) -> None:
 def enable() -> None:
     """Default `exclusive` to True and log every pyserial port open."""
     if SocketSerial.open is _logged_socket_open:
-        raise RuntimeError("Shared serial blocking is already enabled")
+        return
 
     defaults = {
         name: param.default
