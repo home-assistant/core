@@ -53,14 +53,13 @@ async def async_discover_controllers(
     as soon as that specific controller appears (or after the timeout).
 
     If discovery is not yet running, it is started first.
+
+    Raises:
+        OSError: Discovery service failed to start or controller fetch failed.
     """
     from .discovery import async_start_discovery_service  # noqa: PLC0415
 
-    try:
-        disco = await async_start_discovery_service(hass)
-    except OSError:
-        _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
-        return {}
+    disco = await async_start_discovery_service(hass)
 
     if not refresh:
         return await disco.pi_disco.fetch_controllers()
@@ -175,6 +174,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             await async_start_discovery_service(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery from import", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
 
         return self.async_abort(reason="no_devices_found")
 
@@ -196,7 +196,11 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             return self.async_abort(reason="already_in_progress")
 
         # refresh=True requests a rescan only when discovery is already running.
-        controllers = await async_discover_controllers(self.hass, refresh=True)
+        try:
+            controllers = await async_discover_controllers(self.hass, refresh=True)
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
         if not controllers:
             _LOGGER.debug("No controllers found")
             return self.async_abort(reason="no_devices_found")
@@ -301,11 +305,15 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self._abort_if_unique_id_configured()
 
         # A HomeKit advertisement implies a specific UID is on the LAN.  Wait for it.
-        controllers = await async_discover_controllers(
-            self.hass,
-            refresh=True,
-            wait_for_uid=device_uid,
-        )
+        try:
+            controllers = await async_discover_controllers(
+                self.hass,
+                refresh=True,
+                wait_for_uid=device_uid,
+            )
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
         controller = controllers.get(device_uid)
         if controller is None:
             return self.async_abort(reason="no_devices_found")
@@ -370,7 +378,11 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
                 },
             )
 
-        controllers = await async_discover_controllers(self.hass)
+        try:
+            controllers = await async_discover_controllers(self.hass)
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
         if not controllers:
             _LOGGER.debug("No controllers found")
             return self.async_abort(reason="no_devices_found")

@@ -476,7 +476,7 @@ async def test_import_logs_and_aborts_when_discovery_service_cannot_start(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "discovery_failed"
 
 
 async def test_import_aborts_when_another_izone_flow_in_progress(
@@ -626,7 +626,7 @@ async def test_homekit_flow_sets_device_uid_once(
     assert set_unique_id_calls == ["000000001"]
 
 
-async def test_homekit_proceeds_while_user_confirm_is_open(
+async def test_homekit_aborts_while_user_confirm_is_open(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
     """HomeKit onboarding for same UID is blocked while a user flow is already active."""
@@ -749,15 +749,13 @@ async def test_homekit_aborts_when_uid_not_found_in_discovery(
     assert result["reason"] == "no_devices_found"
 
 
-async def test_homekit_aborts_when_uid_not_seen_on_lan_until_rediscover(
+async def test_homekit_aborts_when_controller_unavailable_during_discovery_wait(
     hass: HomeAssistant,
 ) -> None:
-    """HomeKit aborts if the advertised UID is missing from iZone discovery (even if it appears later)."""
-    controller = _make_controller(ip="192.0.2.3")
-
+    """HomeKit aborts when the advertised UID is not found during iZone discovery."""
     with patch(
         "homeassistant.components.izone.config_flow.async_discover_controllers",
-        side_effect=[{}, {controller.device_uid: controller}],
+        return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
             IZONE,
@@ -774,8 +772,8 @@ async def test_homekit_aborts_when_uid_not_seen_on_lan_until_rediscover(
 # ---------------------------------------------------------------------------
 
 
-async def test_not_found(hass: HomeAssistant) -> None:
-    """Test abort when no device is found during broadcast discovery."""
+async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
+    """User flow aborts when broadcast discovery returns no controllers."""
     with patch(
         "homeassistant.components.izone.config_flow.async_discover_controllers",
         return_value={},
@@ -795,14 +793,14 @@ async def test_user_flow_abort_when_discovery_service_cannot_start(
     """User flow aborts when discovery startup fails."""
     with patch(
         "homeassistant.components.izone.config_flow.async_discover_controllers",
-        return_value={},
+        side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
             IZONE, context={"source": config_entries.SOURCE_USER}
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "discovery_failed"
 
 
 async def test_user_discovery_with_shared_service_without_matches_aborts(
@@ -892,12 +890,12 @@ async def test_homekit_aborts_when_nothing_found(hass: HomeAssistant) -> None:
 async def test_homekit_aborts_when_discovered_uid_missing(
     hass: HomeAssistant,
 ) -> None:
-    """Test HomeKit aborts when discovery does not include the advertised UID."""
+    """Test HomeKit aborts when discovery returns controllers but not the advertised UID."""
     different_controller = _make_controller("000000002", "192.0.2.44")
 
     with patch(
         "homeassistant.components.izone.config_flow.async_discover_controllers",
-        side_effect=[{}, {different_controller.device_uid: different_controller}],
+        return_value={different_controller.device_uid: different_controller},
     ):
         result = await hass.config_entries.flow.async_init(
             IZONE,
@@ -907,6 +905,53 @@ async def test_homekit_aborts_when_discovered_uid_missing(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_homekit_flow_aborts_at_confirm_when_controller_disappears(
+    hass: HomeAssistant,
+) -> None:
+    """HomeKit confirm aborts when the controller is gone by the time the user confirms."""
+    controller = _make_controller("000000001", "192.0.2.3")
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value={controller.device_uid: controller},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_homekit_aborts_when_discovery_startup_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test HomeKit flow aborts when discovery service cannot start."""
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_failed"
 
 
 async def test_integration_discovery_aborts_on_invalid_payload(
@@ -1321,14 +1366,15 @@ async def test_async_discover_controllers_waits_for_requested_uid(
 async def test_async_discover_controllers_returns_empty_when_start_fails(
     hass: HomeAssistant,
 ) -> None:
-    """Startup errors while creating discovery return an empty result."""
-    with patch(
-        "homeassistant.components.izone.discovery.async_start_discovery_service",
-        side_effect=OSError,
+    """Startup errors while creating discovery are propagated to the caller."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_start_discovery_service",
+            side_effect=OSError,
+        ),
+        pytest.raises(OSError),
     ):
-        controllers = await config_flow.async_discover_controllers(hass, refresh=True)
-
-    assert controllers == {}
+        await config_flow.async_discover_controllers(hass, refresh=True)
 
 
 def test_flow_uid_for_matching_returns_none_when_no_uid() -> None:
@@ -1474,6 +1520,32 @@ async def test_confirm_aborts_when_unique_id_controller_not_found(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_confirm_aborts_when_discovery_startup_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test confirm step aborts when discovery service cannot start."""
+    controller = _make_controller("000000001", "192.0.2.1")
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value={controller.device_uid: controller},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        side_effect=OSError,
+    ):
+        result = await flow.async_step_confirm({})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_failed"
 
 
 def test_filter_yaml_exclude_returns_original_when_no_exclusions(
