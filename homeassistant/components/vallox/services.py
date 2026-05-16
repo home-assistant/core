@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
+from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE, PROFILE_DURATION_INDEFINITE
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
     {
         vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
         vol.Optional(ATTR_DURATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+            vol.Coerce(int), vol.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
         ),
     }
 )
@@ -70,7 +70,7 @@ async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> N
             translation_domain=DOMAIN,
             translation_key="failed_to_set_fan_speed_for_profile",
             translation_placeholders={
-                "profile": profile.name,
+                "profile": profile.name.lower(),
                 "fan_speed": str(fan_speed),
             },
         ) from err
@@ -105,7 +105,7 @@ async def _async_set_profile(call: ServiceCall) -> None:
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
     except ValloxApiException as err:
-        if duration is None or duration == 65535:
+        if duration is None or duration == PROFILE_DURATION_INDEFINITE:
             translation_key = "failed_to_set_profile"
             translation_placeholders = {"profile": profile_key}
         else:

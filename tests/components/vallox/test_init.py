@@ -3,7 +3,11 @@
 import pytest
 from vallox_websocket_api import Profile, ValloxApiException
 
-from homeassistant.components.vallox.const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
+from homeassistant.components.vallox.const import (
+    DOMAIN,
+    I18N_KEY_TO_VALLOX_PROFILE,
+    PROFILE_DURATION_INDEFINITE,
+)
 from homeassistant.components.vallox.services import (
     ATTR_DURATION,
     ATTR_PROFILE,
@@ -93,18 +97,18 @@ async def test_set_profile_service(
 
 
 @pytest.mark.parametrize(
-    ("service", "profile"),
+    ("service", "expected_profile"),
     [
-        (ValloxService.SET_PROFILE_FAN_SPEED_HOME, Profile.HOME),
-        (ValloxService.SET_PROFILE_FAN_SPEED_AWAY, Profile.AWAY),
-        (ValloxService.SET_PROFILE_FAN_SPEED_BOOST, Profile.BOOST),
+        (ValloxService.SET_PROFILE_FAN_SPEED_HOME, "home"),
+        (ValloxService.SET_PROFILE_FAN_SPEED_AWAY, "away"),
+        (ValloxService.SET_PROFILE_FAN_SPEED_BOOST, "boost"),
     ],
 )
 async def test_set_profile_fan_speed_error(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
     service: str,
-    profile: Profile,
+    expected_profile: str,
 ) -> None:
     """Test error handling when setting fan speed fails."""
     # Act
@@ -126,7 +130,7 @@ async def test_set_profile_fan_speed_error(
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == "failed_to_set_fan_speed_for_profile"
         assert exc_info.value.translation_placeholders == {
-            "profile": profile.name,
+            "profile": expected_profile,
             "fan_speed": "30",
         }
 
@@ -135,10 +139,10 @@ async def test_set_profile_fan_speed_error(
     ("profile", "duration", "expected_key"),
     [
         ("home", None, "failed_to_set_profile"),
-        ("home", 65535, "failed_to_set_profile"),
+        ("home", PROFILE_DURATION_INDEFINITE, "failed_to_set_profile"),
         ("home", 15, "failed_to_set_profile_for_duration"),
         ("boost", None, "failed_to_set_profile"),
-        ("boost", 65535, "failed_to_set_profile"),
+        ("boost", PROFILE_DURATION_INDEFINITE, "failed_to_set_profile"),
         ("boost", 20, "failed_to_set_profile_for_duration"),
         ("fireplace", 10, "failed_to_set_profile_for_duration"),
         ("extra", None, "failed_to_set_profile"),
