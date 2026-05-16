@@ -2076,6 +2076,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[addr6y4u8gb43nl8brnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'addr6y4u8gb43nl8brnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Madimack Elite V3 Pool Heat Pump',
+    'model_id': '8ln34bg8u4y6rdda',
+    'name': 'Madimack Elite V3 Pool Heat Pump',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ai9swgb6tyinbwbxjxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
