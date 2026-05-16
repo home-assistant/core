@@ -291,11 +291,21 @@ async def test_cleanup_runs_hourly(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    known_client_macs = {
+        str(getattr(client, "mac", "")).replace(":", "-").lower()
+        for client in mock_omada_clients_only_client.clients.values()
+    }
+    stale_mac = next(
+        f"02-00-00-00-00-{index:02x}"
+        for index in range(256)
+        if f"02-00-00-00-00-{index:02x}" not in known_client_macs
+    )
+
     # Add a stale tracker after initial startup cleanup has already run
     stale_tracker = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
-        unique_id="scanner_Default_11-11-11-11-11-11",
+        unique_id=f"scanner_Default_{stale_mac}",
         config_entry=mock_config_entry,
     )
     assert entity_registry.async_get(stale_tracker.entity_id) is not None
