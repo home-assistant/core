@@ -1,5 +1,6 @@
 """Coordinator for The Internet Printing Protocol (IPP) integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -29,16 +30,22 @@ _LOGGER = logging.getLogger(__name__)
 type IPPConfigEntry = ConfigEntry[IPPDataUpdateCoordinator]
 
 
-class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
+@dataclass
+class IPPData:
+    """Data fetched from an IPP printer."""
+
+    printer: IPPPrinter
+    page_counts: dict[str, int]
+
+
+class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
     """Class to manage fetching IPP data from single endpoint."""
 
     config_entry: IPPConfigEntry
-    page_counts: dict[str, int]
 
     def __init__(self, hass: HomeAssistant, config_entry: IPPConfigEntry) -> None:
         """Initialize global IPP data updater."""
         self.device_id = config_entry.unique_id or config_entry.entry_id
-        self.page_counts = {}
         self.ipp = IPP(
             host=config_entry.data[CONF_HOST],
             port=config_entry.data[CONF_PORT],
@@ -56,18 +63,21 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> IPPPrinter:
+    async def _async_update_data(self) -> IPPData:
         """Fetch data from IPP."""
         try:
             printer = await self.ipp.printer()
         except IPPError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
-        self.page_counts = await self._async_fetch_page_counts()
+        previous_page_counts = self.data.page_counts if self.data else {}
+        page_counts = await self._async_fetch_page_counts(previous_page_counts)
 
-        return printer
+        return IPPData(printer=printer, page_counts=page_counts)
 
-    async def _async_fetch_page_counts(self) -> dict[str, int]:
+    async def _async_fetch_page_counts(
+        self, previous_page_counts: dict[str, int]
+    ) -> dict[str, int]:
         """Fetch page count attributes from the printer."""
         try:
             response = await self.ipp.execute(
@@ -82,7 +92,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
-            return self.page_counts
+            return previous_page_counts
 
         page_counts: dict[str, int] = {}
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})

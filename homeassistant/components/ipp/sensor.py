@@ -142,7 +142,7 @@ async def async_setup_entry(
         for description in PRINTER_SENSORS
     ]
 
-    for index, marker in enumerate(coordinator.data.markers):
+    for index, marker in enumerate(coordinator.data.printer.markers):
         sensors.append(
             IPPSensor(
                 coordinator,
@@ -171,7 +171,7 @@ async def async_setup_entry(
     sensors.extend(
         IPPPageCountSensor(coordinator, description)
         for description in PAGE_COUNT_SENSORS
-        if description.ipp_attribute in coordinator.page_counts
+        if description.ipp_attribute in coordinator.data.page_counts
     )
 
     async_add_entities(sensors, True)
@@ -185,12 +185,12 @@ class IPPSensor(IPPEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(self.coordinator.data)
+        return self.entity_description.attributes_fn(self.coordinator.data.printer)
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.printer)
 
 
 class IPPPageCountSensor(IPPEntity, SensorEntity):
@@ -209,4 +209,6 @@ class IPPPageCountSensor(IPPEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.page_counts.get(self.entity_description.ipp_attribute)
+        return self.coordinator.data.page_counts.get(
+            self.entity_description.ipp_attribute
+        )
