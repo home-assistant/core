@@ -20,7 +20,12 @@ from .entity import (  # noqa: F401
     InfraredReceiverEntity,
     InfraredReceiverEntityDescription,
 )
-from .helpers import InfraredEmitterConsumerEntity, InfraredReceiverConsumerEntity
+from .helpers import (
+    InfraredEmitterConsumerEntity,
+    InfraredReceiverConsumerEntity,
+    async_send_command,
+    async_subscribe_receiver,
+)
 
 __all__ = [
     "DOMAIN",
