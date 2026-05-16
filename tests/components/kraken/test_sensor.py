@@ -225,7 +225,7 @@ async def test_sensors_added_after_config_update(
         )
         freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.ada_xbt_ask")
 
@@ -271,13 +271,13 @@ async def test_missing_pair_marks_sensor_unavailable(
         )
         freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         ticket_information_mock.side_effect = None
         ticket_information_mock.return_value = MISSING_PAIR_TICKER_INFORMATION_RESPONSE
         freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         sensor = hass.states.get("sensor.xbt_usd_ask")
         assert sensor.state == "unavailable"
