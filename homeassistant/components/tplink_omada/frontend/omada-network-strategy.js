@@ -973,8 +973,4 @@ window.customStrategies.push({
   description:
     "Live view of all TP-Link Omada devices, clients, and port controls.",
   documentationURL: "https://www.home-assistant.io/integrations/tplink_omada",
-  images: {
-    light: "/tplink_omada/omada-preview.svg",
-    dark: "/tplink_omada/omada-preview.svg",
-  },
 });

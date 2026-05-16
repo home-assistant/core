@@ -42,7 +42,6 @@ type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 
 _FRONTEND_DIR = Path(__file__).parent / "frontend"
 _FRONTEND_JS_URL = "/tplink_omada/omada-network-strategy.js"
-_FRONTEND_SVG_URL = "/tplink_omada/omada-preview.svg"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -54,11 +53,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 StaticPathConfig(
                     _FRONTEND_JS_URL,
                     str(_FRONTEND_DIR / "omada-network-strategy.js"),
-                    cache_headers=True,
-                ),
-                StaticPathConfig(
-                    _FRONTEND_SVG_URL,
-                    str(_FRONTEND_DIR / "omada-preview.svg"),
                     cache_headers=True,
                 ),
             ]
