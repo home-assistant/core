@@ -1,6 +1,6 @@
 """Tests for TP-Link Omada integration init."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from tplink_omada_client.exceptions import (
@@ -13,6 +13,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -88,3 +89,27 @@ async def test_missing_devices_removed_at_startup(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_async_setup_registers_frontend_resources(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_setup registers static paths and adds the JS module URL."""
+    mock_http = MagicMock()
+    mock_http.async_register_static_paths = AsyncMock()
+    hass.http = mock_http
+
+    with patch(
+        "homeassistant.components.tplink_omada.add_extra_js_url"
+    ) as mock_add_url:
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    mock_http.async_register_static_paths.assert_called_once()
+    registered_paths = mock_http.async_register_static_paths.call_args[0][0]
+    assert any(
+        p.url_path == "/tplink_omada/omada-network-strategy.js"
+        for p in registered_paths
+    )
+    mock_add_url.assert_called_once_with(
+        hass, "/tplink_omada/omada-network-strategy.js"
+    )

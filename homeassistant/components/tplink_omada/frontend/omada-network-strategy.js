@@ -23,12 +23,8 @@ const TK = {
   CPU: "cpu_usage",
   MEM: "mem_usage",
   WAN_LINK: "wan_link",
-  ONLINE: "online_detection",
-  LAN_STATUS: "lan_status",
-  POE_DELIVERY: "poe_delivery",
   POE_CONTROL: "poe_control",
   WAN_V4: "wan_connect_ipv4",
-  WAN_V6: "wan_connect_ipv6",
 };
 
 // ---------------------------------------------------------------------------
