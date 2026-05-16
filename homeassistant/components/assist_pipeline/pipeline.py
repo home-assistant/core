@@ -1469,6 +1469,36 @@ class PipelineRun:
         elif not self._streamed_response_text:
             self.tts_stream.async_set_message(tts_input)
 
+        if override_media_path is None:
+            try:
+                _LOGGER.warning(
+                    "Waiting for TTS audio before sending tts-end; engine=%s",
+                    self.tts_stream.engine,
+                )
+                async with asyncio.timeout(180):
+                    cache = await self.tts_stream._result_cache
+                    while True:
+                        loading_error = getattr(cache, "_loading_error", None)
+                        if loading_error is not None:
+                            raise loading_error
+                        if getattr(cache, "_result_data", None) is not None:
+                            break
+                        await asyncio.sleep(0.05)
+                _LOGGER.warning(
+                    "TTS audio is ready; sending tts-end; engine=%s",
+                    self.tts_stream.engine,
+                )
+            except TimeoutError as err:
+                raise TextToSpeechError(
+                    code="tts-timeout",
+                    message="Timed out while waiting for TTS audio to be generated",
+                ) from err
+            except Exception as err:
+                raise TextToSpeechError(
+                    code="tts-failed",
+                    message=f"Failed while waiting for TTS audio: {err}",
+                ) from err
+        
         tts_output = {
             "media_id": self.tts_stream.media_source_id,
             "token": self.tts_stream.token,
