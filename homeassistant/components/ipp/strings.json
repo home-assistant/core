@@ -35,19 +35,24 @@
   "entity": {
     "sensor": {
       "impressions_completed": {
-        "name": "Impressions completed"
+        "name": "Impressions completed",
+        "unit_of_measurement": "impressions"
       },
       "impressions_completed_full_color": {
-        "name": "Color impressions completed"
+        "name": "Color impressions completed",
+        "unit_of_measurement": "[%key:component::ipp::entity::sensor::impressions_completed::unit_of_measurement%]"
       },
       "impressions_completed_monochrome": {
-        "name": "Monochrome impressions completed"
+        "name": "Monochrome impressions completed",
+        "unit_of_measurement": "[%key:component::ipp::entity::sensor::impressions_completed::unit_of_measurement%]"
       },
       "media_sheets_completed": {
-        "name": "Media sheets completed"
+        "name": "Media sheets completed",
+        "unit_of_measurement": "sheets"
       },
       "pages_completed": {
-        "name": "Pages completed"
+        "name": "Pages completed",
+        "unit_of_measurement": "pages"
       },
       "printer": {
         "state": {
