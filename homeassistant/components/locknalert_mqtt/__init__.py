@@ -181,7 +181,6 @@ __all__ = [
     "valid_publish_topic",
     "valid_qos_schema",
     "valid_subscribe_topic",
-    "websocket_mqtt_info",
     "websocket_subscribe",
 ]
 
@@ -323,7 +322,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     websocket_api.async_register_command(hass, websocket_subscribe)
-    websocket_api.async_register_command(hass, websocket_mqtt_info)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
