@@ -138,8 +138,9 @@ async def test_reload_core_with_wrong_conf(
     """Test reload core conf service."""
     files = {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])}
     await async_setup_component(hass, ha.DOMAIN, {})
-    with patch_yaml_files(files, True) and pytest.raises(
-        HomeAssistantError, match="Failed to reload core configuration"
+    with (
+        patch_yaml_files(files, True),
+        pytest.raises(HomeAssistantError, match="Failed to reload core configuration"),
     ):
         await hass.services.async_call(
             ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, blocking=True
