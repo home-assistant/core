@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -147,10 +148,10 @@ async def test_switch_action_failed(
     mock_adguard.enable_protection.side_effect = AdGuardHomeError("Boom")
     mock_adguard.disable_protection.side_effect = AdGuardHomeError("Boom")
 
-    await hass.services.async_call(
-        "switch",
-        service,
-        {ATTR_ENTITY_ID: "switch.adguard_home_protection"},
-        blocking=True,
-    )
-    assert expected_message in caplog.text
+    with pytest.raises(HomeAssistantError, match=expected_message):
+        await hass.services.async_call(
+            "switch",
+            service,
+            {ATTR_ENTITY_ID: "switch.adguard_home_protection"},
+            blocking=True,
+        )
