@@ -417,7 +417,7 @@ class VictronGXOptionsFlow(OptionsFlow):
         schema = vol.Schema(
             {
                 # Not a polling integration; this controls the rate updates will sent to HA to limit database size growth
-                vol.Required(  # pylint: disable=hass-config-flow-polling-field
+                vol.Required(  # pylint: disable=home-assistant-config-flow-polling-field
                     CONF_UPDATE_FREQUENCY,
                     default=current_frequency,
                 ): selector.NumberSelector(
