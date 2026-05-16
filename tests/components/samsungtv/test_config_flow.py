@@ -2238,3 +2238,48 @@ async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
             data=dhcp_data,
         )
     assert result_dhcp["type"] is FlowResultType.ABORT
+
+
+@pytest.mark.usefixtures("remote_websocket")
+async def test_ssdp_does_not_overwrite_unique_id_on_mac_match(
+    hass: HomeAssistant,
+) -> None:
+    """Test that SSDP rediscovery with a new UUID does not overwrite unique_id when matched by MAC.
+
+    Older Samsung TVs regenerate their UPnP UUID on reboot. The config flow
+    should NOT update the config entry's unique_id in this case, as doing so
+    orphans existing entities.
+
+    See https://github.com/home-assistant/core/issues/169628
+    """
+    # Create an existing entry with a known unique_id and MAC
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=ENTRYDATA_WEBSOCKET,
+        unique_id="original-uuid-1234-should-not-change",
+    )
+    entry.add_to_hass(hass)
+
+    # Simulate SSDP rediscovery with a DIFFERENT UUID (TV rebooted).
+    # MOCK_SSDP_DATA has UDN "068e7781-006e-1000-bbbf-84a4668d8423"
+    # which differs from our entry's unique_id, simulating UUID rotation.
+    ssdp_data = deepcopy(MOCK_SSDP_DATA)
+
+    device_info = deepcopy(MOCK_DEVICE_INFO)
+    device_info["device"]["wifiMac"] = "aa:bb:cc:dd:ee:ff"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=device_info,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=ssdp_data,
+        )
+
+    # Should abort since entry already exists
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == RESULT_ALREADY_CONFIGURED
+
+    # The unique_id must NOT have been overwritten with the new UUID
+    assert entry.unique_id == "original-uuid-1234-should-not-change"
