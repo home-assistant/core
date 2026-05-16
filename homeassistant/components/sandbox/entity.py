@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 import logging
 from typing import Any
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.event import EventEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -32,6 +34,9 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.components.scene import Scene
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -54,6 +59,8 @@ class SandboxEntityDescription:
     original_name: str | None = None
     original_icon: str | None = None
     entity_category: str | None = None
+    device_class: str | None = None
+    state_class: str | None = None
     supported_features: int = 0
     capabilities: dict[str, Any] = field(default_factory=dict)
     has_entity_name: bool = False
@@ -164,6 +171,8 @@ class SandboxProxyEntity(Entity):
             self._attr_name = description.original_name
         if description.original_icon:
             self._attr_icon = description.original_icon
+        if description.device_class:
+            self._attr_device_class = description.device_class
         self._attr_supported_features = description.supported_features
 
     @property
@@ -334,11 +343,114 @@ class SandboxLightEntity(SandboxProxyEntity, LightEntity):
         await self._forward_method("async_turn_off", **kwargs)
 
 
+class SandboxBinarySensorEntity(SandboxProxyEntity, BinarySensorEntity):
+    """Proxy for a binary_sensor entity in a sandbox."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the sensor is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+
+class SandboxSensorEntity(SandboxProxyEntity, SensorEntity):
+    """Proxy for a sensor entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy sensor entity."""
+        super().__init__(description, manager)
+        if description.state_class:
+            from homeassistant.components.sensor import SensorStateClass
+
+            self._attr_state_class = SensorStateClass(description.state_class)
+        unit = description.capabilities.get("native_unit_of_measurement")
+        if unit:
+            self._attr_native_unit_of_measurement = unit
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the sensor value."""
+        return self._state_cache.get("state")
+
+
+class SandboxSwitchEntity(SandboxProxyEntity, SwitchEntity):
+    """Proxy for a switch entity in a sandbox."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the switch is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+
+class SandboxSceneEntity(SandboxProxyEntity, Scene):
+    """Proxy for a scene entity in a sandbox."""
+
+    async def async_activate(self, **kwargs: Any) -> None:
+        """Forward activate to sandbox."""
+        await self._forward_method("async_activate", **kwargs)
+
+
+class SandboxEventEntity(SandboxProxyEntity, EventEntity):
+    """Proxy for an event entity in a sandbox."""
+
+    _unrecorded_attributes = frozenset({})
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy event entity."""
+        super().__init__(description, manager)
+        self._attr_event_types = description.capabilities.get("event_types", [])
+
+    @callback
+    def sandbox_update_state(self, state: str, attributes: dict[str, Any]) -> None:
+        """Handle event firing from sandbox."""
+        event_type = attributes.get("event_type")
+        if event_type:
+            event_attributes = {
+                k: v
+                for k, v in attributes.items()
+                if k not in ("event_type", "state")
+            }
+            self._trigger_event(event_type, event_attributes or None)
+            self.async_write_ha_state()
+        else:
+            super().sandbox_update_state(state, attributes)
+
+
+_DOMAIN_ENTITY_MAP: dict[str, type[SandboxProxyEntity]] = {
+    "light": SandboxLightEntity,
+    "binary_sensor": SandboxBinarySensorEntity,
+    "sensor": SandboxSensorEntity,
+    "switch": SandboxSwitchEntity,
+    "scene": SandboxSceneEntity,
+    "event": SandboxEventEntity,
+}
+
+
 def _create_proxy_entity(
     description: SandboxEntityDescription,
     manager: SandboxEntityManager,
 ) -> SandboxProxyEntity:
     """Create the appropriate proxy entity for the domain."""
-    if description.domain == "light":
-        return SandboxLightEntity(description, manager)
-    return SandboxProxyEntity(description, manager)
+    entity_cls = _DOMAIN_ENTITY_MAP.get(description.domain, SandboxProxyEntity)
+    return entity_cls(description, manager)
