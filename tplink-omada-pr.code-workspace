@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "tplink_omada (component)",
+      "path": "homeassistant/components/tplink_omada"
+    },
+    {
+      "name": "tplink_omada (tests)",
+      "path": "tests/components/tplink_omada"
+    },
+    {
+      "name": "HAcore (root)",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {},
+    "explorer.sortOrder": "type"
+  }
+}

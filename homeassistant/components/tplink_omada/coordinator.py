@@ -264,8 +264,7 @@ async def async_cleanup_client_trackers(
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
     known_macs = {
-        dr.format_mac(mac)
-        for mac in (controller.known_clients_coordinator.data or {})
+        dr.format_mac(mac) for mac in (controller.known_clients_coordinator.data or {})
     }
 
     for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
