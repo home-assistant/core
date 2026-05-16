@@ -26,7 +26,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .entity import UnifiEntity, UnifiEntityDescription, async_device_available_fn
+from .entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_client_extra_state_attributes_fn,
+    async_device_available_fn,
+)
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
@@ -157,6 +162,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
+        extra_state_attributes_fn=async_client_extra_state_attributes_fn,
         heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
@@ -322,8 +328,9 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the client state attributes."""
+        attributes = dict(super().extra_state_attributes or {})
         if self.entity_description.key != "Client device scanner":
-            return None
+            return attributes or None
 
         client = self.entity_description.object_fn(self.api, self._obj_id)
         raw = client.raw
@@ -332,4 +339,5 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         if self.is_connected:
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
-        return {k: raw[k] for k in attributes_to_check if k in raw}
+        attributes.update({k: raw[k] for k in attributes_to_check if k in raw})
+        return attributes

@@ -13,6 +13,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
+    ATTR_UNIFI_NAME,
+    ATTR_UNIFI_NOTE,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_IGNORE_WIRED_BUG,
@@ -235,6 +237,21 @@ async def test_client_state_from_event_source(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [[WIRELESS_CLIENT_1 | {"name": "ws_client_1", "note": "Known client note"}]],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_client_unifi_metadata_attributes(hass: HomeAssistant) -> None:
+    """Verify client scanner exposes UniFi name and note attributes."""
+    state = hass.states.get("device_tracker.ws_client_1")
+
+    assert state is not None
+    assert state.attributes[ATTR_UNIFI_NAME] == "ws_client_1"
+    assert state.attributes[ATTR_UNIFI_NOTE] == "Known client note"
 
 
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])

@@ -18,6 +18,8 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
 )
 from homeassistant.components.unifi.const import (
+    ATTR_UNIFI_NAME,
+    ATTR_UNIFI_NOTE,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_DETECTION_TIME,
@@ -449,7 +451,7 @@ async def test_entity_and_device_data(
 
 @pytest.mark.parametrize(
     "config_entry_options",
-    [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
+    [{CONF_ALLOW_BANDWIDTH_SENSORS: True}],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_no_clients(hass: HomeAssistant) -> None:
@@ -541,6 +543,23 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_tx")
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
+)
+@pytest.mark.parametrize(
+    "client_payload", [[WIRELESS_CLIENT | {"note": "Known client note"}]]
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_client_sensor_unifi_metadata_attributes(hass: HomeAssistant) -> None:
+    """Verify client sensors expose UniFi name and note attributes."""
+    state = hass.states.get("sensor.wireless_client_rx")
+
+    assert state is not None
+    assert state.attributes[ATTR_UNIFI_NAME] == "Wireless client"
+    assert state.attributes[ATTR_UNIFI_NOTE] == "Known client note"
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])

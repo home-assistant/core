@@ -2224,6 +2224,7 @@
       'device_class': 'data_rate',
       'friendly_name': 'Wireless client RX',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unifi_name': 'Wireless client',
       'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
@@ -2282,6 +2283,7 @@
       'device_class': 'data_rate',
       'friendly_name': 'Wireless client TX',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unifi_name': 'Wireless client',
       'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
@@ -2334,6 +2336,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'uptime',
       'friendly_name': 'Wireless client Uptime',
+      'unifi_name': 'Wireless client',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wireless_client_uptime',
