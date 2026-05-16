@@ -43,18 +43,12 @@ type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 _FRONTEND_DIR = Path(__file__).parent / "frontend"
 _FRONTEND_JS_URL = "/tplink_omada/omada-network-strategy.js"
 _FRONTEND_SVG_URL = "/tplink_omada/omada-preview.svg"
-_DATA_FRONTEND_REGISTERED = f"{DOMAIN}_frontend_registered"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TP-Link Omada integration."""
     async_setup_services(hass)
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
-    """Set up TP-Link Omada from a config entry."""
-    if hass.http is not None and not hass.data.get(_DATA_FRONTEND_REGISTERED):
+    if hass.http is not None:
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(
@@ -70,7 +64,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
             ]
         )
         add_extra_js_url(hass, _FRONTEND_JS_URL)
-        hass.data[_DATA_FRONTEND_REGISTERED] = True
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+    """Set up TP-Link Omada from a config entry."""
 
     try:
         client = await create_omada_client(hass, entry.data)
