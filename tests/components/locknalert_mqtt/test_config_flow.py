@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from aiolocknalert import (
+    LocknAlertCannotConnect,
+    LocknAlertInvalidResponse,
+)
+
 from homeassistant.components.locknalert_mqtt.config_flow import (
     PWD_NOT_CHANGED,
     extract_serial_from_discovery,
@@ -156,7 +161,7 @@ async def test_zeroconf_happy_path(
     mock_try_connection_ok: MagicMock,
 ) -> None:
     """Zeroconf discovery → confirm → entry created."""
-    _, api_instance = mock_bridge_api
+    _, _api_instance = mock_bridge_api
     discovery_info = _make_zeroconf_info()
 
     result = await hass.config_entries.flow.async_init(
@@ -254,8 +259,6 @@ async def test_zeroconf_confirm_aborts_on_invalid_response(
     hass: HomeAssistant,
 ) -> None:
     """Confirm step aborts when bridge returns an unexpected response on submit."""
-    from aiolocknalert import LocknAlertInvalidResponse
-
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:
@@ -408,8 +411,6 @@ async def test_bootstrap_aborts_on_cannot_connect(
     mock_client_session: AsyncMock,
 ) -> None:
     """Bootstrap step aborts when bridge MQTT bootstrap fails."""
-    from aiolocknalert import LocknAlertCannotConnect
-
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:
@@ -436,8 +437,6 @@ async def test_bootstrap_aborts_on_invalid_response(
     mock_client_session: AsyncMock,
 ) -> None:
     """Bootstrap step aborts when bridge returns an unexpected response."""
-    from aiolocknalert import LocknAlertInvalidResponse
-
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:
@@ -523,8 +522,6 @@ async def test_broker_step_shows_error_on_cannot_connect(
     mock_client_session: AsyncMock,
 ) -> None:
     """Bridge API error on manual broker setup shows an error on the form."""
-    from aiolocknalert import LocknAlertCannotConnect
-
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:

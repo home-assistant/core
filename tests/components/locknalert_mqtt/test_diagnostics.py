@@ -9,13 +9,13 @@ from homeassistant.components.locknalert_mqtt.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def mqtt_config_entry_options() -> dict:
 async def test_entry_diagnostics_redacts_credentials(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Config entry diagnostics redact password and username."""
     await mqtt_mock_entry()
@@ -57,7 +57,7 @@ async def test_entry_diagnostics_redacts_credentials(
 async def test_entry_diagnostics_includes_devices_list(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Config entry diagnostics includes a devices list."""
     await mqtt_mock_entry()
@@ -71,8 +71,8 @@ async def test_entry_diagnostics_includes_devices_list(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    hass_client,
-    device_registry,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Device diagnostics return device-specific info."""
     await mqtt_mock_entry()

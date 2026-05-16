@@ -1352,7 +1352,7 @@ class MQTT:
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
     from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
 
-    matcher = MQTTMatcher()
+    matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True
 
-    return lambda topic: next(matcher.iter_match(topic), False)
+    return lambda topic: next(matcher.iter_match(topic), False)  # type: ignore[no-untyped-call]
