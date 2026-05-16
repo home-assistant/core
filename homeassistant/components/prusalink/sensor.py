@@ -39,18 +39,25 @@ _stable_job_finish = ignore_variance(
 )
 
 
-def _job_progress(data: JobInfo | None) -> float | None:
-    """Return job progress or None if no active job is running."""
+def _has_active_job(data: JobInfo | None) -> JobInfo | None:
+    """Return job payload if there is an active job, otherwise None."""
     if data is None or data.get("state") == PrinterState.IDLE.value:
         return None
-    return data["progress"]
+    return data
+
+
+def _job_progress(data: JobInfo | None) -> float | None:
+    """Return job progress or None if no active job is running."""
+    if (active_job := _has_active_job(data)) is None:
+        return None
+    return active_job["progress"]
 
 
 def _job_filename(data: JobInfo | None) -> str | None:
     """Return job filename or None if no active job is running."""
-    if data is None or data.get("state") == PrinterState.IDLE.value:
+    if (active_job := _has_active_job(data)) is None:
         return None
-    file_data = data["file"]
+    file_data = active_job["file"]
     if file_data is None:
         return None
     return file_data["display_name"]
@@ -58,16 +65,16 @@ def _job_filename(data: JobInfo | None) -> str | None:
 
 def _job_start(data: JobInfo | None) -> datetime | None:
     """Return print start timestamp or None if no active job is running."""
-    if data is None or data.get("state") == PrinterState.IDLE.value:
+    if (active_job := _has_active_job(data)) is None:
         return None
-    return _stable_job_start(data["time_printing"])
+    return _stable_job_start(active_job["time_printing"])
 
 
 def _job_finish(data: JobInfo | None) -> datetime | None:
     """Return print finish timestamp or None if no active job is running."""
-    if data is None or data.get("state") == PrinterState.IDLE.value:
+    if (active_job := _has_active_job(data)) is None:
         return None
-    time_remaining = data["time_remaining"]
+    time_remaining = active_job["time_remaining"]
     if time_remaining is None:
         return None
     return _stable_job_finish(time_remaining)
