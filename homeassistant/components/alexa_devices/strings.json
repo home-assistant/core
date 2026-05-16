@@ -118,7 +118,7 @@
   "preview_features": {
     "alexa_media": {
       "description": "Creates media players for Alexa Devices.",
-      "disable_confirmation": "Diable confirmation of setup of media...",
+      "disable_confirmation": "Disable confirmation of setup of media...",
       "enable_confirmation": "Enable confirmation of setup of media...",
       "name": "Alexa Media"
     }

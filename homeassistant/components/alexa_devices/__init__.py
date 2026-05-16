@@ -83,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
         if enabled:
             await coordinator.sync_media_state()
+            await _cancel_http2()  # cancel any existing task
             http2_task = await coordinator.api.start_http2_processing(
                 alexa_httpx_client,
                 on_reauth_required=_on_http2_reauth_required,
@@ -94,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
                 )
                 media_player_loaded = True
         else:
-            await _cancel_http2()
+            await coordinator.api.stop_http2_processing()
             if media_player_loaded:
                 await hass.config_entries.async_unload_platforms(
                     entry, [Platform.MEDIA_PLAYER]
