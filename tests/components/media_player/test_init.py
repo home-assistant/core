@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 import voluptuous as vol
 
@@ -175,6 +176,54 @@ async def test_get_image_http_log_credentials_redacted(
         "Error retrieving proxied image from "
         f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "fetch_exception",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(
+            aiohttp.ClientPayloadError("incomplete chunked read"),
+            id="client_payload_error",
+        ),
+        pytest.param(
+            aiohttp.ClientConnectionError("connection reset"),
+            id="client_connection_error",
+        ),
+    ],
+)
+async def test_get_image_http_aiohttp_failure_returns_500(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    fetch_exception: BaseException,
+) -> None:
+    """Test aiohttp errors during image fetch are caught and surfaced as 500.
+
+    Both TimeoutError and aiohttp.ClientError subclasses are suppressed in
+    async_fetch_image so the failure falls into the existing "Error
+    retrieving proxied image" path rather than propagating. The ClientError
+    case is forward-compat for once aiohttp raises ClientPayloadError on a
+    truncated chunked stream rather than swallowing it as clean EOF.
+    """
+    url = "http://example.com/image.jpg"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, exc=fetch_exception)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Error retrieving proxied image from {url}" in caplog.text
 
 
 @pytest.mark.parametrize(

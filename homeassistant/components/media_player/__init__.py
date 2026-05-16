@@ -1505,7 +1505,13 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(TimeoutError):
+    # Also suppress aiohttp.ClientError so that ClientPayloadError raised by
+    # the chunked-stream path (and any other client-side aiohttp failure)
+    # falls into the same "Error retrieving proxied image" path as a timeout
+    # rather than propagating as an unhandled exception. This is a no-op for
+    # the read-until-EOF case today (aiohttp does not raise there), but picks
+    # up the clean signal once that path is fixed upstream.
+    with suppress(TimeoutError, aiohttp.ClientError):
         response = await websession.get(url, timeout=_FETCH_TIMEOUT)
         if response.status == HTTPStatus.OK:
             body = await response.read()
