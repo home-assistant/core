@@ -13,6 +13,7 @@ import pytest
 from homeassistant.components.elke27.const import READY_TIMEOUT
 from homeassistant.components.elke27.hub import (
     Elke27Hub,
+    _async_set_client_identity,
     _connection_state,
     _event_type,
 )
@@ -608,6 +609,177 @@ async def test_async_set_light_and_lock(
         await hub.async_set_lock(1, locked=True)
 
 
+@pytest.mark.parametrize(
+    ("method_name", "method", "state"),
+    [
+        (
+            "async_set_light",
+            lambda calls: _async_light_on(calls),
+            True,
+        ),
+        (
+            "set_light",
+            lambda calls: _sync_light_on(calls),
+            True,
+        ),
+        (
+            "set_light",
+            lambda calls: _sync_light(calls),
+            False,
+        ),
+    ],
+)
+async def test_async_set_light_uses_client_methods(
+    hass: HomeAssistant,
+    method_name: str,
+    method: Any,
+    state: bool,
+) -> None:
+    """Verify light control uses direct client methods when available."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.73",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    calls: list[Any] = []
+    hub._client = SimpleNamespace(**{method_name: method(calls)})
+
+    assert await hub.async_set_light(1, state=state) is True
+    assert calls == [(1, state)]
+
+
+def _async_light_on(calls: list[Any]) -> Any:
+    async def _method(light_id: int, *, on: bool) -> bool:
+        calls.append((light_id, on))
+        return True
+
+    return _method
+
+
+def _sync_light(calls: list[Any]) -> Any:
+    def _method(light_id: int, state: bool) -> bool:
+        calls.append((light_id, state))
+        return True
+
+    return _method
+
+
+def _sync_light_on(calls: list[Any]) -> Any:
+    def _method(light_id: int, *, on: bool) -> bool:
+        calls.append((light_id, on))
+        return True
+
+    return _method
+
+
+@pytest.mark.parametrize(
+    ("method_name", "method", "locked"),
+    [
+        (
+            "async_set_lock",
+            lambda calls: _async_lock_locked(calls),
+            True,
+        ),
+        (
+            "set_lock",
+            lambda calls: _sync_lock_locked(calls),
+            False,
+        ),
+        (
+            "async_set_lock",
+            lambda calls: _async_lock_on(calls),
+            True,
+        ),
+        (
+            "set_lock",
+            lambda calls: _sync_lock_on(calls),
+            False,
+        ),
+        (
+            "async_set_lock",
+            lambda calls: _async_lock_positional(calls),
+            True,
+        ),
+        (
+            "set_lock",
+            lambda calls: _sync_lock_positional(calls),
+            False,
+        ),
+    ],
+)
+async def test_async_set_lock_uses_client_methods(
+    hass: HomeAssistant,
+    method_name: str,
+    method: Any,
+    locked: bool,
+) -> None:
+    """Verify lock control uses direct client methods when available."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.73",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    calls: list[Any] = []
+    hub._client = SimpleNamespace(**{method_name: method(calls)})
+
+    assert await hub.async_set_lock(2, locked=locked) is True
+    assert calls == [(2, locked)]
+
+
+def _async_lock_locked(calls: list[Any]) -> Any:
+    async def _method(lock_id: int, *, locked: bool) -> bool:
+        calls.append((lock_id, locked))
+        return True
+
+    return _method
+
+
+def _sync_lock_locked(calls: list[Any]) -> Any:
+    def _method(lock_id: int, *, locked: bool) -> bool:
+        calls.append((lock_id, locked))
+        return True
+
+    return _method
+
+
+def _async_lock_on(calls: list[Any]) -> Any:
+    async def _method(lock_id: int, *, on: bool) -> bool:
+        calls.append((lock_id, on))
+        return True
+
+    return _method
+
+
+def _sync_lock_on(calls: list[Any]) -> Any:
+    def _method(lock_id: int, *, on: bool) -> bool:
+        calls.append((lock_id, on))
+        return True
+
+    return _method
+
+
+def _async_lock_positional(calls: list[Any]) -> Any:
+    async def _method(lock_id: int, locked: bool) -> bool:
+        calls.append((lock_id, locked))
+        return True
+
+    return _method
+
+
+def _sync_lock_positional(calls: list[Any]) -> Any:
+    def _method(lock_id: int, state: bool) -> bool:
+        calls.append((lock_id, state))
+        return True
+
+    return _method
+
+
 async def test_async_set_tstat_status(
     hass: HomeAssistant,
 ) -> None:
@@ -649,6 +821,69 @@ async def test_async_set_tstat_status(
     hub._client = SimpleNamespace(async_execute=execute)
     with pytest.raises(HomeAssistantError, match="tstat failed"):
         await hub.async_set_tstat_status(3, mode="HEAT")
+
+
+@pytest.mark.parametrize(
+    ("method_name", "method"),
+    [
+        ("async_set_tstat_status", lambda calls: _async_tstat_status(calls)),
+        ("set_tstat_status", lambda calls: _sync_tstat_status(calls)),
+    ],
+)
+async def test_async_set_tstat_status_uses_client_methods(
+    hass: HomeAssistant,
+    method_name: str,
+    method: Any,
+) -> None:
+    """Verify thermostat control uses direct client methods when available."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.73",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    calls: list[Any] = []
+    hub._client = SimpleNamespace(**{method_name: method(calls)})
+
+    assert await hub.async_set_tstat_status(3, mode="HEAT") is True
+    assert calls == [(3, {"mode": "HEAT"})]
+
+
+def _async_tstat_status(calls: list[Any]) -> Any:
+    async def _method(tstat_id: int, **kwargs: Any) -> bool:
+        calls.append((tstat_id, kwargs))
+        return True
+
+    return _method
+
+
+def _sync_tstat_status(calls: list[Any]) -> Any:
+    def _method(tstat_id: int, **kwargs: Any) -> bool:
+        calls.append((tstat_id, kwargs))
+        return True
+
+    return _method
+
+
+async def test_async_set_tstat_status_returns_false_on_command_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Verify thermostat control returns false on command failure without error."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.73",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
+    )
+
+    assert await hub.async_set_tstat_status(3, mode="HEAT") is False
 
 
 async def test_zone_bypass_validation_and_errors(
@@ -710,6 +945,148 @@ async def test_arm_and_disarm_area_errors(
     )
     with pytest.raises(HomeAssistantError):
         await hub.async_disarm_area(1, pin="1234")
+
+
+@pytest.mark.parametrize(
+    ("method_name", "method"),
+    [
+        ("async_arm_area", lambda calls: _async_arm_area(calls)),
+        ("async_arm_area", lambda calls: _sync_arm_area(calls)),
+    ],
+)
+async def test_async_arm_area_uses_client_method(
+    hass: HomeAssistant,
+    method_name: str,
+    method: Any,
+) -> None:
+    """Verify arm requests use direct client methods when available."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.75",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    calls: list[Any] = []
+    hub._client = SimpleNamespace(**{method_name: method(calls)})
+
+    assert (
+        await hub.async_arm_area(
+            1,
+            ArmMode.ARMED_AWAY,
+            "1234",
+            auto_stay_cancel=True,
+            exit_delay_cancel=True,
+        )
+        is True
+    )
+    assert calls == [(1, "1234", ArmMode.ARMED_AWAY, True, True)]
+
+
+def _async_arm_area(calls: list[Any]) -> Any:
+    async def _method(
+        area_id: int,
+        pin: str,
+        mode: ArmMode,
+        *,
+        auto_stay_cancel: bool,
+        exit_delay_cancel: bool,
+    ) -> bool:
+        calls.append((area_id, pin, mode, auto_stay_cancel, exit_delay_cancel))
+        return True
+
+    return _method
+
+
+def _sync_arm_area(calls: list[Any]) -> Any:
+    def _method(
+        area_id: int,
+        pin: str,
+        mode: ArmMode,
+        *,
+        auto_stay_cancel: bool,
+        exit_delay_cancel: bool,
+    ) -> bool:
+        calls.append((area_id, pin, mode, auto_stay_cancel, exit_delay_cancel))
+        return True
+
+    return _method
+
+
+@pytest.mark.parametrize(
+    ("method_name", "method"),
+    [
+        ("async_disarm_area", lambda calls: _async_disarm_area(calls)),
+        ("async_disarm_area", lambda calls: _sync_disarm_area(calls)),
+    ],
+)
+async def test_async_disarm_area_uses_client_method(
+    hass: HomeAssistant,
+    method_name: str,
+    method: Any,
+) -> None:
+    """Verify disarm requests use direct client methods when available."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.75",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    calls: list[Any] = []
+    hub._client = SimpleNamespace(**{method_name: method(calls)})
+
+    assert (
+        await hub.async_disarm_area(
+            1,
+            "1234",
+            auto_stay_cancel=True,
+            exit_delay_cancel=True,
+        )
+        is True
+    )
+    assert calls == [(1, "1234", True, True)]
+
+
+def _async_disarm_area(calls: list[Any]) -> Any:
+    async def _method(
+        area_id: int,
+        pin: str,
+        *,
+        auto_stay_cancel: bool,
+        exit_delay_cancel: bool,
+    ) -> bool:
+        calls.append((area_id, pin, auto_stay_cancel, exit_delay_cancel))
+        return True
+
+    return _method
+
+
+def _sync_disarm_area(calls: list[Any]) -> Any:
+    def _method(
+        area_id: int,
+        pin: str,
+        *,
+        auto_stay_cancel: bool,
+        exit_delay_cancel: bool,
+    ) -> bool:
+        calls.append((area_id, pin, auto_stay_cancel, exit_delay_cancel))
+        return True
+
+    return _method
+
+
+async def test_async_set_client_identity_awaits_result() -> None:
+    """Verify async client identity setters are awaited."""
+    client = SimpleNamespace(set_client_identity=AsyncMock(return_value=None))
+
+    await _async_set_client_identity(client, {"mn": "222", "sn": "112233445566"})
+
+    client.set_client_identity.assert_awaited_once_with(
+        {"mn": "222", "sn": "112233445566"}
+    )
 
 
 async def test_reconnect_loop_stops_on_link_required(
