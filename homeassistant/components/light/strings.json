@@ -47,6 +47,9 @@
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::light::common::condition_threshold_name%]"
         }
@@ -317,12 +320,6 @@
         "yellowgreen": "Yellow green"
       }
     },
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "flash": {
       "options": {
         "long": "Long",
@@ -333,13 +330,6 @@
       "options": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },

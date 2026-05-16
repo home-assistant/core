@@ -1,7 +1,5 @@
 """Base entity for the Ollama integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
@@ -143,9 +141,11 @@ async def _transform_stream(
 
     response: message=Message(role="assistant", content="Paris")
     response: message=Message(role="assistant", content=".")
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
     response: message=Message(role="assistant", tool_calls=[...])
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
 
     This generator conforms to the chatlog delta stream expectations in that it
     yields deltas, then the role only once the response is done.

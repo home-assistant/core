@@ -1,7 +1,5 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 
-from __future__ import annotations
-
 import asyncio
 
 from haffmpeg.camera import CameraMjpeg
@@ -138,6 +136,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     self.profile.token, self._basic_auth
                 ):
                     return image
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",

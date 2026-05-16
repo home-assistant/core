@@ -747,36 +747,6 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
         schema(value)
 
 
-async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
-    """Test dynamic template validator."""
-    schema = vol.Schema(cv.dynamic_template)
-
-    for value in (
-        None,
-        1,
-        "{{ partial_print }",
-        "{% if True %}Hello",
-        ["test"],
-        "just a string",
-        # Filter added as an extension by Home Assistant
-        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
-    ):
-        with pytest.raises(vol.Invalid):
-            await hass.async_add_executor_job(schema, value)
-
-    options = (
-        "{{ beer }}",
-        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function 'expand' added as an extension by Home Assistant, no error
-        # because non existing functions are not detected by Jinja2
-        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Non existing function 'no_such_function' is not detected by Jinja2
-        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
-    )
-    for value in options:
-        await hass.async_add_executor_job(schema, value)
-
-
 @pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""
@@ -1158,8 +1128,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     option_status = "is deprecated"
     replacement = f"'mars' option near {file}:{line} {option_status}, please replace it with '{replacement_key}'"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.deprecated("mars", replacement_key=replacement_key, default=False)(
         config
@@ -1176,8 +1146,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     option_status = "has been removed"
     replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.removed("mars", default=False, raise_if_present=False)(config)
     assert "mars" not in validated  # Removed because by cv.removed
@@ -1197,7 +1167,7 @@ def test_deprecated_logger_with_one_config_attribute(
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
+    config.__config_file__ = file
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 
@@ -1211,7 +1181,7 @@ def test_deprecated_logger_with_one_config_attribute(
     assert len(caplog.records) == 0
 
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__line__", line)
+    config.__line__ = line
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 

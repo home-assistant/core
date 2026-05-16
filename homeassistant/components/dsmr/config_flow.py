@@ -1,7 +1,5 @@
 """Config flow for DSMR integration."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 from typing import Any
@@ -128,7 +126,9 @@ class DSMRConnection:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
             except TimeoutError:
-                # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
+                # Timeout (no data received), close transport
+                # and return True (if telegram is empty, will
+                # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
         return True

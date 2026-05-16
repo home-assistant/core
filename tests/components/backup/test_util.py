@@ -1,7 +1,5 @@
 """Tests for the Backup integration's utility functions."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
@@ -154,7 +152,8 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
     mock_path.stat.return_value.st_size = 1234
 
     with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
-        mock_open_tar.return_value.__enter__.return_value.extractfile.return_value.read.return_value = backup_json_content
+        tar_ctx = mock_open_tar.return_value.__enter__.return_value
+        tar_ctx.extractfile.return_value.read.return_value = backup_json_content
         backup = read_backup(mock_path)
         assert backup == expected_backup
 

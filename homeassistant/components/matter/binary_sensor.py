@@ -1,7 +1,5 @@
 """Matter binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -530,8 +528,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # LocalTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature  # Calculated Local Temperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -546,8 +543,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # OutdoorTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature  # OutdoorTemperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -565,8 +561,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # Occupancy bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy  # Occupancy is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy
             ),
         ),
         entity_class=MatterBinarySensor,

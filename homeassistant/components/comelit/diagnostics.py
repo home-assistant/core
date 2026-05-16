@@ -1,7 +1,5 @@
 """Diagnostics support for Comelit integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiocomelit import (

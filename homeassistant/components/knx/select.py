@@ -1,7 +1,5 @@
 """Support for KNX select entities."""
 
-from __future__ import annotations
-
 from xknx import XKNX
 from xknx.devices import Device as XknxDevice, RawValue
 

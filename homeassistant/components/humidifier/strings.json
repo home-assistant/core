@@ -12,6 +12,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::humidifier::common::condition_for_name%]"
         }
       },
       "name": "Humidifier is drying"
@@ -21,6 +24,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::humidifier::common::condition_for_name%]"
         }
       },
       "name": "Humidifier is humidifying"
@@ -30,6 +36,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::humidifier::common::condition_for_name%]"
         },
         "mode": {
           "description": "The operation modes to check for.",
@@ -67,6 +76,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::humidifier::common::condition_for_name%]"
         },
         "threshold": {
           "name": "[%key:component::humidifier::common::condition_threshold_name%]"
@@ -160,21 +172,6 @@
   "exceptions": {
     "humidity_out_of_range": {
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "services": {

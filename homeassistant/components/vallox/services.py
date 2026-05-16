@@ -1,7 +1,5 @@
 """Services for the Vallox integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum, auto
 import logging
 
@@ -98,6 +96,7 @@ async def _async_set_profile(call: ServiceCall) -> None:
         await coordinator.client.set_profile(
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     except ValloxApiException as err:
         _LOGGER.error(
             "Error setting profile %s for duration %s: %s",

@@ -1,7 +1,5 @@
 """Switch platform for Watts Vision integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

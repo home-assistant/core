@@ -1,9 +1,7 @@
 """Support for Tuya number."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.number import (
-    TuyaNumberDefinition,
+    NumberDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -230,7 +228,14 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.SFKZQ: (
-        # Controls the irrigation duration for the water valve
+        # Controls the irrigation duration for indexed water valves
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN,
+            translation_key="irrigation_duration",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        # Controls the irrigation duration for indexed water valves
         NumberEntityDescription(
             key=DPCode.COUNTDOWN_1,
             translation_key="indexed_irrigation_duration",
@@ -299,6 +304,21 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,
             translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.IPC_BRIGHT,
+            translation_key="video_brightness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.IPC_CONTRAST,
+            translation_key="video_contrast",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.IPC_SHARP,
+            translation_key="video_sharpness",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -487,7 +507,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        definition: TuyaNumberDefinition,
+        definition: NumberDefinition,
     ) -> None:
         """Initialize a Tuya number entity."""
         super().__init__(device, device_manager, description)

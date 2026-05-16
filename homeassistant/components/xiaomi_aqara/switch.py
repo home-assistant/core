@@ -6,11 +6,10 @@ from typing import Any
 from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
 from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,14 +29,12 @@ IN_USE = "inuse"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["switch"]:
         model = device["model"]
         if model == "plug":
@@ -147,7 +144,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         data_key: str,
         supports_power_consumption: bool,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiPlug."""
         self._data_key = data_key

@@ -1,7 +1,5 @@
 """Test the MySensors config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -76,6 +74,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -137,6 +136,7 @@ async def test_config_serial(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -176,6 +176,7 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY

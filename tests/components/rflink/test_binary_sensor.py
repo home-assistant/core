@@ -87,23 +87,26 @@ async def test_default_setup(
     assert hass.states.get("binary_sensor.test").state == STATE_OFF
 
 
-@pytest.mark.xfail(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_entity_availability(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
-    config = CONFIG
-    failures = [True, True]
-    config[CONF_RECONNECT_INTERVAL] = 60
+    config = {
+        **CONFIG,
+        "rflink": {
+            **CONFIG["rflink"],
+            CONF_RECONNECT_INTERVAL: 60,
+        },
+    }
+    failures = [False, True]
 
     # Create platform and entities
     event_callback, _, _, disconnect_callback = await mock_rflink(
         hass, config, DOMAIN, monkeypatch, failures=failures
     )
+    await hass.async_block_till_done()
 
     # Entities are unknown by default
     assert hass.states.get("binary_sensor.test").state == STATE_UNKNOWN

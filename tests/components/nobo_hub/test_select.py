@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -136,3 +136,14 @@ async def test_week_profile_push_update(
     mock_nobo_hub.zones["1"]["week_profile_id"] = "1"
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(PROFILE_ENTITY).state == "Weekend"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_removed_marks_week_profile_unavailable(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+) -> None:
+    """A zone removed via the Nobø app must not crash and goes unavailable."""
+    mock_nobo_hub.zones.pop("1")
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert hass.states.get(PROFILE_ENTITY).state == STATE_UNAVAILABLE

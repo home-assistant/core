@@ -1,7 +1,5 @@
 """Support for tariff selection."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.select import SelectEntity

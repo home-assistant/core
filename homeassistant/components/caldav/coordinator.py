@@ -1,7 +1,5 @@
 """Data update coordinator for caldav."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
@@ -104,7 +102,8 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
 
         # Create new events for each recurrence of an event that happens today.
-        # For recurring events, some servers return the original event with recurrence rules
+        # For recurring events, some servers return the original
+        # event with recurrence rules
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:

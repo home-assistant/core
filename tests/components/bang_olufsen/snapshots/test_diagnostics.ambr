@@ -124,7 +124,7 @@
     'battery_level': dict({
       'attributes': dict({
         'device_class': 'battery',
-        'friendly_name': 'Living room Balance Battery',
+        'friendly_name': 'Lounge room A5 Battery',
         'state_class': 'measurement',
         'unit_of_measurement': '%',
       }),
@@ -134,7 +134,7 @@
     'charging': dict({
       'attributes': dict({
         'device_class': 'battery_charging',
-        'friendly_name': 'Living room Balance Charging',
+        'friendly_name': 'Lounge room A5 Charging',
       }),
       'entity_id': 'binary_sensor.lounge_room_a5_charging',
       'state': 'off',
@@ -174,12 +174,12 @@
             'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
           'self': dict({
-            'Living room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
           }),
         }),
         'device_class': 'speaker',
         'entity_picture_local': None,
-        'friendly_name': 'Living room Balance',
+        'friendly_name': 'Lounge room A5',
         'group_members': list([
           'media_player.lounge_room_a5',
           'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',

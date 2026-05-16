@@ -1,7 +1,5 @@
 """Config flow tests for Fish Audio."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fishaudio import AuthenticationError, FishAudioError
@@ -27,10 +25,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_happy_path(
-    hass: HomeAssistant,
-    mock_fishaudio_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_fishaudio_client: AsyncMock
 ) -> None:
     """Test the full user flow happy path."""
     result = await hass.config_entries.flow.async_init(

@@ -893,11 +893,9 @@ async def test_user_setup_ignored_device(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_devices_discovered(
-    hass: HomeAssistant,
-    mock_block_device: Mock,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
+    hass: HomeAssistant, mock_block_device: Mock, mock_setup: AsyncMock
 ) -> None:
     """Test user flow with no discovered devices redirects to manual entry."""
     # mock_discovery fixture already returns empty list by default
@@ -987,11 +985,11 @@ async def test_user_flow_with_zeroconf_devices(
     assert result["data"][CONF_HOST] == "192.168.1.100"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_select_zeroconf_device(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_rpc_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test selecting a discovered Zeroconf device completes setup."""
@@ -1027,11 +1025,11 @@ async def test_user_flow_select_zeroconf_device(
     assert result["data"][CONF_PORT] == 80
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_select_manual_entry(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_block_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test selecting manual entry from device list."""
@@ -1075,11 +1073,11 @@ async def test_user_flow_select_manual_entry(
     assert result["data"][CONF_HOST] == "192.168.1.200"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_rpc_device: Mock,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
     """Test device discovered via both BLE and Zeroconf prefers Zeroconf."""
@@ -2758,8 +2756,14 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
         },
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -2811,10 +2815,14 @@ async def test_zeroconf_sleeping_device_attempts_configure(
         },
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    mock_rpc_device.mock_disconnected()
-    await hass.async_block_till_done()
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -2877,10 +2885,14 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
         },
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    mock_rpc_device.mock_disconnected()
-    await hass.async_block_till_done()
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -2943,10 +2955,14 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
         },
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    mock_rpc_device.mock_disconnected()
-    await hass.async_block_till_done()
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -3277,12 +3293,9 @@ async def test_bluetooth_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provisioning_clears_match_history(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test bluetooth provisioning clears match history at discovery start and after successful provisioning."""
     # Configure mock BLE device for this test
@@ -3365,12 +3378,9 @@ async def test_bluetooth_discovery_no_rpc_over_ble(
     assert result["reason"] == "invalid_discovery_info"
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_factory_reset_rediscovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test device can be rediscovered after factory reset when RPC-over-BLE is re-enabled."""
     # Configure mock BLE device for this test
@@ -4439,10 +4449,9 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
     mock_ble_rpc_device: AsyncMock,
     mock_ble_rpc_device_class: MagicMock,
@@ -4657,12 +4666,9 @@ async def test_bluetooth_provision_timeout_ble_exception(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_both_enabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with both AP and BLE disable enabled (default)."""
     # Configure mock BLE device
@@ -4717,12 +4723,9 @@ async def test_bluetooth_provision_secure_device_both_enabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_both_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with both AP and BLE disable disabled."""
     # Configure mock BLE device
@@ -4766,12 +4769,9 @@ async def test_bluetooth_provision_secure_device_both_disabled(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_only_ap_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with only AP disable enabled."""
     # Configure mock BLE device
@@ -4825,12 +4825,9 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_only_ble_disabled(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning with only BLE disable enabled."""
     # Configure mock BLE device
@@ -4884,12 +4881,9 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_with_restart_required(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning when BLE disable requires restart."""
     # Configure mock BLE device
@@ -4944,12 +4938,9 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     assert mock_device.shutdown.called
 
 
-@pytest.mark.usefixtures("mock_ble_rpc_device_class")
+@pytest.mark.usefixtures("mock_ble_rpc_device_class", "mock_setup_entry")
 async def test_bluetooth_provision_secure_device_fails_gracefully(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_setup: AsyncMock,
-    mock_ble_rpc_device: AsyncMock,
+    hass: HomeAssistant, mock_setup: AsyncMock, mock_ble_rpc_device: AsyncMock
 ) -> None:
     """Test provisioning succeeds even when secure device calls fail."""
     # Configure mock BLE device

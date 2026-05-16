@@ -1,23 +1,24 @@
 """Tests for the Duco sensor platform."""
 
-from __future__ import annotations
-
+import logging
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import (
+from duco_connectivity import (
+    DucoConnectionError,
+    DucoError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
     NodeType,
     NodeVentilationInfo,
+    VentilationState,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -168,6 +169,7 @@ async def test_new_node_added_dynamically(
             iaq_co2=None,
             rh=55.0,
             iaq_rh=70,
+            temp=21.0,
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]
@@ -253,3 +255,141 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
     )
     assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a node with UNKNOWN type is retried and gets entities once the type resolves."""
+    node_id = 99
+    ventilation = NodeVentilationInfo(
+        state="AUTO", time_state_remain=0, time_state_end=0, mode="-", flow_lvl_tgt=None
+    )
+    sensor = NodeSensorInfo(co2=None, iaq_co2=None, rh=62.0, iaq_rh=70, temp=21.0)
+
+    def _make_node(node_type: NodeType | str) -> Node:
+        """Create a Node with the given node type for use in tests."""
+        return Node(
+            node_id=node_id,
+            general=NodeGeneralInfo(
+                node_type=node_type,
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Future sensor",
+                identify=0,
+            ),
+            ventilation=ventilation,
+            sensor=sensor,
+        )
+
+    # First poll: UNKNOWN type — no entities created.
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_nodes,
+        _make_node(NodeType.UNKNOWN),
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.future_sensor_humidity") is None
+
+    # Second poll: type now resolved — entities must be created.
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, _make_node("BSRH")]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.future_sensor_humidity")
+    assert state is not None
+    assert state.state == "62.0"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_node_logged_at_debug(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that UNKNOWN nodes are logged at DEBUG level on every coordinator update."""
+    unknown_node = Node(
+        node_id=99,
+        general=NodeGeneralInfo(
+            node_type=NodeType.UNKNOWN,
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="Future sensor",
+            identify=0,
+        ),
+        ventilation=NodeVentilationInfo(
+            state="AUTO",
+            time_state_remain=0,
+            time_state_end=0,
+            mode="-",
+            flow_lvl_tgt=None,
+        ),
+        sensor=NodeSensorInfo(co2=None, iaq_co2=None, rh=None, iaq_rh=None, temp=None),
+    )
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "has an unsupported device type" not in caplog.text
+
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "has an unsupported device type" in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_ventilation_state_unknown_returns_state_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
+    box_node = next(n for n in mock_nodes if n.general.node_type == NodeType.BOX)
+    updated_nodes = [
+        Node(
+            node_id=box_node.node_id,
+            general=box_node.general,
+            ventilation=NodeVentilationInfo(
+                state=VentilationState.UNKNOWN,
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=box_node.sensor,
+        )
+        if n is box_node
+        else n
+        for n in mock_nodes
+    ]
+    mock_duco_client.async_get_nodes.return_value = updated_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation_state")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

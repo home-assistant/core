@@ -1,7 +1,5 @@
 """Config flow for Anthropic integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import json
 import logging
@@ -548,7 +546,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
+                        description=(
+                            "Free text input for the city, e.g. `San Francisco`"
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_WEB_SEARCH_REGION,

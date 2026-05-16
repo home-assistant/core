@@ -1,7 +1,5 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Hashable, Mapping
 import contextlib
 from contextvars import ContextVar
@@ -759,15 +757,7 @@ def dynamic_template(value: Any) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            (
-                "validates schema outside the event loop, "
-                "which will stop working in HA Core 2025.10"
-            ),
-            core_behavior=ReportBehavior.LOG,
-        )
+        raise vol.Invalid("Validates schema outside the event loop")
 
     template_value = template_helper.Template(str(value), hass)
 
@@ -1088,7 +1078,8 @@ def renamed(
         if old_key in value:
             if new_key in value:
                 raise vol.Invalid(
-                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                    f"Cannot specify both '{old_key}' and"
+                    f" '{new_key}'. Please use '{new_key}' only."
                 )
             value[new_key] = value.pop(old_key)
 
@@ -1421,7 +1412,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         ),
         _HAS_ENTITY_SERVICE_FIELD,
     )
-    setattr(validator, "_entity_service_schema", True)
+    setattr(validator, "_entity_service_schema", True)  # noqa: B010
     return validator
 
 
@@ -1780,7 +1771,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
+            vol.Required(CONF_CONDITION): vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)
@@ -1850,7 +1841,8 @@ def _trigger_pre_validator(value: Any | None) -> Any:
     if CONF_TRIGGER in value:
         if CONF_PLATFORM in value:
             raise vol.Invalid(
-                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+                "Cannot specify both 'platform' and 'trigger'."
+                " Please use 'trigger' only."
             )
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
@@ -1875,7 +1867,7 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_
 
 
 def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
-    """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
+    """Flatten trigger arrays with 'triggers:' sublists into one list."""
     flatlist = []
     for t in triggers:
         if CONF_TRIGGERS in t and len(t) == 1:
