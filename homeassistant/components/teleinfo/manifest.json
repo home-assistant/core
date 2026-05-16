@@ -8,6 +8,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["pyteleinfo==0.4.0"],
-  "usb": []
+  "requirements": ["pyteleinfo==0.4.0"]
 }
