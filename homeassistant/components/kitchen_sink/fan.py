@@ -41,7 +41,7 @@ async def async_setup_entry(
                 DemoInfraredFan(
                     subentry_id=subentry_id,
                     device_name=subentry.title,
-                    infrared_entity_id=subentry.data[CONF_INFRARED_ENTITY_ID],
+                    infrared_emitter_entity_id=subentry.data[CONF_INFRARED_ENTITY_ID],
                 )
             ],
             config_subentry_id=subentry_id,
@@ -65,10 +65,10 @@ class DemoInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         self,
         subentry_id: str,
         device_name: str,
-        infrared_entity_id: str,
+        infrared_emitter_entity_id: str,
     ) -> None:
         """Initialize the demo infrared fan entity."""
-        self._infrared_emitter_entity_id = infrared_entity_id
+        self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._attr_unique_id = subentry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry_id)},
