@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from monarchmoney import LoginFailedException, RequireMFAException
+import pytest
 
 from homeassistant.components.monarch_money.const import CONF_MFA_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -38,11 +39,9 @@ async def test_form_simple(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_add_duplicate_entry(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_setup_entry: AsyncMock,
-    mock_config_api: AsyncMock,
+    hass: HomeAssistant, mock_config_entry, mock_config_api: AsyncMock
 ) -> None:
     """Test a duplicate error config flow."""
     mock_config_entry.add_to_hass(hass)

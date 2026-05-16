@@ -28,9 +28,8 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
     """Mock bluetooth for all tests in this module."""
 
 
-async def test_async_step_bluetooth_valid_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -56,9 +55,8 @@ async def test_async_step_bluetooth_valid_device(
     assert set(flow_result.data.keys()) == {CONF_ACCESS_TOKEN}
 
 
-async def test_async_step_bluetooth_invalid_key_retry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_async_step_bluetooth_invalid_key_retry(hass: HomeAssistant) -> None:
     """Test wrong key via bluetooth discovery shows error and allows retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -123,10 +121,9 @@ async def test_abort_scenarios(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_async_step_user_with_devices_found(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test setup from service info cache with devices found."""
     result = await hass.config_entries.flow.async_init(

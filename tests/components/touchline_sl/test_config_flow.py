@@ -89,9 +89,9 @@ async def test_config_flow_failure_api_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_failure_adding_non_unique_account(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_touchlinesl_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

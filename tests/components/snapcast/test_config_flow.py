@@ -45,12 +45,9 @@ async def test_full_flow(
         (ConnectionRefusedError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_server: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_server: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we get the form and handle errors and successful connection."""
 

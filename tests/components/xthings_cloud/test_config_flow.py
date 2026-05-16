@@ -27,10 +27,9 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
+    hass: HomeAssistant, mock_api_client: AsyncMock
 ) -> None:
     """Test successful user login flow."""
     result = await hass.config_entries.flow.async_init(
@@ -62,9 +61,9 @@ async def test_user_flow_success(
         (RuntimeError("unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error_and_recover(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     side_effect: Exception,
     expected_error: str,
@@ -91,11 +90,9 @@ async def test_user_flow_error_and_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_api_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user flow aborts if same account already configured."""
     mock_config_entry.add_to_hass(hass)

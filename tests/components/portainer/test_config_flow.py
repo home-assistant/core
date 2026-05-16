@@ -111,10 +111,10 @@ async def test_form_exceptions(
     assert result["data"] == MOCK_TEST_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""

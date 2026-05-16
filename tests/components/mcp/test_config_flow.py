@@ -219,9 +219,8 @@ async def test_input_form_validation_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_unique_url(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_unique_url(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     """Test that the same url cannot be configured twice."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -251,10 +250,9 @@ async def test_unique_url(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_server_missing_capbilities(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
+    hass: HomeAssistant, mock_mcp_client: Mock
 ) -> None:
     """Test we handle different client library errors."""
     result = await hass.config_entries.flow.async_init(
@@ -277,10 +275,9 @@ async def test_server_missing_capbilities(
 
 
 @respx.mock
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_oauth_discovery_flow_without_credentials(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mcp_client: Mock,
+    hass: HomeAssistant, mock_mcp_client: Mock
 ) -> None:
     """Test for an OAuth discoveryflow for an MCP server where the user has not yet entered credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -582,7 +579,7 @@ async def test_authentication_discovery_via_header(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 @pytest.mark.parametrize(
     ("resource_metadata"),
@@ -616,7 +613,6 @@ async def test_authentication_discovery_via_header(
 )
 async def test_invalid_protected_resource_metadata(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -676,11 +672,10 @@ async def test_invalid_protected_resource_metadata(
         (Exception, "unknown"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_oauth_discovery_failure(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -722,11 +717,10 @@ async def test_oauth_discovery_failure(
         (Exception, "unknown"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_authentication_flow_server_failure_abort(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,
@@ -780,11 +774,10 @@ async def test_authentication_flow_server_failure_abort(
     assert result["reason"] == expected_error
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_authentication_flow_server_missing_tool_capabilities(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_mcp_client: Mock,
     credential: None,
     aioclient_mock: AiohttpClientMocker,

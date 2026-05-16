@@ -190,9 +190,8 @@ async def test_bluetooth_flow_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_bluetooth_flow_no_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_bluetooth_flow_no_device(hass: HomeAssistant) -> None:
     """Test we can handle a bluetooth discovery flow."""
 
     result = await hass.config_entries.flow.async_init(

@@ -24,10 +24,9 @@ from .const import TEST_CODE, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_amazon_devices_client: AsyncMock
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -69,10 +68,10 @@ async def test_full_flow(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -112,10 +111,10 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -142,10 +141,10 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test starting a reauthentication flow."""
@@ -184,10 +183,10 @@ async def test_reauth_successful(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_not_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
@@ -234,10 +233,10 @@ async def test_reauth_not_successful(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the entry can be reconfigured."""
@@ -282,10 +281,10 @@ async def test_reconfigure_successful(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_fails(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,

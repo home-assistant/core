@@ -212,11 +212,11 @@ async def test_reconfigure(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,
-    mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfiguring an existing entry."""
 
@@ -258,11 +258,11 @@ async def test_reconfigure_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unknown_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,
-    mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfiguring an existing entry and handling unknown error."""
 

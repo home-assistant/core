@@ -35,10 +35,9 @@ def make_client_response_error(status: int) -> ClientResponseError:
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_pyaxenco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_pyaxenco_client: AsyncMock
 ) -> None:
     """Test successful user flow for MyNeomitis integration."""
     result = await hass.config_entries.flow.async_init(
@@ -72,10 +71,10 @@ async def test_user_flow_success(
         (RuntimeError("boom"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_pyaxenco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:

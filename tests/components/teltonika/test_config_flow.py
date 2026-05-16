@@ -18,9 +18,8 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from tests.common import MockConfigEntry
 
 
-async def test_form_user_flow(
-    hass: HomeAssistant, mock_teltasync: MagicMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_user_flow(hass: HomeAssistant, mock_teltasync: MagicMock) -> None:
     """Test we get the form and can create an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -59,10 +58,10 @@ async def test_form_user_flow(
     ],
     ids=["invalid_auth", "cannot_connect", "unexpected_exception"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_error_with_recovery(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error_key: str,
 ) -> None:
@@ -146,11 +145,11 @@ async def test_form_duplicate_entry(
         ("device.local", "https://device.local/api", "https://device.local"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_host_url_construction(
     hass: HomeAssistant,
     mock_teltasync: MagicMock,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     host_input: str,
     expected_base_url: str,
     expected_host: str,
@@ -181,8 +180,9 @@ async def test_host_url_construction(
     assert result["result"].data[CONF_HOST] == expected_host
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_user_flow_http_fallback(
-    hass: HomeAssistant, mock_teltasync_client: MagicMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
 ) -> None:
     """Test we fall back to HTTP when HTTPS fails."""
     result = await hass.config_entries.flow.async_init(
@@ -228,8 +228,9 @@ async def test_form_user_flow_http_fallback(
     assert mock_teltasync_client.close.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery(
-    hass: HomeAssistant, mock_teltasync_client: MagicMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_teltasync_client: MagicMock
 ) -> None:
     """Test DHCP discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -324,10 +325,10 @@ async def test_dhcp_discovery_cannot_connect(
     ],
     ids=["invalid_auth", "cannot_connect", "unexpected_exception"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_confirm_error_with_recovery(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error_key: str,
 ) -> None:
@@ -410,10 +411,10 @@ async def test_validate_credentials_false(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful reauth flow."""
@@ -440,10 +441,10 @@ async def test_reauth_flow_success(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.1"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_success_rut240(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
@@ -480,10 +481,10 @@ async def test_reauth_flow_success_rut240(
     ],
     ids=["invalid_auth", "cannot_connect", "unexpected_exception"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors_with_recovery(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_error: str,
@@ -553,10 +554,10 @@ async def test_reauth_flow_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_user_flow_rut240(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
     """RUT240 firmware omits device_identifier; the flow falls back to mnf_info.serial."""
@@ -582,10 +583,10 @@ async def test_form_user_flow_rut240(
     assert result["result"].unique_id == "1234567890"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_rut240(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
     """RUT240 DHCP discovery proceeds to confirmation when the MAC isn't yet known."""
@@ -623,10 +624,10 @@ async def test_dhcp_discovery_rut240(
     assert result["result"].unique_id == "1234567890"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_rut240_repeated_advertisement(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
     """A second DHCP advertisement before dhcp_confirm finishes is suppressed."""

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pypalazzetti.exceptions import CommunicationError
+import pytest
 
 from homeassistant.components.palazzetti.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -14,8 +15,9 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(
-    hass: HomeAssistant, mock_palazzetti_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_palazzetti_client: AsyncMock
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -37,10 +39,9 @@ async def test_full_user_flow(
     assert len(mock_palazzetti_client.connect.mock_calls) > 0
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_invalid_host(
-    hass: HomeAssistant,
-    mock_palazzetti_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_palazzetti_client: AsyncMock
 ) -> None:
     """Test cannot connect error."""
 
@@ -69,10 +70,10 @@ async def test_invalid_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_palazzetti_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -95,8 +96,9 @@ async def test_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_flow(
-    hass: HomeAssistant, mock_palazzetti_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_palazzetti_client: AsyncMock
 ) -> None:
     """Test the DHCP flow."""
     result = await hass.config_entries.flow.async_init(
@@ -122,8 +124,9 @@ async def test_dhcp_flow(
     assert result["result"].unique_id == "11:22:33:44:55:66"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_flow_error(
-    hass: HomeAssistant, mock_palazzetti_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_palazzetti_client: AsyncMock
 ) -> None:
     """Test the DHCP flow."""
     mock_palazzetti_client.connect.side_effect = CommunicationError()

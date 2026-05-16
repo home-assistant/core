@@ -352,10 +352,10 @@ async def test_form_no_nodes_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""
@@ -483,10 +483,10 @@ def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_reconfigure(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_user_step: dict[str, Any],
     mock_user_auth_step: dict[str, Any],
@@ -578,10 +578,10 @@ async def test_full_flow_reconfigure_match_entries(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_reconfigure_exceptions(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     reason: str,

@@ -32,11 +32,11 @@ async def test_setup_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test migration from version 1 to version 2."""
     # Create a v1 config entry with conversation options and an entity

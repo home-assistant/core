@@ -247,11 +247,9 @@ async def test_options_flow_init(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_voice_settings_default(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_async_client: AsyncMock,
-    mock_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_async_client: AsyncMock, mock_entry: MockConfigEntry
 ) -> None:
     """Test options flow voice settings."""
     mock_entry.add_to_hass(hass)
