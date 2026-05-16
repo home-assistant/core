@@ -227,7 +227,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==4.0.2
+aiodns==4.0.3
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
