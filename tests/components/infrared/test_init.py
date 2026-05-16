@@ -109,7 +109,7 @@ async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when entity not found."""
     with pytest.raises(
         HomeAssistantError,
-        match="Infrared entity .+ not found",
+        match="Infrared entity `infrared.nonexistent_entity` not found",
     ):
         await async_send_command(hass, "infrared.nonexistent_entity", TEST_COMMAND)
 
@@ -121,7 +121,7 @@ async def test_async_send_command_rejects_receiver(
     """Test async_send_command rejects a receiver entity."""
     with pytest.raises(
         HomeAssistantError,
-        match="Infrared entity .+ not found",
+        match=f"Infrared entity `{mock_infrared_receiver_entity.entity_id}` not found",
     ):
         await async_send_command(
             hass, mock_infrared_receiver_entity.entity_id, TEST_COMMAND
@@ -262,7 +262,7 @@ async def test_async_subscribe_receiver_not_found(
     """Test async_subscribe_receiver raises when the entity is missing or invalid."""
     with pytest.raises(
         HomeAssistantError,
-        match="Infrared receiver entity .+ not found",
+        match=f"Infrared receiver entity `{entity_id_or_uuid}` not found",
     ):
         async_subscribe_receiver(hass, entity_id_or_uuid, lambda _: None)
 
@@ -274,7 +274,10 @@ async def test_async_subscribe_receiver_rejects_emitter(
     """Test async_subscribe_receiver rejects an emitter entity."""
     with pytest.raises(
         HomeAssistantError,
-        match="Infrared receiver entity .+ not found",
+        match=(
+            f"Infrared receiver entity `{mock_infrared_emitter_entity.entity_id}`"
+            " not found"
+        ),
     ):
         async_subscribe_receiver(
             hass, mock_infrared_emitter_entity.entity_id, lambda _: None
