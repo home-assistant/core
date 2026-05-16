@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant.components import rfm_gateway
 from homeassistant.components.rfm_gateway.config_flow import RfmGatewayConfigFlow
@@ -268,6 +271,82 @@ async def test_zeroconf_ignores_non_rfm_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_rfm_gateway"
 
 
+@pytest.mark.parametrize(
+    ("host", "hostname", "expected_host"),
+    [
+        pytest.param("192.0.2.12", "_http._tcp.local.", "192.0.2.12", id="raw-host-ip"),
+        pytest.param("_http._tcp.local.", "192.0.2.13", "192.0.2.13", id="raw-hostname-ip"),
+        pytest.param(
+            "rfm-gateway.local.",
+            "_http._tcp.local.",
+            "rfm-gateway.local",
+            id="raw-host-hostname",
+        ),
+        pytest.param(
+            "_http._tcp.local.",
+            "rfm-gateway.local.",
+            "rfm-gateway.local",
+            id="raw-hostname-hostname",
+        ),
+    ],
+)
+async def test_zeroconf_uses_raw_host_fallbacks(
+    hass: HomeAssistant,
+    host: str,
+    hostname: str,
+    expected_host: str,
+) -> None:
+    """Test zeroconf host fallback selection from raw host/hostname fields."""
+    discovery = SimpleNamespace(
+        ip_address=None,
+        ip_addresses=[],
+        host=host,
+        hostname=hostname,
+        name="RFM Gateway",
+        properties={"model": "rfm-gateway"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        rfm_gateway.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"]["host"] == expected_host
+
+
+async def test_zeroconf_confirm_aborts_without_discovered_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf confirm aborts when discovery host was not set."""
+    flow = RfmGatewayConfigFlow()
+    flow.hass = hass
+    flow.context = {}
+
+    result = await flow.async_step_zeroconf_confirm()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_config_flow_client_wrapper_methods(hass: HomeAssistant) -> None:
+    """Test internal client wrapper methods on the config flow."""
+    flow = RfmGatewayConfigFlow()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.rfm_gateway.RfmGatewayClient.async_get_capabilities",
+        new=AsyncMock(return_value=_mock_caps()),
+    ) as mock_get_capabilities:
+        capabilities = await flow._async_get_capabilities(TEST_HOST)
+        await flow._async_validate_host(TEST_HOST)
+
+    assert capabilities.device_name == "RFM Gateway"
+    assert mock_get_capabilities.await_count == 2
+
+
 def test_config_flow_helpers() -> None:
     """Test helper methods for host normalization and formatting."""
     flow = RfmGatewayConfigFlow
@@ -281,19 +360,25 @@ def test_config_flow_helpers() -> None:
     )
 
     assert flow._normalize_host(" 192.0.2.10 ") == "192.0.2.10"
+    assert flow._normalize_host("   ") == ""
     assert flow._normalize_host("example.local.") == "example.local"
     assert flow._normalize_host("[2001:db8::1]") == "2001:db8::1"
+    assert flow._normalize_host("[2001:db8::1") == "[2001:db8::1"
     assert flow._normalize_host("example.com:8080") == "example.com"
+    assert flow._normalize_host("example.com") == "example.com"
 
     assert flow._is_ip_address("192.0.2.10")
+    assert not flow._is_ip_address("")
     assert not flow._is_ip_address("example.local")
 
     assert flow._preferred_discovery_ip("") is None
     assert flow._preferred_discovery_ip("invalid") is None
     assert flow._preferred_discovery_ip("192.0.2.10") == "192.0.2.10"
     assert flow._preferred_discovery_ip("fe80::1") is None
+    assert flow._preferred_discovery_ip("2001:db8::1") == "2001:db8::1"
 
     assert not flow._is_usable_discovery_host("")
+    assert not flow._is_usable_discovery_host("192.0.2.10")
     assert not flow._is_usable_discovery_host("_http._tcp.local")
     assert not flow._is_usable_discovery_host("foo._bar")
     assert not flow._is_usable_discovery_host("foo_bar")
