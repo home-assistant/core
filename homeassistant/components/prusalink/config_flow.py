@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 from httpx import HTTPError, InvalidURL
@@ -42,8 +42,9 @@ def ensure_printer_is_supported(version: VersionInfo) -> None:
         # Workaround to allow PrusaLink 0.7.2 on MK3 and MK2.5 that supports
         # the 2.0.0 API, but doesn't advertise it yet. `original` is an
         # undocumented field returned by older standalone PrusaLink builds;
-        # it is not part of VersionInfo, hence the cast.
-        original = cast(str, version.get("original", ""))
+        # it is not part of VersionInfo.
+        original_val = version.get("original")
+        original = original_val if isinstance(original_val, str) else ""
         if original.startswith(
             ("PrusaLink I3MK3", "PrusaLink I3MK2")
         ) and AwesomeVersion("0.7.2") <= AwesomeVersion(version["server"]):

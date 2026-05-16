@@ -182,6 +182,31 @@ async def test_form_invalid_mk3_server_version(
     assert result2["errors"] == {"base": "not_supported"}
 
 
+async def test_form_mk3_original_none(
+    hass: HomeAssistant, mock_version_api
+) -> None:
+    """Test MK2/MK3 workaround path handles original=None safely."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_version_api["api"] = "0.9.0-legacy"
+    mock_version_api["server"] = "0.7.2"
+    mock_version_api["original"] = None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "abcdefg",
+            "password": "abcdefg",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "not_supported"}
+
+
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
