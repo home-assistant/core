@@ -182,9 +182,7 @@ async def test_form_invalid_mk3_server_version(
     assert result2["errors"] == {"base": "not_supported"}
 
 
-async def test_form_mk3_original_none(
-    hass: HomeAssistant, mock_version_api
-) -> None:
+async def test_form_mk3_original_none(hass: HomeAssistant, mock_version_api) -> None:
     """Test MK2/MK3 workaround path handles original=None safely."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
