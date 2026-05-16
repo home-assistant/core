@@ -9,6 +9,7 @@ from aioshelly.const import (
     MODEL_FLOOD_G4,
     MODEL_MOTION,
     MODEL_PLUS_SMOKE,
+    MODEL_WALL_DISPLAY,
 )
 from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -847,4 +848,32 @@ async def test_rpc_cury_orientation_errors(
     assert state.state == STATE_ON
 
     assert (state := hass.states.get(entity_rotation))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_occupancy(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC occupancy entities."""
+    status = {
+        "occupancy:0": {
+            "id": 0,
+            "value": False,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 4, model=MODEL_WALL_DISPLAY)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status["occupancy:0"]["value"] = True
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
