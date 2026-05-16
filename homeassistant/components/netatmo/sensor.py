@@ -266,12 +266,6 @@ NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
-        key="reachable",
-        netatmo_name="reachable",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NetatmoSensorEntityDescription(
         key="rf_status",
         netatmo_name="rf_strength",
         entity_registry_enabled_default=False,

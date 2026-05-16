@@ -152,7 +152,6 @@ async def test_process_health(health: int, expected: str) -> None:
 @pytest.mark.parametrize(
     ("uid", "name", "expected"),
     [
-        ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
         ("12:34:56:03:1b:e4-rf_status", "villa_garden_rf_strength", "Full"),
         (
             "12:34:56:80:bb:26-wifi_status",
