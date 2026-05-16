@@ -70,6 +70,12 @@
       "alarm": {
         "name": "Next alarm"
       },
+      "last_voice_input_command": {
+        "name": "Last input command"
+      },
+      "last_voice_input_timestamp": {
+        "name": "Last input date"
+      },
       "reminder": {
         "name": "Next reminder"
       },

@@ -2,16 +2,24 @@
 
 from unittest.mock import AsyncMock
 
+from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_DEVICE_2,
+    TEST_DEVICE_2_SN,
+    TEST_VOCAL_RECORD_EVENT,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -82,3 +90,48 @@ async def test_coordinator_load_previous_devices_from_registry(
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     assert coordinator.previous_devices == {TEST_DEVICE_1_SN}
+
+
+async def test_sync_history_state_cannot_authenticate(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sync_history_state raises ConfigEntryAuthFailed on CannotAuthenticate."""
+    mock_amazon_devices_client.sync_history_state.side_effect = CannotAuthenticate
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_sync_history_state_cannot_connect(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sync_history_state raises ConfigEntryNotReady on CannotConnect."""
+    mock_amazon_devices_client.sync_history_state.side_effect = CannotConnect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_history_state_event_handler(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test history_state_event_handler updates vocal records and listeners."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    vocal_records = {TEST_DEVICE_1_SN: TEST_VOCAL_RECORD_EVENT}
+    await coordinator.history_state_event_handler(vocal_records)
+
+    assert coordinator.vocal_records is vocal_records
