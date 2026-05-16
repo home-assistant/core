@@ -1,6 +1,6 @@
 """Fixtures for PrusaLink."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from typing import Any
 from unittest.mock import patch
 
@@ -123,7 +123,7 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_job_api_idle() -> Generator[None]:
+def mock_job_api_idle() -> Iterator[None]:
     """Mock PrusaLink job API having no job.
 
     pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
