@@ -20,5 +20,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "yaml_import_cannot_connect": {
+      "description": "The YAML configuration for OpenWrt (luci) at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "title": "YAML configuration import failed: cannot connect"
+    },
+    "yaml_import_invalid_auth": {
+      "description": "The YAML configuration for OpenWrt (luci) at `{host}` could not be imported because the credentials are invalid.\n\nPlease update your `configuration.yaml` with valid credentials and restart Home Assistant.",
+      "title": "YAML configuration import failed: invalid authentication"
+    }
   }
 }

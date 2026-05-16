@@ -22,9 +22,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -66,19 +66,39 @@ async def async_setup_scanner(
         },
     )
 
-    if (
-        result["type"] == FlowResultType.ABORT
-        and result["reason"] != "already_configured"
-    ):
-        return True
+    if result["type"] == FlowResultType.ABORT:
+        if result["reason"] == "invalid_auth":
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "yaml_import_invalid_auth",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="yaml_import_invalid_auth",
+                translation_placeholders={"host": config[CONF_HOST]},
+            )
+            return True
+        if result["reason"] == "cannot_connect":
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "yaml_import_cannot_connect",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="yaml_import_cannot_connect",
+                translation_placeholders={"host": config[CONF_HOST]},
+            )
+            return True
 
-    async_create_issue(
+    ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
         issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
