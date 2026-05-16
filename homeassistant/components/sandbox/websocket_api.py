@@ -293,12 +293,8 @@ async def ws_register_entity(
         connection.send_error(msg["id"], "not_found", "No entity manager")
         return
 
-    if domain not in manager._platform_add_callbacks:
-        await hass.config_entries.async_forward_entry_setups(
-            host_entry, [domain]
-        )
-
     from .entity import SandboxEntityDescription
+    from .host_platform import async_get_or_create_host_platform
 
     description = SandboxEntityDescription(
         domain=domain,
@@ -317,16 +313,11 @@ async def ws_register_entity(
         has_entity_name=msg.get("has_entity_name", False),
     )
 
-    entity = manager.add_entity(description)
+    platform = async_get_or_create_host_platform(
+        hass, domain, host_entry, manager
+    )
 
-    add_entities = manager._platform_add_callbacks.get(domain)
-    if add_entities is None:
-        connection.send_error(
-            msg["id"], "not_ready", f"Platform {domain} not ready"
-        )
-        return
-
-    add_entities([entity])
+    entity = await platform.async_add_proxy_entity(description)
 
     connection.send_result(
         msg["id"],
