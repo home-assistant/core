@@ -1,5 +1,6 @@
 """Tests for the Alexa Devices media player platform."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
@@ -41,6 +42,18 @@ from .const import TEST_DEVICE_1_SN
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.echo_test"
+
+
+# Labs feature.   Remove once no longer needed
+@pytest.fixture(autouse=True)
+def enable_alexa_media_labs(hass: HomeAssistant) -> Generator[None]:
+    """Enable the alexa_media labs feature for all media player tests."""
+    with patch(
+        "homeassistant.components.alexa_devices.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
+
 
 # ---------------------------------------------------------------------------
 # Shared state factories
