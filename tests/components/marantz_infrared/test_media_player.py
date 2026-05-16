@@ -1,15 +1,12 @@
 """Tests for the Marantz Infrared media player platform."""
 
 from typing import Any
+from unittest.mock import MagicMock
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.infrared import (
-    DATA_COMPONENT as INFRARED_DATA_COMPONENT,
-    DOMAIN as INFRARED_DOMAIN,
-)
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -27,9 +24,8 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from .conftest import MockInfraredEntity, media_player_entity_id
+from .conftest import media_player_entity_id
 from .utils import check_availability_follows_ir_entity
 
 from tests.common import (
@@ -37,6 +33,7 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_pm6006_integrated_amplifier"
 
@@ -109,7 +106,7 @@ async def test_select_source_feature_matches_model(
 @pytest.mark.usefixtures("init_integration")
 async def test_media_player_action_sends_correct_code(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
     service_data: dict[str, bool],
     expected_code: MarantzAudioCode,
@@ -122,8 +119,8 @@ async def test_media_player_action_sends_correct_code(
         blocking=True,
     )
 
-    assert len(mock_infrared_entity.send_command_calls) == 1
-    assert mock_infrared_entity.send_command_calls[0] == expected_code
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
 
 
 @pytest.mark.parametrize(
@@ -141,7 +138,7 @@ async def test_media_player_action_sends_correct_code(
 @pytest.mark.usefixtures("init_integration")
 async def test_media_player_select_source(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     source: str,
     expected_code: MarantzAudioCode,
 ) -> None:
@@ -153,7 +150,7 @@ async def test_media_player_select_source(
         blocking=True,
     )
 
-    assert mock_infrared_entity.send_command_calls == [expected_code]
+    assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
@@ -172,7 +169,7 @@ async def test_media_player_select_source(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_off_update_assumed_state(
     hass: HomeAssistant,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Turn-on sends POWER_ON and turn-off sends POWER_OFF."""
     await hass.services.async_call(
@@ -195,7 +192,7 @@ async def test_turn_on_off_update_assumed_state(
     assert state is not None
     assert state.state == "on"
 
-    assert mock_infrared_entity.send_command_calls == [
+    assert mock_infrared_emitter_entity.send_command_calls == [
         MarantzAudioCode.POWER_OFF,
         MarantzAudioCode.POWER_ON,
     ]
@@ -212,15 +209,11 @@ async def test_media_player_availability_follows_ir_entity(
 async def _setup_with_restore(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_infrared_entity: MockInfraredEntity,
     restored: State,
     extra_data: dict[str, Any],
 ) -> None:
     """Seed the restore cache (state + extra data) and set up the integration."""
     mock_restore_cache_with_extra_data(hass, [(restored, extra_data)])
-    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
-    await hass.async_block_till_done()
-    await hass.data[INFRARED_DATA_COMPONENT].async_add_entities([mock_infrared_entity])
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -230,11 +223,10 @@ async def _setup_with_restore(
     "restored_state",
     [MediaPlayerState.ON, MediaPlayerState.OFF],
 )
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_marantz_to_command")
 async def test_restores_state_source_and_mute(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_infrared_entity: MockInfraredEntity,
-    mock_marantz_to_command: None,
     restored_state: MediaPlayerState,
 ) -> None:
     """State, source, and mute survive a restart even from the OFF state.
@@ -247,7 +239,6 @@ async def test_restores_state_source_and_mute(
     await _setup_with_restore(
         hass,
         mock_config_entry,
-        mock_infrared_entity,
         State(MEDIA_PLAYER_ENTITY_ID, restored_state),
         extra_data={"source": "phono", "is_volume_muted": True},
     )
@@ -279,19 +270,19 @@ async def test_initial_state_unknown_when_no_restore(hass: HomeAssistant) -> Non
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is None
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_toggle_flips_between_commands(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_infrared_entity: MockInfraredEntity,
+    mock_marantz_to_command: MagicMock,
 ) -> None:
     """The RC-5 toggle bit must alternate so the receiver sees distinct presses."""
-    for expected_toggle in (1, 0, 1, 0):
+    for _ in range(4):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_VOLUME_UP,
             {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
-        assert init_integration.runtime_data.toggle == expected_toggle
 
-    assert len(mock_infrared_entity.send_command_calls) == 4
+    toggles = [call.kwargs["toggle"] for call in mock_marantz_to_command.call_args_list]
+    assert toggles == [1, 0, 1, 0]
