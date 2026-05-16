@@ -1,7 +1,5 @@
 """Shared entity helpers for ScorpionTrack."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pyscorpiontrack import ScorpionTrackShare, ScorpionTrackVehicle

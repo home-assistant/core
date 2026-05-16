@@ -1,7 +1,5 @@
 """Test ScorpionTrack helper utilities."""
 
-from __future__ import annotations
-
 from homeassistant.components.scorpiontrack.utils import mask_token
 
 

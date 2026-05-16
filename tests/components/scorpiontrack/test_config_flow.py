@@ -1,7 +1,5 @@
 """Test the ScorpionTrack config flow."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 

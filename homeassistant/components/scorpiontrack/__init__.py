@@ -1,7 +1,5 @@
 """The ScorpionTrack integration."""
 
-from __future__ import annotations
-
 from pyscorpiontrack import ScorpionTrackClient
 
 from homeassistant.core import HomeAssistant

@@ -1,7 +1,5 @@
 """Device tracker platform for ScorpionTrack."""
 
-from __future__ import annotations
-
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
