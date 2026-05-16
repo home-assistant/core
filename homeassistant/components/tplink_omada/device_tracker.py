@@ -1,7 +1,5 @@
 """Connected Wi-Fi device scanners for TP-Link Omada access points."""
 
-from __future__ import annotations
-
 from tplink_omada_client.clients import OmadaWirelessClient
 
 from homeassistant.components.device_tracker import ScannerEntity
