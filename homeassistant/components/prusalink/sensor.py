@@ -50,6 +50,8 @@ def _job_progress(data: JobInfo | None) -> float | None:
     """Return job progress or None if no active job is running."""
     if (active_job := _has_active_job(data)) is None:
         return None
+    # Required JobInfo fields are intentionally accessed directly so upstream
+    # contract violations fail fast instead of being silently masked.
     return active_job["progress"]
 
 
@@ -213,6 +215,8 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="progress",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=_job_progress,
+            # Job sensors stay available when idle/no-job so `None` values are
+            # represented as `unknown` instead of `unavailable`.
             available_fn=lambda _: True,
         ),
         PrusaLinkSensorEntityDescription[JobInfo | None](
