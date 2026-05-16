@@ -345,7 +345,7 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
 
     content_id = get_content_id(item)
     thumbnail = None
-    if getattr(item, "album_art_uri", None) and get_thumbnail_url:
+    if getattr(item, "album_art_uri", None):
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
     return BrowseMedia(
