@@ -297,6 +297,53 @@ async def test_sensors_active_job(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_active_job_with_nullable_fields(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_status_printing,
+    mock_job_api_printing_with_nullable_fields,
+) -> None:
+    """Test job sensors with active job but missing nullable fields.
+
+    Verifies that job helpers handle None values for nullable fields (file,
+    time_remaining) without raising, returning None to indicate unknown state.
+    """
+    with patch(
+        "homeassistant.components.prusalink.sensor.utcnow",
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
+    ):
+        assert await async_setup_component(hass, "prusalink", {})
+
+    state = hass.states.get("sensor.mock_title")
+    assert state is not None
+    assert state.state == "printing"
+
+    # progress is required, should always have a value
+    state = hass.states.get("sensor.mock_title_progress")
+    assert state is not None
+    assert state.state == "45.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+
+    # file is None, filename helper should return None -> unknown
+    state = hass.states.get("sensor.mock_title_filename")
+    assert state is not None
+    assert state.state == "unknown"
+
+    # time_printing is required, print_start should always have a value
+    state = hass.states.get("sensor.mock_title_print_start")
+    assert state is not None
+    assert state.state == "2022-08-27T01:46:53+00:00"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+
+    # time_remaining is None, print_finish helper should return None -> unknown
+    state = hass.states.get("sensor.mock_title_print_finish")
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_axis_x_y_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
