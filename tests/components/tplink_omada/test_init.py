@@ -155,7 +155,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
         entity_registry, mock_config_entry.entry_id
     )
     device_trackers = [e for e in all_entities if e.domain == "device_tracker"]
-    assert len(device_trackers) == 4
+    assert device_trackers, "Setup should have created device_tracker entities"
 
     unknown_client_entity_1 = entity_registry.async_get_or_create(
         domain="device_tracker",

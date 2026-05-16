@@ -15,6 +15,7 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -242,9 +243,6 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
 
 
-DEVICE_TRACKER_DOMAIN = "device_tracker"
-
-
 def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
@@ -289,14 +287,14 @@ async def async_cleanup_devices(
 
     device_registry = dr.async_get(hass)
     entry_id = controller.clients_coordinator.config_entry.entry_id
-    known_devices = controller.devices_coordinator.data
+    known_devices = {dr.format_mac(mac) for mac in controller.devices_coordinator.data}
 
     for device_entry in device_registry.devices.get_devices_for_config_entry_id(
         entry_id
     ):
         mac = next(
             (
-                identifier[1]
+                dr.format_mac(identifier[1])
                 for identifier in device_entry.identifiers
                 if identifier[0] == DOMAIN
             ),
