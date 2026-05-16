@@ -313,10 +313,11 @@ def subscribe(
 
     def remove() -> None:
         """Remove listener convert."""
-        # MQTT messages tend to be high volume,
-        # and since they come in via a thread and need to be processed in the event loop,
-        # we want to avoid hass.add_job since most of the time is spent calling
-        # inspect to figure out how to run the callback.
+        # MQTT messages tend to be high volume, and since they
+        # come in via a thread and need to be processed in the
+        # event loop, we want to avoid hass.add_job since most
+        # of the time is spent calling inspect to figure out
+        # how to run the callback.
         hass.loop.call_soon_threadsafe(async_remove)
 
     return remove

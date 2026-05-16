@@ -88,7 +88,7 @@ class HomeConnectProgramSelectEntityDescription(
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSelectEntityDescription(SelectEntityDescription):
-    """Entity Description class for settings and options that have enumeration values."""
+    """Entity Description class for settings and options with enum values."""
 
     translation_key_values: dict[str, str]
     values_translation_key: dict[str, str]
