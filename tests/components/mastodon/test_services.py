@@ -793,12 +793,14 @@ async def test_service_entry_availability(
         ),
     ],
 )
+@pytest.mark.parametrize("return_response", [True, False])
 async def test_service_update_profile(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     kwargs: dict[str, str | None],
+    return_response: bool,
 ) -> None:
     """Test the update profile service."""
     assert await async_setup_component(hass, "media_source", {})
@@ -820,7 +822,7 @@ async def test_service_update_profile(
             SERVICE_UPDATE_PROFILE,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
             blocking=True,
-            return_response=True,
+            return_response=return_response,
         )
 
     mock_mastodon_client.account_update_credentials.assert_called_with(**kwargs)
