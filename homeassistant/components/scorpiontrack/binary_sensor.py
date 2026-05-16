@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 class ScorpionTrackBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe a ScorpionTrack binary sensor."""
 
-    value_fn: Callable[[ScorpionTrackBinarySensorEntity, ScorpionTrackVehicle], bool]
+    value_fn: Callable[[ScorpionTrackEntity, ScorpionTrackVehicle], bool]
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[ScorpionTrackBinarySensorEntityDescription, ...] = (
