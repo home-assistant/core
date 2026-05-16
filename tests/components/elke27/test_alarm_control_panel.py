@@ -231,12 +231,12 @@ def test_area_state_and_ready_status_helpers() -> None:
         alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.ARMED_AWAY))
         == "armed_away"
     )
-    custom = getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None)
-    if custom is not None:
-        assert (
-            alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=custom))
-            == "armed_custom_bypass"
+    assert (
+        alarm_module._area_state_to_ha(
+            SimpleNamespace(arm_mode=alarm_module._custom_bypass_mode())
         )
+        == "armed_custom_bypass"
+    )
     assert (
         alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY"))
         == "Ready away"
