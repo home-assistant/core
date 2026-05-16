@@ -47,12 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     session = aiohttp_client.async_create_clientsession(hass)
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
 
-    entry.runtime_data = coordinator
-
     await coordinator.async_config_entry_first_refresh()
-
-    NON_LABS_PLATFORMS = [p for p in PLATFORMS if p != Platform.MEDIA_PLAYER]
-    await hass.config_entries.async_forward_entry_setups(entry, NON_LABS_PLATFORMS)
 
     media_player_loaded = False
 
@@ -66,11 +61,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         entry.async_start_reauth(hass)
 
     async def _cancel_http2() -> None:
+        nonlocal http2_task  # to be removed after labs
         if not http2_task:
             return
         http2_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await http2_task
+        http2_task = None  # to be removed after labs
 
     async def _async_update_alexa_media(
         event_data: EventLabsUpdatedData | None = None,
@@ -90,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
                 alexa_httpx_client,
                 on_reauth_required=_on_http2_reauth_required,
             )
-            entry.async_on_unload(_cancel_http2)
 
             if not media_player_loaded:
                 await hass.config_entries.async_forward_entry_setups(
@@ -120,6 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
             _async_update_alexa_media,
         )
     )
+    entry.async_on_unload(_cancel_http2)
+
+    entry.runtime_data = coordinator
+
+    NON_LABS_PLATFORMS = [p for p in PLATFORMS if p != Platform.MEDIA_PLAYER]
+    await hass.config_entries.async_forward_entry_setups(entry, NON_LABS_PLATFORMS)
 
     await _async_update_alexa_media()
 
