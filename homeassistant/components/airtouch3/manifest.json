@@ -1,0 +1,11 @@
+{
+  "domain": "airtouch3",
+  "name": "AirTouch 3 Air Conditioner",
+  "codeowners": ["@L0rdCha0s"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airtouch3",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze"
+}

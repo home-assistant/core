@@ -1,0 +1,25 @@
+"""Constants for the Airotuch system."""
+
+
+class MessageConstants:
+    """Constants defining various fixed values for airtouch messages."""
+
+    GROUP_NAME_START = 104
+    ZONE_DATA_START = 232
+    GROUP_PERCENTAGE_DATA_START = 248
+    GROUP_DATA_START = 264
+    GROUP_SETTING_START = 296
+    NUMBER_OF_ZONES = 352
+    SYSTEM_NAME_START = 383
+    AIRCON_STATUS = 423
+    AIRCON_BRAND_ID = 425
+    AIRCON_MODE = 427
+    FAN_SPEED = 429
+    DESIRED_TEMPERATURE = 431
+    ROOM_TEMPERATURE = 433
+    AIRCON_ID = 439
+    THERMOSTAT_MODE = 441
+    TOUCHPAD_GROUP_ID = 443
+    TOUCHPAD_TEMPERATURE = 445
+    SENSOR_DATA_START = 451
+    AIRTOUCH_ID_START = 483
