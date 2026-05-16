@@ -51,11 +51,14 @@ async def _async_pick_legacy_migration_controller(
     """Return the single controller to bind to a legacy ``unique_id == izone`` entry.
 
     Raises:
-        ConfigEntryNotReady: No eligible controller on the network.
+        ConfigEntryNotReady: No eligible controller on the network or discovery failed.
         ConfigEntryError: More than one eligible controller (ambiguous).
 
     """
-    controllers = await config_flow.async_discover_controllers(hass)
+    try:
+        controllers = await config_flow.async_discover_controllers(hass)
+    except OSError:
+        raise ConfigEntryNotReady("iZone discovery service failed to start") from None
     conf: ConfigType | None = hass.data.get(DATA_CONFIG)
     excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
     configured_uids = {
