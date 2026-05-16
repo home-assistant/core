@@ -364,7 +364,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     hass.set_state(CoreState.starting)
 
     initial = datetime.datetime(2017, 1, 1, 23, 42)
-    default = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)
+    default = datetime.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
 
     await async_setup_component(
         hass,
@@ -419,7 +419,7 @@ async def test_default_value(hass: HomeAssistant) -> None:
         },
     )
 
-    dt_obj = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)
+    dt_obj = datetime.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
     state_time = hass.states.get("input_datetime.test_time")
     assert state_time.state == dt_obj.strftime(FORMAT_TIME)
     assert state_time.attributes.get("timestamp") is not None
@@ -528,7 +528,7 @@ async def test_reload(
     assert state_3 is None
     assert state_1.state == DEFAULT_TIME.strftime(FORMAT_TIME)
     assert state_2.state == datetime.datetime.combine(
-        datetime.date.today(), DEFAULT_TIME
+        dt_util.now().date(), DEFAULT_TIME
     ).strftime(FORMAT_DATETIME)
 
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
