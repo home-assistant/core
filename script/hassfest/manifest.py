@@ -319,7 +319,6 @@ USB_LEGACY_DOMAINS = {
     "homeassistant_sky_connect",
     "insteon",
     "modem_callerid",
-    "teleinfo",
     "velbus",
     "zha",
     "zwave_js",
