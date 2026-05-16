@@ -13,7 +13,7 @@ from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.victron_gx import async_remove_config_entry_device
 from homeassistant.components.victron_gx.const import (
-    CONF_UPDATE_FREQUENCY_SECONDS,
+    CONF_UPDATE_FREQUENCY,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
@@ -329,7 +329,7 @@ async def test_hub_uses_configured_update_frequency(
             "port": 1883,
             "installation_id": MOCK_INSTALLATION_ID,
         },
-        options={CONF_UPDATE_FREQUENCY_SECONDS: 60},
+        options={CONF_UPDATE_FREQUENCY: 60},
     )
     entry.add_to_hass(hass)
 
@@ -345,6 +345,7 @@ async def test_hub_uses_configured_update_frequency(
 async def test_options_update_triggers_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
 ) -> None:
     """Test that updating options triggers a config entry reload."""
     mock_config_entry.add_to_hass(hass)
@@ -353,11 +354,15 @@ async def test_options_update_triggers_reload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_victron_hub_library.call_count == 1
 
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        options={CONF_UPDATE_FREQUENCY_SECONDS: 10},
+        options={CONF_UPDATE_FREQUENCY: 10},
     )
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_victron_hub_library.call_count == 2
+    call_kwargs = mock_victron_hub_library.call_args.kwargs
+    assert call_kwargs["update_frequency_seconds"] == 10

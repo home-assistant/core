@@ -24,7 +24,7 @@ from .const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_SERIAL,
-    CONF_UPDATE_FREQUENCY_SECONDS,
+    CONF_UPDATE_FREQUENCY,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
@@ -412,12 +412,12 @@ class VictronGXOptionsFlow(OptionsFlow):
             return self.async_create_entry(data=user_input)
 
         current_frequency = self.config_entry.options.get(
-            CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
+            CONF_UPDATE_FREQUENCY, DEFAULT_UPDATE_FREQUENCY_SECONDS
         )
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_UPDATE_FREQUENCY_SECONDS,
+                    CONF_UPDATE_FREQUENCY,
                     default=current_frequency,
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(

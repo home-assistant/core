@@ -838,11 +838,16 @@ async def test_options_flow_shows_current_value(
 ) -> None:
     """Test options flow shows form with current update frequency."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={"update_frequency": 45}
+    )
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    schema_keys = {k.schema: k for k in result["data_schema"].schema}
+    assert schema_keys["update_frequency"].default() == 45
 
 
 async def test_options_flow_sets_update_frequency(
