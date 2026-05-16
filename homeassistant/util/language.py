@@ -18,7 +18,7 @@ SAME_LANGUAGES = (
     ("he", "iw"),
     # cmd = gemini Chinese putonghua
     # zh = standard Chinese name
-    ("cmn", "zh")
+    ("cmn", "zh"),
 )
 
 
