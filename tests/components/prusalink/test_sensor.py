@@ -2,10 +2,11 @@
 
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.prusalink import sensor as prusalink_sensor
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -296,6 +297,51 @@ async def test_sensors_active_job(
     assert state is not None
     assert state.state == "2500"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
+
+
+async def test_job_start_stabilization_isolated_per_config_entry() -> None:
+    """Ensure job.start variance cache is not shared across config entries."""
+    now = datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC)
+
+    job_start_description = next(
+        description
+        for description in prusalink_sensor.SENSORS["job"]
+        if description.key == "job.start"
+    )
+
+    coordinator_one = Mock()
+    coordinator_one.config_entry = Mock(entry_id="entry_one")
+    coordinator_one.data = {
+        "state": "PRINTING",
+        "time_printing": 600,
+        "time_remaining": 0,
+        "progress": 0.0,
+        "file": None,
+    }
+
+    coordinator_two = Mock()
+    coordinator_two.config_entry = Mock(entry_id="entry_two")
+    coordinator_two.data = {
+        "state": "PRINTING",
+        "time_printing": 660,
+        "time_remaining": 0,
+        "progress": 0.0,
+        "file": None,
+    }
+
+    with patch("homeassistant.components.prusalink.sensor.utcnow", return_value=now):
+        entity_one = prusalink_sensor.PrusaLinkSensorEntity(
+            coordinator_one, job_start_description
+        )
+        entity_two = prusalink_sensor.PrusaLinkSensorEntity(
+            coordinator_two, job_start_description
+        )
+
+        state_one = entity_one.native_value
+        state_two = entity_two.native_value
+
+    assert state_one == datetime(2022, 8, 27, 13, 50, 0, tzinfo=UTC)
+    assert state_two == datetime(2022, 8, 27, 13, 49, 0, tzinfo=UTC)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
