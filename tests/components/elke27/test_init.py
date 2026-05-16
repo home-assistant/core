@@ -11,8 +11,11 @@ from homeassistant.components.elke27 import (
     ATTR_CODE,
     ATTR_MODE,
     SERVICE_ALARM_ARM_AUTOMATIC,
+    _async_arm_automatic_entity,
+    _async_handle_alarm_arm_automatic,
     _async_migrate_unique_ids,
     _panel_name_from_entry,
+    _service_mode_to_arm_mode,
     async_setup,
 )
 from homeassistant.components.elke27.const import (
@@ -25,7 +28,7 @@ from homeassistant.components.elke27.const import (
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
@@ -513,6 +516,114 @@ async def test_alarm_arm_automatic_rejects_non_elke27_entity(
             },
             blocking=True,
         )
+
+
+async def test_alarm_arm_automatic_rejects_missing_target(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the service requires a target alarm entity."""
+    call = ServiceCall(
+        hass,
+        DOMAIN,
+        SERVICE_ALARM_ARM_AUTOMATIC,
+        {ATTR_MODE: "away", ATTR_CODE: "1234"},
+    )
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="No Elke27 alarm control panel target was provided",
+    ):
+        await _async_handle_alarm_arm_automatic(hass, call)
+
+
+async def test_alarm_arm_automatic_rejects_missing_entity_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the service rejects an entity without a config entry."""
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+        )
+        .entity_id
+    )
+
+    with pytest.raises(ServiceValidationError, match="Config entry .* was not found"):
+        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
+
+
+async def test_alarm_arm_automatic_rejects_missing_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the service rejects an entity with a stale config entry reference."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.34"})
+    entry.add_to_hass(hass)
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+            config_entry=entry,
+        )
+        .entity_id
+    )
+    hass.config_entries._entries.pop(entry.entry_id)
+
+    with pytest.raises(ServiceValidationError, match="Config entry .* was not found"):
+        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
+
+
+async def test_alarm_arm_automatic_rejects_unloaded_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the service rejects an entity whose config entry is not loaded."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.35"})
+    entry.add_to_hass(hass)
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+            config_entry=entry,
+        )
+        .entity_id
+    )
+
+    with pytest.raises(ServiceValidationError, match="is not loaded"):
+        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
+
+
+async def test_alarm_arm_automatic_rejects_missing_runtime_data(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the service rejects a loaded entry without runtime data."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.36"})
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    entry.runtime_data = None
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            "aa:bb:cc:dd:ee:ff:area:1",
+            config_entry=entry,
+        )
+        .entity_id
+    )
+
+    with pytest.raises(ServiceValidationError, match="Runtime data .* is unavailable"):
+        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
+
+
+def test_service_mode_to_arm_mode_rejects_unsupported_mode() -> None:
+    """Verify unsupported automatic arming modes are rejected."""
+    with pytest.raises(ServiceValidationError, match="Unsupported arming mode"):
+        _service_mode_to_arm_mode("night")
 
 
 @pytest.mark.parametrize(
