@@ -24,6 +24,7 @@ import yarl
 
 from . import (
     block_async_io,
+    block_shared_serial,
     config as conf_util,
     config_entries,
     core,
@@ -336,6 +337,7 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     block_async_io.enable()
+    block_shared_serial.enable()
 
     if not (recovery_mode := runtime_config.recovery_mode):
         config_dict = None
