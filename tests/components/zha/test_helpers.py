@@ -1,7 +1,9 @@
 """Tests for ZHA helpers."""
 
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 import voluptuous_serialize
@@ -11,15 +13,29 @@ from zigpy.zcl.clusters import lighting
 
 from homeassistant.components.zha import const as zha_const
 from homeassistant.components.zha.helpers import (
+    ZHAGroupProxy,
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
     create_zha_config,
     exclude_none_values,
     get_zha_data,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
+
+from .conftest import (
+    FIXTURE_GRP_ID,
+    FIXTURE_GRP_NAME,
+    FIXTURE_GRP_WITH_ENTITIES_ID,
+    FIXTURE_GRP_WITH_ENTITIES_NAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -218,3 +234,135 @@ async def test_create_zha_config_remove_unused(
 
     # Does not error out
     create_zha_config(hass, ha_zha_data)
+
+
+@pytest.mark.parametrize(
+    ("group_id", "expected_identifier"),
+    [
+        (0x0001, "zha_group_0x0001"),
+        (0x1001, "zha_group_0x1001"),
+        (0xFFFF, "zha_group_0xffff"),
+    ],
+)
+def test_zha_group_proxy_group_device_identifier(
+    group_id: int, expected_identifier: str
+) -> None:
+    """Test ZHAGroupProxy group_device_identifier property."""
+    group_proxy = ZHAGroupProxy(MagicMock(group_id=group_id), MagicMock())
+    assert group_proxy.group_device_identifier == expected_identifier
+
+
+def test_zha_group_proxy_get_device_info() -> None:
+    """Test ZHAGroupProxy get_device_info returns correct DeviceInfo."""
+    mock_group = MagicMock(group_id=0x1001)
+    mock_group.name = "Test Group"
+    coordinator_ieee = "00:15:8d:00:02:32:4f:32"
+
+    device_info = ZHAGroupProxy(mock_group, MagicMock()).get_device_info(
+        coordinator_ieee
+    )
+
+    assert device_info == {
+        "identifiers": {(zha_const.DOMAIN, "zha_group_0x1001")},
+        "name": "Test Group",
+        "manufacturer": "Zigbee",
+        "model": "Group",
+        "entry_type": dr.DeviceEntryType.SERVICE,
+        "via_device": (zha_const.DOMAIN, coordinator_ieee),
+    }
+
+
+def test_zha_group_proxy_device_id_property() -> None:
+    """Test ZHAGroupProxy device_id property getter and setter."""
+    group_proxy = ZHAGroupProxy(MagicMock(group_id=0x1001), MagicMock())
+
+    assert group_proxy.device_id is None
+    group_proxy.device_id = "test_device_id"
+    assert group_proxy.device_id == "test_device_id"
+
+
+async def test_zha_group_proxy_no_device_for_group_without_entities(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+) -> None:
+    """Test that no device is created for groups without entities."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+
+    group_proxy = gateway_proxy.group_proxies.get(FIXTURE_GRP_ID)
+    assert group_proxy is not None
+    assert group_proxy.group.name == FIXTURE_GRP_NAME
+    # Fixture group has no members, so no entities, so no device
+    assert not group_proxy.group.group_entities
+    assert group_proxy.device_id is None
+
+
+async def test_zha_group_device_creation_with_entities(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a device is created for groups with entities."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+
+    assert group_proxy.group.group_entities
+    assert group_proxy.device_id is not None
+
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device is not None
+    assert device.name == FIXTURE_GRP_WITH_ENTITIES_NAME
+    assert device.manufacturer == "Zigbee"
+    assert device.model == "Group"
+    assert device.entry_type == dr.DeviceEntryType.SERVICE
+
+    # Verify via_device points to coordinator
+    gateway = get_zha_gateway(hass)
+    coordinator_ieee = str(gateway.state.node_info.ieee)
+    coordinator_device = device_registry.async_get_device(
+        identifiers={("zha", coordinator_ieee)}
+    )
+    assert device.via_device_id == coordinator_device.id
+
+
+async def test_zha_group_cleanup_on_removal(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that device and entities are cleaned up when a group is removed."""
+    await setup_zha()
+
+    gateway = get_zha_gateway(hass)
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    device_id = group_proxy.device_id
+    assert device_id is not None
+
+    # Collect entity entries for the group device before removal
+    entity_entries = er.async_entries_for_device(
+        entity_registry, device_id, include_disabled_entities=True
+    )
+    assert len(entity_entries) > 0
+    entity_keys = [
+        (entry.domain, entry.platform, entry.unique_id) for entry in entity_entries
+    ]
+
+    # Remove the group
+    await gateway.async_remove_zigpy_group(FIXTURE_GRP_WITH_ENTITIES_ID)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Device should be removed from device registry
+    assert device_registry.async_get(device_id) is None
+    # Deleted devices cache should not contain the removed device
+    assert device_id not in device_registry.deleted_devices
+
+    # Entities should be removed and not in deleted cache
+    for key in entity_keys:
+        assert key not in entity_registry.deleted_entities
