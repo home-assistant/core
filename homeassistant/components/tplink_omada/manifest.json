@@ -1,6 +1,7 @@
 {
   "domain": "tplink_omada",
   "name": "TP-Link Omada",
+  "after_dependencies": ["frontend", "http"],
   "codeowners": ["@MarkGodwin"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink_omada",
