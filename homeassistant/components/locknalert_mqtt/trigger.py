@@ -94,7 +94,7 @@ async def async_attach_trigger(
         ):
             data: dict[str, Any] = {
                 **trigger_data,
-                "platform": "mqtt",
+                "platform": DOMAIN,
                 "topic": mqttmsg.topic,
                 "payload": mqttmsg.payload,
                 "qos": mqttmsg.qos,

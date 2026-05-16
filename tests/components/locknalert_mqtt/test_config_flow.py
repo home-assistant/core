@@ -3,12 +3,8 @@
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiolocknalert import LocknAlertCannotConnect, LocknAlertInvalidResponse
 import pytest
-
-from aiolocknalert import (
-    LocknAlertCannotConnect,
-    LocknAlertInvalidResponse,
-)
 
 from homeassistant.components.locknalert_mqtt.config_flow import (
     PWD_NOT_CHANGED,

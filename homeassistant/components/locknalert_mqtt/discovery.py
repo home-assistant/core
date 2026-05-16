@@ -152,7 +152,7 @@ def get_origin_log_string(
 def get_origin_support_url(discovery_payload: MQTTDiscoveryPayload) -> str | None:
     """Get the origin information support URL from a discovery payload."""
     if CONF_ORIGIN not in discovery_payload:
-        return ""
+        return None
     origin_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
     return origin_info.get("support_url")
 

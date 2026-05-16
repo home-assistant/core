@@ -5,7 +5,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
@@ -143,6 +146,7 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
+        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
         for feature in self._config[CONF_SUPPORTED_FEATURES]:
             self._attr_supported_features |= ALARM_CONTROL_PANEL_SUPPORTED_FEATURES[
                 feature

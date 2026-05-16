@@ -441,7 +441,8 @@ class MqttDeviceData(TypedDict, total=False):
     """Hold the data for an MQTT device."""
 
     name: str
-    identifiers: str
+    identifiers: list[str]
+    connections: list[list[str]]
     configuration_url: str
     sw_version: str
     hw_version: str

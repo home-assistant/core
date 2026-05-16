@@ -5,26 +5,18 @@ import pytest
 from homeassistant.components.locknalert_mqtt.const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONFIG_ENTRY_MINOR_VERSION,
-    CONFIG_ENTRY_VERSION,
     DOMAIN,
 )
 from homeassistant.components.locknalert_mqtt.repairs import (
     MQTTDeviceEntryMigration,
     async_create_fix_flow,
 )
-from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 

@@ -15,14 +15,14 @@
     },
     "error": {
       "bad_birth": "Invalid birth topic",
-      "bridge_pairing_required": "The LocknAlert bridge requires pairing before it can be used.",
-      "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
       "bad_certificate": "The CA certificate is invalid",
       "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
       "bad_client_cert_key": "Client certificate and private key are not a valid pair",
       "bad_discovery_prefix": "Invalid discovery prefix",
       "bad_will": "Invalid will topic",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+      "bridge_pairing_required": "The LocknAlert bridge requires pairing before it can be used.",
+      "bridge_serial_required": "Bridge serial number is required. Enter it manually or ensure the bridge is reachable for auto-detection.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "client_key_error": "Invalid private key file or invalid password supplied",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -90,14 +90,14 @@
         "description": "Please enter the connection information of your MQTT broker."
       },
       "zeroconf_confirm": {
-        "description": "A LocknAlert Bridge was discovered on your network. Enter the serial number printed on your bridge to confirm and connect.",
-        "title": "LocknAlert Bridge discovered",
         "data": {
           "bridge_serial": "Bridge Serial Number"
         },
         "data_description": {
           "bridge_serial": "The serial number printed on your LocknAlert bridge (auto-detected from the network name, edit if incorrect)."
-        }
+        },
+        "description": "A LocknAlert Bridge was discovered on your network. Enter the serial number printed on your bridge to confirm and connect.",
+        "title": "LocknAlert Bridge discovered"
       }
     }
   },

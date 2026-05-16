@@ -34,8 +34,9 @@ class NullLock:
         """Exit the lock."""
 
     @lru_cache(maxsize=_MQTT_LOCK_COUNT)
-    def acquire(self, blocking: bool = False, timeout: int = -1) -> None:
+    def acquire(self, blocking: bool = False, timeout: int = -1) -> bool:
         """Acquire the lock."""
+        return True
 
     @lru_cache(maxsize=_MQTT_LOCK_COUNT)
     def release(self) -> None:
