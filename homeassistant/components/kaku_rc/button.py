@@ -5,7 +5,7 @@ from rf_protocols.commands.ook import OOKCommand
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -88,9 +88,7 @@ class KakuButtonBase(ButtonEntity):
             event: Event[EventStateChangedData],
         ) -> None:
             new_state = event.data["new_state"]
-            available = (
-                new_state is not None and new_state.state != STATE_UNAVAILABLE
-            )
+            available = new_state is not None and new_state.state != STATE_UNAVAILABLE
             if available != self._attr_available:
                 self._attr_available = available
                 self.async_write_ha_state()

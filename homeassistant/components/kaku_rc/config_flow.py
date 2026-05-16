@@ -26,7 +26,6 @@ from .const import (
     FREQUENCY_HZ,
 )
 
-
 _SAMPLE_COMMAND = OOKCommand(
     frequency=FREQUENCY_HZ,
     timings=[275],

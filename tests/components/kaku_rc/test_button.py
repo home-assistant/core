@@ -37,7 +37,9 @@ async def test_press_buttons_send_kaku_commands(
     entity_ids = _kaku_button_entity_ids(hass)
     assert len(entity_ids) == 2
 
-    learn_entity_id = next(entity_id for entity_id in entity_ids if "learn" in entity_id)
+    learn_entity_id = next(
+        entity_id for entity_id in entity_ids if "learn" in entity_id
+    )
     unlearn_entity_id = next(
         entity_id for entity_id in entity_ids if "unlearn" in entity_id
     )

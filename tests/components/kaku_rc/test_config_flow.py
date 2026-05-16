@@ -30,7 +30,9 @@ async def _start_user_flow(hass: HomeAssistant) -> dict:
     return result
 
 
-async def test_user_flow(hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity) -> None:
+async def test_user_flow(
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+) -> None:
     """Test successful user flow creates an entry."""
     result = await _start_user_flow(hass)
 
