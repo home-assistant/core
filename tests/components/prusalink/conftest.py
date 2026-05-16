@@ -204,6 +204,28 @@ def mock_job_api_attention(
 
 
 @pytest.fixture
+def mock_job_api_printing_with_nullable_fields() -> Generator[dict[str, Any]]:
+    """Mock PrusaLink printing with missing/None nullable fields.
+
+    Tests that job helpers handle active jobs where file or time_remaining
+    are None (nullable fields), returning None without raising and allowing
+    sensors to show unknown state.
+    """
+    resp = {
+        "id": 129,
+        "state": "PRINTING",
+        "progress": 45.00,
+        "time_remaining": None,  # Missing finish time
+        "time_printing": 43987,
+        "file": None,  # No file info
+        "serial_print": False,
+        "inaccurate_estimates": True,
+    }
+    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
 def mock_api(
     mock_version_api: dict[str, str],
     mock_info_api: dict[str, Any],
