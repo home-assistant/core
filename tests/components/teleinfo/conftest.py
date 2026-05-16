@@ -14,7 +14,7 @@ USB_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/ttyUSB0",
     pid="6015",
     vid="0403",
-    serial_number="AB1234",
+    serial_number="TINFO-144",
     manufacturer="FTDI",
     description="FT230X Basic UART",
 )
@@ -114,6 +114,16 @@ def mock_teleinfo() -> Generator[MagicMock]:
             mock.decode,
         ),
     ):
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_usb_device_from_path() -> Generator[MagicMock]:
+    """Mock USB device lookup so the flow does no real serial port scan."""
+    with patch(
+        "homeassistant.components.usb.usb_device_from_path",
+        return_value=None,
+    ) as mock:
         yield mock
 
 

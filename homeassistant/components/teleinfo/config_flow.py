@@ -12,7 +12,7 @@ from homeassistant.components.usb import human_readable_device_name
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import CONF_SERIAL_PORT, DOMAIN
+from .const import CONF_SERIAL_PORT, CONF_USB_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +32,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Teleinfo config flow."""
         self._discovered_device: str | None = None
+        self._discovered_usb_serial_number: str | None = None
 
     async def _validate_serial_port(
         self, serial_port: str
@@ -57,6 +58,17 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, None
         return errors, decoded_data
 
+    async def _resolve_usb_serial_number(self, serial_port: str) -> str | None:
+        """Return the USB serial number for a serial port, if it is a USB device.
+
+        This only reads USB descriptors (no serial port is opened), so it is safe
+        to call without disturbing the device or other integrations.
+        """
+        device = await self.hass.async_add_executor_job(
+            usb.usb_device_from_path, serial_port
+        )
+        return device.serial_number if device is not None else None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -64,17 +76,20 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors, decoded_data = await self._validate_serial_port(
-                user_input[CONF_SERIAL_PORT]
-            )
+            serial_port = user_input[CONF_SERIAL_PORT]
+            errors, decoded_data = await self._validate_serial_port(serial_port)
             if not errors:
                 assert decoded_data is not None
                 adco = decoded_data["ADCO"]
                 await self.async_set_unique_id(adco)
                 self._abort_if_unique_id_configured()
+                data: dict[str, str] = {CONF_SERIAL_PORT: serial_port}
+                usb_serial_number = await self._resolve_usb_serial_number(serial_port)
+                if usb_serial_number is not None:
+                    data[CONF_USB_SERIAL_NUMBER] = usb_serial_number
                 return self.async_create_entry(
-                    title=f"Teleinfo ({user_input[CONF_SERIAL_PORT]})",
-                    data=user_input,
+                    title=f"Teleinfo ({serial_port})",
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -84,23 +99,39 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
-        """Handle USB discovery."""
+        """Handle USB discovery.
+
+        No serial port is opened here: the device is only opened once the user
+        explicitly confirms the discovery, so a discovered dongle that actually
+        belongs to another integration is never disturbed.
+        """
         # Resolve stable /dev/serial/by-id/ path
         dev_path = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
+        usb_serial_number = discovery_info.serial_number
 
-        # Validate by reading a real Teleinfo frame — silent abort on failure
-        errors, decoded_data = await self._validate_serial_port(dev_path)
-        if errors or decoded_data is None:
-            return self.async_abort(reason="not_teleinfo_device")
+        # If a config entry already exists for this dongle, update its serial
+        # port path (the dongle may have been re-plugged) and abort. The entry
+        # is keyed by the meter ADCO, which we cannot read without opening the
+        # port, so the dongle USB serial stored in the entry is used to match.
+        if usb_serial_number is not None:
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.data.get(CONF_USB_SERIAL_NUMBER) != usb_serial_number:
+                    continue
+                if entry.data.get(CONF_SERIAL_PORT) != dev_path:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={**entry.data, CONF_SERIAL_PORT: dev_path},
+                    )
+                return self.async_abort(reason="already_configured")
 
-        # Use ADCO (meter serial number) as unique_id — same as manual entry
-        adco = decoded_data["ADCO"]
-        await self.async_set_unique_id(adco)
-        self._abort_if_unique_id_configured(updates={CONF_SERIAL_PORT: dev_path})
+        # Dedupe concurrent discovery flows for the same dongle. The entry's
+        # unique_id becomes the meter ADCO once the user confirms.
+        await self.async_set_unique_id(usb_serial_number)
 
         self._discovered_device = dev_path
+        self._discovered_usb_serial_number = usb_serial_number
         self.context["title_placeholders"] = {
             "name": human_readable_device_name(
                 discovery_info.device,
@@ -120,9 +151,24 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self._discovered_device is not None
         if user_input is not None:
+            # The user confirmed: now it is safe to open the port and validate
+            # that this really is a Teleinfo meter.
+            errors, decoded_data = await self._validate_serial_port(
+                self._discovered_device
+            )
+            if errors or decoded_data is None:
+                return self.async_abort(reason="not_teleinfo_device")
+
+            adco = decoded_data["ADCO"]
+            await self.async_set_unique_id(adco)
+            self._abort_if_unique_id_configured()
+
+            data: dict[str, str] = {CONF_SERIAL_PORT: self._discovered_device}
+            if self._discovered_usb_serial_number is not None:
+                data[CONF_USB_SERIAL_NUMBER] = self._discovered_usb_serial_number
             return self.async_create_entry(
                 title=f"Teleinfo ({self._discovered_device})",
-                data={CONF_SERIAL_PORT: self._discovered_device},
+                data=data,
             )
         self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")

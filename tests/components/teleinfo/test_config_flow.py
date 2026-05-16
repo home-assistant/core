@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 import serial
 
-from homeassistant.components.teleinfo.const import CONF_SERIAL_PORT, DOMAIN
+from homeassistant.components.teleinfo.const import (
+    CONF_SERIAL_PORT,
+    CONF_USB_SERIAL_NUMBER,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -136,10 +140,60 @@ async def test_user_flow_decode_error(
 
 
 @pytest.mark.usefixtures("mock_teleinfo")
+async def test_user_flow_stores_usb_serial(
+    hass: HomeAssistant,
+    mock_serial_port: MagicMock,
+    mock_usb_device_from_path: MagicMock,
+) -> None:
+    """Test the manual flow stores the USB serial when the port is a USB device."""
+    mock_usb_device_from_path.return_value = MagicMock(serial_number="TINFO-144")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_SERIAL_PORT: "/dev/ttyUSB0",
+        CONF_USB_SERIAL_NUMBER: "TINFO-144",
+    }
+
+
+@pytest.mark.usefixtures("mock_teleinfo")
 async def test_usb_discovery_success(
     hass: HomeAssistant, mock_serial_port: MagicMock
 ) -> None:
-    """Test USB discovery happy path: detect → validate → confirm → create entry."""
+    """Test USB discovery happy path: detect → confirm → validate → create entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+    # No serial port is opened until the user confirms.
+    assert mock_serial_port.call_count == 0
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Teleinfo (/dev/ttyUSB0)"
+    assert result["data"] == {
+        CONF_SERIAL_PORT: "/dev/ttyUSB0",
+        CONF_USB_SERIAL_NUMBER: "TINFO-144",
+    }
+    assert result["result"].unique_id == "021861348497"
+
+
+@pytest.mark.usefixtures("mock_teleinfo")
+async def test_usb_discovery_not_teleinfo(
+    hass: HomeAssistant, mock_serial_port: MagicMock
+) -> None:
+    """Test USB discovery aborts when the user confirms a non-Teleinfo device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USB},
@@ -149,26 +203,8 @@ async def test_usb_discovery_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Teleinfo (/dev/ttyUSB0)"
-    assert result["data"] == {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
-    assert result["result"].unique_id == "021861348497"
-
-
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_usb_discovery_not_teleinfo(
-    hass: HomeAssistant, mock_serial_port: MagicMock
-) -> None:
-    """Test USB discovery aborts when frame read times out (not a Teleinfo device)."""
     mock_serial_port.side_effect = TimeoutError("No data received")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=USB_DISCOVERY_INFO,
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"
@@ -178,13 +214,16 @@ async def test_usb_discovery_not_teleinfo(
 async def test_usb_discovery_already_configured_updates_path(
     hass: HomeAssistant, mock_serial_port: MagicMock
 ) -> None:
-    """Test USB discovery updates device path when dongle is re-plugged."""
+    """Test USB discovery updates device path when the dongle is re-plugged."""
 
-    # Existing entry with same ADCO but old path
+    # Existing entry for this dongle (matched by stored USB serial) with old path
     existing_entry = MockConfigEntry(
         title="Teleinfo (/dev/ttyUSB-old)",
         domain=DOMAIN,
-        data={CONF_SERIAL_PORT: "/dev/ttyUSB-old"},
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB-old",
+            CONF_USB_SERIAL_NUMBER: "TINFO-144",
+        },
         unique_id="021861348497",
     )
     existing_entry.add_to_hass(hass)
@@ -196,7 +235,7 @@ async def test_usb_discovery_already_configured_updates_path(
             device="/dev/ttyUSB-new",
             pid="6015",
             vid="0403",
-            serial_number="AB1234",
+            serial_number="TINFO-144",
             manufacturer="FTDI",
             description="FT230X Basic UART",
         ),
@@ -204,8 +243,37 @@ async def test_usb_discovery_already_configured_updates_path(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # Path should be updated to the new device path
+    # Path updated without ever opening the serial port.
     assert existing_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB-new"
+    assert mock_serial_port.call_count == 0
+
+
+@pytest.mark.usefixtures("mock_teleinfo")
+async def test_usb_discovery_already_configured_same_path(
+    hass: HomeAssistant, mock_serial_port: MagicMock
+) -> None:
+    """Test USB discovery aborts without changes when the dongle is unchanged."""
+    existing_entry = MockConfigEntry(
+        title="Teleinfo (/dev/ttyUSB0)",
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_USB_SERIAL_NUMBER: "TINFO-144",
+        },
+        unique_id="021861348497",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert existing_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB0"
+    assert mock_serial_port.call_count == 0
 
 
 @pytest.mark.usefixtures("mock_teleinfo")
@@ -216,7 +284,8 @@ async def test_usb_discovery_manual_entry_duplicate(
 ) -> None:
     """Test USB discovery aborts when the meter was already added manually."""
 
-    # mock_config_entry has ADCO unique_id — same as what USB discovery will find
+    # mock_config_entry has ADCO unique_id but no stored USB serial (added
+    # manually), so it is only matched once the user confirms and we read ADCO.
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -224,6 +293,11 @@ async def test_usb_discovery_manual_entry_duplicate(
         context={"source": SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -234,15 +308,18 @@ async def test_usb_discovery_decode_error_aborts(
     mock_teleinfo: MagicMock,
     mock_serial_port: MagicMock,
 ) -> None:
-    """Test USB discovery aborts when frame is read but decode fails."""
-
-    mock_teleinfo.decode.side_effect = mock_teleinfo.TeleinfoError("bad frame")
-
+    """Test USB discovery aborts when the confirmed device fails to decode."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+
+    mock_teleinfo.decode.side_effect = mock_teleinfo.TeleinfoError("bad frame")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"
