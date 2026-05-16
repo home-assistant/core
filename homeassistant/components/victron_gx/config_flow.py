@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    UnitOfTime,
 )
 from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
@@ -411,24 +412,26 @@ class VictronGXOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        current_frequency = self.config_entry.options.get(
-            CONF_UPDATE_FREQUENCY, DEFAULT_UPDATE_FREQUENCY_SECONDS
-        )
         schema = vol.Schema(
             {
                 # Not a polling integration; this controls the rate at which updates will be sent to HA to limit database size growth
                 vol.Required(  # pylint: disable=home-assistant-config-flow-polling-field
                     CONF_UPDATE_FREQUENCY,
-                    default=current_frequency,
+                    default=DEFAULT_UPDATE_FREQUENCY_SECONDS,
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1,
                         max=600,
                         step=1,
-                        unit_of_measurement="seconds",
+                        unit_of_measurement=UnitOfTime.SECONDS,
                         mode=selector.NumberSelectorMode.BOX,
                     )
                 ),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, self.config_entry.options
+            ),
+        )

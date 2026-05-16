@@ -848,7 +848,7 @@ async def test_options_flow_shows_current_value(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema_keys = {k.schema: k for k in result["data_schema"].schema}
-    assert schema_keys["update_frequency"].default() == 45
+    assert schema_keys["update_frequency"].description["suggested_value"] == 45
 
 
 async def test_options_flow_sets_update_frequency(
