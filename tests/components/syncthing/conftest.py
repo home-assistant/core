@@ -39,3 +39,4 @@ async def mock_syncthing(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_syncthing
+        await hass.config_entries.async_unload(entry.entry_id)

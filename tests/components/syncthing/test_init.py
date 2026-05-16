@@ -89,6 +89,9 @@ async def test_syncthing_client_event_listener(
     assert len(state_changed_calls) == 1
     assert state_changed_calls[0] == MOCK_STATE_CHANGED_EVENT
 
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
 
 async def test_syncthing_client_reconnect_on_error(
     hass: HomeAssistant,

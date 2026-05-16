@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.syncthing.const import (
     FOLDER_PAUSED_RECEIVED,
     FOLDER_SUMMARY_RECEIVED,
+    SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
@@ -46,11 +47,11 @@ async def test_sensor_platform_setup(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_sensor_platform_setup_fails_on_error(
+async def test_sensor_platform_no_sensors_on_config_error(
     hass: HomeAssistant,
     entry: MockConfigEntry,
 ) -> None:
-    """Test sensor platform setup fails when cannot get config."""
+    """Test sensor platform does not create folder sensors when config fetch fails."""
     mock_client = create_mock_syncthing_client()
     mock_client.system.config.side_effect = SyncthingError("Connection error")
 
@@ -145,7 +146,7 @@ async def test_folder_sensor_polls_status(
     syncing_status = {**MOCK_FOLDER_STATUS, "state": "syncing"}
     mock_syncthing.database.status = AsyncMock(return_value=syncing_status)
 
-    future = dt_util.utcnow() + timedelta(seconds=121)
+    future = dt_util.utcnow() + SCAN_INTERVAL + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
@@ -161,7 +162,7 @@ async def test_folder_sensor_error_makes_unavailable(
     """Test folder sensor becomes unavailable on status error."""
     mock_syncthing.database.status = AsyncMock(side_effect=SyncthingError("Error"))
 
-    future = dt_util.utcnow() + timedelta(seconds=121)
+    future = dt_util.utcnow() + SCAN_INTERVAL + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 

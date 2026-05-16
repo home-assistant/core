@@ -51,7 +51,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
 async def test_flow_already_configured(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
-    """Test name is already configured."""
+    """Test the server ID is already configured."""
     with patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
