@@ -220,8 +220,6 @@ async def test_zeroconf_shows_form_when_bridge_unreachable(
 
 async def test_zeroconf_confirm_aborts_on_cannot_connect(hass: HomeAssistant) -> None:
     """Confirm step aborts when bridge is not reachable on submit."""
-    from aiolocknalert import LocknAlertCannotConnect  # noqa: PLC0415
-
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:
