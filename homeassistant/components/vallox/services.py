@@ -105,7 +105,7 @@ async def _async_set_profile(call: ServiceCall) -> None:
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
     except ValloxApiException as err:
-        if duration is None:
+        if duration is None or duration == 65535:
             translation_key = "failed_to_set_profile"
             translation_placeholders = {"profile": profile_key}
         else:
