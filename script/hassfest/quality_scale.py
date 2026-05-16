@@ -1,7 +1,5 @@
 """Validate integration quality scale files."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol
@@ -14,13 +12,8 @@ from homeassistant.util.yaml import load_yaml_dict
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
-    action_setup,
-    config_entry_unloading,
     config_flow,
-    diagnostics,
     discovery,
-    parallel_updates,
-    reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
@@ -42,7 +35,7 @@ class Rule:
 
 ALL_RULES = [
     # BRONZE
-    Rule("action-setup", ScaledQualityScaleTiers.BRONZE, action_setup),
+    Rule("action-setup", ScaledQualityScaleTiers.BRONZE),
     Rule("appropriate-polling", ScaledQualityScaleTiers.BRONZE),
     Rule("brands", ScaledQualityScaleTiers.BRONZE),
     Rule("common-modules", ScaledQualityScaleTiers.BRONZE),
@@ -62,22 +55,18 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule(
-        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
-    ),
+    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
-    Rule(
-        "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
-    ),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
     Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
@@ -129,7 +118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aftership",
     "agent_dvr",
     "airly",
-    "airnow",
     "airq",
     "airthings",
     "airthings_ble",
@@ -464,7 +452,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "honeywell",
     "horizon",
     "hp_ilo",
-    "html5",
     "http",
     "hue",
     "huisbaasje",
@@ -475,7 +462,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -624,7 +610,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "monzo",
     "moon",
@@ -652,7 +637,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nasweb",
     "neato",
     "nederlandse_spoorwegen",
-    "ness_alarm",
     "netatmo",
     "netdata",
     "netgear",
@@ -673,7 +657,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -755,7 +738,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "prowl",
     "proximity",
     "proxmoxve",
-    "prusalink",
     "ps4",
     "pulseaudio_loopback",
     "pure_energie",
@@ -937,7 +919,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "telnet",
     "temper",
     "template",
-    "tesla_fleet",
     "tesla_wall_connector",
     "thermobeacon",
     "thermopro",
@@ -1294,7 +1275,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "eliqonline",
     "elkm1",
     "elmax",
-    "elgato",
     "elv",
     "elvia",
     "emby",
@@ -1457,7 +1437,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -1662,7 +1641,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -1921,7 +1899,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
@@ -2102,6 +2079,7 @@ NO_QUALITY_SCALE = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "ffmpeg",
     "file_upload",
     "frontend",

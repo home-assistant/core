@@ -1,7 +1,5 @@
 """Provide functionality to interact with the vlc telnet interface."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, Literal
@@ -185,11 +183,13 @@ class VlcDevice(MediaPlayerEntity):
             else:
                 self._attr_media_title = media_title
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         await self._vlc.seek(round(position))
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -202,6 +202,7 @@ class VlcDevice(MediaPlayerEntity):
 
         self._attr_is_volume_muted = mute
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -212,6 +213,7 @@ class VlcDevice(MediaPlayerEntity):
             # This can happen if we were muted and then see a volume_up.
             self._attr_is_volume_muted = False
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_play(self) -> None:
         """Send play command."""
@@ -223,6 +225,7 @@ class VlcDevice(MediaPlayerEntity):
             await self._vlc.play()
         self._attr_state = MediaPlayerState.PLAYING
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
@@ -233,12 +236,14 @@ class VlcDevice(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.PAUSED
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._vlc.stop()
         self._attr_state = MediaPlayerState.IDLE
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -259,21 +264,25 @@ class VlcDevice(MediaPlayerEntity):
         await self._vlc.add(media_id)
         self._attr_state = MediaPlayerState.PLAYING
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._vlc.prev()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._vlc.next()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._vlc.clear()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_vlc_errors
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""

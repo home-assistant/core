@@ -1,7 +1,5 @@
 """Home Assistant module to handle restoring backups."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import json
@@ -62,7 +60,10 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
 
 
 def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> None:
-    """Delete all files and directories in the config directory except entries in the keep list."""
+    """Delete all files and directories in the config dir.
+
+    Entries in the keep list are preserved.
+    """
     keep_paths = [config_dir.joinpath(path) for path in keep]
     entries_to_remove = sorted(
         entry for entry in config_dir.iterdir() if entry not in keep_paths
@@ -103,7 +104,8 @@ def _extract_backup(
             )
         ) > HA_VERSION:
             raise ValueError(
-                f"You need at least Home Assistant version {backup_meta_version} to restore this backup"
+                f"You need at least Home Assistant version"
+                f" {backup_meta_version} to restore this backup"
             )
 
         with securetar.SecureTarFile(

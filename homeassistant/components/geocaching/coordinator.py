@@ -1,7 +1,5 @@
 """Provides the Geocaching DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingStatus

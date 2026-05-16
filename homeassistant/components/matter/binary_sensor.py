@@ -1,7 +1,5 @@
 """Matter binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -15,23 +13,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter binary sensor from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
@@ -531,8 +528,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # LocalTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature  # Calculated Local Temperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -547,8 +543,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # OutdoorTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature  # OutdoorTemperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -566,8 +561,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # Occupancy bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy  # Occupancy is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy
             ),
         ),
         entity_class=MatterBinarySensor,

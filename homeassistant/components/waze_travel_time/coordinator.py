@@ -31,7 +31,7 @@ from .const import (
     CONF_VEHICLE_TYPE,
     DOMAIN,
     IMPERIAL_UNITS,
-    SEMAPHORE,
+    SEMAPHORE_KEY,
 )
 from .helpers import base_coordinates_to_tuple
 
@@ -196,7 +196,7 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             self._origin,
             self._destination,
         )
-        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        await self.hass.data[SEMAPHORE_KEY].acquire()
         try:
             if origin_coordinates is None or destination_coordinates is None:
                 raise UpdateFailed("Unable to determine origin or destination")
@@ -257,6 +257,6 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
 
         finally:
-            self.hass.data[DOMAIN][SEMAPHORE].release()
+            self.hass.data[SEMAPHORE_KEY].release()
 
         return travel_data

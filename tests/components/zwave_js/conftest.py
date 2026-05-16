@@ -598,6 +598,17 @@ def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="fibaro_fgms001_v2_8_state")
+def fibaro_fgms001_v2_8_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Fibaro FGMS001 on firmware 2.8."""
+    return cast(
+        NodeDataType,
+        # Note: this fixture was created from a simulated device.
+        # If necessary, replace it with one created from a real FGMS001
+        load_json_object_fixture("fibaro_fgms001_v2_8_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -989,7 +1000,13 @@ async def integration_fixture(
     # Make sure no errors logged during setup.
     # Eg. unique id collisions are only logged as errors and not raised,
     # and may not cause tests to fail otherwise.
-    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+    # Only check loggers relevant to this integration to avoid flaky failures
+    # from unrelated log sources (e.g. sqlalchemy pool cleanup on other threads).
+    _error_loggers = ("homeassistant", "zwave_js_server")
+    assert not any(
+        record.levelno == logging.ERROR and record.name.startswith(_error_loggers)
+        for record in caplog.records
+    )
 
     return entry
 
@@ -1490,5 +1507,27 @@ def hoppe_ehandle_connectsense_fixture(
 ) -> Node:
     """Load node for Hoppe eHandle ConnectSense."""
     node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_v2_8")
+def fibaro_fgms001_v2_8_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load node for Fibaro FGMS001 on firmware 2.8."""
+    node = Node(client, fibaro_fgms001_v2_8_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgms001_unknown_firmware")
+def fibaro_fgms001_unknown_firmware_fixture(
+    client: MagicMock, fibaro_fgms001_v2_8_state: NodeDataType
+) -> Node:
+    """Load FGMS001 node with no reported firmware version."""
+    state = copy.deepcopy(fibaro_fgms001_v2_8_state)
+    state.pop("firmwareVersion", None)
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node

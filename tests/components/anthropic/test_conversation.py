@@ -49,6 +49,8 @@ from homeassistant.components.anthropic.const import (
     DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -455,7 +457,9 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error":"HomeAssistantError","error_text":"Test tool exception"}',
+                "content": (
+                    '{"error":"HomeAssistantError","error_text":"Test tool exception"}'
+                ),
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -486,19 +490,25 @@ async def test_assist_api_tools_conversion(
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
     for component in (
-        "intent",
-        "todo",
-        "light",
-        "shopping_list",
-        "humidifier",
+        "calendar",
         "climate",
-        "media_player",
-        "vacuum",
         "cover",
-        "weather",
         "demo",
+        "humidifier",
+        "intent",
+        "light",
+        "media_player",
+        "script",
+        "shopping_list",
+        "todo",
+        "vacuum",
+        "weather",
     ):
         assert await async_setup_component(hass, component, {})
+        hass.states.async_set(f"{component}.test", "on")
+        async_expose_entity(hass, "conversation", f"{component}.test", True)
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
 
     agent_id = "conversation.claude_conversation"
 
@@ -506,10 +516,19 @@ async def test_assist_api_tools_conversion(
         create_content_block(0, ["Hello, how can I help you?"])
     ]
 
-    await conversation.async_converse(hass, "hello", None, Context(), agent_id=agent_id)
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=agent_id, device_id="test_device"
+    )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
+
+    for tool in tools:
+        for key in ("oneOf", "allOf", "anyOf"):
+            assert key not in tool["input_schema"], (
+                f"{tool['name']}.input_schema: input_schema does not support "
+                "oneOf, allOf, or anyOf at the top level"
+            )
 
 
 async def test_unknown_hass_api(
@@ -979,7 +998,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                        cited_text=(
+                            "This release iterates on some of"
+                            " the features we introduced in"
+                            " the last couple of releases,"
+                            " but also..."
+                        ),
                         encrypted_index="AAA==",
                         title="Home Assistant Release",
                         url="https://www.example.com/todays-news",
@@ -993,7 +1017,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                        cited_text=(
+                            "Breaking news from around the"
+                            " world today includes major"
+                            " events in technology, politics,"
+                            " and culture..."
+                        ),
                         encrypted_index="AQE=",
                         title="Breaking News",
                         url="https://www.newssite.com/breaking-news",
@@ -1490,7 +1519,12 @@ async def test_bash_code_execution_error(
             TextEditorCodeExecutionToolResultError(
                 type="text_editor_code_execution_tool_result_error",
                 error_code="unavailable",
-                error_message="Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)",
+                error_message=(
+                    "Tool response parsing error for view:"
+                    " Failed to parse tool response as JSON:"
+                    " unexpected character:"
+                    " line 1 column 1 (char 0)"
+                ),
             ),
         ),
     ],
@@ -1871,7 +1905,14 @@ async def test_container_reused(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
-                thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+                thinking_content=(
+                    "The user is asking about today's news,"
+                    " which requires current, real-time"
+                    " information. This is clearly something"
+                    " that requires recent information beyond"
+                    " my knowledge cutoff. I should use the"
+                    " web_search tool to find today's news."
+                ),
                 native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
@@ -1919,7 +1960,12 @@ async def test_container_reused(
                             citations=[
                                 CitationWebSearchResultLocationParam(
                                     type="web_search_result_location",
-                                    cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                                    cited_text=(
+                                        "This release iterates on some of"
+                                        " the features we introduced in"
+                                        " the last couple of releases,"
+                                        " but also..."
+                                    ),
                                     encrypted_index="AAA==",
                                     title="Home Assistant Release",
                                     url="https://www.example.com/todays-news",
@@ -1932,7 +1978,12 @@ async def test_container_reused(
                             citations=[
                                 CitationWebSearchResultLocationParam(
                                     type="web_search_result_location",
-                                    cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                                    cited_text=(
+                                        "Breaking news from around the"
+                                        " world today includes major"
+                                        " events in technology, politics,"
+                                        " and culture..."
+                                    ),
                                     encrypted_index="AQE=",
                                     title="Breaking News",
                                     url="https://www.newssite.com/breaking-news",

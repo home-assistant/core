@@ -1,7 +1,5 @@
 """Support for control of ElkM1 sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.const import SettingFormat, ZoneType
@@ -201,7 +199,9 @@ class ElkSetting(ElkSensor):
     _element: Setting
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        self._attr_native_value = self._element.value
+        self._attr_native_value = (
+            None if self._element.value is None else str(self._element.value)
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

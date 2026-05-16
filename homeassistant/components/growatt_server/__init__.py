@@ -94,7 +94,8 @@ async def async_migrate_entry(
     achieve:
         Migration: login() → plant_list() → [cache API instance]
         Setup:     [reuse cached API] → device_list()
-    This reduces to just 1 login() call during the migration+setup cycle and prevent account lockout.
+    This reduces to just 1 login() call during the
+    migration+setup cycle and prevent account lockout.
     """
     _LOGGER.debug(
         "Migrating config entry from version %s.%s",
@@ -131,7 +132,8 @@ async def async_migrate_entry(
 
         # Handle DEFAULT_PLANT_ID resolution
         if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
-            # V1 API should never have DEFAULT_PLANT_ID (plant selection happens in config flow)
+            # V1 API should never have DEFAULT_PLANT_ID
+            # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
                 _LOGGER.error(
@@ -263,7 +265,8 @@ def get_device_list_v1(
                 f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
             ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e.error_msg or str(e)} (Code: {e.error_code})"
+            f"API error during device list: {e.error_msg or str(e)}"
+            f" (Code: {e.error_code})"
         ) from e
     devices = devices_dict.get("devices", [])
     supported_devices = [

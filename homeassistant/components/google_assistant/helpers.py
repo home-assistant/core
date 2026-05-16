@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Collection, Mapping
@@ -174,7 +172,7 @@ class AbstractConfig(ABC):
 
     @abstractmethod
     def get_local_webhook_id(self, agent_user_id):
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for a given agent user id via the local SDK."""
 
     @abstractmethod
     def get_agent_user_id_from_context(self, context):
@@ -427,7 +425,8 @@ class AbstractConfig(ABC):
             )
 
         if (agent_user_id := self.get_agent_user_id_from_webhook(webhook_id)) is None:
-            # No agent user linked to this webhook, means that the user has somehow unregistered
+            # No agent user linked to this webhook, means that
+            # the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
                 (

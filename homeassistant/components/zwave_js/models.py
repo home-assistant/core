@@ -1,7 +1,5 @@
 """Provide models for the Z-Wave integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum

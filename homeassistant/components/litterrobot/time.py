@@ -1,7 +1,5 @@
 """Support for Litter-Robot time."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, time
@@ -22,7 +20,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot time entities."""
 
     value_fn: Callable[[_WhiskerEntityT], time | None]

@@ -1,7 +1,5 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -70,7 +68,8 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     _attr_name = None
 
-    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this variable.
+    # TODO(2026.7.0): When support for unknown fan speeds is
+    # removed, delete this variable.
     # Holds unknown fan speeds we have already warned about.
     warned_unknown_fan_speeds: set[str] = set()
 

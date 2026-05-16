@@ -1,7 +1,5 @@
 """Coordinator module for managing Growatt data fetching."""
 
-from __future__ import annotations
-
 import datetime
 import json
 import logging
@@ -122,11 +120,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if self.device_type == "total":
             if self.api_version == "v1":
-                # The V1 Plant APIs do not provide the same information as the classic plant_info() API
+                # The V1 Plant APIs do not provide the same
+                # information as the classic plant_info() API
                 # More specifically:
-                # 1. There is no monetary information to be found, so today and lifetime money is not available
-                # 2. There is no nominal power, this is provided by inverter min_energy()
-                # This means, for the total coordinator we can only fetch and map the following:
+                # 1. There is no monetary information to be
+                #    found, so today and lifetime money is not
+                #    available
+                # 2. There is no nominal power, this is
+                #    provided by inverter min_energy()
+                # This means, for the total coordinator we can
+                # only fetch and map the following:
                 # todayEnergy -> today_energy
                 # totalEnergy -> total_energy
                 # invTodayPpv -> current_power
@@ -135,7 +138,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 except growattServer.GrowattV1ApiError as err:
                     if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                         raise ConfigEntryAuthFailed(
-                            f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                            "Authentication failed for Growatt API:"
+                            f" {err.error_msg or str(err)}"
                         ) from err
                     raise UpdateFailed(
                         f"Error fetching plant energy overview: {err}"
@@ -207,7 +211,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        "Authentication failed for Growatt API:"
+                        f" {err.error_msg or str(err)}"
                     ) from err
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 
@@ -234,7 +239,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                     raise ConfigEntryAuthFailed(
-                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        "Authentication failed for Growatt API:"
+                        f" {err.error_msg or str(err)}"
                     ) from err
                 raise UpdateFailed(f"Error fetching SPH device data: {err}") from err
 
@@ -447,7 +453,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             # Use V1 API for token authentication
-            # The library's _process_response will raise GrowattV1ApiError if error_code != 0
+            # The library's _process_response will raise
+            # GrowattV1ApiError if error_code != 0
             await self.hass.async_add_executor_job(
                 self.api.min_write_time_segment,
                 self.device_id,
@@ -464,7 +471,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Update coordinator's cached data without making an API call (avoids rate limit)
+        # Update coordinator's cached data without making an
+        # API call (avoids rate limit)
         if self.data:
             # Update the time segment data in the cache
             self.data[f"forcedTimeStart{segment_id}"] = start_time.strftime("%H:%M")
@@ -667,7 +675,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_charge_times(settings_data=self.data)
+        return self.api.sph_read_ac_charge_times(
+            self.device_id, settings_data=self.data
+        )
 
     async def read_ac_discharge_times(self) -> dict:
         """Read AC discharge time settings from SPH device cache."""
@@ -680,4 +690,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             await self.async_refresh()
 
-        return self.api.sph_read_ac_discharge_times(settings_data=self.data)
+        return self.api.sph_read_ac_discharge_times(
+            self.device_id, settings_data=self.data
+        )

@@ -1,7 +1,5 @@
 """Helper to import modules from asyncio."""
 
-from __future__ import annotations
-
 import asyncio
 import importlib
 import logging

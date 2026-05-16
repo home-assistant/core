@@ -1,7 +1,5 @@
 """Music Assistant (music-assistant.io) integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -220,7 +218,8 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
     )
 
-    # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
+    # register listener for player configs
+    # (to handle toggling of the 'expose_to_ha' setting)
     def handle_player_config_updated(event: MassEvent) -> None:
         """Handle Mass Player Config Updated event."""
         if event.object_id is None or not event.data:

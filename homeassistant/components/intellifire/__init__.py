@@ -1,9 +1,8 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 import asyncio
 
+import aiohttp
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
 from intellifire4py.const import IntelliFireApiMode
@@ -154,6 +153,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Initialization of fireplace timed out after 10 minutes"
+        ) from err
+    except (aiohttp.ClientConnectionError, ConnectionError) as err:
+        raise ConfigEntryNotReady(
+            "Error communicating with fireplace during initialization"
         ) from err
 
     # Construct coordinator

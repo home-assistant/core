@@ -7,6 +7,9 @@
       "pause_container": {
         "default": "mdi:pause-circle"
       },
+      "recreate_container": {
+        "default": "mdi:creation"
+      },
       "resume_container": {
         "default": "mdi:play"
       },
@@ -92,6 +95,9 @@
       },
       "volume_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      },
+      "volume_driver": {
+        "default": "mdi:docker"
       }
     },
     "switch": {

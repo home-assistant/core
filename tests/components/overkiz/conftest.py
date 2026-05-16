@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Generator
 from dataclasses import dataclass, field
+from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
 
 from pyoverkiz.client import OverkizClient
@@ -18,6 +19,14 @@ from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_S
 from tests.common import MockConfigEntry
 
 type SetupOverkizIntegration = Callable[..., Awaitable[MockConfigEntry]]
+
+
+class FixtureDevice(NamedTuple):
+    """Test device binding a fixture file to a device URL and entity id."""
+
+    fixture: str
+    device_url: str
+    entity_id: str
 
 
 @dataclass

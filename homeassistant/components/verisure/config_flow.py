@@ -1,7 +1,5 @@
 """Config flow for Verisure integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -255,6 +253,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     self.verisure.validate_mfa, user_input[CONF_CODE]
                 )
+                # pylint: disable-next=home-assistant-sequential-executor-jobs
                 await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)

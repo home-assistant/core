@@ -1,7 +1,5 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
@@ -83,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
         raise ConfigEntryAuthFailed(
-            "Invalid credentials for iAqualink"
+            "Invalid credentials for iAquaLink"
         ) from auth_exception
     except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
@@ -96,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
         raise ConfigEntryAuthFailed(
-            "Invalid credentials for iAqualink"
+            "Invalid credentials for iAquaLink"
         ) from auth_exception
     except AqualinkServiceException as svc_exception:
         await aqualink.close()
@@ -132,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         except AqualinkServiceUnauthorizedException as auth_exception:
             await aqualink.close()
             raise ConfigEntryAuthFailed(
-                "Invalid credentials for iAqualink"
+                "Invalid credentials for iAquaLink"
             ) from auth_exception
         except AqualinkServiceException as svc_exception:
             await aqualink.close()
