@@ -224,7 +224,7 @@ async def async_search_media(
             translation_domain=DOMAIN,
             translation_key="invalid_media_content_type",
             translation_placeholders={
-                "media_content_type": query.media_content_type or "",
+                "media_content_type": query.media_content_type,
             },
         )
     items = await hass.async_add_executor_job(
