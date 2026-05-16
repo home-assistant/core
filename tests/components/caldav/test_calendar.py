@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
 from caldav.objects import Event
@@ -1063,11 +1063,65 @@ async def test_get_events_custom_calendars(
             "summary": "This is a normal event",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "uid": None,
+            "uid": "0",
             "recurrence_id": None,
             "rrule": None,
         }
     ]
+
+
+async def test_get_events_with_recurrence_id(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that uid and recurrence_id are populated from VEVENT data."""
+    vevent_with_recurrence_id = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:original-event-uid
+RECURRENCE-ID:20171127T170000Z
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T180000Z
+DTEND:20171127T190000Z
+SUMMARY:Modified occurrence
+LOCATION:Hamburg
+DESCRIPTION:This occurrence was moved
+END:VEVENT
+END:VCALENDAR"""
+    calendar = Mock()
+    calendar.name = "Example"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[
+            Event(
+                None, "0.ics", vevent_with_recurrence_id, calendar, "original-event-uid"
+            )
+        ]
+    )
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}?start=2017-11-27&end=2017-11-28"
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+
+    assert len(events) == 1
+    assert events[0]["uid"] == "original-event-uid"
+    assert events[0]["recurrence_id"] == "2017-11-27 17:00:00+00:00"
+    assert events[0]["summary"] == "Modified occurrence"
 
 
 @pytest.mark.parametrize(
