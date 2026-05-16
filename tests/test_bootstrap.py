@@ -132,7 +132,7 @@ async def test_async_enable_logging(
 
 @pytest.mark.parametrize(
     ("disable_value", "log_file_count", "old_log_file_count"),
-    [("1", 0, 1), ("0", 0, 1)],
+    [("1", 0, 1), ("0", 1, 0)],
 )
 async def test_async_enable_logging_disable_log_file(
     hass: HomeAssistant,
