@@ -634,7 +634,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
     _from_state: str
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state matches the expected one and that the state changed."""
+        """Check if origin state matches expected and that the state changed."""
         return bool(
             self._get_tracked_value(from_state) == self._from_state
             and self._get_tracked_value(to_state) != self._from_state
@@ -886,8 +886,8 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
 class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes.
 
-    This trigger only fires when the observed attribute changes from not within to within
-    the defined threshold.
+    This trigger only fires when the observed attribute
+    changes from not within to within the defined threshold.
     """
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
@@ -902,8 +902,8 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
 ) -> vol.Schema:
     """Trigger for numerical state and state attribute changes.
 
-    This trigger only fires when the observed attribute changes from not within to within
-    the defined threshold.
+    This trigger only fires when the observed attribute
+    changes from not within to within the defined threshold.
     """
     return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
         {
@@ -1441,8 +1441,10 @@ async def _async_attach_trigger_cls(
         return payload
 
     # Wrap sync action so that it is always async.
-    # This simplifies the Trigger action runner interface by always returning a coroutine,
-    # removing the need for integrations to check for the return type when awaiting the action.
+    # This simplifies the Trigger action runner interface by
+    # always returning a coroutine, removing the need for
+    # integrations to check for the return type when awaiting
+    # the action.
     match get_hassjob_callable_job_type(action):
         case HassJobType.Executor:
             original_action = action

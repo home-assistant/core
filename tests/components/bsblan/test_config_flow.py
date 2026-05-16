@@ -54,7 +54,7 @@ def zeroconf_discovery_info_no_mac() -> ZeroconfServiceInfo:
 
 @pytest.fixture
 def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
-    """Return zeroconf discovery info with a different MAC than the device API returns."""
+    """Return zeroconf discovery info with a different MAC than the device API."""
     return ZeroconfServiceInfo(
         ip_address=ip_address("10.0.2.60"),
         ip_addresses=[ip_address("10.0.2.60")],
@@ -485,7 +485,8 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
         "00:80:41:19:69:90",
     )
 
-    # Should be called 3 times: once without auth (fails), twice with auth (in _validate_and_create)
+    # Should be called 3 times: once without auth (fails),
+    # twice with auth (in _validate_and_create)
     assert len(mock_bsblan.device.mock_calls) == 3
 
 
@@ -495,7 +496,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     mock_setup_entry: AsyncMock,
     zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
-    """Test Zeroconf discovery when no MAC in announcement but device accessible without auth."""
+    """Test Zeroconf discovery when no MAC but device accessible without auth."""
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
 
     # Should now show the discovery_confirm form to the user
@@ -729,7 +730,7 @@ async def test_zeroconf_discovery_no_mac_duplicate_host_port(
     mock_bsblan: MagicMock,
     zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
-    """Test Zeroconf discovery aborts when no MAC and same host/port already configured."""
+    """Test Zeroconf discovery aborts when no MAC and same host/port configured."""
     # Create an existing entry with same host/port but no unique_id
     entry = MockConfigEntry(
         domain=DOMAIN,
