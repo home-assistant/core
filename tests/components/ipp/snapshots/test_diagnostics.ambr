@@ -97,5 +97,12 @@
       }),
       'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251',
     }),
+    'page_counts': dict({
+      'printer-impressions-completed': 2468,
+      'printer-impressions-completed-col/full-color': 968,
+      'printer-impressions-completed-col/monochrome': 1500,
+      'printer-media-sheets-completed': 1234,
+      'printer-pages-completed': 1234,
+    }),
   })
 # ---

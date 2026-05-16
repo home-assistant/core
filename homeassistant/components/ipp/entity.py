@@ -24,12 +24,13 @@ class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
         self.entity_description = description
 
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        printer = self.coordinator.data.printer
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
-            manufacturer=self.coordinator.data.info.manufacturer,
-            model=self.coordinator.data.info.model,
-            name=self.coordinator.data.info.name,
-            serial_number=self.coordinator.data.info.serial,
-            sw_version=self.coordinator.data.info.version,
-            configuration_url=self.coordinator.data.info.more_info,
+            manufacturer=printer.info.manufacturer,
+            model=printer.info.model,
+            name=printer.info.name,
+            serial_number=printer.info.serial,
+            sw_version=printer.info.version,
+            configuration_url=printer.info.more_info,
         )
