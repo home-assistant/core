@@ -1,7 +1,5 @@
 """Support for OpenWRT (luci) routers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -132,16 +130,16 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self,
         coordinator: LuciCoordinator,
         mac: str,
-        device: dict[str, Any],
+        device: Any,
     ) -> None:
         """Initialize the scanner entity."""
         super().__init__(coordinator)
         self._mac = mac
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
-        self._attr_hostname = device.get("hostname")
-        self._attr_ip_address = device.get("ip")
-        self._attr_name = device.get("hostname") or mac
+        self._attr_hostname = device.hostname
+        self._attr_ip_address = device.ip
+        self._attr_name = device.hostname or mac
 
     @property
     def is_connected(self) -> bool:
@@ -153,7 +151,7 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         """Handle updated data from the coordinator."""
         if self._mac in self.coordinator.data:
             device = self.coordinator.data[self._mac]
-            self._attr_hostname = device.get("hostname")
-            self._attr_ip_address = device.get("ip")
-            self._attr_name = device.get("hostname") or self._mac
+            self._attr_hostname = device.hostname
+            self._attr_ip_address = device.ip
+            self._attr_name = device.hostname or self._mac
         super()._handle_coordinator_update()

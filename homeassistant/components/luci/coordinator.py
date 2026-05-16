@@ -19,7 +19,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 type LuciConfigEntry = ConfigEntry[LuciCoordinator]
 
 
-class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+class LuciCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching connected devices from an OpenWrt router."""
 
     config_entry: LuciConfigEntry
@@ -40,7 +40,7 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         )
         self.router = router
 
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the router."""
         try:
             result = await self.hass.async_add_executor_job(
@@ -51,8 +51,4 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
-        devices: dict[str, dict[str, Any]] = {}
-        for device in result:
-            devices[device.mac] = device._asdict()
-
-        return devices
+        return {device.mac: device for device in result}
