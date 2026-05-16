@@ -64,8 +64,3 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         if vehicle is None:
             return None
         return vehicle.position.longitude
-
-    @property
-    def location_accuracy(self) -> float:
-        """Return the location accuracy in meters."""
-        return 0.0

@@ -1,5 +1,10 @@
 """Test the ScorpionTrack sensor platform."""
 
+from dataclasses import replace
+from unittest.mock import AsyncMock
+
+from pyscorpiontrack import ScorpionTrackShare
+
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -23,6 +28,26 @@ async def test_vehicle_sensors(
 
     assert hass.states.get("sensor.ab12_cde_heading").state == "182"
     assert hass.states.get("sensor.ab12_cde_last_reported").state != "unknown"
+
+
+async def test_speed_sensor_handles_missing_speed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_share: ScorpionTrackShare,
+    mock_scorpiontrack_client: AsyncMock,
+) -> None:
+    """The speed sensor should be unknown when the shared position has no speed."""
+    vehicle = mock_share.vehicles[0]
+    mock_scorpiontrack_client.async_get_share.return_value = replace(
+        mock_share,
+        vehicles=(
+            replace(vehicle, position=replace(vehicle.position, speed_kmh=None)),
+        ),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.ab12_cde_speed").state == "unknown"
 
 
 async def test_share_sensors(

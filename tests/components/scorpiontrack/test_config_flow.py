@@ -92,6 +92,20 @@ async def test_validate_input_extracts_token_from_share_url(
     assert share is mock_share
 
 
+async def test_validate_input_maps_malformed_input_to_invalid_token(
+    hass: HomeAssistant,
+) -> None:
+    """Malformed pasted values should show the invalid-token form error."""
+    with (
+        pytest.raises(ScorpionTrackInvalidTokenError),
+        patch(
+            "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient.extract_token",
+            side_effect=ValueError("Could not parse share link"),
+        ),
+    ):
+        await _async_validate_input(hass, {CONF_SHARE_TOKEN: "not a share"})
+
+
 async def test_user_flow_uses_vehicle_display_name_without_share_title(
     hass: HomeAssistant,
     mock_share: ScorpionTrackShare,

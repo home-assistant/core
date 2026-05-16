@@ -25,7 +25,15 @@ async def _async_validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> ScorpionTrackShare:
     """Validate the provided share token or share URL."""
-    normalized_token = ScorpionTrackClient.extract_token(user_input[CONF_SHARE_TOKEN])
+    try:
+        normalized_token = ScorpionTrackClient.extract_token(
+            user_input[CONF_SHARE_TOKEN]
+        )
+    except ValueError as err:
+        raise ScorpionTrackInvalidTokenError(
+            "Invalid ScorpionTrack share token"
+        ) from err
+
     client = ScorpionTrackClient(
         session=async_get_clientsession(hass),
         token=normalized_token,

@@ -48,10 +48,10 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
         try:
             return await self.client.async_get_share()
         except ScorpionTrackConnectionError as err:
-            raise UpdateFailed(f"Could not reach ScorpionTrack: {err}") from err
+            raise UpdateFailed("Could not reach ScorpionTrack") from err
         except ScorpionTrackInvalidTokenError as err:
             raise ConfigEntryError(
-                f"ScorpionTrack rejected the configured share token: {err}"
+                "ScorpionTrack rejected the configured share token"
             ) from err
         except ScorpionTrackShareUnavailableError as err:
-            raise ConfigEntryError(f"Shared location is unavailable: {err}") from err
+            raise ConfigEntryError("Shared location is unavailable") from err

@@ -38,17 +38,17 @@ async def test_async_update_data_returns_share(
         (
             ScorpionTrackConnectionError("Connection failed"),
             UpdateFailed,
-            "Could not reach ScorpionTrack: Connection failed",
+            "Could not reach ScorpionTrack",
         ),
         (
             ScorpionTrackInvalidTokenError("Invalid token"),
             ConfigEntryError,
-            "ScorpionTrack rejected the configured share token: Invalid token",
+            "ScorpionTrack rejected the configured share token",
         ),
         (
             ScorpionTrackShareUnavailableError("Share expired"),
             ConfigEntryError,
-            "Shared location is unavailable: Share expired",
+            "Shared location is unavailable",
         ),
     ],
 )
