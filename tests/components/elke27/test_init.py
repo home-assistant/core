@@ -140,15 +140,6 @@ async def test_setup_transient_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_setup_missing_link_keys_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -163,15 +154,6 @@ async def test_setup_missing_link_keys_raises_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
