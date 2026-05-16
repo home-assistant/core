@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
+    LOGGER_IGNORE,
     LOGGER_LOGS,
     LOGSEVERITY,
     SERVICE_SET_DEFAULT_LEVEL,
@@ -43,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
                 vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
+                vol.Optional(LOGGER_IGNORE): [cv.is_regex],
             }
         )
     },
@@ -72,6 +74,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         log_filters: dict[str, list[re.Pattern]] = logger_config[LOGGER_FILTERS]
         for key, value in log_filters.items():
             _add_log_filter(logging.getLogger(key), value)
+
+    if LOGGER_IGNORE in logger_config:
+        ignore_patterns: list[re.Pattern] = logger_config[LOGGER_IGNORE]
+        _add_log_filter(logging.getLogger(), ignore_patterns)
 
     # Combine log levels configured in configuration.yaml
     # with log levels set by frontend

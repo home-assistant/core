@@ -33,6 +33,7 @@ DEFAULT_LOGSEVERITY = "DEBUG"
 LOGGER_DEFAULT = "default"
 LOGGER_LOGS = "logs"
 LOGGER_FILTERS = "filters"
+LOGGER_IGNORE = "ignore"
 
 ATTR_LEVEL = "level"
 
