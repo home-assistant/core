@@ -201,7 +201,9 @@ async def test_run_select_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("test/select_cmd", "beer", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/select_cmd", "beer", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -243,7 +245,7 @@ async def test_run_select_service_optimistic_with_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/select_cmd", '{"option": "beer"}', 0, False
+        "test/select_cmd", '{"option": "beer"}', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
@@ -284,7 +286,9 @@ async def test_run_select_service(
         {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "milk", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, "milk", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
@@ -325,7 +329,7 @@ async def test_run_select_service_with_command_template(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        cmd_topic, '{"option": "milk"}', 0, False
+        cmd_topic, '{"option": "milk"}', 0, False, message_expiry_interval=None
     )
 
 

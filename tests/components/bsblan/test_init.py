@@ -148,7 +148,7 @@ async def test_coordinator_dhw_config_update_error(
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator handling when DHW config update fails but keeps existing data."""
+    """Test coordinator when DHW config update fails but keeps existing data."""
     # First, set up the integration successfully
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -373,8 +373,33 @@ async def test_migrate_entry_discovers_circuits(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data[CONF_HEATING_CIRCUITS] == [1, 2]
+
+
+async def test_migrate_entry_empty_discovery_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration falls back to [1] when discovery returns no circuits."""
+    mock_bsblan.get_available_circuits.return_value = []
+
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data=_legacy_entry_data(),
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
 async def test_migrate_entry_discovery_failure_falls_back(
@@ -398,7 +423,7 @@ async def test_migrate_entry_discovery_failure_falls_back(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
@@ -422,8 +447,33 @@ async def test_migrate_entry_discovery_timeout_falls_back(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_migrate_entry_stored_empty_circuits_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test migration repairs stored empty heating circuits."""
+    entry = MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={**_legacy_entry_data(), CONF_HEATING_CIRCUITS: []},
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data[CONF_HEATING_CIRCUITS] == [1]
+    assert entry.runtime_data.available_circuits == [1]
+    assert mock_bsblan.get_available_circuits.call_count == 0
 
 
 async def test_migrate_entry_future_version_aborts(

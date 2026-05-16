@@ -190,7 +190,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 unique_id=None,
             )
             _LOGGER.debug(
-                "Migrating sensor %s with unique id %s to sub config entry id %s, old data %s, new data %s",
+                "Migrating sensor %s with unique id %s to sub config"
+                " entry id %s, old data %s, new data %s",
                 title,
                 old_unique_id,
                 new_sub_entry.subentry_id,

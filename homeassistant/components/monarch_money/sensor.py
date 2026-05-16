@@ -176,7 +176,7 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the picture of the account as provided by monarch money if it exists."""
+        """Return the picture of the account if it exists."""
         if self.entity_description.picture_fn is not None:
             return self.entity_description.picture_fn(self.account_data)
         return None

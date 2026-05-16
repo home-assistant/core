@@ -475,7 +475,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
             )
 
         if async_setup_preview:
-            setattr(self, "async_setup_preview", async_setup_preview)
+            setattr(self, "async_setup_preview", async_setup_preview)  # noqa: B010
 
     @property
     def options(self) -> dict[str, Any]:

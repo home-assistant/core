@@ -33,6 +33,8 @@ ALARM_STATE_MAP = {
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,6 +78,7 @@ class SatelIntegraAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(
         self,
