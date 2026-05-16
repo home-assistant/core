@@ -12,6 +12,9 @@
     "config_platform_import_err": {
       "message": "Error importing config platform {domain}: {error}"
     },
+    "config_reload_failed": {
+      "message": "Failed to reload core configuration - {error}."
+    },
     "config_schema_unknown_err": {
       "message": "Unknown error calling {domain} CONFIG_SCHEMA - {error}."
     },

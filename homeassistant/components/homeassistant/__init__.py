@@ -289,10 +289,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # auth only processed during startup
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
