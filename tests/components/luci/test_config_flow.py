@@ -1,6 +1,8 @@
 """Tests for the luci config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.luci.config_flow import InvalidAuth
 from homeassistant.components.luci.const import DOMAIN
@@ -26,186 +28,91 @@ USER_INPUT = {
 }
 
 
-async def test_user_flow_success(
-    hass: HomeAssistant, mock_luci_client: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "errors", "existing_entry"),
+    [
+        (None, {}, False),
+        (ConnectionError, {"base": "cannot_connect"}, False),
+        (InvalidAuth, {"base": "invalid_auth"}, False),
+        (None, {}, True),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    errors: dict[str, str],
+    existing_entry: bool,
 ) -> None:
-    """Test successful user flow."""
+    """Test user flow outcomes including errors and recovery."""
+    if existing_entry:
+        mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with (
-        patch(
-            "homeassistant.components.luci.config_flow._try_connect",
-        ),
-        patch(
-            "homeassistant.components.luci.OpenWrtRpc",
-            return_value=mock_luci_client,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "192.168.1.1"
-    assert result["data"] == USER_INPUT
-
-
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test connection error in user flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
     with patch(
         "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=ConnectionError,
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=USER_INPUT
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    if errors:
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == errors
+        with patch("homeassistant.components.luci.config_flow._try_connect"):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=USER_INPUT
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+    elif existing_entry:
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+    else:
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "192.168.1.1"
+        assert result["data"] == USER_INPUT
 
 
-async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test invalid auth in user flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort if already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_user_flow_recover_after_error(
-    hass: HomeAssistant, mock_luci_client: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "result_type", "reason", "existing_entry"),
+    [
+        (None, FlowResultType.CREATE_ENTRY, None, False),
+        (ConnectionError, FlowResultType.ABORT, "cannot_connect", False),
+        (InvalidAuth, FlowResultType.ABORT, "invalid_auth", False),
+        (None, FlowResultType.ABORT, "already_configured", True),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    result_type: FlowResultType,
+    reason: str | None,
+    existing_entry: bool,
 ) -> None:
-    """Test recovery after a connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    """Test import flow outcomes."""
+    if existing_entry:
+        mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=ConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with (
-        patch(
-            "homeassistant.components.luci.config_flow._try_connect",
-        ),
-        patch(
-            "homeassistant.components.luci.OpenWrtRpc",
-            return_value=mock_luci_client,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_luci_client: MagicMock
-) -> None:
-    """Test successful import from YAML."""
-    with (
-        patch(
-            "homeassistant.components.luci.config_flow._try_connect",
-        ),
-        patch(
-            "homeassistant.components.luci.OpenWrtRpc",
-            return_value=mock_luci_client,
-        ),
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "192.168.1.1"
-    assert result["data"] == USER_INPUT
-
-
-async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test import aborts on connection error."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=ConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test import aborts on invalid auth."""
-    with patch(
-        "homeassistant.components.luci.config_flow._try_connect",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_auth"
-
-
-async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test import aborts if already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=USER_INPUT,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is result_type
+    if result_type is FlowResultType.CREATE_ENTRY:
+        assert result["title"] == "192.168.1.1"
+        assert result["data"] == USER_INPUT
+    else:
+        assert result["reason"] == reason
