@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==4.0.0",
+  "aiodns==4.0.3",
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
@@ -59,7 +59,7 @@ dependencies = [
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==47.0.0",
   "Pillow==12.2.0",
-  "propcache==0.4.1",
+  "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
   "orjson==3.11.9",
   "packaging>=23.1",
