@@ -156,6 +156,20 @@ wheels = [
 ]
 
 [[package]]
+name = "aiohue"
+version = "4.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "asyncio-throttle" },
+    { name = "awesomeversion" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/26/14656c285df5e3590fcaac4b7333479b9be0c5c074df178941d211dcf34f/aiohue-4.8.1.tar.gz", hash = "sha256:7fddc328add07715001bd3d75a37c730a5befcb4348b120c5259583fb9fa34bb", size = 54121, upload-time = "2026-01-28T10:59:31.775Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/c1/be72d133306cd3ac36cd4c1e440f77716f1648ebf4f4ad07ba0f1bb10976/aiohue-4.8.1-py3-none-any.whl", hash = "sha256:c731f0f550eacca5da67e034cf9dbd2d2a6a6856ed9feac3738d3f6766594628", size = 80362, upload-time = "2026-01-28T10:59:30.415Z" },
+]
+
+[[package]]
 name = "aiooui"
 version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
@@ -254,6 +268,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a5/ae/136395dfbfe00dfc94da3f3e136d0b13f394cba8f4841120e34226265780/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3", size = 9274, upload-time = "2024-11-06T16:41:39.6Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/ba/e2081de779ca30d473f21f5b30e0e737c438205440784c7dfc81efc2b029/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c", size = 6233, upload-time = "2024-11-06T16:41:37.9Z" },
+]
+
+[[package]]
+name = "asyncio-throttle"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/6f/0e2d42c0e95d50edf63147b8a742703061945e02760f25d6a0e8f028ccb0/asyncio-throttle-1.0.2.tar.gz", hash = "sha256:2675282e99d9129ecc446f917e174bc205c65e36c602aa18603b4948567fcbd4", size = 3775, upload-time = "2021-04-07T13:37:50.114Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/6a/d18c93722fb56dc1ffed5fb7e7fcff4f8031f80f84c5cc0427363a036b0c/asyncio_throttle-1.0.2-py3-none-any.whl", hash = "sha256:4d4c1eb3250f735f59ce842d8d92cd2927c008bd52008797ba030b5787c41f3b", size = 4079, upload-time = "2021-04-07T13:37:48.63Z" },
 ]
 
 [[package]]
@@ -921,6 +944,7 @@ test = [
 [package.dev-dependencies]
 dev = [
     { name = "aiohasupervisor" },
+    { name = "aiohue" },
     { name = "bcrypt" },
     { name = "freezegun" },
     { name = "ha-ffmpeg" },
@@ -929,6 +953,8 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-freezer" },
     { name = "pytest-socket" },
+    { name = "pytest-unordered" },
+    { name = "python-picnic-api2" },
     { name = "requests-mock" },
     { name = "respx" },
     { name = "syrupy" },
@@ -945,6 +971,7 @@ provides-extras = ["test"]
 [package.metadata.requires-dev]
 dev = [
     { name = "aiohasupervisor", specifier = ">=0.4.3" },
+    { name = "aiohue", specifier = ">=4.8.1" },
     { name = "bcrypt", specifier = ">=4.0.0" },
     { name = "freezegun", specifier = ">=1.5.0" },
     { name = "ha-ffmpeg", specifier = ">=3.2.2" },
@@ -953,6 +980,8 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
     { name = "pytest-freezer", specifier = ">=0.4.9" },
     { name = "pytest-socket", specifier = ">=0.7.0" },
+    { name = "pytest-unordered", specifier = ">=0.7.0" },
+    { name = "python-picnic-api2", specifier = ">=1.3.4" },
     { name = "requests-mock", specifier = ">=1.12.0" },
     { name = "respx", specifier = ">=0.23.0" },
     { name = "syrupy", specifier = ">=5.0.0" },
@@ -1731,6 +1760,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-unordered"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bd/3e/6ec9ec74551804c9e005d5b3cbe1fd663f03ed3bd4bdb1ce764c3d334d8e/pytest_unordered-0.7.0.tar.gz", hash = "sha256:0f953a438db00a9f6f99a0f4727f2d75e72dd93319b3d548a97ec9db4903a44f", size = 7930, upload-time = "2025-06-03T12:56:04.289Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/95/ae2875e19472797e9672b65412858ab6639d8e55defd9859241e5ff80d02/pytest_unordered-0.7.0-py3-none-any.whl", hash = "sha256:486b26d24a2d3b879a275c3d16d14eda1bd9c32aafddbb17b98ac755daba7584", size = 6210, upload-time = "2025-06-03T12:36:06.66Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -1740,6 +1781,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
+]
+
+[[package]]
+name = "python-picnic-api2"
+version = "1.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e6/4d/d6466478d0c995f25ff3a2c26b14591bc41903697905b55967ba05faccb4/python_picnic_api2-1.3.4.tar.gz", hash = "sha256:9d1772ad1c84b4040f70b75775e85e1bb8586ca473b0662b92db232e70aa1f4b", size = 31291, upload-time = "2026-03-03T22:02:16.303Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/8d/10983e36f6d6953c7620d1d8aa004d608ce967424d3d7f87a1be4c208652/python_picnic_api2-1.3.4-py3-none-any.whl", hash = "sha256:2a725685ec7536e3a6f35ebe0874237a35c06240971873272624cfa61c9e27b2", size = 13211, upload-time = "2026-03-03T22:02:15.042Z" },
 ]
 
 [[package]]

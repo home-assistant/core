@@ -34,6 +34,9 @@ dev = [
   "aiohasupervisor>=0.4.3",
   "ha-ffmpeg>=3.2.2",
   "pytest-freezer>=0.4.9",
+  "aiohue>=4.8.1",
+  "python-picnic-api2>=1.3.4",
+  "pytest-unordered>=0.7.0",
 ]
 
 [tool.setuptools]
