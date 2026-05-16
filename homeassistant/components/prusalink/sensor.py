@@ -47,7 +47,10 @@ def _job_progress(data: JobInfo | None) -> float | None:
 
 
 def _job_filename(data: JobInfo | None) -> str | None:
-    """Return job filename, or None if there is no active job or the active job has no file metadata."""
+    """Return job filename.
+
+    Return None if there is no active job or the active job has no file metadata.
+    """
     if (active_job := _has_active_job(data)) is None:
         return None
     file_data = active_job["file"]
@@ -64,7 +67,11 @@ def _job_start(data: JobInfo | None) -> datetime | None:
 
 
 def _job_finish(data: JobInfo | None) -> datetime | None:
-    """Return print finish timestamp, or None if there is no active job or the active job has no remaining-time estimate."""
+    """Return print finish timestamp.
+
+    Return None if there is no active job or the active job has no
+    remaining-time estimate.
+    """
     if (active_job := _has_active_job(data)) is None:
         return None
     time_remaining = active_job["time_remaining"]
