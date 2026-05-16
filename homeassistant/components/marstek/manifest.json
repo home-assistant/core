@@ -1,0 +1,21 @@
+{
+  "domain": "marstek",
+  "name": "Marstek",
+  "codeowners": ["@MarstekEnergy"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "hostname": "marstek*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/marstek",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["py-marstek==0.2.0"],
+  "version": "0.1.0"
+}
