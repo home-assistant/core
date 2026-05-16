@@ -538,18 +538,18 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
 
     if EVENT_IN in call.data:
         if EVENT_IN_DAYS in call.data[EVENT_IN]:
-            now = datetime.now().date()
+            today = dt_util.now().date()
 
-            start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
+            start_in = today + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
             end = DateOrDatetime(date=end_in)
 
         elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-            now = datetime.now().date()
+            today = dt_util.now().date()
 
-            start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
+            start_in = today + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
