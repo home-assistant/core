@@ -11,10 +11,5 @@ MANUFACTURER = "ScorpionTrack"
 CONF_SHARE_TOKEN = "share_token"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
-STALE_POSITION_THRESHOLD = timedelta(hours=24)
 
-PLATFORMS: tuple[Platform, ...] = (
-    Platform.BINARY_SENSOR,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-)
+PLATFORMS: tuple[Platform, ...] = (Platform.DEVICE_TRACKER,)

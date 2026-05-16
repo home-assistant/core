@@ -22,45 +22,6 @@
       }
     }
   },
-  "entity": {
-    "binary_sensor": {
-      "ignition": {
-        "name": "Ignition"
-      },
-      "location_stale": {
-        "name": "Location stale"
-      }
-    },
-    "sensor": {
-      "heading": {
-        "name": "Heading"
-      },
-      "last_reported": {
-        "name": "Last reported"
-      },
-      "location": {
-        "name": "Location"
-      },
-      "share_created": {
-        "name": "Share created"
-      },
-      "share_expires": {
-        "name": "Share expires"
-      },
-      "share_title": {
-        "name": "Share title"
-      },
-      "shared_by": {
-        "name": "Shared by"
-      },
-      "speed": {
-        "name": "Speed"
-      },
-      "status": {
-        "name": "Status"
-      }
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "The ScorpionTrack share could not be reached right now."

@@ -1,45 +1,8 @@
 {
   "entity": {
-    "binary_sensor": {
-      "ignition": {
-        "default": "mdi:engine"
-      },
-      "location_stale": {
-        "default": "mdi:clock-alert-outline"
-      }
-    },
     "device_tracker": {
       "vehicle_location": {
         "default": "mdi:car"
-      }
-    },
-    "sensor": {
-      "heading": {
-        "default": "mdi:compass"
-      },
-      "last_reported": {
-        "default": "mdi:clock-outline"
-      },
-      "location": {
-        "default": "mdi:map-marker"
-      },
-      "share_created": {
-        "default": "mdi:calendar-plus"
-      },
-      "share_expires": {
-        "default": "mdi:calendar-clock"
-      },
-      "share_title": {
-        "default": "mdi:share-variant"
-      },
-      "shared_by": {
-        "default": "mdi:account"
-      },
-      "speed": {
-        "default": "mdi:speedometer"
-      },
-      "status": {
-        "default": "mdi:car-info"
       }
     }
   }
