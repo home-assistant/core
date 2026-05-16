@@ -1,6 +1,5 @@
 """Offer MQTT listening automation rules."""
 
-
 from collections.abc import Callable
 from contextlib import suppress
 import logging

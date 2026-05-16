@@ -1,6 +1,5 @@
 """Repairs for MQTT."""
 
-
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
@@ -8,8 +7,6 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN
 
 
 class MQTTDeviceEntryMigration(RepairsFlow):

@@ -1,6 +1,5 @@
 """Control a LocknAlert MQTT Alarm."""
 
-
 import logging
 
 import voluptuous as vol

@@ -1,6 +1,5 @@
 """Utility functions for the MQTT integration."""
 
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from functools import lru_cache

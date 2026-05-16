@@ -1,6 +1,5 @@
 """Provides device automations for MQTT."""
 
-
 import functools
 
 import voluptuous as vol

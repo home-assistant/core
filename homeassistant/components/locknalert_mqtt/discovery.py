@@ -1,6 +1,5 @@
 """Support for MQTT discovery."""
 
-
 import asyncio
 from collections import deque
 from dataclasses import dataclass
@@ -553,7 +552,7 @@ async def async_start(  # noqa: C901
                     MQTT_DISCOVERY_DONE.format(*discovery_hash),
                     discovery_done,
                 ),
-                "pending": deque([]),
+                "pending": deque(),
             }
 
         if component not in mqtt_data.platforms_loaded and payload:

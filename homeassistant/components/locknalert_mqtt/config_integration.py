@@ -1,6 +1,5 @@
 """Support for MQTT platform config setup."""
 
-
 import voluptuous as vol
 
 from homeassistant.const import (

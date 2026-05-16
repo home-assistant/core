@@ -1,6 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
 
-
 from collections import deque
 from dataclasses import dataclass
 import datetime as dt
@@ -43,7 +42,7 @@ def log_message(
     )
     if topic not in entity_info["transmitted"]:
         entity_info["transmitted"][topic] = {
-            "messages": deque([], STORED_MESSAGES),
+            "messages": deque(maxlen=STORED_MESSAGES),
         }
     msg = TimestampedPublishMessage(
         topic, payload, qos, retain, timestamp=time.monotonic()
@@ -62,7 +61,7 @@ def add_subscription(
         if subscription not in entity_info["subscriptions"]:
             entity_info["subscriptions"][subscription] = {
                 "count": 1,
-                "messages": deque([], STORED_MESSAGES),
+                "messages": deque(maxlen=STORED_MESSAGES),
             }
         else:
             entity_info["subscriptions"][subscription]["count"] += 1

@@ -1,6 +1,5 @@
 """Shared schemas for MQTT discovery and YAML config items."""
 
-
 from typing import Any
 
 import voluptuous as vol

@@ -1,6 +1,5 @@
 """Async wrappings for mqtt client."""
 
-
 from functools import lru_cache
 from types import TracebackType
 from typing import Self

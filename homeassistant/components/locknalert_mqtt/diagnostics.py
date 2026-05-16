@@ -1,6 +1,5 @@
 """Diagnostics support for MQTT."""
 
-
 from typing import Any
 
 from homeassistant.components import device_tracker

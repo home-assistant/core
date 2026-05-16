@@ -1,6 +1,5 @@
 """Helper to handle a set of topics to subscribe to."""
 
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
