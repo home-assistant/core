@@ -184,9 +184,7 @@ async def test_discover_invalid_panel_value(hass: HomeAssistant) -> None:
     """Test discover step handles non-numeric panel selection."""
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
-    flow._discovered_panels = [
-        SimpleNamespace(panel_host="1.2.3.4", port=DEFAULT_PORT)
-    ]
+    flow._discovered_panels = [SimpleNamespace(panel_host="1.2.3.4", port=DEFAULT_PORT)]
 
     result = await flow.async_step_discover(
         {"panel": "not-a-number", "access_code": "1", "passphrase": "2"}
