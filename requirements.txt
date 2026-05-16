@@ -3,7 +3,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiodns==4.0.0
+aiodns==4.0.3
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -30,7 +30,7 @@ home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.5.5
 httpx==0.28.1
 ifaddr==0.2.0
-infrared-protocols==5.3.0
+infrared-protocols==5.4.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.47.0

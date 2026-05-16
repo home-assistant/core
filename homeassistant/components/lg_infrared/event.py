@@ -1,7 +1,6 @@
 """Event platform for LG IR integration."""
 
 import logging
-from typing import override
 
 from infrared_protocols.codes.lg.tv import LG_ADDRESS, LGTVCode
 from infrared_protocols.commands.nec import NECCommand
@@ -9,16 +8,10 @@ from infrared_protocols.commands.nec import NECCommand
 from homeassistant.components.event import EventEntity
 from homeassistant.components.infrared import (
     InfraredReceivedSignal,
-    async_subscribe_receiver,
+    InfraredReceiverConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_RECEIVER_ENTITY_ID, LGDeviceType
@@ -98,27 +91,16 @@ async def async_setup_entry(
     async_add_entities([LgIrReceivedCommandEvent(entry, receiver_entity_id)])
 
 
-class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
+class LgIrReceivedCommandEvent(LgIrEntity, InfraredReceiverConsumerEntity, EventEntity):
     """Event entity that fires when an LG TV IR command is received."""
 
     _attr_translation_key = "received_command"
     _attr_event_types = _EVENT_TYPES
 
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        receiver_entity_id: str,
-    ) -> None:
+    def __init__(self, entry: ConfigEntry, receiver_entity_id: str) -> None:
         """Initialize the event entity."""
-        super().__init__(entry, receiver_entity_id, unique_id_suffix="received_command")
-        self._remove_signal_subscription: CALLBACK_TYPE | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to the IR receiver when added to hass."""
-        await super().async_added_to_hass()
-
-        self._async_update_receiver_subscription()
-        self.async_on_remove(self._async_unsubscribe_receiver)
+        super().__init__(entry, unique_id_suffix="received_command")
+        self._infrared_receiver_entity_id = receiver_entity_id
 
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
@@ -133,8 +115,6 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
         try:
             command_code = LGTVCode(nec_command.command)
         except ValueError:
-            # Ensure that a future change to the LGTVCode enum doesn't break this and
-            # shows as unknown
             event_type = _EVENT_TYPE_UNKNOWN
         else:
             event_type = _COMMAND_CODE_TO_EVENT_TYPE.get(
@@ -147,33 +127,3 @@ class LgIrReceivedCommandEvent(LgIrEntity, EventEntity):
 
         self._trigger_event(event_type)
         self.async_write_ha_state()
-
-    @callback
-    def _async_unsubscribe_receiver(self) -> None:
-        """Unsubscribe from the current IR receiver."""
-        if self._remove_signal_subscription is None:
-            return
-        self._remove_signal_subscription()
-        self._remove_signal_subscription = None
-
-    @callback
-    def _async_update_receiver_subscription(self) -> None:
-        """Update the IR receiver subscription when availability changes."""
-        if not self.available:
-            self._async_unsubscribe_receiver()
-        elif self._remove_signal_subscription is None:
-            _LOGGER.debug(
-                "Subscribing to infrared receiver entity %s for %s",
-                self._infrared_entity_id,
-                self.entity_id,
-            )
-            self._remove_signal_subscription = async_subscribe_receiver(
-                self.hass, self._infrared_entity_id, self._handle_signal
-            )
-
-    @override
-    @callback
-    def _async_ir_state_changed(self, event: Event[EventStateChangedData]) -> None:
-        """Handle infrared entity state changes."""
-        super()._async_ir_state_changed(event)
-        self._async_update_receiver_subscription()
