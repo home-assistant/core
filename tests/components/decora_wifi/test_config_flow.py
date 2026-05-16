@@ -51,7 +51,7 @@ async def test_user_flow_error_and_recovery(
     login_side_effect: Exception | None,
     expected_error: str,
 ) -> None:
-    """Test user flow shows the correct error and that the user can retry successfully."""
+    """Test user flow shows the correct error and the user can retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

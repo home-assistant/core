@@ -174,7 +174,8 @@ async def test_bluetooth_flow_errors(
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] == expected_error
 
-    # now retry without side effect, simulating a user correcting the issue (e.g. entering correct PIN)
+    # now retry without side effect, simulating a user
+    # correcting the issue (e.g. entering correct PIN)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         FIXTURE_USER_INPUT,
@@ -220,7 +221,8 @@ async def test_name_from_discovery() -> None:
     # If for some reason no name can be derived, just return the default name
     assert name_from_discovery(None) == "Comet Blue"
 
-    # If the name is the same as the address, just return the address to avoid long names
+    # If the name is the same as the address, just return
+    # the address to avoid long names
     fake_info = deepcopy(FAKE_SERVICE_INFO)
     fake_info.name = str(fake_info.address)
     assert name_from_discovery(fake_info) == str(fake_info.address)

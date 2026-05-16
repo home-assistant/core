@@ -125,7 +125,10 @@ async def test_user_flow_discovery_no_serial_unexpected_error(
 async def test_user_flow_discovery_timeout_shows_manual_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test user flow falls back to manual form when discovery times out, then recovers."""
+    """Test user flow falls back to manual form when discovery times out.
+
+    Then recovers.
+    """
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -182,7 +185,7 @@ async def test_manual_entry_validation_errors(
     side_effect: Exception,
     error: str,
 ) -> None:
-    """Test manual entry: errors during validation show correct error, retry succeeds."""
+    """Test manual entry errors show correct error, retry succeeds."""
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

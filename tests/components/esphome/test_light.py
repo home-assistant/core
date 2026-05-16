@@ -465,7 +465,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a generic light entity that only supports brightness along with an unknown color mode."""
+    """Test light entity with brightness and unknown color mode."""
     mock_client.api_version = APIVersion(1, 7)
     entity_info = [
         LightInfo(

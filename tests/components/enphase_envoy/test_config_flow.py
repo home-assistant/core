@@ -594,7 +594,9 @@ async def test_options_default(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: (
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+        ),
         OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
     }
 
@@ -798,7 +800,7 @@ async def test_reconfigure_change_ip_to_existing(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test reconfiguration to existing entry with same ip does not harm existing one."""
+    """Test reconfiguration to existing entry with same ip."""
     await setup_integration(hass, config_entry)
     other_entry = MockConfigEntry(
         domain=DOMAIN,
