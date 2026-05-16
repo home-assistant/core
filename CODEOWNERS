@@ -1899,6 +1899,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/utility_meter/ @dgomes
 /homeassistant/components/v2c/ @dgomes
 /tests/components/v2c/ @dgomes
+/homeassistant/components/vacmaster_cardio54/ @iluebbe
+/tests/components/vacmaster_cardio54/ @iluebbe
 /homeassistant/components/vacuum/ @home-assistant/core
 /tests/components/vacuum/ @home-assistant/core
 /homeassistant/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
