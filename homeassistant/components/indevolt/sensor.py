@@ -105,6 +105,14 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_CYCLE_COUNT,
+        generation=(2,),
+        translation_key="cycle_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     # Electrical Energy Information
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.TOTAL_INPUT_ENERGY,
@@ -218,6 +226,16 @@ SENSORS: Final = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
+        generation=(2,),
+        translation_key="transformer_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # PV Operating Parameters
     IndevoltSensorEntityDescription(

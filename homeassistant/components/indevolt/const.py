@@ -145,5 +145,7 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltBattery.PACK_5_HEATING_STATE,
         IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
+        IndevoltBattery.GEN_2_CYCLE_COUNT,
+        IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
     ],
 }
