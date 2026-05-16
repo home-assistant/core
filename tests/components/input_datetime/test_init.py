@@ -4,6 +4,7 @@ import datetime
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -347,7 +348,9 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -405,7 +408,9 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state_was_date.state == default.strftime(FORMAT_TIME)
 
 
-async def test_default_value(hass: HomeAssistant) -> None:
+async def test_default_value(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test default value if none has been set via initial or restore state."""
     await async_setup_component(
         hass,
@@ -463,6 +468,7 @@ async def test_reload(
     entity_registry: er.EntityRegistry,
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
