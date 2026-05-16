@@ -88,7 +88,7 @@ class VoIPDevices:
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
-        self.device_store: VoipStore = store
+        self.device_store = store
 
     async def async_setup(self) -> None:
         """Set up devices."""

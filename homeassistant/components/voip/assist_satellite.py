@@ -13,7 +13,7 @@ from typing import Any, Final
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
-from voip_utils.sip import SipDatagramProtocol, SipEndpoint, get_sip_endpoint
+from voip_utils.sip import SipEndpoint, get_sip_endpoint
 
 from homeassistant.components import intent, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
@@ -265,9 +265,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._announcement = announcement
 
         # Make the call
-        sip_protocol: SipDatagramProtocol = (
-            self.config_entry.runtime_data.domain_data.protocol
-        )
+        sip_protocol = self.config_entry.runtime_data.domain_data.protocol
         _LOGGER.debug("Outgoing call to contact %s", self.voip_device.contact)
         call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
