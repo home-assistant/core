@@ -95,21 +95,25 @@ async def test_async_setup_registers_frontend_resources(
     hass: HomeAssistant,
 ) -> None:
     """Test that async_setup registers static paths and adds the JS module URL."""
-    mock_http = MagicMock()
-    mock_http.async_register_static_paths = AsyncMock()
-    hass.http = mock_http
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, "frontend", {})
+    hass.http.async_register_static_paths = AsyncMock()
 
     with patch(
         "homeassistant.components.tplink_omada.add_extra_js_url"
     ) as mock_add_url:
         assert await async_setup_component(hass, DOMAIN, {})
 
-    mock_http.async_register_static_paths.assert_called_once()
-    registered_paths = mock_http.async_register_static_paths.call_args[0][0]
-    assert any(
-        p.url_path == "/tplink_omada/omada-network-strategy.js"
+    hass.http.async_register_static_paths.assert_called_once()
+    registered_paths = hass.http.async_register_static_paths.call_args[0][0]
+    js_paths = [
+        p
         for p in registered_paths
-    )
+        if p.url_path == "/tplink_omada/omada-network-strategy.js"
+    ]
+    assert len(js_paths) == 1
+    assert js_paths[0].cache_headers is True
+    assert js_paths[0].path.endswith("frontend/omada-network-strategy.js")
     mock_add_url.assert_called_once_with(
         hass, "/tplink_omada/omada-network-strategy.js"
     )

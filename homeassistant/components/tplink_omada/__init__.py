@@ -44,17 +44,16 @@ _FRONTEND_JS_URL = "/tplink_omada/omada-network-strategy.js"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TP-Link Omada integration."""
     async_setup_services(hass)
-    if hass.http is not None:
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    _FRONTEND_JS_URL,
-                    str(_FRONTEND_DIR / "omada-network-strategy.js"),
-                    cache_headers=True,
-                ),
-            ]
-        )
-        add_extra_js_url(hass, _FRONTEND_JS_URL)
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                _FRONTEND_JS_URL,
+                str(_FRONTEND_DIR / "omada-network-strategy.js"),
+                cache_headers=True,
+            ),
+        ]
+    )
+    add_extra_js_url(hass, _FRONTEND_JS_URL)
     return True
 
 

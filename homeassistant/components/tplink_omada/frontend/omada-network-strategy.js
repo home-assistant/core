@@ -36,7 +36,8 @@ function escHtml(s) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function _macFromUniqueId(unique_id) {
@@ -250,7 +251,9 @@ class OmadaDevicesTableCard extends HTMLElement {
   }
 }
 
-customElements.define("omada-devices-table-card", OmadaDevicesTableCard);
+if (!customElements.get("omada-devices-table-card")) {
+  customElements.define("omada-devices-table-card", OmadaDevicesTableCard);
+}
 
 // ---------------------------------------------------------------------------
 // Custom card: Client panel
@@ -258,7 +261,7 @@ customElements.define("omada-devices-table-card", OmadaDevicesTableCard);
 // Sections:
 //   1. Search + filter bar
 //   2. Live client table
-//   3. Disabled clients (collapsible, starts open if any disabled)
+//   3. Disabled clients (collapsible, starts collapsed)
 //
 // Config shape:
 //   enabledEntityIds: string[]
@@ -572,12 +575,35 @@ class OmadaClientsPanelCard extends HTMLElement {
       btn.textContent = "Enabled \u2713";
       btn.style.borderColor = "var(--success-color,#4CAF50)";
       btn.style.color = "var(--success-color,#4CAF50)";
+      // Remove the row after a short delay so the user sees the confirmation,
+      // then update the disabled-section header / hide it if now empty.
+      const row = btn.closest(".omada-dis-row");
+      setTimeout(() => {
+        if (row) row.remove();
+        this._refreshDisabledSection(entityId);
+      }, 800);
     } catch (_err) {
       this._pendingEnables.delete(entityId);
       btn.textContent = "Error \u2014 retry";
       btn.style.borderColor = "var(--error-color,#F44336)";
       btn.style.color = "var(--error-color,#F44336)";
       btn.disabled = false;
+    }
+  }
+
+  // Remove the enabled entity from the disabled-section config so a later
+  // hass re-render does not bring the row back, then collapse the whole
+  // section if no disabled clients remain.
+  _refreshDisabledSection(enabledEntityId) {
+    if (this._config?.disabledEntities) {
+      this._config.disabledEntities = this._config.disabledEntities.filter(
+        (e) => e.entity_id !== enabledEntityId,
+      );
+    }
+    const remaining = this.querySelectorAll(".omada-dis-row").length;
+    if (!remaining) {
+      const section = this.querySelector("#omada-dis-hdr")?.parentElement;
+      if (section) section.style.display = "none";
     }
   }
 
@@ -700,7 +726,9 @@ class OmadaClientsPanelCard extends HTMLElement {
   }
 }
 
-customElements.define("omada-clients-panel-card", OmadaClientsPanelCard);
+if (!customElements.get("omada-clients-panel-card")) {
+  customElements.define("omada-clients-panel-card", OmadaClientsPanelCard);
+}
 
 // ---------------------------------------------------------------------------
 // Build cards for the single-page view
@@ -952,13 +980,15 @@ class OmadaNetworkDashboardStrategy extends HTMLElement {
 // Register custom elements
 // ---------------------------------------------------------------------------
 
-customElements.define(
-  "ll-strategy-dashboard-omada-network",
-  OmadaNetworkDashboardStrategy,
-);
+if (!customElements.get("ll-strategy-dashboard-omada-network")) {
+  customElements.define(
+    "ll-strategy-dashboard-omada-network",
+    OmadaNetworkDashboardStrategy,
+  );
+}
 
 // ---------------------------------------------------------------------------
-// Register with Community Dashboards picker (HA 2026.5+)
+// Register with Community Dashboards picker (when supported by the frontend)
 // ---------------------------------------------------------------------------
 
 window.customStrategies = window.customStrategies || [];
