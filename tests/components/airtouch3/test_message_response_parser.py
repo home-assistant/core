@@ -78,3 +78,12 @@ def test_parse_short_response_raises() -> None:
 
     with pytest.raises(ValueError):
         MessageResponseParser(response, logging.getLogger(__name__)).parse()
+
+
+def test_parse_unsupported_zone_count_raises() -> None:
+    """Test unsupported AirTouch zone counts fail before zone parsing."""
+    response = _make_response(1)
+    response[MessageConstants.NUMBER_OF_ZONES] = 17
+
+    with pytest.raises(ValueError):
+        MessageResponseParser(response, logging.getLogger(__name__)).parse()

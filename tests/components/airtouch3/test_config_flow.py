@@ -86,6 +86,27 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        side_effect=RuntimeError("boom"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
