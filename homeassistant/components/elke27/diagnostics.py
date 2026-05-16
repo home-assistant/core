@@ -72,6 +72,6 @@ def _to_jsonable(value: Any) -> Any:
         return value.name
     if isinstance(value, datetime | date):
         return value.isoformat()
-    if isinstance(value, (str, int, float, bool)):
+    if isinstance(value, str | int | float | bool):
         return value
     return str(value)
