@@ -186,8 +186,8 @@ class InfraredReceiverConsumerEntity(Entity):
         self._async_update_receiver_subscription()
         self.async_on_remove(self._async_unsubscribe_receiver)
 
-    @abstractmethod
     @callback
+    @abstractmethod
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Handle a received IR signal."""
 
