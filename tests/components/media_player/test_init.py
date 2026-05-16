@@ -301,6 +301,52 @@ async def test_get_image_http_truncated_response(
         assert body == response_body
 
 
+async def test_get_image_http_truncated_fetch_is_not_cached(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A truncated fetch must not be cached so a later retry can succeed.
+
+    Before this behavior change, async_fetch_image returning (None, None)
+    was cached the same as a successful response, which made any failure
+    permanent for the cache lifetime. The truncation guard would have
+    turned the original half-rendered image symptom into a fully broken
+    one. The cache write is now skipped on failure so the next request
+    retries from the source.
+    """
+    url = "http://example.com/recoverable.jpg"
+    truncated = b"\xff\xd8\xff\xe0" + b"\x00" * 1024
+    complete = b"\xff\xd8\xff\xe0" + b"\x00" * 1024 + b"\xff\xd9"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        # First request: upstream returns a truncated JPEG.
+        aioclient_mock.get(
+            url, content=truncated, headers={"Content-Type": "image/jpeg"}
+        )
+        resp1 = await client.get(state.attributes["entity_picture"])
+        assert resp1.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+        # Second request, same URL: upstream now returns the complete JPEG.
+        # If the failure had been cached, this would still 500.
+        aioclient_mock.clear_requests()
+        aioclient_mock.get(
+            url, content=complete, headers={"Content-Type": "image/jpeg"}
+        )
+        resp2 = await client.get(state.attributes["entity_picture"])
+        assert resp2.status == HTTPStatus.OK
+        assert await resp2.read() == complete
+
+
 async def test_get_async_get_browse_image(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

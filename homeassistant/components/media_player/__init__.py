@@ -17,7 +17,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1486,7 +1486,13 @@ def _image_response_appears_complete(
     users with permanently broken artwork. This is a best-effort check that
     catches the common shapes without per-source logic.
     """
-    if (cl := response.headers.get(CONTENT_LENGTH)) is not None:
+    # Skip the Content-Length comparison when the body has been transparently
+    # decompressed by aiohttp (Content-Encoding present); in that case the
+    # advertised length is the encoded size and len(body) is the decoded size
+    # so a mismatch is expected, not a truncation.
+    if (
+        cl := response.headers.get(CONTENT_LENGTH)
+    ) is not None and not response.headers.get(CONTENT_ENCODING):
         try:
             expected = int(cl)
         except ValueError:
@@ -1512,22 +1518,22 @@ async def async_fetch_image(
     # the read-until-EOF case today (aiohttp does not raise there), but picks
     # up the clean signal once that path is fixed upstream.
     with suppress(TimeoutError, aiohttp.ClientError):
-        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
-        if response.status == HTTPStatus.OK:
-            body = await response.read()
-            ct_header = response.headers.get(CONTENT_TYPE)
-            ct = ct_header.split(";")[0] if ct_header else None
-            if _image_response_appears_complete(response, body, ct):
-                content = body
-                content_type = ct
-            else:
-                logger.warning(
-                    "Discarding truncated image response from %s "
-                    "(%d bytes, content-type %s)",
-                    url,
-                    len(body),
-                    ct,
-                )
+        async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
+            if response.status == HTTPStatus.OK:
+                body = await response.read()
+                ct_header = response.headers.get(CONTENT_TYPE)
+                ct = ct_header.split(";")[0] if ct_header else None
+                if _image_response_appears_complete(response, body, ct):
+                    content = body
+                    content_type = ct
+                else:
+                    logger.warning(
+                        "Discarding truncated image response from %s "
+                        "(%d bytes, content-type %s)",
+                        url,
+                        len(body),
+                        ct,
+                    )
 
     if content is None:
         url_parts = URL(url)
