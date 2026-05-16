@@ -399,6 +399,7 @@ NETATMO_CLIMATE_BATTERY_SENSOR_DESCRIPTIONS: Final[
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
+        is_sticky=True,
     )
 ]
 
@@ -653,6 +654,7 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
+            if not self.entity_description.is_sticky:
                 self._attr_native_value = None
 
         elif (state := getattr(self.device, self.entity_description.key)) is None:
@@ -699,7 +701,8 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
 
         if not self.device.reachable:
             self._attr_available = False
-            self._attr_native_value = None
+            if not self.entity_description.is_sticky:
+                self._attr_native_value = None
         else:
             value = cast(
                 StateType,
