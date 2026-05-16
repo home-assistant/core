@@ -60,5 +60,16 @@
         "name": "Status"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "The ScorpionTrack share could not be reached right now."
+    },
+    "invalid_token": {
+      "message": "ScorpionTrack rejected the configured share token."
+    },
+    "share_unavailable": {
+      "message": "The shared location is unavailable."
+    }
   }
 }

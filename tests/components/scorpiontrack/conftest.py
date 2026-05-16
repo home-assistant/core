@@ -1,6 +1,6 @@
 """Test fixtures for the ScorpionTrack integration."""
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -64,7 +64,9 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_scorpiontrack_client(mock_share: ScorpionTrackShare) -> Generator[AsyncMock]:
+def mock_scorpiontrack_client(
+    mock_share: ScorpionTrackShare,
+) -> Iterator[AsyncMock]:
     """Mock the ScorpionTrack client."""
     with (
         patch(
