@@ -2,9 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pyipp import IPPError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.ipp.coordinator import IPPConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -85,3 +87,23 @@ async def test_no_page_count_sensors_when_unsupported(
         assert not entity_registry.async_get_entity_id(
             "sensor", "ipp", f"{unique_id}_{key}"
         )
+
+
+async def test_page_counts_retained_on_fetch_failure(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_ipp: MagicMock,
+) -> None:
+    """Test page count sensors keep previous values when fetch fails."""
+    assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
+
+    mock_ipp.execute.side_effect = IPPError("boom")
+    entry: IPPConfigEntry = init_integration
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
+    assert (
+        hass.states.get("sensor.test_ha_1000_series_impressions_completed").state
+        == "2468"
+    )
