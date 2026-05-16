@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import cast
 
 from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
-from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
+from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -80,6 +80,14 @@ def _job_finish(data: JobInfo | None) -> datetime | None:
     if time_remaining is None:
         return None
     return _stable_job_finish(time_remaining)
+
+
+def _legacy_material(data: LegacyPrinterStatus) -> str | None:
+    """Return material name or None when legacy telemetry is missing."""
+    telemetry = data.get("telemetry")
+    if telemetry is None:
+        return None
+    return telemetry["material"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -201,11 +209,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
             key="printer.telemetry.material",
             translation_key="material",
-            # `available_fn` guarantees `telemetry` is not None at this
-            # point; the inner cast narrows the Optional for the index.
-            value_fn=lambda data: cast(
-                str, cast(LegacyPrinterTelemetry, data["telemetry"])["material"]
-            ),
+            value_fn=_legacy_material,
             available_fn=lambda data: data.get("telemetry") is not None,
         ),
     ),
