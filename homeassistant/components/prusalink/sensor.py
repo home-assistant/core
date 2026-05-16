@@ -24,9 +24,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
+
+_stable_job_start = ignore_variance(
+    lambda printing_seconds: utcnow() - timedelta(seconds=printing_seconds),
+    timedelta(minutes=2),
+)
+_stable_job_finish = ignore_variance(
+    lambda remaining_seconds: utcnow() + timedelta(seconds=remaining_seconds),
+    timedelta(minutes=2),
+)
 
 
 def _job_progress(data: JobInfo | None) -> float | None:
@@ -50,7 +60,7 @@ def _job_start(data: JobInfo | None) -> datetime | None:
     """Return print start timestamp or None if no active job is running."""
     if data is None or data.get("state") == PrinterState.IDLE.value:
         return None
-    return utcnow() - timedelta(seconds=data["time_printing"])
+    return _stable_job_start(data["time_printing"])
 
 
 def _job_finish(data: JobInfo | None) -> datetime | None:
@@ -60,7 +70,8 @@ def _job_finish(data: JobInfo | None) -> datetime | None:
     time_remaining = data["time_remaining"]
     if time_remaining is None:
         return None
-    return utcnow() + timedelta(seconds=time_remaining)
+    return _stable_job_finish(time_remaining)
+
 
 @dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription[
