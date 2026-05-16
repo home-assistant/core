@@ -79,6 +79,12 @@
   "exceptions": {
     "config_entry_not_loaded": {
       "message": "Config entry not loaded."
+    },
+    "error_while_turn_off": {
+      "message": "An error occurred while turning off AdGuard Home switch."
+    },
+    "error_while_turn_on": {
+      "message": "An error occurred while turning on AdGuard Home switch."
     }
   },
   "services": {
