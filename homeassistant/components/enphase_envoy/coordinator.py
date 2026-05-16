@@ -21,9 +21,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEFAULT_RETRY_TIMEOUT,
     DOMAIN,
     INVALID_AUTH_ERRORS,
+    OPERATIONAL_RETRY_TIMEOUT,
     SETUP_RETRY_TIMEOUT,
 )
 
@@ -57,7 +57,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
         self._setup_complete = False
-        self._default_timeout = False
+        self._operational_timeout = False
         self.envoy_firmware = ""
         self.interface = None
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
@@ -274,14 +274,14 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if not self._setup_complete:
                     _LOGGER.debug("update on try %s, setup not complete", tries)
                     self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
-                    self._default_timeout = False
+                    self._operational_timeout = False
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
-                if not self._default_timeout:
-                    self.envoy.set_retry_policy(max_delay=DEFAULT_RETRY_TIMEOUT)
-                    self._default_timeout = True
+                if not self._operational_timeout:
+                    self.envoy.set_retry_policy(max_delay=OPERATIONAL_RETRY_TIMEOUT)
+                    self._operational_timeout = True
             except INVALID_AUTH_ERRORS as err:
                 _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
                 if self._setup_complete and tries == 0:

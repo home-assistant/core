@@ -13,7 +13,7 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
-    DEFAULT_RETRY_TIMEOUT,
+    OPERATIONAL_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
     SETUP_RETRY_TIMEOUT,
@@ -632,7 +632,7 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
-async def test_retry_option_in_config_file(
+async def test_retry_timeout_settings(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
@@ -666,5 +666,5 @@ async def test_retry_option_in_config_file(
         max_delay=SETUP_RETRY_TIMEOUT
     )
     assert mock_envoy.mock_calls[-1] == call.set_retry_policy(
-        max_delay=DEFAULT_RETRY_TIMEOUT
+        max_delay=OPERATIONAL_RETRY_TIMEOUT
     )
