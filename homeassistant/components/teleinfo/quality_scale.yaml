@@ -23,7 +23,12 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: done
+  test-before-configure:
+    status: done
+    comment: >-
+      The serial port is read and a Teleinfo frame decoded before the entry is
+      created. For USB discovery this validation runs on the user-confirmed
+      step, so a discovered dongle is never opened automatically.
   test-before-setup: done
   unique-config-entry: done
 
@@ -50,8 +55,17 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: done
-  discovery: done
+  discovery-update-info:
+    status: done
+    comment: >-
+      The dongle USB serial number is stored in the config entry; on
+      rediscovery the serial port path is updated from it without opening
+      the port.
+  discovery:
+    status: done
+    comment: >-
+      USB discovery is scoped to the Micro Teleinfo dongle by its TINFO-*
+      USB serial number to avoid matching unrelated serial adapters.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
