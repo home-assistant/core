@@ -12,6 +12,8 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Paulus Schoutsen" }]
 dependencies = [
   "aiohttp>=3.11.0",
+  "hassil>=3.5.0",
+  "home-assistant-intents>=2026.5.5",
   "homeassistant",
 ]
 

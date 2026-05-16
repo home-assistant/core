@@ -17,6 +17,7 @@ from typing import Any
 
 from .api import HomeAssistantAPI
 from .config import RemoteConfig
+from .sandbox_entity_bridge import SandboxEntityBridge
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -37,6 +38,7 @@ class SandboxClient:
         self._entries: list[dict[str, Any]] = []
         self._hass: Any = None
         self._entity_map: dict[str, str] = {}
+        self._bridges: list[SandboxEntityBridge] = []
         self._stop_event = asyncio.Event()
 
     async def start(self) -> None:
@@ -113,7 +115,7 @@ class SandboxClient:
         if domain in ("input_boolean", "input_number", "input_text", "input_select", "input_datetime"):
             await self._setup_input_helper(domain, entry_id, data)
         else:
-            _LOGGER.warning("Domain %s is not yet supported in sandbox", domain)
+            await self._setup_config_entry_integration(entry_config)
 
     async def _setup_input_helper(
         self,
@@ -236,6 +238,75 @@ class SandboxClient:
         )
         _LOGGER.info(
             "Subscribed to service calls for %s", ha_entity_ids
+        )
+
+    async def _setup_config_entry_integration(
+        self, entry_config: dict[str, Any]
+    ) -> None:
+        """Set up a config-entry-based integration in the sandbox."""
+        from homeassistant.config_entries import ConfigEntry
+        from homeassistant.helpers.entity_platform import EntityPlatform
+
+        hass = self._hass
+        api = self._api
+        assert api is not None
+
+        domain = entry_config["domain"]
+        entry_id = entry_config["entry_id"]
+        data = entry_config.get("data", {})
+        options = entry_config.get("options", {})
+        title = entry_config.get("title", domain)
+
+        integration = await self._load_integration(domain)
+        if integration is None:
+            return
+
+        from types import MappingProxyType
+        from homeassistant.config_entries import ConfigEntryState
+
+        entry = ConfigEntry(
+            data=data,
+            discovery_keys=MappingProxyType({}),
+            domain=domain,
+            entry_id=entry_id,
+            minor_version=1,
+            options=options,
+            source="sandbox",
+            subentries_data=None,
+            title=title,
+            unique_id=None,
+            version=1,
+        )
+        entry._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+        hass.config_entries._entries[entry.entry_id] = entry
+
+        module = integration.get_component()
+        if hasattr(module, "async_setup"):
+            await module.async_setup(hass, {domain: {}})
+
+        if hasattr(module, "async_setup_entry"):
+            await module.async_setup_entry(hass, entry)
+
+        await hass.async_block_till_done()
+
+        bridge = SandboxEntityBridge(hass, api, entry_id)
+        self._bridges.append(bridge)
+
+        from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
+
+        domain_platform_entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        for (plat_domain, plat_name), entities in domain_platform_entities.items():
+            for eid, entity in list(entities.items()):
+                if entity.platform and entity.platform.config_entry == entry:
+                    await bridge._register_entity(eid, entity, entity.platform)
+
+        bridge.start_state_forwarding()
+        await bridge.subscribe_entity_commands()
+
+        _LOGGER.info(
+            "Config entry integration %s set up with %d entities",
+            domain,
+            len(bridge._local_entities),
         )
 
     async def _load_integration(self, domain: str) -> Any:

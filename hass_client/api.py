@@ -431,6 +431,24 @@ class HomeAssistantAPI:
         """Remove a sandbox entity from HA Core."""
         await self.send_command("sandbox/remove_entity", entity_id=entity_id)
 
+    async def async_sandbox_entity_command_result(
+        self,
+        call_id: str,
+        success: bool,
+        result: Any = None,
+        error: str | None = None,
+    ) -> None:
+        """Send the result of an entity command back to the host."""
+        kwargs: dict[str, Any] = {
+            "call_id": call_id,
+            "success": success,
+        }
+        if result is not None:
+            kwargs["result"] = result
+        if error is not None:
+            kwargs["error"] = error
+        await self.send_command("sandbox/entity_command_result", **kwargs)
+
     async def send_command(self, command: str, **payload: Any) -> Any:
         """Send a command and await the result."""
         if not self.connected:

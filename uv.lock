@@ -933,6 +933,8 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
+    { name = "hassil" },
+    { name = "home-assistant-intents" },
     { name = "homeassistant" },
 ]
 
@@ -963,6 +965,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.0" },
+    { name = "hassil", specifier = ">=3.5.0" },
+    { name = "home-assistant-intents", specifier = ">=2026.5.5" },
     { name = "homeassistant", editable = "../core" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3.0" },
 ]
@@ -1016,6 +1020,19 @@ wheels = [
 ]
 
 [[package]]
+name = "hassil"
+version = "3.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "unicode-rbnf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/bf/9630f99bcc3dca337e3905571d1e06f0317fcc1aec2d3b5a0933b810f9cf/hassil-3.5.0.tar.gz", hash = "sha256:bed39573626d76bfc0681a709a6b64e4de82a680371bd29238473f6711392597", size = 61144, upload-time = "2025-12-02T20:21:08.435Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7a/4e/94d688f7fb23b6e898922a077d7e32a6f412372ff285567d890a8791de7f/hassil-3.5.0-py3-none-any.whl", hash = "sha256:87b2a48164b2de1d693edbe4204b3a7c3b72dc7c5c3829774de8824ecc62ab96", size = 51788, upload-time = "2025-12-02T20:21:07.125Z" },
+]
+
+[[package]]
 name = "home-assistant-bluetooth"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1025,6 +1042,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bc/6f/914fd8086f502748907751766e26e3f7fe5204347a679703ee9954e55e4d/home_assistant_bluetooth-2.0.0.tar.gz", hash = "sha256:3febd16b194812b156024d9bc8ce8ec7622cdd8d159047cac504cc77ca034ea1", size = 7604, upload-time = "2025-07-09T18:01:47.541Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/15/3e/2ed9e59da8fc26c43cbd9d6abbd27217138a31c608b1d334cc5e680e4069/home_assistant_bluetooth-2.0.0-py3-none-any.whl", hash = "sha256:8d7c2ac48c303adacad73cb6cdfe7710f2fccd2a367d4c3106acf301b0d22b91", size = 7907, upload-time = "2025-07-09T18:01:46.506Z" },
+]
+
+[[package]]
+name = "home-assistant-intents"
+version = "2026.5.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/6a/33d9f9022315abbb550cdeabe0023e67ccf2dcd455f37a6e2281b538fab7/home_assistant_intents-2026.5.5.tar.gz", hash = "sha256:c009202de1f36c6f047480879018412c42b4ed84ee0d4931e6a0afe20cdc7b3e", size = 2880221, upload-time = "2026-05-05T14:51:23.5Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/e2/86114fee07a923c8dc1265a24ed4c4235803a2369c212b28da58c1db6468/home_assistant_intents-2026.5.5-py3-none-any.whl", hash = "sha256:9681214c1ff2ecc8e99961f56e5f0f07cba328129b07ebe8768fb5e8511c6664", size = 2905038, upload-time = "2026-05-05T14:51:21.602Z" },
 ]
 
 [[package]]
@@ -2111,6 +2137,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/55/b1/258765b8d209187a19228c89733400b751db223b7b68c7b79e4c924962a9/ulid_transform-2.2.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:3adf5a417a2250264c6b6b290f1393d41efff0ac692ea19d4fa677bf29a67137", size = 1066233, upload-time = "2026-03-18T18:25:38.194Z" },
     { url = "https://files.pythonhosted.org/packages/21/f5/c29d4e164f5a6302b3f2025d16dfde9a6a8704efaf01c7d3c70ee69a4a12/ulid_transform-2.2.0-cp314-cp314t-win32.whl", hash = "sha256:66b66189322bccb54491b91a9c0e25c9240156d5d5671ca59860d8db1ce4ff9f", size = 33249, upload-time = "2026-03-18T18:25:39.673Z" },
     { url = "https://files.pythonhosted.org/packages/c6/45/f9c7400646f89d71dd5c04693ed259feb459e13b036c98193ecc8467cb4d/ulid_transform-2.2.0-cp314-cp314t-win_amd64.whl", hash = "sha256:212ba7218ea61cafb06772cd3967f60f16d4b028869a470cddcffad3ca5fac1c", size = 33277, upload-time = "2026-03-18T18:25:41.235Z" },
+]
+
+[[package]]
+name = "unicode-rbnf"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/1f/d952ba97832647e608700c36b22d1c4476016076c9ed1ce74ae814bea55a/unicode_rbnf-2.4.0.tar.gz", hash = "sha256:6d2f12a7581c69ea6218ee61fafcd2da46e1f9986bdcd0964c5151f7c2a938ac", size = 89069, upload-time = "2025-10-07T20:59:41.3Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4b/21/82f5d435808cba330668a8b69efb180e3ef9739d4998e8cd0381e8c9cb23/unicode_rbnf-2.4.0-py3-none-any.whl", hash = "sha256:0176b30ac9b7b84008d7dc0f23078055dc10d2671fdadfab5747943243e20e2d", size = 141691, upload-time = "2025-10-07T20:59:40.139Z" },
 ]
 
 [[package]]
