@@ -139,7 +139,7 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
 }
 
 THREAD_ROUTING_ROLE_MAP = {
-    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnspecified: None,
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnspecified: "unspecified",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnassigned: "unassigned",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kSleepyEndDevice: "sleepy_end_device",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kEndDevice: "end_device",

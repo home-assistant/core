@@ -1009,6 +1009,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -1053,6 +1054,7 @@
       'device_class': 'enum',
       'friendly_name': 'Multi-State Sensor P100',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -1393,6 +1395,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -1437,6 +1440,7 @@
       'device_class': 'enum',
       'friendly_name': 'Multi-State Sensor P100 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -1511,6 +1515,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -1555,6 +1560,7 @@
       'device_class': 'enum',
       'friendly_name': 'Presence Multi-Sensor FP300 1',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2063,6 +2069,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2107,6 +2114,7 @@
       'device_class': 'enum',
       'friendly_name': 'Presence Multi-Sensor FP300 1 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2181,6 +2189,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2225,6 +2234,7 @@
       'device_class': 'enum',
       'friendly_name': 'Climate Sensor W100',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2837,6 +2847,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2881,6 +2892,7 @@
       'device_class': 'enum',
       'friendly_name': 'Climate Sensor W100 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2955,6 +2967,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -2999,6 +3012,7 @@
       'device_class': 'enum',
       'friendly_name': 'Floor Heating Thermostat',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -3408,6 +3422,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -3452,6 +3467,7 @@
       'device_class': 'enum',
       'friendly_name': 'Floor Heating Thermostat Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -4942,6 +4958,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -4986,6 +5003,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Door',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5276,6 +5294,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5320,6 +5339,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Door Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5394,6 +5414,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5438,6 +5459,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy 20ECN4101',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5786,6 +5808,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5830,6 +5853,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy 20ECN4101 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -5962,6 +5986,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6006,6 +6031,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy Plug',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6354,6 +6380,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6398,6 +6425,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy Plug Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6530,6 +6558,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6574,6 +6603,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy Plug Patched',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6931,6 +6961,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -6975,6 +7006,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Energy Plug Patched Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7110,6 +7142,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7154,6 +7187,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Shutter Switch 20ECI1701',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7379,6 +7413,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7423,6 +7458,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Shutter Switch 20ECI1701 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7497,6 +7533,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7541,6 +7578,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Thermo 20EBP1701',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7889,6 +7927,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -7933,6 +7972,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Thermo 20EBP1701 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8058,6 +8098,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8102,6 +8143,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Thermo 20ECD1701',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8389,6 +8431,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8433,6 +8476,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Thermo 20ECD1701 Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8558,6 +8602,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -8602,6 +8647,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Weather',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9063,6 +9109,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9107,6 +9154,7 @@
       'device_class': 'enum',
       'friendly_name': 'Eve Weather Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9245,6 +9293,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9289,6 +9338,7 @@
       'device_class': 'enum',
       'friendly_name': 'HJMT-6B',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9897,6 +9947,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -9941,6 +9992,7 @@
       'device_class': 'enum',
       'friendly_name': 'HJMT-6B Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10015,6 +10067,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10059,6 +10112,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smart CO sensor',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10454,6 +10508,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10498,6 +10553,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smart CO sensor Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10633,6 +10689,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -10677,6 +10734,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smart motion sensor',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11072,6 +11130,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11116,6 +11175,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smart motion sensor Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11417,6 +11477,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11461,6 +11522,7 @@
       'device_class': 'enum',
       'friendly_name': 'ALPSTUGA air quality monitor',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11926,6 +11988,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -11970,6 +12033,7 @@
       'device_class': 'enum',
       'friendly_name': 'ALPSTUGA air quality monitor Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12044,6 +12108,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12088,6 +12153,7 @@
       'device_class': 'enum',
       'friendly_name': 'BILRESA dual button',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12534,6 +12600,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12578,6 +12645,7 @@
       'device_class': 'enum',
       'friendly_name': 'BILRESA dual button Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12652,6 +12720,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -12696,6 +12765,7 @@
       'device_class': 'enum',
       'friendly_name': 'BILRESA scroll wheel',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -13513,6 +13583,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -13557,6 +13628,7 @@
       'device_class': 'enum',
       'friendly_name': 'BILRESA scroll wheel Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -13631,6 +13703,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -13675,6 +13748,7 @@
       'device_class': 'enum',
       'friendly_name': 'White Series OnOff Switch',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14304,6 +14378,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14348,6 +14423,7 @@
       'device_class': 'enum',
       'friendly_name': 'White Series OnOff Switch Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14483,6 +14559,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14527,6 +14604,7 @@
       'device_class': 'enum',
       'friendly_name': 'Inovelli',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14860,6 +14938,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -14904,6 +14983,7 @@
       'device_class': 'enum',
       'friendly_name': 'Inovelli Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -17211,6 +17291,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -17255,6 +17336,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mocked Fan Switch',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -17429,6 +17511,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -17473,6 +17556,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mocked Fan Switch Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -21654,6 +21738,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -21698,6 +21783,7 @@
       'device_class': 'enum',
       'friendly_name': 'Secuyou Smart Lock',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -21872,6 +21958,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -21916,6 +22003,7 @@
       'device_class': 'enum',
       'friendly_name': 'Secuyou Smart Lock Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -21990,6 +22078,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -22034,6 +22123,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dishwasher',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -22582,6 +22672,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -22626,6 +22717,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dishwasher Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -23827,6 +23919,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -23871,6 +23964,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL_Fan',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24045,6 +24139,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24089,6 +24184,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL_Fan Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24163,6 +24259,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24207,6 +24304,7 @@
       'device_class': 'enum',
       'friendly_name': 'LaundryWasher',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24815,6 +24913,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24859,6 +24958,7 @@
       'device_class': 'enum',
       'friendly_name': 'LaundryWasher Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24933,6 +25033,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -24977,6 +25078,7 @@
       'device_class': 'enum',
       'friendly_name': 'Light switch example',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25204,6 +25306,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25248,6 +25351,7 @@
       'device_class': 'enum',
       'friendly_name': 'Light switch example Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25322,6 +25426,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25366,6 +25471,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL-RangeHood',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25540,6 +25646,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25584,6 +25691,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL-RangeHood Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25658,6 +25766,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25702,6 +25811,7 @@
       'device_class': 'enum',
       'friendly_name': 'Refrigerator',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25876,6 +25986,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -25920,6 +26031,7 @@
       'device_class': 'enum',
       'friendly_name': 'Refrigerator Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -27523,6 +27635,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -27567,6 +27680,7 @@
       'device_class': 'enum',
       'friendly_name': 'Zemismart MT25B Roller Motor',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -27919,6 +28033,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',
@@ -27963,6 +28078,7 @@
       'device_class': 'enum',
       'friendly_name': 'Zemismart MT25B Roller Motor Thread routing role',
       'options': list([
+        'unspecified',
         'unassigned',
         'sleepy_end_device',
         'end_device',

@@ -605,7 +605,8 @@
           "reed": "Router eligible end device",
           "router": "Router",
           "sleepy_end_device": "Sleepy end device",
-          "unassigned": "Unassigned"
+          "unassigned": "Unassigned",
+          "unspecified": "Unspecified"
         }
       },
       "tvoc_level": {
