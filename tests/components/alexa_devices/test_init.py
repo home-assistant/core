@@ -12,7 +12,12 @@ from homeassistant.components.alexa_devices.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_LABS_UPDATED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -159,7 +164,14 @@ async def test_http2_reauth_callback_triggers_reauth(
 
     mock_amazon_devices_client.start_http2_processing.side_effect = capture_callback
 
-    with patch.object(mock_config_entry, "async_start_reauth") as mock_reauth:
+    # remove labs patch when labs is removed
+    with (
+        patch(
+            "homeassistant.components.alexa_devices.async_is_preview_feature_enabled",
+            return_value=True,
+        ),
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+    ):
         await setup_integration(hass, mock_config_entry)
 
         assert captured_callback is not None
@@ -178,9 +190,39 @@ async def test_http2_stop_processing_called_on_unload(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test stop_http2_processing is called on unload."""
-    await setup_integration(hass, mock_config_entry)
+    # remove labs patch when labs is removed
+    with patch(
+        "homeassistant.components.alexa_devices.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     mock_amazon_devices_client.stop_http2_processing.assert_called_once()
+
+
+# Labs test to be removed with labs
+async def test_alexa_media_labs_disabled_unloads_media_player(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disabling the labs feature stops http2 and unloads the media player platform."""
+    with patch(
+        "homeassistant.components.alexa_devices.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("media_player.echo_test") is not None
+
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {"domain": DOMAIN, "preview_feature": "alexa_media", "enabled": False},
+    )
+    await hass.async_block_till_done()
+
+    mock_amazon_devices_client.stop_http2_processing.assert_called_once()
+    assert hass.states.get("media_player.echo_test") is None
