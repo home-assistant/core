@@ -144,7 +144,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return True if the volume is muted."""
-        if not self.volume_state:
+        if not self.volume_state or self.volume_state.volume is None:
             return None
         # is_muted is True when Alexa has muted the device
         # volume == 0 is where we have muted by setting volume to 0
