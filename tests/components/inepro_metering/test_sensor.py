@@ -38,9 +38,10 @@ from homeassistant.components.inepro_metering.const import (
 from homeassistant.components.inepro_metering.coordinator import (
     IneproMeteringCoordinator,
 )
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -99,6 +100,7 @@ def _register_map() -> dict[int, int]:
     add(0x6018, _encode_uint32(2500))
     add(0x6030, _encode_uint32(4800))
     add(0x603C, _encode_uint32(300))
+    add(0x6048, [0x0001])
 
     return registers
 
@@ -180,11 +182,21 @@ def _register_map_grow_750() -> dict[int, int]:
     add(0x5048, _encode_float(0.0))
     add(0x504A, _encode_float(1.5))
     add(0x504C, _encode_float(0.0))
-    add(0x6000, _encode_int32(91))
-    add(0x600C, _encode_uint32(91))
-    add(0x6018, _encode_uint32(0))
+    add(0x6000, _encode_int32(-1234))
+    add(0x6006, _encode_int32(-100))
+    add(0x6008, _encode_int32(2000))
+    add(0x600A, _encode_int32(3000))
+    add(0x600C, _encode_uint32(91000))
+    add(0x6012, _encode_uint32(1111))
+    add(0x6014, _encode_uint32(2222))
+    add(0x6016, _encode_uint32(3333))
+    add(0x6018, _encode_uint32(7000))
+    add(0x601E, _encode_uint32(4444))
+    add(0x6020, _encode_uint32(5555))
+    add(0x6022, _encode_uint32(6666))
     add(0x6030, _encode_uint32(0))
     add(0x603C, _encode_uint32(0))
+    add(0x6048, [0x0002])
     add(0x1010, _encode_int32(0))
     add(0x1012, _encode_int32(0))
     add(0x1100, [0x0000])
@@ -270,6 +282,35 @@ class FakeModbusClient:
     async def async_close(self) -> None:
         """Close the fake client."""
         return
+
+
+class FakeGrow750ModbusClient(FakeModbusClient):
+    """Fake Modbus client for a three-phase GROW 750 meter."""
+
+    def __init__(self, config) -> None:
+        """Initialize the fake client."""
+        super().__init__(config)
+        self._registers = _register_map_grow_750()
+
+    async def async_read_device_identification(self, slave_id):
+        """Return fake device identification."""
+        return IneproDeviceIdentification(
+            manufacturer_name="inepro Metering B.V.",
+            product_name="879-3120",
+            version="V1.0.2744",
+        )
+
+
+class FakeGrow750EnergyReadFailureModbusClient(FakeGrow750ModbusClient):
+    """Fake three-phase GROW meter that rejects the first energy block."""
+
+    async def async_read_registers(self, register_type, address, count, slave_id):
+        """Raise for the first cumulative energy block."""
+        if address == 0x6000:
+            raise IneproReadError("energy block unavailable")
+        return await super().async_read_registers(
+            register_type, address, count, slave_id
+        )
 
 
 class FakeModbusClientUnknownCrc(FakeModbusClient):
@@ -498,6 +539,16 @@ async def test_setup_entry_creates_expected_sensor_entities(
         float(hass.states.get("sensor.test_meter_forward_active_energy").state)
         == 12.345
     )
+    assert (
+        float(hass.states.get("sensor.test_meter_active_energy_import_total").state)
+        == 12.345
+    )
+    assert (
+        float(hass.states.get("sensor.test_meter_active_energy_export_total").state)
+        == 2.5
+    )
+    assert hass.states.get("sensor.test_meter_active_energy_import_l1") is None
+    assert hass.states.get("sensor.test_meter_active_energy_export_l1") is None
     assert hass.states.get("sensor.test_meter_serial_number").state == "25150002"
     assert hass.states.get("sensor.test_meter_product_code").state == "0850"
     assert hass.states.get("sensor.test_meter_error_code").state == "0000"
@@ -541,6 +592,134 @@ async def test_setup_entry_creates_expected_sensor_entities(
     assert legal.attributes["crc"] == "6A479857"
     assert non_legal.attributes["raw_version"] == "1.0"
     assert non_legal.attributes["crc"] == "6A479857"
+
+
+async def test_grow_three_phase_energy_entities_use_import_export_metadata(
+    hass: HomeAssistant,
+) -> None:
+    """A supported three-phase GROW meter should expose per-phase energy entities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Three Phase Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_750",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.inepro_metering.coordinator.IneproModbusClient",
+        FakeGrow750ModbusClient,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    expected_energy_states = {
+        "active_energy_import_total": 91.0,
+        "active_energy_import_l1": 1.111,
+        "active_energy_import_l2": 2.222,
+        "active_energy_import_l3": 3.333,
+        "active_energy_export_total": 7.0,
+        "active_energy_export_l1": 4.444,
+        "active_energy_export_l2": 5.555,
+        "active_energy_export_l3": 6.666,
+    }
+    for key, expected_value in expected_energy_states.items():
+        state = hass.states.get(f"sensor.three_phase_meter_{key}")
+        assert state is not None
+        assert float(state.state) == pytest.approx(expected_value)
+        assert state.attributes["device_class"] == SensorDeviceClass.ENERGY
+        assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+        assert state.attributes["unit_of_measurement"] == UnitOfEnergy.KILO_WATT_HOUR
+
+    assert float(hass.states.get("sensor.three_phase_meter_active_power_l1").state) == 0
+    assert float(hass.states.get("sensor.three_phase_meter_active_power_l2").state) == 0
+    assert float(hass.states.get("sensor.three_phase_meter_active_power_l3").state) == 0
+    assert hass.states.get("sensor.three_phase_meter_reactive_energy_q1_l1") is None
+    assert hass.states.get("sensor.three_phase_meter_apparent_energy_l1") is None
+    assert hass.states.get("sensor.three_phase_meter_resettable_day_counter_l1") is None
+
+
+async def test_grow_signed_active_energy_decodes_as_int32(
+    hass: HomeAssistant,
+) -> None:
+    """Signed/net active-energy registers should decode as INT32 values."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Three Phase Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_750",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.inepro_metering.coordinator.IneproModbusClient",
+        FakeGrow750ModbusClient,
+    ):
+        coordinator = IneproMeteringCoordinator(hass, entry)
+        data = await coordinator._async_update_data()
+
+    assert data.readings["active_energy_total"] == pytest.approx(-1.234)
+    assert data.readings["active_energy_l1"] == pytest.approx(-0.1)
+    assert data.readings["active_energy_l2"] == pytest.approx(2.0)
+    assert data.readings["active_energy_l3"] == pytest.approx(3.0)
+
+
+async def test_grow_energy_read_failure_does_not_report_zero(
+    hass: HomeAssistant,
+) -> None:
+    """Unavailable energy blocks should stay unknown instead of becoming zero."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Three Phase Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_750",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.inepro_metering.coordinator.IneproModbusClient",
+        FakeGrow750EnergyReadFailureModbusClient,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    energy_state = hass.states.get("sensor.three_phase_meter_active_energy_import_l1")
+    assert energy_state is not None
+    assert energy_state.state == "unknown"
 
 
 async def test_setup_entry_creates_expected_pro_sensor_entities(
