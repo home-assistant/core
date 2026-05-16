@@ -1,8 +1,5 @@
 """Alexa Devices integration."""
 
-import asyncio
-import contextlib
-
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
     async_is_preview_feature_enabled,
@@ -55,25 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
     )
-    http2_task: asyncio.Task | None = None
 
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
-
-    async def _cancel_http2() -> None:
-        nonlocal http2_task  # to be removed after labs
-        if not http2_task:
-            return
-        http2_task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await http2_task
-        http2_task = None  # to be removed after labs
 
     async def _async_update_alexa_media(
         event_data: EventLabsUpdatedData | None = None,
     ) -> None:
         nonlocal media_player_loaded
-        nonlocal http2_task
 
         enabled = (
             event_data["enabled"]
@@ -83,8 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
         if enabled:
             await coordinator.sync_media_state()
-            await _cancel_http2()  # cancel any existing task
-            http2_task = await coordinator.api.start_http2_processing(
+            await coordinator.api.start_http2_processing(
                 alexa_httpx_client,
                 on_reauth_required=_on_http2_reauth_required,
             )
@@ -117,7 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
             _async_update_alexa_media,
         )
     )
-    entry.async_on_unload(_cancel_http2)
 
     entry.runtime_data = coordinator
 
