@@ -8,10 +8,10 @@ from typing import Any
 from voip_utils import CallInfo, VoipDatagramProtocol
 from voip_utils.sip import SipEndpoint
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import VoipConfigEntry
 from .const import DOMAIN
 from .store import DeviceContact, DeviceContacts, VoipStore
 
@@ -79,7 +79,7 @@ class VoIPDevices:
     """Class to store devices."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, store: VoipStore
+        self, hass: HomeAssistant, config_entry: VoipConfigEntry, store: VoipStore
     ) -> None:
         """Initialize VoIP devices."""
         self.hass = hass

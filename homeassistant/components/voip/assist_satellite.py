@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 import socket
 import time
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
@@ -26,11 +26,11 @@ from homeassistant.components.assist_satellite import (
 )
 from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VoipConfigEntry
 from .const import (
     CHANNELS,
     CONF_SIP_PORT,
@@ -42,9 +42,6 @@ from .const import (
 )
 from .devices import VoIPDevice
 from .entity import VoIPEntity
-
-if TYPE_CHECKING:
-    from . import DomainData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,11 +69,11 @@ _TONE_FILENAMES: dict[Tones, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VoipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP Assist satellite entity."""
-    domain_data: DomainData = config_entry.runtime_data.domain_data
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
@@ -109,7 +106,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self,
         hass: HomeAssistant,
         voip_device: VoIPDevice,
-        config_entry: ConfigEntry,
+        config_entry: VoipConfigEntry,
         tones=Tones.LISTENING | Tones.PROCESSING | Tones.ERROR,
     ) -> None:
         """Initialize an Assist satellite."""
