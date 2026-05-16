@@ -1,4 +1,4 @@
-"""Tests for the block_shared_serial pyserial monkey-patches."""
+"""Tests for the block_shared_serial pyserial patches."""
 
 from collections.abc import Generator
 import logging
@@ -15,39 +15,39 @@ from homeassistant import block_shared_serial
 
 @pytest.fixture(autouse=True)
 def restore_pyserial() -> Generator[None]:
-    """Restore the patched pyserial methods after each test."""
+    """Restore pyserial state after each test."""
+    original_defaults = SerialBase.__init__.__defaults__
     try:
         yield
     finally:
-        SerialBase.__init__ = block_shared_serial._original_init
+        SerialBase.__init__.__defaults__ = original_defaults
         PlatformSerial.open = block_shared_serial._original_open
         SocketSerial.open = block_shared_serial._original_socket_open
         Rfc2217Serial.open = block_shared_serial._original_rfc2217_open
 
 
-@pytest.mark.parametrize("requested", [None, False, True])
-async def test_init_forces_exclusive(requested: bool | None) -> None:
-    """Test that __init__ always coerces exclusive to True after enable()."""
-    base1 = SerialBase(exclusive=requested)
-    assert base1.exclusive is requested
-
+async def test_default_exclusive_becomes_true() -> None:
+    """When `exclusive` is omitted, it defaults to True after enable()."""
+    assert SerialBase()._exclusive is None
     block_shared_serial.enable()
-    base2 = SerialBase(exclusive=requested)
-    assert base2.exclusive is True
+    assert SerialBase()._exclusive is True
+
+
+@pytest.mark.parametrize("value", [None, False, True])
+async def test_explicit_exclusive_is_preserved(value: bool | None) -> None:
+    """Explicit `exclusive` arguments are honored after enable()."""
+    block_shared_serial.enable()
+    assert SerialBase(exclusive=value)._exclusive is value
 
 
 @pytest.mark.parametrize(
     "uri",
-    [
-        "/dev/this-does-not-exist",
-        "socket://127.0.0.1:1",
-        "rfc2217://127.0.0.1:1",
-    ],
+    ["/dev/this-does-not-exist", "socket://127.0.0.1:1", "rfc2217://127.0.0.1:1"],
 )
 async def test_serial_open_logs(caplog: pytest.LogCaptureFixture, uri: str) -> None:
-    """Test that opening a serial port emits a debug log on the serial logger."""
+    """Opening a serial port emits a debug log on the pySerial logger."""
     block_shared_serial.enable()
-    caplog.set_level(logging.DEBUG, logger="serial")
+    caplog.set_level(logging.DEBUG, logger="pySerial")
 
     with (  # noqa: SIM117
         pytest.raises(SerialException),
@@ -61,7 +61,7 @@ async def test_serial_open_logs(caplog: pytest.LogCaptureFixture, uri: str) -> N
 
 
 async def test_enable_multiple_times() -> None:
-    """Test that calling enable() twice raises RuntimeError."""
+    """Calling enable() twice raises RuntimeError."""
     block_shared_serial.enable()
 
     with pytest.raises(RuntimeError, match="Shared serial blocking is already enabled"):
