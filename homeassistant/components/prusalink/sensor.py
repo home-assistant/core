@@ -90,6 +90,11 @@ def _legacy_material(data: LegacyPrinterStatus) -> str | None:
     return telemetry["material"]
 
 
+def _always_available(_: object) -> bool:
+    """Keep entities available while coordinator is connected."""
+    return True
+
+
 @dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription[
     T: PrinterStatus | LegacyPrinterStatus | JobInfo | None | PrinterInfo
@@ -221,27 +226,27 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             value_fn=_job_progress,
             # Job sensors stay available when idle/no-job so `None` values are
             # represented as `unknown` instead of `unavailable`.
-            available_fn=lambda _: True,
+            available_fn=_always_available,
         ),
         PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.filename",
             translation_key="filename",
             value_fn=_job_filename,
-            available_fn=lambda _: True,
+            available_fn=_always_available,
         ),
         PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.start",
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=_job_start,
-            available_fn=lambda _: True,
+            available_fn=_always_available,
         ),
         PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=_job_finish,
-            available_fn=lambda _: True,
+            available_fn=_always_available,
         ),
     ),
     "info": (
