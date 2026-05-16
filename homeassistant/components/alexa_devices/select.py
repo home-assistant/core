@@ -40,8 +40,6 @@ async def async_setup_entry(
 class AmazonSelect(AmazonServiceEntity, SelectEntity, RestoreEntity):
     """Representation of a select entity for the default Alexa device."""
 
-    _attr_has_entity_name = True
-
     @property
     def options(self) -> list[str]:
         """Return a list of available options."""
