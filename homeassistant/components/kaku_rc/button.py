@@ -5,11 +5,10 @@ from rf_protocols.commands.ook import OOKCommand
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EntityCategory, STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 

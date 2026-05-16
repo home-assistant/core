@@ -154,6 +154,7 @@ class KakuDimmerLight(LightEntity, RestoreEntity):
                 dimlevel=None,
                 frame_repeats=REPEAT_COUNT,
             )
+            self._attr_brightness = 0
         command = OOKCommand(
             frequency=FREQUENCY_HZ,
             timings=timings,

@@ -374,6 +374,7 @@ FLOWS = {
         "jewish_calendar",
         "justnimbus",
         "jvc_projector",
+        "kaku_rc",
         "kaleidescape",
         "keenetic_ndms2",
         "kegtron",
