@@ -610,21 +610,21 @@ async def test_async_set_light_and_lock(
 
 
 @pytest.mark.parametrize(
-    ("method_name", "method", "state"),
+    ("method_name", "method_factory", "state"),
     [
         (
             "async_set_light",
-            lambda calls: _async_light_on(calls),
+            "_async_light_on",
             True,
         ),
         (
             "set_light",
-            lambda calls: _sync_light_on(calls),
+            "_sync_light_on",
             True,
         ),
         (
             "set_light",
-            lambda calls: _sync_light(calls),
+            "_sync_light",
             False,
         ),
     ],
@@ -632,7 +632,7 @@ async def test_async_set_light_and_lock(
 async def test_async_set_light_uses_client_methods(
     hass: HomeAssistant,
     method_name: str,
-    method: Any,
+    method_factory: str,
     state: bool,
 ) -> None:
     """Verify light control uses direct client methods when available."""
@@ -645,7 +645,7 @@ async def test_async_set_light_uses_client_methods(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: method(calls)})
+    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
 
     assert await hub.async_set_light(1, state=state) is True
     assert calls == [(1, state)]
@@ -676,36 +676,36 @@ def _sync_light_on(calls: list[Any]) -> Any:
 
 
 @pytest.mark.parametrize(
-    ("method_name", "method", "locked"),
+    ("method_name", "method_factory", "locked"),
     [
         (
             "async_set_lock",
-            lambda calls: _async_lock_locked(calls),
+            "_async_lock_locked",
             True,
         ),
         (
             "set_lock",
-            lambda calls: _sync_lock_locked(calls),
+            "_sync_lock_locked",
             False,
         ),
         (
             "async_set_lock",
-            lambda calls: _async_lock_on(calls),
+            "_async_lock_on",
             True,
         ),
         (
             "set_lock",
-            lambda calls: _sync_lock_on(calls),
+            "_sync_lock_on",
             False,
         ),
         (
             "async_set_lock",
-            lambda calls: _async_lock_positional(calls),
+            "_async_lock_positional",
             True,
         ),
         (
             "set_lock",
-            lambda calls: _sync_lock_positional(calls),
+            "_sync_lock_positional",
             False,
         ),
     ],
@@ -713,7 +713,7 @@ def _sync_light_on(calls: list[Any]) -> Any:
 async def test_async_set_lock_uses_client_methods(
     hass: HomeAssistant,
     method_name: str,
-    method: Any,
+    method_factory: str,
     locked: bool,
 ) -> None:
     """Verify lock control uses direct client methods when available."""
@@ -726,7 +726,7 @@ async def test_async_set_lock_uses_client_methods(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: method(calls)})
+    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
 
     assert await hub.async_set_lock(2, locked=locked) is True
     assert calls == [(2, locked)]
@@ -824,16 +824,16 @@ async def test_async_set_tstat_status(
 
 
 @pytest.mark.parametrize(
-    ("method_name", "method"),
+    ("method_name", "method_factory"),
     [
-        ("async_set_tstat_status", lambda calls: _async_tstat_status(calls)),
-        ("set_tstat_status", lambda calls: _sync_tstat_status(calls)),
+        ("async_set_tstat_status", "_async_tstat_status"),
+        ("set_tstat_status", "_sync_tstat_status"),
     ],
 )
 async def test_async_set_tstat_status_uses_client_methods(
     hass: HomeAssistant,
     method_name: str,
-    method: Any,
+    method_factory: str,
 ) -> None:
     """Verify thermostat control uses direct client methods when available."""
     hub = Elke27Hub(
@@ -845,7 +845,7 @@ async def test_async_set_tstat_status_uses_client_methods(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: method(calls)})
+    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
 
     assert await hub.async_set_tstat_status(3, mode="HEAT") is True
     assert calls == [(3, {"mode": "HEAT"})]
@@ -948,16 +948,16 @@ async def test_arm_and_disarm_area_errors(
 
 
 @pytest.mark.parametrize(
-    ("method_name", "method"),
+    ("method_name", "method_factory"),
     [
-        ("async_arm_area", lambda calls: _async_arm_area(calls)),
-        ("async_arm_area", lambda calls: _sync_arm_area(calls)),
+        ("async_arm_area", "_async_arm_area"),
+        ("async_arm_area", "_sync_arm_area"),
     ],
 )
 async def test_async_arm_area_uses_client_method(
     hass: HomeAssistant,
     method_name: str,
-    method: Any,
+    method_factory: str,
 ) -> None:
     """Verify arm requests use direct client methods when available."""
     hub = Elke27Hub(
@@ -969,7 +969,7 @@ async def test_async_arm_area_uses_client_method(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: method(calls)})
+    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
 
     assert (
         await hub.async_arm_area(
@@ -1015,16 +1015,16 @@ def _sync_arm_area(calls: list[Any]) -> Any:
 
 
 @pytest.mark.parametrize(
-    ("method_name", "method"),
+    ("method_name", "method_factory"),
     [
-        ("async_disarm_area", lambda calls: _async_disarm_area(calls)),
-        ("async_disarm_area", lambda calls: _sync_disarm_area(calls)),
+        ("async_disarm_area", "_async_disarm_area"),
+        ("async_disarm_area", "_sync_disarm_area"),
     ],
 )
 async def test_async_disarm_area_uses_client_method(
     hass: HomeAssistant,
     method_name: str,
-    method: Any,
+    method_factory: str,
 ) -> None:
     """Verify disarm requests use direct client methods when available."""
     hub = Elke27Hub(
@@ -1036,7 +1036,7 @@ async def test_async_disarm_area_uses_client_method(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: method(calls)})
+    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
 
     assert (
         await hub.async_disarm_area(
