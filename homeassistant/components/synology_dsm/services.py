@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
 from .coordinator import SynologyDSMConfigEntry
@@ -32,20 +33,26 @@ async def _service_handler(call: ServiceCall) -> None:
         dsm_device = next(iter(dsm_devices.values()))
         serial = next(iter(dsm_devices))
     else:
-        LOGGER.error(
-            "More than one DSM configured, must specify one of serials %s",
-            sorted(dsm_devices),
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="missing_serial",
+            translation_placeholders={"serials": ", ".join(sorted(dsm_devices))},
         )
-        return
 
     if not dsm_device:
-        LOGGER.error("DSM with specified serial %s not found", serial)
-        return
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="serial_not_found",
+            translation_placeholders={"serial": serial},
+        )
 
     if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
         if serial not in dsm_devices:
-            LOGGER.error("DSM with specified serial %s not found", serial)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="serial_not_found",
+                translation_placeholders={"serial": serial},
+            )
         LOGGER.debug("%s DSM with serial %s", call.service, serial)
         LOGGER.warning(
             (
@@ -58,15 +65,16 @@ async def _service_handler(call: ServiceCall) -> None:
         dsm_api = dsm_device.api
         try:
             await getattr(dsm_api, f"async_{call.service}")()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except SynologyDSMException as ex:
-            LOGGER.error(
-                "%s of DSM with serial %s not possible, because of %s",
-                call.service,
-                serial,
-                ex,
-            )
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="execution_error",
+                translation_placeholders={
+                    "action": call.service,
+                    "serial": serial,
+                    "error": str(ex),
+                },
+            ) from ex
 
 
 @callback
