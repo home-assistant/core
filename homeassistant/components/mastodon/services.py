@@ -406,7 +406,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
             if field[ATTR_NAME].strip()
         ]
     try:
-        response = await call.hass.async_add_executor_job(
+        response: Account = await call.hass.async_add_executor_job(
             lambda: client.account_update_credentials(**params)
         )
     except MastodonUnauthorizedError as error:
@@ -422,7 +422,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
             translation_key="unable_to_update_profile",
         ) from err
     if call.return_response:
-        return dict(response)
+        return response
     return None
 
 
