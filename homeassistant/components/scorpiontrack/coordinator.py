@@ -14,6 +14,7 @@ from pyscorpiontrack import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -51,8 +52,8 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
         except ScorpionTrackConnectionError as err:
             raise UpdateFailed(f"Could not reach ScorpionTrack: {err}") from err
         except ScorpionTrackInvalidTokenError as err:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 f"ScorpionTrack rejected the configured share token: {err}"
             ) from err
         except ScorpionTrackShareUnavailableError as err:
-            raise UpdateFailed(f"Shared location is unavailable: {err}") from err
+            raise ConfigEntryError(f"Shared location is unavailable: {err}") from err

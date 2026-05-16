@@ -3,39 +3,33 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
 from pyscorpiontrack import ScorpionTrackShare, ScorpionTrackVehicle
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER, STALE_POSITION_THRESHOLD
+from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER, STALE_POSITION_THRESHOLD
 from .coordinator import ScorpionTrackCoordinator
 
 
 class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
     """Base class for ScorpionTrack vehicle entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ScorpionTrackCoordinator, vehicle_id: int) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._vehicle_id = vehicle_id
-        self._device_identifier = (DOMAIN, f"{self.share.id}_{vehicle_id}")
-        self._cached_display_name = f"Vehicle {vehicle_id}"
-        self._cached_registration: str | None = None
-        self._cached_manufacturer = MANUFACTURER
-        self._cached_model: str | None = None
-
-        self.get_vehicle()
-
-    def _cache_vehicle_metadata(self, vehicle: ScorpionTrackVehicle) -> None:
-        """Cache the latest immutable vehicle metadata."""
-        self._cached_display_name = vehicle.display_name
-        self._cached_registration = vehicle.registration
-        self._cached_manufacturer = vehicle.make or MANUFACTURER
-        self._cached_model = vehicle.model
+        vehicle = self.get_vehicle()
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.share.id}_{vehicle_id}")},
+            manufacturer=(vehicle.make or MANUFACTURER) if vehicle else MANUFACTURER,
+            model=vehicle.model if vehicle else None,
+            name=vehicle.display_name if vehicle else f"Vehicle {vehicle_id}",
+        )
 
     @property
     def share(self) -> ScorpionTrackShare:
@@ -46,18 +40,13 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         """Return the matching vehicle, if present."""
         for vehicle in self.share.vehicles:
             if vehicle.id == self._vehicle_id:
-                self._cache_vehicle_metadata(vehicle)
                 return vehicle
         return None
-
-    def is_vehicle_available(self, vehicle: ScorpionTrackVehicle | None) -> bool:
-        """Return if the entity has coordinator data and a matching vehicle."""
-        return super().available and vehicle is not None
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self.is_vehicle_available(self.get_vehicle())
+        return super().available and self.get_vehicle() is not None
 
     def position_age(
         self, vehicle: ScorpionTrackVehicle | None = None
@@ -81,88 +70,25 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         """Return True if the latest reported position is stale."""
         return _is_position_stale(self.position_age(vehicle))
 
-    def common_location_attributes(
-        self,
-        *,
-        include_coordinates: bool = False,
-        vehicle: ScorpionTrackVehicle | None = None,
-    ) -> dict[str, Any]:
-        """Return shared location-related attributes."""
-        if vehicle is None:
-            vehicle = self.get_vehicle()
-        position = vehicle.position if vehicle else None
-        age = self.position_age(vehicle)
-        age_seconds = max(0, int(age.total_seconds())) if age is not None else None
 
-        attributes = {
-            "registration": vehicle.registration
-            if vehicle
-            else self._cached_registration,
-            "make": (vehicle.make or MANUFACTURER)
-            if vehicle
-            else self._cached_manufacturer,
-            "model": vehicle.model if vehicle else self._cached_model,
-            "status": vehicle.status if vehicle else None,
-            "bearing": position.bearing if position else None,
-            "heading_cardinal": _bearing_to_cardinal(
-                position.bearing if position else None
-            ),
-            "address": position.address if position else None,
-            "ignition": position.ignition if position else None,
-            "last_reported": position.timestamp.isoformat()
-            if position and position.timestamp
-            else None,
-            "last_reported_age_seconds": age_seconds,
-            "stale": _is_position_stale(age),
-            "stale_after_hours": int(STALE_POSITION_THRESHOLD.total_seconds() // 3600),
-            "removed_from_share": vehicle is None,
-            "share_title": self.share.title,
-            "shared_by": self.share.owner_name,
-            "share_expires": self.share.expires_at.isoformat()
-            if self.share.expires_at
-            else None,
-        }
-        if include_coordinates:
-            attributes["latitude"] = position.latitude if position else None
-            attributes["longitude"] = position.longitude if position else None
-        return attributes
+class ScorpionTrackShareEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
+    """Base class for ScorpionTrack share entities."""
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device metadata for the vehicle."""
-        return DeviceInfo(
-            identifiers={self._device_identifier},
-            manufacturer=self._cached_manufacturer,
-            model=self._cached_model,
-            name=self._cached_display_name,
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: ScorpionTrackCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self.share.id))},
+            entry_type=DeviceEntryType.SERVICE,
+            name=self.share.title or DEFAULT_NAME,
         )
 
-
-def _bearing_to_cardinal(bearing: float | None) -> str | None:
-    """Convert a numeric bearing into a cardinal heading."""
-    if bearing is None:
-        return None
-
-    directions = (
-        "N",
-        "NNE",
-        "NE",
-        "ENE",
-        "E",
-        "ESE",
-        "SE",
-        "SSE",
-        "S",
-        "SSW",
-        "SW",
-        "WSW",
-        "W",
-        "WNW",
-        "NW",
-        "NNW",
-    )
-    index = int((bearing % 360) / 22.5 + 0.5) % len(directions)
-    return directions[index]
+    @property
+    def share(self) -> ScorpionTrackShare:
+        """Return the active share data."""
+        return self.coordinator.data
 
 
 def _is_position_stale(age: timedelta | None) -> bool:

@@ -14,6 +14,7 @@ import pytest
 
 from homeassistant.components.scorpiontrack.coordinator import ScorpionTrackCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -34,34 +35,38 @@ async def test_async_update_data_returns_share(
 
 
 @pytest.mark.parametrize(
-    ("exception", "message"),
+    ("exception", "expected_exception", "message"),
     [
         (
             ScorpionTrackConnectionError("Connection failed"),
+            UpdateFailed,
             "Could not reach ScorpionTrack: Connection failed",
         ),
         (
             ScorpionTrackInvalidTokenError("Invalid token"),
+            ConfigEntryError,
             "ScorpionTrack rejected the configured share token: Invalid token",
         ),
         (
             ScorpionTrackShareUnavailableError("Share expired"),
+            ConfigEntryError,
             "Shared location is unavailable: Share expired",
         ),
     ],
 )
-async def test_async_update_data_wraps_client_errors(
+async def test_async_update_data_maps_client_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_scorpiontrack_client: AsyncMock,
     exception: Exception,
+    expected_exception: type[Exception],
     message: str,
 ) -> None:
-    """Client errors should be wrapped as update failures."""
+    """Client errors should be mapped to retryable or setup-failing errors."""
     coordinator = ScorpionTrackCoordinator(
         hass, mock_scorpiontrack_client, mock_config_entry
     )
     mock_scorpiontrack_client.async_get_share.side_effect = exception
 
-    with pytest.raises(UpdateFailed, match=message):
+    with pytest.raises(expected_exception, match=message):
         await coordinator._async_update_data()

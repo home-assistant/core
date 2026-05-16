@@ -9,6 +9,7 @@ from pyscorpiontrack import (
     ScorpionTrackClient,
     ScorpionTrackConnectionError,
     ScorpionTrackInvalidTokenError,
+    ScorpionTrackShare,
     ScorpionTrackShareUnavailableError,
 )
 import voluptuous as vol
@@ -24,27 +25,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
-) -> dict[str, str]:
+) -> ScorpionTrackShare:
     """Validate the provided share token or share URL."""
     normalized_token = ScorpionTrackClient.extract_token(user_input[CONF_SHARE_TOKEN])
     client = ScorpionTrackClient(
         session=async_get_clientsession(hass),
         token=normalized_token,
     )
-    share = await client.async_get_share()
+    return await client.async_get_share()
 
+
+def _share_title(share: ScorpionTrackShare) -> str:
+    """Return the best config entry title for a share."""
     if share.title:
-        title = share.title
-    elif share.vehicles:
-        title = share.vehicles[0].display_name
-    else:
-        title = DEFAULT_NAME
-
-    return {
-        "token": share.token,
-        "title": title,
-        "unique_id": str(share.id),
-    }
+        return share.title
+    if share.vehicles:
+        return share.vehicles[0].display_name
+    return DEFAULT_NAME
 
 
 class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -60,24 +57,12 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await _async_validate_input(self.hass, user_input)
-            except ScorpionTrackConnectionError as err:
-                _LOGGER.warning(
-                    "ScorpionTrack share validation could not connect: %s",
-                    err,
-                )
+                share = await _async_validate_input(self.hass, user_input)
+            except ScorpionTrackConnectionError:
                 errors["base"] = "cannot_connect"
-            except ScorpionTrackInvalidTokenError as err:
-                _LOGGER.warning(
-                    "ScorpionTrack share validation rejected the provided share token or URL: %s",
-                    err,
-                )
+            except ScorpionTrackInvalidTokenError:
                 errors["base"] = "invalid_token"
-            except ScorpionTrackShareUnavailableError as err:
-                _LOGGER.warning(
-                    "ScorpionTrack share validation found an unavailable share: %s",
-                    err,
-                )
+            except ScorpionTrackShareUnavailableError:
                 errors["base"] = "share_unavailable"
             except Exception:
                 _LOGGER.exception(
@@ -85,11 +70,12 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
+                await self.async_set_unique_id(str(share.id))
                 self._abort_if_unique_id_configured()
+                user_input[CONF_SHARE_TOKEN] = share.token
                 return self.async_create_entry(
-                    title=info["title"],
-                    data={CONF_SHARE_TOKEN: info["token"]},
+                    title=_share_title(share),
+                    data=user_input,
                 )
 
         return self.async_show_form(

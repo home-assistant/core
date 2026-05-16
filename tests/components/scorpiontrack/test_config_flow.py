@@ -26,18 +26,15 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-VALIDATION_INFO = {
-    "token": "canonical-token",
-    "title": "Family Cars",
-    "unique_id": "101",
-}
 
-
-async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
+async def test_user_flow_creates_entry(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
     """A valid token should create a config entry."""
     with patch(
         "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
-        return_value=VALIDATION_INFO,
+        return_value=mock_share,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -63,13 +60,13 @@ async def test_validate_input_strips_whitespace_and_uses_share_title(
         mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
         mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
 
-        info = await _async_validate_input(
+        share = await _async_validate_input(
             hass,
             {CONF_SHARE_TOKEN: "  canonical-token  \n"},
         )
 
     assert mock_client.call_args.kwargs["token"] == "canonical-token"
-    assert info == VALIDATION_INFO
+    assert share is mock_share
 
 
 async def test_validate_input_extracts_token_from_share_url(
@@ -83,7 +80,7 @@ async def test_validate_input_extracts_token_from_share_url(
         mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
         mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
 
-        info = await _async_validate_input(
+        share = await _async_validate_input(
             hass,
             {
                 CONF_SHARE_TOKEN: (
@@ -94,50 +91,53 @@ async def test_validate_input_extracts_token_from_share_url(
         )
 
     assert mock_client.call_args.kwargs["token"] == "canonical-token"
-    assert info == VALIDATION_INFO
+    assert share is mock_share
 
 
-async def test_validate_input_uses_vehicle_display_name_without_share_title(
+async def test_user_flow_uses_vehicle_display_name_without_share_title(
     hass: HomeAssistant,
     mock_share: ScorpionTrackShare,
 ) -> None:
-    """Validation should fall back to the first vehicle display name."""
+    """The config entry title should fall back to the first vehicle display name."""
     share = replace(mock_share, title="")
     with patch(
-        "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
-    ) as mock_client:
-        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
-        mock_client.return_value.async_get_share = AsyncMock(return_value=share)
-
-        info = await _async_validate_input(
-            hass,
-            {CONF_SHARE_TOKEN: "canonical-token"},
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "canonical-token"},
         )
 
-    assert info["title"] == share.vehicles[0].display_name
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == share.vehicles[0].display_name
 
 
-async def test_validate_input_uses_default_name_without_title_or_vehicles(
+async def test_user_flow_uses_default_name_without_title_or_vehicles(
     hass: HomeAssistant,
     mock_share: ScorpionTrackShare,
 ) -> None:
-    """Validation should use the default name when nothing descriptive exists."""
+    """The config entry title should use the default name when nothing descriptive exists."""
     share = replace(mock_share, title="", vehicles=())
     with patch(
-        "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
-    ) as mock_client:
-        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
-        mock_client.return_value.async_get_share = AsyncMock(return_value=share)
-
-        info = await _async_validate_input(
-            hass,
-            {CONF_SHARE_TOKEN: "canonical-token"},
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "canonical-token"},
         )
 
-    assert info["title"] == DEFAULT_NAME
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
 
 
-async def test_user_flow_aborts_for_existing_share(hass: HomeAssistant) -> None:
+async def test_user_flow_aborts_for_existing_share(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
     """The same share should not be configured twice."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -149,7 +149,7 @@ async def test_user_flow_aborts_for_existing_share(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
-        return_value=VALIDATION_INFO,
+        return_value=mock_share,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

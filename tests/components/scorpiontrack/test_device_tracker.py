@@ -1,7 +1,6 @@
 """Test the ScorpionTrack device tracker platform."""
 
 from dataclasses import replace
-from unittest.mock import patch
 
 from pyscorpiontrack import ScorpionTrackShare
 
@@ -31,13 +30,13 @@ async def test_device_tracker_state(
     assert state.attributes["longitude"] == -0.1278
     assert state.attributes["gps_accuracy"] == 0.0
     assert state.attributes["source_type"] == "gps"
-    assert state.attributes["address"] == "Westminster, London"
-    assert state.attributes["speed"] == 30.0
-    assert state.attributes["speed_unit"] == "mph"
+    assert "address" not in state.attributes
+    assert "speed" not in state.attributes
+    assert "speed_unit" not in state.attributes
 
     entity_entry = entity_registry.async_get("device_tracker.ab12_cde")
     assert entity_entry is not None
-    assert entity_entry.original_name == "AB12 CDE"
+    assert entity_entry.unique_id == "101_1"
 
 
 async def test_device_is_registered(
@@ -77,20 +76,38 @@ async def test_removed_vehicle_becomes_unavailable(
     assert device.name == "AB12 CDE"
 
 
-async def test_tracker_available_fetches_vehicle_once(
+async def test_new_vehicles_after_setup_do_not_add_tracker_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """Vehicles that appear later should wait for a future dynamic-device PR."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    new_vehicle = replace(
+        mock_share.vehicles[0],
+        id=2,
+        name="Tiguan",
+        registration="EF34 ABC",
+        model="Tiguan",
+    )
+    coordinator.async_set_updated_data(
+        replace(mock_share, vehicles=(*mock_share.vehicles, new_vehicle))
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.ef34_abc") is None
+
+
+async def test_tracker_uses_device_name(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """The availability check should reuse the selected vehicle."""
+    """The tracker should use the vehicle device name as the main entity name."""
     await setup_integration(hass, mock_config_entry)
 
     entity = ScorpionTrackTrackerEntity(mock_config_entry.runtime_data, 1)
 
-    with patch.object(
-        entity,
-        "get_vehicle",
-        wraps=entity.get_vehicle,
-    ) as mock_get_vehicle:
-        assert entity.available is True
-
-    assert mock_get_vehicle.call_count == 1
+    assert entity.has_entity_name is True
+    assert entity.name is None
