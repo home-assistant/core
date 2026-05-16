@@ -5,16 +5,12 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-if TYPE_CHECKING:
-    pass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,15 +44,7 @@ class SandboxEntityManager:
         self.sandbox_id = sandbox_id
         self._entities: dict[str, SandboxProxyEntity] = {}
         self._pending_calls: dict[str, asyncio.Future[Any]] = {}
-        self._platform_add_callbacks: dict[str, AddEntitiesCallback] = {}
         self._call_id_counter = 0
-
-    @callback
-    def register_platform_callback(
-        self, domain: str, async_add_entities: AddEntitiesCallback
-    ) -> None:
-        """Register the async_add_entities callback for a domain."""
-        self._platform_add_callbacks[domain] = async_add_entities
 
     @callback
     def add_entity(self, description: SandboxEntityDescription) -> SandboxProxyEntity:
