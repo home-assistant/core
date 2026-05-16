@@ -66,7 +66,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
         },
-        unique_id=None,
     )
 
 
