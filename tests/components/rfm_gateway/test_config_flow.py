@@ -275,7 +275,9 @@ async def test_zeroconf_ignores_non_rfm_device(hass: HomeAssistant) -> None:
     ("host", "hostname", "expected_host"),
     [
         pytest.param("192.0.2.12", "_http._tcp.local.", "192.0.2.12", id="raw-host-ip"),
-        pytest.param("_http._tcp.local.", "192.0.2.13", "192.0.2.13", id="raw-hostname-ip"),
+        pytest.param(
+            "_http._tcp.local.", "192.0.2.13", "192.0.2.13", id="raw-hostname-ip"
+        ),
         pytest.param(
             "rfm-gateway.local.",
             "_http._tcp.local.",
