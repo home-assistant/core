@@ -1,7 +1,5 @@
 """The luci component."""
 
-from __future__ import annotations
-
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
