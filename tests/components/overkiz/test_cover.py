@@ -110,6 +110,11 @@ UP_DOWN_VENETIAN_BLIND = FixtureDevice(
     "rts://1234-1234-6362/16747291",
     "cover.office_venetian_blind",
 )
+UP_DOWN_SHEER_SCREEN = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16753206",
+    "cover.kitchen_sheer_screen",
+)
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
@@ -188,6 +193,7 @@ async def test_cover_entities_snapshot(
         ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
@@ -216,6 +222,7 @@ async def test_cover_entities_snapshot(
             CoverState.CLOSING,
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
@@ -253,6 +260,7 @@ async def test_cover_entities_snapshot(
             STATE_UNKNOWN,
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
@@ -274,6 +282,27 @@ async def test_cover_entities_snapshot(
             [0],
             STATE_UNKNOWN,
         ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [15, 1],
+            CoverState.OPENING,
+        ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [15, 1],
+            CoverState.CLOSING,
+        ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
@@ -286,6 +315,7 @@ async def test_cover_entities_snapshot(
         "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
+        "open-sheer-screen-rts",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
@@ -296,6 +326,7 @@ async def test_cover_entities_snapshot(
         "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
+        "close-sheer-screen-rts",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
@@ -309,9 +340,13 @@ async def test_cover_entities_snapshot(
         "close-tilt-tilt-only-venetian-blind",
         "stop-tilt-tilt-only-venetian-blind",
         "stop-venetian-blind-rts",
+        "stop-sheer-screen-rts",
         "open-tilt-venetian-blind-rts",
         "close-tilt-venetian-blind-rts",
         "stop-tilt-venetian-blind-rts",
+        "open-tilt-sheer-screen-rts",
+        "close-tilt-sheer-screen-rts",
+        "stop-tilt-sheer-screen-rts",
     ],
 )
 async def test_cover_service_actions(
