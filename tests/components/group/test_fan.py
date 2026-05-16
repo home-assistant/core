@@ -625,7 +625,8 @@ async def test_assumed_state(hass: HomeAssistant) -> None:
     state = hass.states.get(FAN_GROUP)
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    # All members without assumed_state -> group doesn't have
+    # assumed_state in attributes
     hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {})
     await hass.async_block_till_done()
 

@@ -50,7 +50,7 @@ async def test_availability(
     mock_google_weather_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     entity_id = "weather.home"
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -131,10 +131,9 @@ async def test_condition(
     expected_ha_condition: str,
 ) -> None:
     """Test condition mapping."""
-    mock_google_weather_api.async_get_current_conditions.return_value.weather_condition.type = api_condition
-    mock_google_weather_api.async_get_current_conditions.return_value.is_daytime = (
-        is_daytime
-    )
+    current = mock_google_weather_api.async_get_current_conditions
+    current.return_value.weather_condition.type = api_condition
+    current.return_value.is_daytime = is_daytime
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 

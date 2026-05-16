@@ -360,7 +360,8 @@ async def test_send_text_command_media_player(
     )
     assert status == http.HTTPStatus.NOT_FOUND
 
-    # Assert that both audio responses can still be served before the 5 minutes expiration
+    # Assert that both audio responses can still be served before
+    # the 5 minutes expiration
     freezer.tick(timedelta(minutes=4, seconds=59))
     async_fire_time_changed(hass)
     status, response = await fetch_api_url(hass_client, audio_url1)

@@ -134,7 +134,7 @@ async def test_image_caching(
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
 ) -> None:
-    """Test that the image is cached and not fetched more often than the framerate indicates."""
+    """Test image is cached and not fetched more than framerate."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
     framerate = 5
@@ -334,7 +334,9 @@ async def test_stream_source(
         data={},
         options={
             CONF_STILL_IMAGE_URL: "http://example.com",
-            CONF_STREAM_SOURCE: 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            CONF_STREAM_SOURCE: (
+                'http://example.com/{{ states.sensor.temp.state + "a" }}'
+            ),
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: True,
             CONF_FRAMERATE: 2,
             CONF_CONTENT_TYPE: "image/png",

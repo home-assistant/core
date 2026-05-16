@@ -545,7 +545,8 @@ async def test_execute(
                                         "params": {"on": True},
                                     },
                                     {
-                                        "command": "action.devices.commands.BrightnessAbsolute",
+                                        "command": "action.devices.commands"
+                                        ".BrightnessAbsolute",
                                         "params": {"brightness": 20},
                                     },
                                 ],
@@ -706,7 +707,8 @@ async def test_execute_times_out(
                                             "params": {"on": True},
                                         },
                                         {
-                                            "command": "action.devices.commands.BrightnessAbsolute",
+                                            "command": "action.devices.commands"
+                                            ".BrightnessAbsolute",
                                             "params": {"brightness": 20},
                                         },
                                     ],
@@ -1260,7 +1262,8 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
                                     "devices": [{"id": "camera.office"}],
                                     "execution": [
                                         {
-                                            "command": "action.devices.commands.GetCameraStream",
+                                            "command": "action.devices.commands"
+                                            ".GetCameraStream",
                                             "params": {
                                                 "StreamToChromecast": True,
                                                 "SupportedStreamProtocols": [
@@ -1342,7 +1345,10 @@ async def test_identify(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 }
             ],
@@ -1421,7 +1427,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {
@@ -1430,7 +1439,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {
@@ -1439,7 +1451,10 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
                         "httpPort": 8123,
                         "httpSSL": False,
                         "proxyDeviceId": proxy_device_id,
-                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                        "webhookId": (
+                            "dde3b9800a905e886cc4d38e226a6e7e"
+                            "3f2a6993d2b9b9f63d13e42ee7de3219"
+                        ),
                     },
                 },
                 {"id": proxy_device_id, "customData": {}},

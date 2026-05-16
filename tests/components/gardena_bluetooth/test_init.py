@@ -40,14 +40,14 @@ from tests.components.bluetooth import inject_bluetooth_service_info
             WATER_TIMER_SERVICE_INFO,
             {
                 Battery.battery_level.uuid: Battery.battery_level.encode(100),
-                DeviceInformation.model_number.uuid: DeviceInformation.model_number.encode(
-                    "Model Number TBD"
+                DeviceInformation.model_number.uuid: (
+                    DeviceInformation.model_number.encode("Model Number TBD")
                 ),
-                DeviceInformation.firmware_version.uuid: DeviceInformation.firmware_version.encode(
-                    "1.2.3"
+                DeviceInformation.firmware_version.uuid: (
+                    DeviceInformation.firmware_version.encode("1.2.3")
                 ),
-                DeviceConfiguration.custom_device_name.uuid: DeviceConfiguration.custom_device_name.encode(
-                    "My timer"
+                DeviceConfiguration.custom_device_name.uuid: (
+                    DeviceConfiguration.custom_device_name.encode("My timer")
                 ),
             },
             id=WATER_TIMER_SERVICE_INFO.name,
@@ -55,17 +55,17 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourBattery.battery_level.uuid: AquaContourBattery.battery_level.encode(
-                    100
+                AquaContourBattery.battery_level.uuid: (
+                    AquaContourBattery.battery_level.encode(100)
                 ),
-                DeviceInformation.model_number.uuid: DeviceInformation.model_number.encode(
-                    "Aqua Contour"
+                DeviceInformation.model_number.uuid: (
+                    DeviceInformation.model_number.encode("Aqua Contour")
                 ),
-                DeviceInformation.firmware_version.uuid: DeviceInformation.firmware_version.encode(
-                    "2.0.0"
+                DeviceInformation.firmware_version.uuid: (
+                    DeviceInformation.firmware_version.encode("2.0.0")
                 ),
-                AquaContour.custom_device_name.uuid: AquaContour.custom_device_name.encode(
-                    "My contour"
+                AquaContour.custom_device_name.uuid: (
+                    AquaContour.custom_device_name.encode("My contour")
                 ),
             },
             id=AQUA_CONTOUR_SERVICE_INFO.name,

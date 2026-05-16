@@ -1213,7 +1213,9 @@ async def test_group_persons_and_device_trackers(hass: HomeAssistant) -> None:
         {
             "group": {
                 "group_zero": {
-                    "entities": "device_tracker.one, person.one, person.two, person.three"
+                    "entities": (
+                        "device_tracker.one, person.one, person.two, person.three"
+                    )
                 },
             }
         },
@@ -1238,7 +1240,12 @@ async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
             "group": {
                 "group_zero": {
                     "all": "true",
-                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door",
+                    "entities": (
+                        "lock.alexander_garage_exit_door,"
+                        " binary_sensor"
+                        ".alexander_garage_side_door_open,"
+                        " cover.small_garage_door"
+                    ),
                 },
             }
         },
@@ -1263,7 +1270,12 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
             "group": {
                 "group_zero": {
                     "all": "true",
-                    "entities": "lock.alexander_garage_exit_door, binary_sensor.alexander_garage_side_door_open, cover.small_garage_door",
+                    "entities": (
+                        "lock.alexander_garage_exit_door,"
+                        " binary_sensor"
+                        ".alexander_garage_side_door_open,"
+                        " cover.small_garage_door"
+                    ),
                 },
             }
         },
@@ -1400,7 +1412,11 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
         {
             "group": {
                 "group_zero": {
-                    "entities": "alarm_control_panel.one, alarm_control_panel.two, alarm_control_panel.three"
+                    "entities": (
+                        "alarm_control_panel.one,"
+                        " alarm_control_panel.two,"
+                        " alarm_control_panel.three"
+                    )
                 },
             }
         },
@@ -1425,7 +1441,11 @@ async def test_group_alarm_disarmed(hass: HomeAssistant) -> None:
         {
             "group": {
                 "group_zero": {
-                    "entities": "alarm_control_panel.one, alarm_control_panel.two, alarm_control_panel.three"
+                    "entities": (
+                        "alarm_control_panel.one,"
+                        " alarm_control_panel.two,"
+                        " alarm_control_panel.three"
+                    )
                 },
             }
         },

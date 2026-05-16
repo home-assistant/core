@@ -186,7 +186,8 @@ async def test_server_timeout_on_stop(
     "server_stdout",
     [
         [
-            "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+            "09:00:03.466 INF go2rtc"
+            " platform=linux/amd64 revision=780f378 version=1.9.5",
             "09:00:03.466 INF config path=/tmp/go2rtc.yaml",
         ]
     ],
@@ -198,7 +199,7 @@ async def test_server_failed_to_start(
     server: Server,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test server, where an exception is raised if the expected log entry was not received until the timeout."""
+    """Test server raises exception when expected log not received."""
     with (
         patch("homeassistant.components.go2rtc.server._SETUP_TIMEOUT", new=0.1),
         pytest.raises(HomeAssistantError, match="Go2rtc server didn't start correctly"),
@@ -233,10 +234,13 @@ async def test_server_failed_to_start(
             [
                 "09:00:03.466 TRC [api] register path path=/",
                 "09:00:03.466 DBG build vcs.time=2024-10-28T19:47:55Z version=go1.23.2",
-                "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+                "09:00:03.466 INF go2rtc"
+                " platform=linux/amd64 revision=780f378 version=1.9.5",
                 "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
                 "09:00:03.466 WRN warning message",
-                '09:00:03.466 ERR [api] listen error="listen tcp 127.0.0.1:11984: bind: address already in use"',
+                "09:00:03.466 ERR [api] listen"
+                ' error="listen tcp 127.0.0.1:11984:'
+                ' bind: address already in use"',
                 "09:00:03.466 FTL fatal message",
                 "09:00:03.466 PNC panic message",
                 "exit with signal: interrupt",  # Example of stderr write

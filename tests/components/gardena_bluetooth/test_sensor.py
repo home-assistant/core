@@ -86,8 +86,8 @@ async def test_setup(
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourBattery.battery_level.uuid: AquaContourBattery.battery_level.encode(
-                    100
+                AquaContourBattery.battery_level.uuid: (
+                    AquaContourBattery.battery_level.encode(100)
                 ),
                 FlowStatistics.overall.uuid: FlowStatistics.overall.encode(111),
                 FlowStatistics.current.uuid: FlowStatistics.overall.encode(222),
@@ -98,8 +98,8 @@ async def test_setup(
                         1, 1, datetime(2000, 1, 1), AquaContourErrorCode.FLASH_ERROR
                     )
                 ),
-                AquaContourWatering.remaining_watering_time.uuid: AquaContourWatering.remaining_watering_time.encode(
-                    100
+                AquaContourWatering.remaining_watering_time.uuid: (
+                    AquaContourWatering.remaining_watering_time.encode(100)
                 ),
             },
             id="aqua_contour",

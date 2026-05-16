@@ -770,7 +770,7 @@ async def test_reauth_password_success(
     user_input: dict[str, str],
     expected_region: str,
 ) -> None:
-    """Test successful reauthentication with password auth for default and non-default regions."""
+    """Test successful reauthentication with password auth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -946,7 +946,7 @@ async def test_reauth_token_non_auth_api_error(
     mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth token with non-auth V1 API error (e.g. rate limit) shows cannot_connect."""
+    """Test reauth token with non-auth V1 API error."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -1078,7 +1078,7 @@ async def test_reauth_token_exception(
     mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth token flow with unexpected exception from plant_list, then recovery."""
+    """Test reauth token flow with unexpected exception, then recovery."""
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -1159,7 +1159,7 @@ async def test_reconfigure_password_success(
     user_input: dict[str, str],
     expected_region: str,
 ) -> None:
-    """Test successful reconfiguration with password auth for default and non-default regions."""
+    """Test successful reconfiguration with password auth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1323,7 +1323,7 @@ async def test_reconfigure_token_error_then_recovery(
 
 
 async def test_reconfigure_unknown_auth_type(hass: HomeAssistant) -> None:
-    """Test reconfigure aborts immediately when the config entry has an unknown auth type."""
+    """Test reconfigure aborts with unknown auth type."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
