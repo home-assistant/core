@@ -29,15 +29,6 @@ from homeassistant.util.variance import ignore_variance
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
-_stable_job_start = ignore_variance(
-    lambda printing_seconds: utcnow() - timedelta(seconds=printing_seconds),
-    timedelta(minutes=2),
-)
-_stable_job_finish = ignore_variance(
-    lambda remaining_seconds: utcnow() + timedelta(seconds=remaining_seconds),
-    timedelta(minutes=2),
-)
-
 
 def _has_active_job(data: JobInfo | None) -> JobInfo | None:
     """Return job payload if there is an active job, otherwise None."""
@@ -69,7 +60,7 @@ def _job_start(data: JobInfo | None) -> datetime | None:
     """Return print start timestamp or None if no active job is running."""
     if (active_job := _has_active_job(data)) is None:
         return None
-    return _stable_job_start(active_job["time_printing"])
+    return utcnow() - timedelta(seconds=active_job["time_printing"])
 
 
 def _job_finish(data: JobInfo | None) -> datetime | None:
@@ -79,7 +70,40 @@ def _job_finish(data: JobInfo | None) -> datetime | None:
     time_remaining = active_job["time_remaining"]
     if time_remaining is None:
         return None
-    return _stable_job_finish(time_remaining)
+    return utcnow() + timedelta(seconds=time_remaining)
+
+
+def _make_stable_job_start() -> Callable[[JobInfo | None], datetime | None]:
+    """Return a per-entity stable job-start value function."""
+    stable_job_start = ignore_variance(
+        lambda printing_seconds: utcnow() - timedelta(seconds=printing_seconds),
+        timedelta(minutes=2),
+    )
+
+    def _value_fn(data: JobInfo | None) -> datetime | None:
+        if (active_job := _has_active_job(data)) is None:
+            return None
+        return stable_job_start(active_job["time_printing"])
+
+    return _value_fn
+
+
+def _make_stable_job_finish() -> Callable[[JobInfo | None], datetime | None]:
+    """Return a per-entity stable job-finish value function."""
+    stable_job_finish = ignore_variance(
+        lambda remaining_seconds: utcnow() + timedelta(seconds=remaining_seconds),
+        timedelta(minutes=2),
+    )
+
+    def _value_fn(data: JobInfo | None) -> datetime | None:
+        if (active_job := _has_active_job(data)) is None:
+            return None
+        time_remaining = active_job["time_remaining"]
+        if time_remaining is None:
+            return None
+        return stable_job_finish(time_remaining)
+
+    return _value_fn
 
 
 def _legacy_material(data: LegacyPrinterStatus) -> str | None:
@@ -105,6 +129,7 @@ class PrusaLinkSensorEntityDescription[
     """Describes PrusaLink sensor entity."""
 
     value_fn: Callable[[T], datetime | StateType]
+    value_fn_factory: Callable[[], Callable[[T], datetime | StateType]] | None = None
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -239,6 +264,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=_job_start,
+            value_fn_factory=_make_stable_job_start,
             available_fn=_always_available,
         ),
         PrusaLinkSensorEntityDescription[JobInfo | None](
@@ -246,6 +272,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=_job_finish,
+            value_fn_factory=_make_stable_job_finish,
             available_fn=_always_available,
         ),
     ),
@@ -306,8 +333,19 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        # Some sensors need a fresh callable per entity to avoid shared state
+        # across multiple entries (e.g., variance cache for timestamps).
+        if description.value_fn_factory is not None:
+            self._value_fn = cast(
+                Callable[[object], datetime | StateType],
+                description.value_fn_factory(),
+            )
+        else:
+            self._value_fn = cast(
+                Callable[[object], datetime | StateType], description.value_fn
+            )
 
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self._value_fn(self.coordinator.data)
