@@ -113,7 +113,7 @@ class KakuDimmerLight(LightEntity, RestoreEntity):
         brightness = kwargs.get("brightness")
         if isinstance(brightness, int):
             self._attr_brightness = max(1, min(255, brightness))
-        elif self._attr_brightness <= 0:
+        elif (current_brightness := self._attr_brightness) is not None and current_brightness <= 0:
             self._attr_brightness = 255
 
         await self._async_send(brightness=self._attr_brightness)

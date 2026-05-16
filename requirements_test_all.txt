@@ -2462,6 +2462,9 @@ reolink-aio==0.19.1
 # homeassistant.components.radio_frequency
 rf-protocols==3.0.0
 
+# homeassistant.components.kaku_rc
+rf-protocols==3.1.0
+
 # homeassistant.components.rflink
 rflink==0.0.67
 
