@@ -27,8 +27,8 @@ if TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessage
 
     from .client import MQTT, Subscription
-    from .debug_info import TimestampedPublishMessage
-    from .device_trigger import Trigger
+
+
     from .discovery import MQTTDiscoveryPayload
 from .const import DOMAIN, TEMPLATE_ERRORS
 
@@ -89,28 +89,6 @@ class ReceiveMessage:
 
 
 type MessageCallbackType = Callable[[ReceiveMessage], None]
-
-
-class SubscriptionDebugInfo(TypedDict):
-    """Class for holding subscription debug info."""
-
-    messages: deque[ReceiveMessage]
-    count: int
-
-
-class EntityDebugInfo(TypedDict):
-    """Class for holding entity based debug info."""
-
-    subscriptions: dict[str, SubscriptionDebugInfo]
-    discovery_data: DiscoveryInfoType
-    transmitted: dict[str, dict[str, deque[TimestampedPublishMessage]]]
-
-
-class TriggerDebugInfo(TypedDict):
-    """Class for holding trigger based debug info."""
-
-    device_id: str
-    discovery_data: DiscoveryInfoType
 
 
 class PendingDiscovered(TypedDict):
@@ -390,11 +368,6 @@ class MqttData:
 
     client: MQTT
     config: list[ConfigType]
-    debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
-    debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
-        default_factory=dict
-    )
-    device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
     # the entity registry index, which is a tuple (entity_platform, "mqtt", unique_id)

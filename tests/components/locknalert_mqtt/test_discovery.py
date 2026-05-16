@@ -2373,8 +2373,6 @@ ABBREVIATIONS_WHITE_LIST = [
 EXCLUDED_MODULES = {
     "config.py",
     "config_flow.py",
-    "device_trigger.py",
-    "trigger.py",
 }
 
 

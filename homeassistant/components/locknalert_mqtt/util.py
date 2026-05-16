@@ -164,18 +164,7 @@ async def async_forward_entry_setup_and_setup_discovery(
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
     tasks: list[asyncio.Task] = []
-    if "device_automation" in new_platforms:
-        # Local import to avoid circular dependencies
-        from . import device_automation  # noqa: PLC0415
-
-        tasks.append(
-            create_eager_task(
-                device_automation.async_setup_mqtt_device_automation_entry(
-                    hass, config_entry
-                )
-            )
-        )
-    if new_entity_platforms := (new_platforms - {"device_automation"}):
+    if new_entity_platforms := new_platforms:
         tasks.append(
             create_eager_task(
                 hass.config_entries.async_forward_entry_setups(
@@ -427,9 +416,6 @@ async def async_cleanup_device_registry(
     Remove MQTT from the device registry entry if there are no remaining
     entities or triggers.
     """
-    # Local import to avoid circular dependencies
-    from . import device_trigger  # noqa: PLC0415
-
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     if (
@@ -439,7 +425,6 @@ async def async_cleanup_device_registry(
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
-        and not await device_trigger.async_get_triggers(hass, device_id)
     ):
         device_registry.async_update_device(
             device_id, remove_config_entry_id=config_entry_id

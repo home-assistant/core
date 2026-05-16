@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HassJobType, HomeAssistant, callback
 
-from . import debug_info
+
 from .client import async_subscribe_internal
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
@@ -39,16 +39,12 @@ class EntitySubscription:
 
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
-            if other.topic is not None:
-                debug_info.remove_subscription(self.hass, other.topic, other.entity_id)
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it
             return
 
         # Prepare debug data
-        debug_info.add_subscription(self.hass, self.topic, self.entity_id)
-
         self.should_subscribe = True
 
     @callback
@@ -124,12 +120,6 @@ def async_prepare_subscribe_topics(
     for remaining in current_subscriptions.values():
         if remaining.unsubscribe_callback is not None:
             remaining.unsubscribe_callback()
-            # Clear debug data if it exists
-            debug_info.remove_subscription(
-                hass,
-                str(remaining.topic),
-                remaining.entity_id,
-            )
 
     return sub_state
 

@@ -35,7 +35,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
-from . import debug_info, discovery
+from . import discovery
 from .client import (
     MQTT,
     async_on_subscribe_done,
@@ -540,19 +540,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
-)
-@callback
-def websocket_mqtt_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Get MQTT debug info for device."""
-    device_id = msg["device_id"]
-    mqtt_info = debug_info.info_for_device(hass, device_id)
-
-    connection.send_result(msg["id"], mqtt_info)
-
 
 @websocket_api.websocket_command(
     {
@@ -619,15 +606,6 @@ def is_connected(hass: HomeAssistant) -> bool:
     mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data.client.connected
 
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
-) -> bool:
-    """Remove MQTT config entry from a device."""
-    from . import device_automation  # noqa: PLC0415
-
-    await device_automation.async_removed_from_device(hass, device_entry.id)
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

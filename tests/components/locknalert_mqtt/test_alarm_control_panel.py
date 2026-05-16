@@ -45,7 +45,7 @@ from .common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
     help_test_encoding_subscribable_topics,
-    help_test_entity_debug_info_message,
+
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -1171,19 +1171,6 @@ async def test_entity_id_update_discovery_update(
         hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
 
-
-async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test MQTT debug info."""
-    await help_test_entity_debug_info_message(
-        hass,
-        mqtt_mock_entry,
-        alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
-        alarm_control_panel.SERVICE_ALARM_DISARM,
-        command_payload="DISARM",
-    )
 
 
 @pytest.mark.parametrize(

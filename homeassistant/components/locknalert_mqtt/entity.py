@@ -60,7 +60,7 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump as yaml_dump
 
-from . import debug_info, subscription
+from . import subscription
 from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -98,7 +98,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTION_STATE,
 )
-from .debug_info import log_message
+
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -1016,9 +1016,6 @@ class MqttDiscoveryUpdateMixin(Entity):
         if not self._discovery_data:
             return
         discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
-        debug_info.add_entity_discovery_data(
-            self.hass, self._discovery_data, self.entity_id
-        )
         # Set in case the entity has been removed and is re-added,
         # for example when changing entity_id
         set_discovery_hash(self.hass, discovery_hash)
@@ -1172,7 +1169,6 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
             return
 
-        debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
             if self._migrate_discovery is None:
@@ -1529,7 +1525,6 @@ class MqttEntity(
         await MqttAttributesMixin.async_will_remove_from_hass(self)
         await MqttAvailabilityMixin.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
-        debug_info.remove_entity_data(self.hass, self.entity_id)
 
     async def async_publish(
         self,
@@ -1540,7 +1535,6 @@ class MqttEntity(
         encoding: str | None = DEFAULT_ENCODING,
     ) -> None:
         """Publish message to an MQTT topic."""
-        log_message(self.hass, self.entity_id, topic, payload, qos, retain)
         await async_publish(
             self.hass,
             topic,
@@ -1637,13 +1631,6 @@ class MqttEntity(
                 (attribute, getattr(self, attribute, UNDEFINED))
                 for attribute in attributes
             )
-        mqtt_data = self.hass.data[DATA_MQTT]
-        messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
-            msg.subscribed_topic
-        ]["messages"]
-        if msg not in messages:
-            messages.append(msg)
-
         try:
             msg_callback(msg)
         except MqttValueTemplateException as exc:
