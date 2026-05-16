@@ -90,10 +90,14 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raw_hostname = self._normalize_host(discovery_info.hostname or "")
 
         if not host and self._is_ip_address(raw_host):
-            host = raw_host
+            preferred = self._preferred_discovery_ip(raw_host)
+            if preferred:
+                host = preferred
 
         if not host and self._is_ip_address(raw_hostname):
-            host = raw_hostname
+            preferred = self._preferred_discovery_ip(raw_hostname)
+            if preferred:
+                host = preferred
 
         if not host and self._is_usable_discovery_host(raw_host):
             host = raw_host
