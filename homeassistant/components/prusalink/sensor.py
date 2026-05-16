@@ -5,13 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast
 
-from pyprusalink.types import (
-    JobFilePrint,
-    JobInfo,
-    PrinterInfo,
-    PrinterState,
-    PrinterStatus,
-)
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
@@ -30,15 +24,47 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
-from homeassistant.util.variance import ignore_variance
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 
+def _job_progress(data: JobInfo | None) -> float | None:
+    """Return job progress or None if no active job is running."""
+    if data is None or data.get("state") == PrinterState.IDLE.value:
+        return None
+    return data["progress"]
+
+
+def _job_filename(data: JobInfo | None) -> str | None:
+    """Return job filename or None if no active job is running."""
+    if data is None or data.get("state") == PrinterState.IDLE.value:
+        return None
+    file_data = data["file"]
+    if file_data is None:
+        return None
+    return file_data["display_name"]
+
+
+def _job_start(data: JobInfo | None) -> datetime | None:
+    """Return print start timestamp or None if no active job is running."""
+    if data is None or data.get("state") == PrinterState.IDLE.value:
+        return None
+    return utcnow() - timedelta(seconds=data["time_printing"])
+
+
+def _job_finish(data: JobInfo | None) -> datetime | None:
+    """Return print finish timestamp or None if no active job is running."""
+    if data is None or data.get("state") == PrinterState.IDLE.value:
+        return None
+    time_remaining = data["time_remaining"]
+    if time_remaining is None:
+        return None
+    return utcnow() + timedelta(seconds=time_remaining)
+
 @dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription[
-    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+    T: PrinterStatus | LegacyPrinterStatus | JobInfo | None | PrinterInfo
 ](
     SensorEntityDescription,
     PrusaLinkEntityDescription,
@@ -164,58 +190,32 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
     ),
     "job": (
-        PrusaLinkSensorEntityDescription[JobInfo](
+        PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.progress",
             translation_key="progress",
             native_unit_of_measurement=PERCENTAGE,
-            value_fn=lambda data: cast(float, data["progress"]),
-            available_fn=lambda data: (
-                data.get("progress") is not None
-                and data.get("state") != PrinterState.IDLE.value
-            ),
+            value_fn=_job_progress,
+            available_fn=lambda _: True,
         ),
-        PrusaLinkSensorEntityDescription[JobInfo](
+        PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.filename",
             translation_key="filename",
-            # `available_fn` guarantees `file` is not None at this point;
-            # the inner cast narrows the Optional for the index.
-            value_fn=lambda data: cast(
-                str, cast(JobFilePrint, data["file"])["display_name"]
-            ),
-            available_fn=lambda data: (
-                data.get("file") is not None
-                and data.get("state") != PrinterState.IDLE.value
-            ),
+            value_fn=_job_filename,
+            available_fn=lambda _: True,
         ),
-        PrusaLinkSensorEntityDescription[JobInfo](
+        PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.start",
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn=ignore_variance(
-                lambda data: utcnow() - timedelta(seconds=data["time_printing"]),
-                timedelta(minutes=2),
-            ),
-            available_fn=lambda data: (
-                data.get("time_printing") is not None
-                and data.get("state") != PrinterState.IDLE.value
-            ),
+            value_fn=_job_start,
+            available_fn=lambda _: True,
         ),
-        PrusaLinkSensorEntityDescription[JobInfo](
+        PrusaLinkSensorEntityDescription[JobInfo | None](
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
-            # `available_fn` guarantees `time_remaining` is not None at this
-            # point; the cast narrows the Optional for `timedelta`.
-            value_fn=ignore_variance(
-                lambda data: (
-                    utcnow() + timedelta(seconds=cast(int, data["time_remaining"]))
-                ),
-                timedelta(minutes=2),
-            ),
-            available_fn=lambda data: (
-                data.get("time_remaining") is not None
-                and data.get("state") != PrinterState.IDLE.value
-            ),
+            value_fn=_job_finish,
+            available_fn=lambda _: True,
         ),
     ),
     "info": (

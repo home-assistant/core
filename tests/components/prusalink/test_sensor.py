@@ -110,21 +110,21 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.mock_title_filename")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
     state = hass.states.get("sensor.mock_title_print_start")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_print_finish")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_hotend_fan")
@@ -219,21 +219,21 @@ async def test_sensors_idle_job_mk3(
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.mock_title_filename")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
     state = hass.states.get("sensor.mock_title_print_start")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_print_finish")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_hotend_fan")
