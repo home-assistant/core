@@ -561,6 +561,14 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
         if not integration.usb:
             continue
         for entry in integration.usb:
+            if not {"vid", "pid", "manufacturer", "description"} <= entry.keys():
+                _LOGGER.warning(
+                    "Ignoring USB discovery entry %s for custom integration %s: "
+                    "matchers must include vid, pid, manufacturer, and description",
+                    entry,
+                    integration.domain,
+                )
+                continue
             usb.append(
                 cast(
                     USBMatcher,
