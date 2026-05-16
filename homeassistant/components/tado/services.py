@@ -39,7 +39,7 @@ async def _add_meter_reading(call: ServiceCall) -> None:
         call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
     )
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     response: dict = await coordinator.set_meter_reading(call.data[CONF_READING])
 
     if ATTR_MESSAGE in response:

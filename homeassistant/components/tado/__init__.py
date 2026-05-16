@@ -33,12 +33,18 @@ from .const import (
     DOMAIN,
     TADO_BRIDGE_MODELS,
 )
-from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
+from .coordinator import (
+    TadoConfigEntry,
+    TadoData,
+    TadoDataUpdateCoordinator,
+    TadoZoneControlUpdateCoordinator,
+)
 from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WATER_HEATER,
@@ -97,6 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
 
+    zone_control_coordinator = TadoZoneControlUpdateCoordinator(
+        hass, entry, tado, coordinator.zones, coordinator.home_id
+    )
+    try:
+        await zone_control_coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        _LOGGER.warning(
+            "Failed to load Tado heating circuit data; select entities will be unavailable"
+        )
+
     # Pre-register the bridge device to ensure it exists before other devices reference it
     device_registry = dr.async_get(hass)
     for device in coordinator.data["device"].values():
@@ -112,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
                 configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
             )
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = TadoData(coordinator, zone_control_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
