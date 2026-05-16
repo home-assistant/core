@@ -1,4 +1,4 @@
-"""Block shared access to serial ports by forcing pyserial exclusivvity.
+"""Block shared access to serial ports by forcing pyserial exclusivity.
 
 Also wires up a `serial` logger around port opens, since pyserial itself is silent.
 """
