@@ -252,7 +252,7 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     parts = unique_id.split("_", 2)
     if len(parts) != 3:
         return None
-    return parts[2]
+    return dr.format_mac(parts[2])
 
 
 async def async_cleanup_client_trackers(
@@ -263,7 +263,10 @@ async def async_cleanup_client_trackers(
 
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
-    known_macs = set(controller.known_clients_coordinator.data or {})
+    known_macs = {
+        dr.format_mac(mac)
+        for mac in (controller.known_clients_coordinator.data or {})
+    }
 
     for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entity.domain != DEVICE_TRACKER_DOMAIN:
@@ -282,6 +285,8 @@ async def async_cleanup_devices(
     controller: OmadaSiteController,
 ) -> None:
     """Remove devices from the registry when Omada no longer reports them."""
+    if not controller.devices_coordinator.last_update_success:
+        return
 
     device_registry = dr.async_get(hass)
     entry_id = controller.clients_coordinator.config_entry.entry_id
