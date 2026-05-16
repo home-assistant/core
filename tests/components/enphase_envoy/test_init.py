@@ -454,8 +454,8 @@ async def test_coordinator_firmware_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert (
-            "Envoy firmware changed from: 7.6.175 to: 9.9.9999, reloading config entry Envoy 1234"
-            in caplog.text
+            "Envoy firmware changed from: 7.6.175 to: 9.9.9999,"
+            " reloading config entry Envoy 1234" in caplog.text
         )
         envoy = config_entry.runtime_data.envoy
         assert envoy.firmware == "9.9.9999"
@@ -581,7 +581,7 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test coordinator interface mac verification with MAC also in other existing device."""
+    """Test coordinator interface mac verification with other device."""
     await setup_integration(hass, config_entry)
 
     caplog.set_level(logging.DEBUG)

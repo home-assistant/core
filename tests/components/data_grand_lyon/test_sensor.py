@@ -59,7 +59,7 @@ async def test_stop_sensor_secondary_departure_disabled_by_default(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that direction/type sensors past the first departure are disabled by default."""
+    """Test direction/type sensors past the first departure are disabled by default."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
