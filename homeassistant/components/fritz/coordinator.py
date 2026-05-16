@@ -187,6 +187,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
+        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -247,8 +249,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         if not self._unique_id:
             self._unique_id = info.serial_number
-
-        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
 
         self._model = info.model_name
         if (
