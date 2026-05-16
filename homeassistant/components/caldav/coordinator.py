@@ -81,6 +81,12 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     end=self.to_local(self.get_end_date(vevent)),
                     location=get_attr_value(vevent, "location"),
                     description=get_attr_value(vevent, "description"),
+                    uid=get_attr_value(vevent, "uid"),
+                    recurrence_id=(
+                        str(v)
+                        if (v := get_attr_value(vevent, "recurrence_id")) is not None
+                        else None
+                    ),
                 )
             )
 
@@ -176,6 +182,12 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             end=self.to_local(self.get_end_date(vevent)),
             location=get_attr_value(vevent, "location"),
             description=get_attr_value(vevent, "description"),
+            uid=get_attr_value(vevent, "uid"),
+            recurrence_id=(
+                str(v)
+                if (v := get_attr_value(vevent, "recurrence_id")) is not None
+                else None
+            ),
         )
 
     @staticmethod
