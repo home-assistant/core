@@ -1,5 +1,7 @@
 """Conftest for the KNX integration."""
 
+from __future__ import annotations
+
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
@@ -29,6 +31,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_PATH,
     DEFAULT_ROUTING_IA,
     DOMAIN,
 )
@@ -139,6 +142,7 @@ class KNXTestKit:
             if not state_updater:
                 state_updater_patcher.start()
 
+            await async_setup_component(self.hass, "persistent_notification", {})
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
             # remove patch after setup so state_updater can be tested
@@ -353,6 +357,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
     )
 

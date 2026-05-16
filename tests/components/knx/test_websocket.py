@@ -1,5 +1,7 @@
 """KNX Websocket Tests."""
 
+from __future__ import annotations
+
 from typing import Any
 from unittest.mock import patch
 
@@ -203,6 +205,54 @@ async def test_knx_group_monitor_info_command(
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
     assert res["result"]["recent_telegrams"] == []
+
+
+async def test_knx_query_telegrams_command(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test knx/query_telegrams command."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    # get some telegrams to populate the store
+    await knx.receive_write("1/1/1", True)
+    await knx.receive_write("2/2/2", (1, 2, 3))
+    await knx.receive_write("3/3/3", 0x34)
+    # wait for async store task
+    await hass.async_block_till_done()
+
+    # Query all
+    await client.send_json_auto_id({"type": "knx/query_telegrams"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 3
+    assert res["result"]["total_count"] == 3
+    assert res["result"]["limit_reached"] is False
+
+    # Query with filter
+    await client.send_json_auto_id(
+        {
+            "type": "knx/query_telegrams",
+            "destinations": ["1/1/1", "3/3/3"],
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 2
+    assert res["result"]["total_count"] == 2
+
+    # Query with limit
+    await client.send_json_auto_id(
+        {
+            "type": "knx/query_telegrams",
+            "limit": 1,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 1
+    assert res["result"]["total_count"] == 3
+    assert res["result"]["limit_reached"] is True
 
 
 async def test_knx_group_telegrams_command(
