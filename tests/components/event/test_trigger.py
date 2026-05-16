@@ -239,7 +239,8 @@ async def test_event_trigger_options_validation(
                 },
             ],
         ),
-        # To unavailable - should not trigger, and first state after unavailable is skipped
+        # To unavailable - should not trigger, and first state
+        # after unavailable is skipped
         (
             "event.received",
             {"event_type": ["button_press"]},
@@ -286,7 +287,7 @@ async def test_event_state_trigger(
     trigger_options: dict,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the event trigger fires when an event entity receives a matching event."""
+    """Test event trigger fires on matching event entity event."""
     calls: list[str] = []
     other_entity_ids = set(target_events["included_entities"]) - {entity_id}
 

@@ -62,7 +62,7 @@ async def test_status_authentication_error_marks_device_offline(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test that an auth error from a per-device status call marks the device offline."""
+    """Test auth error from per-device status marks device offline."""
     mock_api_client.async_get_device_status.side_effect = (
         FlussApiClientAuthenticationError("permission revoked")
     )

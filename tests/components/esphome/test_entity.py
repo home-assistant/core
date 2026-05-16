@@ -131,7 +131,7 @@ async def test_entities_removed_after_reload(
     hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test entities and their registry entry are removed when static info changes after a reload."""
+    """Test entities are removed when static info changes after reload."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -472,7 +472,7 @@ async def test_entity_without_name_device_with_friendly_name(
     hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test name and entity_id for a device a friendly name and an entity without a name."""
+    """Test name and entity_id for device with friendly name."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -1123,7 +1123,7 @@ async def test_entity_id_with_empty_sub_device_name(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test entity_id when sub device has empty name (falls back to main device name)."""
+    """Test entity_id when sub device has empty name."""
     # Define sub device with empty name
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
@@ -1168,7 +1168,7 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that unique_id is migrated when entity moves between devices while entity_id stays the same."""
+    """Test unique_id is migrated when entity moves between devices."""
     # Initial setup: entity on main device
     device_info = {
         "name": "test",
@@ -1289,7 +1289,7 @@ async def test_unique_id_migration_sub_device_to_main_device(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that unique_id is migrated when entity moves from sub-device to main device."""
+    """Test unique_id is migrated when entity moves to main device."""
     # Initial setup: entity on sub-device
     sub_devices = [
         SubDeviceInfo(device_id=22222222, name="kitchen_controller", area_id=0),
@@ -1480,7 +1480,7 @@ async def test_entity_device_id_rename_in_yaml(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that entities are re-added as new when user renames device_id in YAML config."""
+    """Test entities re-added when user renames device_id in YAML."""
     # Initial setup: entity on sub-device with device_id 11111111
     sub_devices = [
         SubDeviceInfo(device_id=11111111, name="old_device", area_id=0),

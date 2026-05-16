@@ -23,7 +23,7 @@ from .mocks import BinarySwitchPropertyMock, HomeControlMock, HomeControlMockLig
 async def test_light_without_binary_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test setup and state change of a light device that does not have an additional binary sensor."""
+    """Test setup and state change of a light without an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
     with patch(
@@ -88,7 +88,7 @@ async def test_light_without_binary_sensor(
 async def test_light_with_binary_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test setup and state change of a light device that has an additional binary sensor."""
+    """Test setup and state change of a light with an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
     test_gateway.devices["Test"].binary_switch_property = {

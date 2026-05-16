@@ -108,7 +108,8 @@ async def test_user_setup_fail(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
 
-    # The user should be able to try again. Maybe the droplet was disconnected from the network or something
+    # The user should be able to try again. Maybe the droplet
+    # was disconnected from the network or something
     attrs = {
         "get_device_id.return_value": MOCK_DEVICE_ID,
         "try_connect.return_value": True,

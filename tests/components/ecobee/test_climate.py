@@ -545,7 +545,8 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         # `temp` is the preset running because of a hold.
         mock_sensors.assert_called_once_with(0, "temp", sensor_ids=["rs:100"])
 
-    # Check that sensors are not updated when the sent sensors are the currently set sensors.
+    # Check that sensors are not updated when the sent sensors
+    # are the currently set sensors.
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
         await hass.services.async_call(
             DOMAIN,

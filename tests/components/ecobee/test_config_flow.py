@@ -218,7 +218,7 @@ async def test_password_login_error_recovers(
     first_user_input: dict,
     expected_error: str,
 ) -> None:
-    """Test that authentication errors keep the user on the form and recover on retry."""
+    """Test auth errors keep the user on the form and recover on retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

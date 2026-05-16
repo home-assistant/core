@@ -95,7 +95,7 @@ async def test_fan_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when any fan state changes to a specific state."""
+    """Test the fan state trigger fires on any fan state change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_fans,
@@ -138,7 +138,7 @@ async def test_fan_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the first fan changes to a specific state."""
+    """Test the fan trigger fires on the first fan state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_fans,
@@ -181,7 +181,7 @@ async def test_fan_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the last fan changes to a specific state."""
+    """Test the fan trigger fires on the last fan state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_fans,

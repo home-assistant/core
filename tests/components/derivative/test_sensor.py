@@ -405,9 +405,11 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
     """Test derivative sensor state."""
     # We simulate the following situation:
     # The temperature rises 1 °C per minute for 30 minutes long.
-    # There is 60 random datapoints (and the start and end) and the signal is normally distributed
-    # around the expected value with ±0.1°C
-    # We use a time window of 1 minute and expect an error of less than the standard deviation. (0.01)
+    # There is 60 random datapoints (and the start and end) and
+    # the signal is normally distributed around the expected
+    # value with ±0.1°C
+    # We use a time window of 1 minute and expect an error of
+    # less than the standard deviation. (0.01)
 
     time_window = 60
     random.seed(0)
@@ -447,12 +449,15 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
 
 async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
-    # The old algorithm would produce extreme values if, after a delay longer than the time window
-    # there would be two signals, a large spike would be produced. Check explicitly for this situation
+    # The old algorithm would produce extreme values if, after
+    # a delay longer than the time window there would be two
+    # signals, a large spike would be produced. Check
+    # explicitly for this situation
     time_window = 60
     times = [*range(time_window * 10), time_window * 20, time_window * 20 + 0.01]
 
-    # just apply sine as some sort of temperature change and make sure the change after the delay is very small
+    # just apply sine as some sort of temperature change and
+    # make sure the change after the delay is very small
     temperature_values = [sin(x) for x in times]
     temperature_values[-2] = temperature_values[-3] + 0.01
     temperature_values[-1] = temperature_values[-2] + 0.01
@@ -856,7 +861,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
 
 async def test_total_increasing_reset(hass: HomeAssistant) -> None:
-    """Test derivative sensor state with total_increasing sensor input where it should ignore the reset value."""
+    """Test derivative with total_increasing input where it should ignore the reset."""
     times = [0, 20, 30, 35, 40, 50, 60]
     values = [0, 10, 30, 40, 0, 10, 40]
     expected_times = [0, 20, 30, 35, 50, 60]
@@ -1084,7 +1089,8 @@ async def test_unavailable_boot(
 
         state = hass.states.get("sensor.power")
         assert state is not None
-        # Now that the source sensor has two valid datapoints, we can calculate derivative
+        # Now that the source sensor has two valid datapoints,
+        # we can calculate derivative
         assert state.state == "5.00"
         assert state.attributes.get("unit_of_measurement") == "kW"
 

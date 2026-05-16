@@ -2737,7 +2737,8 @@ async def test_missing_price_entity(
     )
     await hass.async_block_till_done()
 
-    # Cost should be initialized (0.0 because it's the first update after price became available)
+    # Cost should be initialized (0.0 because it's the first
+    # update after price became available)
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "0.0"
 

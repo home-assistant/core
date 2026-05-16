@@ -59,7 +59,11 @@ MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -83,7 +87,11 @@ MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -109,7 +117,11 @@ MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -133,7 +145,11 @@ MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -159,7 +175,11 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -183,7 +203,11 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",

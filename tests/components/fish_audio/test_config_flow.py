@@ -269,7 +269,8 @@ async def test_subflow_reconfigure_already_configured(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Try to reconfigure the first subentry to match the second one (which already exists)
+    # Try to reconfigure the first subentry to match the second
+    # one (which already exists)
     first_subentry = [
         s for s in mock_config_entry.subentries.values() if s.title == "Test Voice"
     ][0]

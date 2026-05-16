@@ -160,8 +160,8 @@ async def test_upnp_missing(
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.state.recoverable is True
     assert (
-        "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
-        in caplog.text
+        "Config entry 'Mock Title' for fritz integration"
+        " could not authenticate: Missing UPnP configuration" in caplog.text
     )
 
 

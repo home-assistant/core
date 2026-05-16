@@ -143,7 +143,7 @@ async def test_create_entry_gps(
 async def test_config_flow_already_configured(
     hass: HomeAssistant, mock_dwdwfsapi: MagicMock
 ) -> None:
-    """Test aborting, if the warncell ID / name is already configured during the config."""
+    """Test aborting if the warncell ID / name is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=DEMO_CONFIG_ENTRY_REGION.copy(),
