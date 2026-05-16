@@ -4,6 +4,7 @@ from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable
+import contextlib
 from datetime import timedelta
 from functools import lru_cache, partial
 import logging
@@ -359,7 +360,8 @@ class Template:
 
         if len(render_result) > MAX_TEMPLATE_OUTPUT:
             raise TemplateError(
-                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+                "Template output exceeded maximum size of"
+                f" {MAX_TEMPLATE_OUTPUT} characters"
             )
 
         render_result = render_result.strip()
@@ -431,7 +433,7 @@ class Template:
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            if template_render_thread.is_alive():
+            with contextlib.suppress(ValueError):
                 template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -674,7 +676,7 @@ def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
 
 
 class HassLoader(jinja2.BaseLoader):
-    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+    """An in-memory jinja loader that tracks templates needing reload."""
 
     def __init__(self, sources: dict[str, str]) -> None:
         """Initialize an empty HassLoader."""
