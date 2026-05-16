@@ -149,11 +149,13 @@ async def test_http2_reauth_callback_triggers_reauth(
 ) -> None:
     """Test on_reauth_required callback passed to start_http2_processing triggers reauth."""
     captured_callback = None
+    http2_task: asyncio.Task | None = None
 
     async def capture_callback(_client, on_reauth_required=None) -> asyncio.Task:
-        nonlocal captured_callback
+        nonlocal captured_callback, http2_task
         captured_callback = on_reauth_required
-        return hass.loop.create_task(asyncio.sleep(3600))
+        http2_task = hass.loop.create_task(asyncio.sleep(3600))
+        return http2_task
 
     mock_amazon_devices_client.start_http2_processing.side_effect = capture_callback
 
@@ -165,24 +167,20 @@ async def test_http2_reauth_callback_triggers_reauth(
 
     mock_reauth.assert_called_once_with(hass)
 
+    assert http2_task is not None
+    http2_task.cancel()
+    await asyncio.gather(http2_task, return_exceptions=True)
 
-async def test_http2_task_is_cancelled_on_unload(
+
+async def test_http2_stop_processing_called_on_unload(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test HTTP2 task is cancelled during unload."""
-    http2_task = hass.loop.create_task(asyncio.sleep(3600))
-
-    mock_amazon_devices_client.start_http2_processing.side_effect = (
-        lambda *_args, **_kwargs: http2_task
-    )
-
+    """Test stop_http2_processing is called on unload."""
     await setup_integration(hass, mock_config_entry)
-
-    assert not http2_task.cancelled()
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert http2_task.cancelled()
+    mock_amazon_devices_client.stop_http2_processing.assert_called_once()
