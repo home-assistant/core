@@ -29,11 +29,16 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_INSTALLATION_ID,
+    CONF_MODEL,
+    CONF_SERIAL,
+    CONF_UPDATE_FREQUENCY_SECONDS,
+    DEFAULT_UPDATE_FREQUENCY_SECONDS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-UPDATE_INTERVAL_SECONDS = 30
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -75,7 +80,9 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
+            update_frequency_seconds=config.get(
+                CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
+            ),
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}

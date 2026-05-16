@@ -831,3 +831,32 @@ async def test_reconfigure_flow_different_device(
     assert result["reason"] == "different_device"
     # Entry should be unchanged
     assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+async def test_options_flow_shows_current_value(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow shows form with current update frequency."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+
+async def test_options_flow_sets_update_frequency(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow saves the update frequency."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"update_frequency": 60},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options["update_frequency"] == 60

@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -20,7 +20,15 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import (
+    CONF_INSTALLATION_ID,
+    CONF_MODEL,
+    CONF_SERIAL,
+    CONF_UPDATE_FREQUENCY_SECONDS,
+    DEFAULT_UPDATE_FREQUENCY_SECONDS,
+    DOMAIN,
+)
+from .hub import VictronGxConfigEntry
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -384,3 +392,42 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: VictronGxConfigEntry,
+    ) -> VictronGXOptionsFlow:
+        """Get the options flow for this handler."""
+        return VictronGXOptionsFlow()
+
+
+class VictronGXOptionsFlow(OptionsFlow):
+    """Handle options flow for Victron GX."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current_frequency = self.config_entry.options.get(
+            CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
+        )
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_UPDATE_FREQUENCY_SECONDS,
+                    default=current_frequency,
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1,
+                        max=600,
+                        step=1,
+                        unit_of_measurement="seconds",
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

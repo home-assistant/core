@@ -2003,5 +2003,17 @@
     "cannot_connect": {
       "message": "Cannot connect to the GX device at {host}."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_frequency": "Update frequency"
+        },
+        "data_description": {
+          "update_frequency": "How often entities are updated with new values from the device, in seconds. Lower values provide more responsive updates but increase MQTT traffic."
+        }
+      }
+    }
   }
 }
