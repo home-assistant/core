@@ -1,6 +1,5 @@
 """Control a LocknAlert MQTT Alarm."""
 
-from __future__ import annotations
 
 import logging
 

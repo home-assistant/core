@@ -1,6 +1,5 @@
 """Offer MQTT listening automation rules."""
 
-from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
@@ -91,7 +90,7 @@ async def async_attach_trigger(
         """Listen for MQTT messages."""
         if wanted_payload is None or (
             (payload := value_template(mqttmsg.payload, PayloadSentinel.DEFAULT))
-            and payload is not PayloadSentinel.DEFAULT
+            is not PayloadSentinel.DEFAULT
             and wanted_payload == payload
         ):
             data: dict[str, Any] = {
