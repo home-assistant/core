@@ -10,13 +10,25 @@ Entity instances on the host. These proxies:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
 from typing import Any
 
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.button import ButtonEntity
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.components.date import DateEntity
+from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.components.event import EventEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.humidifier import HumidifierEntity, HumidifierEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerActivity, LawnMowerEntity, LawnMowerEntityFeature
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -34,9 +46,28 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.components.lock import LockEntity, LockEntityFeature
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    RepeatMode,
+)
+from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.remote import RemoteEntity, RemoteEntityFeature
 from homeassistant.components.scene import Scene
+from homeassistant.components.select import SelectEntity
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.text import TextEntity, TextMode
+from homeassistant.components.time import TimeEntity
+from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.valve import ValveEntity, ValveEntityFeature
+from homeassistant.components.water_heater import WaterHeaterEntity, WaterHeaterEntityFeature
+from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -437,13 +468,1286 @@ class SandboxEventEntity(SandboxProxyEntity, EventEntity):
             super().sandbox_update_state(state, attributes)
 
 
+class SandboxButtonEntity(SandboxProxyEntity, ButtonEntity):
+    """Proxy for a button entity in a sandbox."""
+
+    async def async_press(self) -> None:
+        """Forward press to sandbox."""
+        await self._forward_method("async_press")
+
+
+class SandboxLockEntity(SandboxProxyEntity, LockEntity):
+    """Proxy for a lock entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy lock entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = LockEntityFeature(
+            description.supported_features
+        )
+
+    @property
+    def is_locked(self) -> bool | None:
+        """Return if the lock is locked."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "locked"
+
+    @property
+    def is_locking(self) -> bool | None:
+        """Return if the lock is locking."""
+        return self._state_cache.get("is_locking")
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return if the lock is unlocking."""
+        return self._state_cache.get("is_unlocking")
+
+    @property
+    def is_jammed(self) -> bool | None:
+        """Return if the lock is jammed."""
+        return self._state_cache.get("is_jammed")
+
+    @property
+    def is_open(self) -> bool | None:
+        """Return if the lock is open."""
+        return self._state_cache.get("is_open")
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Forward lock to sandbox."""
+        await self._forward_method("async_lock", **kwargs)
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Forward unlock to sandbox."""
+        await self._forward_method("async_unlock", **kwargs)
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Forward open to sandbox."""
+        await self._forward_method("async_open", **kwargs)
+
+
+class SandboxCoverEntity(SandboxProxyEntity, CoverEntity):
+    """Proxy for a cover entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy cover entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = CoverEntityFeature(
+            description.supported_features
+        )
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "closed"
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening."""
+        return self._state_cache.get("is_opening")
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing."""
+        return self._state_cache.get("is_closing")
+
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return the current cover position."""
+        return self._state_cache.get("current_cover_position")
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt position."""
+        return self._state_cache.get("current_cover_tilt_position")
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Forward open_cover to sandbox."""
+        await self._forward_method("async_open_cover", **kwargs)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Forward close_cover to sandbox."""
+        await self._forward_method("async_close_cover", **kwargs)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Forward stop_cover to sandbox."""
+        await self._forward_method("async_stop_cover", **kwargs)
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Forward set_cover_position to sandbox."""
+        await self._forward_method("async_set_cover_position", **kwargs)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Forward open_cover_tilt to sandbox."""
+        await self._forward_method("async_open_cover_tilt", **kwargs)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Forward close_cover_tilt to sandbox."""
+        await self._forward_method("async_close_cover_tilt", **kwargs)
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Forward stop_cover_tilt to sandbox."""
+        await self._forward_method("async_stop_cover_tilt", **kwargs)
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Forward set_cover_tilt_position to sandbox."""
+        await self._forward_method("async_set_cover_tilt_position", **kwargs)
+
+
+class SandboxFanEntity(SandboxProxyEntity, FanEntity):
+    """Proxy for a fan entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy fan entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = FanEntityFeature(
+            description.supported_features
+        )
+        if preset_modes := description.capabilities.get("preset_modes"):
+            self._attr_preset_modes = preset_modes
+        if speed_count := description.capabilities.get("speed_count"):
+            self._attr_speed_count = speed_count
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the fan is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        return self._state_cache.get("percentage")
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return self._state_cache.get("preset_mode")
+
+    @property
+    def current_direction(self) -> str | None:
+        """Return the current direction."""
+        return self._state_cache.get("current_direction")
+
+    @property
+    def oscillating(self) -> bool | None:
+        """Return if the fan is oscillating."""
+        return self._state_cache.get("oscillating")
+
+    async def async_turn_on(self, percentage: int | None = None, preset_mode: str | None = None, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", percentage=percentage, preset_mode=preset_mode, **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Forward set_percentage to sandbox."""
+        await self._forward_method("async_set_percentage", percentage=percentage)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Forward set_preset_mode to sandbox."""
+        await self._forward_method("async_set_preset_mode", preset_mode=preset_mode)
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Forward set_direction to sandbox."""
+        await self._forward_method("async_set_direction", direction=direction)
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Forward oscillate to sandbox."""
+        await self._forward_method("async_oscillate", oscillating=oscillating)
+
+
+class SandboxClimateEntity(SandboxProxyEntity, ClimateEntity):
+    """Proxy for a climate entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy climate entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = ClimateEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if hvac_modes := caps.get("hvac_modes"):
+            self._attr_hvac_modes = [HVACMode(m) for m in hvac_modes]
+        if fan_modes := caps.get("fan_modes"):
+            self._attr_fan_modes = fan_modes
+        if preset_modes := caps.get("preset_modes"):
+            self._attr_preset_modes = preset_modes
+        if swing_modes := caps.get("swing_modes"):
+            self._attr_swing_modes = swing_modes
+        if (min_temp := caps.get("min_temp")) is not None:
+            self._attr_min_temp = min_temp
+        if (max_temp := caps.get("max_temp")) is not None:
+            self._attr_max_temp = max_temp
+        if (min_humidity := caps.get("min_humidity")) is not None:
+            self._attr_min_humidity = min_humidity
+        if (max_humidity := caps.get("max_humidity")) is not None:
+            self._attr_max_humidity = max_humidity
+        if (temp_step := caps.get("target_temperature_step")) is not None:
+            self._attr_target_temperature_step = temp_step
+        if temp_unit := caps.get("temperature_unit"):
+            self._attr_temperature_unit = temp_unit
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return the current HVAC mode."""
+        mode = self._state_cache.get("hvac_mode")
+        if mode is None:
+            return None
+        return HVACMode(mode)
+
+    @property
+    def hvac_action(self) -> str | None:
+        """Return the current HVAC action."""
+        return self._state_cache.get("hvac_action")
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._state_cache.get("current_temperature")
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        return self._state_cache.get("target_temperature")
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the high target temperature."""
+        return self._state_cache.get("target_temperature_high")
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the low target temperature."""
+        return self._state_cache.get("target_temperature_low")
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._state_cache.get("current_humidity")
+
+    @property
+    def target_humidity(self) -> float | None:
+        """Return the target humidity."""
+        return self._state_cache.get("target_humidity")
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode."""
+        return self._state_cache.get("fan_mode")
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return self._state_cache.get("preset_mode")
+
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the current swing mode."""
+        return self._state_cache.get("swing_mode")
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Forward set_temperature to sandbox."""
+        await self._forward_method("async_set_temperature", **kwargs)
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Forward set_humidity to sandbox."""
+        await self._forward_method("async_set_humidity", humidity=humidity)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Forward set_fan_mode to sandbox."""
+        await self._forward_method("async_set_fan_mode", fan_mode=fan_mode)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Forward set_hvac_mode to sandbox."""
+        await self._forward_method("async_set_hvac_mode", hvac_mode=hvac_mode)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Forward set_preset_mode to sandbox."""
+        await self._forward_method("async_set_preset_mode", preset_mode=preset_mode)
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Forward set_swing_mode to sandbox."""
+        await self._forward_method("async_set_swing_mode", swing_mode=swing_mode)
+
+    async def async_turn_on(self) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on")
+
+    async def async_turn_off(self) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off")
+
+
+class SandboxNumberEntity(SandboxProxyEntity, NumberEntity):
+    """Proxy for a number entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy number entity."""
+        super().__init__(description, manager)
+        caps = description.capabilities
+        if (min_val := caps.get("native_min_value")) is not None:
+            self._attr_native_min_value = min_val
+        if (max_val := caps.get("native_max_value")) is not None:
+            self._attr_native_max_value = max_val
+        if (step := caps.get("native_step")) is not None:
+            self._attr_native_step = step
+        if unit := caps.get("native_unit_of_measurement"):
+            self._attr_native_unit_of_measurement = unit
+        if mode := caps.get("mode"):
+            self._attr_mode = NumberMode(mode)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current value."""
+        val = self._state_cache.get("state")
+        if val is None:
+            return None
+        return float(val)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Forward set_native_value to sandbox."""
+        await self._forward_method("async_set_native_value", value=value)
+
+
+class SandboxSelectEntity(SandboxProxyEntity, SelectEntity):
+    """Proxy for a select entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy select entity."""
+        super().__init__(description, manager)
+        self._attr_options = description.capabilities.get("options", [])
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        return self._state_cache.get("state")
+
+    async def async_select_option(self, option: str) -> None:
+        """Forward select_option to sandbox."""
+        await self._forward_method("async_select_option", option=option)
+
+
+class SandboxTextEntity(SandboxProxyEntity, TextEntity):
+    """Proxy for a text entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy text entity."""
+        super().__init__(description, manager)
+        caps = description.capabilities
+        if (native_min := caps.get("native_min")) is not None:
+            self._attr_native_min = native_min
+        if (native_max := caps.get("native_max")) is not None:
+            self._attr_native_max = native_max
+        if mode := caps.get("mode"):
+            self._attr_mode = TextMode(mode)
+        if pattern := caps.get("pattern"):
+            self._attr_pattern = pattern
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current value."""
+        return self._state_cache.get("state")
+
+    async def async_set_value(self, value: str) -> None:
+        """Forward set_value to sandbox."""
+        await self._forward_method("async_set_value", value=value)
+
+
+class SandboxDateEntity(SandboxProxyEntity, DateEntity):
+    """Proxy for a date entity in a sandbox."""
+
+    @property
+    def native_value(self):
+        """Return the current date value."""
+        from datetime import date
+
+        val = self._state_cache.get("state")
+        if val is None:
+            return None
+        if isinstance(val, str):
+            return date.fromisoformat(val)
+        return val
+
+    async def async_set_value(self, value) -> None:
+        """Forward set_value to sandbox."""
+        await self._forward_method("async_set_value", value=value.isoformat())
+
+
+class SandboxDateTimeEntity(SandboxProxyEntity, DateTimeEntity):
+    """Proxy for a datetime entity in a sandbox."""
+
+    @property
+    def native_value(self):
+        """Return the current datetime value."""
+        from datetime import datetime, timezone
+
+        val = self._state_cache.get("state")
+        if val is None:
+            return None
+        if isinstance(val, str):
+            dt = datetime.fromisoformat(val)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        return val
+
+    async def async_set_value(self, value) -> None:
+        """Forward set_value to sandbox."""
+        await self._forward_method("async_set_value", value=value.isoformat())
+
+
+class SandboxTimeEntity(SandboxProxyEntity, TimeEntity):
+    """Proxy for a time entity in a sandbox."""
+
+    @property
+    def native_value(self):
+        """Return the current time value."""
+        from datetime import time
+
+        val = self._state_cache.get("state")
+        if val is None:
+            return None
+        if isinstance(val, str):
+            return time.fromisoformat(val)
+        return val
+
+    async def async_set_value(self, value) -> None:
+        """Forward set_value to sandbox."""
+        await self._forward_method("async_set_value", value=value.isoformat())
+
+
+class SandboxHumidifierEntity(SandboxProxyEntity, HumidifierEntity):
+    """Proxy for a humidifier entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy humidifier entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = HumidifierEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if available_modes := caps.get("available_modes"):
+            self._attr_available_modes = available_modes
+        if (min_humidity := caps.get("min_humidity")) is not None:
+            self._attr_min_humidity = min_humidity
+        if (max_humidity := caps.get("max_humidity")) is not None:
+            self._attr_max_humidity = max_humidity
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the humidifier is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._state_cache.get("current_humidity")
+
+    @property
+    def target_humidity(self) -> float | None:
+        """Return the target humidity."""
+        return self._state_cache.get("target_humidity")
+
+    @property
+    def mode(self) -> str | None:
+        """Return the current mode."""
+        return self._state_cache.get("mode")
+
+    @property
+    def action(self) -> str | None:
+        """Return the current action."""
+        return self._state_cache.get("action")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Forward set_humidity to sandbox."""
+        await self._forward_method("async_set_humidity", humidity=humidity)
+
+    async def async_set_mode(self, mode: str) -> None:
+        """Forward set_mode to sandbox."""
+        await self._forward_method("async_set_mode", mode=mode)
+
+
+class SandboxWaterHeaterEntity(SandboxProxyEntity, WaterHeaterEntity):
+    """Proxy for a water_heater entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy water heater entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = WaterHeaterEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if operation_list := caps.get("operation_list"):
+            self._attr_operation_list = operation_list
+        if (min_temp := caps.get("min_temp")) is not None:
+            self._attr_min_temp = min_temp
+        if (max_temp := caps.get("max_temp")) is not None:
+            self._attr_max_temp = max_temp
+        if temp_unit := caps.get("temperature_unit"):
+            self._attr_temperature_unit = temp_unit
+
+    @property
+    def current_operation(self) -> str | None:
+        """Return the current operation."""
+        return self._state_cache.get("current_operation")
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._state_cache.get("current_temperature")
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        return self._state_cache.get("target_temperature")
+
+    @property
+    def is_away_mode_on(self) -> bool | None:
+        """Return if away mode is on."""
+        return self._state_cache.get("is_away_mode_on")
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Forward set_temperature to sandbox."""
+        await self._forward_method("async_set_temperature", **kwargs)
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Forward set_operation_mode to sandbox."""
+        await self._forward_method("async_set_operation_mode", operation_mode=operation_mode)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+
+class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
+    """Proxy for a vacuum entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy vacuum entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = VacuumEntityFeature(
+            description.supported_features
+        )
+        if fan_speed_list := description.capabilities.get("fan_speed_list"):
+            self._attr_fan_speed_list = fan_speed_list
+
+    @property
+    def activity(self) -> str | None:
+        """Return the current vacuum activity."""
+        return self._state_cache.get("activity")
+
+    @property
+    def battery_level(self) -> int | None:
+        """Return the battery level."""
+        return self._state_cache.get("battery_level")
+
+    @property
+    def fan_speed(self) -> str | None:
+        """Return the current fan speed."""
+        return self._state_cache.get("fan_speed")
+
+    async def async_start(self) -> None:
+        """Forward start to sandbox."""
+        await self._forward_method("async_start")
+
+    async def async_pause(self) -> None:
+        """Forward pause to sandbox."""
+        await self._forward_method("async_pause")
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Forward stop to sandbox."""
+        await self._forward_method("async_stop", **kwargs)
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Forward return_to_base to sandbox."""
+        await self._forward_method("async_return_to_base", **kwargs)
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Forward clean_spot to sandbox."""
+        await self._forward_method("async_clean_spot", **kwargs)
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Forward locate to sandbox."""
+        await self._forward_method("async_locate", **kwargs)
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Forward set_fan_speed to sandbox."""
+        await self._forward_method("async_set_fan_speed", fan_speed=fan_speed, **kwargs)
+
+    async def async_send_command(self, command: str, params: dict[str, Any] | list[Any] | None = None, **kwargs: Any) -> None:
+        """Forward send_command to sandbox."""
+        await self._forward_method("async_send_command", command=command, params=params, **kwargs)
+
+
+class SandboxLawnMowerEntity(SandboxProxyEntity, LawnMowerEntity):
+    """Proxy for a lawn_mower entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy lawn mower entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = LawnMowerEntityFeature(
+            description.supported_features
+        )
+
+    @property
+    def activity(self) -> LawnMowerActivity | None:
+        """Return the current activity."""
+        val = self._state_cache.get("activity")
+        if val is None:
+            return None
+        return LawnMowerActivity(val)
+
+    async def async_start_mowing(self) -> None:
+        """Forward start_mowing to sandbox."""
+        await self._forward_method("async_start_mowing")
+
+    async def async_dock(self) -> None:
+        """Forward dock to sandbox."""
+        await self._forward_method("async_dock")
+
+    async def async_pause(self) -> None:
+        """Forward pause to sandbox."""
+        await self._forward_method("async_pause")
+
+
+class SandboxSirenEntity(SandboxProxyEntity, SirenEntity):
+    """Proxy for a siren entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy siren entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = SirenEntityFeature(
+            description.supported_features
+        )
+        if available_tones := description.capabilities.get("available_tones"):
+            self._attr_available_tones = available_tones
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the siren is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+
+class SandboxValveEntity(SandboxProxyEntity, ValveEntity):
+    """Proxy for a valve entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy valve entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = ValveEntityFeature(
+            description.supported_features
+        )
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the valve is closed."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "closed"
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the valve is opening."""
+        return self._state_cache.get("is_opening")
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the valve is closing."""
+        return self._state_cache.get("is_closing")
+
+    @property
+    def current_valve_position(self) -> int | None:
+        """Return the current valve position."""
+        return self._state_cache.get("current_valve_position")
+
+    async def async_open_valve(self, **kwargs: Any) -> None:
+        """Forward open_valve to sandbox."""
+        await self._forward_method("async_open_valve", **kwargs)
+
+    async def async_close_valve(self, **kwargs: Any) -> None:
+        """Forward close_valve to sandbox."""
+        await self._forward_method("async_close_valve", **kwargs)
+
+    async def async_stop_valve(self, **kwargs: Any) -> None:
+        """Forward stop_valve to sandbox."""
+        await self._forward_method("async_stop_valve", **kwargs)
+
+    async def async_set_valve_position(self, position: int) -> None:
+        """Forward set_valve_position to sandbox."""
+        await self._forward_method("async_set_valve_position", position=position)
+
+
+class SandboxRemoteEntity(SandboxProxyEntity, RemoteEntity):
+    """Proxy for a remote entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy remote entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = RemoteEntityFeature(
+            description.supported_features
+        )
+        if activity_list := description.capabilities.get("activity_list"):
+            self._attr_activity_list = activity_list
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the remote is on."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return state == "on"
+
+    @property
+    def current_activity(self) -> str | None:
+        """Return the current activity."""
+        return self._state_cache.get("current_activity")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on", **kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off", **kwargs)
+
+    async def async_send_command(self, command: list[str], **kwargs: Any) -> None:
+        """Forward send_command to sandbox."""
+        await self._forward_method("async_send_command", command=command, **kwargs)
+
+
+class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
+    """Proxy for a media_player entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy media player entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = MediaPlayerEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if source_list := caps.get("source_list"):
+            self._attr_source_list = source_list
+        if sound_mode_list := caps.get("sound_mode_list"):
+            self._attr_sound_mode_list = sound_mode_list
+
+    @property
+    def state(self) -> MediaPlayerState | None:
+        """Return the current state."""
+        state = self._state_cache.get("state")
+        if state is None:
+            return None
+        return MediaPlayerState(state)
+
+    @property
+    def volume_level(self) -> float | None:
+        """Return the volume level."""
+        return self._state_cache.get("volume_level")
+
+    @property
+    def is_volume_muted(self) -> bool | None:
+        """Return if volume is muted."""
+        return self._state_cache.get("is_volume_muted")
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Return the media content ID."""
+        return self._state_cache.get("media_content_id")
+
+    @property
+    def media_content_type(self) -> str | None:
+        """Return the media content type."""
+        return self._state_cache.get("media_content_type")
+
+    @property
+    def media_title(self) -> str | None:
+        """Return the media title."""
+        return self._state_cache.get("media_title")
+
+    @property
+    def media_artist(self) -> str | None:
+        """Return the media artist."""
+        return self._state_cache.get("media_artist")
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Return the media album name."""
+        return self._state_cache.get("media_album_name")
+
+    @property
+    def media_duration(self) -> float | None:
+        """Return the media duration."""
+        return self._state_cache.get("media_duration")
+
+    @property
+    def media_position(self) -> float | None:
+        """Return the media position."""
+        return self._state_cache.get("media_position")
+
+    @property
+    def source(self) -> str | None:
+        """Return the current source."""
+        return self._state_cache.get("source")
+
+    @property
+    def sound_mode(self) -> str | None:
+        """Return the current sound mode."""
+        return self._state_cache.get("sound_mode")
+
+    @property
+    def shuffle(self) -> bool | None:
+        """Return if shuffle is enabled."""
+        return self._state_cache.get("shuffle")
+
+    @property
+    def repeat(self) -> RepeatMode | None:
+        """Return the current repeat mode."""
+        val = self._state_cache.get("repeat")
+        if val is None:
+            return None
+        return RepeatMode(val)
+
+    async def async_turn_on(self) -> None:
+        """Forward turn_on to sandbox."""
+        await self._forward_method("async_turn_on")
+
+    async def async_turn_off(self) -> None:
+        """Forward turn_off to sandbox."""
+        await self._forward_method("async_turn_off")
+
+    async def async_volume_up(self) -> None:
+        """Forward volume_up to sandbox."""
+        await self._forward_method("async_volume_up")
+
+    async def async_volume_down(self) -> None:
+        """Forward volume_down to sandbox."""
+        await self._forward_method("async_volume_down")
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Forward set_volume_level to sandbox."""
+        await self._forward_method("async_set_volume_level", volume=volume)
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Forward mute_volume to sandbox."""
+        await self._forward_method("async_mute_volume", mute=mute)
+
+    async def async_media_play(self) -> None:
+        """Forward media_play to sandbox."""
+        await self._forward_method("async_media_play")
+
+    async def async_media_pause(self) -> None:
+        """Forward media_pause to sandbox."""
+        await self._forward_method("async_media_pause")
+
+    async def async_media_stop(self) -> None:
+        """Forward media_stop to sandbox."""
+        await self._forward_method("async_media_stop")
+
+    async def async_media_next_track(self) -> None:
+        """Forward media_next_track to sandbox."""
+        await self._forward_method("async_media_next_track")
+
+    async def async_media_previous_track(self) -> None:
+        """Forward media_previous_track to sandbox."""
+        await self._forward_method("async_media_previous_track")
+
+    async def async_media_seek(self, position: float) -> None:
+        """Forward media_seek to sandbox."""
+        await self._forward_method("async_media_seek", position=position)
+
+    async def async_select_source(self, source: str) -> None:
+        """Forward select_source to sandbox."""
+        await self._forward_method("async_select_source", source=source)
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Forward select_sound_mode to sandbox."""
+        await self._forward_method("async_select_sound_mode", sound_mode=sound_mode)
+
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+        """Forward play_media to sandbox."""
+        await self._forward_method("async_play_media", media_type=media_type, media_id=media_id, **kwargs)
+
+
+class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
+    """Proxy for a weather entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy weather entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = WeatherEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if temp_unit := caps.get("native_temperature_unit"):
+            self._attr_native_temperature_unit = temp_unit
+        if pressure_unit := caps.get("native_pressure_unit"):
+            self._attr_native_pressure_unit = pressure_unit
+        if wind_speed_unit := caps.get("native_wind_speed_unit"):
+            self._attr_native_wind_speed_unit = wind_speed_unit
+        if visibility_unit := caps.get("native_visibility_unit"):
+            self._attr_native_visibility_unit = visibility_unit
+        if precipitation_unit := caps.get("native_precipitation_unit"):
+            self._attr_native_precipitation_unit = precipitation_unit
+
+    @property
+    def condition(self) -> str | None:
+        """Return the weather condition."""
+        return self._state_cache.get("condition")
+
+    @property
+    def native_temperature(self) -> float | None:
+        """Return the temperature."""
+        return self._state_cache.get("native_temperature")
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return self._state_cache.get("native_apparent_temperature")
+
+    @property
+    def native_pressure(self) -> float | None:
+        """Return the pressure."""
+        return self._state_cache.get("native_pressure")
+
+    @property
+    def humidity(self) -> float | None:
+        """Return the humidity."""
+        return self._state_cache.get("humidity")
+
+    @property
+    def native_wind_speed(self) -> float | None:
+        """Return the wind speed."""
+        return self._state_cache.get("native_wind_speed")
+
+    @property
+    def wind_bearing(self) -> float | str | None:
+        """Return the wind bearing."""
+        return self._state_cache.get("wind_bearing")
+
+    @property
+    def native_visibility(self) -> float | None:
+        """Return the visibility."""
+        return self._state_cache.get("native_visibility")
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Forward forecast_daily to sandbox."""
+        return await self._forward_method("async_forecast_daily")
+
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Forward forecast_hourly to sandbox."""
+        return await self._forward_method("async_forecast_hourly")
+
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Forward forecast_twice_daily to sandbox."""
+        return await self._forward_method("async_forecast_twice_daily")
+
+
+class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
+    """Proxy for an update entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy update entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = UpdateEntityFeature(
+            description.supported_features
+        )
+
+    @property
+    def installed_version(self) -> str | None:
+        """Return the installed version."""
+        return self._state_cache.get("installed_version")
+
+    @property
+    def latest_version(self) -> str | None:
+        """Return the latest version."""
+        return self._state_cache.get("latest_version")
+
+    @property
+    def title(self) -> str | None:
+        """Return the title."""
+        return self._state_cache.get("title")
+
+    @property
+    def release_summary(self) -> str | None:
+        """Return the release summary."""
+        return self._state_cache.get("release_summary")
+
+    @property
+    def release_url(self) -> str | None:
+        """Return the release URL."""
+        return self._state_cache.get("release_url")
+
+    @property
+    def in_progress(self) -> bool | int | None:
+        """Return if update is in progress."""
+        return self._state_cache.get("in_progress")
+
+    @property
+    def auto_update(self) -> bool:
+        """Return if auto-update is enabled."""
+        return self._state_cache.get("auto_update", False)
+
+    async def async_install(self, version: str | None = None, backup: bool = False, **kwargs: Any) -> None:
+        """Forward install to sandbox."""
+        await self._forward_method("async_install", version=version, backup=backup, **kwargs)
+
+
+class SandboxNotifyEntity(SandboxProxyEntity, NotifyEntity):
+    """Proxy for a notify entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy notify entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = NotifyEntityFeature(
+            description.supported_features
+        )
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Forward send_message to sandbox."""
+        await self._forward_method("async_send_message", message=message, title=title)
+
+
+class SandboxAlarmControlPanelEntity(SandboxProxyEntity, AlarmControlPanelEntity):
+    """Proxy for an alarm_control_panel entity in a sandbox."""
+
+    def __init__(
+        self,
+        description: SandboxEntityDescription,
+        manager: SandboxEntityManager,
+    ) -> None:
+        """Initialize the proxy alarm control panel entity."""
+        super().__init__(description, manager)
+        self._attr_supported_features = AlarmControlPanelEntityFeature(
+            description.supported_features
+        )
+        caps = description.capabilities
+        if code_format := caps.get("code_format"):
+            self._attr_code_format = code_format
+        if (code_arm_required := caps.get("code_arm_required")) is not None:
+            self._attr_code_arm_required = code_arm_required
+
+    @property
+    def alarm_state(self) -> str | None:
+        """Return the alarm state."""
+        return self._state_cache.get("state")
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Forward alarm_disarm to sandbox."""
+        await self._forward_method("async_alarm_disarm", code=code)
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Forward alarm_arm_home to sandbox."""
+        await self._forward_method("async_alarm_arm_home", code=code)
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Forward alarm_arm_away to sandbox."""
+        await self._forward_method("async_alarm_arm_away", code=code)
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Forward alarm_arm_night to sandbox."""
+        await self._forward_method("async_alarm_arm_night", code=code)
+
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Forward alarm_arm_vacation to sandbox."""
+        await self._forward_method("async_alarm_arm_vacation", code=code)
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Forward alarm_trigger to sandbox."""
+        await self._forward_method("async_alarm_trigger", code=code)
+
+
+class SandboxCalendarEntity(SandboxProxyEntity, CalendarEntity):
+    """Proxy for a calendar entity in a sandbox."""
+
+    @property
+    def event(self) -> CalendarEvent | None:
+        """Return the next event."""
+        event_data = self._state_cache.get("event")
+        if event_data is None:
+            return None
+        from datetime import date, datetime
+
+        start = event_data.get("start")
+        end = event_data.get("end")
+        if isinstance(start, str):
+            start = datetime.fromisoformat(start) if "T" in start else date.fromisoformat(start)
+        if isinstance(end, str):
+            end = datetime.fromisoformat(end) if "T" in end else date.fromisoformat(end)
+        return CalendarEvent(
+            start=start,
+            end=end,
+            summary=event_data.get("summary", ""),
+            description=event_data.get("description"),
+            location=event_data.get("location"),
+        )
+
+    async def async_get_events(self, hass: HomeAssistant, start_date, end_date) -> list[CalendarEvent]:
+        """Forward get_events to sandbox."""
+        result = await self._forward_method(
+            "async_get_events",
+            start_date=start_date.isoformat(),
+            end_date=end_date.isoformat(),
+        )
+        if not result:
+            return []
+        from datetime import date, datetime
+
+        events = []
+        for ev in result:
+            start = ev.get("start")
+            end = ev.get("end")
+            if isinstance(start, str):
+                start = datetime.fromisoformat(start) if "T" in start else date.fromisoformat(start)
+            if isinstance(end, str):
+                end = datetime.fromisoformat(end) if "T" in end else date.fromisoformat(end)
+            events.append(CalendarEvent(
+                start=start,
+                end=end,
+                summary=ev.get("summary", ""),
+                description=ev.get("description"),
+                location=ev.get("location"),
+            ))
+        return events
+
+
 _DOMAIN_ENTITY_MAP: dict[str, type[SandboxProxyEntity]] = {
-    "light": SandboxLightEntity,
+    "alarm_control_panel": SandboxAlarmControlPanelEntity,
     "binary_sensor": SandboxBinarySensorEntity,
-    "sensor": SandboxSensorEntity,
-    "switch": SandboxSwitchEntity,
-    "scene": SandboxSceneEntity,
+    "button": SandboxButtonEntity,
+    "calendar": SandboxCalendarEntity,
+    "climate": SandboxClimateEntity,
+    "cover": SandboxCoverEntity,
+    "date": SandboxDateEntity,
+    "datetime": SandboxDateTimeEntity,
     "event": SandboxEventEntity,
+    "fan": SandboxFanEntity,
+    "humidifier": SandboxHumidifierEntity,
+    "lawn_mower": SandboxLawnMowerEntity,
+    "light": SandboxLightEntity,
+    "lock": SandboxLockEntity,
+    "media_player": SandboxMediaPlayerEntity,
+    "notify": SandboxNotifyEntity,
+    "number": SandboxNumberEntity,
+    "remote": SandboxRemoteEntity,
+    "scene": SandboxSceneEntity,
+    "select": SandboxSelectEntity,
+    "sensor": SandboxSensorEntity,
+    "siren": SandboxSirenEntity,
+    "switch": SandboxSwitchEntity,
+    "text": SandboxTextEntity,
+    "time": SandboxTimeEntity,
+    "update": SandboxUpdateEntity,
+    "vacuum": SandboxVacuumEntity,
+    "valve": SandboxValveEntity,
+    "water_heater": SandboxWaterHeaterEntity,
+    "weather": SandboxWeatherEntity,
 }
 
 
