@@ -58,11 +58,8 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_full_flow_reauth(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow_reauth(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     """Test the full flow of the config when reauthticating."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -212,11 +209,9 @@ async def test_wait_for_login_rate_limit(
     assert "Tado API rate limit reached" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_tado_api: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options."""
     mock_config_entry.add_to_hass(hass)

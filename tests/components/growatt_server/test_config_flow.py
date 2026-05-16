@@ -141,8 +141,9 @@ async def test_auth_form_display(
         assert field in result["data_schema"].schema
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_incorrect_login(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with incorrect credentials, then recovery."""
     # Simulate incorrect login
@@ -183,8 +184,9 @@ async def test_password_auth_incorrect_login(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_account_locked(
-    hass: HomeAssistant, mock_growatt_classic_api: MagicMock, mock_setup_entry: None
+    hass: HomeAssistant, mock_growatt_classic_api: MagicMock
 ) -> None:
     """Test password authentication when account is locked out."""
     mock_growatt_classic_api.login.return_value = {
@@ -265,8 +267,9 @@ async def test_token_auth_no_plants(hass: HomeAssistant, mock_growatt_v1_api) ->
     assert result["reason"] == ABORT_NO_PLANTS
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -294,8 +297,9 @@ async def test_password_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -355,12 +359,9 @@ async def test_password_auth_multiple_plants(
         (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_api_error(
-    hass: HomeAssistant,
-    mock_growatt_v1_api,
-    mock_setup_entry,
-    error_code: int,
-    expected_error: str,
+    hass: HomeAssistant, mock_growatt_v1_api, error_code: int, expected_error: str
 ) -> None:
     """Test token authentication with V1 API error maps to correct error type."""
     result = await hass.config_entries.flow.async_init(
@@ -398,8 +399,9 @@ async def test_token_auth_api_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with network error, then recovery."""
 
@@ -438,8 +440,9 @@ async def test_token_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with invalid response format, then recovery."""
 
@@ -475,8 +478,9 @@ async def test_token_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -503,8 +507,9 @@ async def test_token_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -598,8 +603,9 @@ async def test_token_auth_existing_plant_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with connection error, then recovery."""
     # Simulate connection error on first attempt
@@ -640,8 +646,9 @@ async def test_password_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid response format, then recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -680,8 +687,9 @@ async def test_password_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with plant list connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -707,8 +715,9 @@ async def test_password_auth_plant_list_error(
     assert result["reason"] == ERROR_CANNOT_CONNECT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_invalid_format(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid plant list format."""
     result = await hass.config_entries.flow.async_init(
