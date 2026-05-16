@@ -6,7 +6,6 @@ from pyipp import IPPError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ipp.coordinator import IPPConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -98,8 +97,7 @@ async def test_page_counts_retained_on_fetch_failure(
     assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
 
     mock_ipp.execute.side_effect = IPPError("boom")
-    entry: IPPConfigEntry = init_integration
-    await entry.runtime_data.async_refresh()
+    await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_ha_1000_series_pages_completed").state == "1234"
