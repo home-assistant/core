@@ -117,27 +117,27 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
 
     async def async_turn_on(self) -> None:
         """Send discrete power-on command."""
-        await self._send_command(MarantzAudioCode.POWER_ON)
+        await self._send_marantz_command(MarantzAudioCode.POWER_ON)
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Send discrete power-off command."""
-        await self._send_command(MarantzAudioCode.POWER_OFF)
+        await self._send_marantz_command(MarantzAudioCode.POWER_OFF)
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
     async def async_volume_up(self) -> None:
         """Send volume up command."""
-        await self._send_command(MarantzAudioCode.VOLUME_UP)
+        await self._send_marantz_command(MarantzAudioCode.VOLUME_UP)
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""
-        await self._send_command(MarantzAudioCode.VOLUME_DOWN)
+        await self._send_marantz_command(MarantzAudioCode.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send discrete mute-on or mute-off command."""
-        await self._send_command(
+        await self._send_marantz_command(
             MarantzAudioCode.MUTE_ON if mute else MarantzAudioCode.MUTE_OFF
         )
         self._attr_is_volume_muted = mute
@@ -145,6 +145,6 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
 
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        await self._send_command(self._source_to_code[source])
+        await self._send_marantz_command(self._source_to_code[source])
         self._attr_source = source
         self.async_write_ha_state()

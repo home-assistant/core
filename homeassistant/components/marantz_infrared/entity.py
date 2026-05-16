@@ -1,24 +1,16 @@
 """Common entity for Marantz IR integration."""
 
-import logging
-
 from infrared_protocols.codes.marantz import models as marantz_models
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
-from homeassistant.components.infrared import async_send_command
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import Event, EventStateChangedData, callback
+from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change_event
 
 from . import MarantzIrConfigEntry
 from .const import CONF_MODEL, DOMAIN, MODELS
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class MarantzIrEntity(Entity):
+class MarantzIrEntity(InfraredEmitterConsumerEntity):
     """Marantz IR base entity."""
 
     _attr_has_entity_name = True
@@ -30,7 +22,7 @@ class MarantzIrEntity(Entity):
         unique_id_suffix: str,
     ) -> None:
         """Initialize Marantz IR entity."""
-        self._infrared_entity_id = infrared_entity_id
+        self._infrared_emitter_entity_id = infrared_entity_id
         self._runtime_data = entry.runtime_data
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
         lib_model = MODELS[entry.data[CONF_MODEL]]
@@ -38,53 +30,14 @@ class MarantzIrEntity(Entity):
             identifiers={(DOMAIN, entry.entry_id)},
             name=f"Marantz {lib_model.name}",
             manufacturer="Marantz",
-            # Generic catch-all entries aren't a specific physical product.
             model=None if lib_model is marantz_models.GENERIC else lib_model.name,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to infrared entity state changes."""
-        await super().async_added_to_hass()
-
-        @callback
-        def _async_ir_state_changed(event: Event[EventStateChangedData]) -> None:
-            """Handle infrared entity state changes."""
-            new_state = event.data["new_state"]
-            ir_available = (
-                new_state is not None and new_state.state != STATE_UNAVAILABLE
-            )
-            if ir_available != self.available:
-                _LOGGER.info(
-                    "Infrared entity %s used by %s is %s",
-                    self._infrared_entity_id,
-                    self.entity_id,
-                    "available" if ir_available else "unavailable",
-                )
-
-                self._attr_available = ir_available
-                self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, [self._infrared_entity_id], _async_ir_state_changed
-            )
-        )
-
-        ir_state = self.hass.states.get(self._infrared_entity_id)
-        self._attr_available = (
-            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
-        )
-
-    async def _send_command(self, code: MarantzAudioCode) -> None:
+    async def _send_marantz_command(self, code: MarantzAudioCode) -> None:
         """Send an IR command using the Marantz protocol.
 
         Flips the RC-5 toggle bit before each frame so the receiver
         treats consecutive presses as new presses, not as a held repeat.
         """
         self._runtime_data.toggle ^= 1
-        await async_send_command(
-            self.hass,
-            self._infrared_entity_id,
-            code.to_command(toggle=self._runtime_data.toggle),
-            context=self._context,
-        )
+        await self._send_command(code.to_command(toggle=self._runtime_data.toggle))
