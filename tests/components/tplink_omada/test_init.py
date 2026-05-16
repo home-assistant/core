@@ -88,7 +88,7 @@ async def test_automatic_missing_device_cleanup(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")},
+        identifiers={(DOMAIN, "99:99:99:99:99:99")},
         manufacturer="TPLink",
         name="Old Device",
         model="Some old model",
@@ -229,7 +229,7 @@ async def test_cleanup_devices_removes_orphans(
 
     orphan = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")},
+        identifiers={(DOMAIN, "99:99:99:99:99:99")},
         manufacturer="TP-Link",
         model="Test",
         name="Orphan",
@@ -291,15 +291,8 @@ async def test_cleanup_runs_hourly(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    known_client_macs = {
-        str(getattr(client, "mac", "")).replace(":", "-").lower()
-        for client in mock_omada_clients_only_client.clients.values()
-    }
-    stale_mac = next(
-        f"02-00-00-00-00-{index:02x}"
-        for index in range(256)
-        if f"02-00-00-00-00-{index:02x}" not in known_client_macs
-    )
+    # MAC chosen to be absent from the known-clients.json fixture
+    stale_mac = "02-00-00-00-00-00"
 
     # Add a stale tracker after initial startup cleanup has already run
     stale_tracker = entity_registry.async_get_or_create(
