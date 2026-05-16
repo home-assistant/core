@@ -851,12 +851,12 @@ async def test_rpc_cury_orientation_errors(
     assert state.state == STATE_ON
 
 
-async def test_rpc_occupancy(
+async def test_rpc_occupancy_component(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC occupancy entities."""
+    """Test RPC occupancy binary sensor."""
     status = {
         "occupancy:0": {
             "id": 0,
