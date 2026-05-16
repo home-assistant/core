@@ -174,7 +174,8 @@ async def _async_setup_cloudhook(
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
-        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        # If we have a cloudhook but no longer logged in
+        # to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
