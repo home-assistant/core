@@ -59,27 +59,6 @@ def _job_filename(data: JobInfo | None) -> str | None:
     return file_data["display_name"]
 
 
-def _job_start(data: JobInfo | None) -> datetime | None:
-    """Return print start timestamp or None if no active job is running."""
-    if (active_job := _has_active_job(data)) is None:
-        return None
-    return utcnow() - timedelta(seconds=active_job["time_printing"])
-
-
-def _job_finish(data: JobInfo | None) -> datetime | None:
-    """Return print finish timestamp.
-
-    Return None if there is no active job or the active job has no
-    remaining-time estimate.
-    """
-    if (active_job := _has_active_job(data)) is None:
-        return None
-    time_remaining = active_job["time_remaining"]
-    if time_remaining is None:
-        return None
-    return utcnow() + timedelta(seconds=time_remaining)
-
-
 def _make_stable_job_start() -> Callable[[JobInfo | None], datetime | None]:
     """Return a per-entity stable job-start value function."""
     stable_job_start = ignore_variance(
