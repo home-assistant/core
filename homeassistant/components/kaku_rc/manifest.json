@@ -7,6 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/kaku_rc",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "bronze",
-  "requirements": ["rf-protocols==3.1.0"]
+  "quality_scale": "bronze"
 }
