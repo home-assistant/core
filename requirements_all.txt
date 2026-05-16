@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.5.0
+aioamazondevices==13.6.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -2873,7 +2873,7 @@ reolink-aio==0.19.1
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==3.0.0
+rf-protocols==3.2.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
