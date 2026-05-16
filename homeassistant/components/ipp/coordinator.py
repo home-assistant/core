@@ -18,12 +18,12 @@ from .const import CONF_BASE_PATH, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PAGE_COUNT_ATTRIBUTES = [
+PAGE_COUNT_ATTRIBUTES = (
     "printer-impressions-completed",
     "printer-pages-completed",
     "printer-media-sheets-completed",
     "printer-impressions-completed-col",
-]
+)
 
 _LOGGER = logging.getLogger(__name__)
 
