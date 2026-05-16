@@ -38,6 +38,15 @@ class ScorpionTrackShareSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[ScorpionTrackShare], StateType | datetime]
 
 
+def _convert_speed(
+    share: ScorpionTrackShare, vehicle: ScorpionTrackVehicle
+) -> float | None:
+    """Return the vehicle speed in the share's preferred unit."""
+    if vehicle.position.speed_kmh is None:
+        return None
+    return share.convert_speed(vehicle.position.speed_kmh)
+
+
 VEHICLE_SENSOR_DESCRIPTIONS: tuple[ScorpionTrackVehicleSensorEntityDescription, ...] = (
     ScorpionTrackVehicleSensorEntityDescription(
         key="status",
@@ -55,7 +64,7 @@ VEHICLE_SENSOR_DESCRIPTIONS: tuple[ScorpionTrackVehicleSensorEntityDescription, 
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda share, vehicle: _convert_speed(share, vehicle),
+        value_fn=_convert_speed,
         unit_fn=lambda share: (
             UnitOfSpeed.MILES_PER_HOUR
             if share.uses_miles
@@ -192,12 +201,3 @@ def _format_location(vehicle: ScorpionTrackVehicle) -> str | None:
     if vehicle.position.latitude is not None and vehicle.position.longitude is not None:
         return f"{vehicle.position.latitude:.6f}, {vehicle.position.longitude:.6f}"
     return None
-
-
-def _convert_speed(
-    share: ScorpionTrackShare, vehicle: ScorpionTrackVehicle
-) -> float | None:
-    """Return the vehicle speed in the share's preferred unit."""
-    if vehicle.position.speed_kmh is None:
-        return None
-    return share.convert_speed(vehicle.position.speed_kmh)
