@@ -373,7 +373,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
             subentry_entities: list[Entity] = []
             device_config = subentry_data["device"].copy()
             device_mqtt_options = device_config.pop("mqtt_settings", {})
-            device_config["identifiers"] = config_subentry_id
+            device_config["identifiers"] = [config_subentry_id]
             for component_id, component_data in subentry_data["components"].items():
                 if component_data["platform"] != domain:
                     continue
