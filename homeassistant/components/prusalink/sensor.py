@@ -128,8 +128,15 @@ class PrusaLinkSensorEntityDescription[
 ):
     """Describes PrusaLink sensor entity."""
 
-    value_fn: Callable[[T], datetime | StateType]
+    value_fn: Callable[[T], datetime | StateType] | None = None
     value_fn_factory: Callable[[], Callable[[T], datetime | StateType]] | None = None
+
+    def __post_init__(self) -> None:
+        """Ensure exactly one value callable source is configured."""
+        if (self.value_fn is None) == (self.value_fn_factory is None):
+            raise ValueError(
+                "Exactly one of value_fn or value_fn_factory must be provided"
+            )
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -263,7 +270,6 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.start",
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn=_job_start,
             value_fn_factory=_make_stable_job_start,
             available_fn=_always_available,
         ),
@@ -271,7 +277,6 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn=_job_finish,
             value_fn_factory=_make_stable_job_finish,
             available_fn=_always_available,
         ),
@@ -340,9 +345,13 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
                 Callable[[object], datetime | StateType],
                 description.value_fn_factory(),
             )
-        else:
+        elif description.value_fn is not None:
             self._value_fn = cast(
                 Callable[[object], datetime | StateType], description.value_fn
+            )
+        else:
+            raise ValueError(
+                f"Missing value callable for sensor description: {description.key}"
             )
 
     @property
