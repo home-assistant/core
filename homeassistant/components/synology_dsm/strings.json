@@ -187,6 +187,17 @@
       }
     }
   },
+  "exceptions": {
+    "execution_error": {
+      "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
+    },
+    "missing_serial": {
+      "message": "More than one DSM configured, must specify one of serials: {serials}."
+    },
+    "serial_not_found": {
+      "message": "DSM with specified serial {serial} not found."
+    }
+  },
   "issues": {
     "missing_backup_setup": {
       "fix_flow": {
