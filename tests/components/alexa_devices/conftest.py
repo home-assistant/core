@@ -56,6 +56,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
+        client.default_device = deepcopy(TEST_DEVICE_1)
         client.routines = ["Test Routine"]
         client.send_sound_notification = AsyncMock()
         yield client

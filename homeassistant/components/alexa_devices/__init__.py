@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NOTIFY,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

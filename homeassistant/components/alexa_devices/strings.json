@@ -66,6 +66,11 @@
         "name": "Speak"
       }
     },
+    "select": {
+      "default_device": {
+        "name": "Default device"
+      }
+    },
     "sensor": {
       "alarm": {
         "name": "Next alarm"
