@@ -3,6 +3,7 @@
 
 def mask_token(value: str, *, visible: int = 4) -> str:
     """Return a lightly redacted token for logging."""
+    visible = max(1, visible)
     cleaned = value.strip()
     if not cleaned:
         return "<empty>"
