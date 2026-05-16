@@ -14,6 +14,8 @@ from .const import CONF_ENABLE_TEMPERATURE_SENSOR, CONF_ZONE_NUMBER, SUBENTRY_TY
 from .coordinator import SatelConfigEntry, SatelIntegraTemperaturesCoordinator
 from .entity import SatelIntegraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
