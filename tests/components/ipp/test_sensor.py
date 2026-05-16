@@ -31,15 +31,15 @@ async def test_disabled_by_default_sensors(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the disabled by default IPP sensors."""
-    entry = entity_registry.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", "ipp", f"{init_integration.unique_id}_uptime"
     )
-    assert entry is not None
+    assert entity_id is not None
 
-    state = hass.states.get(entry)
+    state = hass.states.get(entity_id)
     assert state is None
 
-    entity_entry = entity_registry.async_get(entry)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

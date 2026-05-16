@@ -94,7 +94,9 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
             )
             return previous_page_counts
 
-        page_counts: dict[str, int] = {}
+        # Start from previous values so a partial response (e.g. printer
+        # returning a subset of attributes) doesn't drop known keys
+        page_counts: dict[str, int] = dict(previous_page_counts)
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
         for attr in PAGE_COUNT_ATTRIBUTES:
             if attr not in parsed:
