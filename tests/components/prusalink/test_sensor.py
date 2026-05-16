@@ -344,6 +344,23 @@ async def test_sensors_active_job_with_nullable_fields(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_material_sensor_unavailable_when_legacy_telemetry_missing(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_legacy_printer: dict[str, Any],
+) -> None:
+    """Material sensor is unavailable when legacy telemetry is missing."""
+    mock_get_legacy_printer["telemetry"] = None
+
+    assert await async_setup_component(hass, "prusalink", {})
+
+    state = hass.states.get("sensor.mock_title_material")
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_axis_x_y_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:

@@ -128,6 +128,9 @@ def mock_job_api_idle() -> Iterator[None]:
 
     pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
     no job is running, rather than an empty dict as in 2.x.
+
+    Iterator is intentional for this yield fixture: it matches pytest usage
+    while avoiding unnecessary Generator send/return type parameters.
     """
     with patch("pyprusalink.PrusaLink.get_job", return_value=None):
         yield None
