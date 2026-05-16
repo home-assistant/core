@@ -458,8 +458,11 @@ async def test_add_event_date_in_x(
     mock_events_list({})
     assert await component_setup()
 
-    freezer.move_to("2025-06-15 08:00:00")
-    today = datetime.date(2025, 6, 15)
+    # Freeze at 2025-06-15 03:00 UTC which is 2025-06-14 21:00 in America/Regina
+    # (the test timezone). This ensures dt_util.now().date() returns June 14
+    # while a naive datetime.now().date() would return June 15 in UTC.
+    freezer.move_to("2025-06-15 03:00:00+00:00")
+    today = datetime.date(2025, 6, 14)
     start_date = today + start_timedelta
     end_date = today + end_timedelta
 
