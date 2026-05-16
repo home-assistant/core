@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "quality_scale": "gold",
-  "requirements": ["rf-protocols==3.0.0"]
+  "requirements": ["rf-protocols==3.1.0"]
 }
