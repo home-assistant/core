@@ -911,3 +911,91 @@ async def test_wifi_rssi_sensor(
     entry = entity_registry.async_get("sensor.m5stamp_lighting_app_wi_fi_rssi")
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "attribute_id", "initial_state", "updated_value", "updated_state"),
+    [
+        (
+            "sensor.multi_state_sensor_p100_thread_channel",
+            0,
+            "25",
+            20,
+            "20",
+        ),
+        (
+            "sensor.multi_state_sensor_p100_thread_network_name",
+            2,
+            "MyHome1895415629",
+            "OtherNet",
+            "OtherNet",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["aqara_multi_state_p100"])
+async def test_thread_diagnostic_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute_id: int,
+    initial_state: str,
+    updated_value: int | str,
+    updated_state: str,
+) -> None:
+    """Test ThreadNetworkDiagnostics Channel and NetworkName sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial_state
+
+    set_node_attribute(matter_node, 0, 53, attribute_id, updated_value)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == updated_state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("routing_role_value", "expected_state"),
+    [
+        (0, "unspecified"),
+        (1, "unassigned"),
+        (2, "sleepy_end_device"),
+        (3, "end_device"),
+        (4, "reed"),
+        (5, "router"),
+        (6, "leader"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["aqara_multi_state_p100"])
+async def test_thread_routing_role_enum_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    routing_role_value: int,
+    expected_state: str,
+) -> None:
+    """Test ThreadNetworkDiagnostics RoutingRole enum maps every value to a translatable state."""
+    entity_id = "sensor.multi_state_sensor_p100_thread_routing_role"
+
+    set_node_attribute(matter_node, 0, 53, 1, routing_role_value)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.capabilities is not None
+    assert expected_state in entry.capabilities["options"]
