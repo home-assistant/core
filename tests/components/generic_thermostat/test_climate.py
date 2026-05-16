@@ -1031,7 +1031,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
         (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
     ],
 )
-async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_min_cycle_duration(
+async def test_hvac_mode_change_toggles_switch_within_min_cycle_duration(
     hass: HomeAssistant,
     ac_mode: bool,
     initial_hvac_mode: HVACMode,
