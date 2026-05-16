@@ -73,7 +73,7 @@ async def test_dynamic_new_devices(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test light platform setup with at first no devices and dynamically adding a device."""
+    """Test platform setup with no devices and dynamically adding one."""
     mock_config_entry.add_to_hass(hass)
 
     eheimdigital_hub_mock.return_value.devices = {}
