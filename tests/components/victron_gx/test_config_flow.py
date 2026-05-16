@@ -10,6 +10,7 @@ from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_SERIAL,
+    CONF_UPDATE_FREQUENCY,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -839,7 +840,7 @@ async def test_options_flow_shows_current_value(
     """Test options flow shows form with current update frequency."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, options={"update_frequency": 45}
+        mock_config_entry, options={CONF_UPDATE_FREQUENCY: 45}
     )
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -860,8 +861,8 @@ async def test_options_flow_sets_update_frequency(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"update_frequency": 60},
+        user_input={CONF_UPDATE_FREQUENCY: 60},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options["update_frequency"] == 60
+    assert mock_config_entry.options[CONF_UPDATE_FREQUENCY] == 60

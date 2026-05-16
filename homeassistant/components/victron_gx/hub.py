@@ -80,7 +80,7 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds=config.get(
+            update_frequency_seconds=entry.options.get(
                 CONF_UPDATE_FREQUENCY, DEFAULT_UPDATE_FREQUENCY_SECONDS
             ),
         )
