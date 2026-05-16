@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.5.0
+aioamazondevices==13.6.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -236,7 +236,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==4.0.0
+aiodns==4.0.3
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -254,7 +254,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.0.0
+aioesphomeapi==45.0.2
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1356,7 +1356,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.3.0
+infrared-protocols==5.4.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -1438,7 +1438,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.7
+lcn-frontend==0.2.9
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -2870,10 +2870,8 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.19.1
 
-# homeassistant.components.honeywell_string_lights
-# homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
-rf-protocols==3.1.0
+rf-protocols==3.2.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3241,7 +3239,7 @@ unifiled==0.11
 universal-silabs-flasher==1.1.0
 
 # homeassistant.components.upb
-upb-lib==0.7.0
+upb-lib==0.7.1
 
 # homeassistant.components.upcloud
 upcloud-api==2.9.0
