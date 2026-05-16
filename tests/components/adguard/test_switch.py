@@ -1,7 +1,6 @@
 """Tests for the AdGuard Home switch entity."""
 
 from collections.abc import Callable
-import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -138,13 +137,10 @@ async def test_switch_actions(
 async def test_switch_action_failed(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     service: str,
     expected_message: str,
 ) -> None:
     """Test the adguard switch actions."""
-    caplog.set_level(logging.ERROR)
-
     mock_adguard.enable_protection.side_effect = AdGuardHomeError("Boom")
     mock_adguard.disable_protection.side_effect = AdGuardHomeError("Boom")
 
