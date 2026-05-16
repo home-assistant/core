@@ -11,9 +11,9 @@
   "requirements": ["pyteleinfo==0.4.0"],
   "usb": [
     {
-      "vid": "0403",
       "pid": "6015",
-      "serial_number": "tinfo-*"
+      "serial_number": "tinfo-*",
+      "vid": "0403"
     }
   ]
 }
