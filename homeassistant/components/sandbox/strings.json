@@ -1,0 +1,10 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sandbox Configuration",
+        "description": "Configure entries to run in a sandbox process."
+      }
+    }
+  }
+}
