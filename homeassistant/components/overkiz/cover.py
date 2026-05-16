@@ -199,6 +199,15 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
         stop_command=OverkizCommand.STOP,
     ),
+    # Needs override since OpenCloseGate4T only supports the cycle command
+    # (rts:GateOpenerRTS4TComponent)
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_GATE_4T,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(

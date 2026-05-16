@@ -7442,6 +7442,38 @@
       "uiClass": "Gate"
     },
     {
+      "creationTime": 1434967095000,
+      "lastUpdateTime": 1434967095000,
+      "label": "RTS Gate",
+      "deviceURL": "rts://1234-1234-6233/16730717",
+      "shortcut": false,
+      "controllableName": "rts:GateOpenerRTS4TComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "cycle",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "OpenCloseGate4T",
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
+        "uiClass": "Gate",
+        "qualifiedName": "rts:GateOpenerRTS4TComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "OpenCloseGate4T",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
+      "uiClass": "Gate"
+    },
+    {
       "creationTime": 1521964729000,
       "lastUpdateTime": 1521964729000,
       "label": "Garage Door",
