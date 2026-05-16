@@ -7,24 +7,11 @@ import pytest
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from .conftest import (
-    TEST_HOST,
-    TEST_NAME,
-    TEST_PASSWORD,
-    TEST_PORT,
-    TEST_SERIAL,
-    TEST_USERNAME,
-)
+from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_SERIAL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -49,19 +36,17 @@ async def test_form(
             CONF_PORT: TEST_PORT,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_NAME: TEST_NAME,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == f"Amcrest {TEST_SERIAL}"
     assert result["result"].unique_id == TEST_SERIAL
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_NAME: TEST_NAME,
     }
 
 
@@ -109,6 +94,7 @@ async def test_form_invalid_auth(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Amcrest {TEST_SERIAL}"
 
 
 async def test_form_cannot_connect(

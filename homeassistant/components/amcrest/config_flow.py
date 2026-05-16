@@ -7,13 +7,7 @@ from amcrest import AmcrestError, LoginError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -23,7 +17,6 @@ from . import (
     CONF_RESOLUTION,
     CONF_STREAM_SOURCE,
     DEFAULT_ARGUMENTS,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_RESOLUTION,
     AmcrestChecker,
@@ -32,6 +25,8 @@ from .camera import STREAM_SOURCE_LIST
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTRY_TITLE_PREFIX = "Amcrest"
 
 
 async def _validate_connection(
@@ -76,7 +71,6 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            name = user_input.get(CONF_NAME, DEFAULT_NAME)
 
             serial_number, error = await _validate_connection(
                 self.hass, host, port, username, password
@@ -89,13 +83,12 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=name,
+                    title=f"{ENTRY_TITLE_PREFIX} {serial_number}",
                     data={
                         CONF_HOST: host,
                         CONF_PORT: port,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        CONF_NAME: name,
                     },
                     options={
                         CONF_RESOLUTION: DEFAULT_RESOLUTION,
@@ -113,7 +106,6 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 }
             ),
             errors=errors,

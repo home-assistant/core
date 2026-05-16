@@ -7,13 +7,7 @@ import pytest
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -25,7 +19,7 @@ async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fail
 ) -> None:
     """Test config-entry setup uses entry.unique_id even if device serial fetch fails."""
     entry = MockConfigEntry(
-        title="Amcrest Camera",
+        title="Amcrest SERIAL_FROM_FLOW",
         domain=DOMAIN,
         unique_id="SERIAL_FROM_FLOW",
         data={
@@ -33,7 +27,6 @@ async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fail
             CONF_PORT: 80,
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
-            CONF_NAME: "Amcrest Camera",
         },
     )
     entry.add_to_hass(hass)
@@ -85,7 +78,6 @@ async def test_setup_entry_requires_unique_id(hass: HomeAssistant) -> None:
             CONF_PORT: 80,
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
-            CONF_NAME: "Amcrest Camera",
         },
     )
     entry.add_to_hass(hass)

@@ -209,12 +209,14 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._channel = device.channel
         self.entity_description: AmcrestSensorEntityDescription = entity_description
 
-        self._attr_name = f"{name} {entity_description.name}"
+        if device.device_info is not None:
+            self._attr_device_info = device.device_info
+            self._attr_has_entity_name = True
+        else:
+            self._attr_name = f"{name} {entity_description.name}"
         self._attr_should_poll = entity_description.should_poll
         if unique_id:
             self._attr_unique_id = unique_id
-        if hasattr(device, "device_info"):
-            self._attr_device_info = device.device_info
 
     @property
     def available(self) -> bool:

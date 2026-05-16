@@ -7,13 +7,7 @@ import pytest
 
 from homeassistant.components.amcrest import PLATFORMS
 from homeassistant.components.amcrest.const import DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +16,7 @@ TEST_PORT = 80
 TEST_USERNAME = "admin"
 TEST_PASSWORD = "password123"
 TEST_SERIAL = "12345"
-TEST_NAME = "Amcrest Camera"
+TEST_CONFIG_ENTRY_TITLE = f"Amcrest {TEST_SERIAL}"
 
 
 @pytest.fixture
@@ -38,14 +32,13 @@ def mock_setup_entry() -> Generator[MagicMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=TEST_NAME,
+        title=TEST_CONFIG_ENTRY_TITLE,
         domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_NAME: TEST_NAME,
         },
         unique_id=TEST_SERIAL,
     )

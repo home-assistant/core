@@ -111,12 +111,14 @@ class AmcrestSensor(SensorEntity):
         self._api = device.api
         self._channel = device.channel
 
-        self._attr_name = f"{name} {description.name}"
+        if device.device_info is not None:
+            self._attr_device_info = device.device_info
+            self._attr_has_entity_name = True
+        else:
+            self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
         if unique_id:
             self._attr_unique_id = unique_id
-        if hasattr(device, "device_info"):
-            self._attr_device_info = device.device_info
 
     @property
     def available(self) -> bool:
