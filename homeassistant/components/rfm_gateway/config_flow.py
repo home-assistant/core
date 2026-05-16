@@ -231,6 +231,12 @@ class RfmGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _is_usable_discovery_host(value: str) -> bool:
         if not value:
             return False
+        try:
+            ipaddress.ip_address(value)
+        except ValueError:
+            pass
+        else:
+            return False
         if "_http._tcp" in value:
             return False
         if "._" in value:
