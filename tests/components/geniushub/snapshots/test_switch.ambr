@@ -43,6 +43,7 @@
       'friendly_name': 'Bedroom Socket',
       'status': dict({
         'mode': 'timer',
+        'output': 1,
         'override': dict({
           'duration': 0,
           'setpoint': 'True',
@@ -102,6 +103,7 @@
       'friendly_name': 'Kitchen Socket',
       'status': dict({
         'mode': 'timer',
+        'output': 1,
         'override': dict({
           'duration': 0,
           'setpoint': 'True',
@@ -161,6 +163,7 @@
       'friendly_name': 'Study Socket',
       'status': dict({
         'mode': 'off',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 'True',

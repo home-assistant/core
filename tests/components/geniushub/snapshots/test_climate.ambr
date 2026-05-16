@@ -51,6 +51,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
       'friendly_name': 'Bedroom',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -64,6 +65,7 @@
       ]),
       'status': dict({
         'mode': 'off',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 23.5,
@@ -135,6 +137,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21,
       'friendly_name': 'Ensuite',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -150,6 +153,7 @@
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 28,
@@ -221,6 +225,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21,
       'friendly_name': 'Guest room',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -236,6 +241,7 @@
       'status': dict({
         'mode': 'off',
         'occupied': 'True',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -307,6 +313,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21,
       'friendly_name': 'Hall',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -322,6 +329,7 @@
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -393,6 +401,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
       'friendly_name': 'Kitchen',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -408,6 +417,7 @@
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -478,6 +488,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 20,
       'friendly_name': 'Lounge',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -491,6 +502,7 @@
       ]),
       'status': dict({
         'mode': 'off',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 20,
@@ -562,6 +574,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 22,
       'friendly_name': 'Study',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -577,6 +590,7 @@
       'status': dict({
         'mode': 'off',
         'occupied': 'False',
+        'output': 0,
         'override': dict({
           'duration': 0,
           'setpoint': 28,
