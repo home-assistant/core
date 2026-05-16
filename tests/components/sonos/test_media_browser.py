@@ -366,6 +366,9 @@ async def test_search_media(
 
     assert response["result"] == snapshot
 
+    assert soco_mock.music_library.get_music_library_information.call_args.args == (
+        "tracks",
+    )
     assert soco_mock.music_library.get_music_library_information.call_args.kwargs == {
         "search_term": "Come Together",
         "full_album_art_uri": True,

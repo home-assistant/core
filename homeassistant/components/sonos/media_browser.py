@@ -218,7 +218,7 @@ async def async_search_media(
     query: SearchMediaQuery,
 ) -> SearchMedia:
     """Search media."""
-    search_type = MEDIA_TYPES_TO_SONOS.get(query.media_content_type or "")
+    search_type = MEDIA_TYPES_TO_SONOS.get(query.media_content_type or MediaType.TRACK)
     if search_type is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
