@@ -1,8 +1,5 @@
 """Alexa Devices integration."""
 
-import asyncio
-import contextlib
-
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
@@ -49,17 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
 
-    http2_task = await coordinator.api.start_http2_processing(
+    await coordinator.api.start_http2_processing(
         alexa_httpx_client,
         on_reauth_required=_on_http2_reauth_required,
     )
-
-    async def _cancel_http2() -> None:
-        http2_task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await http2_task
-
-    entry.async_on_unload(_cancel_http2)
 
     entry.runtime_data = coordinator
 
