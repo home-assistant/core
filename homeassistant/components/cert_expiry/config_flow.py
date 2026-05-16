@@ -95,3 +95,44 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: Mapping[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        self._errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+
+            if (
+                host != reconfigure_entry.data[CONF_HOST]
+                or port != reconfigure_entry.data[CONF_PORT]
+            ):
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+
+            if await self._test_connection(user_input):
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: host, CONF_PORT: port},
+                    unique_id=f"{host}:{port}",
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
+                    ): str,
+                    vol.Required(
+                        CONF_PORT,
+                        default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    ): int,
+                }
+            ),
+            errors=self._errors,
+        )
