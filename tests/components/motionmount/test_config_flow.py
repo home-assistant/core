@@ -389,6 +389,34 @@ async def test_zeroconf_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_does_not_overwrite_static_ip(
+    hass: HomeAssistant,
+    mock_motionmount: MagicMock,
+) -> None:
+    """Test zeroconf discovery does not overwrite a manually configured static IP."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ZEROCONF_MAC,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V2)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == HOST
+    assert mock_config_entry.data[CONF_HOST] != ZEROCONF_HOSTNAME
+
+
 async def test_zeroconf_authentication_needed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
