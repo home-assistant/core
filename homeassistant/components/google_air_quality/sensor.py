@@ -234,7 +234,11 @@ class AirQualitySensorEntity(
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"_{subentry.data[CONF_LATITUDE]}"
+            f"_{subentry.data[CONF_LONGITUDE]}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
