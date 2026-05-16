@@ -16,6 +16,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -126,7 +130,7 @@ class HinenImplementation(AuthImplementation):
             if resp.status >= 400:
                 try:
                     error_response = await resp.json()
-                except ClientError, JSONDecodeError:
+                except JSONDecodeError, ValueError, ClientError:
                     error_response = {}
                 error_code = error_response.get("code", "unknown")
                 error_description = error_response.get("msg", "unknown error")
@@ -138,7 +142,23 @@ class HinenImplementation(AuthImplementation):
                     error_description,
                     error_trace_id,
                 )
-            resp.raise_for_status()
+                if resp.status == 429 or 500 <= resp.status <= 599:
+                    raise OAuth2TokenRequestTransientError(
+                        request_info=resp.request_info,
+                        history=resp.history,
+                        status=resp.status,
+                        message=f"Token request failed ({self.domain})",
+                        headers=resp.headers,
+                        domain=self.domain,
+                    ) from None
+                raise OAuth2TokenRequestReauthError(
+                    request_info=resp.request_info,
+                    history=resp.history,
+                    status=resp.status,
+                    message=f"Token request failed ({self.domain})",
+                    headers=resp.headers,
+                    domain=self.domain,
+                ) from None
             custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
             custom_token.update(
                 {

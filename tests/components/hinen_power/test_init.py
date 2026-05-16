@@ -1,13 +1,23 @@
 """Tests for the Hinen integration init module."""
 
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from yarl import URL
 
+from homeassistant.components.application_credentials import (
+    AuthorizationServer,
+    ClientCredential,
+)
+from homeassistant.components.hinen_power.auth_config import HinenImplementation
 from homeassistant.components.hinen_power.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 
 from . import MockHinen
 from .conftest import TOKEN_URL, ComponentSetup
@@ -97,3 +107,48 @@ async def test_async_unload_entry(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_error_class"),
+    [
+        (400, OAuth2TokenRequestReauthError),
+        (401, OAuth2TokenRequestReauthError),
+        (403, OAuth2TokenRequestReauthError),
+        (429, OAuth2TokenRequestTransientError),
+        (500, OAuth2TokenRequestTransientError),
+        (503, OAuth2TokenRequestTransientError),
+    ],
+)
+async def test_token_request_error_mapping(
+    hass: HomeAssistant,
+    status: int,
+    expected_error_class: type[Exception],
+) -> None:
+    """Test _token_request maps HTTP errors to correct OAuth2 exceptions."""
+    impl = HinenImplementation(
+        hass,
+        domain="hinen_power",
+        client_credential=ClientCredential("id", "secret"),
+        authorization_server=AuthorizationServer(
+            authorize_url="https://auth.url",
+            token_url=TOKEN_URL,
+        ),
+    )
+
+    mock_response = AsyncMock()
+    mock_response.status = status
+    mock_response.json.return_value = {}
+    mock_response.request_info = Mock(url=URL(TOKEN_URL))
+    mock_response.headers = {}
+    mock_response.history = ()
+
+    with patch(
+        "homeassistant.components.hinen_power.auth_config.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get.return_value.__aenter__ = AsyncMock(
+            return_value=mock_response
+        )
+
+        with pytest.raises(expected_error_class):
+            await impl._token_request({"some": "data"})

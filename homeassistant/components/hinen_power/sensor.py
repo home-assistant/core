@@ -143,11 +143,17 @@ class HinenSensor(HinenDeviceEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data[self._device_id]
+        device = self.coordinator.data.get(self._device_id)
+        return (
+            device is not None
+            and super().available
+            and self.entity_description.available_fn(device)
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self._device_id])
+        device = self.coordinator.data.get(self._device_id)
+        if device is None:
+            return None
+        return self.entity_description.value_fn(device)

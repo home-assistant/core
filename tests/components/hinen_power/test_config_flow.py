@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from hinen_open_api.exceptions import ForbiddenError
+from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
 import pytest
 
 from homeassistant import config_entries
@@ -20,7 +20,6 @@ from . import MockHinen
 from .conftest import AUTH_URL, CLIENT_ID, CLIENT_SECRET, HOST, PAGE_LANGUAGE, TITLE
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -260,21 +259,18 @@ async def test_unknown_error(
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_country_list_api_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test flow when country list API returns error."""
-    # Mock country list API to return error
-    aioclient_mock.get(
-        "https://global.knowledge.celinksmart.com/prod-api/iot-global/app-api/countries",
-        status=500,
-    )
+    with patch(
+        "homeassistant.components.hinen_power.config_flow.HinenPublic.get_country_list",
+        side_effect=HinenAPIError("API error", "error_code"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "failed_to_fetch_countries"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
