@@ -6,26 +6,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VoipConfigEntry
 from .const import DOMAIN
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
-if TYPE_CHECKING:
-    from . import DomainData
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VoipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP binary sensor entities."""
-    domain_data: DomainData = config_entry.runtime_data.domain_data
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
