@@ -161,7 +161,7 @@
     'supported_features': 0,
     'translation_key': 'impressions_completed_full_color',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed_full_color',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'impressions',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_color_impressions_completed-state]
@@ -169,6 +169,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test HA-1000 Series Color impressions completed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'impressions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_color_impressions_completed',
@@ -271,7 +272,7 @@
     'supported_features': 0,
     'translation_key': 'impressions_completed',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'impressions',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_impressions_completed-state]
@@ -279,6 +280,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test HA-1000 Series Impressions completed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'impressions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_impressions_completed',
@@ -381,7 +383,7 @@
     'supported_features': 0,
     'translation_key': 'media_sheets_completed',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_media_sheets_completed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'sheets',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_media_sheets_completed-state]
@@ -389,6 +391,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test HA-1000 Series Media sheets completed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'sheets',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_media_sheets_completed',
@@ -434,7 +437,7 @@
     'supported_features': 0,
     'translation_key': 'impressions_completed_monochrome',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed_monochrome',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'impressions',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_monochrome_impressions_completed-state]
@@ -442,6 +445,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test HA-1000 Series Monochrome impressions completed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'impressions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_monochrome_impressions_completed',
@@ -487,7 +491,7 @@
     'supported_features': 0,
     'translation_key': 'pages_completed',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_pages_completed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_pages_completed-state]
@@ -495,6 +499,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test HA-1000 Series Pages completed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ha_1000_series_pages_completed',
