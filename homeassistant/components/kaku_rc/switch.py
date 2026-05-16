@@ -79,9 +79,7 @@ class KakuSwitch(SwitchEntity, RestoreEntity):
             event: Event[EventStateChangedData],
         ) -> None:
             new_state = event.data["new_state"]
-            available = (
-                new_state is not None and new_state.state != STATE_UNAVAILABLE
-            )
+            available = new_state is not None and new_state.state != STATE_UNAVAILABLE
             if available != self._attr_available:
                 self._attr_available = available
                 self.async_write_ha_state()
