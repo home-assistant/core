@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DOMAIN
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonServiceEntity
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        AmazonSelect(coordinator, sensor_desc) for sensor_desc in SELECTS
+        AmazonSelect(coordinator, select_desc) for select_desc in SELECTS
     )
 
 
@@ -64,4 +65,8 @@ class AmazonSelect(AmazonServiceEntity, SelectEntity, RestoreEntity):
                 self._attr_current_option = option
                 self.async_write_ha_state()
                 return
-        raise HomeAssistantError(f"Device with name {option} not found")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="select_option_not_found",
+            translation_placeholders={"name": option},
+        )

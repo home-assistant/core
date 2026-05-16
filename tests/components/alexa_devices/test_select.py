@@ -32,11 +32,12 @@ from tests.common import (
 ENTITY_ID = "select.fake_email_gmail_com_default_device"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_amazon_devices_client"
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -136,10 +137,11 @@ async def test_select_entity_invalid_option_raises_home_assistant_error() -> Non
     )
     entity = AmazonSelect(coordinator, SELECTS[0])
 
-    with pytest.raises(
-        HomeAssistantError, match="Device with name Nonexistent Device not found"
-    ):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await entity.async_select_option("Nonexistent Device")
+
+    assert excinfo.value.translation_key == "select_option_not_found"
+    assert excinfo.value.translation_placeholders == {"name": "Nonexistent Device"}
 
 
 async def test_restore_state(

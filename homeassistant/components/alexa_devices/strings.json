@@ -115,6 +115,9 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "select_option_not_found": {
+      "message": "Device with name {name} not found"
     }
   },
   "selector": {
