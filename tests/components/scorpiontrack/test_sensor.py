@@ -4,7 +4,9 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from pyscorpiontrack import ScorpionTrackShare
+import pytest
 
+from homeassistant.const import UnitOfSpeed
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -23,8 +25,8 @@ async def test_vehicle_sensors(
     assert hass.states.get("sensor.ab12_cde_location").state == "Westminster, London"
 
     speed = hass.states.get("sensor.ab12_cde_speed")
-    assert speed.state == "30.0"
-    assert speed.attributes["unit_of_measurement"] == "mph"
+    assert float(speed.state) == pytest.approx(48.28032)
+    assert speed.attributes["unit_of_measurement"] == UnitOfSpeed.KILOMETERS_PER_HOUR
 
     assert hass.states.get("sensor.ab12_cde_heading").state == "182"
     assert hass.states.get("sensor.ab12_cde_last_reported").state != "unknown"
