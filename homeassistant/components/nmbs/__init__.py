@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if station_response is None:
         return False
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = station_response.stations
 
     return True

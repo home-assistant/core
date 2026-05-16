@@ -21,6 +21,7 @@ from homeassistant.components.mqtt.config_flow import (
     PWD_NOT_CHANGED,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
+from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -1111,6 +1112,7 @@ async def test_option_flow(
             user_input={
                 mqtt.CONF_DISCOVERY: True,
                 "discovery_prefix": "homeassistant",
+                "discovery_qos": 2,
                 "birth_enable": True,
                 "birth_topic": "ha_state/online",
                 "birth_payload": "online",
@@ -1132,6 +1134,7 @@ async def test_option_flow(
         }
         assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
+            CONF_DISCOVERY_QOS: 2,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
@@ -1390,6 +1393,7 @@ async def test_disable_birth_will(
         user_input={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+            CONF_DISCOVERY_QOS: 0,
             "birth_enable": False,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -1407,11 +1411,13 @@ async def test_disable_birth_will(
         "birth_message": {},
         "discovery": True,
         "discovery_prefix": "homeassistant",
+        "discovery_qos": 0,
         "will_message": {},
     }
     assert config_entry.data == {mqtt.CONF_BROKER: "test-broker", CONF_PORT: 1234}
     assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
+        CONF_DISCOVERY_QOS: 0,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
@@ -1507,6 +1513,7 @@ async def test_option_flow_default_suggested_values(
         },
         options={
             mqtt.CONF_DISCOVERY: True,
+            CONF_DISCOVERY_QOS: 1,
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
                 mqtt.ATTR_PAYLOAD: "online",
@@ -1528,6 +1535,7 @@ async def test_option_flow_default_suggested_values(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
+        "discovery_qos": 1,
         "birth_qos": 1,
         "birth_retain": True,
         "will_qos": 2,
@@ -5101,6 +5109,43 @@ async def test_subentry_reconfigure_update_device_properties(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device"
+
+    # Check suggested values
+    base_schema_key_descriptions = {
+        key: key.description for key, value in result["data_schema"].schema.items()
+    }
+    assert base_schema_key_descriptions == {
+        "name": {"suggested_value": "Milk notifier"},
+        "model": {"suggested_value": "Model XL"},
+        "model_id": {"suggested_value": "mn002"},
+        "manufacturer": {"suggested_value": "Milk Masters"},
+        "configuration_url": {"suggested_value": "https://example.com"},
+        "advanced_settings": None,
+        "mqtt_settings": None,
+    }
+
+    advanced_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["advanced_settings"]
+        .schema.schema.items()
+    }
+    assert advanced_settings_key_descriptions == {
+        "sw_version": {"suggested_value": "1.0"},
+        "hw_version": {"suggested_value": "2.1 rev a"},
+    }
+    assert result["data_schema"].schema["advanced_settings"].options == {
+        "collapsed": False
+    }
+
+    mqtt_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["mqtt_settings"]
+        .schema.schema.items()
+    }
+    assert mqtt_settings_key_descriptions == {"qos": {"suggested_value": 2}}
+    assert result["data_schema"].schema["mqtt_settings"].options == {"collapsed": False}
 
     # Update the device details
     result = await hass.config_entries.subentries.async_configure(

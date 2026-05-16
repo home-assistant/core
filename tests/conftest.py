@@ -60,14 +60,14 @@ from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import (
@@ -229,9 +229,9 @@ def pytest_runtest_setup() -> None:
         _validate_host(host)
         return (host, [], [host])
 
-    setattr(socket, "getaddrinfo", getaddrinfo_patched)
-    setattr(socket, "gethostbyname", gethostbyname_patched)
-    setattr(socket, "gethostbyname_ex", gethostbyname_ex_patched)
+    socket.getaddrinfo = getaddrinfo_patched
+    socket.gethostbyname = gethostbyname_patched
+    socket.gethostbyname_ex = gethostbyname_ex_patched
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
@@ -1063,7 +1063,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         # not be synchronous.
 
         @ha.callback
-        def _async_fire_mqtt_message(topic, payload, qos, retain):
+        def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
             async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
             hass.loop.call_soon(

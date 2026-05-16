@@ -308,6 +308,7 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "vacHigh", str(high_perf)
         )
@@ -354,6 +355,7 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error(
                 "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
@@ -388,6 +390,7 @@ class BraavaJet(IRobotVacuum):
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "rankOverlap", overlap
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference,
             "padWetness",

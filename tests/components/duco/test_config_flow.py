@@ -1,11 +1,9 @@
 """Tests for the Duco config flow."""
 
 from ipaddress import IPv4Address
-from ssl import SSLContext
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, LanInfo
+from duco_connectivity import BoardInfo, DucoConnectionError, DucoError, LanInfo
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -37,10 +35,9 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test a successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -67,10 +64,10 @@ async def test_user_flow_success(
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -116,10 +113,9 @@ async def test_user_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_new_device(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test zeroconf discovery of a new device shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
@@ -321,10 +317,9 @@ async def test_reconfigure_flow_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_new_device(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test DHCP discovery of a new device shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
@@ -417,10 +412,9 @@ async def test_dhcp_discovery_exceptions(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_exception_recovery(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test DHCP discovery recovers after an initial exception and creates the entry."""
     mock_duco_client.async_get_board_info.side_effect = DucoConnectionError(
@@ -455,24 +449,15 @@ async def test_dhcp_discovery_exception_recovery(
     assert result["result"].unique_id == TEST_MAC
 
 
-async def test_user_flow_builds_ssl_context_in_executor(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_board_info: BoardInfo,
-    mock_lan_info: LanInfo,
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_initializes_client_with_host(
+    hass: HomeAssistant, mock_board_info: BoardInfo, mock_lan_info: LanInfo
 ) -> None:
-    """Test that build_ssl_context runs in an executor and its result is passed to DucoClient."""
-    mock_ssl_context = MagicMock(spec=SSLContext)
-    with (
-        patch(
-            "homeassistant.components.duco.config_flow.build_ssl_context",
-            return_value=mock_ssl_context,
-        ) as mock_build,
-        patch(
-            "homeassistant.components.duco.config_flow.DucoClient",
-            autospec=True,
-        ) as mock_client_class,
-    ):
+    """Test that the config flow initializes the Duco client with the host."""
+    with patch(
+        "homeassistant.components.duco.config_flow.DucoClient",
+        autospec=True,
+    ) as mock_client_class:
         mock_client_class.return_value.async_get_board_info.return_value = (
             mock_board_info
         )
@@ -485,9 +470,7 @@ async def test_user_flow_builds_ssl_context_in_executor(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    mock_build.assert_called_once()
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,
-        ssl_context=mock_ssl_context,
     )

@@ -218,8 +218,9 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-            # Some cameras don't support setting the timezone and will throw an IndexError
-            # if we try to set it. If we get an error, try again without the timezone.
+            # Some cameras don't support setting the timezone
+            # and will throw an IndexError if we try to set it.
+            # If we get an error, try again without the timezone.
             except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
@@ -333,8 +334,9 @@ class ONVIFDevice:
         try:
             device_info = await device_mgmt.GetDeviceInformation()
         except (XMLParseError, XMLSyntaxError, TransportError) as ex:
-            # Some cameras have invalid UTF-8 in their device information (TransportError)
-            # and others have completely invalid XML (XMLParseError, XMLSyntaxError)
+            # Some cameras have invalid UTF-8 in their device
+            # information (TransportError) and others have
+            # completely invalid XML (XMLParseError, XMLSyntaxError)
             LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
         else:
             manufacturer = device_info.Manufacturer

@@ -104,7 +104,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
-        """Handle a message event from the API and trigger the event entity if it matches the entity's mower ID."""
+        """Handle a message event from the API and trigger for matching mower ID."""
         if msg.id != self.mower_id:
             return
         message = msg.attributes.message
