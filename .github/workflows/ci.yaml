@@ -1088,6 +1088,7 @@ jobs:
         options: >-
           --health-cmd="if command -v mariadb-admin >/dev/null; then mariadb-admin ping -uroot -ppassword; else mysqladmin ping -uroot -ppassword; fi"
           --health-interval=5s --health-timeout=2s --health-retries=3
+          --tmpfs /var/lib/mysql:rw,size=2g,mode=1777
     needs:
       - info
       - base
