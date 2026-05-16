@@ -14,7 +14,7 @@ from elke27_lib.errors import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import ATTR_CODE, CONF_HOST, CONF_PORT, Platform
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -26,7 +26,13 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
 )
 
-from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, CONF_PANEL, DOMAIN
+from .const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LEGACY_PIN,
+    CONF_LINK_KEYS_JSON,
+    CONF_PANEL,
+    DOMAIN,
+)
 from .coordinator import Elke27DataUpdateCoordinator
 from .entity import unique_base
 from .hub import Elke27Hub
@@ -43,7 +49,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 SERVICE_ALARM_ARM_AUTOMATIC = "alarm_arm_automatic"
 ATTR_MODE = "mode"
-ATTR_CODE = "code"
 
 SERVICE_ALARM_ARM_AUTOMATIC_SCHEMA = cv.make_entity_service_schema(
     {
@@ -84,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(msg)
     integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
     entry_data = dict(entry.data)
-    pin_removed = entry_data.pop("pin", None)
+    pin_removed = entry_data.pop(CONF_LEGACY_PIN, None)
     if not integration_serial:
         integration_serial = await async_get_integration_serial(hass, host)
         entry_data[CONF_INTEGRATION_SERIAL] = integration_serial
@@ -145,10 +150,8 @@ async def _async_migrate_unique_ids(
     """Migrate legacy unique IDs to the <base>:<domain>:<id> format."""
     registry = er.async_get(hass)
     prefix = f"{base}_"
-    for entity in registry.entities.values():
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.platform != DOMAIN:
-            continue
-        if entity.config_entry_id != entry.entry_id:
             continue
         unique_id = entity.unique_id
         if not unique_id.startswith(prefix):

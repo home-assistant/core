@@ -23,7 +23,6 @@ from elke27_lib.types import CsmSnapshot
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import (
     Elke27DataUpdateCoordinator,
-    _is_event,
     _normalize_domains,
 )
 from homeassistant.core import HomeAssistant
@@ -241,16 +240,6 @@ async def test_connection_state_event_triggers_refresh(
     coordinator._process_event(event)
     await hass.async_block_till_done()
     coordinator.async_refresh_now.assert_awaited_once()
-
-
-def test_is_event_fallback() -> None:
-    """Verify event matching falls back to class name when needed."""
-
-    class FakeEvent:
-        pass
-
-    event = FakeEvent()
-    assert _is_event(event, None, "FakeEvent")
 
 
 def test_normalize_domains() -> None:

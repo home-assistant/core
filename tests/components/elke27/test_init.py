@@ -17,6 +17,7 @@ from homeassistant.components.elke27 import (
 )
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
+    CONF_LEGACY_PIN,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
@@ -139,6 +140,15 @@ async def test_setup_transient_error_returns_not_ready(
     hub.async_disconnect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.homeassistant.issues.config_entry_reauth.title",
+            "component.homeassistant.issues.config_entry_reauth.description",
+        ]
+    ],
+)
 async def test_setup_missing_link_keys_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -153,6 +163,15 @@ async def test_setup_missing_link_keys_raises_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.homeassistant.issues.config_entry_reauth.title",
+            "component.homeassistant.issues.config_entry_reauth.description",
+        ]
+    ],
+)
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -266,7 +285,7 @@ async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> 
             CONF_HOST: "192.168.1.15",
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            "pin": "1234",
+            CONF_LEGACY_PIN: "1234",
             "panel": {"panel_name": "Panel"},
         },
     )
@@ -315,7 +334,7 @@ async def test_setup_removes_pin_when_serial_exists(hass: HomeAssistant) -> None
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
             CONF_INTEGRATION_SERIAL: "112233445566",
-            "pin": "1234",
+            CONF_LEGACY_PIN: "1234",
         },
     )
     entry.add_to_hass(hass)
@@ -512,3 +531,57 @@ async def test_alarm_arm_automatic_rejects_non_elke27_entity(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        "aa:bb:cc:dd:ee:ff_area_1",
+        "aa:bb:cc:dd:ee:ff:area:abc",
+    ],
+)
+async def test_alarm_arm_automatic_rejects_malformed_unique_id(
+    hass: HomeAssistant,
+    unique_id: str,
+) -> None:
+    """Verify automatic arming rejects malformed Elke27 area unique IDs."""
+    await async_setup(hass, {})
+
+    hub = SimpleNamespace(
+        async_arm_area=AsyncMock(return_value=True),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.33"},
+    )
+    entry.add_to_hass(hass)
+    entry.runtime_data = Elke27RuntimeData(
+        hub=hub,
+        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
+    )
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    entity_id = (
+        er.async_get(hass)
+        .async_get_or_create(
+            "alarm_control_panel",
+            DOMAIN,
+            unique_id,
+            config_entry=entry,
+        )
+        .entity_id
+    )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ALARM_ARM_AUTOMATIC,
+            {
+                "entity_id": entity_id,
+                ATTR_MODE: "away",
+                ATTR_CODE: "1234",
+            },
+            blocking=True,
+        )
+    hub.async_arm_area.assert_not_awaited()

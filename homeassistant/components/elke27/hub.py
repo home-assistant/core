@@ -280,10 +280,7 @@ class Elke27Hub:
             "light_id": light_id,
             "status": status,
         }
-        if state:
-            payload["level"] = level if level is not None else 99
-        if not state:
-            payload["level"] = 0
+        payload["level"] = (level if level is not None else 99) if state else 0
         result = await client.async_execute("light_set_status", **payload)
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
@@ -467,6 +464,8 @@ class Elke27Hub:
             or (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
             or getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None) is mode
         ):
+            # The panel applies custom-bypass behavior by bypassing zones first,
+            # then using the normal away arm command.
             arm_state = "ARMED_AWAY"
         else:
             msg = "Arm mode is not supported."

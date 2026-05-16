@@ -181,7 +181,7 @@ class Elke27AreaAlarmControlPanel(
             except Elke27PinRequiredError as err:
                 msg = "PIN required to perform this action."
                 raise HomeAssistantError(msg) from err
-        await self._async_arm(ArmMode.ARMED_AWAY, code)
+        await self._async_arm(_custom_bypass_mode(), code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
@@ -192,7 +192,7 @@ class Elke27AreaAlarmControlPanel(
             msg = "PIN required to perform this action."
             raise HomeAssistantError(msg) from err
 
-    async def _async_arm(self, mode: ArmMode, code: str | None) -> None:
+    async def _async_arm(self, mode: ArmMode | str, code: str | None) -> None:
         """Arm the area using the requested mode."""
         code = _normalize_code(code)
         try:

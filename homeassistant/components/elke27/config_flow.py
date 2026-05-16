@@ -22,7 +22,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    selector,
+)
 
 from .const import (
     CONF_INTEGRATION_SERIAL,
@@ -62,19 +67,12 @@ STEP_REAUTH_DATA_SCHEMA = STEP_LINK_DATA_SCHEMA
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SETUP_METHOD, default=SETUP_METHOD_DISCOVER): selector(
-            {
-                "select": {
-                    "options": [
-                        {
-                            "value": SETUP_METHOD_DISCOVER,
-                            "label": "Discover panels",
-                        },
-                        {"value": SETUP_METHOD_MANUAL, "label": "Manual setup"},
-                    ],
-                    "mode": "list",
-                }
-            }
+        vol.Required(CONF_SETUP_METHOD, default=SETUP_METHOD_DISCOVER): SelectSelector(
+            SelectSelectorConfig(
+                options=[SETUP_METHOD_DISCOVER, SETUP_METHOD_MANUAL],
+                mode=SelectSelectorMode.LIST,
+                translation_key=CONF_SETUP_METHOD,
+            )
         )
     }
 )
@@ -146,7 +144,15 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if panel_idx_raw == CONF_RESCAN:
                     self._discovered_panels = None
                     return await self.async_step_discover(None)
-                panel_idx = int(panel_idx_raw)
+                try:
+                    panel_idx = int(panel_idx_raw)
+                except ValueError:
+                    errors["base"] = "no_panels_found"
+                    return self.async_show_form(
+                        step_id="discover",
+                        data_schema=self._discovery_schema(),
+                        errors=errors,
+                    )
                 if not self._discovered_panels or panel_idx >= len(
                     self._discovered_panels
                 ):
@@ -318,7 +324,11 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except Elke27AuthError:
             errors["base"] = "cannot_connect"
-        except Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError:
+        except (
+            Elke27ConnectionError,
+            Elke27TimeoutError,
+            Elke27DisconnectedError,
+        ):
             errors["base"] = "cannot_connect"
         except Elke27LinkRequiredError:
             errors["base"] = "link_required"

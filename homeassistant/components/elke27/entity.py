@@ -59,6 +59,7 @@ def device_info_for_entry(
     snapshot = coordinator.data
     panel_name = get_panel_field(snapshot, hub.panel_name, "name") or entry.title
     mac = get_panel_field(snapshot, hub.panel_name, "mac")
+    formatted_mac = format_mac(str(mac)) if mac else None
     panel_serial = get_panel_field(snapshot, hub.panel_name, "serial")
     model = get_panel_field(snapshot, hub.panel_name, "model")
     firmware = get_panel_field(snapshot, hub.panel_name, "firmware")
@@ -70,7 +71,9 @@ def device_info_for_entry(
     )
     identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
+        connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
+        if formatted_mac
+        else set(),
         identifiers=identifiers,
         name=panel_name,
         model=model,

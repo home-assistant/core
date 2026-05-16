@@ -84,6 +84,14 @@
       }
     }
   },
+  "selector": {
+    "setup_method": {
+      "options": {
+        "discover": "Discover panels",
+        "manual": "Manual setup"
+      }
+    }
+  },
   "services": {
     "alarm_arm_automatic": {
       "description": "Arm an Elk E27 area using automatic panel behavior for stay and exit-delay handling.",
