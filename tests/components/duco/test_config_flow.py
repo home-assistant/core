@@ -362,6 +362,7 @@ async def test_reconfigure_flow_wrong_device(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(500, "/info"), "unknown"),
     ],
 )
 async def test_reconfigure_flow_error(

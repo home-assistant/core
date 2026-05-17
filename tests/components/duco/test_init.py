@@ -106,6 +106,11 @@ _UNSUPPORTED_BOARD_INFOS = [
             ConfigEntryState.SETUP_ERROR,
         ),
         (
+            "async_get_board_info",
+            DucoResponseError(500, "/info"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
