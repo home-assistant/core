@@ -1,11 +1,22 @@
 """Validation helpers for supported Duco systems."""
 
+from typing import cast
+
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import DucoResponseError
-from duco_connectivity.models import BoardInfo
+from duco_connectivity.models import BoardInfo, DucoVersion, KnownBoardName
 
-_SUPPORTED_BOX_NAMES: frozenset[str] = frozenset({"SILENT_CONNECT"})
-_MIN_PUBLIC_API_VERSION: tuple[int, ...] = (2, 1)
+# Newer Connectivity boards expose /info with BoxName and
+# PublicApiVersion. We use that endpoint to distinguish supported Connectivity
+# hardware from older Communication board V1 hardware before applying the
+# narrower product whitelist below.
+_SUPPORTED_BOX_NAMES: frozenset[KnownBoardName] = frozenset(
+    {KnownBoardName.SILENT_CONNECT}
+)
+_MIN_PUBLIC_API_VERSION = DucoVersion("2.1")
+_MIN_PUBLIC_API_VERSION_COMPONENTS: tuple[int, ...] = cast(
+    tuple[int, ...], _MIN_PUBLIC_API_VERSION.components
+)
 
 
 class UnsupportedBoardError(Exception):
@@ -14,17 +25,12 @@ class UnsupportedBoardError(Exception):
 
 def validate_board_support(board_info: BoardInfo) -> None:
     """Raise UnsupportedBoardError if the board does not meet support requirements."""
-    if board_info.box_name not in _SUPPORTED_BOX_NAMES:
+    if board_info.box_name.known_value not in _SUPPORTED_BOX_NAMES:
         raise UnsupportedBoardError
-    if board_info.public_api_version is None:
+    version = board_info.public_api_version
+    if version is None or version.components is None:
         raise UnsupportedBoardError
-    try:
-        version_tuple = tuple(
-            int(part) for part in board_info.public_api_version.split(".")
-        )
-    except (AttributeError, ValueError) as err:
-        raise UnsupportedBoardError from err
-    if version_tuple < _MIN_PUBLIC_API_VERSION:
+    if version.components < _MIN_PUBLIC_API_VERSION_COMPONENTS:
         raise UnsupportedBoardError
 
 
@@ -34,7 +40,8 @@ async def async_get_supported_board_info(client: DucoClient) -> BoardInfo:
         board_info = await client.async_get_board_info()
     except DucoResponseError as err:
         if err.status == 404:
-            # Older unsupported boards are known to miss the /info endpoint.
+            # Duco indicated that Communication board V1 does not implement
+            # /info, so a 404 is enough to treat the device as unsupported.
             raise UnsupportedBoardError from err
         raise
 

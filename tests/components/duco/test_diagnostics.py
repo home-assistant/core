@@ -87,6 +87,31 @@ async def test_diagnostics_without_optional_software_version(
     assert "software_version" not in diagnostics["board_info"]
 
 
+async def test_diagnostics_without_optional_public_api_version(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that an optional public API version is omitted from diagnostics."""
+    # BoardInfo is a frozen dataclass, so the mock must be updated before
+    # integration setup — the coordinator stores board_info during async_setup.
+    mock_duco_client.async_get_board_info.return_value = replace(
+        mock_duco_client.async_get_board_info.return_value,
+        public_api_version=None,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert "public_api_version" not in diagnostics["board_info"]
+    assert diagnostics["board_info"]["software_version"] == "1.2.3"
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_diagnostics_without_optional_api_metadata(
     hass: HomeAssistant,

@@ -136,6 +136,7 @@ async def test_user_flow_success(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
+        (DucoResponseError(500, "/info"), "unknown"),
         (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
