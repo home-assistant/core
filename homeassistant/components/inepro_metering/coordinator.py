@@ -31,6 +31,7 @@ from inepro_metering.settings import WIFI_SUPPORT_SETTING_KEY, get_writable_sett
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -186,7 +187,11 @@ class IneproMeteringCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 gateway_readings.update(gateway_configuration.as_readings())
             readings = await _async_read_profile(
                 self._client,
-                self.profile.all_sensors,
+                _polling_sensors_for_entry(
+                    self.hass,
+                    self.entry,
+                    self.profile,
+                ),
                 slave_id,
             )
             if gateway_readings:
@@ -375,7 +380,13 @@ class IneproSerialBusCoordinator(DataUpdateCoordinator[SerialBusCoordinatorData]
             try:
                 readings = await _async_read_profile(
                     self._client,
-                    profile.all_sensors,
+                    _polling_sensors_for_meter(
+                        self.hass,
+                        self.entry,
+                        meter,
+                        profile,
+                        use_legacy_identity=meter == self._meters[0],
+                    ),
                     meter.slave_id,
                 )
                 if gateway_readings:
@@ -542,6 +553,86 @@ def _should_keep_ble_stale_data(
         and last_data is not None
         and consecutive_failures < BLE_STALE_READ_GRACE_POLLS
     )
+
+
+def _polling_sensors_for_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    profile: MeterProfile,
+) -> tuple[MeterSensorDescription, ...]:
+    """Return sensors that should be read for one single-meter poll."""
+    return _polling_sensors(
+        hass,
+        profile,
+        unique_id_prefix=entry.entry_id,
+    )
+
+
+def _polling_sensors_for_meter(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    meter: ConfiguredMeter,
+    profile: MeterProfile,
+    *,
+    use_legacy_identity: bool,
+) -> tuple[MeterSensorDescription, ...]:
+    """Return sensors that should be read for one bus-meter poll."""
+    if use_legacy_identity:
+        unique_id_prefix = entry.entry_id
+    else:
+        unique_id_prefix = f"{entry.entry_id}_{build_meter_key(meter)}"
+    return _polling_sensors(
+        hass,
+        profile,
+        unique_id_prefix=unique_id_prefix,
+    )
+
+
+def _polling_sensors(
+    hass: HomeAssistant,
+    profile: MeterProfile,
+    *,
+    unique_id_prefix: str,
+) -> tuple[MeterSensorDescription, ...]:
+    """Return register sensors that need polling for a profile.
+
+    Disabled-by-default measurement and diagnostic entities should not expand the
+    steady-state Modbus read set. Configuration registers are still read because
+    writable controls use them as their backing state.
+    """
+    return (
+        tuple(
+            description
+            for description in (
+                profile.measurement_sensors + profile.diagnostic_sensors
+            )
+            if _sensor_entity_enabled(
+                hass,
+                unique_id=f"{unique_id_prefix}_{description.key}",
+                default=description.entity_registry_enabled_default,
+            )
+        )
+        + profile.config_sensors
+    )
+
+
+def _sensor_entity_enabled(
+    hass: HomeAssistant,
+    *,
+    unique_id: str,
+    default: bool,
+) -> bool:
+    """Return whether a sensor entity should be included in polling."""
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    if entity_id is None:
+        return default
+
+    entity_entry = registry.async_get(entity_id)
+    if entity_entry is None:
+        return default
+
+    return entity_entry.disabled_by is None
 
 
 async def _async_read_profile(

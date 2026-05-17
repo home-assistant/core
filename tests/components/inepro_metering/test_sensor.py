@@ -38,13 +38,17 @@ from homeassistant.components.inepro_metering.const import (
 from homeassistant.components.inepro_metering.coordinator import (
     IneproMeteringCoordinator,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -266,9 +270,11 @@ class FakeModbusClient:
     def __init__(self, config) -> None:
         """Initialize the fake client."""
         self._registers = _register_map()
+        self.read_calls = []
 
     async def async_read_registers(self, register_type, address, count, slave_id):
         """Return fake register values."""
+        self.read_calls.append((register_type, address, count, slave_id))
         return [self._registers.get(address + offset, 0) for offset in range(count)]
 
     async def async_read_device_identification(self, slave_id):
@@ -287,10 +293,13 @@ class FakeModbusClient:
 class FakeGrow750ModbusClient(FakeModbusClient):
     """Fake Modbus client for a three-phase GROW 750 meter."""
 
+    instances = []
+
     def __init__(self, config) -> None:
         """Initialize the fake client."""
         super().__init__(config)
         self._registers = _register_map_grow_750()
+        FakeGrow750ModbusClient.instances.append(self)
 
     async def async_read_device_identification(self, slave_id):
         """Return fake device identification."""
@@ -306,7 +315,7 @@ class FakeGrow750EnergyReadFailureModbusClient(FakeGrow750ModbusClient):
 
     async def async_read_registers(self, register_type, address, count, slave_id):
         """Raise for the first cumulative energy block."""
-        if address == 0x6000:
+        if address == 0x6012:
             raise IneproReadError("energy block unavailable")
         return await super().async_read_registers(
             register_type, address, count, slave_id
@@ -329,6 +338,20 @@ class FakeModbusClientFault(FakeModbusClient):
         """Initialize the fake client."""
         super().__init__(config)
         self._registers = _register_map_faulted()
+
+
+def _enable_sensor_entity(
+    entity_registry: er.EntityRegistry,
+    entry: MockConfigEntry,
+    key: str,
+) -> None:
+    """Pre-create an enabled sensor registry entry."""
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{entry.entry_id}_{key}",
+        config_entry=entry,
+    )
 
 
 class FakeGatewayModbusClient(FakeModbusClient):
@@ -652,8 +675,55 @@ async def test_grow_three_phase_energy_entities_use_import_export_metadata(
     assert hass.states.get("sensor.three_phase_meter_resettable_day_counter_l1") is None
 
 
+async def test_grow_disabled_measurements_are_not_polled_by_default(
+    hass: HomeAssistant,
+) -> None:
+    """Disabled GROW measurement entities should not expand normal polling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Three Phase Meter",
+        data={
+            CONF_FAMILY: MeterFamily.GROW.value,
+            CONF_VARIANT: "grow_750",
+            CONF_TRANSPORT: TransportType.SERIAL.value,
+            CONF_SLAVE_ID: 1,
+            CONF_SCAN_INTERVAL: 15,
+            CONF_SERIAL_PORT: "COM7",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+            CONF_TIMEOUT: 3,
+        },
+    )
+    entry.add_to_hass(hass)
+    FakeGrow750ModbusClient.instances = []
+
+    with patch(
+        "homeassistant.components.inepro_metering.coordinator.IneproModbusClient",
+        FakeGrow750ModbusClient,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    client = FakeGrow750ModbusClient.instances[-1]
+    read_blocks = client.read_calls
+
+    assert any(address == 0x6012 and count == 8 for _, address, count, _ in read_blocks)
+    assert not any(
+        address == 0x6000 and count == 119 for _, address, count, _ in read_blocks
+    )
+    assert not any(
+        address <= 0x6091 < address + count for _, address, count, _ in read_blocks
+    )
+    assert not any(
+        address <= 0x60B9 < address + count for _, address, count, _ in read_blocks
+    )
+
+
 async def test_grow_signed_active_energy_decodes_as_int32(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Signed/net active-energy registers should decode as INT32 values."""
     entry = MockConfigEntry(
@@ -673,6 +743,14 @@ async def test_grow_signed_active_energy_decodes_as_int32(
             CONF_TIMEOUT: 3,
         },
     )
+    entry.add_to_hass(hass)
+    for key in (
+        "active_energy_total",
+        "active_energy_l1",
+        "active_energy_l2",
+        "active_energy_l3",
+    ):
+        _enable_sensor_entity(entity_registry, entry, key)
 
     with patch(
         "homeassistant.components.inepro_metering.coordinator.IneproModbusClient",
