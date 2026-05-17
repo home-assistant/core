@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfApparentPower, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -32,26 +32,26 @@ class ZendureP1SensorEntityDescription(SensorEntityDescription):
 
 SENSORS: tuple[ZendureP1SensorEntityDescription, ...] = (
     ZendureP1SensorEntityDescription(
-        key="a_apparent_power",
-        translation_key="a_apparent_power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
+        key="phase_1_apparent_power",
+        translation_key="phase_1_apparent_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda report: report.a_apparent_power,
     ),
     ZendureP1SensorEntityDescription(
-        key="b_apparent_power",
-        translation_key="b_apparent_power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
+        key="phase_2_apparent_power",
+        translation_key="phase_2_apparent_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda report: report.b_apparent_power,
     ),
     ZendureP1SensorEntityDescription(
-        key="c_apparent_power",
-        translation_key="c_apparent_power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
+        key="phase_3_apparent_power",
+        translation_key="phase_3_apparent_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda report: report.c_apparent_power,
     ),

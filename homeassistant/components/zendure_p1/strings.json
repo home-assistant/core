@@ -19,14 +19,14 @@
   },
   "entity": {
     "sensor": {
-      "a_apparent_power": {
-        "name": "Phase A power"
+      "phase_1_apparent_power": {
+        "name": "Phase 1 apparent power"
       },
-      "b_apparent_power": {
-        "name": "Phase B power"
+      "phase_2_apparent_power": {
+        "name": "Phase 2 apparent power"
       },
-      "c_apparent_power": {
-        "name": "Phase C power"
+      "phase_3_apparent_power": {
+        "name": "Phase 3 apparent power"
       },
       "total_power": {
         "name": "Total power"

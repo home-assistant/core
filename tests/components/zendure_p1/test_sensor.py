@@ -35,9 +35,9 @@ async def test_sensor_values(
 ) -> None:
     """Test sensor entities expose values from the coordinator."""
     for key, expected in (
-        ("a_apparent_power", "100"),
-        ("b_apparent_power", "200"),
-        ("c_apparent_power", "300"),
+        ("phase_1_apparent_power", "100"),
+        ("phase_2_apparent_power", "200"),
+        ("phase_3_apparent_power", "300"),
         ("total_power", "600"),
     ):
         unique_id = f"SN123456-{key}"
@@ -62,9 +62,9 @@ async def test_sensor_values(
     await hass.async_block_till_done()
 
     for key, expected in (
-        ("a_apparent_power", "150"),
-        ("b_apparent_power", "250"),
-        ("c_apparent_power", "350"),
+        ("phase_1_apparent_power", "150"),
+        ("phase_2_apparent_power", "250"),
+        ("phase_3_apparent_power", "350"),
         ("total_power", "750"),
     ):
         unique_id = f"SN123456-{key}"
