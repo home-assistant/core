@@ -1,0 +1,11 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'a_apparent_power': 100,
+    'b_apparent_power': 200,
+    'c_apparent_power': 300,
+    'device_id': 'SN123456',
+    'timestamp': 1000000,
+    'total_power': 600,
+  })
+# ---
