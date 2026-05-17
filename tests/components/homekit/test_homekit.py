@@ -1870,7 +1870,7 @@ async def test_homekit_ignored_missing_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test HomeKit handles a device in the entity registry but missing from the device registry.
+    """Test HomeKit handles entity with missing device registry entry.
 
     If the entity registry is updated to remove entities linked to non-existent devices,
     or set the link to None, this test can be removed.

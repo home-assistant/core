@@ -604,6 +604,9 @@
       "supply_temperature": {
         "name": "Supply temperature"
       },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
       "valve_position": {
         "name": "Valve position"
       },
