@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-import contextlib
 from datetime import timedelta
 from enum import IntEnum
 import io
@@ -150,13 +149,6 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
     return await hass.async_add_executor_job(_load_image_from_bytes, data)
 
 
-async def _cancel_upload_task(task: asyncio.Task) -> None:
-    """Cancel a running upload task and wait for it to finish."""
-    task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await task
-
-
 async def _async_upload_image(call: ServiceCall) -> None:
     """Handle the upload_image service call."""
     entry = _get_entry_for_device(call)
@@ -183,7 +175,8 @@ async def _async_upload_image(call: ServiceCall) -> None:
 
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
-        await _cancel_upload_task(prev)
+        prev.cancel()
+        await asyncio.wait({prev})
     entry.runtime_data.upload_task = current
 
     try:
