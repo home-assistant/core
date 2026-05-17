@@ -181,17 +181,19 @@ class AirTouch3ConfigFlow(ConfigFlowBase, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the step to pick a discovered controller."""
         if user_input is not None:
-            device = self._discovered_devices[user_input[CONF_DEVICE]]
+            selected_device = self._discovered_devices[user_input[CONF_DEVICE]]
             _LOGGER.debug(
                 "User selected discovered AirTouch 3 controller %s at %s",
-                device.unique_id,
-                device.host,
+                selected_device.unique_id,
+                selected_device.host,
             )
             await self._async_set_unique_id_or_abort(
-                device.unique_id, device.host, raise_on_progress=False
+                selected_device.unique_id,
+                selected_device.host,
+                raise_on_progress=False,
             )
             return self.async_create_entry(
-                title=device.title, data={CONF_HOST: device.host}
+                title=selected_device.title, data={CONF_HOST: selected_device.host}
             )
 
         discovered_devices = await async_discover_devices(self.hass, DISCOVERY_TIMEOUT)
@@ -201,17 +203,20 @@ class AirTouch3ConfigFlow(ConfigFlowBase, domain=DOMAIN):
         )
         self._discovered_devices = {}
         for discovery in discovered_devices:
-            if not (device := await self._async_validate_discovery(discovery)):
+            discovered_device = await self._async_validate_discovery(discovery)
+            if discovered_device is None:
                 continue
-            if self._async_configured_entry(device.unique_id, device.host):
+            if self._async_configured_entry(
+                discovered_device.unique_id, discovered_device.host
+            ):
                 _LOGGER.debug(
                     "Skipping discovered AirTouch 3 controller %s at %s because it "
                     "is already configured",
-                    device.unique_id,
-                    device.host,
+                    discovered_device.unique_id,
+                    discovered_device.host,
                 )
                 continue
-            self._discovered_devices[device.unique_id] = device
+            self._discovered_devices[discovered_device.unique_id] = discovered_device
 
         if not self._discovered_devices:
             _LOGGER.debug("No unconfigured AirTouch 3 controllers were discovered")
