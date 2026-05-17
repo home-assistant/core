@@ -19,6 +19,7 @@ PARALLEL_UPDATES = 1
 
 _LEARNING_SENDER_ENTITY_ID = "learning_sender"
 _SENDER_SLOT_ENTITY_ID = "sender_slot"
+_DEFAULT_SENDER_ENTITY_ID = "default_sender"
 
 
 async def async_setup_entry(
@@ -31,7 +32,10 @@ async def async_setup_entry(
     gateway_eurid = gateway.eurid
 
     entities: list[
-        EnOceanSelect | EnOceanDeviceSenderSlotSelect | EnOceanLearningSenderSelect
+        EnOceanSelect
+        | EnOceanDeviceSenderSlotSelect
+        | EnOceanLearningSenderSelect
+        | EnOceanDefaultSenderSelect
     ] = []
     for eurid, spec in gateway.device_specs.items():
         is_actuator = any(entity.actions for entity in spec.entities)
@@ -57,7 +61,13 @@ async def async_setup_entry(
             if not isinstance(entity.config_spec, EnumOptions):
                 continue
             category = LIB_ENTITY_CATEGORY_MAP.get(entity.category)
-            if entity.id == _LEARNING_SENDER_ENTITY_ID:
+            if entity.id == _DEFAULT_SENDER_ENTITY_ID:
+                entities.append(
+                    EnOceanDefaultSenderSelect(
+                        gateway_eurid, entity.id, gateway, category
+                    )
+                )
+            elif entity.id == _LEARNING_SENDER_ENTITY_ID:
                 entities.append(
                     EnOceanLearningSenderSelect(
                         gateway_eurid, entity.id, gateway, category
@@ -210,6 +220,32 @@ class EnOceanLearningSenderSelect(_SenderSlotSelectBase):
     async def async_select_option(self, option: str) -> None:
         """Persist the selected sender slot key to gateway config."""
         key = self._label_to_key.get(option, "auto")
+        self._attr_current_option = option
+        self.gateway.set_gateway_config(self.entity_key, key)
+        self.async_write_ha_state()
+
+
+class EnOceanDefaultSenderSelect(_SenderSlotSelectBase):
+    """Dynamic select for the gateway's default sender slot (no Auto option)."""
+
+    def _refresh_options(self) -> None:
+        current_key = self.gateway.config.get(self.entity_key, "")
+        label_to_key: dict[str, str] = {}
+        for slot_key, address, _ in self.gateway.learning_sender_options():
+            if slot_key == "auto" or address is None:
+                continue
+            label_to_key[str(address)] = slot_key
+        self._label_to_key = label_to_key
+        labels = list(label_to_key)
+        self._attr_options = labels
+        self._attr_current_option = next(
+            (label for label, key in label_to_key.items() if key == current_key),
+            labels[0] if labels else None,
+        )
+
+    async def async_select_option(self, option: str) -> None:
+        """Persist the selected sender slot key to gateway config."""
+        key = self._label_to_key.get(option, option)
         self._attr_current_option = option
         self.gateway.set_gateway_config(self.entity_key, key)
         self.async_write_ha_state()
