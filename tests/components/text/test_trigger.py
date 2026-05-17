@@ -219,7 +219,7 @@ async def test_input_text_state_trigger(
     trigger: str,
     states: list[BasicTriggerStateDescription],
 ) -> None:
-    """Test that the `text.changed` trigger fires when any input_text entity's state changes."""
+    """Test text.changed trigger fires on any input_text state change."""
     calls: list[str] = []
     other_entity_ids = set(target_input_texts["included_entities"]) - {entity_id}
 

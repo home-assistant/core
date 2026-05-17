@@ -168,7 +168,7 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
-    """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
+    """Test we can still setup valid sensors when config has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
