@@ -760,6 +760,12 @@ async def test_shorthand_template_condition_in_or(hass: HomeAssistant) -> None:
     config = await condition.async_validate_condition_config(hass, config)
     assert config["conditions"][0]["condition"] == "template"
 
+    # Verify the condition can actually be evaluated at runtime
+    test = await condition.async_from_config(hass, config)
+    hass.states.async_set("sensor.test", "on")
+    hass.states.async_set("sensor.other", "off")
+    assert test.async_check()
+
 
 async def test_not_condition(hass: HomeAssistant) -> None:
     """Test the 'not' condition."""

@@ -1752,10 +1752,9 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     if isinstance(config, str):
-        # Shorthand template condition not yet converted by schema
         config = {
             CONF_CONDITION: "template",
-            CONF_VALUE_TEMPLATE: config,
+            CONF_VALUE_TEMPLATE: cv.dynamic_template(config),
         }
     condition_key: str = config[CONF_CONDITION]
 
