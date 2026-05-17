@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaType,
 )
-from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY
+from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY, SONOS_TRACKS
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
     get_media,
@@ -367,7 +367,7 @@ async def test_search_media(
     assert response["result"] == snapshot
 
     assert soco_mock.music_library.get_music_library_information.call_args.args == (
-        "tracks",
+        SONOS_TRACKS,
     )
     assert soco_mock.music_library.get_music_library_information.call_args.kwargs == {
         "search_term": "Come Together",
