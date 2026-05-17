@@ -204,7 +204,9 @@ def pytest_runtest_setup() -> None:
       of times it was raised.
 
     freezegun:
-    - Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
+    - Modified to include
+      https://github.com/spulec/freezegun/pull/424
+      and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
@@ -451,7 +453,8 @@ def verify_cleanup(
     try:
         # Verify respx.mock has been cleaned up
         assert not respx.mock.routes, (
-            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+            "respx.mock routes not cleaned up, maybe the test"
+            " needs to be decorated with @respx.mock"
         )
     finally:
         # Clear mock routes not break subsequent tests
@@ -559,7 +562,9 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 @pytest.fixture
 def aiohttp_client() -> Generator[ClientSessionGenerator]:
-    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+    """Override the default aiohttp_client since 3.x does not support it.
+
+    The aiohttp_client_cls is not supported in 3.x.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
     will do the same thing
@@ -691,7 +696,8 @@ async def hass(
 
         yield hass
 
-        # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+        # Config entries are not normally unloaded on HA shutdown.
+        # They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
         loaded_entries = [
             entry
@@ -1011,7 +1017,11 @@ def hass_ws_client(
 def fail_on_log_exception(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
+    """Fixture to fail if a callback or coroutine throws.
+
+    Catches callbacks wrapped by catch_log_exception or coroutines
+    wrapped by async_create_catching_coro.
+    """
     if "no_fail_on_log_exception" in request.keywords:
         return
 
@@ -1631,7 +1641,8 @@ def recorder_db_url(
             # to ensure that InnoDB does not deadlock.
             with engine.begin() as connection:
                 query = sa.text(
-                    "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+                    "select id FROM information_schema.processlist"
+                    " WHERE db=:db and id != CONNECTION_ID()"
                 )
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
                 if rows:
@@ -2223,7 +2234,8 @@ _real_dhcp_service_info_init = DhcpServiceInfo.__init__
 def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
     """Override __init__ for DhcpServiceInfo.
 
-    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    Ensure that the macaddress is always in lowercase and
+    without colons to match DHCP service.
     """
     _real_dhcp_service_info_init(self, *args, **kwargs)
     if self.macaddress != self.macaddress.lower().replace(":", ""):

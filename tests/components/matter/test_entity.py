@@ -408,8 +408,9 @@ async def test_bridged_entity_subscribes_to_reachable_attribute(
         and call.kwargs.get("event_filter") == EventType.ATTRIBUTE_UPDATED
         for call in subscribe_calls
     ), (
-        f"Expected a subscribe_events call with attr_path_filter={_REACHABLE_ATTR_PATH!r} "
-        "and event_filter=ATTRIBUTE_UPDATED, but none was found."
+        "Expected a subscribe_events call with attr_path_filter="
+        f"{_REACHABLE_ATTR_PATH!r} and event_filter=ATTRIBUTE_UPDATED,"
+        " but none was found."
     )
 
 
@@ -433,7 +434,9 @@ async def test_non_bridged_entity_does_not_subscribe_to_reachable(
         and "/57/17" in call.kwargs["attr_path_filter"]
         for call in subscribe_calls
     ), (
-        "Unexpected subscribe_events call for BridgedDeviceBasicInformation.Reachable on a non-bridged entity."
+        "Unexpected subscribe_events call for"
+        " BridgedDeviceBasicInformation.Reachable"
+        " on a non-bridged entity."
     )
 
 
@@ -517,7 +520,8 @@ async def test_composed_entity_unavailable_when_parent_node_goes_offline(
         hass,
         "fritz_bridge",
         matter_client,
-        # fake as reachable at startup so we can test the node going offline while reachable
+        # fake as reachable at startup so we can test the node
+        # going offline while reachable
         {_COMPOSED_PARENT_REACHABLE_ATTR_PATH: True},
     )
 
@@ -550,7 +554,7 @@ async def test_composed_entity_subscribes_to_parent_reachable_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
-    """Test that composed entity subscribes to parent BridgedDeviceBasicInformation.Reachable.
+    """Test composed entity subscribes to parent Reachable.
 
     When an endpoint belongs to a composed device, the BridgedDeviceBasicInformation
     cluster lives on the parent endpoint. The entity must create an ATTRIBUTE_UPDATED
@@ -565,6 +569,7 @@ async def test_composed_entity_subscribes_to_parent_reachable_attribute(
         and call.kwargs.get("event_filter") == EventType.ATTRIBUTE_UPDATED
         for call in subscribe_calls
     ), (
-        f"Expected a subscribe_events call with attr_path_filter={_COMPOSED_PARENT_REACHABLE_ATTR_PATH!r} "
-        "and event_filter=ATTRIBUTE_UPDATED, but none was found."
+        "Expected a subscribe_events call with attr_path_filter="
+        f"{_COMPOSED_PARENT_REACHABLE_ATTR_PATH!r}"
+        " and event_filter=ATTRIBUTE_UPDATED, but none was found."
     )

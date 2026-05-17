@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.6.0
+aioamazondevices==13.7.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -2781,7 +2781,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.33
+pyvlx==0.2.34
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
