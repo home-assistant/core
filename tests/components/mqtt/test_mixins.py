@@ -526,13 +526,17 @@ async def test_registry_not_enabled_by_default(
     assert entry.disabled
 
 
-async def test_registry_enable_not_enabled_by_default_entity(
+async def test_registry_reconfigure_disabled_or_removed_mqtt_device(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test enabling an entity that was not enabled by default."""
+    """Test reconfiguring an entity that was not enabled or removed.
+
+    Assert if a disabled entity can be re-enabled,
+    and that the suggested area can be changed or deleted devices.
+    """
     await mqtt_mock_entry()
 
     discovery_topic = "homeassistant/sensor/bla/config"
@@ -543,7 +547,11 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "enabled_by_default": False,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test",
-            "device": {"identifiers": "very_unique_device", "name": "test"},
+            "device": {
+                "identifiers": "very_unique_device",
+                "name": "test",
+                "suggested_area": "Kitchen",
+            },
         }
     )
     config_enabled = json.json_dumps(
@@ -553,7 +561,11 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "enabled_by_default": True,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test",
-            "device": {"identifiers": "very_unique_device", "name": "test"},
+            "device": {
+                "identifiers": "very_unique_device",
+                "name": "test",
+                "suggested_area": "Bedroom",
+            },
         }
     )
     config_enabled_new_entity_name = json.json_dumps(
@@ -563,19 +575,24 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "enabled_by_default": True,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test_new",
-            "device": {"identifiers": "very_unique_device", "name": "test"},
+            "device": {
+                "identifiers": "very_unique_device",
+                "name": "test",
+                "suggested_area": "Attic",
+            },
         }
     )
 
     async_fire_mqtt_message(hass, discovery_topic, config_disabled)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test")
     assert state is None
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert entry.disabled
     assert (device_id := entry.device_id)
-    assert device_registry.async_get(device_id) is not None
+    device_registry_item = device_registry.async_get(device_id)
+    assert device_registry_item.area_id == "kitchen"
 
     # Remove the entity and device
     # At this stage no entry existed during the initialization
@@ -588,24 +605,30 @@ async def test_registry_enable_not_enabled_by_default_entity(
 
     # Rediscover the previous deleted entity and allow it to be enabled
     async_fire_mqtt_message(hass, discovery_topic, config_enabled)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test")
     assert state is not None
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert not entry.disabled
-    assert device_registry.async_get(device_id) is not None
+    assert entry.area_id == "bedroom"
+    assert (device_id := entry.device_id)
+    device_registry_item = device_registry.async_get(device_id)
+    assert device_registry_item.area_id == "bedroom"
 
     # Update entity to not be enabled by default
     # The entity should stay available as it was enabled before
+    # The area should not update
     async_fire_mqtt_message(hass, discovery_topic, config_disabled)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test")
     assert state is not None
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert not entry.disabled
-    assert device_registry.async_get(device_id) is not None
+    assert entry.area_id == "bedroom"
+    device_registry_item = device_registry.async_get(device_id)
+    assert device_registry_item.area_id == "bedroom"
 
     # Delete the entity again
     async_fire_mqtt_message(hass, discovery_topic, "")
@@ -615,15 +638,17 @@ async def test_registry_enable_not_enabled_by_default_entity(
     # Assert device is cleaned up
     assert device_registry.async_get(device_id) is None
 
-    # Repeat the re-discovery, with a new entity name
+    # Repeat the re-discovery, with a new entity name and suggested area
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test_new")
     assert state is not None
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is not None
+    assert entry.area_id == "attic"
     assert not entry.disabled
-    assert device_registry.async_get(device_id) is not None
+    device_registry_item = device_registry.async_get(device_id)
+    assert device_registry_item.area_id == "attic"
 
 
 @pytest.mark.parametrize(

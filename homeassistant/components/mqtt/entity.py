@@ -31,7 +31,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceInfo,
@@ -1367,6 +1371,7 @@ class MqttEntity(
     _default_name: str | None
     _entity_id_format: str
     _update_registry_entity_id: str | None = None
+    _update_registry_area_id: str | None = None
 
     def __init__(
         self,
@@ -1428,6 +1433,24 @@ class MqttEntity(
             self._update_registry_entity_id = self.entity_id
 
         if (
+            deleted_entry
+            and (
+                device_info := device_info_from_specifications(
+                    self._config.get(CONF_DEVICE)
+                )
+            )
+            is not None
+            and dr.async_get(self.hass).deleted_devices.get_entry(
+                identifiers=device_info["identifiers"],
+                connections=device_info["connections"],
+            )
+            and (suggested_area := device_info.get(ATTR_SUGGESTED_AREA))
+        ):
+            self._update_registry_area_id = (
+                ar.async_get(self.hass).async_get_or_create(suggested_area).id
+            )
+
+        if (
             self._config[CONF_ENABLED_BY_DEFAULT]
             and deleted_entry
             and deleted_entry.disabled_by is not None
@@ -1437,8 +1460,7 @@ class MqttEntity(
                 entity_platform, DOMAIN, self.unique_id
             )
             entity_registry.async_update_entity(
-                recreated_entry.entity_id,
-                disabled_by=None,
+                recreated_entry.entity_id, disabled_by=None
             )
 
         if discovery_data is None:
@@ -1466,12 +1488,26 @@ class MqttEntity(
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
-        if self._update_registry_entity_id is not None:
+        if (
+            self._update_registry_entity_id is not None
+            or self._update_registry_area_id is not None
+        ):
             entity_registry = er.async_get(self.hass)
-            entity_registry.async_update_entity(
-                self.entity_id, new_entity_id=self._update_registry_entity_id
+            entry = entity_registry.async_update_entity(
+                self.entity_id,
+                new_entity_id=self._update_registry_entity_id or UNDEFINED,
+                area_id=self._update_registry_area_id or UNDEFINED,
             )
+            if (
+                self._update_registry_area_id is not None
+                and entry.device_id is not None
+            ):
+                device_registry = dr.async_get(self.hass)
+                device_registry.async_update_device(
+                    entry.device_id, area_id=self._update_registry_area_id or UNDEFINED
+                )
             self._update_registry_entity_id = None
+            self._update_registry_area_id = None
 
         await super().async_added_to_hass()
         await self._async_finish_update_config()
