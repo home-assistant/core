@@ -7894,6 +7894,112 @@
       "widget": "DynamicGate",
       "oid": "a8d3e9f1-4b2c-4d5e-8f6a-1234567890ab",
       "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1620000000000,
+      "lastUpdateTime": 1620000000000,
+      "label": "Bedroom Venetian Blind",
+      "deviceURL": "ogp://1234-1234-6233/16730100",
+      "shortcut": false,
+      "controllableName": "ogp:VenetianBlind",
+      "definition": {
+        "commands": [
+          { "commandName": "close", "nparams": 0 },
+          { "commandName": "identify", "nparams": 0 },
+          { "commandName": "open", "nparams": 0 },
+          { "commandName": "setClosure", "nparams": 1 },
+          { "commandName": "setClosureAndOrientation", "nparams": 2 },
+          { "commandName": "setOrientation", "nparams": 1 },
+          { "commandName": "stop", "nparams": 0 }
+        ],
+        "states": [
+          { "type": "ContinuousState", "qualifiedName": "core:ClosureState" },
+          {
+            "type": "DiscreteState",
+            "values": ["open", "closed"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          }
+        ],
+        "widgetName": "DynamicVenetianBlind",
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "ogp:VenetianBlind",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        { "name": "core:ClosureState", "type": 1, "value": 50 },
+        { "name": "core:OpenClosedState", "type": 3, "value": "open" },
+        { "name": "core:SlateOrientationState", "type": 1, "value": 25 }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "DynamicVenetianBlind",
+      "oid": "d0e5f1a3-6c4b-4e8a-ae9d-3456789012cd",
+      "uiClass": "VenetianBlind"
+    },
+    {
+      "creationTime": 1620000000000,
+      "lastUpdateTime": 1620000000000,
+      "label": "Living Room Venetian Blind",
+      "deviceURL": "zigbee://1234-1234-6233/16730099",
+      "shortcut": false,
+      "controllableName": "zigbee:SomfyVenetianBlindComponent",
+      "definition": {
+        "commands": [
+          { "commandName": "close", "nparams": 0 },
+          { "commandName": "identify", "nparams": 0 },
+          { "commandName": "open", "nparams": 0 },
+          { "commandName": "setClosure", "nparams": 1 },
+          { "commandName": "setClosureAndOrientation", "nparams": 2 },
+          { "commandName": "setOrientation", "nparams": 1 },
+          { "commandName": "startIdentify", "nparams": 0 },
+          { "commandName": "stop", "nparams": 0 },
+          { "commandName": "stopIdentify", "nparams": 0 }
+        ],
+        "states": [
+          { "type": "ContinuousState", "qualifiedName": "core:ClosureState" },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetOrientationState"
+          }
+        ],
+        "widgetName": "PositionableVenetianBlind",
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "zigbee:SomfyVenetianBlindComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        { "name": "core:ClosureState", "type": 1, "value": 100 },
+        { "name": "core:MovingState", "type": 6, "value": false },
+        { "name": "core:SlateOrientationState", "type": 1, "value": 0 },
+        { "name": "core:TargetClosureState", "type": 1, "value": 100 },
+        { "name": "core:TargetOrientationState", "type": 1, "value": 0 }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "PositionableVenetianBlind",
+      "oid": "c9d4f0a2-5e3b-4f7a-9d8c-2345678901bc",
+      "uiClass": "VenetianBlind"
     }
   ],
   "zones": [],

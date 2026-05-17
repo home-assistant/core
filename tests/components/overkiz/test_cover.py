@@ -139,6 +139,16 @@ DYNAMIC_GATE = FixtureDevice(
     "ogp://1234-1234-6233/10410217",
     "cover.ogp_gate",
 )
+DYNAMIC_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/16730100",
+    "cover.bedroom_venetian_blind",
+)
+POSITIONABLE_VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "zigbee://1234-1234-6233/16730099",
+    "cover.living_room_venetian_blind",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -150,6 +160,8 @@ SNAPSHOT_FIXTURES = [
     DYNAMIC_EXTERIOR_VENETIAN_BLIND,
     POSITIONABLE_ROLLER_SHUTTER_UNO,
     POSITIONABLE_DUAL_ROLLER_SHUTTER,
+    DYNAMIC_VENETIAN_BLIND,
+    POSITIONABLE_VENETIAN_BLIND,
 ]
 
 
@@ -199,6 +211,13 @@ async def test_cover_entities_snapshot(
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (
+            DYNAMIC_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER,
+            "open",
+            None,
+            CoverState.OPENING,
+        ),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
@@ -229,6 +248,13 @@ async def test_cover_entities_snapshot(
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
         (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (
+            DYNAMIC_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
@@ -245,6 +271,13 @@ async def test_cover_entities_snapshot(
             STATE_UNKNOWN,
         ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (
+            DYNAMIC_VENETIAN_BLIND,
+            SERVICE_STOP_COVER,
+            "stop",
+            None,
+            CoverState.OPEN,
+        ),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
@@ -324,6 +357,7 @@ async def test_cover_entities_snapshot(
         "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
         "open-sheer-screen-rts",
+        "open-dynamic-venetian-blind",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
@@ -336,6 +370,7 @@ async def test_cover_entities_snapshot(
         "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
         "close-sheer-screen-rts",
+        "close-dynamic-venetian-blind",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
@@ -346,6 +381,7 @@ async def test_cover_entities_snapshot(
         "stop-partial-garage-door",
         "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
+        "stop-dynamic-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
         "close-tilt-tilt-only-venetian-blind",
         "stop-tilt-tilt-only-venetian-blind",
@@ -408,8 +444,15 @@ async def test_cover_service_actions(
             [65, OverkizCommandParam.LOWSPEED],
             35,
         ),
+        (
+            DYNAMIC_VENETIAN_BLIND,
+            DYNAMIC_VENETIAN_BLIND.entity_id,
+            "setClosure",
+            [75],
+            25,
+        ),
     ],
-    ids=["roller-shutter", "awning", "low-speed"],
+    ids=["roller-shutter", "awning", "low-speed", "dynamic-venetian-blind"],
 )
 async def test_cover_set_position(
     hass: HomeAssistant,
@@ -437,6 +480,77 @@ async def test_cover_set_position(
         command_name=command_name,
         parameters=parameters,
     )
+
+
+@pytest.mark.parametrize(
+    ("device", "command_name", "parameters", "tilt_position"),
+    [
+        (DYNAMIC_VENETIAN_BLIND, "setOrientation", [60], 40),
+    ],
+    ids=["dynamic-venetian-blind"],
+)
+async def test_cover_set_tilt_position(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    command_name: str,
+    parameters: list[Any],
+    tilt_position: int,
+) -> None:
+    """Test cover tilt position services and mapping."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: device.entity_id, ATTR_TILT_POSITION: tilt_position},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=device.device_url,
+        command_name=command_name,
+        parameters=parameters,
+    )
+
+
+async def test_is_closed_falls_back_to_position(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test is_closed derives from position when OpenClosedState is absent."""
+    await setup_overkiz_integration(fixture=POSITIONABLE_VENETIAN_BLIND.fixture)
+
+    state = hass.states.get(POSITIONABLE_VENETIAN_BLIND.entity_id)
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=POSITIONABLE_VENETIAN_BLIND.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_CLOSURE.value,
+                        "type": 1,
+                        "value": 50,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(POSITIONABLE_VENETIAN_BLIND.entity_id)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
 
 async def test_cover_tilt_services(
