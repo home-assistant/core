@@ -208,6 +208,31 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.CYCLE,
         close_command=OverkizCommand.CYCLE,
     ),
+    # Needs override since CyclicGarageDoor only supports the cycle command
+    # (io:CyclicGarageOpenerIOComponent)
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since CyclicSlidingGateOpener only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_SLIDING_GATE_OPENER,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since CyclicSwingingGateOpener only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_SWINGING_GATE_OPENER,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
     # Needs override since SlidingDiscreteGateWithPedestrianPosition reports
     # core:OpenClosedPedestrianState instead of core:OpenClosedState
     # uiClass is Gate

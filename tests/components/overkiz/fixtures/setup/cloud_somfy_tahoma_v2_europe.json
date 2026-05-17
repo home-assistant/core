@@ -7757,6 +7757,385 @@
       "uiClass": "GarageDoor"
     },
     {
+      "creationTime": 1685039520000,
+      "lastUpdateTime": 1685039520000,
+      "label": "Cyclic Garage Door",
+      "deviceURL": "io://1234-1234-6233/6416929",
+      "shortcut": false,
+      "controllableName": "io:CyclicGarageOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "cycle",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "CyclicGarageDoor",
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:CyclicGarageOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Cyclic Garage Door"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 72.0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5127170A01"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "CyclicGarageDoor",
+      "type": 1,
+      "oid": "42a91c8c-2f55-4442-9af8-fa93862fbeff",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1711109596000,
+      "lastUpdateTime": 1711109596000,
+      "label": "Swinging Gate",
+      "deviceURL": "io://1234-1234-8983/1959462",
+      "shortcut": false,
+      "controllableName": "io:CyclicSwingingGateOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "cycle",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "CyclicSwingingGateOpener",
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
+        "uiClass": "Gate",
+        "qualifiedName": "io:CyclicSwingingGateOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Swinging Gate"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1742634864000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 32.0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5127170B02"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "CyclicSwingingGateOpener",
+      "type": 1,
+      "oid": "83371762-4f7c-4e1b-846b-d5b7f8e9aa53",
+      "uiClass": "Gate"
+    },
+    {
       "creationTime": 1521964729000,
       "lastUpdateTime": 1521964729000,
       "label": "Partial Garage Door",
