@@ -286,3 +286,20 @@ async def test_toggle_flips_between_commands(
 
     toggles = [call.kwargs["toggle"] for call in mock_marantz_to_command.call_args_list]
     assert toggles == [1, 0, 1, 0]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_power_on_sends_repeat_count(
+    hass: HomeAssistant,
+    mock_marantz_to_command: MagicMock,
+) -> None:
+    """Power-on sends repeat_count=5 so the receiver reliably wakes up."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert mock_marantz_to_command.call_count == 1
+    assert mock_marantz_to_command.call_args_list[0].kwargs["repeat_count"] == 5

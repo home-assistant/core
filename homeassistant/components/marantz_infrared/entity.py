@@ -33,11 +33,15 @@ class MarantzIrEntity(InfraredEmitterConsumerEntity):
             model=None if lib_model is marantz_models.GENERIC else lib_model.name,
         )
 
-    async def _send_marantz_command(self, code: MarantzAudioCode) -> None:
+    async def _send_marantz_command(
+        self, code: MarantzAudioCode, repeat_count: int = 0
+    ) -> None:
         """Send an IR command using the Marantz protocol.
 
         Flips the RC-5 toggle bit before each frame so the receiver
         treats consecutive presses as new presses, not as a held repeat.
         """
         self._runtime_data.toggle ^= 1
-        await self._send_command(code.to_command(toggle=self._runtime_data.toggle))
+        await self._send_command(
+            code.to_command(repeat_count=repeat_count, toggle=self._runtime_data.toggle)
+        )
