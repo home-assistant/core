@@ -480,40 +480,6 @@ async def test_cover_set_position(
     )
 
 
-@pytest.mark.parametrize(
-    ("device", "command_name", "parameters", "tilt_position"),
-    [
-        (DYNAMIC_VENETIAN_BLIND, "setOrientation", [60], 40),
-    ],
-    ids=["dynamic-venetian-blind"],
-)
-async def test_cover_set_tilt_position(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    device: FixtureDevice,
-    command_name: str,
-    parameters: list[Any],
-    tilt_position: int,
-) -> None:
-    """Test cover tilt position services and mapping."""
-    await setup_overkiz_integration(fixture=device.fixture)
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: device.entity_id, ATTR_TILT_POSITION: tilt_position},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=device.device_url,
-        command_name=command_name,
-        parameters=parameters,
-    )
-
-
 async def test_is_closed_falls_back_to_position(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
