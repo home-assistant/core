@@ -45,7 +45,13 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
+from .const import (
+    CONF_BAUDRATE,
+    CONF_FLOW_CONTROL,
+    CONF_RADIO_TYPE,
+    DOMAIN,
+    LEGACY_ZEROCONF_PORT,
+)
 from .helpers import get_config_entry_unique_id, get_zha_gateway
 from .radio_manager import (
     DEVICE_SCHEMA,
@@ -87,7 +93,6 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 
-LEGACY_ZEROCONF_PORT = 6638
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
 
 ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
