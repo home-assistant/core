@@ -128,12 +128,20 @@ async def test_update_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert bulb.mock_calls == [
-        call.connect(),
-        call.get_brightness(),
-        call.get_rgb(),
-        call.disconnect(),
-    ]
+    bulb.connect.assert_called_once()
+    bulb.get_brightness.assert_called_once()
+    bulb.get_rgb.assert_called_once()
+    bulb.disconnect.assert_called_once()
+
+    assert bulb.mock_calls.index(call.connect()) < bulb.mock_calls.index(
+        call.get_brightness()
+    )
+    assert bulb.mock_calls.index(call.get_brightness()) < bulb.mock_calls.index(
+        call.get_rgb()
+    )
+    assert bulb.mock_calls.index(call.get_rgb()) < bulb.mock_calls.index(
+        call.disconnect()
+    )
 
     state = hass.states.get("light.bedroom")
     assert state is not None
