@@ -23,10 +23,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: exempt
-    comment: |
-      Data cannot be pushed without registering a webhook.
+  test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
   # Silver
@@ -42,10 +39,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: |
-      The integration has no initiative access to the device.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt

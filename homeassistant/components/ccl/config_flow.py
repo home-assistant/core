@@ -16,8 +16,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.network import NoURLAvailableError
 
 from . import register_webhook
-from .const import DOMAIN
-from .devices import devices
+from .const import DEVICES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,13 +62,13 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device = CCLDevice(self.webhook_id)
             # Try to register the device, but if it already exists, use the existing one
             try:
-                register(devices, self.device)
+                register(self.hass.data[DEVICES], self.device)
             except CCLDeviceRegistrationException:
                 _LOGGER.debug(
                     "Device with webhook ID %s is already registered",
                     self.webhook_id,
                 )
-                self.device = devices[self.webhook_id]
+                self.device = self.hass.data[DEVICES][self.webhook_id]
             # Try to register the webhook
             try:
                 await register_webhook(self.hass, self.webhook_id)
@@ -107,13 +106,13 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Timed out waiting for device update during config flow")
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                devices.pop(self.webhook_id, None)
+                self.hass.data[DEVICES].pop(self.webhook_id, None)
                 return self.async_abort(reason="connect_timeout")
             except AbortFlow:
                 _LOGGER.debug("Device already configured during config flow")
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                devices.pop(self.webhook_id, None)
+                self.hass.data[DEVICES].pop(self.webhook_id, None)
                 return self.async_abort(reason="already_configured")
 
         if uncompleted_task:
@@ -156,4 +155,4 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Remove the device from the global devices dict
         if CONF_WEBHOOK_ID in self.data:
-            devices.pop(self.data[CONF_WEBHOOK_ID], None)
+            self.hass.data[DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
