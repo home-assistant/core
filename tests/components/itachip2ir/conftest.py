@@ -1,7 +1,5 @@
 """Fixtures for the iTach IP2IR tests."""
 
-from pathlib import Path
-import sys
 from unittest.mock import AsyncMock
 
 import pytest
@@ -13,19 +11,6 @@ from homeassistant.core import HomeAssistant
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Enable custom integrations."""
     return
-
-
-@pytest.fixture(autouse=True)
-def ensure_custom_components_path():
-    """Ensure custom_components is importable."""
-    root = Path(__file__).resolve().parents[1]
-    homeassistant_components = root / "homeassistant.components"
-
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
-
-    if str(homeassistant_components) not in sys.path:
-        sys.path.insert(0, str(homeassistant_components))
 
 
 @pytest.fixture(autouse=True)

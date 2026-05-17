@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ItachConfigEntry
@@ -53,7 +53,7 @@ def _device_connections(device_id: str) -> set[tuple[str, str]]:
         raw_mac = device_id.removeprefix("GlobalCache_")
         if len(raw_mac) == 12:
             mac = ":".join(raw_mac[index : index + 2] for index in range(0, 12, 2))
-            return {("mac", mac)}
+            return {(CONNECTION_NETWORK_MAC, mac)}
 
     return set()
 
