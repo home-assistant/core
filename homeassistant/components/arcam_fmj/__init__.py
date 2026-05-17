@@ -10,6 +10,7 @@ from arcam.fmj.client import Client
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
@@ -23,6 +24,15 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
     """Set up config entry."""
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
+
+    try:
+        async with timeout(DEFAULT_SCAN_INTERVAL):
+            await client.start()
+    except (ConnectionFailed, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Arcam FMJ at {client.host}:{client.port}"
+        ) from err
+    await client.stop()
 
     coordinators: dict[int, ArcamFmjCoordinator] = {}
     for zone in (1, 2):
