@@ -79,7 +79,13 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
         if last is None or last.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
         last_pct = last.attributes.get(ATTR_PERCENTAGE)
-        if isinstance(last_pct, (int, float)) and last_pct > 0:
+        # ``bool`` subclasses ``int``, so guard against a stray boolean
+        # attribute (e.g. ``True``) being treated as a percentage of 1.
+        if (
+            isinstance(last_pct, (int, float))
+            and not isinstance(last_pct, bool)
+            and last_pct > 0
+        ):
             self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
         elif last.state == STATE_ON:
             # Older HA versions might restore an "on" state without the

@@ -50,15 +50,23 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
         Different transmitters can safely reuse the same device ID; the
         config entry's unique_id is ``{transmitter}_{device_id}``, so a
         device-ID collision only matters when both transmitters match.
+
+        Raises ``HomeAssistantError`` in the pathological case where the
+        20-bit ID space on this transmitter is exhausted (~1M entries) — a
+        bounded retry keeps the event loop from blocking forever.
         """
         used = {
             entry.data[CONF_DEVICE_ID]
             for entry in self._async_current_entries()
             if entry.data.get(CONF_TRANSMITTER) == transmitter_id
         }
-        while (candidate := random.getrandbits(DEVICE_ID_BITS)) in used:
-            continue
-        return candidate
+        for _ in range(1000):
+            candidate = random.getrandbits(DEVICE_ID_BITS)
+            if candidate not in used:
+                return candidate
+        raise HomeAssistantError(
+            "Could not allocate a unique 20-bit device ID on this transmitter"
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
