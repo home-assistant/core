@@ -16,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ArcamFmjBinarySensorEntityDescription(BinarySensorEntityDescription):

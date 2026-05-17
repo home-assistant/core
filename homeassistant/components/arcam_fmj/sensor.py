@@ -22,6 +22,8 @@ from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 def _enum_options(value: type[IntOrTypeEnum]) -> list[str]:
     return [
