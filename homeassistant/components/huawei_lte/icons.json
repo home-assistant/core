@@ -187,6 +187,15 @@
     }
   },
   "services": {
+    "delete_sms": {
+      "service": "mdi:message-minus"
+    },
+    "get_sms_list": {
+      "service": "mdi:message-text"
+    },
+    "mark_sms_read": {
+      "service": "mdi:message-check"
+    },
     "resume_integration": {
       "service": "mdi:play-pause"
     },
