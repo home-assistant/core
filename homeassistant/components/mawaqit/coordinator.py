@@ -78,7 +78,11 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         )
 
     async def _async_update_data(self) -> dict:
-        """Fetch prayer times from API and notify sensors."""
+        """Fetch prayer times from API and notify sensors.
+
+        We fetch the prayer times once per day, but the coordinator updates every
+        minute so that sensors can re-evaluate which prayer is upcoming.
+        """
         now = dt_util.utcnow()
 
         if (
