@@ -156,8 +156,19 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     assert entry.unique_id == f"{new_host}:{new_port}"
 
 
-async def test_reconfigure_validation_failure(hass: HomeAssistant) -> None:
-    """Test reconfiguration form re-shows errors on validation failure."""
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (socket.gaierror(), "resolve_failed"),
+        (TimeoutError, "connection_timeout"),
+        (ConnectionRefusedError, "connection_refused"),
+        (ConnectionResetError, "connection_reset"),
+    ],
+)
+async def test_reconfigure_validation_failure_recovers(
+    hass: HomeAssistant, side_effect: Exception, error_key: str
+) -> None:
+    """Test the reconfigure form re-shows on failure then recovers on retry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
@@ -169,19 +180,37 @@ async def test_reconfigure_validation_failure(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+    new_host = "new.example.com"
+    new_port = 8443
+
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=socket.gaierror(),
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "unresolvable.example.com", CONF_PORT: PORT},
+            user_input={CONF_HOST: new_host, CONF_PORT: new_port},
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {CONF_HOST: "resolve_failed"}
+    assert result["errors"] == {CONF_HOST: error_key}
     assert entry.data[CONF_HOST] == HOST
+    assert entry.data[CONF_PORT] == PORT
+
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: new_host, CONF_PORT: new_port},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == new_host
+    assert entry.data[CONF_PORT] == new_port
+    assert entry.unique_id == f"{new_host}:{new_port}"
 
 
 async def test_reconfigure_already_exists(hass: HomeAssistant) -> None:
