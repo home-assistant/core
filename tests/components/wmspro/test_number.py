@@ -156,3 +156,36 @@ async def test_number_set_and_restore_value(
     entity = hass.states.get(entity_name)
     assert entity is not None
     assert float(entity.state) == float(target_value)
+
+
+async def test_number_update_handles_zero_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub_ping: AsyncMock,
+    mock_hub_configuration_prod_slat_rotate: AsyncMock,
+    mock_hub_status_prod_slat_rotate: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update path when native value is zero."""
+    assert await setup_config_entry(hass, mock_config_entry)
+    assert len(mock_hub_ping.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
+    assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
+
+    entity = hass.states.get("number.keuken_alle_minimum_rotation")
+    assert entity is not None
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 0.0},
+        blocking=True,
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get("number.keuken_alle_minimum_rotation")
+    assert entity is not None
+    assert float(entity.state) == 0.0
