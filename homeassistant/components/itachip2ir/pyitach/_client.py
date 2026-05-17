@@ -4,7 +4,8 @@ import asyncio
 from contextlib import suppress
 import logging
 import time
-from typing import Any
+from types import TracebackType
+from typing import Any, Self
 
 from ._exceptions import (
     ItachBusyError,
@@ -52,6 +53,20 @@ class ItachClient:
         self._next_sendir_command_id = 1
         self._last_used_monotonic: float | None = None
         self.max_connector: int | None = None
+
+    async def __aenter__(self) -> Self:
+        """Open the TCP connection and return this client for async context use."""
+        await self.async_connect()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        """Close the TCP connection when leaving an async context."""
+        await self.close()
 
     async def async_connect(self) -> None:
         """Open TCP connection."""
@@ -176,7 +191,7 @@ class ItachClient:
 
         return command_id
 
-    async def send_command(self, command: str) -> str:
+    async def async_send_command(self, command: str) -> str:
         """Send a raw iTach command and return one response line.
 
         Commands are not retried after write or response failures. Once bytes
@@ -185,6 +200,15 @@ class ItachClient:
         """
         async with self._lock:
             return await self._send_command_locked(command)
+
+    async def send_command(self, command: str) -> str:
+        """Send a raw iTach command and return one response line.
+
+        This compatibility alias preserves the original public API. New code
+        should prefer async_send_command() for naming consistency with the rest
+        of the asynchronous client API.
+        """
+        return await self.async_send_command(command)
 
     async def _send_command_locked(self, command: str) -> str:
         """Send a raw iTach command while caller holds the lock."""

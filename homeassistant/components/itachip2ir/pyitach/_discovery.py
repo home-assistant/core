@@ -2,8 +2,8 @@
 
 This private module owns the Global Caché/iTach UDP discovery transport and
 beacon parsing. It intentionally contains no Home Assistant imports or config
-entry logic. Public consumers should import discovery helpers from
-``custom_components.itachip2ir.pyitach`` rather than this private module.
+entry logic. Public consumers should import discovery helpers from the
+integration's ``pyitach`` package rather than this private module.
 """
 
 import asyncio
@@ -51,7 +51,7 @@ def normalize_host(host: str | None) -> str | None:
     if host is None:
         return None
 
-    normalized = host.strip().rstrip(".")
+    normalized = host.strip().rstrip(".").lower()
     return normalized or None
 
 
@@ -105,10 +105,12 @@ def normalize_uuid(uuid: str | None) -> str | None:
 
 
 def parse_discovery_beacon(
-    message: str, packet_host: str | None = None
+    message: str,
+    packet_host: str | None = None,
 ) -> ItachDiscoveryBeacon | None:
     """Parse a Global Caché UDP discovery beacon."""
-    if "AMXB" not in message or "GlobalCache" not in message:
+    message_lower = message.lower()
+    if "amxb" not in message_lower or "globalcache" not in message_lower:
         return None
 
     uuid_match = _UUID_RE.search(message)
@@ -256,4 +258,7 @@ class ItachDiscoveryListener:
             parsed = parse_discovery_beacon(message, packet_host)
 
             if parsed is not None:
-                await self._on_beacon(parsed)
+                try:
+                    await self._on_beacon(parsed)
+                except Exception:
+                    _LOGGER.exception("Error handling iTach discovery beacon")

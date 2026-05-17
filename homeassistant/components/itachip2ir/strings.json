@@ -34,8 +34,8 @@
           "port": "Port"
         },
         "data_description": {
-          "host": "Hostname or IP address of the iTach IP2IR device.",
-          "port": "TCP port used by the iTach control API."
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
         },
         "description": "Update the connection details for this iTach IP2IR device.",
         "title": "Reconfigure iTach IP2IR"
@@ -47,9 +47,9 @@
           "port": "Port"
         },
         "data_description": {
-          "device_id": "Optional stable device identifier or MAC address. Leave blank when discovery can identify the device.",
-          "host": "Hostname or IP address of the iTach IP2IR device.",
-          "port": "TCP port used by the iTach control API."
+          "device_id": "MAC address or Global Caché device identifier used to uniquely identify this device.",
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
         },
         "description": "Connect to your Global Caché iTach IP2IR device.",
         "title": "Set up iTach IP2IR"
@@ -105,15 +105,15 @@
   },
   "issues": {
     "cannot_connect": {
-      "description": "Home Assistant cannot connect to the configured iTach IP2IR device. Check that the device is powered on, reachable from Home Assistant, and using the configured network address. After fixing the network or device issue, reload the integration.",
+      "description": "Home Assistant cannot connect to **{entry_title}**. Check that the iTach device is powered on, reachable from Home Assistant, and using the configured network address. After fixing the network or device issue, reload the integration.",
       "title": "iTach IP2IR cannot be reached"
     },
     "invalid_config": {
-      "description": "Home Assistant could not set up the configured iTach IP2IR device because the stored configuration or device response is invalid. Reconfigure the integration or reload it after fixing the device or network configuration.",
+      "description": "Home Assistant could not set up {entry_title} because the stored configuration or device response is invalid: {error}. Reconfigure the integration or reload it after fixing the device/network configuration.",
       "title": "iTach IP2IR configuration problem"
     },
     "no_ir_ports": {
-      "description": "The configured iTach IP2IR device does not currently expose any infrared-capable ports. Check the iTach port configuration and make sure at least one port is configured as IR Out or IR Blaster Out, then reload the integration.",
+      "description": "**{entry_title}** does not currently expose any infrared-capable ports. Check the iTach port configuration and make sure at least one port is configured as `IR Out` or `IR Blaster Out`, then reload the integration.",
       "title": "No infrared-capable iTach ports are available"
     }
   },
@@ -153,30 +153,25 @@
       "add_command": {
         "data": {
           "command_data": "Infrared command data",
-          "command_name": "Command name",
-          "data": "Infrared command data",
-          "name": "Command name"
+          "command_name": "Command name"
         },
         "data_description": {
-          "command_data": "Infrared command data as Pronto Hex, JSON timings, comma-separated timings, or frequency-prefixed timings.",
-          "command_name": "Name used by the virtual remote service call.",
-          "data": "Infrared command data as Pronto Hex, JSON timings, comma-separated timings, or frequency-prefixed timings.",
-          "name": "Name used by the virtual remote service call."
+          "command_data": "Infrared command payload, such as a Pronto hex string or supported timing data.",
+          "command_name": "Name used when calling the remote command."
         },
         "description": "Add or replace a named infrared command for a virtual remote.",
         "title": "Add remote command"
       },
       "add_remote": {
         "data": {
-          "id": "Virtual remote",
           "infrared_entity_id": "Associated infrared entity",
           "name": "Virtual remote name",
           "remote_name": "Virtual remote name"
         },
         "data_description": {
-          "infrared_entity_id": "Infrared entity that will transmit commands for this virtual remote.",
-          "name": "Name of the virtual remote to create.",
-          "remote_name": "Name of the virtual remote to create."
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "name": "Name for the virtual remote entity.",
+          "remote_name": "Name for the virtual remote entity."
         },
         "description": "Create a virtual remote backed by an infrared entity.",
         "title": "Add virtual remote"
@@ -188,9 +183,9 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "infrared_entity_id": "Infrared entity to associate with the selected virtual remote.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote to update.",
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "remote_id": "Virtual remote to update."
         },
         "description": "Reassign a virtual remote to a different infrared entity. Existing commands are preserved.",
         "title": "Change associated infrared entity"
@@ -202,9 +197,9 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "infrared_entity_id": "Infrared entity to associate with the selected virtual remote.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote to update.",
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "remote_id": "Virtual remote to update."
         },
         "description": "Reassign a virtual remote to a different infrared entity. Existing commands are preserved.",
         "title": "Change associated infrared entity"
@@ -212,15 +207,11 @@
       "edit_command": {
         "data": {
           "command_data": "Infrared command data",
-          "command_name": "Command name",
-          "data": "Infrared command data",
-          "name": "Command name"
+          "command_name": "Command name"
         },
         "data_description": {
-          "command_data": "Infrared command data as Pronto Hex, JSON timings, comma-separated timings, or frequency-prefixed timings.",
-          "command_name": "Name used by the virtual remote service call.",
-          "data": "Infrared command data as Pronto Hex, JSON timings, comma-separated timings, or frequency-prefixed timings.",
-          "name": "Name used by the virtual remote service call."
+          "command_data": "Infrared command payload, such as a Pronto hex string or supported timing data.",
+          "command_name": "Name used when calling the remote command."
         },
         "description": "Update the command name or infrared command data. Existing virtual remote assignments are preserved.",
         "title": "Edit remote command"
@@ -244,12 +235,10 @@
       },
       "remove_command": {
         "data": {
-          "command_name": "Command name",
-          "id": "Command"
+          "command_name": "Command name"
         },
         "data_description": {
-          "command_name": "Command to use for this action.",
-          "id": "Command to use for this action."
+          "command_name": "Command to remove."
         },
         "description": "Select the command to remove.",
         "title": "Remove remote command"
@@ -260,20 +249,18 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote to remove.",
+          "remote_id": "Virtual remote to remove."
         },
         "description": "Select the virtual remote to remove.",
         "title": "Remove virtual remote"
       },
       "select_command_for_edit": {
         "data": {
-          "command_name": "Command name",
-          "id": "Command"
+          "command_name": "Command name"
         },
         "data_description": {
-          "command_name": "Command to use for this action.",
-          "id": "Command to use for this action."
+          "command_name": "Command to edit."
         },
         "description": "Select the command to edit.",
         "title": "Edit remote command"
@@ -284,8 +271,8 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote that will receive the command.",
+          "remote_id": "Virtual remote that will receive the command."
         },
         "description": "Select the virtual remote that will receive the command.",
         "title": "Add remote command"
@@ -296,8 +283,8 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote that contains the command to edit.",
+          "remote_id": "Virtual remote that contains the command to edit."
         },
         "description": "Select the virtual remote that contains the command to edit.",
         "title": "Edit remote command"
@@ -308,8 +295,8 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote that contains the command to remove.",
+          "remote_id": "Virtual remote that contains the command to remove."
         },
         "description": "Select the virtual remote that contains the command to remove.",
         "title": "Remove remote command"
@@ -320,8 +307,8 @@
           "remote_id": "Virtual remote"
         },
         "data_description": {
-          "id": "Virtual remote to use for this action.",
-          "remote_id": "Virtual remote to use for this action."
+          "id": "Virtual remote to update.",
+          "remote_id": "Virtual remote to update."
         },
         "description": "Select the virtual remote to reassign.",
         "title": "Change associated infrared entity"

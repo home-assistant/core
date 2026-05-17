@@ -1,10 +1,12 @@
 """Tests for iTach IP2IR repairs."""
 
-from homeassistant.components.itachip2ir.const import DOMAIN
-from homeassistant.components.itachip2ir.repairs import (
+from homeassistant.components.itachip2ir.const import (
+    DOMAIN,
     ISSUE_CANNOT_CONNECT,
     ISSUE_INVALID_CONFIG,
     ISSUE_NO_IR_PORTS,
+)
+from homeassistant.components.itachip2ir.repairs import (
     ReconfigureRepairFlow,
     async_create_fix_flow,
     async_create_repair_issue,

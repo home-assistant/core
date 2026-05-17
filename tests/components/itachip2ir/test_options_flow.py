@@ -353,7 +353,7 @@ async def test_options_flow_adds_named_command(hass: HomeAssistant) -> None:
             CONF_REMOTE_NAME: "Living Room TV",
             CONF_INFRARED_ENTITY_ID: _infrared_entity_id(1),
             CONF_REMOTE_COMMANDS: {
-                "power_on": "0000 006D 0001 0000 0010 0020",
+                "POWER_ON": "0000 006D 0001 0000 0010 0020",
             },
         }
     ]
@@ -366,7 +366,7 @@ async def test_options_flow_add_command_replaces_existing_command(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "old"}),
+                _remote(commands={"POWER_ON": "old"}),
             ]
         }
     )
@@ -387,7 +387,7 @@ async def test_options_flow_add_command_replaces_existing_command(
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == {
-        "power_on": "100,200",
+        "POWER_ON": "100,200",
     }
 
 
@@ -470,7 +470,7 @@ async def test_options_flow_edits_named_command(hass: HomeAssistant) -> None:
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200", "power_off": "300,400"}),
+                _remote(commands={"POWER_ON": "100,200", "POWER_OFF": "300,400"}),
             ]
         }
     )
@@ -492,11 +492,11 @@ async def test_options_flow_edits_named_command(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "edit_command"
-    assert _schema_default(result, COMMAND_NAME) == "power_on"
+    assert _schema_default(result, COMMAND_NAME) == "POWER_ON"
     assert _schema_default(result, COMMAND_DATA) == "100,200"
 
     result = await hass.config_entries.options.async_configure(
@@ -506,8 +506,8 @@ async def test_options_flow_edits_named_command(hass: HomeAssistant) -> None:
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == {
-        "power_off": "300,400",
-        "power_toggle": "500,600",
+        "POWER_OFF": "300,400",
+        "POWER_TOGGLE": "500,600",
     }
 
 
@@ -518,7 +518,7 @@ async def test_options_flow_edit_command_rejects_duplicate_name(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200", "power_off": "300,400"}),
+                _remote(commands={"POWER_ON": "100,200", "POWER_OFF": "300,400"}),
             ]
         }
     )
@@ -534,7 +534,7 @@ async def test_options_flow_edit_command_rejects_duplicate_name(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -555,7 +555,7 @@ async def test_options_flow_edit_command_rejects_invalid_data(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200"}),
+                _remote(commands={"POWER_ON": "100,200"}),
             ]
         }
     )
@@ -571,7 +571,7 @@ async def test_options_flow_edit_command_rejects_invalid_data(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -606,7 +606,7 @@ async def test_options_flow_edit_command_aborts_when_command_missing(
 ) -> None:
     """Test editing aborts if the selected command disappears mid-flow."""
     entry = _entry(
-        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"power_on": "100,200"})]}
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
     )
     _register_infrared_entities(hass, entry)
 
@@ -620,7 +620,7 @@ async def test_options_flow_edit_command_aborts_when_command_missing(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
 
     flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
@@ -628,7 +628,7 @@ async def test_options_flow_edit_command_aborts_when_command_missing(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on", COMMAND_DATA: "500,600"},
+        user_input={COMMAND_NAME: "POWER_ON", COMMAND_DATA: "500,600"},
     )
 
     assert result["type"] == "abort"
@@ -640,7 +640,7 @@ async def test_options_flow_removes_named_command(hass: HomeAssistant) -> None:
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "on", "power_off": "off"}),
+                _remote(commands={"POWER_ON": "on", "POWER_OFF": "off"}),
             ]
         }
     )
@@ -662,12 +662,12 @@ async def test_options_flow_removes_named_command(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == {
-        "power_off": "off",
+        "POWER_OFF": "off",
     }
 
 
@@ -716,7 +716,7 @@ def test_slugify_remote_id_normalizes_names() -> None:
 
 def test_normalize_command_name_normalizes_names() -> None:
     """Test command name normalization."""
-    assert _normalize_command_name("Power On") == "power_on"
+    assert _normalize_command_name("Power On") == "POWER_ON"
 
 
 async def test_options_flow_add_command_without_selected_remote_redirects(
@@ -1125,7 +1125,7 @@ async def test_options_flow_edit_command_rejects_empty_command_name(
 ) -> None:
     """Test editing a command rejects an empty new command name."""
     entry = _entry(
-        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"power_on": "100,200"})]}
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
     )
     _register_infrared_entities(hass, entry)
 
@@ -1139,7 +1139,7 @@ async def test_options_flow_edit_command_rejects_empty_command_name(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1156,7 +1156,7 @@ async def test_options_flow_edit_command_rejects_empty_command_data(
 ) -> None:
     """Test editing a command rejects empty command data."""
     entry = _entry(
-        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"power_on": "100,200"})]}
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
     )
     _register_infrared_entities(hass, entry)
 
@@ -1170,7 +1170,7 @@ async def test_options_flow_edit_command_rejects_empty_command_data(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1207,7 +1207,7 @@ async def test_options_flow_adds_named_command_from_json_timing_array(
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == {
-        "power_json": "[9000, 4500, 560, 560]",
+        "POWER_JSON": "[9000, 4500, 560, 560]",
     }
 
 
@@ -1244,7 +1244,7 @@ async def test_options_flow_edit_command_updates_same_normalized_name(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200"}),
+                _remote(commands={"POWER_ON": "100,200"}),
             ]
         }
     )
@@ -1260,7 +1260,7 @@ async def test_options_flow_edit_command_updates_same_normalized_name(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1269,7 +1269,7 @@ async def test_options_flow_edit_command_updates_same_normalized_name(
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == {
-        "power_on": "300,400",
+        "POWER_ON": "300,400",
     }
 
 
@@ -1280,7 +1280,7 @@ async def test_options_flow_remove_command_rejects_unknown_command(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200"}),
+                _remote(commands={"POWER_ON": "100,200"}),
             ]
         }
     )
@@ -1307,7 +1307,7 @@ async def test_options_flow_edit_command_aborts_when_remote_removed_before_comma
 ) -> None:
     """Test edit command aborts if the selected remote disappears mid-flow."""
     entry = _entry(
-        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"power_on": "100,200"})]}
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
     )
     _register_infrared_entities(hass, entry)
 
@@ -1325,7 +1325,7 @@ async def test_options_flow_edit_command_aborts_when_remote_removed_before_comma
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
 
     assert result["type"] == "abort"
@@ -1339,7 +1339,7 @@ async def test_options_flow_edit_command_aborts_when_selected_command_removed(
     entry = _entry(
         options={
             CONF_VIRTUAL_REMOTES: [
-                _remote(commands={"power_on": "100,200", "power_off": "300,400"})
+                _remote(commands={"POWER_ON": "100,200", "POWER_OFF": "300,400"})
             ]
         }
     )
@@ -1355,11 +1355,11 @@ async def test_options_flow_edit_command_aborts_when_selected_command_removed(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={COMMAND_NAME: "power_on"},
+        user_input={COMMAND_NAME: "POWER_ON"},
     )
 
     flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
-    flow._virtual_remotes[0][CONF_REMOTE_COMMANDS] = {"power_off": "300,400"}
+    flow._virtual_remotes[0][CONF_REMOTE_COMMANDS] = {"POWER_OFF": "300,400"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

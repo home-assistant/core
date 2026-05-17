@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.infrared import InfraredEntity
+from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ItachConfigEntry
 from .const import DOMAIN
-from .infrared_compat import InfraredCommand
 from .pyitach import (
     ItachBusyError,
     ItachClient,

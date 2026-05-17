@@ -238,7 +238,7 @@ def _parse_pronto_command(command: str) -> tuple[int, list[int]]:
 
 def _coerce_int_list(value: Any, field: str) -> list[int]:
     """Coerce a sequence of values to integers."""
-    if not isinstance(value, list | tuple):
+    if not isinstance(value, (list, tuple)):
         raise _command_error(f"{field} must be a list")
 
     result: list[int] = []

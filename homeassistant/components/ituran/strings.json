@@ -1,68 +1,318 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "This device is already configured.",
+      "cannot_connect": "Failed to connect.",
+      "cannot_identify": "Could not identify the device. Enter the MAC address manually.",
+      "invalid_discovery": "The discovered device information is invalid.",
+      "no_change": "No changes were made.",
+      "no_changes": "No changes were made.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "not_ip2ir": "The discovered Global Caché device does not expose infrared-capable ports.",
+      "reconfigure_successful": "Reconfiguration successful.",
+      "unknown": "Unexpected error."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_otp": "OTP invalid",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Failed to connect.",
+      "cannot_identify": "Could not identify the device. Enter the MAC address manually.",
+      "invalid_device_id": "Enter a valid MAC address.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "unknown": "Unexpected error."
     },
     "step": {
-      "otp": {
+      "confirm_discovery": {
+        "description": "Do you want to set up the discovered iTach IP2IR at {host}?",
+        "title": "Set up discovered iTach IP2IR"
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up the discovered iTach IP2IR at {host}?",
+        "title": "Set up discovered iTach IP2IR"
+      },
+      "reconfigure": {
         "data": {
-          "otp": "OTP"
+          "host": "Host",
+          "port": "Port"
         },
         "data_description": {
-          "otp": "A one-time-password sent as a text message to the mobile phone number provided before."
-        }
-      },
-      "reauth_confirm": {
-        "description": "A new one-time password will be sent to {phone_number}.",
-        "title": "[%key:common::config_flow::title::reauth%]"
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
+        },
+        "description": "Update the connection details for this iTach IP2IR device.",
+        "title": "Reconfigure iTach IP2IR"
       },
       "user": {
         "data": {
-          "id_or_passport": "ID or passport number",
-          "phone_number": "Mobile phone number"
+          "device_id": "MAC address",
+          "host": "Host",
+          "port": "Port"
         },
         "data_description": {
-          "id_or_passport": "The government ID or passport number provided when registering with Ituran.",
-          "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number."
-        }
+          "device_id": "MAC address or Global Caché device identifier used to uniquely identify this device.",
+          "host": "IP address or hostname of the iTach IP2IR device.",
+          "port": "TCP port used by the iTach device."
+        },
+        "description": "Connect to your Global Caché iTach IP2IR device.",
+        "title": "Set up iTach IP2IR"
       }
     }
   },
   "entity": {
-    "sensor": {
-      "address": {
-        "name": "Address"
+    "infrared": {
+      "ir_blaster_port": {
+        "name": "IR Blaster Port {port}"
       },
-      "battery_range": {
-        "name": "Remaining range"
+      "ir_port": {
+        "name": "IR Port {port}"
       },
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "heading": {
-        "name": "Heading"
-      },
-      "last_update_from_vehicle": {
-        "name": "Last update from vehicle"
-      },
-      "mileage": {
-        "name": "Mileage"
+      "itach_port": {
+        "name": "IR Port {port}"
+      }
+    },
+    "remote": {
+      "itach_remote": {
+        "name": "{name}"
       }
     }
   },
   "exceptions": {
-    "api_error": {
-      "message": "An error occurred while communicating with the Ituran service."
+    "itach_busy": {
+      "message": "The iTach infrared port is busy."
     },
-    "auth_error": {
-      "message": "Failed authenticating with the Ituran service, please reauthenticate the integration."
+    "itach_connection_failed": {
+      "message": "Failed to communicate with the iTach device: {error}"
+    },
+    "itach_invalid_command": {
+      "message": "The infrared command is invalid: {error}"
+    },
+    "itach_rejected_command": {
+      "message": "The iTach device rejected the command: {error}"
+    },
+    "remote_command_missing": {
+      "message": "Command {command} is not configured."
+    },
+    "remote_infrared_missing": {
+      "message": "Infrared entity {entity_id} is not available."
+    },
+    "remote_invalid_command": {
+      "message": "The infrared command is invalid: {error}"
+    },
+    "remote_invalid_service_parameter": {
+      "message": "Invalid service parameter: {error}"
+    },
+    "remote_send_failed": {
+      "message": "Failed to send remote command: {error}"
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "description": "Home Assistant cannot connect to {entry_title}. Check that the iTach device is powered on, reachable from Home Assistant, and using the configured network address. After fixing the network or device issue, reload the integration.",
+      "title": "iTach IP2IR cannot be reached"
+    },
+    "invalid_config": {
+      "description": "Home Assistant could not set up {entry_title} because the stored configuration or device response is invalid. Reconfigure the integration or reload it after fixing the device/network configuration.",
+      "title": "iTach IP2IR configuration problem"
+    },
+    "no_ir_ports": {
+      "description": "{entry_title} does not currently expose any infrared-capable ports. Check the iTach port configuration and make sure at least one port is configured as IR Out or IR Blaster Out, then reload the integration.",
+      "title": "No infrared-capable iTach ports are available"
+    }
+  },
+  "options": {
+    "abort": {
+      "command_not_found": "The selected command no longer exists.",
+      "command_removed": "Command removed.",
+      "no_available_infrared_entities": "No available infrared entities were found.",
+      "no_remote_commands": "No commands are configured for any virtual remote.",
+      "no_virtual_remotes": "No virtual remotes are configured.",
+      "reassign_successful": "Associated infrared entity updated.",
+      "refresh_successful": "Infrared entities refreshed.",
+      "remote_not_found": "The selected virtual remote no longer exists.",
+      "remote_removed": "Virtual remote removed."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "command_data_required": "Enter infrared command data.",
+      "command_name_exists": "A command with this name already exists.",
+      "command_name_required": "Enter a command name.",
+      "duplicate_command": "A command with this name already exists.",
+      "duplicate_remote": "A virtual remote with this name already exists.",
+      "infrared_entity_unavailable": "Selected infrared entity is not available.",
+      "invalid_command": "Enter valid infrared command data.",
+      "invalid_infrared_entity": "Selected entity is not a valid infrared entity.",
+      "invalid_remote": "Selected virtual remote no longer exists.",
+      "no_ir_ports": "No infrared-capable ports were found.",
+      "refresh_failed": "Failed to refresh infrared entities.",
+      "remote_name_exists": "A virtual remote with this name already exists.",
+      "remote_name_required": "Enter a virtual remote name.",
+      "unknown": "Unexpected error."
+    },
+    "progress": {
+      "refresh_infrared_ports": "Refreshing infrared entities..."
+    },
+    "step": {
+      "add_command": {
+        "data": {
+          "command_data": "Infrared command data",
+          "command_name": "Command name"
+        },
+        "data_description": {
+          "command_data": "Infrared command payload, such as a Pronto hex string or supported timing data.",
+          "command_name": "Name used when calling the remote command."
+        },
+        "description": "Add or replace a named infrared command for a virtual remote.",
+        "title": "Add remote command"
+      },
+      "add_remote": {
+        "data": {
+          "infrared_entity_id": "Associated infrared entity",
+          "name": "Virtual remote name",
+          "remote_name": "Virtual remote name"
+        },
+        "data_description": {
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "name": "Name for the virtual remote entity.",
+          "remote_name": "Name for the virtual remote entity."
+        },
+        "description": "Create a virtual remote backed by an infrared entity.",
+        "title": "Add virtual remote"
+      },
+      "change_infrared_entity": {
+        "data": {
+          "id": "Virtual remote",
+          "infrared_entity_id": "Associated infrared entity",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote to update.",
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "remote_id": "Virtual remote to update."
+        },
+        "description": "Reassign a virtual remote to a different infrared entity. Existing commands are preserved.",
+        "title": "Change associated infrared entity"
+      },
+      "change_remote_infrared_entity": {
+        "data": {
+          "id": "Virtual remote",
+          "infrared_entity_id": "Associated infrared entity",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote to update.",
+          "infrared_entity_id": "Infrared entity that will send commands for this virtual remote.",
+          "remote_id": "Virtual remote to update."
+        },
+        "description": "Reassign a virtual remote to a different infrared entity. Existing commands are preserved.",
+        "title": "Change associated infrared entity"
+      },
+      "edit_command": {
+        "data": {
+          "command_data": "Infrared command data",
+          "command_name": "Command name"
+        },
+        "data_description": {
+          "command_data": "Infrared command payload, such as a Pronto hex string or supported timing data.",
+          "command_name": "Name used when calling the remote command."
+        },
+        "description": "Update the command name or infrared command data. Existing virtual remote assignments are preserved.",
+        "title": "Edit remote command"
+      },
+      "init": {
+        "menu_options": {
+          "add_command": "Add remote command",
+          "add_remote": "Add virtual remote",
+          "change_infrared_entity": "Change associated infrared entity",
+          "change_remote_infrared_entity": "Change associated infrared entity",
+          "edit_command": "Edit remote command",
+          "refresh_infrared_ports": "Refresh infrared entities",
+          "remove_command": "Remove remote command",
+          "remove_remote": "Remove virtual remote"
+        },
+        "title": "Manage iTach IP2IR"
+      },
+      "refresh_infrared_ports": {
+        "description": "Query the iTach device and reconcile Home Assistant infrared entities with the current port configuration.",
+        "title": "Refresh infrared entities"
+      },
+      "remove_command": {
+        "data": {
+          "command_name": "Command name"
+        },
+        "data_description": {
+          "command_name": "Command to remove."
+        },
+        "description": "Select the command to remove.",
+        "title": "Remove remote command"
+      },
+      "remove_remote": {
+        "data": {
+          "id": "Virtual remote",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote to remove.",
+          "remote_id": "Virtual remote to remove."
+        },
+        "description": "Select the virtual remote to remove.",
+        "title": "Remove virtual remote"
+      },
+      "select_command_for_edit": {
+        "data": {
+          "command_name": "Command name"
+        },
+        "data_description": {
+          "command_name": "Command to edit."
+        },
+        "description": "Select the command to edit.",
+        "title": "Edit remote command"
+      },
+      "select_remote_for_command": {
+        "data": {
+          "id": "Virtual remote",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote that will receive the command.",
+          "remote_id": "Virtual remote that will receive the command."
+        },
+        "description": "Select the virtual remote that will receive the command.",
+        "title": "Add remote command"
+      },
+      "select_remote_for_command_edit": {
+        "data": {
+          "id": "Virtual remote",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote that contains the command to edit.",
+          "remote_id": "Virtual remote that contains the command to edit."
+        },
+        "description": "Select the virtual remote that contains the command to edit.",
+        "title": "Edit remote command"
+      },
+      "select_remote_for_command_removal": {
+        "data": {
+          "id": "Virtual remote",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote that contains the command to remove.",
+          "remote_id": "Virtual remote that contains the command to remove."
+        },
+        "description": "Select the virtual remote that contains the command to remove.",
+        "title": "Remove remote command"
+      },
+      "select_remote_for_infrared_entity": {
+        "data": {
+          "id": "Virtual remote",
+          "remote_id": "Virtual remote"
+        },
+        "data_description": {
+          "id": "Virtual remote to update.",
+          "remote_id": "Virtual remote to update."
+        },
+        "description": "Select the virtual remote to reassign.",
+        "title": "Change associated infrared entity"
+      }
     }
   }
 }

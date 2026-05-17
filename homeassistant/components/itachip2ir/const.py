@@ -3,6 +3,10 @@
 DOMAIN = "itachip2ir"
 DISCOVERY = "discovery"
 
+ISSUE_CANNOT_CONNECT = "cannot_connect"
+ISSUE_NO_IR_PORTS = "no_ir_ports"
+ISSUE_INVALID_CONFIG = "invalid_config"
+
 CONF_VIRTUAL_REMOTES = "virtual_remotes"
 CONF_REMOTE_ID = "id"
 CONF_REMOTE_NAME = "name"

@@ -1,5 +1,6 @@
 """Options flow for Global Caché iTach IP2IR."""
 
+from collections.abc import Mapping
 import re
 import time
 from typing import Any
@@ -27,6 +28,7 @@ from .pyitach import (
 )
 
 _REMOTE_ID_RE = re.compile(r"[^a-z0-9_]+")
+_COMMAND_NAME_RE = re.compile(r"[^A-Z0-9_]+")
 COMMAND_NAME = "command_name"
 COMMAND_DATA = "command_data"
 SOURCE_ADD_REMOTE = "add_remote"
@@ -339,6 +341,9 @@ class ItachOptionsFlow(config_entries.OptionsFlow):
 
             if not errors:
                 commands = dict(remote.get(CONF_REMOTE_COMMANDS, {}))
+                existing_command_name = _find_command_key(commands, command_name)
+                if existing_command_name is not None:
+                    commands.pop(existing_command_name, None)
                 commands[command_name] = command_data
                 remote[CONF_REMOTE_COMMANDS] = commands
                 return self._create_options_entry()
@@ -467,10 +472,11 @@ class ItachOptionsFlow(config_entries.OptionsFlow):
             if not command_data:
                 errors[COMMAND_DATA] = "command_data_required"
 
+            existing_command_name = _find_command_key(commands, command_name)
             if (
                 not errors
-                and command_name != selected_command_name
-                and command_name in commands
+                and existing_command_name is not None
+                and existing_command_name != selected_command_name
             ):
                 errors[COMMAND_NAME] = "command_name_exists"
 
@@ -688,9 +694,24 @@ def _slugify_remote_id(name: str) -> str:
 
 def _normalize_command_name(name: str) -> str:
     """Normalize a user-provided command name."""
-    value = name.strip().casefold().replace(" ", "_")
-    value = _REMOTE_ID_RE.sub("_", value)
+    value = name.strip().upper().replace(" ", "_")
+    value = _COMMAND_NAME_RE.sub("_", value)
     return value.strip("_")
+
+
+def _find_command_key(
+    commands: Mapping[str, Any],
+    normalized_command_name: str,
+) -> str | None:
+    """Return the existing command key matching a normalized command name."""
+    return next(
+        (
+            command_name
+            for command_name in commands
+            if _normalize_command_name(str(command_name)) == normalized_command_name
+        ),
+        None,
+    )
 
 
 def _infrared_entity_selector(

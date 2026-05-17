@@ -1198,9 +1198,6 @@ influxdb-client==1.50.0
 # homeassistant.components.influxdb
 influxdb==5.3.1
 
-# homeassistant.components.itachip2ir
-infrared-protocols==0.8.1
-
 # homeassistant.components.infrared
 infrared-protocols==3.5.0
 

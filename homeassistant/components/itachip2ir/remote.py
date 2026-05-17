@@ -1,20 +1,20 @@
-"""Generic remote entities backed by Home Assistant infrared transmitters."""
+"""Remote entities for Global Caché iTach IP2IR virtual remotes."""
 
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components import infrared
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .command import RawInfraredCommand, parse_remote_command
+from . import ItachConfigEntry
+from .command import parse_remote_command as _parse_remote_command
 from .const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -26,63 +26,59 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _raise_invalid_remote_commands() -> None:
-    """Raise when remote commands are not configured as a mapping."""
-    raise TypeError("commands must be a mapping")
+PARALLEL_UPDATES = 0
 
 
-PARALLEL_UPDATES = 1
-POWER_ON_COMMAND = "power_on"
-POWER_OFF_COMMAND = "power_off"
-POWER_TOGGLE_COMMANDS = ("toggle", "power_toggle")
-REMOTE_DEVICE_INFO = "remote_device_info"
-REMOTE_UNIQUE_ID_PREFIX = "remote_unique_id_prefix"
+def _as_str_mapping(value: Any) -> dict[str, str] | None:
+    """Return a string mapping or None when the value is malformed."""
+    if not isinstance(value, Mapping):
+        return None
 
-# Kept because tests and callers use these parser symbols directly. They are
-# command-format compatibility aliases, not iTach hardware compatibility.
-_RawInfraredCommand = RawInfraredCommand
-_parse_remote_command = parse_remote_command
+    result: dict[str, str] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str):
+            return None
+        result[key] = item
+
+    return result
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ItachConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up user-configured infrared-backed remote entities."""
-    platform_data = _remote_platform_data(hass, entry)
-    runtime_data = getattr(entry, "runtime_data", None)
-
-    unique_id_prefix = str(
-        platform_data.get(REMOTE_UNIQUE_ID_PREFIX)
-        or getattr(entry, "unique_id", None)
-        or getattr(entry, "entry_id", None)
-        or getattr(runtime_data, "device_id", None)
-        or "remote"
+    """Set up configured virtual remote entities."""
+    runtime_data = entry.runtime_data
+    entry_data = getattr(entry, "data", {})
+    configured_remotes = entry.options.get(
+        CONF_VIRTUAL_REMOTES,
+        entry_data.get(CONF_VIRTUAL_REMOTES, []),
     )
-    device_info = cast(DeviceInfo | None, platform_data.get(REMOTE_DEVICE_INFO))
-
-    virtual_remotes = _virtual_remotes(entry)
 
     entities: list[InfraredRemoteEntity] = []
-    for remote_config in virtual_remotes:
-        try:
-            remote_id = str(remote_config[CONF_REMOTE_ID])
-            name = str(remote_config[CONF_REMOTE_NAME])
-            infrared_entity_id = _required_infrared_entity_id(remote_config)
-            commands_raw = remote_config.get(CONF_REMOTE_COMMANDS, {})
-            if not isinstance(commands_raw, Mapping):
-                _raise_invalid_remote_commands()
-            commands = {
-                str(command_name): str(command_payload)
-                for command_name, command_payload in commands_raw.items()
-            }
-        except KeyError, TypeError, ValueError:
-            _LOGGER.warning(
-                "Skipping malformed remote configuration: %s",
-                remote_config,
-            )
+
+    if not isinstance(configured_remotes, list):
+        _LOGGER.warning("Ignoring malformed iTach virtual remote configuration")
+        async_add_entities(entities)
+        return
+
+    for remote_config in configured_remotes:
+        if not isinstance(remote_config, Mapping):
+            continue
+
+        remote_id = remote_config.get(CONF_REMOTE_ID)
+        name = remote_config.get(CONF_REMOTE_NAME)
+        infrared_entity_id = remote_config.get(CONF_INFRARED_ENTITY_ID)
+        commands = _as_str_mapping(remote_config.get(CONF_REMOTE_COMMANDS, {}))
+
+        if (
+            not isinstance(remote_id, str)
+            or not isinstance(name, str)
+            or not isinstance(infrared_entity_id, str)
+            or commands is None
+        ):
+            _LOGGER.debug("Skipping malformed iTach virtual remote entry")
             continue
 
         entities.append(
@@ -91,22 +87,24 @@ async def async_setup_entry(
                 name=name,
                 infrared_entity_id=infrared_entity_id,
                 commands=commands,
-                unique_id_prefix=unique_id_prefix,
-                device_info=device_info,
-                translation_domain=DOMAIN,
+                unique_id_prefix=runtime_data.device_id,
+                device_info=DeviceInfo(
+                    identifiers={(DOMAIN, runtime_data.device_id)},
+                    name=f"iTach IP2IR ({runtime_data.host})",
+                    manufacturer="Global Caché",
+                    model="iTach IP2IR",
+                    configuration_url=f"http://{runtime_data.host}",
+                ),
             )
         )
 
-    async_add_entities(entities, update_before_add=False)
+    async_add_entities(entities)
 
 
 class InfraredRemoteEntity(RemoteEntity):
-    """User-configured remote backed by an infrared transmitter entity."""
+    """Virtual remote backed by a Home Assistant infrared entity."""
 
-    _attr_has_entity_name = False
-    _attr_is_on = True
-    _attr_available = True
-    _attr_assumed_state = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -116,61 +114,65 @@ class InfraredRemoteEntity(RemoteEntity):
         infrared_entity_id: str,
         commands: dict[str, str] | None,
         unique_id_prefix: str,
-        device_info: DeviceInfo | None,
-        translation_domain: str = DOMAIN,
+        device_info: DeviceInfo,
     ) -> None:
-        """Initialize the remote entity."""
-        self._remote_id = remote_id
-        self._infrared_entity_id = _normalize_infrared_entity_id(infrared_entity_id)
-        self._commands = commands or {}
-        self._translation_domain = translation_domain
-
+        """Initialize the virtual remote."""
         self._attr_name = name
         self._attr_unique_id = f"{unique_id_prefix}_remote_{remote_id}"
         self._attr_device_info = device_info
+        self._infrared_entity_id = infrared_entity_id
+        self._commands = commands or {}
+        self._is_on = True
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the virtual remote is on."""
+        return self._is_on
 
     @property
     def available(self) -> bool:
-        """Return whether the configured infrared entity is currently usable."""
-        hass = _entity_hass(self)
+        """Return whether the backing infrared entity is available."""
+        hass = getattr(self, "hass", None)
         if hass is None:
-            return bool(self._attr_available)
+            return True
 
         state = hass.states.get(self._infrared_entity_id)
-        if state is None or state.state == STATE_UNAVAILABLE:
+        if state is None:
             return False
 
-        return bool(self._attr_available)
+        return state.state != STATE_UNAVAILABLE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Send power_on when configured and mark the remote on."""
-        if POWER_ON_COMMAND not in self._commands:
+        """Turn on the virtual remote."""
+        if "power_on" not in self._commands:
             return
 
-        await self._async_send_named_command(POWER_ON_COMMAND, kwargs)
-        self._attr_is_on = True
+        await self._async_send_named_command("power_on", kwargs)
+        self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send power_off when configured and mark the remote off."""
-        if POWER_OFF_COMMAND not in self._commands:
+        """Turn off the virtual remote."""
+        if "power_off" not in self._commands:
             return
 
-        await self._async_send_named_command(POWER_OFF_COMMAND, kwargs)
-        self._attr_is_on = False
+        await self._async_send_named_command("power_off", kwargs)
+        self._is_on = False
         self.async_write_ha_state()
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Send toggle command when configured and toggle remote state."""
-        command_name = next(
-            (name for name in POWER_TOGGLE_COMMANDS if name in self._commands),
-            None,
-        )
-        if command_name is None:
+        """Toggle the virtual remote."""
+        command = None
+        if "toggle" in self._commands:
+            command = "toggle"
+        elif "power_toggle" in self._commands:
+            command = "power_toggle"
+
+        if command is None:
             return
 
-        await self._async_send_named_command(command_name, kwargs)
-        self._attr_is_on = not bool(self._attr_is_on)
+        await self._async_send_named_command(command, kwargs)
+        self._is_on = not self._is_on
         self.async_write_ha_state()
 
     async def async_send_command(
@@ -178,210 +180,88 @@ class InfraredRemoteEntity(RemoteEntity):
         command: Iterable[str],
         **kwargs: Any,
     ) -> None:
-        """Send one or more named or raw IR commands."""
-        delay_secs = _coerce_non_negative_float(
-            kwargs.get("delay_secs", 0),
-            "delay_secs",
-            self._translation_domain,
-        )
-        num_repeats = _coerce_positive_int(
-            kwargs.get("num_repeats", 1),
-            "num_repeats",
-            self._translation_domain,
-        )
+        """Send one or more commands through the backing infrared entity."""
+        num_repeats = kwargs.pop("num_repeats", 1)
+        delay_secs = kwargs.pop("delay_secs", 0)
+
+        if not isinstance(num_repeats, int) or num_repeats < 1:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_invalid_service_parameter",
+                translation_placeholders={
+                    "error": "num_repeats must be a positive integer"
+                },
+            )
+
+        if not isinstance(delay_secs, (int, float)) or delay_secs < 0:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_invalid_service_parameter",
+                translation_placeholders={
+                    "error": "delay_secs must be a non-negative number"
+                },
+            )
+
         commands = [command] if isinstance(command, str) else list(command)
-        total_sends = num_repeats * len(commands)
-        sends_done = 0
+        total = len(commands) * num_repeats
+        sent = 0
 
         for _ in range(num_repeats):
-            for command_name_or_raw in commands:
-                await self._async_send_one(str(command_name_or_raw), kwargs)
-                sends_done += 1
-                if delay_secs > 0 and sends_done < total_sends:
+            for item in commands:
+                if not isinstance(item, str):
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="remote_invalid_service_parameter",
+                        translation_placeholders={"error": "command must be a string"},
+                    )
+
+                await self._async_send_named_command(item, kwargs)
+                sent += 1
+
+                if delay_secs and sent < total:
                     await asyncio.sleep(delay_secs)
 
     async def _async_send_named_command(
         self,
-        command_name: str,
-        kwargs: dict[str, Any],
+        command: str,
+        kwargs: dict[str, Any] | None = None,
     ) -> None:
-        """Send a configured named command."""
-        if command_name not in self._commands:
-            raise _remote_error(
-                self._translation_domain,
-                "remote_command_missing",
-                {"command": command_name},
-            )
-        await self._async_send_one(command_name, kwargs)
+        """Resolve and send a named or raw infrared command."""
+        raw_command = self._commands.get(command, command)
+        ir_command = _parse_remote_command(raw_command, kwargs or {})
+        entity_id = self._resolve_infrared_entity_id()
 
-    async def _async_send_one(
-        self,
-        command_name_or_raw: str,
-        kwargs: dict[str, Any],
-    ) -> None:
-        """Resolve and send one named or raw command."""
-        hass = _entity_hass(self)
+        hass = getattr(self, "hass", None)
         if hass is None:
-            raise _remote_error(
-                self._translation_domain,
-                "remote_infrared_missing",
-                {"entity_id": self._infrared_entity_id},
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_infrared_missing",
+                translation_placeholders={"entity_id": entity_id},
             )
 
-        command_payload = self._commands.get(command_name_or_raw, command_name_or_raw)
-        ir_command = parse_remote_command(command_payload, kwargs)
-        await self._async_send_infrared_command(hass, ir_command)
-
-    async def _async_send_infrared_command(
-        self,
-        hass: HomeAssistant,
-        ir_command: RawInfraredCommand,
-    ) -> None:
-        """Send a parsed infrared command through the configured transmitter."""
         try:
-            await infrared.async_send_command(
-                hass,
-                self._infrared_entity_id,
-                ir_command,
-                context=getattr(self, "_context", None),
-            )
+            await infrared.async_send_command(hass, entity_id, ir_command)
         except HomeAssistantError:
             raise
         except Exception as err:
-            _LOGGER.warning(
-                "Failed sending remote command via infrared entity %s",
-                self._infrared_entity_id,
-            )
-            raise _remote_error(
-                self._translation_domain,
-                "remote_send_failed",
-                {"error": str(err)},
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_send_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
 
     def _resolve_infrared_entity_id(self) -> str:
-        """Return the configured infrared entity id."""
+        """Return the configured backing infrared entity id."""
+        hass = getattr(self, "hass", None)
+        if hass is None:
+            return self._infrared_entity_id
+
+        state = hass.states.get(self._infrared_entity_id)
+        if state is None or state.state == STATE_UNAVAILABLE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_infrared_missing",
+                translation_placeholders={"entity_id": self._infrared_entity_id},
+            )
+
         return self._infrared_entity_id
-
-    def _infrared_entity_id_for_log(self) -> str:
-        """Return the configured infrared entity id for logs and errors."""
-        return self._infrared_entity_id
-
-
-def _virtual_remotes(entry: ConfigEntry) -> list[Mapping[str, Any]]:
-    """Return virtual remote configs from options or data.
-
-    Options take precedence for integrations that manage remotes after setup.
-    Data fallback lets other integrations share this remote platform while
-    storing the same remote config shape directly in the config entry data.
-    """
-    options = getattr(entry, "options", {})
-    data = getattr(entry, "data", {})
-
-    if CONF_VIRTUAL_REMOTES in options:
-        remotes = options[CONF_VIRTUAL_REMOTES]
-    elif CONF_VIRTUAL_REMOTES in data:
-        remotes = data[CONF_VIRTUAL_REMOTES]
-    else:
-        return []
-
-    if not isinstance(remotes, list):
-        return []
-
-    return [remote for remote in remotes if isinstance(remote, Mapping)]
-
-
-def _remote_platform_data(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
-    """Return optional platform data supplied by the owning integration."""
-    domain_data = hass.data.get(DOMAIN, {})
-    entry_id = getattr(entry, "entry_id", None)
-    if entry_id is None:
-        return {}
-    entry_data = domain_data.get(entry_id, {})
-    return entry_data if isinstance(entry_data, dict) else {}
-
-
-def _required_infrared_entity_id(remote_config: Mapping[str, Any]) -> str:
-    """Return the required infrared entity id from a remote config."""
-    return _normalize_infrared_entity_id(remote_config[CONF_INFRARED_ENTITY_ID])
-
-
-def _normalize_infrared_entity_id(value: str) -> str:
-    """Normalize and validate an infrared entity id string."""
-    entity_id = value.strip()
-    if not entity_id:
-        raise ValueError("infrared entity id is required")
-    try:
-        domain, _object_id = split_entity_id(entity_id)
-    except ValueError as err:
-        raise ValueError("infrared entity id must be a valid entity id") from err
-    if domain != infrared.DOMAIN:
-        raise ValueError("infrared entity id must belong to the infrared domain")
-    return entity_id
-
-
-def _coerce_non_negative_float(
-    value: Any,
-    field: str,
-    translation_domain: str,
-) -> float:
-    """Coerce a non-negative float service parameter."""
-    try:
-        result = float(value)
-    except (TypeError, ValueError) as err:
-        raise _remote_error(
-            translation_domain,
-            "remote_invalid_service_parameter",
-            {"error": f"{field} must be a number"},
-        ) from err
-
-    if result < 0:
-        raise _remote_error(
-            translation_domain,
-            "remote_invalid_service_parameter",
-            {"error": f"{field} must be greater than or equal to 0"},
-        )
-
-    return result
-
-
-def _coerce_positive_int(
-    value: Any,
-    field: str,
-    translation_domain: str,
-) -> int:
-    """Coerce a positive integer service parameter."""
-    try:
-        result = int(value)
-    except (TypeError, ValueError) as err:
-        raise _remote_error(
-            translation_domain,
-            "remote_invalid_service_parameter",
-            {"error": f"{field} must be an integer"},
-        ) from err
-
-    if result < 1:
-        raise _remote_error(
-            translation_domain,
-            "remote_invalid_service_parameter",
-            {"error": f"{field} must be at least 1"},
-        )
-
-    return result
-
-
-def _remote_error(
-    translation_domain: str,
-    translation_key: str,
-    placeholders: dict[str, str],
-) -> HomeAssistantError:
-    """Build a translated Home Assistant error."""
-    return HomeAssistantError(
-        translation_domain=translation_domain,
-        translation_key=translation_key,
-        translation_placeholders=placeholders,
-    )
-
-
-def _entity_hass(entity: RemoteEntity) -> HomeAssistant | None:
-    """Return an entity's hass instance without upsetting static typing."""
-    return cast(HomeAssistant | None, getattr(entity, "hass", None))

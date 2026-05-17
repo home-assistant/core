@@ -2,10 +2,10 @@
   "entity": {
     "infrared": {
       "ir_blaster_port": {
-        "default": "mdi:remote"
+        "default": "mdi:led-on"
       },
       "ir_port": {
-        "default": "mdi:remote"
+        "default": "mdi:led-on"
       }
     }
   }

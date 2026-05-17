@@ -11,8 +11,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import infrared_compat as _infrared_compat  # noqa: F401
-from .const import DISCOVERY, DOMAIN
+from .const import (
+    DISCOVERY,
+    DOMAIN,
+    ISSUE_CANNOT_CONNECT,
+    ISSUE_INVALID_CONFIG,
+    ISSUE_NO_IR_PORTS,
+)
 from .discovery import ItachDiscovery
 from .pyitach import (
     ItachClient,
@@ -20,13 +25,7 @@ from .pyitach import (
     ItachError,
     async_get_ir_capability,
 )
-from .repairs import (
-    ISSUE_CANNOT_CONNECT,
-    ISSUE_INVALID_CONFIG,
-    ISSUE_NO_IR_PORTS,
-    async_create_repair_issue,
-    async_delete_repair_issue,
-)
+from .repairs import async_create_repair_issue, async_delete_repair_issue
 
 _LOGGER = logging.getLogger(__name__)
 
