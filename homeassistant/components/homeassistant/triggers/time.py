@@ -269,7 +269,7 @@ async def async_attach_trigger(  # noqa: C901
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
             to_track.append(TrackEntity(at_time, update_entity_trigger_event))
         elif isinstance(at_time, dict):
-            # entity with offset
+            # entity with optional offset
             entity_id: str = at_time.get(CONF_ENTITY_ID, "")
             offset: timedelta = at_time.get(CONF_OFFSET, timedelta(0))
             update_entity_trigger(
