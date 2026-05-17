@@ -74,7 +74,10 @@ async def test_firmness(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness",
+            ATTR_ENTITY_ID: (
+                f"number.{BED_NAME_LOWER}_sleepnumber"
+                f"_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness"
+            ),
             ATTR_VALUE: 42,
         },
         blocking=True,
@@ -88,7 +91,7 @@ async def test_firmness(
 async def test_actuators(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
 ) -> None:
-    """Test the SleepIQ actuator position values for a bed with adjustable head and foot."""
+    """Test SleepIQ actuator position values for adjustable bed."""
     entry = await setup_platform(hass, NUMBER_DOMAIN)
 
     state = hass.states.get(
@@ -152,7 +155,10 @@ async def test_actuators(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_right_head_position",
+            ATTR_ENTITY_ID: (
+                f"number.{BED_NAME_LOWER}_sleepnumber"
+                f"_{BED_NAME_LOWER}_right_head_position"
+            ),
             ATTR_VALUE: 42,
         },
         blocking=True,
@@ -196,7 +202,11 @@ async def test_foot_warmer_timer(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warming_timer",
+            ATTR_ENTITY_ID: (
+                f"number.{BED_NAME_LOWER}_sleepnumber"
+                f"_{BED_NAME_LOWER}"
+                f"_{SLEEPER_L_NAME_LOWER}_foot_warming_timer"
+            ),
             ATTR_VALUE: 300,
         },
         blocking=True,
@@ -235,7 +245,11 @@ async def test_core_climate_timer(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate_timer",
+            ATTR_ENTITY_ID: (
+                f"number.{BED_NAME_LOWER}_sleepnumber"
+                f"_{BED_NAME_LOWER}"
+                f"_{SLEEPER_L_NAME_LOWER}_core_climate_timer"
+            ),
             ATTR_VALUE: 420,
         },
         blocking=True,
