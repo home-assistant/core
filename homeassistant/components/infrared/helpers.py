@@ -114,21 +114,24 @@ class InfraredEntityStateTracker:
         availability_changed: Callable[[bool], None],
     ) -> None:
         """Initialize the state tracker and subscribe to state changes."""
+        self._hass = entity.hass
         self._entity = entity
         self._infrared_entity_id = infrared_entity_id
         self._availability_changed = availability_changed
 
-        hass = entity.hass
+    @callback
+    def async_setup(self) -> None:
+        """Subscribe to infrared entity state changes and set initial availability."""
 
-        entity.async_on_remove(
+        self._entity.async_on_remove(
             async_track_state_change_event(
-                hass, [infrared_entity_id], self._async_ir_state_changed
+                self._hass, [self._infrared_entity_id], self._async_ir_state_changed
             )
         )
 
         # Set initial availability based on current infrared entity state
-        ir_state = hass.states.get(infrared_entity_id)
-        availability_changed(
+        ir_state = self._hass.states.get(self._infrared_entity_id)
+        self._availability_changed(
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
@@ -166,6 +169,7 @@ class InfraredEmitterConsumerEntity(Entity):
             self._infrared_emitter_entity_id,
             self._async_set_available,
         )
+        self._ir_state_tracker.async_setup()
 
     @callback
     def _async_set_available(self, available: bool) -> None:
@@ -200,6 +204,7 @@ class InfraredReceiverConsumerEntity(Entity):
             self._infrared_receiver_entity_id,
             self._async_set_available,
         )
+        self._ir_state_tracker.async_setup()
 
         self._async_update_receiver_subscription()
         self.async_on_remove(self._async_unsubscribe_receiver)
