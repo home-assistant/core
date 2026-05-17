@@ -207,14 +207,17 @@ async def test_restore_state_rejects_bool_percentage(
 
     ``bool`` subclasses ``int`` so a stray ``True`` in the restored
     attributes would otherwise pass ``isinstance(last_pct, (int, float))``
-    and bring the fan back at speed 1. The restore guard rejects bools.
+    and bring the fan back at speed 1 — visible to the user when the
+    previous ``state`` was anything other than ``on`` (the ``STATE_ON``
+    fallback for missing percentages would mask the bug otherwise). Last
+    state ``off`` here makes the bug-vs-fix difference observable.
     """
     mock_restore_cache(
         hass,
         [
             State(
                 ENTITY_ID,
-                STATE_ON,
+                STATE_OFF,
                 attributes={ATTR_PERCENTAGE: True},
             )
         ],
@@ -225,7 +228,9 @@ async def test_restore_state_rejects_bool_percentage(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    # Bool rejected -> _level stayed 0 -> fan presents as off.
+    # Bool rejected -> _level stayed 0 -> fan presents as off (matches the
+    # restored ``off`` state). Without the guard the fan would silently
+    # come back at speed 1.
     assert state.state == STATE_OFF
 
 
