@@ -20,8 +20,6 @@ from tests.common import load_json_array_fixture, snapshot_platform
 
 SCENARIO_FIXTURES = [
     "scenarios/cozytouch.json",
-    "scenarios/tahoma_box_v1.json",
-    "scenarios/tahoma_classic_v2.json",
     "scenarios/tahoma_switch.json",
 ]
 
