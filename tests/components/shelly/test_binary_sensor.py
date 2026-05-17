@@ -535,7 +535,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual binary sensor will be removed if the mode has been changed to a toggle."""
+    """Test virtual binary sensor removal when mode changes to toggle."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -567,7 +567,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual binary sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
 
     # create orphaned entity on main device

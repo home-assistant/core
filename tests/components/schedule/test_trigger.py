@@ -106,7 +106,7 @@ async def test_schedule_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when any schedule state changes to a specific state."""
+    """Test schedule state trigger fires on any state change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_schedules,
@@ -149,7 +149,7 @@ async def test_schedule_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when the first schedule changes to a specific state."""
+    """Test schedule trigger fires on first schedule state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_schedules,
@@ -192,7 +192,7 @@ async def test_schedule_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when the last schedule changes to a specific state."""
+    """Test schedule trigger fires on last schedule state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_schedules,
@@ -211,7 +211,7 @@ async def test_schedule_state_trigger_back_to_back(
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the schedule state trigger fires when transitioning between two back-to-back schedule blocks."""
+    """Test trigger fires when transitioning between back-to-back blocks."""
     calls: list[str] = []
     freezer.move_to("2022-08-30 13:20:00-07:00")
     entity_id = "schedule.from_yaml"

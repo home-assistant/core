@@ -73,7 +73,7 @@ async def test_all_entities(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
 ) -> None:
-    """Test all sensor entities are created with the correct state and registry entry."""
+    """Test all sensors are created with correct state and registry."""
     with patch("homeassistant.components.solaredge.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
@@ -111,7 +111,7 @@ async def test_storage_level_unknown_when_storage_missing(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
 ) -> None:
-    """Test storage_level returns None (unknown) when site has no storage in flow data."""
+    """Test storage_level returns None when site has no storage."""
     power_flow = solaredge_api.get_current_power_flow.return_value
     power_flow["siteCurrentPowerFlow"].pop("STORAGE")
     # Drop STORAGE from connections too so the data service does not reference it.
@@ -161,7 +161,7 @@ async def test_sensor_unavailable_on_data_service_keyerror(
     api_method: str,
     sensor_id: str,
 ) -> None:
-    """Test sensors become unavailable when a data service refresh raises UpdateFailed."""
+    """Test sensors become unavailable on UpdateFailed."""
     getattr(solaredge_api, api_method).return_value = {}
 
     await setup_integration(hass, mock_config_entry)
@@ -220,7 +220,7 @@ async def test_energy_details_filters_meters(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
 ) -> None:
-    """Test energy details data service skips meters without type/values and unsupported types."""
+    """Test energy details skips meters without type/values."""
     solaredge_api.get_energy_details.return_value = {
         "energyDetails": {
             "unit": "Wh",
@@ -277,7 +277,7 @@ async def test_power_flow_grid_export_storage_discharge(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
 ) -> None:
-    """Test power flow sign flipping for grid export and reports for storage discharge."""
+    """Test power flow sign flipping for grid export and storage."""
     solaredge_api.get_current_power_flow.return_value = {
         "siteCurrentPowerFlow": {
             "unit": "W",
@@ -507,7 +507,7 @@ async def test_storage_data_missing_keys_in_response(
     entity_registry: er.EntityRegistry,
     bad_response: dict,
 ) -> None:
-    """Test storage sensors are unavailable when the response is missing required keys."""
+    """Test storage sensors unavailable with missing required keys."""
     solaredge_api.get_storage_data.return_value = bad_response
 
     await setup_integration(hass, mock_config_entry)
@@ -627,7 +627,7 @@ async def test_storage_data_service_handles_malformed_responses(
     storage_response: dict,
     expected_charge_state: str,
 ) -> None:
-    """Test storage data service tolerates batteries without serial / telemetries / single telemetry."""
+    """Test storage tolerates batteries without serial/telemetries."""
     solaredge_api.get_storage_data.return_value = storage_response
 
     await setup_integration(hass, mock_config_entry)
@@ -649,7 +649,7 @@ async def test_inventory_battery_without_serial_skipped(
     solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test inventory batteries without a serial number are skipped for per-battery sensors."""
+    """Test batteries without serial are skipped for per-battery sensors."""
     inventory = solaredge_api.get_inventory.return_value
     inventory["Inventory"]["batteries"] = [{"name": "Battery without serial"}]
 
@@ -682,7 +682,7 @@ async def test_storage_service_not_retried_after_recovery_with_no_batteries(
     solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test storage service stays idle when inventory recovers but reports no batteries."""
+    """Test storage stays idle when inventory has no batteries."""
     solaredge_api.get_inventory.side_effect = KeyError("Inventory")
 
     await setup_integration(hass, mock_config_entry)

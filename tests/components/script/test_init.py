@@ -1051,7 +1051,9 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
                     "sequence": [
                         call_script_2,
                         {
-                            "wait_template": "{{ is_state('input_boolean.test1', 'on') }}"
+                            "wait_template": (
+                                "{{ is_state('input_boolean.test1', 'on') }}"
+                            )
                         },
                         {"action": "test.script", "data": {"value": "script1"}},
                     ],
@@ -1061,7 +1063,9 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
                     "sequence": [
                         {"action": "test.script", "data": {"value": "script2a"}},
                         {
-                            "wait_template": "{{ is_state('input_boolean.test2', 'on') }}"
+                            "wait_template": (
+                                "{{ is_state('input_boolean.test2', 'on') }}"
+                            )
                         },
                         {"action": "test.script", "data": {"value": "script2b"}},
                     ],
@@ -1130,7 +1134,9 @@ async def test_script_variables(
                     "variables": {
                         "this_variable": "{{this.entity_id}}",
                         "test_var": "from_config",
-                        "templated_config_var": "{{ var_from_service | default('config-default') }}",
+                        "templated_config_var": (
+                            "{{ var_from_service | default('config-default') }}"
+                        ),
                     },
                     "sequence": [
                         {
@@ -1219,7 +1225,7 @@ async def test_script_variables(
 async def test_script_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test script always has reference to this, even with no variables are configured."""
+    """Test script has reference to this even without variables."""
 
     assert await async_setup_component(
         hass,
@@ -1600,7 +1606,8 @@ async def test_script_service_changed_entity_id(
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
 
-    # Change entity while the script entity is loaded, and make sure the service still works
+    # Change entity while the script entity is loaded, and make sure
+    # the service still works
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="script.custom_entity_id_2"
     )
@@ -1666,7 +1673,8 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string for dictionary value @ data['sequence'][0]['action']",
+            "value should be a string for dictionary value"
+            " @ data['sequence'][0]['action']",
         ),
     ],
 )

@@ -394,7 +394,8 @@ async def test_yaml_import_already_configured_creates_deprecation_issue(
     # Add existing config entry before YAML import
     mock_config_entry.add_to_hass(hass)
 
-    # Set up component with YAML - should see existing entry and abort with single_instance_allowed
+    # Set up component with YAML - should see existing entry and
+    # abort with single_instance_allowed
     assert await async_setup_component(
         hass,
         DOMAIN,

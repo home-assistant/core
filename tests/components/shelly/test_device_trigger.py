@@ -400,7 +400,7 @@ async def test_rpc_no_runtime_data(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test the device trigger for the RPC device when there is no runtime_data in the entry."""
+    """Test RPC device trigger when entry has no runtime_data."""
     entry = await init_integration(hass, 2)
     # Cache initial runtime_data
     runtime_data = entry.runtime_data
@@ -450,7 +450,7 @@ async def test_block_no_runtime_data(
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test the device trigger for the block device when there is no runtime_data in the entry."""
+    """Test block device trigger when entry has no runtime_data."""
     entry = await init_integration(hass, 1)
     # Cache initial runtime_data
     runtime_data = entry.runtime_data

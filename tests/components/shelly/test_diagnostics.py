@@ -160,7 +160,13 @@ async def test_rpc_config_entry_diagnostics(
                 "raw_advertisement_data": {
                     "AA:BB:CC:DD:EE:FF": {
                         "__type": "<class 'bytes'>",
-                        "repr": "b'\\x02\\x01\\x06\\t\\xffY\\x00\\xd1\\xfb;t\\xc8\\x90\\x11\\x07\\x1b\\xc5\\xd5\\xa5\\x02\\x00\\xb8\\x9f\\xe6\\x11M\"\\x00\\r\\xa2\\xcb\\x06\\x16\\x00\\rH\\x10a'",
+                        "repr": (
+                            "b'\\x02\\x01\\x06\\t\\xffY\\x00\\xd1"
+                            "\\xfb;t\\xc8\\x90\\x11\\x07\\x1b\\xc5"
+                            "\\xd5\\xa5\\x02\\x00\\xb8\\x9f\\xe6"
+                            '\\x11M"\\x00\\r\\xa2\\xcb\\x06\\x16'
+                            "\\x00\\rH\\x10a'"
+                        ),
                     }
                 },
                 "type": "ShellyBLEScanner",
@@ -219,7 +225,7 @@ async def test_rpc_config_entry_diagnostics_no_ws(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test config entry diagnostics for rpc device which doesn't support ws outbound."""
+    """Test diagnostics for rpc device without ws outbound."""
     config = deepcopy(mock_rpc_device.config)
     config.pop("ws")
     monkeypatch.setattr(mock_rpc_device, "config", config)

@@ -1266,7 +1266,7 @@ async def test_rpc_remove_text_virtual_sensor_when_mode_field(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual text sensor will be removed if the mode has been changed to a field."""
+    """Test virtual text sensor removal when mode changes to field."""
     config = deepcopy(mock_rpc_device.config)
     config["text:200"] = {"name": None, "meta": {"ui": {"view": "field"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -1298,7 +1298,7 @@ async def test_rpc_remove_text_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual text sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual text sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -1371,7 +1371,7 @@ async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual number sensor will be removed if the mode has been changed to a field."""
+    """Test virtual number sensor removal when mode changes to field."""
     config = deepcopy(mock_rpc_device.config)
     config["number:200"] = {
         "name": None,
@@ -1408,7 +1408,7 @@ async def test_rpc_remove_number_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual number sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual number sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -1485,7 +1485,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual enum sensor will be removed if the mode has been changed to a dropdown."""
+    """Test virtual enum sensor removal when mode changes to dropdown."""
     config = deepcopy(mock_rpc_device.config)
     config["enum:200"] = {
         "name": None,
@@ -1526,7 +1526,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual enum sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual enum sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(

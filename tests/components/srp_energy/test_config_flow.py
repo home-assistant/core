@@ -134,7 +134,8 @@ async def test_flow_entry_already_configured(
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
-    # Attempt a second config using same account id. This is the unique id between configs.
+    # Attempt a second config using same account id.
+    # This is the unique id between configs.
     user_input_second = TEST_CONFIG_HOME
     user_input_second[CONF_ID] = init_integration.data[CONF_ID]
 
@@ -157,7 +158,8 @@ async def test_flow_multiple_configs(
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
-    # Attempt a second config using different account id. This is the unique id between configs.
+    # Attempt a second config using different account id.
+    # This is the unique id between configs.
     assert TEST_CONFIG_CABIN[CONF_ID] != ACCNT_ID
 
     result = await hass.config_entries.flow.async_init(

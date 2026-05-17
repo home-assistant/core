@@ -308,7 +308,7 @@ async def test_create_issue_with_items(
     suggested_object_id: str,
     issue_string: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
@@ -368,7 +368,9 @@ async def test_create_issue_with_items(
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
-        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+        "items": (
+            "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)"
+        ),
     }
 
     entity_registry.async_update_entity(
@@ -469,7 +471,7 @@ async def test_create_issue(
     issue_string: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 

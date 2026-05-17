@@ -173,7 +173,7 @@ async def test_abort_if_already_setup(
 async def test_ignored_entry_does_not_cause_error(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test an ignored entry does not cause and error and we can still create an new entry."""
+    """Test an ignored entry does not cause an error on new entry."""
     MockConfigEntry(
         domain="solaredge",
         data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},

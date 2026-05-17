@@ -98,7 +98,8 @@ HTML = """
                 <h1>Intruder alert at apartment!!</h1>
               </div>
               <div>
-                <img alt="tests/testing_config/notify/test.jpg" src="cid:tests/testing_config/notify/test.jpg"/>
+                <img alt="tests/testing_config/notify/test.jpg"\
+ src="cid:tests/testing_config/notify/test.jpg"/>
               </div>
             </body>
         </html>"""

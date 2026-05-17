@@ -558,7 +558,7 @@ async def test_rpc_ignore_virtual_click_event(
     events: list[Event],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    """Test RPC virtual click events triggered by integration."""
     await init_integration(hass, 2)
 
     # Generate a virtual button event

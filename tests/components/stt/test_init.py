@@ -300,11 +300,13 @@ async def test_stream_audio_uses_enum_values(
         ),
         (
             (
-                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=bad channel;"
+                "format=wav; codec=pcm; sample_rate=16000;"
+                " bit_rate=16; channel=bad channel;"
                 " language=en"
             ),
             400,
-            "Wrong format of X-Speech-Content: invalid literal for int() with base 10: 'bad channel'",
+            "Wrong format of X-Speech-Content: invalid literal"
+            " for int() with base 10: 'bad channel'",
         ),
         (
             "format=wav; codec=pcm; sample_rate=16000",
@@ -615,7 +617,7 @@ async def test_audio_processing_default(
 async def test_audio_processing_entity_default(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
 ) -> None:
-    """Test that the default audio_processing property on entity returns correct values."""
+    """Test default audio_processing property returns correct values."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     engine = async_get_speech_to_text_engine(hass, f"{DOMAIN}.{TEST_DOMAIN}")

@@ -458,14 +458,16 @@ async def test_ll_hls_playlist_bad_msn_part(
     # Current sequence number is 1 and part number is num_completed_parts-1
     # The following two tests should fail immediately:
     # - request with a _HLS_msn of 4
-    # - request with a _HLS_msn of 1 and a _HLS_part of num_completed_parts-1+advance_part_limit
+    # - request with a _HLS_msn of 1 and a _HLS_part of
+    #   num_completed_parts-1+advance_part_limit
     assert (
         await hls_client.get("/playlist.m3u8?_HLS_msn=4")
     ).status == HTTPStatus.BAD_REQUEST
+    part_limit = hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit
     assert (
         await hls_client.get(
             "/playlist.m3u8?_HLS_msn=1&_HLS_part="
-            f"{num_completed_parts - 1 + hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
+            f"{num_completed_parts - 1 + part_limit}"
         )
     ).status == HTTPStatus.BAD_REQUEST
     stream_worker_sync.resume()

@@ -401,7 +401,7 @@ async def test_hls_playlist_view(
 async def test_hls_max_segments(
     hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
 ) -> None:
-    """Test rendering the hls playlist with more segments than the segment deque can hold."""
+    """Test hls playlist with more segments than the deque can hold."""
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -438,7 +438,8 @@ async def test_hls_max_segments(
         segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == HTTPStatus.NOT_FOUND
 
-    # However all segments in the buffer are accessible, even those that were not in the playlist.
+    # However all segments in the buffer are accessible,
+    # even those that were not in the playlist.
     for sequence in range(1, MAX_SEGMENTS + 1):
         segment_response = await hls_client.get(f"/segment/{sequence}.m4s")
         assert segment_response.status == HTTPStatus.OK

@@ -8,7 +8,7 @@ from . import SnoozFixture
 async def test_removing_entry_cleans_up_connections(
     hass: HomeAssistant, mock_connected_snooz: SnoozFixture
 ) -> None:
-    """Tests setup and removal of a config entry, ensuring connections are cleaned up."""
+    """Tests setup and removal of a config entry, cleaning up connections."""
     await hass.config_entries.async_remove(mock_connected_snooz.entry.entry_id)
     await hass.async_block_till_done()
 

@@ -179,7 +179,7 @@ async def test_switch_speech_enhancement(
     model: str,
     attribute: str,
 ) -> None:
-    """Tests the speech enhancement switch and attribute substitution for different models."""
+    """Tests speech enhancement switch and attribute substitution."""
     entity_id = "switch.zone_a_speech_enhancement"
     speaker_info["model_name"] = model
     soco.get_speaker_info.return_value = speaker_info
@@ -572,7 +572,7 @@ async def test_tv_ungroup_autoplay_unavailable_when_linked_zones_missing(
     soco: MockSoCo,
     speaker_info: dict[str, str],
 ) -> None:
-    """Test ungroup-on-autoplay becomes unavailable when IncludeLinkedZones is absent."""
+    """Test ungroup-on-autoplay unavailable without IncludeLinkedZones."""
     entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
 
     speaker_info["model_name"] = "Sonos Beam"
@@ -634,7 +634,7 @@ async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     async_autosetup_sonos,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that ungroup-on-autoplay switch is not created when device raises SoCoUPnPException.
+    """Test ungroup-on-autoplay switch not created on SoCoUPnPException.
 
     Non-HT devices don't support the GetAutoplayLinkedZones action and raise
     SoCoUPnPException, which is the capability check we rely on. The conftest
@@ -655,7 +655,8 @@ async def test_alarm_update_exception_logs_warning(
     with patch(
         "homeassistant.components.sonos.alarms.Alarms.update",
         side_effect=SoCoException(
-            "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
+            "Alarm list UID RINCON_0001234567890:31"
+            " does not match RINCON_000E987654321:0"
         ),
     ):
         await async_setup_sonos()
@@ -674,7 +675,7 @@ async def test_alarm_setup_for_undiscovered_speaker(
     soco_factory: SoCoMockFactory,
     discover,
 ) -> None:
-    """Test for creation of alarm on a speaker that is discovered after the integration is setup."""
+    """Test alarm creation on a speaker discovered after setup."""
 
     soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
