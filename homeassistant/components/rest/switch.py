@@ -213,9 +213,17 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         try:
             req = await self.get_response(self.hass)
         except TimeoutError, httpx.TimeoutException:
-            _LOGGER.exception("Timed out while fetching data")
+            _LOGGER.exception(
+                "Timed out while fetching data for %s from %s",
+                self.entity_id,
+                self._state_resource,
+            )
         except httpx.RequestError:
-            _LOGGER.exception("Error while fetching data")
+            _LOGGER.exception(
+                "Error fetching data for %s from %s",
+                self.entity_id,
+                self._state_resource,
+            )
 
         if req:
             self._async_update(req.text)
