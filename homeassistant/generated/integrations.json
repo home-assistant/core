@@ -8225,6 +8225,12 @@
       "integration_type": "virtual",
       "supported_by": "fibaro"
     },
+    "zendure_p1": {
+      "name": "Zendure Smart Meter P1",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zengge": {
       "name": "Zengge",
       "integration_type": "hub",

@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Zendure Smart Meter P1 device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "a_apparent_power": {
+        "name": "Phase A power"
+      },
+      "b_apparent_power": {
+        "name": "Phase B power"
+      },
+      "c_apparent_power": {
+        "name": "Phase C power"
+      },
+      "total_power": {
+        "name": "Total power"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with the Zendure P1 device."
+    },
+    "response_error": {
+      "message": "Invalid response from the Zendure P1 device."
+    },
+    "timeout_error": {
+      "message": "Timeout communicating with the Zendure P1 device."
+    }
+  }
+}

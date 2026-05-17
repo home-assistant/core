@@ -2059,6 +2059,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/zabbix/ @kruton
 /homeassistant/components/zamg/ @killer0071234
 /tests/components/zamg/ @killer0071234
+/homeassistant/components/zendure_p1/ @NextNebula
+/tests/components/zendure_p1/ @NextNebula
 /homeassistant/components/zengge/ @emontnemery
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco

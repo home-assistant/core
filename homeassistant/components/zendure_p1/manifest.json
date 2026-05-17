@@ -1,0 +1,11 @@
+{
+  "domain": "zendure_p1",
+  "name": "Zendure Smart Meter P1",
+  "codeowners": ["@NextNebula"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zendure_p1",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["zendure-p1==0.1.2"]
+}
