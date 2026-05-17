@@ -16,8 +16,11 @@ from tests.common import MockConfigEntry
 async def test_setup_entry_retries_when_transmitter_missing(
     hass: HomeAssistant,
 ) -> None:
-    """``async_setup_entry`` raises ``ConfigEntryNotReady`` if the configured
-    transmitter registry id is gone, leaving the entry in the retry state."""
+    """``async_setup_entry`` raises ``ConfigEntryNotReady`` on missing transmitter.
+
+    Verifies the entry stays in the retry state when the configured
+    transmitter registry id is no longer present.
+    """
     fake_registry_id = "00000000000000000000000000"
     entry = MockConfigEntry(
         domain=DOMAIN,
