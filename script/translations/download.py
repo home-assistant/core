@@ -97,14 +97,18 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         component_path = Path("homeassistant") / "components" / component
         if not component_path.is_dir():
             print(
-                f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
+                f"Skipping {lang} for {component},"
+                " as the integration doesn't seem"
+                " to exist."
             )
             continue
 
         strings_path = component_path / "strings.json"
         if not strings_path.exists():
             print(
-                f"Skipping {lang} for {component}, as the integration doesn't have a strings.json file."
+                f"Skipping {lang} for {component},"
+                " as the integration doesn't have"
+                " a strings.json file."
             )
             continue
         strings = load_json_from_path(strings_path)
