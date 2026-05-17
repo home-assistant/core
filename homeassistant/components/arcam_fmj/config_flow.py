@@ -3,7 +3,8 @@
 from typing import Any
 from urllib.parse import urlparse
 
-from arcam.fmj.client import Client, ConnectionFailed
+from arcam.fmj import ConnectionFailed
+from arcam.fmj.client import Client
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
