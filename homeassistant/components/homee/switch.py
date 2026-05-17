@@ -15,6 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -166,7 +167,9 @@ class HomeegramSwitch(SwitchEntity):
         self._host_connected = entry.runtime_data.connected
         self._attr_name = homeegram.name
 
-        self._attr_entity_registry_enabled_default = self.add_as_enabled(homeegram)
+        self._attr_entity_registry_enabled_default = self._is_enabled_by_default(
+            homeegram
+        )
 
     async def async_added_to_hass(self) -> None:
         """Add the Homeegram entity to home assistant."""
@@ -195,16 +198,20 @@ class HomeegramSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turning off homeegrams is not supported."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="homeegram_turn_off_not_supported",
+        )
 
     def _on_homeegram_updated(self, homeegram: HomeeGram) -> None:
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def add_as_enabled(self, homeegram: HomeeGram) -> bool:
-        """Get the number of actions in a homeegram."""
+    def _is_enabled_by_default(self, homeegram: HomeeGram) -> bool:
+        """Return if the homeegram should be enabled by default."""
         # We only enable if homeegram has more than one action and it is activated.
         return (
             sum(len(action_type) for action_type in homeegram.actions.data.values()) > 1
