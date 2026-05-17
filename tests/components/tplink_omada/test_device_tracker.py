@@ -61,7 +61,7 @@ async def test_device_scanner_created(
     assert not updated_entity.disabled
     await hass.async_block_till_done(wait_background_tasks=True)
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
