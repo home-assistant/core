@@ -12,6 +12,9 @@ AIOSomecomfort==0.0.35
 # homeassistant.components.adax
 Adax-local==0.3.0
 
+# homeassistant.components.ambiclimate
+Ambiclimate==0.2.1
+
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.11
 
@@ -48,6 +51,9 @@ ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
 PyChromecast==14.0.10
+
+# homeassistant.components.flick_electric
+PyFlick==0.0.2
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -518,6 +524,9 @@ aranet4==2.6.0
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.8.3
 
+# homeassistant.components.asterisk_mbox
+asterisk_mbox==0.5.0
+
 # homeassistant.components.asuswrt
 asusrouter==1.21.3
 
@@ -621,7 +630,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.4
+bluetooth-data-tools==1.29.5
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1310,8 +1319,14 @@ librouteros==3.2.0
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
 
+# homeassistant.components.linear_garage_door
+linear-garage-door==0.2.9
+
 # homeassistant.components.livisi
 livisi==0.0.25
+
+# homeassistant.components.logi_circle
+logi-circle==0.2.3
 
 # homeassistant.components.lojack
 lojack-api==0.7.2
@@ -2484,6 +2499,9 @@ rova==0.4.1
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
+# homeassistant.components.rtsp_to_webrtc
+rtsp-to-webrtc==0.5.1
+
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.4.0
 
@@ -2621,6 +2639,9 @@ steamloop==1.2.0
 
 # homeassistant.components.steam_online
 steamodd==4.21
+
+# homeassistant.components.stookalert
+stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
 stookwijzer==1.6.1
@@ -2814,6 +2835,12 @@ volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
 vsure==2.6.7
+
+# homeassistant.components.vulcan
+vulcan-api==2.3.2
+
+# homeassistant.components.vultr
+vultr==0.1.2
 
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
