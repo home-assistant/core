@@ -1,9 +1,9 @@
 {
   "state": {
     "on": true,
-    "bri": 255,
+    "bri": 128,
     "transition": 7,
-    "ps": 2,
+    "ps": -1,
     "pl": -1,
     "nl": {
       "on": false,
@@ -24,18 +24,18 @@
       {
         "id": 0,
         "start": 0,
-        "stop": 178,
-        "len": 178,
+        "stop": 30,
+        "len": 30,
         "grp": 1,
         "spc": 0,
         "of": 0,
         "on": true,
         "frz": false,
         "bri": 255,
-        "cct": 53,
+        "cct": 127,
         "set": 0,
         "col": [
-          [0, 0, 0, 255],
+          [255, 0, 0, 0],
           [0, 0, 0, 0],
           [0, 0, 0, 0]
         ],
@@ -58,35 +58,31 @@
     ]
   },
   "info": {
-    "ver": "0.15.0-b3",
+    "ver": "0.99.0b1",
     "vid": 2405180,
-    "cn": "Kōsen",
-    "release": "ESP32",
     "leds": {
-      "count": 178,
-      "pwr": 0,
-      "fps": 0,
-      "maxpwr": 0,
+      "count": 30,
+      "pwr": 536,
+      "fps": 5,
+      "maxpwr": 850,
       "maxseg": 32,
-      "bootps": 1,
-      "seglc": [6],
-      "lc": 6,
-      "rgbw": false,
-      "wv": 2,
+      "seglc": [5],
+      "lc": 5,
+      "rgbw": true,
+      "wv": 0,
       "cct": 4
     },
     "str": false,
-    "name": "WLED CCT light",
+    "name": "WLED RGB CCT Light",
     "udpport": 21324,
-    "simplifiedui": false,
     "live": false,
     "liveseg": -1,
     "lm": "",
     "lip": "",
-    "ws": 1,
+    "ws": -1,
     "fxcount": 187,
-    "palcount": 75,
-    "cpalcount": 4,
+    "palcount": 71,
+    "cpalcount": 0,
     "maps": [
       {
         "id": 0
@@ -99,19 +95,17 @@
       "channel": 11
     },
     "fs": {
-      "u": 20,
+      "u": 12,
       "t": 983,
-      "pmt": 1721752272
+      "pmt": 0
     },
     "ndc": 1,
     "arch": "esp32",
     "core": "v3.3.6-16-gcc5440f6a2",
-    "clock": 240,
-    "flash": 4,
     "lwip": 0,
-    "freeheap": 164804,
-    "uptime": 79769,
-    "time": "2024-7-24, 14:34:00",
+    "freeheap": 196960,
+    "uptime": 461,
+    "time": "1970-1-1, 00:07:41",
     "opt": 79,
     "brand": "WLED",
     "product": "FOSS",
@@ -233,7 +227,7 @@
     "Chunchun",
     "Dancing Shadows",
     "Washing Machine",
-    "Rotozoomer",
+    "RSVD",
     "Blends",
     "TV Simulator",
     "Dynamic Smooth",
@@ -379,5 +373,208 @@
     "Red Shift",
     "Red Tide",
     "Candy2"
-  ]
+  ],
+  "presets": {
+    "0": {},
+    "1": {
+      "on": true,
+      "bri": 128,
+      "transition": 7,
+      "mainseg": 0,
+      "seg": [
+        {
+          "id": 0,
+          "start": 0,
+          "stop": 131,
+          "grp": 1,
+          "spc": 0,
+          "of": 0,
+          "on": true,
+          "frz": false,
+          "bri": 255,
+          "cct": 127,
+          "set": 0,
+          "n": "",
+          "col": [
+            [40, 255, 3],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "fx": 0,
+          "sx": 128,
+          "ix": 128,
+          "pal": 0,
+          "c1": 128,
+          "c2": 128,
+          "c3": 16,
+          "sel": true,
+          "rev": false,
+          "mi": false,
+          "o1": false,
+          "o2": false,
+          "o3": false,
+          "si": 0,
+          "m12": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        }
+      ],
+      "n": "Preset 1"
+    },
+    "2": {
+      "on": true,
+      "bri": 128,
+      "transition": 7,
+      "mainseg": 0,
+      "seg": [
+        {
+          "id": 0,
+          "start": 0,
+          "stop": 131,
+          "grp": 1,
+          "spc": 0,
+          "of": 0,
+          "on": true,
+          "frz": false,
+          "bri": 255,
+          "cct": 127,
+          "set": 0,
+          "n": "",
+          "col": [
+            [51, 88, 255],
+            [0, 0, 0],
+            [0, 0, 0]
+          ],
+          "fx": 0,
+          "sx": 128,
+          "ix": 128,
+          "pal": 0,
+          "c1": 128,
+          "c2": 128,
+          "c3": 16,
+          "sel": true,
+          "rev": false,
+          "mi": false,
+          "o1": false,
+          "o2": false,
+          "o3": false,
+          "si": 0,
+          "m12": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        }
+      ],
+      "n": "Preset 2"
+    },
+    "3": {
+      "playlist": {
+        "ps": [1, 2],
+        "dur": [300, 300],
+        "transition": [7, 7],
+        "repeat": 0,
+        "end": 0,
+        "r": 0
+      },
+      "on": true,
+      "n": "Playlist 1"
+    },
+    "4": {
+      "playlist": {
+        "ps": [2, 0],
+        "dur": [300, 300],
+        "transition": [7, 7],
+        "repeat": 0,
+        "end": 0,
+        "r": 0
+      },
+      "on": true,
+      "n": "Playlist 2"
+    }
+  }
 }
