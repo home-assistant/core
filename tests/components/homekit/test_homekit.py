@@ -2283,7 +2283,7 @@ async def test_homekit_finds_linked_air_purifier_sensors(
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
-async def test_reload(mock_port_available: AsyncMock, hass: HomeAssistant) -> None:
+async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> None:
     """Test we can reload from yaml."""
 
     entry = MockConfigEntry(
