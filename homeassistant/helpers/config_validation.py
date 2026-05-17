@@ -1992,17 +1992,24 @@ _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_STOP_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(
-            CONF_RESPONSE_VARIABLE,
-            "error_or_response",
-            msg="not allowed to add a response to an error stop action",
-        ): str,
-    }
+
+def _stop_action_check_error_response(config: dict) -> dict:
+    """Validate that error stop actions don't have a response variable."""
+    if config.get(CONF_ERROR) and CONF_RESPONSE_VARIABLE in config:
+        raise vol.Invalid("not allowed to add a response to an error stop action")
+    return config
+
+
+_SCRIPT_STOP_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_STOP): vol.Any(None, string),
+            vol.Optional(CONF_ERROR): boolean,
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
+        }
+    ),
+    _stop_action_check_error_response,
 )
 
 _SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
