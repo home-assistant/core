@@ -1,7 +1,7 @@
 """Support for EnOcean devices."""
 
 from enocean_async import DEVICE_TYPES, EURID, Gateway, Observable, Observation
-from enocean_async.address import BaseAddress
+from enocean_async.address import Address, BaseAddress
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
@@ -125,13 +125,24 @@ async def async_setup_entry(
     _async_update_gateway_device(hass, config_entry, gateway)
 
     # Add devices to the gateway so it can decode their telegrams.
-    base_id = gateway.base_id
     for device in config_entry.options.get(CONF_ENOCEAN_DEVICES, []):
         try:
             enocean_id = EURID(device[CONF_ENOCEAN_DEVICE_ID])
             device_type = DEVICE_TYPES[device[CONF_ENOCEAN_DEVICE_TYPE_ID]]
             sender_id_string: str | None = device.get(CONF_ENOCEAN_SENDER_ID)
-            sender = BaseAddress(sender_id_string) if sender_id_string else base_id
+
+            # default sender will be set by the gateway automatically
+            sender = None
+
+            # if a sender_id_string is provided and valid, use that instead
+            if sender_id_string is not None:
+                s = Address(sender_id_string)
+                if gateway.is_valid_sender(s):
+                    if s.is_base_address:
+                        sender = BaseAddress(sender_id_string)
+                    elif s.is_eurid and s == gateway.eurid:
+                        sender = EURID(sender_id_string)
+
             gateway.add_device(
                 address=enocean_id,
                 device_type=device_type,
@@ -139,8 +150,9 @@ async def async_setup_entry(
             )
         except (KeyError, ValueError) as ex:
             LOGGER.error(
-                "Failed to add EnOcean device %s: %s",
-                device.get(CONF_ENOCEAN_DEVICE_ID, "unknown"),
+                "Failed to add EnOcean device %s with sender %s: %s",
+                device.get(CONF_ENOCEAN_DEVICE_ID, "<unknown>"),
+                device.get(CONF_ENOCEAN_SENDER_ID, "<unknown>"),
                 ex,
             )
 
@@ -225,6 +237,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> 
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
     ):
-        entry.runtime_data.stop()
+        await entry.runtime_data.stop()
 
     return unload_platforms
