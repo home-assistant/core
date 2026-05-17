@@ -273,7 +273,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
         if data is None:
             return None
         humidity = data.get(CONTROL4_HUMIDITY)
-        return int(humidity) if humidity is not None else None
+        try:
+            return int(humidity) if humidity is not None else None
+        except ValueError, TypeError:
+            return None
 
     @property
     def hvac_mode(self) -> HVACMode:
