@@ -296,7 +296,7 @@ async def test_upcoming_event(
     }
 
 
-@pytest.mark.freeze_time(datetime(2026, 5, 18, 6))
+@pytest.mark.freeze_time("2026-05-18 06:00:00+00:00")
 @respx.mock
 async def test_coordinator_refresh_updates_upcoming_event_state(
     hass: HomeAssistant,

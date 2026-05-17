@@ -58,6 +58,7 @@ class RemoteCalendarEntity(
         self._attr_name = entry.data[CONF_CALENDAR_NAME]
         self._attr_unique_id = entry.entry_id
         self._timeline: Timeline | None = None
+        self._manual_update_in_progress = False
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -108,8 +109,13 @@ class RemoteCalendarEntity(
             self.async_write_ha_state()
             return
 
+        if self._manual_update_in_progress:
+            return
+
         self.coordinator.config_entry.async_create_task(
-            self.hass, self._async_handle_coordinator_update()
+            self.hass,
+            self._async_handle_coordinator_update(),
+            name="remote calendar timeline update",
         )
 
     async def _async_handle_coordinator_update(self) -> None:
@@ -119,9 +125,15 @@ class RemoteCalendarEntity(
 
     async def async_update(self) -> None:
         """Refresh the coordinator and materialized timeline."""
-        await super().async_update()
+        self._manual_update_in_progress = True
+        try:
+            await super().async_update()
+        finally:
+            self._manual_update_in_progress = False
         if self.coordinator.last_update_success:
             await self._async_update_timeline()
+            if self.entity_id is not None:
+                self.async_write_ha_state()
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
