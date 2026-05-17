@@ -198,6 +198,37 @@ async def test_turn_off_when_on_sends_power_toggle(
     assert _last_command_data(mock_rf_entity) == DATA_POWER
 
 
+async def test_restore_state_rejects_bool_percentage(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """``ATTR_PERCENTAGE=True`` must not be treated as percentage 1.
+
+    ``bool`` subclasses ``int`` so a stray ``True`` in the restored
+    attributes would otherwise pass ``isinstance(last_pct, (int, float))``
+    and bring the fan back at speed 1. The restore guard rejects bools.
+    """
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_ON,
+                attributes={ATTR_PERCENTAGE: True},
+            )
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    # Bool rejected -> _level stayed 0 -> fan presents as off.
+    assert state.state == STATE_OFF
+
+
 async def test_restore_state_does_not_transmit(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,

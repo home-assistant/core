@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.radio_frequency import DATA_COMPONENT
 from homeassistant.components.vacmaster_cardio54.const import (
     CONF_DEVICE_ID,
@@ -369,3 +371,38 @@ async def test_user_flow_generator_skips_used_device_ids(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == free_id
     assert result["result"].unique_id == f"{registry_id}_{free_id:05X}"
+
+
+async def test_device_id_generator_raises_when_exhausted(
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+) -> None:
+    """``_generate_device_id`` bails after 1000 retries instead of hanging.
+
+    Pathological safeguard for the case where the 20-bit ID space on a
+    single transmitter is effectively exhausted — without the bounded
+    retry the ``while`` loop would block the event loop forever.
+    """
+    from homeassistant.components.vacmaster_cardio54.config_flow import (
+        VacmasterCardio54ConfigFlow,
+    )
+
+    registry_id = _transmitter_registry_id(hass, mock_rf_entity)
+    colliding_id = 0x11111
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Existing Cardio54",
+        data={CONF_TRANSMITTER: registry_id, CONF_DEVICE_ID: colliding_id},
+        unique_id=f"{registry_id}_{colliding_id:05X}",
+    ).add_to_hass(hass)
+
+    flow = VacmasterCardio54ConfigFlow()
+    flow.hass = hass
+
+    with (
+        patch(
+            "homeassistant.components.vacmaster_cardio54.config_flow.random.getrandbits",
+            return_value=colliding_id,
+        ),
+        pytest.raises(HomeAssistantError, match="Could not allocate"),
+    ):
+        flow._generate_device_id(registry_id)
