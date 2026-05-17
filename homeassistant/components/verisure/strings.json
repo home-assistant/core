@@ -53,7 +53,7 @@
   },
   "exceptions": {
     "arm_state_failed": {
-      "message": "Failed to change alarm state. Check your code and try again."
+      "message": "Failed to change alarm state. Verify your code is correct and that your account is not temporarily locked."
     }
   },
   "options": {

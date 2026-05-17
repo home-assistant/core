@@ -65,6 +65,7 @@ class VerisureAlarm(
         )
         LOGGER.debug("Verisure set arm state %s", state)
         if arm_state is None or "data" not in arm_state:
+            await self.coordinator.async_refresh()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="arm_state_failed",
@@ -83,6 +84,8 @@ class VerisureAlarm(
                     list(arm_state["data"].values())[0], state
                 ),
             )
+            if transaction is None:
+                continue
             result = (
                 transaction.get("data", {})
                 .get("installation", {})
