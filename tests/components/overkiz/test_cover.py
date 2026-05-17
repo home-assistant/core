@@ -134,6 +134,11 @@ RTS_GATE_4T = FixtureDevice(
     "rts://1234-1234-6233/16730717",
     "cover.rts_gate",
 )
+SLIDING_DISCRETE_GATE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730051",
+    "cover.sliding_gate",
+)
 DYNAMIC_GATE = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "ogp://1234-1234-6233/10410217",
@@ -188,6 +193,7 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (RTS_GATE_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
+        (SLIDING_DISCRETE_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
@@ -212,6 +218,7 @@ async def test_cover_entities_snapshot(
         ),
         (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
+        (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
@@ -235,6 +242,7 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
+        (SLIDING_DISCRETE_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
@@ -318,6 +326,7 @@ async def test_cover_entities_snapshot(
         "open-dynamic-garage-door-ogp",
         "open-dynamic-gate",
         "open-rts-gate-4t",
+        "open-sliding-discrete-gate",
         "open-partial-garage-door",
         "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
@@ -330,6 +339,7 @@ async def test_cover_entities_snapshot(
         "close-dynamic-garage-door-ogp",
         "close-dynamic-gate",
         "close-rts-gate-4t",
+        "close-sliding-discrete-gate",
         "close-partial-garage-door",
         "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
@@ -341,6 +351,7 @@ async def test_cover_entities_snapshot(
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-dynamic-gate",
+        "stop-sliding-discrete-gate",
         "stop-partial-garage-door",
         "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
@@ -731,7 +742,7 @@ async def test_vertical_cover_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for vertical covers based on current vs target position."""
+    """Test moving direction detection for vertical covers."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     await async_deliver_events(
@@ -796,7 +807,7 @@ async def test_awning_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for awnings based on current vs target position."""
+    """Test moving direction detection for awnings."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
     await async_deliver_events(
@@ -867,7 +878,7 @@ async def test_moving_offset_missing_closure_states(
     mock_client: MockOverkizClient,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that is_opening/is_closing return None when closure states are missing while moving."""
+    """Test is_opening/is_closing None when states missing."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
     await async_deliver_events(
@@ -1096,7 +1107,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
 ) -> None:
-    """ServiceValidationError must be raised when SET_CLOSURE_AND_ORIENTATION is missing.
+    """Error raised when SET_CLOSURE_AND_ORIENTATION is missing.
 
     Defence-in-depth: even when a cover advertises both SET_POSITION and
     SET_TILT_POSITION (so it passes the ``required_features`` filter), the
