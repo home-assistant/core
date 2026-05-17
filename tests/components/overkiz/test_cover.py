@@ -217,6 +217,8 @@ async def test_cover_entities_snapshot(
             CoverState.CLOSING,
         ),
         (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        # Cycle command is used for both open and close; device reports OPENING
+        # since the RTS protocol has no directional feedback.
         (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
