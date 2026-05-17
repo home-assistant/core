@@ -32,16 +32,5 @@
         "name": "Total power"
       }
     }
-  },
-  "exceptions": {
-    "connection_error": {
-      "message": "Error communicating with the Zendure P1 device."
-    },
-    "response_error": {
-      "message": "Invalid response from the Zendure P1 device."
-    },
-    "timeout_error": {
-      "message": "Timeout communicating with the Zendure P1 device."
-    }
   }
 }

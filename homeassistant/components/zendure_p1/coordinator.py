@@ -44,13 +44,13 @@ class ZendureP1Coordinator(DataUpdateCoordinator[Report]):
             return await self.api.get_report()
         except ZendureP1ConnectionError as ex:
             raise UpdateFailed(
-                ex, translation_domain=DOMAIN, translation_key="connection_error"
+                f"Error communicating with the Zendure P1 device: {ex}"
             ) from ex
         except ZendureP1TimeoutError as ex:
             raise UpdateFailed(
-                ex, translation_domain=DOMAIN, translation_key="timeout_error"
+                f"Timeout communicating with the Zendure P1 device: {ex}"
             ) from ex
         except ZendureP1ResponseError as ex:
             raise UpdateFailed(
-                ex, translation_domain=DOMAIN, translation_key="response_error"
+                f"Invalid response from the Zendure P1 device: {ex}"
             ) from ex
