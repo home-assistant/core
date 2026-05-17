@@ -17,5 +17,7 @@ class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,
-            "error": str(self.coordinator.cert_error),
+            "error": str(self.coordinator.cert_error)
+            if self.coordinator.cert_error
+            else None,
         }
