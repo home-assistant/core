@@ -353,6 +353,24 @@ async def test_listing_webhook(
     ]
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_listing_webhook_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test listing webhooks requires an admin user."""
+    assert await async_setup_component(hass, "webhook", {})
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json({"id": 5, "type": "webhook/list"})
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
 async def test_ws_webhook(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

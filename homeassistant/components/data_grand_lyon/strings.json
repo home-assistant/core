@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +12,16 @@
     },
     "step": {
       "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::data_grand_lyon::config::step::user::data_description::password%]",
+          "username": "[%key:component::data_grand_lyon::config::step::user::data_description::username%]"
+        }
+      },
+      "reconfigure": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
@@ -49,10 +60,59 @@
           }
         }
       }
+    },
+    "velov_station": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      },
+      "entry_type": "Vélo'v station",
+      "initiate_flow": {
+        "user": "Add Vélo'v station"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "station_id": "Station ID"
+          }
+        }
+      }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "name": "Station open"
+      }
+    },
     "sensor": {
+      "available_bikes": {
+        "name": "Available bikes",
+        "unit_of_measurement": "bikes"
+      },
+      "available_electrical_bikes": {
+        "name": "Available electrical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_mechanical_bikes": {
+        "name": "Available mechanical bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "available_stands": {
+        "name": "Available stands",
+        "unit_of_measurement": "stands"
+      },
+      "capacity": {
+        "name": "Capacity",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_stands::unit_of_measurement%]"
+      },
+      "electrical_internal_battery_bikes": {
+        "name": "Electrical internal battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
+      "electrical_removable_battery_bikes": {
+        "name": "Electrical removable battery bikes",
+        "unit_of_measurement": "[%key:component::data_grand_lyon::entity::sensor::available_bikes::unit_of_measurement%]"
+      },
       "next_departure_1": {
         "name": "Next departure 1"
       },
@@ -92,6 +152,17 @@
           "theoretical": "[%key:component::data_grand_lyon::entity::sensor::next_departure_1_type::state::theoretical%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for Data Grand Lyon."
+    },
+    "update_failed_all": {
+      "message": "[%key:component::data_grand_lyon::exceptions::update_failed_all_stops::message%]"
+    },
+    "update_failed_all_stops": {
+      "message": "Error fetching Data Grand Lyon data: all requests failed."
     }
   }
 }

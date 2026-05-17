@@ -151,8 +151,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
             except (BadCredentialsException, NotAuthenticatedException) as exception:
-                # If authentication with CozyTouch auth server is valid, but token is invalid
-                # for Overkiz API server, the hardware is not supported.
+                # If authentication with CozyTouch auth server is
+                # valid, but token is invalid for Overkiz API
+                # server, the hardware is not supported.
                 if user_input[CONF_HUB] in {
                     Server.ATLANTIC_COZYTOUCH,
                     Server.SAUTER_COZYTOUCH,

@@ -35,7 +35,8 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     ),
     # Identify
     OverkizButtonDescription(
-        key=OverkizCommand.IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
+        # startIdentify and identify are reversed... Swap this when fixed in API.
+        key=OverkizCommand.IDENTIFY,
         name="Start identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -49,7 +50,8 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         entity_registry_enabled_default=False,
     ),
     OverkizButtonDescription(
-        key=OverkizCommand.START_IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
+        # startIdentify and identify are reversed... Swap this when fixed in API.
+        key=OverkizCommand.START_IDENTIFY,
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
