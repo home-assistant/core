@@ -95,7 +95,9 @@ async def test_setup_platform_yaml(
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                         "icon": (
-                            '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
+                            '{% if this.attributes.icon=="mdi:icon2" %}'
+                            " mdi:icon1"
+                            " {% else %} mdi:icon2 {% endif %}"
                         ),
                     }
                 }
@@ -261,8 +263,8 @@ async def test_updating_to_often(
     wait_till_event.set()
     await asyncio.sleep(0)
     assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Binary Sensor Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -274,8 +276,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Binary Sensor Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 

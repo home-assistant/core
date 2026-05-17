@@ -334,7 +334,7 @@ async def test_set_temperature_no_entities(
 
 
 async def test_set_temperature_not_supported(hass: HomeAssistant) -> None:
-    """Test HassClimateSetTemperature intent when climate entity doesn't support required feature."""
+    """Test HassClimateSetTemperature intent without support."""
     assert await async_setup_component(hass, "homeassistant", {})
     await climate_intent.async_setup_intents(hass)
 

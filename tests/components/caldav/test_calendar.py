@@ -351,8 +351,9 @@ def get_api_events(
     async def api_call(entity_id: str) -> dict[str, Any]:
         client = await hass_client()
         response = await client.get(
-            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
-            # which just returns all events for the calendar.
+            # The start/end times are arbitrary since they are
+            # ignored by `_mock_calendar` which just returns all
+            # events for the calendar.
             f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
         )
         assert response.status == HTTPStatus.OK
@@ -732,7 +733,10 @@ async def test_all_day_event(
     freezer: FrozenDateTimeFactory,
     target_datetime: datetime.datetime,
 ) -> None:
-    """Test that the event lasting the whole day is returned, if it's early in the local day."""
+    """Test that the event lasting the whole day is returned.
+
+    Specifically when it's early in the local day.
+    """
     freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
@@ -912,7 +916,10 @@ async def test_event_rrule_all_day_early(
     freezer: FrozenDateTimeFactory,
     target_datetime: datetime.datetime,
 ) -> None:
-    """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
+    """Test recurring all day event is returned early in the day.
+
+    Verifies it's not returned on the first occurrence.
+    """
     freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
@@ -1199,7 +1206,10 @@ async def test_config_entry_supported_components(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test that calendars are only created for VEVENT types when using a config entry."""
+    """Test calendars are only created for VEVENT types.
+
+    This applies when using a config entry.
+    """
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 

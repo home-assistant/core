@@ -221,7 +221,7 @@ async def test_climate_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
+    """Test climate trigger fires on any state change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_climates,
@@ -295,7 +295,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
+    """Test climate attribute trigger fires on any change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_climates,
@@ -353,7 +353,7 @@ async def test_climate_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate changes to a specific state."""
+    """Test climate trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -414,7 +414,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate state changes to a specific state."""
+    """Test climate attribute trigger fires on first change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -472,7 +472,7 @@ async def test_climate_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate changes to a specific state."""
+    """Test climate trigger fires on last state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_climates,
@@ -533,7 +533,7 @@ async def test_climate_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate state changes to a specific state."""
+    """Test climate attribute trigger fires on last change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_climates,

@@ -836,7 +836,7 @@ async def _register_test_webrtc_provider(hass: HomeAssistant) -> Callable[[], No
             session_id: str,
             send_message: WebRTCSendMessage,
         ) -> None:
-            """Handle the WebRTC offer and return the answer via the provided callback."""
+            """Handle the WebRTC offer and return the answer."""
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
@@ -917,7 +917,7 @@ async def test_camera_capabilities_webrtc(
 async def test_webrtc_provider_not_added_for_native_webrtc(
     hass: HomeAssistant,
 ) -> None:
-    """Test that a WebRTC provider is not added to a camera when the camera has native WebRTC support."""
+    """Test that a WebRTC provider is not added for native WebRTC."""
     camera_obj = get_camera_from_entity_id(hass, "camera.async")
     assert camera_obj
     assert camera_obj._webrtc_provider is None

@@ -93,7 +93,8 @@ def test_turbojpeg_load_failure(
             (
                 "homeassistant.components.camera.img_util",
                 logging.ERROR,
-                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal",
+                "Error loading libturbojpeg; Camera snapshot"
+                " performance will be sub-optimal",
             )
         ]
 

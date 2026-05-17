@@ -120,7 +120,7 @@ async def test_select_state_update_via_callback_after_command_failure(
     mock_casper_glow: MagicMock,
     fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
-    """Test that device callbacks correctly update state even after a command failure."""
+    """Test callbacks update state after a command failure."""
     mock_casper_glow.set_brightness_and_dimming_time.side_effect = CasperGlowError(
         "Connection failed"
     )

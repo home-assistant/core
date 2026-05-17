@@ -286,8 +286,8 @@ async def test_updating_to_often(
 
     assert not called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -295,8 +295,8 @@ async def test_updating_to_often(
     called.clear()
 
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -310,8 +310,8 @@ async def test_updating_to_often(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
@@ -442,7 +442,12 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                             "command_close": f"echo 0 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "name": "Test",
-                            "icon": '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}',
+                            "icon": (
+                                "{% if this.attributes.icon=="
+                                '"mdi:icon2" %} mdi:icon1'
+                                " {% else %} mdi:icon2"
+                                " {% endif %}"
+                            ),
                         }
                     }
                 ]

@@ -43,7 +43,7 @@ async def test_water_heater_unknown_temperature(
     mock_connector: MagicMock,
     mock_return_value: Any,
 ) -> None:
-    """Test that water heater shows unknown temperature when get_current_value returns invalid values."""
+    """Test water heater shows unknown temp for invalid values."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         mock_return_value
     )

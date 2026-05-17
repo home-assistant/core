@@ -201,7 +201,7 @@ async def test_counter_state_trigger_behavior_any(
     trigger_options: dict[str, Any] | None,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when any counter state changes to a specific state."""
+    """Test counter trigger fires on any state change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_counters,
@@ -232,7 +232,7 @@ async def test_counter_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the first counter changes to a specific state."""
+    """Test counter trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_counters,
@@ -263,7 +263,7 @@ async def test_counter_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the last counter changes to a specific state."""
+    """Test counter trigger fires on last state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_counters,

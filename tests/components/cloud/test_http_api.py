@@ -455,7 +455,7 @@ async def test_login_view_mfa_required_tokens_missing(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test logging in when MFA is required, code is provided, but session tokens are missing."""
+    """Test MFA login when code is given but tokens are missing."""
     cloud_client = await hass_client()
     cloud.login.side_effect = MFARequired(mfa_tokens={})
 
