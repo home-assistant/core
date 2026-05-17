@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
 
-from __future__ import annotations
-
 import difflib
 import importlib
 from operator import itemgetter
@@ -16,9 +14,10 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
-# Requirements which can't be installed on all systems because they rely on additional
-# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
-# in requirements_all.txt and requirements_test_all.txt.
+# Requirements which can't be installed on all systems because they
+# rely on additional system packages. Requirements listed in
+# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
+# requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avion",
@@ -41,11 +40,6 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {
-        "exclude": set(),
-        "include": set(),
-        "markers": {},
-    },
     "wheels_aarch64": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
@@ -97,9 +91,11 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
-# these requirements are quite loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# httpx requires httpcore, and httpcore requires anyio and h11,
+# but the version constraints on these requirements are quite
+# loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful
+# for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.10.0
 h11==0.16.0
@@ -117,14 +113,11 @@ pandas==2.3.3
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Version 2.0 added typing, prevent accidental fallbacks
-backoff>=2.0
-
 # Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.12.2
+pydantic==2.13.2
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -218,6 +211,10 @@ pytest-rerunfailures==16.0.1
 # Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
 aiomqtt>=2.5.0
 
+# aiofile 3.10.0 crashes on import due to KeyError on package metadata
+# https://github.com/mosquito/aiofile/pull/106
+aiofile==3.9.0
+
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
@@ -225,6 +222,11 @@ auth0-python<5.0
 
 # Setuptools >=82.0.0 doesn't contain pkg_resources anymore
 setuptools<82.0.0
+
+# backoff and python-backoff share the same package name
+# pin versions which are mostly compatible to each other
+backoff==2.2.1
+python-backoff<2.4.0
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

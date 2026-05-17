@@ -1,7 +1,5 @@
 """Support for ReCollect Waste calendars."""
 
-from __future__ import annotations
-
 import datetime
 
 from aiorecollect.client import PickupEvent
@@ -70,7 +68,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
             current_event = next(
                 event
                 for event in self.coordinator.data
-                if event.date >= datetime.date.today()
+                if event.date >= datetime.date.today()  # noqa: DTZ011
             )
         except StopIteration:
             self._event = None

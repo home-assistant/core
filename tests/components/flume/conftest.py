@@ -41,6 +41,7 @@ SENSOR_DEVICE = {
     "type": 2,  # Sensor
     "location": {
         "name": "Sensor Location",
+        "tz": "America/New_York",
     },
     "name": "Flume Sensor",
     "connected": True,
@@ -52,7 +53,11 @@ NOTIFICATION = {
     "device_id": "6248148189204194987",
     "user_id": USER_ID,
     "type": 1,
-    "message": "Low Flow Leak triggered at Home. Water has been running for 2 hours averaging 0.43 gallons every minute.",
+    "message": (
+        "Low Flow Leak triggered at Home."
+        " Water has been running for 2 hours"
+        " averaging 0.43 gallons every minute."
+    ),
     "created_datetime": "2020-01-15T16:33:39.000Z",
     "title": "Potential Leak Detected!",
     "read": True,

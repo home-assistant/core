@@ -1,7 +1,5 @@
 """The thread websocket API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from python_otbr_api.tlv_parser import TLVError

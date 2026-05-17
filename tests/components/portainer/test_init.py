@@ -7,7 +7,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 import pytest
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -247,7 +248,8 @@ async def test_device_registry(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_entries == snapshot
+    # Sort by identifier to ensure consistent order in snapshot
+    assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
 
 async def test_container_stack_device_links(
@@ -301,6 +303,19 @@ async def test_container_stack_device_links(
     assert standalone_container_device.via_device_id == endpoint_device.id
 
 
+async def test_docker_system_df_refresh_runs_on_ha_start(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test docker system df coordinator refreshes DF data on HA start."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def test_new_endpoint_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
@@ -320,7 +335,7 @@ async def test_new_endpoint_callback(
         for endpoint in await async_load_json_array_fixture(
             hass, "endpoints.json", DOMAIN
         )
-        if endpoint["Status"] == 1
+        if endpoint["Status"] == EndpointStatus.UP
     ]
 
     coordinator = mock_config_entry.runtime_data
@@ -361,6 +376,21 @@ async def test_new_container_callback(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) > len(entities)
+
+
+async def test_swarm_stacks_fetched_by_swarm_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that on a Swarm manager get_stacks is called with both endpoint_id and swarm_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    calls = mock_portainer_client.get_stacks.call_args_list
+    # Expect exactly two calls: one by endpoint_id, one by swarm_id
+    assert len(calls) == 2
+    assert calls[0].kwargs == {"endpoint_id": 1}
+    assert calls[1].kwargs == {"endpoint_id": 1, "swarm_id": "swarm-cluster-id"}
 
 
 async def test_new_stack_callback(

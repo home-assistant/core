@@ -1,7 +1,5 @@
 """Support for Prometheus metrics export."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import astuple, dataclass
@@ -44,7 +42,8 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 
-# Alias water_heater constants to avoid name clashes with similarly named climate constants
+# Alias water_heater constants to avoid name clashes with
+# similarly named climate constants
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
@@ -349,7 +348,10 @@ class PrometheusMetrics:
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
-        """Listen for deleted, disabled or renamed entities and remove them from the Prometheus Registry."""
+        """Listen for entity changes and remove from Prometheus Registry.
+
+        Handles deleted, disabled, or renamed entities.
+        """
         if event.data["action"] in (None, "create"):
             return
 
@@ -491,7 +493,7 @@ class PrometheusMetrics:
         entity_id: str,
         ignored_metric_names: set[str] | None = None,
     ) -> None:
-        """Remove labelsets matching the given entity id from all non-ignored metrics."""
+        """Remove labelsets matching the entity id from non-ignored metrics."""
         if ignored_metric_names is None:
             ignored_metric_names = set()
         metric_set = self._metrics_by_entity_id[entity_id]
@@ -555,7 +557,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
-        metric.replace("\u03bc", "\u00b5")
+        metric = metric.replace("\u03bc", "\u00b5")
         return "".join(
             [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
@@ -752,7 +754,7 @@ class PrometheusMetrics:
         metric.set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
-        self._numeric_metric(state, "binary_sensor", "binary boolean")
+        self._numeric_metric(state, "binary_sensor", "binary sensor")
 
     def _handle_input_boolean(self, state: State) -> None:
         self._numeric_metric(state, "input_boolean", "input boolean")
@@ -903,7 +905,7 @@ class PrometheusMetrics:
             state,
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
-            "Target temperature in degrees Celsius",
+            "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
@@ -1060,7 +1062,10 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sensor_timestamp_metric(state: State, unit: str | None) -> str | None:
-        """Get metric for timestamp sensors, which have no unit of measurement attribute."""
+        """Get metric for timestamp sensors.
+
+        These have no unit of measurement attribute.
+        """
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric == SensorDeviceClass.TIMESTAMP:
             return f"sensor_{metric}_seconds"

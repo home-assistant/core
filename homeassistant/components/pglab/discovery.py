@@ -1,7 +1,5 @@
 """Discovery PG LAB Electronics devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import json
@@ -117,7 +115,10 @@ async def create_discover_device_info(
 
 @dataclass
 class PGLabDiscovery:
-    """Discovery a PGLab device with the following MQTT topic format pglab/discovery/[device]/config."""
+    """Discover a PGLab device.
+
+    Uses the MQTT topic format pglab/discovery/[device]/config.
+    """
 
     def __init__(self) -> None:
         """Initialize the discovery class."""
@@ -148,7 +149,8 @@ class PGLabDiscovery:
                 "Unexpected discovery payload format, id key not present"
             )
 
-        # Do a sanity check: the id must match the discovery topic /pglab/discovery/[id]/config
+        # Do a sanity check: the id must match the discovery
+        # topic /pglab/discovery/[id]/config
         topic = msg.topic
         if not topic.endswith(f"{payload[device_id]}/config"):
             raise PGLabDiscoveryError("Unexpected discovery topic format")
@@ -203,11 +205,14 @@ class PGLabDiscovery:
             except PGLabDiscoveryError as err:
                 LOGGER.warning("Can't create PGLabDiscovery instance(%s) ", str(err))
 
-                # For some reason it's not possible to create the device with the discovery message,
-                # be sure that any previous device with the same topic is now destroyed.
+                # For some reason it's not possible to create the
+                # device with the discovery message, be sure that
+                # any previous device with the same topic is now
+                # destroyed.
                 device_id = get_device_id_from_discovery_topic(msg.topic)
 
-                # If there is a valid topic device_id clean everything relative to the device.
+                # If there is a valid topic device_id clean
+                # everything relative to the device.
                 if device_id:
                     self.__clean_discovered_device(hass, device_id)
 
@@ -235,15 +240,18 @@ class PGLabDiscovery:
 
                 if discovery_info.hash == pglab_device.hash:
                     # Best case, there is nothing to do.
-                    # The device is still in the same configuration. Same name, same shutters, same relay etc.
+                    # The device is still in the same configuration.
+                    # Same name, same shutters, same relay etc.
                     return
 
                 LOGGER.warning(
-                    "Changed internal configuration of device(%s). Rebuilding all entities",
+                    "Changed internal configuration of device(%s)."
+                    " Rebuilding all entities",
                     pglab_device.id,
                 )
 
-                # Something has changed, all previous entities must be destroyed and re-created.
+                # Something has changed, all previous entities
+                # must be destroyed and re-created.
                 self.__clean_discovered_device(hass, pglab_device.id)
 
             # Add a new device.

@@ -1,7 +1,5 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -19,6 +17,8 @@ from .const import (
 )
 from .coordinator import SatelConfigEntry, SatelIntegraBaseCoordinator
 from .entity import SatelIntegraEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -79,6 +79,8 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
     SatelIntegraEntity[_CoordinatorT], BinarySensorEntity
 ):
     """Base binary sensor for Satel Integra."""
+
+    _attr_name = None
 
     def __init__(
         self,

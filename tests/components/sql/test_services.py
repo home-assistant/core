@@ -1,7 +1,5 @@
 """Tests for the SQL integration services."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import sqlite3
 from unittest.mock import patch

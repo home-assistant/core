@@ -1,7 +1,5 @@
 """Test Tuya binary sensor platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -14,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -67,7 +65,7 @@ async def test_selective_state_update(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -78,7 +76,7 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        notification_helper,
         freezer,
         entity_id="binary_sensor.window_downstairs_door",
         dpcode="doorcontact_state",
@@ -108,7 +106,7 @@ async def test_bitmap(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     fault_value: int,
     tankfull: str,
     defrost: str,
@@ -121,7 +119,9 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == "off"
 
-    await mock_listener.async_send_device_update(mock_device, {"fault": fault_value})
+    await notification_helper.async_send_device_update(
+        mock_device, {"fault": fault_value}
+    )
 
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost

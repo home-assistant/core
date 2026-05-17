@@ -657,6 +657,40 @@ async def test_device_class(
         assert state.attributes.get(attr) == value
 
 
+async def test_state_class_monetary_device_class(hass: HomeAssistant) -> None:
+    """Test that monetary device class uses state_class total, not total_increasing."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "utility_meter": {
+                "cost_meter": {
+                    "source": "sensor.energy_cost",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.energy_cost",
+        2,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.MONETARY,
+            ATTR_UNIT_OF_MEASUREMENT: "EUR",
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.cost_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
+
+
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
@@ -1797,6 +1831,63 @@ async def test_tz_changes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.energy_bill")
     assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
+
+
+async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
+    """Test that a missed reset fires on restore after entity rename.
+
+    When an entity is restored (e.g. after rename) and a reset was missed,
+    the scheduler should catch up from last_reset rather than starting from
+    now(), which would skip the missed reset entirely.
+    """
+    last_reset = "2024-10-27T00:00:00+00:00"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.energy_bill",
+                    "3",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": "3",
+                    "status": "collecting",
+                    "input_device_class": "energy",
+                },
+            ),
+        ],
+    )
+
+    # Restore at noon on Oct 28 - the Oct 28 midnight reset was missed
+    now = dt_util.parse_datetime("2024-10-28T12:00:00+00:00")
+    with freeze_time(now):
+        assert await async_setup_component(hass, DOMAIN, gen_config("daily"))
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    # The missed reset should have fired as a catch-up, updating last_reset
+    # and recording the previous period value. Without the fix, last_reset
+    # stays at the original value because the scheduler starts from now()
+    # and skips the missed period entirely.
+    assert state.attributes.get("last_reset") != last_reset
+    assert state.attributes.get("last_period") == "3"
+    assert state.state == "0"
 
 
 async def test_self_reset_daily(hass: HomeAssistant) -> None:

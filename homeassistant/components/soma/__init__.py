@@ -1,7 +1,5 @@
 """Support for Soma Smartshades."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -62,6 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: SomaConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     api = await hass.async_add_executor_job(SomaApi, entry.data[HOST], entry.data[PORT])
+    # pylint: disable-next=home-assistant-sequential-executor-jobs
     devices = await hass.async_add_executor_job(api.list_devices)
     entry.runtime_data = SomaData(api, devices["shades"])
 

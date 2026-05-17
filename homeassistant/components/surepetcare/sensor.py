@@ -1,7 +1,5 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from surepy.entities import SurepyEntity

@@ -1,7 +1,5 @@
 """Casper Glow integration sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from pycasperglow import GlowState
