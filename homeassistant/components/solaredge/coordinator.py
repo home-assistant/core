@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from aiosolaredge import SolarEdge
@@ -224,8 +224,8 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            now = datetime.now()
-            today = date.today()  # noqa: DTZ011
+            now = dt_util.now()
+            today = now.date()
             midnight = datetime.combine(today, datetime.min.time())
             data = await self.api.get_energy_details(
                 self.site_id,
