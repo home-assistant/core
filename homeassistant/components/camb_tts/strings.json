@@ -1,0 +1,22 @@
+{
+  "config": {
+    "error": {
+      "invalid_auth": "Invalid API key"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "language": "[%key:common::config_flow::data::language%]",
+          "voice_id": "Voice ID",
+          "speech_model": "Speech Model"
+        },
+        "data_description": {
+          "api_key": "Your CAMB AI API key from studio.camb.ai",
+          "voice_id": "Voice ID to use (default: 147320)",
+          "speech_model": "MARS speech model (mars-flash for low latency, mars-pro for quality)"
+        }
+      }
+    }
+  }
+}

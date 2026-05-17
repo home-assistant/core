@@ -1,0 +1,11 @@
+{
+  "domain": "camb_tts",
+  "name": "CAMB AI text-to-speech",
+  "codeowners": ["@camb-ai"],
+  "config_flow": true,
+  "documentation": "https://docs.camb.ai",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["camb"],
+  "requirements": ["camb-sdk==0.1.0"]
+}
