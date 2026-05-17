@@ -355,7 +355,7 @@ def build_homeegrams() -> list[AsyncMock]:
     for hg_data in homeegrams_data:
         hg_mock = AsyncMock(spec=HomeeGram)
         # Set basic properties
-        for key in ("id", "name", "active"):
+        for key in ("id", "name", "active", "play"):
             setattr(hg_mock, key, hg_data[key])
         # Mock triggers with AsyncMock for subclasses
         triggers_mock = MagicMock()

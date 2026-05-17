@@ -212,9 +212,7 @@ class HomeegramSwitch(SwitchEntity):
 
     def _is_enabled_by_default(self, homeegram: HomeeGram) -> bool:
         """Return if the homeegram should be enabled by default."""
-        # Only use the action-count heuristic here; runtime activation is
-        # reflected by `available` so later-activated homeegrams become usable
-        # without requiring the user to manually enable the entity.
-        return sum(
-            len(action_type) for action_type in homeegram.actions.data.values()
-        ) > 1
+        # Only enable homeegram switches by default if there is more than 1 homeegram action.
+        return (
+            sum(len(action_type) for action_type in homeegram.actions.data.values()) > 1
+        )
