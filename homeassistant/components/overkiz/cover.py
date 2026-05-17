@@ -101,38 +101,6 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.LOWER_CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override since PositionableOrOrientableRollerShutter has orientation
-    # (core:SlateOrientationState + setOrientation) not provided by UIClass.ROLLER_SHUTTER
-    # uiClass is RollerShutter
-    OverkizCoverDescription(
-        key=UIWidget.POSITIONABLE_OR_ORIENTABLE_ROLLER_SHUTTER,
-        device_class=CoverDeviceClass.SHUTTER,
-        current_position_state=OverkizState.CORE_CLOSURE,
-        set_position_command=OverkizCommand.SET_CLOSURE,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
-        stop_command=OverkizCommand.STOP,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
-        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
-        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
-        stop_tilt_command=OverkizCommand.STOP,
-    ),
-    # Needs override since PositionableOrProgressiveOrientableRollerShutter has orientation
-    # (core:SlateOrientationState + setOrientation) not provided by UIClass.ROLLER_SHUTTER
-    # uiClass is RollerShutter
-    OverkizCoverDescription(
-        key=UIWidget.POSITIONABLE_OR_PROGRESSIVE_ORIENTABLE_ROLLER_SHUTTER,
-        device_class=CoverDeviceClass.SHUTTER,
-        current_position_state=OverkizState.CORE_CLOSURE,
-        set_position_command=OverkizCommand.SET_CLOSURE,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
-        stop_command=OverkizCommand.STOP,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
-        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
-        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
-        stop_tilt_command=OverkizCommand.STOP,
-    ),
     # Needs override to add support for very specific tilt commands
     # uiClass is VenetianBlind
     OverkizCoverDescription(
