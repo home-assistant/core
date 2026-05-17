@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -65,6 +66,12 @@ class VerisureAlarm(
             self.coordinator.verisure.request, command_data
         )
         LOGGER.debug("Verisure set arm state %s", state)
+        if arm_state is None or "data" not in arm_state:
+            await self.coordinator.async_refresh()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_state_failed",
+            )
         result = None
         attempts = 0
         while result is None:
@@ -79,6 +86,8 @@ class VerisureAlarm(
                     list(arm_state["data"].values())[0], state
                 ),
             )
+            if transaction is None:
+                continue
             result = (
                 transaction.get("data", {})
                 .get("installation", {})
