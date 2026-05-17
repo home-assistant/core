@@ -27,12 +27,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: >
-      Entity actions (climate set_hvac_mode/set_preset_mode/set_temperature,
-      select select_option) currently raise unwrapped exceptions; will wrap
-      in HomeAssistantError with translation keys.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -73,7 +68,7 @@ rules:
       PR #170135.
   entity-disabled-by-default: todo
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
