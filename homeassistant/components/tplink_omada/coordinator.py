@@ -247,9 +247,11 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
         return None
-    # Split from the right so site_ids containing underscores are handled
-    _, sep, mac = unique_id.rpartition("_")
-    if not sep or not mac:
+    # The format is scanner_<site_id>_<mac>. Strip the prefix and split from the
+    # right so site_ids that contain underscores are handled correctly.
+    remainder = unique_id.removeprefix("scanner_")
+    site_id, sep, mac = remainder.rpartition("_")
+    if not sep or not site_id or not mac:
         return None
     return dr.format_mac(mac)
 
