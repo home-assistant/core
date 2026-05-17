@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
+from aiopvpc_ng import BadApiTokenAuthError, EsiosApiData, PVPCData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN

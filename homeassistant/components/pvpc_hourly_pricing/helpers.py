@@ -1,6 +1,6 @@
 """Helper functions to relate sensors keys and unique ids."""
 
-from aiopvpc.const import (
+from aiopvpc_ng.const import (
     ALL_SENSORS,
     KEY_INJECTION,
     KEY_MAG,
