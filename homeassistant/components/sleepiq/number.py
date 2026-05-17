@@ -158,6 +158,8 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_foot_warmer_time,
         get_name_fn=_get_foot_warming_name,
         get_unique_id_fn=_get_foot_warming_unique_id,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
     ),
     CORE_CLIMATE_TIMER: SleepIQNumberEntityDescription(
         key=CORE_CLIMATE_TIMER,
@@ -170,7 +172,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_core_climate_time,
         get_name_fn=_get_core_climate_name,
         get_unique_id_fn=_get_core_climate_unique_id,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
     ),
 }
