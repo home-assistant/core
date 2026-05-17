@@ -1,7 +1,5 @@
 """Support for range-options of slat-cover connected with WMS WebControl pro."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from wmspro.const import WMS_WebControl_pro_API_actionDescription as ACTION_DESC
@@ -78,12 +76,19 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         """Update the entity and learn current rotation."""
         await super().async_update()
 
-        # Learn min/max rotation if different from action limits
+        # Start with the current min/max rotation as native value
         action = self._dest.action(ACTION_DESC.SlatRotate)
+        native_value = getattr(action, self._value_attr)
+        if not native_value:
+            native_value = self._attr_native_value
+        if not native_value:
+            return
+
+        # Learn min/max rotation if different from action limits
         rotation = action["rotation"]
         if rotation and rotation not in (action.wms__minValue, action.wms__maxValue):
-            native_value = self._attr_native_value or rotation
-            await self.async_set_native_value(self._value_func(native_value, rotation))
+            native_value = self._value_func(native_value, rotation)
+        await self.async_set_native_value(native_value)
 
     @property
     def native_min_value(self) -> float:
