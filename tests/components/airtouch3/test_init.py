@@ -3,6 +3,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from pyairtouch3.airtouch_aircon import Aircon
+
 from homeassistant.components.airtouch3 import (
     PLATFORMS,
     _async_migrate_entity_unique_ids,
@@ -10,7 +12,6 @@ from homeassistant.components.airtouch3 import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.airtouch3.comms.airtouch_aircon import Aircon
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform

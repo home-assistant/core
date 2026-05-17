@@ -3,10 +3,10 @@
 from dataclasses import asdict
 from unittest.mock import AsyncMock, patch
 
+from pyairtouch3.airtouch_aircon import Aircon
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.airtouch3.comms.airtouch_aircon import Aircon
 from homeassistant.components.airtouch3.config_flow import CannotConnect
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.discovery import AirTouch3Discovery

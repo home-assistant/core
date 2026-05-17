@@ -2,13 +2,13 @@
 
 from typing import Any
 
+from pyairtouch3 import Aircon, AirtouchZone
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import AirTouch3ConfigEntry
-from .comms.airtouch_aircon import Aircon
-from .comms.airtouch_zone import AirtouchZone
 
 TO_REDACT = {CONF_HOST}
 

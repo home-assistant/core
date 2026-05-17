@@ -3,6 +3,10 @@
 from typing import cast
 from unittest.mock import AsyncMock, Mock, call, patch
 
+from pyairtouch3.airtouch_aircon import Aircon
+from pyairtouch3.airtouch_sensor import Sensor
+from pyairtouch3.airtouch_zone import AirtouchZone
+from pyairtouch3.enums import AcMode, ZoneStatus
 import pytest
 
 from homeassistant.components.airtouch3.climate import (
@@ -11,10 +15,6 @@ from homeassistant.components.airtouch3.climate import (
     AirtouchGroup,
     async_setup_entry,
 )
-from homeassistant.components.airtouch3.comms.airtouch_aircon import Aircon
-from homeassistant.components.airtouch3.comms.airtouch_sensor import Sensor
-from homeassistant.components.airtouch3.comms.airtouch_zone import AirtouchZone
-from homeassistant.components.airtouch3.comms.enums import AcMode, ZoneStatus
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.coordinator import (
     Airtouch3DataUpdateCoordinator,

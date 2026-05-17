@@ -4,6 +4,8 @@ import asyncio
 import logging
 from typing import Any
 
+from pyairtouch3 import AcMode, AirtouchZone, ZoneStatus
+
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
@@ -20,8 +22,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirTouch3ConfigEntry
-from .comms.airtouch_zone import AirtouchZone
-from .comms.enums import AcMode, ZoneStatus
 from .const import DOMAIN
 from .coordinator import Airtouch3DataUpdateCoordinator
 

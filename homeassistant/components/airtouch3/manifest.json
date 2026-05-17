@@ -16,5 +16,7 @@
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "quality_scale": "gold"
+  "loggers": ["pyairtouch3"],
+  "quality_scale": "gold",
+  "requirements": ["pyairtouch3==0.1.0"]
 }
