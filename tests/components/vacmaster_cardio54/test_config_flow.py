@@ -7,6 +7,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.radio_frequency import DATA_COMPONENT
+from homeassistant.components.vacmaster_cardio54.config_flow import (
+    VacmasterCardio54ConfigFlow,
+)
 from homeassistant.components.vacmaster_cardio54.const import (
     CONF_DEVICE_ID,
     CONF_TRANSMITTER,
@@ -382,10 +385,6 @@ async def test_device_id_generator_raises_when_exhausted(
     single transmitter is effectively exhausted — without the bounded
     retry the ``while`` loop would block the event loop forever.
     """
-    from homeassistant.components.vacmaster_cardio54.config_flow import (
-        VacmasterCardio54ConfigFlow,
-    )
-
     registry_id = _transmitter_registry_id(hass, mock_rf_entity)
     colliding_id = 0x11111
     MockConfigEntry(
