@@ -5330,7 +5330,7 @@
     {
       "creationTime": 1501225111000,
       "lastUpdateTime": 1501225111000,
-      "label": "*é*é* *",
+      "label": "*\u00e9*\u00e9* *",
       "deviceURL": "rtds://1234-1234-6233/124768",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5402,7 +5402,7 @@
     {
       "creationTime": 1501225074000,
       "lastUpdateTime": 1501225074000,
-      "label": "*é*é* *",
+      "label": "*\u00e9*\u00e9* *",
       "deviceURL": "rtds://1234-1234-6233/169771",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5525,7 +5525,7 @@
     {
       "creationTime": 1501224970000,
       "lastUpdateTime": 1501224970000,
-      "label": "É*",
+      "label": "\u00c9*",
       "deviceURL": "rtds://1234-1234-6233/246258",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5627,7 +5627,7 @@
     {
       "creationTime": 1501224830000,
       "lastUpdateTime": 1501224830000,
-      "label": "*é*",
+      "label": "*\u00e9*",
       "deviceURL": "rtds://1234-1234-6233/394765",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5727,7 +5727,7 @@
     {
       "creationTime": 1501225017000,
       "lastUpdateTime": 1501225017000,
-      "label": "*é* *",
+      "label": "*\u00e9* *",
       "deviceURL": "rtds://1234-1234-6233/711548",
       "shortcut": false,
       "controllableName": "rtds:RTDSSmokeSensor",
@@ -7894,6 +7894,249 @@
       "widget": "DynamicGate",
       "oid": "a8d3e9f1-4b2c-4d5e-8f6a-1234567890ab",
       "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Garage Door Rollixo",
+      "deviceURL": "io://1234-1234-6233/12745774",
+      "shortcut": false,
+      "controllableName": "io:DiscreteGarageOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "addLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "executeManufacturerProcedure",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "writeManufacturerData",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "readManufacturerData",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          },
+          {
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "qualifiedName": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "qualifiedName": "core:OpenClosedUnknownState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DiscretePositionableGarageDoor",
+        "uiProfiles": ["StatefulOpenCloseGarageOpener", "OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DiscreteGarageOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:OpenClosedUnknownState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Garage Door Rollixo"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5105491C15"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DiscretePositionableGarageDoor",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "uiClass": "GarageDoor"
     }
   ],
   "zones": [],

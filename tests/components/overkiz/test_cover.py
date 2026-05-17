@@ -114,6 +114,11 @@ UP_DOWN_SHEER_SCREEN = FixtureDevice(
     "rts://1234-1234-6362/16753206",
     "cover.kitchen_sheer_screen",
 )
+DISCRETE_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/12745774",
+    "cover.garage_door_rollixo",
+)
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
@@ -184,6 +189,7 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DISCRETE_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
@@ -202,6 +208,7 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DISCRETE_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             DYNAMIC_GARAGE_DOOR_OGP,
@@ -232,6 +239,7 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DISCRETE_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
@@ -315,6 +323,7 @@ async def test_cover_entities_snapshot(
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-discrete-garage-door",
         "open-dynamic-garage-door",
         "open-dynamic-garage-door-ogp",
         "open-dynamic-gate",
@@ -327,6 +336,7 @@ async def test_cover_entities_snapshot(
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-discrete-garage-door",
         "close-dynamic-garage-door",
         "close-dynamic-garage-door-ogp",
         "close-dynamic-gate",
@@ -339,6 +349,7 @@ async def test_cover_entities_snapshot(
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-discrete-garage-door",
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-dynamic-gate",
