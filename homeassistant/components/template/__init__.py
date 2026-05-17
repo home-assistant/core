@@ -77,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
@@ -204,7 +205,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
-            coordinator.async_remove()
+            await coordinator.async_shutdown()
 
     async def init_coordinator(
         hass: HomeAssistant, conf_section: dict[str, Any]

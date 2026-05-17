@@ -9,6 +9,8 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from paho.mqtt.client import MQTTMessage
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
@@ -24,8 +26,6 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import MQTTMessage
-
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -157,8 +157,11 @@ class MqttCommandTemplateException(ServiceValidationError):
         }
         entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{command_template}' and payload: {value_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{command_template}'"
+            f" and payload: {value_log}"
         )
 
     def __str__(self) -> str:
@@ -243,8 +246,12 @@ class MqttValueTemplateException(TemplateError):
         )
         payload_log = str(payload)
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{value_template}'"
+            f"{default_payload_log}"
+            f" and payload: {payload_log}"
         )
 
     def __str__(self) -> str:

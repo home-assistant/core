@@ -30,8 +30,10 @@ async def test_mqtt_abort_invalid_topic(
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/bla",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'
@@ -67,8 +69,10 @@ async def test_mqtt_abort_invalid_topic(
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'
@@ -92,8 +96,10 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'

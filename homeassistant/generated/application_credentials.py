@@ -44,6 +44,7 @@ APPLICATION_CREDENTIALS = [
     "teslemetry",
     "tibber",
     "twitch",
+    "vicare",
     "volvo",
     "watts",
     "weheat",

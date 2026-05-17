@@ -859,8 +859,8 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["name"] = None
                     entity["options"] = {}
             if old_minor_version < 19:
-                # Version 1.19 adds undefined flags to deleted entities, this is a bugfix
-                # of version 1.18
+                # Version 1.19 adds undefined flags to deleted
+                # entities, this is a bugfix of version 1.18
                 set_to_undefined = old_minor_version < 18
                 for entity in data["deleted_entities"]:
                     entity["disabled_by_undefined"] = set_to_undefined
@@ -895,10 +895,10 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["name"] = name
 
             if old_minor_version < 22:
-                # Version 1.22 adds support for COMPUTED_NAME in aliases and starts preserving
-                # their order.
-                # To avoid a major version bump, we keep the old aliases as-is and use aliases_v2
-                # field instead.
+                # Version 1.22 adds support for COMPUTED_NAME in
+                # aliases and starts preserving their order.
+                # To avoid a major version bump, we keep the old
+                # aliases as-is and use aliases_v2 field instead.
                 for entity in data["entities"]:
                     entity["aliases_v2"] = [None, *entity["aliases"]]
 
@@ -1082,7 +1082,8 @@ def _validate_item(
         and not isinstance(entity_category, EntityCategory)
     ):
         raise ValueError(
-            f"entity_category must be a valid EntityCategory instance, got {entity_category}"
+            "entity_category must be a valid EntityCategory"
+            f" instance, got {entity_category}"
         )
     if (
         hidden_by
@@ -1172,8 +1173,9 @@ class EntityRegistry(BaseRegistry):
 
         This function is deprecated. Use `async_get_available_entity_id` instead.
 
-        Entity ID conflicts are checked against registered and currently existing entities,
-        as well as provided `reserved_entity_ids`.
+        Entity ID conflicts are checked against registered and
+        currently existing entities, as well as provided
+        `reserved_entity_ids`.
         """
         report_usage(
             "calls `entity_registry.async_generate_entity_id`, "
@@ -1201,8 +1203,9 @@ class EntityRegistry(BaseRegistry):
     ) -> str:
         """Get next available entity ID.
 
-        Entity ID conflicts are checked against registered and currently existing entities,
-        as well as provided `reserved_entity_ids`.
+        Entity ID conflicts are checked against registered and
+        currently existing entities, as well as provided
+        `reserved_entity_ids`.
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
 
@@ -1277,8 +1280,9 @@ class EntityRegistry(BaseRegistry):
     ) -> str:
         """Regenerate an entity ID for an entry.
 
-        Entity ID conflicts are checked against registered and currently existing entities,
-        as well as provided `reserved_entity_ids`.
+        Entity ID conflicts are checked against registered and
+        currently existing entities, as well as provided
+        `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
             current_entity_id=entry.entity_id,
@@ -1602,8 +1606,8 @@ class EntityRegistry(BaseRegistry):
                 ):
                     self.async_remove(entity.entity_id)
 
-        # Remove entities which belong to config subentries no longer associated with the
-        # device
+        # Remove entities which belong to config subentries no longer
+        # associated with the device
         if old_config_entries_subentries := changes.get("config_entries_subentries"):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True

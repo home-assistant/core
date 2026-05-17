@@ -69,7 +69,7 @@ SUPPORT_WIIM_BASE = (
 
 
 def media_player_exception_wrap[
-    _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity",
+    _WiimMediaPlayerEntityT: WiimMediaPlayerEntity,
     **_P,
     _R,
 ](

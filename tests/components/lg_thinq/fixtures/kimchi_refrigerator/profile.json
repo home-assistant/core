@@ -1,0 +1,29 @@
+{
+  "notification": {
+    "push": ["DOOR_IS_OPEN"]
+  },
+  "property": {
+    "temperature": [
+      {
+        "locationName": "TOP",
+        "targetTemperature": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": ["TEMPERATURE_NUMBER"]
+          }
+        }
+      },
+      {
+        "locationName": "MIDDLE",
+        "targetTemperature": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": ["KIMCHI", "MEAT_FISH", "VEGETABLE_FRUIT"]
+          }
+        }
+      }
+    ]
+  }
+}

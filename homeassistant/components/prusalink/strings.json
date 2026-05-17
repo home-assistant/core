@@ -26,6 +26,9 @@
       "cancel_job": {
         "name": "Cancel job"
       },
+      "continue_job": {
+        "name": "Continue job"
+      },
       "pause_job": {
         "name": "Pause job"
       },
@@ -56,6 +59,9 @@
       },
       "material": {
         "name": "Material"
+      },
+      "min_extrusion_temp": {
+        "name": "Minimum extrusion temperature"
       },
       "nozzle_diameter": {
         "name": "Nozzle diameter"
@@ -93,6 +99,12 @@
       },
       "progress": {
         "name": "Progress"
+      },
+      "x_position": {
+        "name": "X-Position"
+      },
+      "y_position": {
+        "name": "Y-Position"
       },
       "z_height": {
         "name": "Z-Height"

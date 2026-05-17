@@ -298,7 +298,7 @@ def mock_smile_anna_p1() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_smile_p1(chosen_env: str, gateway_id: str) -> Generator[MagicMock]:
-    """Create a base Mock P1 type for testing with different datasets and gateway-ids."""
+    """Create a base Mock P1 type for testing."""
     data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
