@@ -133,7 +133,7 @@ def mock_radios(mock_countries, mock_stations):
 
 @pytest.fixture
 def patch_radios(monkeypatch: pytest.MonkeyPatch, mock_radios):
-    """Replace the radios object in the source with the mock object (with mock stations and countries)."""
+    """Replace the radios object in the source with the mock."""
 
     def _patch(source):
         monkeypatch.setattr(type(source), "radios", mock_radios)

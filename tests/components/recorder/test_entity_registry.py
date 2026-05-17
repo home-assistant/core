@@ -108,7 +108,7 @@ async def test_rename_entity_on_mocked_platform(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test states meta is migrated when entity_id is changed when using a mocked platform.
+    """Test states meta is migrated when entity_id is changed.
 
     This test will call async_remove on the entity so we can make
     sure that we do not record the entity as removed in the database
@@ -309,7 +309,8 @@ async def test_rename_entity_collision_without_states_meta_safeguard(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the entity_registry
+    # so that we hit the filter_unique_constraint_integrity_error
+    # safeguard in the entity_registry
     with patch.object(instance.states_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         entity_registry.async_update_entity(

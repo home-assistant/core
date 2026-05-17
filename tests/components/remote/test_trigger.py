@@ -136,7 +136,7 @@ async def test_remote_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the remote triggers when the first remote changes to a specific state."""
+    """Test remote triggers when first remote changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_remotes,
@@ -179,7 +179,7 @@ async def test_remote_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the remote triggers when the last remote changes to a specific state."""
+    """Test remote triggers when last remote changes state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_remotes,

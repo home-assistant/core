@@ -310,9 +310,10 @@ async def test_setup_router_ble_trackers(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test router and BLE trackers."""
-    # BLE trackers are considered stationary trackers; however unlike a router based tracker
-    # whose states are home and not_home, a BLE tracker may have the value of any zone that the
-    # beacon is configured for.
+    # BLE trackers are considered stationary trackers; however unlike
+    # a router based tracker whose states are home and not_home, a BLE
+    # tracker may have the value of any zone that the beacon is
+    # configured for.
     hass.set_state(CoreState.not_running)
     user_id = hass_admin_user.id
     config = {

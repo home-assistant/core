@@ -345,7 +345,7 @@ async def test_non_binary_sensor_with_binary_args(
     qs_devices,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that the system logs a warning when a non-binary device has binary specific args."""
+    """Test warning when a non-binary device has binary specific args."""
 
     config = {
         "qwikswitch": {
@@ -379,7 +379,7 @@ async def test_non_relay_switch(
     qs_devices,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that the system logs a warning when a switch is configured for a device that is not a relay."""
+    """Test warning when a switch is configured for a non-relay device."""
 
     config = {"qwikswitch": {"switches": ["@a00003"]}}
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)

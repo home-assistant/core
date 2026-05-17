@@ -459,7 +459,7 @@ async def test_import_flow_exceptions(
 
 
 def sanitize_config_entry(data: dict[str, Any]) -> dict[str, Any]:
-    """Sanitize config entry data by removing unused or None auth keys for assertions."""
+    """Sanitize config entry data by removing unused auth keys."""
     # Ignore unused keys (i.e. when switching from password to token or vice versa)
     # as we cannot unset them in the config entry, but the flow should still succeed
     unused_auth_keys = [CONF_TOKEN_ID, CONF_TOKEN_SECRET]
@@ -523,7 +523,8 @@ async def test_full_flow_reconfigure_match_entries(
     """Test the full flow of the config flow, this time matching existing entries."""
     mock_config_entry.add_to_hass(hass)
 
-    # Adding a second entry with a different host, since configuring the same host should work
+    # Adding a second entry with a different host, since configuring
+    # the same host should work
     second_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Second ProxmoxVE",
@@ -756,7 +757,7 @@ async def test_form_offline_node_skipped(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
 ) -> None:
-    """Test that offline nodes are skipped during config flow and don't cause setup failure."""
+    """Test that offline nodes are skipped during config flow."""
     mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
 
     result = await hass.config_entries.flow.async_init(

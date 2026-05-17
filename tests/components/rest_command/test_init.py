@@ -143,7 +143,8 @@ async def test_rest_command_digest_auth(
 
     await setup_component(config)
 
-    # Mock the digest auth behavior - the request will be called with DigestAuthMiddleware
+    # Mock the digest auth behavior - the request will be called
+    # with DigestAuthMiddleware
     with patch("aiohttp.ClientSession.get") as mock_get:
 
         async def async_iter_chunks(self, chunk_size):

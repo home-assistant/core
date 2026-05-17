@@ -135,7 +135,7 @@ async def test_migrate_events_context_ids(
     indices_to_drop: list[tuple[str, str]],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    """Test migrating uuid and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
 
@@ -529,7 +529,7 @@ async def test_migrate_states_context_ids(
     indices_to_drop: list[tuple[str, str]],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate old uuid context ids and ulid context ids to binary format."""
+    """Test migrating uuid and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
 
@@ -1380,7 +1380,7 @@ async def test_migrate_null_entity_ids(
 async def test_migrate_null_event_type_ids(
     async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
-    """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
+    """Test migrating NULL event_types to the EventTypes table."""
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
 

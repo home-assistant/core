@@ -97,7 +97,10 @@ async def test_resolve(
     await hass.async_block_till_done()
     caplog.set_level(logging.DEBUG)
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
     play_media = await async_resolve_media(
@@ -105,7 +108,10 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
 
     play_media = await async_resolve_media(
@@ -120,7 +126,10 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     play_media = await async_resolve_media(
@@ -206,8 +215,14 @@ async def test_browsing(
     )
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
-    browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    browse_day_0_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    )
+    browse_day_1_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    )
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_CAM_NAME} lens 0 High res."
     assert browse.identifier == browse_days_id
@@ -227,7 +242,10 @@ async def test_browsing(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
     browse_files_id = f"FILES|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    browse_file_id = (
+        f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     assert browse.domain == DOMAIN
     assert (
         browse.title
@@ -248,7 +266,11 @@ async def test_browsing(
 
     # browse event trigger person on a NVR
     reolink_host.is_nvr = True
-    browse_event_person_id = f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}|{VOD_trigger.PERSON.name}"
+    browse_event_person_id = (
+        f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+        f"|{VOD_trigger.PERSON.name}"
+    )
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
     assert browse.children[0].identifier == browse_event_person_id

@@ -30,7 +30,7 @@ async def test_device_info(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test device info is populated with serial number, firmware, and suggested area."""
+    """Test device info is populated with serial and firmware."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     device = device_registry.async_get_device(

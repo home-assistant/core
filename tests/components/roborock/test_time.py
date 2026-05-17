@@ -90,8 +90,9 @@ async def test_update_success(
 
     call = expected_call(fake_vacuum)
     assert call.call_count == 1
-    # Since we update the begin or end time separately: Verify that the args are built properly
-    # by reading the existing value and only updating the relevant fields.
+    # Since we update the begin or end time separately: Verify that
+    # the args are built properly by reading the existing value and
+    # only updating the relevant fields.
     assert call.call_args == ((expected_args,),)
 
     state = hass.states.get(entity_id)

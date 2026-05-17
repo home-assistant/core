@@ -796,7 +796,8 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
+    # so that we hit the filter_unique_constraint_integrity_error
+    # safeguard in the statistics
     with patch.object(instance.statistics_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         entity_registry.async_update_entity(
@@ -3973,7 +3974,8 @@ async def test_recorder_platforms_with_custom_equivalent_units(
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4049,7 +4051,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
+    """Test custom equivalent units are skipped on exception."""
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
@@ -4074,7 +4076,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4119,8 +4122,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     recorder_platform_two.async_custom_equivalent_units.assert_called_once()
 
     assert (
-        "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error"
-        in caplog.text
+        "Error calling async_custom_equivalent_units for recorder"
+        " platform domain some_domain_one: test error" in caplog.text
     )
 
 
@@ -4137,13 +4140,13 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
         {"invalid": {"dict": {"five": "5"}}},
     ],
 )
-async def test_recorder_platforms_with_custom_equivalent_units_continues_on_invalid_types(
+async def test_recorder_platforms_custom_equivalent_units_on_invalid_types(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     invalid_custom_equivalent_units: Any,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are skipped if they are of invalid type."""
+    """Test custom equivalent units are skipped on invalid types."""
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
@@ -4168,7 +4171,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4215,8 +4219,9 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
     # If the dict is None or empty it will be skipped before validation
     if invalid_custom_equivalent_units:
         assert (
-            "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one"
-            in caplog.text
+            "Error processing result of"
+            " async_custom_equivalent_units for recorder"
+            " platform domain some_domain_one" in caplog.text
         )
 
     # Reset domains for which warnings were shown

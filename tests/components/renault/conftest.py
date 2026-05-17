@@ -253,7 +253,9 @@ def patch_fixtures_with_invalid_upstream_exception() -> Generator[dict[str, Asyn
     """Mock fixtures."""
     invalid_upstream_exception = exceptions.InvalidUpstreamException(
         "err.tech.500",
-        "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
+        "Invalid response from the upstream server"
+        " (The request sent to the GDC is erroneous)"
+        " ; 502 Bad Gateway",
     )
 
     with patch_get_vehicle_data() as patches:

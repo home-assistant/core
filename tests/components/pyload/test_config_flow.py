@@ -423,7 +423,7 @@ async def test_hassio_discovery_already_configured(
 async def test_hassio_discovery_data_update(
     hass: HomeAssistant,
 ) -> None:
-    """Test we abort discovery flow if already configured and we update entry from discovery data."""
+    """Test we abort discovery if configured and update entry."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,

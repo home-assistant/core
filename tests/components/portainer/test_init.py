@@ -184,7 +184,7 @@ async def test_migration_v4_to_v5(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -216,7 +216,7 @@ async def test_migration_v4_to_v5_exceptions(
     mock_portainer_client: AsyncMock,
     exception: type[Exception],
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -322,7 +322,7 @@ async def test_new_endpoint_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new endpoint appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -354,7 +354,7 @@ async def test_new_container_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new container appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new container creates entities after refresh."""
     mock_portainer_client.get_containers.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -383,7 +383,7 @@ async def test_swarm_stacks_fetched_by_swarm_id(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that on a Swarm manager get_stacks is called with both endpoint_id and swarm_id."""
+    """Test Swarm manager calls get_stacks with both IDs."""
     await setup_integration(hass, mock_config_entry)
 
     calls = mock_portainer_client.get_stacks.call_args_list
@@ -399,7 +399,7 @@ async def test_new_stack_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new stack appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new stack creates entities after refresh."""
     mock_portainer_client.get_stacks.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
