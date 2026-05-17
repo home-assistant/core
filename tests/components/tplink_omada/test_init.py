@@ -263,14 +263,14 @@ async def test_cleanup_task_guard_prevents_redundant_tasks(
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         # Startup _schedule_cleanup() fires immediately; wait for the task to start
         await cleanup_started.wait()
 
         # In-flight task guard is now active — the 1-hour interval should be a no-op
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         # Release the first cleanup
         cleanup_proceed.set()

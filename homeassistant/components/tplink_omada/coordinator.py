@@ -261,6 +261,8 @@ async def async_cleanup_client_trackers(
     controller: OmadaSiteController,
 ) -> None:
     """Remove stale client tracker entities for the Omada integration."""
+    if not controller.known_clients_coordinator.last_update_success:
+        return
 
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
@@ -292,9 +294,7 @@ async def async_cleanup_devices(
     entry_id = controller.devices_coordinator.config_entry.entry_id
     known_devices = {dr.format_mac(mac) for mac in controller.devices_coordinator.data}
 
-    for device_entry in device_registry.devices.get_devices_for_config_entry_id(
-        entry_id
-    ):
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
         mac = next(
             (
                 dr.format_mac(identifier[1])
