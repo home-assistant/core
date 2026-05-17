@@ -8,7 +8,6 @@ import logging
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
-from aiolyric.objects.priority import LyricPriority
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -44,7 +43,6 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         )
         self.oauth_session = oauth_session
         self.lyric = lyric
-        self.priorities_dict: dict[str, LyricPriority] = {}
 
     async def _async_update_data(self) -> Lyric:
         """Fetch data from Lyric."""
@@ -76,7 +74,6 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
                         and device.device_id.startswith("LCC")
                     )
                 )
-                self.priorities_dict = self.lyric.priorities_dict
 
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
