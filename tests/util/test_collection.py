@@ -4,7 +4,7 @@ from homeassistant.util.collection import chunked_or_all
 
 
 def test_chunked_or_all() -> None:
-    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
+    """Test chunked_or_all iterates chunk sizes larger than input."""
     all_items = []
     incoming = (1, 2, 3, 4)
     for chunk in chunked_or_all(incoming, 2):

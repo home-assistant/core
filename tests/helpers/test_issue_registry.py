@@ -367,7 +367,9 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls issue_registry.async_get_or_create from a thread.",
+        match=(
+            "Detected code that calls issue_registry.async_get_or_create from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             partial(

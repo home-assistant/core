@@ -182,7 +182,8 @@ def test_restoring_backup_that_is_not_a_file(
     restore_file_path.write_text(json.dumps(restore_config), encoding="utf-8")
     assert restore_file_path.exists()
 
-    # Create a directory at the backup file path to simulate the backup file not being a file
+    # Create a directory at the backup file path to simulate
+    # the backup file not being a file
     backup_file_path.mkdir(exist_ok=True)
 
     with (
@@ -227,7 +228,10 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
     with (
         pytest.raises(
             ValueError,
-            match="You need at least Home Assistant version 9999.99.99 to restore this backup",
+            match=(
+                "You need at least Home Assistant version"
+                " 9999.99.99 to restore this backup"
+            ),
         ),
     ):
         assert backup_restore.restore_backup(tmp_path.as_posix()) is True

@@ -642,7 +642,7 @@ def test_async_register(hass: HomeAssistant) -> None:
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
-    """Test registering multiple intents with the same type, ensuring the last one overwrites the previous one and a warning is emitted."""
+    """Test registering duplicate intent types overwrites and emits a warning."""
     handler1 = MagicMock()
     handler1.intent_type = "test_intent"
 
@@ -661,7 +661,7 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
-    """Test removing an intent and verifying it is no longer present in the Home Assistant data."""
+    """Test removing an intent and verifying it is no longer present."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
 
@@ -916,7 +916,7 @@ async def test_service_handler_device_classes(
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:
-    """Test that matched_states reflects the post-service-call state, not the pre-call state."""
+    """Test matched_states reflects post-service-call state, not pre-call."""
     hass.states.async_set("light.kitchen", "off")
 
     async def mock_turn_on(call):

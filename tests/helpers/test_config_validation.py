@@ -933,10 +933,11 @@ def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) 
 def test_deprecated_or_removed_param_and_raise(
     caplog: pytest.LogCaptureFixture, schema
 ) -> None:
-    """Test removed or deprecation options and fail the config validation by raising an exception.
+    """Test removed or deprecation options and fail config validation.
 
     Expected behavior:
-        - Outputs the appropriate deprecation or removed from support error if key is detected
+        - Outputs the appropriate deprecation or removed
+          from support error if key is detected
     """
     removed_schema = vol.All(cv.deprecated("mars", raise_if_present=True), schema)
 
@@ -1119,14 +1120,17 @@ def test_deprecated_cant_find_module() -> None:
 def test_deprecated_or_removed_logger_with_config_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if the line and file attribute is available in config."""
+    """Test logger outputs correct message if line and file attr is available."""
     file: str = "configuration.yaml"
     line: int = 54
 
     # test as deprecated option
     replacement_key = "jupiter"
     option_status = "is deprecated"
-    replacement = f"'mars' option near {file}:{line} {option_status}, please replace it with '{replacement_key}'"
+    replacement = (
+        f"'mars' option near {file}:{line} {option_status},"
+        f" please replace it with '{replacement_key}'"
+    )
     config = OrderedDict([("mars", "blah")])
     config.__config_file__ = file
     config.__line__ = line
@@ -1144,7 +1148,10 @@ def test_deprecated_or_removed_logger_with_config_attributes(
 
     # test as removed option
     option_status = "has been removed"
-    replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
+    replacement = (
+        f"'mars' option near {file}:{line} {option_status},"
+        " please remove it from your configuration"
+    )
     config = OrderedDict([("mars", "blah")])
     config.__config_file__ = file
     config.__line__ = line
@@ -1162,7 +1169,7 @@ def test_deprecated_or_removed_logger_with_config_attributes(
 def test_deprecated_logger_with_one_config_attribute(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
+    """Test logger message when only one of line/file attr is available."""
     file: str = "configuration.yaml"
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
@@ -1198,7 +1205,7 @@ def test_deprecated_logger_with_one_config_attribute(
 def test_deprecated_logger_without_config_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
+    """Test logger message when line and file attr is not available."""
     file: str = "configuration.yaml"
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
@@ -1412,8 +1419,8 @@ def test_key_value_schemas_with_default() -> None:
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
-            str(excinfo.value)
-            == f"Unexpected value for mode: '{mode}'. Expected number, string, a cool template"
+            str(excinfo.value) == f"Unexpected value for mode: '{mode}'."
+            " Expected number, string, a cool template"
         )
 
     with pytest.raises(vol.Invalid) as excinfo:
@@ -1945,7 +1952,9 @@ async def test_trigger_backwards_compatibility() -> None:
     assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
     with pytest.raises(
         vol.Invalid,
-        match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+        match=(
+            "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+        ),
     ):
         cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
     with pytest.raises(

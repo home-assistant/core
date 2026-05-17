@@ -513,7 +513,7 @@ async def test_extract_referenced_entity_ids_primary_entities_only(
     selector_config: ConfigType,
     non_primary_entities: set[str],
 ) -> None:
-    """Test that primary_entities_only controls inclusion of config/diagnostic entities."""
+    """Test primary_entities_only controls config/diagnostic entity inclusion."""
     target_selection = target.TargetSelection(selector_config)
 
     selected_primary = target.async_extract_referenced_entity_ids(

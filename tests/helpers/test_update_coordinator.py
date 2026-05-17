@@ -761,7 +761,7 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test async_config_entry_first_refresh passes through ConfigEntryError & ConfigEntryAuthFailed.
+    """Test first refresh passes through ConfigEntryError and ConfigEntryAuthFailed.
 
     Verify we do not log the exception since it
     will be caught by config_entries.async_setup which will log it with
@@ -805,8 +805,13 @@ async def test_async_config_entry_first_refresh_invalid_state(
     crd.setup_method = AsyncMock()
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
-        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
+        match=(
+            "`async_config_entry_first_refresh` called when"
+            " config entry state is"
+            " ConfigEntryState.NOT_LOADED, but should only"
+            " be called in state"
+            " ConfigEntryState.SETUP_IN_PROGRESS"
+        ),
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -827,8 +832,13 @@ async def test_async_config_entry_first_refresh_invalid_state_in_integration(
 
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
-        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
+        match=(
+            "`async_config_entry_first_refresh` called when"
+            " config entry state is"
+            " ConfigEntryState.NOT_LOADED, but should only"
+            " be called in state"
+            " ConfigEntryState.SETUP_IN_PROGRESS"
+        ),
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -898,7 +908,7 @@ async def test_async_set_update_error(
 async def test_only_callback_on_change_when_always_update_is_false(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test we do not callback listeners unless something has actually changed when always_update is false."""
+    """Test no callback unless data actually changed (always_update=False)."""
     update_callback = Mock()
     crd.always_update = False
     remove_callbacks = crd.async_add_listener(update_callback)
@@ -968,7 +978,7 @@ async def test_only_callback_on_change_when_always_update_is_false(
 async def test_always_callback_when_always_update_is_true(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test we callback listeners even though the data is the same when always_update is True."""
+    """Test we callback listeners even with same data (always_update=True)."""
     update_callback = Mock()
     remove_callbacks = crd.async_add_listener(update_callback)
     mocked_data = None

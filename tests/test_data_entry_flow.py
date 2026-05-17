@@ -982,7 +982,7 @@ async def test_init_unknown_flow(manager: MockFlowManager) -> None:
 
 
 async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
-    """Test that UnknownFlow is raised when async_get is called with a flow_id that does not exist."""
+    """Test UnknownFlow raised when async_get gets unknown flow_id."""
 
     with pytest.raises(data_entry_flow.UnknownFlow):
         await manager.async_get("does_not_exist")
@@ -991,7 +991,7 @@ async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
 async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
     manager: MockFlowManager,
 ) -> None:
-    """Test that moving to an unknown step raises and removes the flow from in progress."""
+    """Test unknown step raises and removes flow from in progress."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -1017,7 +1017,7 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
 async def test_next_step_unknown_step_raises_and_removes_from_in_progress(
     manager: MockFlowManager, result_type: str, params: dict[str, str]
 ) -> None:
-    """Test that moving to an unknown step raises and removes the flow from in progress."""
+    """Test unknown step raises and removes flow from in progress."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):

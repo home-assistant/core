@@ -159,7 +159,9 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
+            "| sort(attribute='entity_id')"
+            " | map(attribute='entity_id')"
+            " | list | join(', ') }}"
         ),
     )
     assert result == "light.none, light.unavailable, light.unknown"

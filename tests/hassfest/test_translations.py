@@ -224,7 +224,9 @@ SAMPLE_STRINGS = {
         },
     },
     "application_credentials": {
-        "description": "To configure this integration, you need to create an application",
+        "description": (
+            "To configure this integration, you need to create an application"
+        ),
     },
     "issues": {
         "firmware_update_required": {

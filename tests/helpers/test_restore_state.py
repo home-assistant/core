@@ -144,7 +144,7 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
 
 
 async def test_save_persistent_states(hass: HomeAssistant) -> None:
-    """Test that we cancel the currently running job, save the data, and verify the perdiodic job continues."""
+    """Test we cancel the running job, save data, and verify periodic job continues."""
     data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])
