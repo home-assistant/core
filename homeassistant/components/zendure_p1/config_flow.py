@@ -40,7 +40,7 @@ class ZendureP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 ZendureP1ResponseError,
                 ZendureP1TimeoutError,
             ) as err:
-                LOGGER.exception("Cannot connect to Zendure P1: %s", err)
+                LOGGER.error("Cannot connect to Zendure P1: %s", err)
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_id)
