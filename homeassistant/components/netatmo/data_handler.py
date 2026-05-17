@@ -371,6 +371,7 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,
+                NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
                 NETATMO_CREATE_LEGACY_SENSOR,
             ],
             NetatmoDeviceCategory.meter: [
