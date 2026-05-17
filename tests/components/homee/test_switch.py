@@ -252,13 +252,13 @@ async def test_homeegram_connection_listener(
     await hass.async_block_till_done()
 
     states = hass.states.get("switch.homeegrams_test_hg_2")
-    assert states.state is STATE_UNAVAILABLE
+    assert states.state == STATE_UNAVAILABLE
 
     await mock_homee.add_connection_listener.call_args_list[6][0][0](True)
     await hass.async_block_till_done()
 
     states = hass.states.get("switch.homeegrams_test_hg_2")
-    assert states.state is not STATE_UNAVAILABLE
+    assert states.state != STATE_UNAVAILABLE
 
 
 async def test_homeegram_playing_in_homee(
@@ -293,7 +293,7 @@ async def test_homeegram_playing_in_homee(
     await hass.async_block_till_done()
 
     states = hass.states.get("switch.homeegrams_test_hg_2")
-    assert states.state is not STATE_ON
+    assert states.state != STATE_ON
 
 
 async def test_homeegram_inactive(
@@ -318,7 +318,7 @@ async def test_homeegram_inactive(
     await hass.async_block_till_done()
 
     states = hass.states.get("switch.homeegrams_test_hg_2")
-    assert states.state is STATE_UNAVAILABLE
+    assert states.state == STATE_UNAVAILABLE
 
     # Simulate homeegram becoming active again
     mock_homee.homeegrams[1].active = True
@@ -328,7 +328,7 @@ async def test_homeegram_inactive(
     await hass.async_block_till_done()
 
     states = hass.states.get("switch.homeegrams_test_hg_2")
-    assert states.state is not STATE_UNAVAILABLE
+    assert states.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
