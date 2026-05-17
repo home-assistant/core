@@ -1847,10 +1847,13 @@ async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
-    # The missed reset should have fired as a catch-up, updating last_reset.
-    # Without the fix, last_reset stays at the original value because
-    # the scheduler starts from now() and skips the missed period.
+    # The missed reset should have fired as a catch-up, updating last_reset
+    # and recording the previous period value. Without the fix, last_reset
+    # stays at the original value because the scheduler starts from now()
+    # and skips the missed period entirely.
     assert state.attributes.get("last_reset") != last_reset
+    assert state.attributes.get("last_period") == "3"
+    assert state.state == "0"
 
 
 async def test_self_reset_daily(hass: HomeAssistant) -> None:

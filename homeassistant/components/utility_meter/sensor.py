@@ -406,7 +406,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._current_tz = None
         self._config_scheduler()
 
-    def _config_scheduler(self, start_time=None):
+    def _config_scheduler(self, start_time: datetime | None = None) -> None:
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
