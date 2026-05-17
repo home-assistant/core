@@ -18,6 +18,7 @@ from pyatv.helpers import is_streamable
 from pyatv.interface import (
     AppleTV,
     AudioListener,
+    MediaMetadata,
     OutputDevice,
     Playing,
     PowerListener,
@@ -27,6 +28,7 @@ from pyatv.interface import (
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -351,8 +353,19 @@ class AppleTvMediaPlayer(
         if self._is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         ):
+            extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+            metadata_extra = extra.get("metadata") or {}
+            if not isinstance(metadata_extra, dict):
+                metadata_extra = {}
+            # Coerce empty strings to None so Apple TV doesn't display blank fields with 'or None'
+            title = extra.get("title") or metadata_extra.get("title") or None
+            metadata = MediaMetadata(
+                title=title,
+                artist=metadata_extra.get("artist") or None,
+                album=metadata_extra.get("album") or None,
+            )
             _LOGGER.debug("Streaming %s via RAOP", media_id)
-            await self.atv.stream.stream_file(media_id)
+            await self.atv.stream.stream_file(media_id, metadata=metadata)
         elif self._is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
