@@ -146,7 +146,7 @@ async def test_ssdp_discovery_success(
 async def test_ssdp_discovery_from_ssdp_location(
     hass: HomeAssistant, mock_hegel_client: MagicMock
 ) -> None:
-    """Test SSDP discovery extracts host from ssdp_location when presentationURL is not available."""
+    """Test SSDP discovery extracts host from ssdp_location when no presentationURL."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
@@ -240,7 +240,7 @@ async def test_ssdp_discovery_already_configured_updates_host(
     mock_config_entry: MockConfigEntry,
     mock_hegel_client: MagicMock,
 ) -> None:
-    """Test SSDP discovery updates host when device is already configured with different IP."""
+    """Test SSDP discovery updates host when device is configured with different IP."""
     new_host = "192.168.1.50"
 
     mock_config_entry.add_to_hass(hass)
