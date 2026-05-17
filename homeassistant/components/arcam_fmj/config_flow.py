@@ -47,8 +47,6 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a discovered device."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             uuid = await get_uniqueid_from_host(
                 async_get_clientsession(self.hass), user_input[CONF_HOST]
@@ -67,9 +65,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
-        return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(fields))
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
