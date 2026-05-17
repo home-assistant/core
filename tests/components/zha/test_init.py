@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 import typing
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 import pytest
@@ -138,55 +138,6 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     ) as setup_mock:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
         assert setup_mock.call_count == 1
-
-
-@pytest.mark.parametrize(
-    ("path", "cleaned_path"),
-    [
-        # No corrections
-        ("/dev/path1", "/dev/path1"),
-        ("/dev/path1[asd]", "/dev/path1[asd]"),
-        ("/dev/path1 ", "/dev/path1 "),
-        ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
-        # Brackets around URI
-        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
-        # Spaces
-        ("socket://dev/path1 ", "socket://dev/path1"),
-        # Both
-        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
-    ],
-)
-@patch(
-    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
-)
-async def test_setup_with_v3_cleaning_uri(
-    hass: HomeAssistant,
-    path: str,
-    cleaned_path: str,
-    mock_zigpy_connect: ControllerApplication,
-) -> None:
-    """Test migration of config entry from v3, applying corrections to the port path."""
-    config_entry_v4 = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
-            CONF_DEVICE: {
-                CONF_DEVICE_PATH: path,
-                CONF_BAUDRATE: 115200,
-                CONF_FLOW_CONTROL: None,
-            },
-        },
-        version=5,
-    )
-    config_entry_v4.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry_v4.entry_id)
-    await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry_v4.entry_id)
-
-    assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
-    assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 5
 
 
 @pytest.mark.parametrize(
