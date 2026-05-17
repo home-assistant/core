@@ -763,6 +763,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 5
+    MINOR_VERSION = 2
 
     async def _set_unique_id_and_update_ignored_flow(
         self, unique_id: str, device_path: str

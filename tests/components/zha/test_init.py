@@ -141,6 +141,47 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
 
 
 @pytest.mark.parametrize(
+    ("old_path", "new_path"),
+    [
+        ("/dev/ttyUSB0", "/dev/ttyUSB0"),
+        ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
+        ("socket://1.2.3.4", "socket://1.2.3.4:6638"),
+        ("tcp://hostname", "tcp://hostname:6638"),
+        ("tcp://hostname:1234", "tcp://hostname:1234"),
+        ("socket://[::1]", "socket://[::1]:6638"),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_v5_to_v5_2_explicit_socket_port(
+    old_path: str,
+    new_path: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that socket:// and tcp:// paths get an explicit default port."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: old_path,
+            },
+        },
+        version=5,
+        minor_version=1,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 5
+    assert config_entry.minor_version == 2
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == new_path
+
+
+@pytest.mark.parametrize(
     (
         "radio_type",
         "old_baudrate",
