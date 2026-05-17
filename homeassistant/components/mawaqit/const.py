@@ -25,7 +25,3 @@ WRONG_CREDENTIAL = "wrong_credential"
 
 PRAYER_NAMES = ["fajr", "shuruq", "dhuhr", "asr", "maghrib", "isha"]
 PRAYER_NAMES_IQAMA = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
-
-# Coordinators
-PRAYER_TIMES_COORDINATOR = "prayer_time_coordinator"
-MOSQUES_COORDINATOR = "mosque_coordinator"
