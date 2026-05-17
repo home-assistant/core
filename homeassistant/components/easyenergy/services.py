@@ -152,6 +152,19 @@ def __serialize_prices(prices: list[dict[str, float | datetime]]) -> ServiceResp
     }
 
 
+def __select_prices(
+    data: Electricity | Gas, use_invoice: bool
+) -> list[dict[str, float | datetime]]:
+    """Select market or invoice prices from price data."""
+    if not use_invoice:
+        return data.timestamp_prices
+
+    return [
+        {"timestamp": interval.starts_at, "price": interval.invoice_price}
+        for interval in data.intervals
+    ]
+
+
 def __get_coordinator(call: ServiceCall) -> EasyEnergyDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry: EasyEnergyConfigEntry = service.async_get_config_entry(
@@ -184,13 +197,9 @@ async def __get_prices(
             end_date=end_date,
             vat=vat,
         )
-        if call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value:
-            prices = [
-                {"timestamp": interval.starts_at, "price": interval.invoice_price}
-                for interval in data.intervals
-            ]
-        else:
-            prices = data.timestamp_prices
+        prices = __select_prices(
+            data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
+        )
     else:
         data = await coordinator.easyenergy.energy_prices(
             start_date=start_date,
@@ -200,13 +209,9 @@ async def __get_prices(
         )
 
         if service_price_type == ServicePriceType.ENERGY_USAGE:
-            if call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value:
-                prices = [
-                    {"timestamp": interval.starts_at, "price": interval.invoice_price}
-                    for interval in data.intervals
-                ]
-            else:
-                prices = data.timestamp_prices
+            prices = __select_prices(
+                data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
+            )
         else:
             prices = data.timestamp_return_prices
 
