@@ -629,7 +629,9 @@ class UtilityMeterSensor(RestoreSensor):
                 self._collecting = lambda: None
             # Reconfigure the scheduler from the restored last_reset so that
             # next_reset is not shifted forward on entity restore/rename.
-            self._config_scheduler(self._last_reset)
+            self._config_scheduler(
+                dt_util.as_local(self._last_reset) if self._last_reset else None
+            )
 
         await self._program_reset()
 
