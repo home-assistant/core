@@ -95,7 +95,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Connectivity',
+      'friendly_name': 'Baby Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -409,7 +409,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Connectivity',
+      'friendly_name': 'Baby Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -723,7 +723,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Livingroom Connectivity',
+      'friendly_name': 'Baby Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -777,7 +777,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Parents Bedroom Connectivity',
+      'friendly_name': 'Baby Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -935,7 +935,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Villa Bathroom Connectivity',
+      'friendly_name': 'Villa Garden Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_bathroom_connectivity',
@@ -987,7 +987,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Villa Bedroom Connectivity',
+      'friendly_name': 'Villa Garden Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_bedroom_connectivity',
@@ -1039,7 +1039,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Villa Connectivity',
+      'friendly_name': 'Villa Garden Connectivity',
       'latitude': 46.123456,
       'longitude': 6.1234567,
     }),
@@ -1145,7 +1145,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Villa Outdoor Connectivity',
+      'friendly_name': 'Villa Garden Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_outdoor_connectivity',
@@ -1197,7 +1197,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'device_class': 'connectivity',
-      'friendly_name': 'Villa Rain Connectivity',
+      'friendly_name': 'Villa Garden Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_rain_connectivity',

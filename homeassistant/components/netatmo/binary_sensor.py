@@ -371,6 +371,14 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
 
         super().__init__(netatmo_device, description)
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
+
         # Apply Dynamic Device Class override
         self._attr_device_class = OPENING_CATEGORY_TO_DEVICE_CLASS.get(
             get_opening_category(netatmo_device), BinarySensorDeviceClass.OPENING
@@ -418,3 +426,20 @@ class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
 
     entity_description: NetatmoBinarySensorEntityDescription
     _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize a Netatmo binary sensor."""
+
+        super().__init__(netatmo_device, description)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
