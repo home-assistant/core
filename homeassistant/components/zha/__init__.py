@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, repairs, websocket_api
+from .config_flow import ZhaConfigFlowHandler
 from .const import (
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
@@ -308,6 +309,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
+
+    if (config_entry.version, config_entry.minor_version) > (
+        ZhaConfigFlowHandler.VERSION,
+        ZhaConfigFlowHandler.MINOR_VERSION,
+    ):
+        # This means the user has downgraded from a future version
+        return False
 
     if config_entry.version == 1:
         data = {

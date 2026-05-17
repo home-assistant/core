@@ -152,7 +152,7 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     ],
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_v5_to_v5_2_explicit_socket_port(
+async def test_migration_v5_explicit_socket_port(
     old_path: str,
     new_path: str,
     hass: HomeAssistant,
