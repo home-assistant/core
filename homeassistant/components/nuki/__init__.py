@@ -1,7 +1,5 @@
 """The nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
@@ -164,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
             DEFAULT_TIMEOUT,
         )
 
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         locks, openers = await hass.async_add_executor_job(_get_bridge_devices, bridge)
     except InvalidCredentialsException as err:
         raise exceptions.ConfigEntryAuthFailed from err

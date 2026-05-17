@@ -1,7 +1,5 @@
 """KNX integration services."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -122,6 +120,7 @@ async def service_event_register_modify(call: ServiceCall) -> None:
         for group_address in group_addresses:
             try:
                 knx_module.knx_event_callback.group_addresses.remove(group_address)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError:
                 _LOGGER.warning(
                     "Service event_register could not remove event for '%s'",

@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
@@ -372,9 +373,11 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     energy_save = 3084
     pre_heating = 3099
 
-    steam_reduction = 3863
+    steam_reduction = 3863, 7959
     waiting_for_start = 7939
     heating_up_phase = 7940
+    drying = 7961
+    rinse = 7962
 
 
 class ProgramPhaseSteamOvenMicro(MieleEnum, missing_to_none=True):
@@ -477,6 +480,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     down_filled_items = 129
     cottons_eco = 133
     quick_power_wash = 146, 10031
+    quick_intense = 177
     eco_40_60 = 190, 10007
     bed_linen = 10047
     easy_care = 10016
@@ -629,7 +633,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     rinse = 333
     shabbat_program = 335
     yom_tov = 336
-    hydroclean = 341
+    hydroclean = 341, 2434
     drying = 357, 2028
     heat_crockery = 358
     prove_dough = 359, 2023

@@ -1,7 +1,5 @@
 """Config flow for the MELCloud platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus

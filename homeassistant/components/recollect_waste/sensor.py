@@ -1,7 +1,5 @@
 """Support for ReCollect Waste sensors."""
 
-from __future__ import annotations
-
 from datetime import date
 
 from homeassistant.components.sensor import (
@@ -72,7 +70,7 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())
+        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())  # noqa: DTZ011
         pickup_index = self.PICKUP_INDEX_MAP[self.entity_description.key]
 
         try:

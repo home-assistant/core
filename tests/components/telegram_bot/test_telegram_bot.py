@@ -1690,6 +1690,44 @@ async def test_set_message_reaction(
     )
 
 
+async def test_send_message_draft(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message draft."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message_draft",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message_draft",
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_MESSAGE: "_Thinking..._",
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_PARSER: PARSER_MD2,
+                "draft_id": "3456",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once_with(
+        chat_id=123456,
+        draft_id=3456,
+        text="_Thinking..._",
+        message_thread_id=123,
+        parse_mode=PARSER_MD2,
+        read_timeout=None,
+    )
+
+
 @pytest.mark.parametrize(
     ("service", "input"),
     [
@@ -2406,6 +2444,98 @@ async def test_download_file_when_error_when_downloading(
     assert err.value.translation_placeholders is not None
     assert "error" in err.value.translation_placeholders
     assert err.value.translation_placeholders["error"] == "failed to download file"
+
+
+@pytest.mark.parametrize(
+    "directory_path",
+    [
+        "../etc",
+        "/config/..",
+        "~/secrets",
+        "/home/~evil",
+    ],
+)
+async def test_download_file_rejects_invalid_directory_path(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    directory_path: str,
+) -> None:
+    """Test download_file rejects directory_path containing `..` or `~`."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        patch("pathlib.Path.write_bytes") as write_bytes_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory_path,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "invalid_directory_path"
+    assert err.value.translation_placeholders == {"directory_path": directory_path}
+    get_file_mock.assert_not_called()
+    write_bytes_mock.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "../etc/passwd",
+        "../../etc/cron.d/pwn",
+        "~/malicious",
+        "/root/.ssh/authorized_keys",
+        "subdir/inside.txt",
+        "windows\\style.txt",
+    ],
+)
+async def test_download_file_rejects_invalid_file_name(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    file_name: str,
+) -> None:
+    """Test download_file rejects file_name containing path separators or traversal."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        patch("pathlib.Path.write_bytes") as write_bytes_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
+                ATTR_FILE_NAME: file_name,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "invalid_file_name"
+    assert err.value.translation_placeholders == {"file_name": file_name}
+    get_file_mock.assert_not_called()
+    write_bytes_mock.assert_not_called()
 
 
 async def test_send_media_group(

@@ -47,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: StreamlabsConfigEntry) -
         location_id = service.data.get(CONF_LOCATION_ID) or list(coordinator.data)[0]
         client.update_location(location_id, away_mode)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode, schema=SET_AWAY_MODE_SCHEMA
     )

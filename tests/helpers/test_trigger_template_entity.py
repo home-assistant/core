@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
     async_parse_date_datetime,
 )
 from homeassistant.const import (
@@ -296,14 +296,20 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
     assert entity.some_other_key == {"test_key": "test_data"}
 
 
+@pytest.mark.parametrize(
+    "device_class",
+    [SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME],
+)
 async def test_manual_trigger_sensor_entity_with_date(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: SensorDeviceClass,
 ) -> None:
     """Test manual trigger template entity when availability template isn't used."""
     config = {
         CONF_NAME: template.Template("test_entity", hass),
         CONF_STATE: template.Template("{{ as_datetime(value) }}", hass),
-        CONF_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
+        CONF_DEVICE_CLASS: device_class,
     }
 
     class TestEntity(ManualTriggerSensorEntity):
@@ -328,4 +334,4 @@ async def test_manual_trigger_sensor_entity_with_date(
         "2025-01-01T00:00:00+00:00", entity.entity_id, entity.device_class
     )
     assert entity.state == "2025-01-01T00:00:00+00:00"
-    assert entity.device_class == SensorDeviceClass.TIMESTAMP
+    assert entity.device_class == device_class

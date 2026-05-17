@@ -1,7 +1,5 @@
 """Support for FFmpeg."""
 
-from __future__ import annotations
-
 import asyncio
 import re
 
@@ -20,7 +18,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.system_info import is_official_image
 
 from .const import (
@@ -71,7 +68,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@bind_hass
 def get_ffmpeg_manager(hass: HomeAssistant) -> FFmpegManager:
     """Return the FFmpegManager."""
     if DATA_FFMPEG not in hass.data:
@@ -79,7 +75,6 @@ def get_ffmpeg_manager(hass: HomeAssistant) -> FFmpegManager:
     return hass.data[DATA_FFMPEG]
 
 
-@bind_hass
 async def async_get_image(
     hass: HomeAssistant,
     input_source: str,
@@ -145,7 +140,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-class-module
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False

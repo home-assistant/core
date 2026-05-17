@@ -1,7 +1,5 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -18,6 +16,8 @@ from .const import (
 )
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -55,6 +55,8 @@ class SatelIntegraSwitch(
     SatelIntegraEntity[SatelIntegraOutputsCoordinator], SwitchEntity
 ):
     """Representation of an Satel Integra switch."""
+
+    _attr_name = None
 
     def __init__(
         self,

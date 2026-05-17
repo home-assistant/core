@@ -1,7 +1,5 @@
 """The Honeywell Lyric integration."""
 
-from __future__ import annotations
-
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricAccessory, LyricRoom

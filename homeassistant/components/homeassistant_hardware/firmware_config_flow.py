@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
@@ -281,7 +279,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
                 if probed_fw_version >= fw_version:
                     _LOGGER.debug(
-                        "Not downgrading firmware, installed %s is newer than available %s",
+                        "Not downgrading firmware, installed %s"
+                        " is newer than available %s",
                         probed_fw_version,
                         fw_version,
                     )

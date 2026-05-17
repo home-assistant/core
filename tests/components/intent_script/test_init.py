@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.intent_script import DOMAIN
+from homeassistant.components.intent_script import CONF_ACTION, DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -13,6 +13,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    script,
 )
 from homeassistant.setup import async_setup_component
 
@@ -462,3 +463,38 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert len(intents) == 0
     assert intents.get("NewIntent1") is None
     assert intents.get("NewIntent2") is None
+
+
+async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
+    """Test that reloading intent scripts unloads the action scripts."""
+    await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "TestIntent": {
+                    "action": {"service": "test.service"},
+                }
+            }
+        },
+    )
+
+    existing_intents = hass.data[DOMAIN]
+    action_script = existing_intents["TestIntent"][CONF_ACTION]
+    assert isinstance(action_script, script.Script)
+
+    yaml_path = get_fixture_path("configuration_no_entry.yaml", "intent_script")
+    with (
+        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+        patch.object(
+            action_script, "async_stop", wraps=action_script.async_stop
+        ) as stop_mock,
+        patch.object(
+            action_script, "async_unload", wraps=action_script.async_unload
+        ) as unload_mock,
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    stop_mock.assert_called_once()
+    unload_mock.assert_called_once()

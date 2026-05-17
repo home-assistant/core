@@ -1,6 +1,6 @@
 """Tests for the telegram_bot integration."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -142,6 +142,7 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
+        patch.object(BotMock, "send_message_draft", return_value=True),
         patch.object(BotMock, "send_photo", return_value=message),
         patch.object(BotMock, "send_media_group", side_effect=mock_send_media_group),
         patch.object(BotMock, "send_sticker", return_value=message),
@@ -372,13 +373,11 @@ async def webhook_bot(
     mock_register_webhook: None,
     mock_external_calls: None,
     mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
+) -> None:
     """Fixture for setting up a webhook telegram bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
     await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
 
 
 @pytest.fixture

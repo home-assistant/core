@@ -1,7 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -75,10 +73,12 @@ async def auth_manager_from_config(
         provider_hash[key] = provider
 
         if isinstance(provider, HassAuthProvider):
-            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
-            # We need to initialize the provider to create the repair if needed as otherwise
-            # the provider will be initialized on first use, which could be rare as users
-            # don't frequently change auth settings
+            # Can be removed in 2026.7 with the legacy mode of
+            # homeassistant auth provider.
+            # We need to initialize the provider to create the repair
+            # if needed as otherwise the provider will be initialized
+            # on first use, which could be rare as users don't
+            # frequently change auth settings
             await provider.async_initialize()
 
     if module_configs:

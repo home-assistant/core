@@ -1,7 +1,5 @@
 """Tests for Wake On LAN component."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest

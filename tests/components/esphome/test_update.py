@@ -311,7 +311,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
+    """Test update entity when dashboard discovered after startup fails."""
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
@@ -369,7 +369,7 @@ async def test_update_becomes_available_at_runtime(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity when the dashboard has no device at startup but gets them later."""
+    """Test update entity when dashboard has no device at startup."""
     await mock_esphome_device(
         mock_client=mock_client,
     )
@@ -402,7 +402,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test ESPHome update entity does not get created if the device is unknown to the dashboard."""
+    """Test update entity not created if device is unknown to dashboard."""
     await mock_esphome_device(
         mock_client=mock_client,
     )

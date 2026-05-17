@@ -1,7 +1,5 @@
 """Trigger entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 
@@ -23,7 +21,7 @@ from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 
 
-class TriggerEntity(  # pylint: disable=hass-enforce-class-module
+class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     TriggerBaseEntity,
     CoordinatorEntity[TriggerUpdateCoordinator],
     AbstractTemplateEntity,

@@ -1,7 +1,5 @@
 """Support for LG soundbars."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import temescal
@@ -41,7 +39,9 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
-    _attr_state = MediaPlayerState.ON  # Default to ON to ensure compatibility with models that don't send a powerstatus message
+    # Default to ON to ensure compatibility with models
+    # that don't send a powerstatus message
+    _attr_state = MediaPlayerState.ON
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -166,9 +166,11 @@ class LGDevice(MediaPlayerEntity):
                 # Ask device for current play info when stream type changed.
                 self._device.get_play()
             if data["i_stream_type"] == 0:
-                # If the stream type is 0 (aka the soundbar is used as an actual soundbar)
-                # the last track info should be cleared and the state should only be on or off,
-                # as all playing/paused are not applicable in this mode
+                # If the stream type is 0 (aka the soundbar
+                # is used as an actual soundbar) the last
+                # track info should be cleared and the
+                # state should only be on or off, as all
+                # playing/paused are not applicable
                 self._attr_media_image_url = None
                 self._attr_media_artist = None
                 self._attr_media_title = None

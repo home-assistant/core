@@ -1,7 +1,5 @@
 """Bluetooth support for shelly."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aioshelly.ble import async_start_scanner, create_scanner
