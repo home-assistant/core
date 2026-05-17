@@ -499,7 +499,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass: HomeAssistant) 
 
 
 async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
-    """Test we check the device again between first discovery and config entry creation."""
+    """Test we recheck the device between discovery and entry creation."""
     with _patch_wizlight(
         device=None,
         extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
