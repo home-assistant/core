@@ -92,6 +92,11 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
         """Subscribe to RF entity state changes."""
         await super().async_added_to_hass()
 
+        # Resolve UUID to entity ID if needed
+        self._rf_transmitter_entity_id = er.async_validate_entity_id(
+            er.async_get(self.hass), self._rf_transmitter_entity_id
+        )
+
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,

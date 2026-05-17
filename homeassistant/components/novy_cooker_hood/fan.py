@@ -6,7 +6,9 @@ from typing import Any
 from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
-from homeassistant.components.radio_frequency import async_send_command
+from homeassistant.components.radio_frequency import (
+    RadioFrequencyTransmitterConsumerEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,7 +19,7 @@ from homeassistant.util.percentage import (
 )
 
 from .commands import COMMAND_MINUS, COMMAND_PLUS
-from .const import CONF_CODE, SPEED_COUNT
+from .const import CONF_CODE, CONF_TRANSMITTER, SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1
@@ -34,7 +36,12 @@ async def async_setup_entry(
     async_add_entities([NovyCookerHoodFan(config_entry)])
 
 
-class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
+class NovyCookerHoodFan(
+    NovyCookerHoodEntity,
+    RadioFrequencyTransmitterConsumerEntity,
+    FanEntity,
+    RestoreEntity,
+):
     """Calibration-based fan: each change resets to off then climbs to target."""
 
     _attr_name = None
@@ -48,6 +55,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the fan."""
         super().__init__(entry)
+        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
         self._codes = get_codes_for_code(entry.data[CONF_CODE])
         self._level = 0
         self._attr_unique_id = entry.entry_id
@@ -104,7 +112,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         steps = self._steps_from_percentage(percentage_step)
         plus = await self._codes.async_load_command(COMMAND_PLUS)
         for _ in range(steps):
-            await self._async_send(plus)
+            await self._send_command(plus)
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
@@ -113,7 +121,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         steps = self._steps_from_percentage(percentage_step)
         minus = await self._codes.async_load_command(COMMAND_MINUS)
         for _ in range(steps):
-            await self._async_send(minus)
+            await self._send_command(minus)
         self._level = max(0, self._level - steps)
         self.async_write_ha_state()
 
@@ -128,16 +136,10 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
         minus = await self._codes.async_load_command(COMMAND_MINUS)
         for _ in range(SPEED_COUNT):
-            await self._async_send(minus)
+            await self._send_command(minus)
         if level > 0:
             plus = await self._codes.async_load_command(COMMAND_PLUS)
             for _ in range(level):
-                await self._async_send(plus)
+                await self._send_command(plus)
         self._level = level
         self.async_write_ha_state()
-
-    async def _async_send(self, command: Any) -> None:
-        """Send a single RF command via the configured transmitter."""
-        await async_send_command(
-            self.hass, self._transmitter, command, context=self._context
-        )
