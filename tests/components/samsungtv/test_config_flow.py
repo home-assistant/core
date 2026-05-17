@@ -495,7 +495,7 @@ async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
 async def test_ssdp_legacy_not_remote_control_receiver_udn(
     hass: HomeAssistant, data: SsdpServiceInfo
 ) -> None:
-    """Test we abort if st is not usable for legacy discovery."""
+    """Test we abort if it is not usable for legacy discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
     )
