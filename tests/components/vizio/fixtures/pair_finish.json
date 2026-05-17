@@ -1,0 +1,9 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEM": {
+    "AUTH_TOKEN": "deadbeef"
+  }
+}

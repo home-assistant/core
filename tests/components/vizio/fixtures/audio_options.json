@@ -1,0 +1,16 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEMS": [
+    {
+      "CNAME": "eq",
+      "TYPE": "T_LIST_V1",
+      "NAME": "EQ",
+      "VALUE": "Music",
+      "HASHVAL": 1234567890,
+      "ELEMENTS": ["Music", "Movie"]
+    }
+  ]
+}

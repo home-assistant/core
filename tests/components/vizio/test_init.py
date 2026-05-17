@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import setup_integration
+from .common import setup_integration
 from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed

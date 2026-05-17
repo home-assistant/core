@@ -1,0 +1,15 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEMS": [
+    {
+      "CNAME": "power_mode",
+      "TYPE": "T_VALUE_V1",
+      "NAME": "Power Mode",
+      "VALUE": 0,
+      "HASHVAL": 3026334404
+    }
+  ]
+}

@@ -35,9 +35,9 @@ HOST = "192.168.1.1:9000"
 HOST2 = "192.168.1.2:9000"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
-UNIQUE_ID = "testid"
-MODEL = "model"
-VERSION = "version"
+UNIQUE_ID = "TEST00000000001"
+MODEL = "VHD24M-0810"
+VERSION = "3.720.9.1-1"
 
 CH_TYPE = 1
 RESPONSE_TOKEN = 1234
@@ -64,8 +64,8 @@ class MockCompletePairingResponse:
 CURRENT_EQ = "Music"
 EQ_LIST = ["Music", "Movie"]
 
-CURRENT_INPUT = "HDMI"
-INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
+CURRENT_INPUT = "HDMI-1"
+INPUT_LIST = ["HDMI-1", "HDMI-2", "COMP", "TV"]
 
 CURRENT_APP = "Hulu"
 CURRENT_APP_CONFIG = {CONF_APP_ID: "3", CONF_NAME_SPACE: 4, CONF_MESSAGE: None}

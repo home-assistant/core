@@ -1,0 +1,15 @@
+{
+  "STATUS": {
+    "RESULT": "SUCCESS",
+    "DETAIL": "Success"
+  },
+  "ITEMS": [
+    {
+      "CNAME": "serial_number",
+      "TYPE": "T_STRING_V1",
+      "NAME": "Serial Number",
+      "VALUE": "TEST00000000001",
+      "HASHVAL": 1030748816
+    }
+  ]
+}
