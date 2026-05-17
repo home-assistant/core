@@ -606,6 +606,7 @@
           "router": "Router",
           "sleepy_end_device": "Sleepy end device",
           "unassigned": "Unassigned",
+          "unknown": "Unknown",
           "unspecified": "Unspecified"
         }
       },

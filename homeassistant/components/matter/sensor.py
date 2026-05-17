@@ -146,7 +146,7 @@ THREAD_ROUTING_ROLE_MAP = {
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kReed: "reed",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kRouter: "router",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kLeader: "leader",
-    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: None,
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: "unknown",
 }
 
 BOOST_STATE_MAP = {

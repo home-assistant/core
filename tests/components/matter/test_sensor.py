@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -896,12 +898,18 @@ async def test_wifi_rssi_sensor(
     matter_node: MatterNode,
 ) -> None:
     """Test WiFiNetworkDiagnostics RSSI sensor."""
-    # RSSI (cluster 54, attr 4) = -56
+    # RSSI = -56
     state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_rssi")
     assert state
     assert state.state == "-56"
 
-    set_node_attribute(matter_node, 0, 54, 4, -72)
+    set_node_attribute(
+        matter_node,
+        0,
+        clusters.WiFiNetworkDiagnostics.id,
+        clusters.WiFiNetworkDiagnostics.Attributes.Rssi.attribute_id,
+        -72,
+    )
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_rssi")
@@ -915,18 +923,18 @@ async def test_wifi_rssi_sensor(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("entity_id", "attribute_id", "initial_state", "updated_value", "updated_state"),
+    ("entity_id", "attribute", "initial_state", "updated_value", "updated_state"),
     [
         (
             "sensor.multi_state_sensor_p100_thread_channel",
-            0,
+            clusters.ThreadNetworkDiagnostics.Attributes.Channel,
             "25",
             20,
             "20",
         ),
         (
             "sensor.multi_state_sensor_p100_thread_network_name",
-            2,
+            clusters.ThreadNetworkDiagnostics.Attributes.NetworkName,
             "MyHome1895415629",
             "OtherNet",
             "OtherNet",
@@ -940,7 +948,7 @@ async def test_thread_diagnostic_sensors(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
-    attribute_id: int,
+    attribute: type[ClusterAttributeDescriptor],
     initial_state: str,
     updated_value: int | str,
     updated_state: str,
@@ -950,7 +958,9 @@ async def test_thread_diagnostic_sensors(
     assert state
     assert state.state == initial_state
 
-    set_node_attribute(matter_node, 0, 53, attribute_id, updated_value)
+    set_node_attribute(
+        matter_node, 0, attribute.cluster_id, attribute.attribute_id, updated_value
+    )
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
@@ -987,7 +997,13 @@ async def test_thread_routing_role_enum_mapping(
     """Test ThreadNetworkDiagnostics RoutingRole enum maps every value to a translatable state."""
     entity_id = "sensor.multi_state_sensor_p100_thread_routing_role"
 
-    set_node_attribute(matter_node, 0, 53, 1, routing_role_value)
+    set_node_attribute(
+        matter_node,
+        0,
+        clusters.ThreadNetworkDiagnostics.id,
+        clusters.ThreadNetworkDiagnostics.Attributes.RoutingRole.attribute_id,
+        routing_role_value,
+    )
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
