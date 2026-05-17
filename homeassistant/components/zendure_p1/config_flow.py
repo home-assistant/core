@@ -43,6 +43,11 @@ class ZendureP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as err:
                 LOGGER.debug("Cannot connect to Zendure P1: %s", err)
                 errors["base"] = "cannot_connect"
+            except Exception as err:  # noqa: BLE001
+                LOGGER.exception(
+                    "Unexpected error while connecting to Zendure P1: %s", err
+                )
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()

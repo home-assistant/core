@@ -78,19 +78,23 @@ async def test_abort_already_configured(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "expected_error"),
     [
-        ZendureP1ConnectionError(),
-        ZendureP1TimeoutError(),
-        ZendureP1ResponseError(),
+        pytest.param(
+            ZendureP1ConnectionError(), "cannot_connect", id="connection_error"
+        ),
+        pytest.param(ZendureP1TimeoutError(), "cannot_connect", id="timeout_error"),
+        pytest.param(ZendureP1ResponseError(), "cannot_connect", id="response_error"),
+        pytest.param(Exception(), "unknown", id="unknown_error"),
     ],
 )
-async def test_form_cannot_connect(
+async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Test we handle connection errors and the flow can recover."""
+    """Test we handle errors and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -108,7 +112,7 @@ async def test_form_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
     with patch(
         "homeassistant.components.zendure_p1.config_flow.ZendureP1Client",
