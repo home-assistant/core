@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot button entities."""
 
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
