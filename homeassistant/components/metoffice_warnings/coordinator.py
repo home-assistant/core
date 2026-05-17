@@ -114,7 +114,7 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
         if pub_date_text:
             try:
                 pub_date = datetime.strptime(
-                    pub_date_text, "%a, %d %b %Y %H:%M:%S %Z"
+                    pub_date_text, "%a, %d %b %Y %H:%M:%S GMT"
                 ).replace(tzinfo=UTC)
             except ValueError:
                 _LOGGER.warning("Invalid pubDate format: %s", pub_date_text)
