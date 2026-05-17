@@ -15,7 +15,6 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -243,17 +242,17 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
 
 
+DEVICE_TRACKER_DOMAIN = "device_tracker"
+
+
 def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
         return None
-    # The format is scanner_<site_id>_<mac>. Strip the prefix and split from the
-    # right so site_ids that contain underscores are handled correctly.
-    remainder = unique_id.removeprefix("scanner_")
-    site_id, sep, mac = remainder.rpartition("_")
-    if not sep or not site_id or not mac:
+    parts = unique_id.split("_", 2)
+    if len(parts) != 3:
         return None
-    return dr.format_mac(mac)
+    return parts[2]
 
 
 async def async_cleanup_client_trackers(
@@ -264,9 +263,7 @@ async def async_cleanup_client_trackers(
 
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
-    known_macs = {
-        dr.format_mac(mac) for mac in (controller.known_clients_coordinator.data or {})
-    }
+    known_macs = set(controller.known_clients_coordinator.data or {})
 
     for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entity.domain != DEVICE_TRACKER_DOMAIN:
@@ -285,19 +282,17 @@ async def async_cleanup_devices(
     controller: OmadaSiteController,
 ) -> None:
     """Remove devices from the registry when Omada no longer reports them."""
-    if not controller.devices_coordinator.last_update_success:
-        return
 
     device_registry = dr.async_get(hass)
-    entry_id = controller.devices_coordinator.config_entry.entry_id
-    known_devices = {dr.format_mac(mac) for mac in controller.devices_coordinator.data}
+    entry_id = controller.clients_coordinator.config_entry.entry_id
+    known_devices = controller.devices_coordinator.data
 
     for device_entry in device_registry.devices.get_devices_for_config_entry_id(
         entry_id
     ):
         mac = next(
             (
-                dr.format_mac(identifier[1])
+                identifier[1]
                 for identifier in device_entry.identifiers
                 if identifier[0] == DOMAIN
             ),
