@@ -647,9 +647,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start   t0       t1       t2      Startup             End
-    # |-20min-|-20min-|-10min-|-10min-|----30min----|15min|15min|
-    # |--on---|--on---|--on---|--on---|-----on------|off--|on---|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -739,7 +739,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     assert hass.states.get("sensor.sensor1").state == "1.75"
 
 
-async def test_async_start_from_history_switch_to_state_changes_expanding_window(
+async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(  # noqa: E501, RUF100
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
@@ -751,9 +751,9 @@ async def test_async_start_from_history_switch_to_state_changes_expanding_window
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start   t0       t1       t2      Startup             End
-    # |-20min-|-20min-|-10min-|-10min-|----30min----|15min|15min|
-    # |--on---|--on---|--on---|--on---|-----on------|off--|on---|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -868,9 +868,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start   t0       t1       t2      Startup             End
-    # |-20min-|-20min-|-10min-|-10min-|----30min----|15min|15min|
-    # |--on---|--on---|--on---|--on---|-----on------|off--|on---|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {
@@ -1207,9 +1207,9 @@ async def test_does_not_work_into_the_future(
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Start   t0       t1       t2      Startup             End
-    # |-20min-|-20min-|-10min-|-10min-|----30min----|15min|15min|
-    # |--on---|--on---|--on---|--on---|-----on------|off--|on---|
+    # Start     t0        t1        t2       Startup                                       End  # noqa: E501, RUF100
+    # |--20min--|--20min--|--10min--|--10min--|---------30min---------|---15min--|---15min--|  # noqa: E501, RUF100
+    # |---on----|---on----|---on----|---on----|----------on-----------|---off----|----on----|  # noqa: E501, RUF100
 
     def _fake_states(*args, **kwargs):
         return {

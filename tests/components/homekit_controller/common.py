@@ -327,16 +327,15 @@ async def assert_devices_and_entities_created(
         # brought in)
 
         # There are currently really 3 cases here:
-        # - We can match exactly one device by serial number. This won't work for
-        # devices like the Ryse.
-        #   These have nlank or broken serial numbers.
-        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id. This
-        # is only set for
+        # - We can match exactly one device by serial number. This won't
+        #   work for devices like the Ryse.
+        #   These have blank or broken serial numbers.
+        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id.
+        #   This is only set for
         #   the root (bridge) device.
-        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid. This is
-        # only set when
-        # we have detected broken serial numbers (and serial number is not used as an
-        # identifier).
+        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid.
+        #   This is only set when we have detected broken serial numbers
+        #   (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
             identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
