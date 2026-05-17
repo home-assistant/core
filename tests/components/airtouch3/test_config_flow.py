@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.airtouch3.comms.airtouch_aircon import Aircon
+from homeassistant.components.airtouch3.config_flow import CannotConnect
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.components.airtouch3.discovery import AirTouch3Discovery
 from homeassistant.const import CONF_HOST
@@ -101,6 +102,24 @@ async def test_form_cannot_connect(
         CONF_HOST: "1.1.1.1",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_without_system_id_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle a response without a system id as a connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        return_value=_aircon(""),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.1.1.1"}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
@@ -207,6 +226,47 @@ async def test_user_search_no_devices_found(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "no_devices_found"}
 
 
+async def test_user_search_filters_invalid_and_configured_devices(
+    hass: HomeAssistant,
+) -> None:
+    """Test search filters devices that fail validation or are already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=SYSTEM_ID, data={CONF_HOST: "1.1.1.1"}
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    discoveries = [
+        AirTouch3Discovery(host="1.1.1.1", mac="F0FE6B772324", model="AirTouch3"),
+        AirTouch3Discovery(host="2.2.2.2", mac="F0FE6B772325", model="AirTouch3"),
+    ]
+
+    async def _mock_fetch(host: str) -> Aircon:
+        if host == "2.2.2.2":
+            raise UpdateFailed("failed")
+        return _aircon()
+
+    with (
+        patch(
+            "homeassistant.components.airtouch3.config_flow.async_discover_devices",
+            return_value=discoveries,
+        ),
+        patch(
+            "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+            side_effect=_mock_fetch,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: ""}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_devices_found"}
+
+
 async def test_integration_discovery_confirm(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -265,6 +325,48 @@ async def test_integration_discovery_updates_host(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {CONF_HOST: "2.2.2.2"}
+
+
+async def test_integration_discovery_cannot_connect(hass: HomeAssistant) -> None:
+    """Test integration discovery aborts when validation fails."""
+    discovery = AirTouch3Discovery(
+        host="1.1.1.1", mac="F0FE6B772324", model="AirTouch3"
+    )
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        side_effect=UpdateFailed("failed"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(discovery),
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_integration_discovery_validation_raises_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Test integration discovery handles validation raising CannotConnect."""
+    discovery = AirTouch3Discovery(
+        host="1.1.1.1", mac="F0FE6B772324", model="AirTouch3"
+    )
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.AirTouch3ConfigFlow._async_validate_discovery",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(discovery),
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_dhcp_discovery_confirm(
@@ -375,6 +477,27 @@ async def test_reconfigure_updates_host(hass: HomeAssistant) -> None:
     assert entry.data == {
         CONF_HOST: "2.2.2.2",
     }
+
+
+async def test_reconfigure_wrong_device(hass: HomeAssistant) -> None:
+    """Test reconfiguring with a different controller aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=SYSTEM_ID, data={CONF_HOST: "1.1.1.1"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        return_value=_aircon("11112222"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
 
 
 @pytest.mark.parametrize(
