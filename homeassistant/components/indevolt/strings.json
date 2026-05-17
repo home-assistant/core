@@ -222,6 +222,9 @@
       "cumulative_production": {
         "name": "Cumulative production"
       },
+      "cycle_count": {
+        "name": "Cycle count"
+      },
       "daily_production": {
         "name": "Daily production"
       },
@@ -334,6 +337,9 @@
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
+      },
+      "transformer_temperature": {
+        "name": "Transformer temperature"
       }
     },
     "switch": {

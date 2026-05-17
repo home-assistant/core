@@ -201,7 +201,8 @@ async def test_function_call(
                         "content": {
                             "parts": [
                                 {
-                                    "text": "test function with the provided parameters.",
+                                    "text": "test function with the"
+                                    " provided parameters.",
                                     "thought_signature": b"_thought_signature_5",
                                 }
                             ],
@@ -308,7 +309,8 @@ async def test_google_search_tool_is_sent(
     context = Context()
 
     messages = [
-        # Messages from the model which contain the google search answer (the usage of the Google Search tool is server side)
+        # Messages from the model which contain the google search
+        # answer (the usage of the Google Search tool is server side)
         [
             GenerateContentResponse(
                 candidates=[
@@ -686,7 +688,7 @@ async def test_empty_content_in_chat_history(
     mock_chat_log: MockChatLog,  # noqa: F811
     mock_send_message_stream: AsyncMock,
 ) -> None:
-    """Tests that in case of an empty entry in the chat history the google API will receive an injected space sign instead."""
+    """Test empty chat history entries get an injected space for the API."""
     agent_id = "conversation.google_ai_conversation"
     context = Context()
 

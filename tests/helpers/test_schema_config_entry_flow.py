@@ -74,7 +74,7 @@ def manager_fixture():
 
 
 async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
-    """Test the config flow name is copied from registry entry, with fallback to state."""
+    """Test config flow name is copied from registry, with state fallback."""
     entity_id = "switch.ceiling"
 
     # No entry or state, use Object ID

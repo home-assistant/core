@@ -357,9 +357,9 @@ async def test_dhcp_discovery_new_hub(
     ],
     ids=["matching_ip_backfills_mac", "mismatched_ip_does_not_clobber"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_backfill_requires_ip_match(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,
     stored_ip: str,
     expected_type: FlowResultType,
@@ -367,7 +367,7 @@ async def test_dhcp_discovery_backfill_requires_ip_match(
     expected_step: str | None,
     expected_mac: str | None,
 ) -> None:
-    """MAC backfill on an entry without a stored MAC requires both IP and prefix to match.
+    """MAC backfill requires both IP and prefix to match.
 
     Two hubs from the same production batch share the 9-digit serial
     prefix but have different IPs. Requiring IP match prevents a DHCP
@@ -401,10 +401,9 @@ async def test_dhcp_discovery_backfill_requires_ip_match(
     assert config_entry.data[CONF_MAC] == expected_mac
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_skips_broadcast_when_mac_known(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
+    hass: HomeAssistant, mock_unload_entry: AsyncMock
 ) -> None:
     """A configured entry with a stored MAC refreshes its IP without broadcasting."""
     config_entry = MockConfigEntry(
@@ -456,9 +455,9 @@ async def test_dhcp_discovery_skips_broadcast_when_mac_known(
     ],
     ids=["same_mac_aborts", "different_mac_proceeds"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_with_ignored_entry(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     ignored_unique_id: str,
     expected_type: FlowResultType,
     expected_reason: str | None,
@@ -487,10 +486,9 @@ async def test_dhcp_discovery_with_ignored_entry(
     assert result.get("step_id") == expected_step
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_configured_wins_over_ignored_mac(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
+    hass: HomeAssistant, mock_unload_entry: AsyncMock
 ) -> None:
     """A configured entry's IP refresh wins over an ignored entry with the same MAC.
 

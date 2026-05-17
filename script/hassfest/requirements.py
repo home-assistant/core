@@ -660,8 +660,10 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     ):
         integration.add_error(
             "requirements",
-            f"Integration {integration.domain} runtime files dependency exceptions "
-            "have been resolved, please remove from `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -767,7 +769,8 @@ def check_dependency_files(
         integration.add_warning_or_error(
             pkg in package_exceptions,
             "requirements",
-            f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
         integration.add_warning_or_error(

@@ -1398,7 +1398,7 @@
     'state': '97.0',
   })
 # ---
-# name: test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry[LibreHardwareMonitorConnectionError][valid_sensor_data]
+# name: test_sensors_go_unavailable_on_error_and_recover[LibreHardwareMonitorConnectionError][valid_sensor_data]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1776,7 +1776,7 @@
     }),
   ])
 # ---
-# name: test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry[LibreHardwareMonitorNoDevicesError][valid_sensor_data]
+# name: test_sensors_go_unavailable_on_error_and_recover[LibreHardwareMonitorNoDevicesError][valid_sensor_data]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
