@@ -1338,6 +1338,33 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     assert state.state == expected_state
 
 
+async def test_restore_state_invalid(hass: HomeAssistant) -> None:
+    """Ensure invalid restored state does not crash entity setup."""
+    mock_restore_cache(hass, (State("alarm_control_panel.test", "unknown"),))
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state
+    assert state.state == AlarmControlPanelState.DISARMED
+
+
 @pytest.mark.parametrize(
     "expected_state",
     [
