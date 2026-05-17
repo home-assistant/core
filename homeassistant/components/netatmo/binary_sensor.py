@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,6 +22,7 @@ from .const import (
     CONF_URL_CONTROL,
     CONF_URL_ENERGY,
     CONF_URL_SECURITY,
+    DOMAIN,
     DOORTAG_CATEGORY_DOOR,
     DOORTAG_CATEGORY_FURNITURE,
     DOORTAG_CATEGORY_GARAGE,
@@ -299,6 +301,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         super().__init__(netatmo_device, **kwargs)
 
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.parent_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
         # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
