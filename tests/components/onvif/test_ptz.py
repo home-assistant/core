@@ -12,7 +12,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import HOST, MAC, NAME, PASSWORD, PORT, USERNAME, setup_mock_onvif_camera
+from . import (
+    FIRMWARE_VERSION,
+    HOST,
+    MAC,
+    MANUFACTURER,
+    MODEL,
+    NAME,
+    PASSWORD,
+    PORT,
+    SERIAL_NUMBER,
+    USERNAME,
+    setup_mock_onvif_camera,
+)
 
 from tests.common import MockConfigEntry
 
@@ -31,6 +43,9 @@ def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:
     # code path reads from (PTZConfiguration, VideoSourceConfiguration,
     # Resolution width/height, and a stable Name for entity_id generation).
     media_service = MagicMock()
+    media_service.GetServiceCapabilities = AsyncMock(
+        return_value=SimpleNamespace(SnapshotUri=False)
+    )
     media_service.GetProfiles = AsyncMock(
         return_value=[
             SimpleNamespace(
@@ -53,9 +68,7 @@ def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:
     ptz_service.GetPresets = AsyncMock(return_value=[])
     mock_onvif_camera_cls.create_ptz_service = AsyncMock(return_value=ptz_service)
     mock_onvif_camera_cls.create_imaging_service = AsyncMock(return_value=MagicMock())
-    mock_onvif_camera_cls.create_pullpoint_manager = AsyncMock(
-        return_value=MagicMock()
-    )
+    mock_onvif_camera_cls.create_pullpoint_manager = AsyncMock(return_value=MagicMock())
     mock_onvif_camera_cls.get_snapshot = AsyncMock(return_value=False)
     mock_onvif_camera_cls.get_capabilities = AsyncMock(
         return_value={
@@ -70,9 +83,19 @@ def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:
         }
     )
 
-    # Short-circuit async_check_date_and_time by returning None.
+    # Short-circuit async_check_date_and_time by returning None, and return
+    # serializable device information so the device registry entry can be
+    # persisted (the shared helper only sets SerialNumber).
     devicemgmt = mock_onvif_camera_cls.create_devicemgmt_service.return_value
     devicemgmt.GetSystemDateAndTime = AsyncMock(return_value=None)
+    devicemgmt.GetDeviceInformation = AsyncMock(
+        return_value=SimpleNamespace(
+            Manufacturer=MANUFACTURER,
+            Model=MODEL,
+            FirmwareVersion=FIRMWARE_VERSION,
+            SerialNumber=SERIAL_NUMBER,
+        )
+    )
 
     return ptz_service
 
