@@ -736,6 +736,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         )
         self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
         self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.ExposedEntitiesExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.FunctionalExtension"
