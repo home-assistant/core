@@ -85,6 +85,7 @@ ATTR_EVENT_TYPE_LABEL = "event_type_label"
 ATTR_DATA_TYPE_LABEL = "data_type_label"
 ATTR_NOTIFICATION_TYPE = "notification_type"
 ATTR_NOTIFICATION_EVENT = "notification_event"
+ATTR_URGENCY = "urgency"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"

@@ -228,6 +228,19 @@
         "name": "Ping"
       }
     },
+    "event": {
+      "battery_low": {
+        "name": "Battery low",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "now": "Battery should be replaced now",
+              "soon": "Battery should be replaced soon"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "avg_signal_noise": {
         "name": "Avg. signal noise (channel {channel})"

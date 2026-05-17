@@ -1,17 +1,30 @@
 """Test the Z-Wave JS event platform."""
 
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 import pytest
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.zwave_js.const import ATTR_URGENCY
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry
 
 BASIC_EVENT_VALUE_ENTITY = "event.honeywell_in_wall_smart_fan_control_event_value"
 CENTRAL_SCENE_ENTITY = "event.node_51_scene_002"
+BATTERY_LOW_EVENT_ENTITY = "event.keypad_v2_battery_low"
 
 
 @pytest.fixture
@@ -204,3 +217,131 @@ async def test_central_scene(
         ],
         "value": 1,
     }
+
+
+def _battery_notification_event(node_id: int, urgency: int) -> Event:
+    """Build a Battery CC notification event."""
+    return Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": node_id,
+            "endpointIndex": 0,
+            "ccId": 128,  # Battery CC
+            "args": {
+                "eventType": "battery low",
+                "urgency": urgency,
+            },
+        },
+    )
+
+
+async def test_battery_low_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the Battery CC battery low event entity."""
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["event_types"] == ["soon", "now"]
+
+    entity_entry = entity_registry.async_get(BATTERY_LOW_EVENT_ENTITY)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity_entry.translation_key == "battery_low"
+    assert entity_entry.unique_id.endswith(".battery_low")
+
+    fut = dt_util.now() + timedelta(minutes=1)
+    with freeze_time(fut):
+        ring_keypad.receive_event(
+            _battery_notification_event(ring_keypad.node_id, urgency=1)
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == dt_util.as_utc(fut).isoformat(timespec="milliseconds")
+    assert state.attributes[ATTR_EVENT_TYPE] == "soon"
+    assert state.attributes[ATTR_URGENCY] == 1
+
+    fut2 = fut + timedelta(hours=2)
+    with freeze_time(fut2):
+        ring_keypad.receive_event(
+            _battery_notification_event(ring_keypad.node_id, urgency=2)
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == dt_util.as_utc(fut2).isoformat(timespec="milliseconds")
+    assert state.attributes[ATTR_EVENT_TYPE] == "now"
+    assert state.attributes[ATTR_URGENCY] == 2
+
+
+async def test_battery_low_event_other_notifications_ignored(
+    hass: HomeAssistant,
+    client: MagicMock,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that non-Battery CC notifications do not trigger the entity."""
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    # Notification CC (113) should be ignored by the battery low entity
+    other_event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": ring_keypad.node_id,
+            "endpointIndex": 0,
+            "ccId": 113,
+            "args": {
+                "type": 7,
+                "label": "Home Security",
+                "event": 3,
+                "eventLabel": "Tampering, product cover removed",
+            },
+        },
+    )
+    ring_keypad.receive_event(other_event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_battery_low_event_removed_on_interview_started(
+    hass: HomeAssistant,
+    client: MagicMock,
+    ring_keypad: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the entity is removed when the node starts a reinterview."""
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    ring_keypad.receive_event(
+        Event(
+            type="interview started",
+            data={
+                "source": "node",
+                "event": "interview started",
+                "nodeId": ring_keypad.node_id,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(BATTERY_LOW_EVENT_ENTITY)
+    assert state
+    assert state.state == STATE_UNAVAILABLE

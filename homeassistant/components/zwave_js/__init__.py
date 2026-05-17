@@ -17,6 +17,7 @@ from zwave_js_server.exceptions import (
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
+    BatteryNotification,
     EntryControlNotification,
     MultilevelSwitchNotification,
     NotificationNotification,
@@ -79,6 +80,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_TEST_NODE_ID,
     ATTR_TYPE,
+    ATTR_URGENCY,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
@@ -826,6 +828,17 @@ class NodeEvents:
                 node,
             )
 
+        # Create a battery low event entity for each non-controller node that
+        # supports the Battery CC.
+        if not node.is_controller_node and any(
+            cc.id == CommandClass.BATTERY.value for cc in node.command_classes
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_battery_low_event_entity",
+                node,
+            )
+
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
@@ -965,7 +978,8 @@ class NodeEvents:
 
         driver = self.controller_events.driver_events.driver
         notification: (
-            EntryControlNotification
+            BatteryNotification
+            | EntryControlNotification
             | NotificationNotification
             | PowerLevelNotification
             | MultilevelSwitchNotification
@@ -985,7 +999,15 @@ class NodeEvents:
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
-        if isinstance(notification, EntryControlNotification):
+        if isinstance(notification, BatteryNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Battery",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_URGENCY: notification.urgency,
+                }
+            )
+        elif isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
