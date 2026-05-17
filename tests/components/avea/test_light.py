@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -28,7 +28,9 @@ def mock_bulb() -> MagicMock:
     bulb = MagicMock()
     bulb.name = "Bedroom"
     bulb.brightness = 0
+    bulb.connect.return_value = True
     bulb.get_brightness.return_value = 0
+    bulb.get_rgb.return_value = (0, 0, 0)
     return bulb
 
 
@@ -117,13 +119,24 @@ async def test_update_state(
     assert state.attributes[ATTR_BRIGHTNESS] is None
 
     bulb = setup_integration
+    bulb.reset_mock()
+    bulb.connect.return_value = True
     bulb.get_brightness.return_value = 2048
+    bulb.get_rgb.return_value = (0, 255, 0)
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert bulb.mock_calls == [
+        call.connect(),
+        call.get_brightness(),
+        call.get_rgb(),
+        call.disconnect(),
+    ]
+
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_HS_COLOR] == (120.0, 100.0)
