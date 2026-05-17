@@ -79,31 +79,6 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 ] = HassKey("all_service_descriptions_cache")
 
 
-_BASE_COMPONENT_NAMES = frozenset(
-    {
-        "ai_task",
-        "alarm_control_panel",
-        "assist_satellite",
-        "calendar",
-        "camera",
-        "climate",
-        "cover",
-        "fan",
-        "humidifier",
-        "light",
-        "lock",
-        "media_player",
-        "notify",
-        "remote",
-        "siren",
-        "todo",
-        "update",
-        "vacuum",
-        "water_heater",
-    }
-)
-
-
 def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
     """Validate attribute option or supported feature."""
     try:
@@ -113,10 +88,13 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
             f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
-    if domain not in _BASE_COMPONENT_NAMES:
-        raise vol.Invalid(f"Unknown base component '{domain}'")
-
-    base_component = importlib.import_module(f"homeassistant.components.{domain}")
+    base_component_module_name = f"homeassistant.components.{domain}"
+    try:
+        base_component = importlib.import_module(base_component_module_name)
+    except ModuleNotFoundError as exc:
+        if exc.name == base_component_module_name:
+            raise vol.Invalid(f"Unknown base component '{domain}'") from exc
+        raise
 
     try:
         attribute_enum = getattr(base_component, enum)
