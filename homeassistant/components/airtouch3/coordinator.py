@@ -23,13 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 COMMAND_QUEUE_INTERVAL = 5
 DEFAULT_PORT = 8899
 RESPONSE_TIMEOUT = 10
-MIN_RESPONSE_LENGTH = MessageConstants.AIRTOUCH_ID_START
+MIN_RESPONSE_LENGTH = (
+    MessageConstants.AIRTOUCH_ID_START + MessageConstants.AIRTOUCH_ID_LENGTH
+)
 
 
 async def async_fetch_airtouch_data(host: str, port: int = DEFAULT_PORT) -> Aircon:
     """Fetch and parse data from an AirTouch 3 controller."""
     socket_writer: asyncio.StreamWriter | None = None
     try:
+        _LOGGER.debug("Fetching AirTouch 3 data from %s:%s", host, port)
         async with asyncio.timeout(RESPONSE_TIMEOUT):
             socket_reader, socket_writer = await asyncio.open_connection(host, port)
             message = AirTouchMessage()
@@ -37,7 +40,19 @@ async def async_fetch_airtouch_data(host: str, port: int = DEFAULT_PORT) -> Airc
             await socket_writer.drain()
             response_data = await socket_reader.read(1024)
 
+        _LOGGER.debug(
+            "Received %s bytes from AirTouch 3 controller at %s:%s",
+            len(response_data),
+            host,
+            port,
+        )
         if len(response_data) < MIN_RESPONSE_LENGTH:
+            _LOGGER.debug(
+                "AirTouch 3 response from %s:%s was too short: %s bytes",
+                host,
+                port,
+                len(response_data),
+            )
             raise UpdateFailed(
                 f"AirTouch response was too short: {len(response_data)} bytes"
             )
@@ -45,6 +60,7 @@ async def async_fetch_airtouch_data(host: str, port: int = DEFAULT_PORT) -> Airc
         parser = MessageResponseParser(bytearray(response_data), _LOGGER)
         return parser.parse()
     except (TimeoutError, OSError, ValueError, IndexError) as err:
+        _LOGGER.debug("AirTouch 3 communication with %s:%s failed: %s", host, port, err)
         raise UpdateFailed(f"Communication error with AirTouch: {err}") from err
     finally:
         if socket_writer:
@@ -84,6 +100,11 @@ class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[Aircon]):
         self._command_queue_interval = COMMAND_QUEUE_INTERVAL
         self._command_queue_task: asyncio.Task[None] | None = None
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
+    @property
+    def system_id(self) -> str:
+        """Return a stable controller identifier for entity unique IDs."""
+        return self._entry.unique_id or self.host
 
     async def connect_to_airtouch(self) -> None:
         """Establish a connection to the AirTouch unit."""

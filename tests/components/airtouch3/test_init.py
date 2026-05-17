@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.airtouch3 import (
     PLATFORMS,
+    async_setup,
     async_setup_entry,
     async_unload_entry,
 )
@@ -15,6 +16,24 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+SYSTEM_ID = "35901813"
+
+
+async def test_async_setup_starts_discovery(hass: HomeAssistant) -> None:
+    """Test setting up the integration starts discovery."""
+    with (
+        patch(
+            "homeassistant.components.airtouch3.async_discover_devices",
+            AsyncMock(return_value=[]),
+        ) as discover_devices,
+        patch("homeassistant.components.airtouch3.async_trigger_discovery") as trigger,
+    ):
+        assert await async_setup(hass, {})
+        await hass.async_block_till_done()
+
+    discover_devices.assert_awaited_once()
+    trigger.assert_called_once_with(hass, [])
+
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test setting up the integration from a config entry."""
@@ -22,6 +41,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     aircon = Aircon(1)
+    aircon.system_id = SYSTEM_ID
 
     with (
         patch(
@@ -35,6 +55,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         assert await async_setup_entry(hass, entry)
 
     assert entry.runtime_data.data is aircon
+    assert entry.unique_id == SYSTEM_ID
     forward_entry_setups.assert_awaited_once_with(entry, PLATFORMS)
 
 

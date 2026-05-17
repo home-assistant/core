@@ -23,6 +23,7 @@ class Aircon:
         self._desired_temperature: int = 0
         self._mode: AcMode = AcMode.AUTO
         self._brand_id: int = 0
+        self._system_id: str = ""
         self.groups: list[dict[str, int | str]] = []
         self.group_temperatures: dict[int, int] = {}
         self.group_target_temperatures: dict[int, int] = {}
@@ -107,3 +108,13 @@ class Aircon:
     def brand_id(self, new_brand_id: int) -> None:
         """Set the brand identifier for this AC."""
         self._brand_id = new_brand_id
+
+    @property
+    def system_id(self) -> str:
+        """Return the AirTouch controller system identifier."""
+        return self._system_id
+
+    @system_id.setter
+    def system_id(self, new_system_id: str) -> None:
+        """Set the AirTouch controller system identifier."""
+        self._system_id = new_system_id

@@ -8,7 +8,9 @@ from .airtouch_zone import AirtouchZone
 from .enums import AcMode, ZoneStatus
 from .message_constants import MessageConstants
 
-MIN_RESPONSE_LENGTH = MessageConstants.AIRTOUCH_ID_START
+MIN_RESPONSE_LENGTH = (
+    MessageConstants.AIRTOUCH_ID_START + MessageConstants.AIRTOUCH_ID_LENGTH
+)
 
 
 class MessageResponseParser:
@@ -47,6 +49,17 @@ class MessageResponseParser:
 
         # Initialize Aircon with ac_id
         aircon = Aircon(ac_id=ac_id)
+        aircon.system_id = (
+            bytes(
+                self.response_buffer[
+                    MessageConstants.AIRTOUCH_ID_START : MessageConstants.AIRTOUCH_ID_START
+                    + MessageConstants.AIRTOUCH_ID_LENGTH
+                ]
+            )
+            .decode("ascii", "ignore")
+            .strip("\x00 ")
+        )
+        self.log.debug("AirTouch system id is: '%s'", aircon.system_id)
 
         # Running status
         aircon.status = bool(self.response_buffer[MessageConstants.AIRCON_STATUS] >> 7)

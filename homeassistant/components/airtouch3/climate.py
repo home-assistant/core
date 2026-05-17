@@ -97,9 +97,9 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
         """Initialize the AirTouch AC unit."""
         super().__init__(coordinator)
         self.ac_id = ac_id
-        self._attr_unique_id = f"{coordinator.host}_airtouch_ac_{ac_id}"
+        self._attr_unique_id = f"{coordinator.system_id}_airtouch_ac_{ac_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.host}_ac_{ac_id}")},
+            identifiers={(DOMAIN, f"{coordinator.system_id}_ac_{ac_id}")},
             name="AirTouch 3",
             manufacturer="Polyaire",
             model="AirTouch 3",
@@ -188,9 +188,11 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
         super().__init__(coordinator)
         self.group_id = group_id
         self.ac_id = ac_id
-        self._attr_unique_id = f"{coordinator.host}_airtouch_{ac_id}_group_{group_id}"
+        self._attr_unique_id = (
+            f"{coordinator.system_id}_airtouch_{ac_id}_group_{group_id}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.host}_group_{group_id}")},
+            identifiers={(DOMAIN, f"{coordinator.system_id}_group_{group_id}")},
             manufacturer="Polyaire",
             model="AirTouch 3",
             name=zone_name,

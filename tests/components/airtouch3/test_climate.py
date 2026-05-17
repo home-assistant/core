@@ -31,6 +31,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+SYSTEM_ID = "35901813"
+
 
 def _sensor(temperature: int) -> Sensor:
     """Create an available sensor."""
@@ -61,6 +63,7 @@ def _zone(
 def _aircon() -> Aircon:
     """Create AirTouch data for climate tests."""
     aircon = Aircon(1)
+    aircon.system_id = SYSTEM_ID
     aircon.brand_id = 2
     aircon.fan_speed = 2
     aircon.mode = AcMode.COOL
@@ -75,7 +78,9 @@ def _aircon() -> Aircon:
 
 def _coordinator(hass: HomeAssistant) -> Airtouch3DataUpdateCoordinator:
     """Create a coordinator with data."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=SYSTEM_ID, data={CONF_HOST: "1.1.1.1"}
+    )
     entry.add_to_hass(hass)
     coordinator = Airtouch3DataUpdateCoordinator(hass, entry, "1.1.1.1")
     coordinator.data = _aircon()
@@ -95,9 +100,9 @@ async def test_async_setup_entry_adds_ac_and_zone_entities(
 
     entities = async_add_entities.call_args.args[0]
     assert [entity.unique_id for entity in entities] == [
-        "1.1.1.1_airtouch_ac_1",
-        "1.1.1.1_airtouch_1_group_1",
-        "1.1.1.1_airtouch_1_group_2",
+        "35901813_airtouch_ac_1",
+        "35901813_airtouch_1_group_1",
+        "35901813_airtouch_1_group_2",
     ]
     assert PARALLEL_UPDATES == 1
     assert entities[0].translation_key == "air_conditioner"

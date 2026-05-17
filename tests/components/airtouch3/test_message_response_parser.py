@@ -12,6 +12,7 @@ from homeassistant.components.airtouch3.comms.message_response_parser import (
 
 AVAILABLE_FLAG = 0x80
 RESPONSE_LENGTH = 520
+SYSTEM_ID = "35901813"
 
 
 def _make_response(num_zones: int) -> bytearray:
@@ -19,6 +20,10 @@ def _make_response(num_zones: int) -> bytearray:
     response = bytearray(RESPONSE_LENGTH)
     response[MessageConstants.NUMBER_OF_ZONES] = num_zones
     response[MessageConstants.AIRCON_STATUS] = AVAILABLE_FLAG
+    response[
+        MessageConstants.AIRTOUCH_ID_START : MessageConstants.AIRTOUCH_ID_START
+        + MessageConstants.AIRTOUCH_ID_LENGTH
+    ] = SYSTEM_ID.encode()
 
     for index in range(num_zones):
         response[MessageConstants.GROUP_DATA_START + index] = index << 4
@@ -42,6 +47,7 @@ def test_parse_assigns_touchpad_temperature_to_configured_zone() -> None:
 
     aircon = MessageResponseParser(response, logging.getLogger(__name__)).parse()
 
+    assert aircon.system_id == SYSTEM_ID
     assert aircon.zones[0].sensor
     assert aircon.zones[0].sensor.current_temperature == 20
     assert aircon.zones[1].sensor is None
@@ -74,7 +80,9 @@ def test_parse_ac_mode(raw_mode: int, expected_mode: AcMode) -> None:
 
 def test_parse_short_response_raises() -> None:
     """Test short AirTouch responses fail before fixed offsets are read."""
-    response = bytearray(MessageConstants.AIRTOUCH_ID_START - 1)
+    response = bytearray(
+        MessageConstants.AIRTOUCH_ID_START + MessageConstants.AIRTOUCH_ID_LENGTH - 1
+    )
 
     with pytest.raises(ValueError):
         MessageResponseParser(response, logging.getLogger(__name__)).parse()

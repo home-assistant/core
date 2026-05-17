@@ -3,6 +3,15 @@
   "name": "AirTouch 3 Air Conditioner",
   "codeowners": ["@L0rdCha0s"],
   "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "hostname": "*airtouch3*"
+    },
+    {
+      "hostname": "*aritouch3*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/airtouch3",
   "homekit": {},
   "integration_type": "hub",
