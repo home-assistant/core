@@ -8,7 +8,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -72,17 +71,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_start_discovery(hass: HomeAssistant) -> None:
     """Start discovery once."""
-    hass.data.setdefault(DOMAIN, {})
-    # pylint: disable-next=hass-use-runtime-data
-    if DISCOVERY in hass.data[DOMAIN]:
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if DISCOVERY in domain_data:
         return
 
     _LOGGER.debug("Starting iTach discovery")
 
     discovery = ItachDiscovery(hass)
     await discovery.async_start()
-    # pylint: disable-next=hass-use-runtime-data
-    hass.data[DOMAIN][DISCOVERY] = discovery
+    domain_data[DISCOVERY] = discovery
 
     async def _async_stop_discovery(event: Event) -> None:
         """Stop discovery when Home Assistant stops."""
@@ -103,8 +100,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ItachConfigEntry) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ItachConfigEntry) -> bool:
     """Initialize the iTach integration from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if not _discovery_disabled(hass):
         await _async_start_discovery(hass)
 
@@ -195,18 +190,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ItachConfigEntry) -> boo
         ir_connector_modes=ir_connector_modes,
         client=client,
     )
-    # pylint: disable-next=hass-use-runtime-data
-    hass.data[DOMAIN][entry.entry_id] = {
-        "remote_unique_id_prefix": entry.unique_id,
-        "remote_device_info": DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            name=f"iTach IP2IR ({host})",
-            manufacturer="Global Caché",
-            model="iTach IP2IR",
-            configuration_url=f"http://{host}",
-        ),
-    }
-
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -218,7 +201,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ItachConfigEntry) -> bo
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
         await entry.runtime_data.client.close()
 
     return unload_ok
