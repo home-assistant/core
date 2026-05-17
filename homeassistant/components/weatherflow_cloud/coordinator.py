@@ -185,6 +185,8 @@ class WeatherFlowWindCoordinator(BaseWebsocketCoordinator[EventDataRapidWind]):
 
     async def _handle_websocket_message(self, data: RapidWindWS) -> None:
         """Handle rapid wind websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 
@@ -204,6 +206,8 @@ class WeatherFlowObservationCoordinator(BaseWebsocketCoordinator[WebsocketObserv
 
     async def _handle_websocket_message(self, data: ObservationTempestWS) -> None:
         """Handle observation websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 
