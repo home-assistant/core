@@ -274,7 +274,7 @@ async def test_cover_entities_snapshot(
             SERVICE_STOP_COVER,
             "stop",
             None,
-            CoverState.OPEN,
+            CoverState.CLOSED,
         ),
         (
             TILT_ONLY_VENETIAN_BLIND,
