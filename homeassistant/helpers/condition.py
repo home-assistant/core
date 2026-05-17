@@ -1748,9 +1748,14 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType | str
 ) -> ConfigType:
     """Validate config."""
+    if isinstance(config, str):
+        config = {
+            CONF_CONDITION: "template",
+            CONF_VALUE_TEMPLATE: cv.dynamic_template(config),
+        }
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
