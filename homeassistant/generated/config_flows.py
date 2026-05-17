@@ -404,6 +404,7 @@ FLOWS = {
         "lg_netcast",
         "lg_soundbar",
         "lg_thinq",
+        "lg_tv_rs232",
         "libre_hardware_monitor",
         "lichess",
         "lidarr",

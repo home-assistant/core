@@ -3767,6 +3767,12 @@
         }
       }
     },
+    "lg_tv_rs232": {
+      "name": "LG TV via Serial",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "device",
