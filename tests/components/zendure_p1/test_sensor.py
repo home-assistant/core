@@ -58,7 +58,7 @@ async def test_sensor_values(
         total_power=750,
     )
     freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass, freezer)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     for key, expected in (
