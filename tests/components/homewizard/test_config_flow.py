@@ -626,7 +626,7 @@ async def test_manual_flow_works_with_v2_api_support(
     mock_homewizardenergy_v2: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test config flow accepts user configuration and triggers authorization when detected v2 support."""
+    """Test config flow triggers authorization on v2 support detection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -666,7 +666,7 @@ async def test_manual_flow_detects_failed_user_authorization(
     mock_homewizardenergy_v2: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test config flow accepts user configuration and detects failed button press by user."""
+    """Test config flow detects failed button press by user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

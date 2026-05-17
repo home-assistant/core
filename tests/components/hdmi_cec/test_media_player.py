@@ -192,7 +192,10 @@ async def test_service_off(
                 MPEF.STOP,
             ),
             marks=pytest.mark.xfail(
-                reason="Checking for the wrong attribute, should be checking `type_id`, is checking `type`."
+                reason=(
+                    "Checking for the wrong attribute, should be"
+                    " checking `type_id`, is checking `type`."
+                )
             ),
         ),
         pytest.param(
@@ -213,7 +216,10 @@ async def test_service_off(
                 MPEF.NEXT_TRACK,
             ),
             marks=pytest.mark.xfail(
-                reason="Checking for the wrong attribute, should be checking `type_id`, is checking `type`."
+                reason=(
+                    "Checking for the wrong attribute, should be"
+                    " checking `type_id`, is checking `type`."
+                )
             ),
         ),
         pytest.param(

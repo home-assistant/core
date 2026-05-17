@@ -24,7 +24,10 @@ from tests.typing import WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners since we are not testing for these."""
+    """Return listeners without final write listeners.
+
+    We are not testing for these.
+    """
     return {
         key: value
         for key, value in listeners.items()
@@ -835,7 +838,7 @@ async def test_history_stream_bad_end_time(
 async def test_history_stream_live_no_attributes_minimal_response(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test history stream with history and live data and no_attributes and minimal_response."""
+    """Test history stream with live data, no_attributes and minimal_response."""
     now = dt_util.utcnow()
     await async_setup_component(
         hass,
@@ -1251,7 +1254,10 @@ async def test_history_stream_live_no_attributes(
 async def test_history_stream_live_no_attributes_minimal_response_specific_entities(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test history stream with history and live data and no_attributes and minimal_response with specific entities."""
+    """Test history stream with no_attributes and minimal_response.
+
+    Uses specific entities.
+    """
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
@@ -1507,7 +1513,10 @@ async def test_history_stream_before_history_starts(
 async def test_history_stream_for_entity_with_no_possible_changes(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test history stream for future with no possible changes where end time is less than or equal to now."""
+    """Test history stream with no possible changes.
+
+    End time is less than or equal to now.
+    """
     await async_setup_component(
         hass,
         "history",

@@ -40,7 +40,9 @@ TEST_HC_APP = "Dishwasher"
 
 EVENT_PROG_DELAYED_START = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.DelayedStart",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.DelayedStart"
+        ),
     },
     EventType.EVENT: {
         EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 30,
@@ -51,7 +53,9 @@ EVENT_PROG_DELAYED_START = {
 
 EVENT_PROG_RUN = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
     EventType.EVENT: {
         EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 0,
@@ -65,7 +69,9 @@ EVENT_PROG_UPDATE_1 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 80,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
@@ -75,7 +81,9 @@ EVENT_PROG_UPDATE_2 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
@@ -86,13 +94,17 @@ EVENT_PROG_UPDATE_3 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
 EVENT_PROG_END = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Ready",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Ready"
+        ),
     },
 }
 
@@ -113,7 +125,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -231,7 +243,7 @@ async def test_sensor_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if sensor entities availability are based on the appliance connection state."""
+    """Test sensor entities availability based on appliance connection."""
     entity_ids = [
         "sensor.dishwasher_operation_state",
         "sensor.dishwasher_salt_nearly_empty",

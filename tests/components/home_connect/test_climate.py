@@ -86,7 +86,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
@@ -212,7 +212,7 @@ async def test_climate_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if climate entities availability are based on the appliance connection state."""
+    """Test climate entity availability based on appliance connection."""
     entity_ids = [
         "climate.air_conditioner",
     ]
@@ -270,7 +270,7 @@ async def test_entity_not_added_if_no_air_conditioner_programs(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     program_keys: list[ProgramKey],
 ) -> None:
-    """Test that the air conditioner entity is not added if there are no air conditioner programs."""
+    """Test AC entity is not added without AC programs."""
     client.get_all_programs.side_effect = None
     client.get_all_programs.return_value = ArrayOfPrograms(
         [
@@ -561,7 +561,7 @@ async def test_not_supported_functionality_if_not_power_setting(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test the off HVAC mode, and turn on/off is not supported when the setting is not present."""
+    """Test off HVAC mode and turn on/off unsupported without setting."""
     client.get_settings = AsyncMock(return_value=ArrayOfSettings([]))
 
     assert await integration_setup(client)
@@ -794,7 +794,10 @@ async def test_fan_mode_functionality(
         option_key=option_key,
         value=allowed_values[0]
         if allowed_values
-        else "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+        else (
+            "HeatingVentilationAirConditioning"
+            ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+        ),
     )
     entity_state = hass.states.get(entity_id)
     assert entity_state
@@ -852,7 +855,7 @@ async def test_fan_mode_feature_supported(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that fan feature is supported depending on the fan speed mode option availability."""
+    """Test fan feature support based on fan speed mode option."""
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
@@ -931,7 +934,7 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     program_keys: list[ProgramKey],
 ) -> None:
-    """Test that the preset modes are not supported if active clean program is missing."""
+    """Test preset modes not supported if active clean program missing."""
     client.get_all_programs.side_effect = None
     client.get_all_programs.return_value = ArrayOfPrograms(
         [

@@ -43,7 +43,7 @@ from tests.common import MockConfigEntry
 
 @dataclasses.dataclass
 class DeviceMigrationTest:
-    """Holds the expected state before and after testing a device identifier migration."""
+    """Holds expected state before and after device identifier migration."""
 
     fixture: str
     manufacturer: str
@@ -52,7 +52,8 @@ class DeviceMigrationTest:
 
 
 DEVICE_MIGRATION_TESTS = [
-    # 0401.3521.0679 was incorrectly treated as a serial number, it should be stripped out during migration
+    # 0401.3521.0679 was incorrectly treated as a serial number, it should be stripped
+    # out during migration
     DeviceMigrationTest(
         fixture="ryse_smart_bridge_four_shades.json",
         manufacturer="RYSE Inc.",
@@ -61,7 +62,8 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")},
     ),
-    # This shade has a serial of 1.0.0, which we should already ignore. Make sure it gets migrated to a 2-tuple
+    # This shade has a serial of 1.0.0, which we should already ignore. Make sure it
+    # gets migrated to a 2-tuple
     DeviceMigrationTest(
         fixture="ryse_smart_bridge_four_shades.json",
         manufacturer="RYSE Inc.",
@@ -93,7 +95,8 @@ DEVICE_MIGRATION_TESTS = [
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:6623462389072572"),
         },
     ),
-    # Test migrating a Koogeek LS1. This is just for completeness (testing hub and hub-less devices)
+    # Test migrating a Koogeek LS1. This is just for completeness (testing hub and
+    # hub-less devices)
     DeviceMigrationTest(
         fixture="koogeek_ls1.json",
         manufacturer="Koogeek",
@@ -147,7 +150,7 @@ async def test_migrate_device_id_no_serial(
     device_registry: dr.DeviceRegistry,
     variant: DeviceMigrationTest,
 ) -> None:
-    """Test that a Ryse smart bridge with four shades can be migrated correctly in HA."""
+    """Test Ryse smart bridge with four shades can be migrated in HA."""
     accessories = await setup_accessories_from_file(hass, variant.fixture)
 
     fake_controller = await setup_platform(hass)
@@ -230,7 +233,9 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
             "button",
             "press",
             {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                "entity_id": (
+                    "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                )
             },
             blocking=True,
         )
@@ -289,7 +294,9 @@ async def test_thread_provision(
         "button",
         "press",
         {
-            "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            "entity_id": (
+                "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            )
         },
         blocking=True,
     )
@@ -306,7 +313,7 @@ async def test_thread_provision(
 
 
 async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
-    """Test that when a device 'migrates' but doesn't show up in CoAP, we remain in BLE mode."""
+    """Test device remains in BLE mode when CoAP migration fails."""
     await async_add_dataset(
         hass,
         "Tests",
@@ -345,7 +352,9 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
             "button",
             "press",
             {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                "entity_id": (
+                    "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+                )
             },
             blocking=True,
         )
@@ -356,7 +365,7 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
 async def test_poll_firmware_version_only_all_watchable_accessory_mode(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that we only poll firmware if available and all chars are watchable accessory mode."""
+    """Test firmware poll only when all chars are watchable."""
 
     def _create_accessory(accessory: Accessory) -> Service:
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
@@ -380,7 +389,8 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
         assert mock_get_characteristics.call_count == 2
-        # Verify everything is polled (convert to set for comparison since batching changes the type)
+        # Verify everything is polled (convert to set for comparison since batching
+        # changes the type)
         assert set(mock_get_characteristics.call_args_list[0][0][0]) == {
             (1, 10),
             (1, 11),
@@ -531,7 +541,8 @@ async def test_poll_all_on_startup_refreshes_stale_values(
         len(polled_chars) == 79
     )  # The Ecobee fixture has exactly 79 readable characteristics
 
-    # Check that the climate entity has the fresh temperature (22.5°C) not the stale fixture value (21.8°C)
+    # Check that the climate entity has the fresh temperature (22.5°C) not the stale
+    # fixture value (21.8°C)
     state = hass.states.get("climate.homew")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
@@ -540,7 +551,7 @@ async def test_poll_all_on_startup_refreshes_stale_values(
 async def test_characteristic_polling_batching(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that characteristic polling is batched to MAX_CHARACTERISTICS_PER_REQUEST."""
+    """Test characteristic polling is batched to max per request."""
 
     # Create a large accessory with many characteristics (more than 49)
     def create_large_accessory_with_many_chars(accessory: Accessory) -> None:
@@ -596,7 +607,8 @@ async def test_characteristic_polling_batching(
     # Check that no batch exceeded MAX_CHARACTERISTICS_PER_REQUEST
     for i, batch in enumerate(get_chars_calls):
         assert len(batch) <= MAX_CHARACTERISTICS_PER_REQUEST, (
-            f"Batch {i} size {len(batch)} exceeded maximum {MAX_CHARACTERISTICS_PER_REQUEST}"
+            f"Batch {i} size {len(batch)} exceeded maximum"
+            f" {MAX_CHARACTERISTICS_PER_REQUEST}"
         )
 
     # Verify the total number of characteristics polled
@@ -609,12 +621,14 @@ async def test_characteristic_polling_batching(
 
     # The first batch should be full (49 characteristics)
     assert len(get_chars_calls[0]) == 49, (
-        f"First batch should have exactly 49 characteristics, got {len(get_chars_calls[0])}"
+        "First batch should have exactly 49 characteristics,"
+        f" got {len(get_chars_calls[0])}"
     )
 
     # The second batch should have exactly 1 characteristic
     assert len(get_chars_calls[1]) == 1, (
-        f"Second batch should have exactly 1 characteristic, got {len(get_chars_calls[1])}"
+        "Second batch should have exactly 1 characteristic,"
+        f" got {len(get_chars_calls[1])}"
     )
 
 

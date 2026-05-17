@@ -518,7 +518,7 @@ async def test_hmip_passage_detector_delta_counter(
 async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     hass: HomeAssistant, default_mock_hap_factory: HomematicipHAP
 ) -> None:
-    """Test HomematicipFloorTerminalBlockMechanicChannelValve Channel 1 HmIP-FALMOT-C12."""
+    """Test FloorTerminalBlockMechanicChannelValve Ch 1 FALMOT-C12."""
     entity_id = "sensor.fussbodenheizungsaktor_heizkreislauf_1_og_bad_r"
     entity_name = "Fußbodenheizungsaktor Heizkreislauf (1) OG Bad r"
     device_model = "HmIP-FALMOT-C12"

@@ -156,7 +156,7 @@ async def test_load_creates_repair_issue_when_name_is_updated(
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test setup creates repair issue for v2 API upgrade and updates title when device name changes."""
+    """Test repair issue for v2 API and title update on name change."""
     mock_config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 

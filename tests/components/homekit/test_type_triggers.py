@@ -23,7 +23,7 @@ async def test_programmable_switch_button_fires_on_trigger(
     demo_cleanup,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that DeviceTriggerAccessory fires the programmable switch event on trigger."""
+    """Test DeviceTriggerAccessory fires programmable switch event."""
     hk_driver.publish = MagicMock()
 
     demo_config_entry = MockConfigEntry(domain="domain")

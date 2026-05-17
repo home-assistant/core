@@ -293,7 +293,7 @@ async def test_bluetooth_not_pairable_logs_on_connect(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that the not-pairable warning is logged only when a connection is attempted."""
+    """Test not-pairable warning is logged only when connection is attempted."""
 
     inject_bluetooth_service_info(hass, AUTOMOWER_NOT_PAIRABLE_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)

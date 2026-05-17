@@ -34,7 +34,10 @@ _HUB_BASE = {
 
 
 def _make_mock_hive(hub_extra: dict) -> MagicMock:
-    """Return a mocked Hive instance whose startSession returns a minimal devices dict."""
+    """Return a mocked Hive instance.
+
+    startSession returns a minimal devices dict.
+    """
     hub_data = {**_HUB_BASE, **hub_extra}
     mock_hive = MagicMock()
     mock_hive.session.startSession = AsyncMock(return_value={"parent": [hub_data]})

@@ -35,7 +35,7 @@ async def test_event(
     values: dict[str, MowerAttributes],
     automower_ws_ready: list[Callable[[], None]],
 ) -> None:
-    """Test that a new message arriving over the websocket creates and updates the sensor."""
+    """Test websocket message creates and updates the sensor."""
     callbacks: list[Callable[[SingleMessageData], None]] = []
 
     @callback

@@ -938,7 +938,7 @@ async def test_uptime_sensor_does_not_update_timestamp_on_data_update(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test that the uptime sensor does not update its timestamp when refreshing data."""
+    """Test uptime sensor does not update its timestamp when refreshing."""
     entity_id = "sensor.device_uptime"
 
     mock_homewizardenergy.combined.return_value = CombinedModels(

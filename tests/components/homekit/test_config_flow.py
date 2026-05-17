@@ -163,7 +163,7 @@ async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
 async def test_setup_creates_entries_for_accessory_mode_devices(
     hass: HomeAssistant,
 ) -> None:
-    """Test we can setup a new instance and we create entries for accessory mode devices."""
+    """Test setup creates entries for accessory mode devices."""
     hass.states.async_set("camera.one", "on")
     hass.states.async_set("camera.existing", "on")
     hass.states.async_set("lock.new", "on")
@@ -505,7 +505,7 @@ async def test_options_flow_devices(
 async def test_options_flow_devices_preserved_when_advanced_off(
     port_mock, hass: HomeAssistant
 ) -> None:
-    """Test devices are preserved if they were added in advanced mode but it was turned off."""
+    """Test devices preserved when advanced mode is turned off."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},

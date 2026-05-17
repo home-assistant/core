@@ -266,10 +266,11 @@ async def test_constant_polling(
     values: dict[str, MowerAttributes],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Verify that receiving a WebSocket update does not interrupt the regular polling cycle.
+    """Verify WebSocket updates do not interrupt regular polling.
 
-    The test simulates a WebSocket update that changes an entity's state, then advances time
-    to trigger a scheduled poll to confirm polled data also arrives.
+    The test simulates a WebSocket update that changes an entity's state, then
+    advances time to trigger a scheduled poll to confirm polled data also
+    arrives.
     """
     test_values = deepcopy(values)
     callback_holder: dict[str, Callable] = {}

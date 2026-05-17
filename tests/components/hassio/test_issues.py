@@ -59,7 +59,7 @@ def mock_resolution_info(
     suggestions_by_issue: dict[UUID, list[Suggestion]] | None = None,
     suggestion_result: SupervisorError | None = None,
 ) -> None:
-    """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
+    """Mock resolution/info endpoint with unsupported/unhealthy reasons."""
     supervisor_client.resolution.info.return_value = ResolutionInfo(
         unsupported=unsupported or [],
         unhealthy=unhealthy or [],
@@ -171,7 +171,7 @@ async def test_unhealthy_reasons(
     hass_ws_client: WebSocketGenerator,
     unhealthy_reason: UnhealthyReason,
 ) -> None:
-    """Test all unhealthy reasons in client library are properly made into repairs with a translation."""
+    """Test all unhealthy reasons in client library are made into repairs."""
     mock_resolution_info(supervisor_client, unhealthy=[unhealthy_reason])
 
     result = await async_setup_component(hass, "hassio", {})
@@ -226,7 +226,7 @@ async def test_unsupported_reasons(
     hass_ws_client: WebSocketGenerator,
     unsupported_reason: UnsupportedReason,
 ) -> None:
-    """Test all unsupported reasons in client library are properly made into repairs with a translation."""
+    """Test all unsupported reasons in client library are made into repairs."""
     mock_resolution_info(supervisor_client, unsupported=[unsupported_reason])
 
     result = await async_setup_component(hass, "hassio", {})
@@ -561,7 +561,7 @@ async def test_new_unsupported_unhealthy_reason(
     supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """New unsupported/unhealthy reasons result in a generic repair until next core update."""
+    """New unsupported/unhealthy reasons result in a generic repair."""
     mock_resolution_info(
         supervisor_client,
         unsupported=["fake_unsupported"],

@@ -181,7 +181,11 @@ async def test_select_unauthorized_error(
     mock_homewizardenergy.batteries.side_effect = UnauthorizedError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API is unauthorized\. Restore API access by following the instructions in the repair issue$",
+        match=(
+            r"^The local API is unauthorized\. Restore API"
+            r" access by following the instructions in the"
+            r" repair issue$"
+        ),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

@@ -29,7 +29,7 @@ from tests.typing import ClientSessionGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners since we are not testing for these."""
+    """Return listeners without final write listeners."""
     return {
         key: value
         for key, value in listeners.items()

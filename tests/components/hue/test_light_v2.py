@@ -372,7 +372,8 @@ async def test_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
 
-    # Add new fake entity (and attached device and zigbee_connectivity) by emitting events
+    # Add new fake entity (and attached device and zigbee_connectivity) by emitting
+    # events
     mock_bridge_v2.api.emit_event("add", FAKE_LIGHT)
     await hass.async_block_till_done()
 
@@ -531,7 +532,8 @@ async def test_grouped_lights(
     # While we have a group on, test the color aggregation logic, XY first
 
     # Turn off one of the bulbs in the group
-    # "hue_light_with_color_and_color_temperature_1" corresponds to "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
+    # "hue_light_with_color_and_color_temperature_1" corresponds to
+    # "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
     mock_bridge_v2.mock_requests.clear()
     single_light_id = "light.hue_light_with_color_and_color_temperature_1"
     await hass.services.async_call(
@@ -548,13 +550,15 @@ async def test_grouped_lights(
     mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
-    # The group should still show the same XY color since other lights maintain their color
+    # The group should still show the same XY color since other lights maintain their
+    # color
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
-    # Turn the light back on with a white XY color (different from the rest of the group)
+    # Turn the light back on with a white XY color (different from the rest of the
+    # group)
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -587,8 +591,10 @@ async def test_grouped_lights(
     assert abs(group_x - expected_x) < 0.001  # Allow small floating point differences
     assert abs(group_y - expected_y) < 0.001
 
-    # Test turning off another light in the group, leaving only two lights on - one white and one original color
-    # "hue_light_with_color_and_color_temperature_2" corresponds to "b3fe71ef-d0ef-48de-9355-d9e604377df0"
+    # Test turning off another light in the group, leaving only two lights on - one
+    # white and one original color
+    # "hue_light_with_color_and_color_temperature_2" corresponds to
+    # "b3fe71ef-d0ef-48de-9355-d9e604377df0"
     second_light_id = "light.hue_light_with_color_and_color_temperature_2"
     await hass.services.async_call(
         "light",
@@ -897,7 +903,8 @@ async def test_grouped_lights(
         blocking=True,
     )
 
-    # PUT request should have been sent to ONLY the grouped_light resource with correct params
+    # PUT request should have been sent to ONLY the grouped_light resource with correct
+    # params
     assert len(mock_bridge_v2.mock_requests) == 1
     assert mock_bridge_v2.mock_requests[0]["method"] == "put"
     assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
