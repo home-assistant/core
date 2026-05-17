@@ -40,7 +40,7 @@ async def test_availability(
     mock_imgw_pib_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     await init_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)

@@ -1471,7 +1471,7 @@ async def test_start_timer_with_conversation_command(
 async def test_start_timer_with_sentence_trigger_validation(
     hass: HomeAssistant, init_components
 ) -> None:
-    """Test starting a timer with a conversation command validates against sentence triggers."""
+    """Test timer with conversation command validates sentence triggers."""
     device_id = "test_device"
     timer_name = "test timer"
     test_command = "turn on the lights"
@@ -1541,13 +1541,14 @@ async def test_start_timer_with_invalid_conversation_command(
 async def test_start_timer_with_conversation_command_skip_validation(
     hass: HomeAssistant, init_components
 ) -> None:
-    """Test starting a timer with a conversation command skips validation for non-default agents."""
+    """Test timer with conversation command skips validation for non-default agents."""
     device_id = "test_device"
     timer_name = "test timer"
     invalid_command = "invalid command that does not exist"
     agent_id = "conversation.test_llm_agent"
 
-    # This should NOT raise an error because validation is skipped for all non-default agents
+    # This should NOT raise an error because validation is
+    # skipped for all non-default agents
     result = await intent.async_handle(
         hass,
         "test",

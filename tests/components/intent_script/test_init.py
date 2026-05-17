@@ -179,7 +179,11 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
                     },
                     "speech": {
                         "type": "ssml",
-                        "text": '<speak><amazon:effect name="whispered">Good morning {{ name }}</amazon:effect></speak>',
+                        "text": (
+                            '<speak><amazon:effect name="whispered">'
+                            "Good morning {{ name }}"
+                            "</amazon:effect></speak>"
+                        ),
                     },
                     "reprompt": {"text": "{{ null }}"},
                 }
@@ -194,9 +198,9 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data["hello"] == "Paulus"
 
-    assert (
-        response.speech["ssml"]["speech"]
-        == '<speak><amazon:effect name="whispered">Good morning Paulus</amazon:effect></speak>'
+    assert response.speech["ssml"]["speech"] == (
+        '<speak><amazon:effect name="whispered">'
+        "Good morning Paulus</amazon:effect></speak>"
     )
 
     assert not (response.reprompt)
@@ -340,9 +344,10 @@ async def test_intent_script_action_validation(
                                     "conditions": [
                                         {
                                             "condition": "state",
-                                            # Use entity registry ID instead of entity_id
-                                            # This requires async_validate_actions_config
-                                            # to resolve to the actual entity_id
+                                            # Use entity registry ID
+                                            # instead of entity_id.
+                                            # async_validate_actions_config
+                                            # resolves to actual entity_id
                                             "entity_id": entry.id,
                                             "state": "on",
                                         }
@@ -365,7 +370,8 @@ async def test_intent_script_action_validation(
                     ],
                     "speech": {"text": "Done"},
                 },
-                # This intent has an invalid entity registry ID and should fail validation
+                # This intent has an invalid entity registry ID
+                # and should fail validation
                 "InvalidIntent": {
                     "action": [
                         {

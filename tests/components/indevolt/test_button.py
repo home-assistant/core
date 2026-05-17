@@ -42,7 +42,7 @@ async def test_button_press_standby(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing the standby button switches to real-time mode and sends standby action."""
+    """Test standby button switches to real-time mode and sends action."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
@@ -101,7 +101,7 @@ async def test_button_press_standby_rejected_command(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing standby raises HomeAssistantError when the device rejects the command."""
+    """Test standby raises HomeAssistantError when device rejects."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
@@ -124,7 +124,7 @@ async def test_button_press_standby_portable_mode_error(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing standby raises HomeAssistantError when device is in outdoor/portable mode."""
+    """Test standby raises error in outdoor/portable mode."""
 
     # Force outdoor/portable mode
     mock_indevolt.fetch_data.return_value[IndevoltConfig.READ_ENERGY_MODE] = (
