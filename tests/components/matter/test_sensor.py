@@ -948,7 +948,7 @@ async def test_thread_diagnostic_sensors(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
-    attribute: type[ClusterAttributeDescriptor],
+    attribute: ClusterAttributeDescriptor,
     initial_state: str,
     updated_value: int | str,
     updated_state: str,

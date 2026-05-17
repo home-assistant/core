@@ -1620,10 +1620,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            options=[
-                role for role in THREAD_ROUTING_ROLE_MAP.values() if role is not None
-            ],
-            device_to_ha=THREAD_ROUTING_ROLE_MAP.get,
+            options=list(THREAD_ROUTING_ROLE_MAP.values()),
+            device_to_ha=lambda value: THREAD_ROUTING_ROLE_MAP.get(value, "unknown"),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.RoutingRole,),
