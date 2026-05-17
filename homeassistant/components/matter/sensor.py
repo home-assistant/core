@@ -138,7 +138,7 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
 }
 
 BOOT_REASON_MAP = {
-    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnspecified: None,
+    clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnspecified: "unspecified",
     clusters.GeneralDiagnostics.Enums.BootReasonEnum.kPowerOnReboot: "power_on_reboot",
     clusters.GeneralDiagnostics.Enums.BootReasonEnum.kBrownOutReset: "brown_out_reset",
     clusters.GeneralDiagnostics.Enums.BootReasonEnum.kSoftwareWatchdogReset: "software_watchdog_reset",
@@ -1606,7 +1606,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.UpTime,),

@@ -935,3 +935,25 @@ async def test_general_diagnostics_sensors(
     state = hass.states.get("sensor.m5stamp_lighting_app_boot_reason")
     assert state
     assert state.state == "software_reset"
+
+    entry = entity_registry.async_get("sensor.m5stamp_lighting_app_boot_reason")
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics sensors are disabled by default."""
+    for entity_id in (
+        "sensor.m5stamp_lighting_app_reboot_count",
+        "sensor.m5stamp_lighting_app_uptime",
+        "sensor.m5stamp_lighting_app_boot_reason",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

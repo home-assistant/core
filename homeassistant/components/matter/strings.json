@@ -425,7 +425,8 @@
           "power_on_reboot": "Power-on reboot",
           "software_reset": "Software reset",
           "software_update_completed": "Software update completed",
-          "software_watchdog_reset": "Software watchdog reset"
+          "software_watchdog_reset": "Software watchdog reset",
+          "unspecified": "Unspecified"
         }
       },
       "contamination_state": {
@@ -614,9 +615,6 @@
       "tank_volume": {
         "name": "Tank volume"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "tvoc_level": {
         "name": "TVOC level",
         "state": {
@@ -625,6 +623,9 @@
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]"
         }
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "valve_position": {
         "name": "Valve position"

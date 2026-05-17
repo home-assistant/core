@@ -775,7 +775,59 @@ async def test_general_diagnostics_fault_sensors(
     assert state
     assert state.state == "off"
 
+    set_node_attribute(matter_node, 0, 51, 6, [1])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 0, 51, 6, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
+    assert state
+    assert state.state == "off"
+
     # ActiveNetworkFaults (cluster 51, attr 7) = [] (no faults)
     state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
     assert state
     assert state.state == "off"
+
+    set_node_attribute(matter_node, 0, 51, 7, [1])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 0, 51, 7, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
+    assert state
+    assert state.state == "off"
+
+    entry = entity_registry.async_get(
+        "binary_sensor.m5stamp_lighting_app_hardware_faults"
+    )
+    assert entry
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_fault_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics fault binary sensors are disabled by default."""
+    for entity_id in (
+        "binary_sensor.m5stamp_lighting_app_hardware_faults",
+        "binary_sensor.m5stamp_lighting_app_radio_faults",
+        "binary_sensor.m5stamp_lighting_app_network_faults",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

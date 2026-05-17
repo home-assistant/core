@@ -791,6 +791,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -835,6 +836,7 @@
       'device_class': 'enum',
       'friendly_name': 'Aqara Door and Window Sensor P2 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -911,7 +913,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -951,7 +953,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Aqara Door and Window Sensor P2 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -1136,6 +1138,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -1180,6 +1183,7 @@
       'device_class': 'enum',
       'friendly_name': 'Aqara Motion and Light Sensor P2 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -1311,7 +1315,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1351,7 +1355,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Aqara Motion and Light Sensor P2 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -1536,6 +1540,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -1580,6 +1585,7 @@
       'device_class': 'enum',
       'friendly_name': 'Presence Multi-Sensor FP300 1 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -1824,7 +1830,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1864,7 +1870,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Presence Multi-Sensor FP300 1 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -2049,6 +2055,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -2093,6 +2100,7 @@
       'device_class': 'enum',
       'friendly_name': 'Climate Sensor W100 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -2441,7 +2449,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2481,7 +2489,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Climate Sensor W100 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -2561,6 +2569,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -2605,6 +2614,7 @@
       'device_class': 'enum',
       'friendly_name': 'Floor Heating Thermostat Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -2855,7 +2865,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2895,7 +2905,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Floor Heating Thermostat Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -3030,6 +3040,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -3074,6 +3085,7 @@
       'device_class': 'enum',
       'friendly_name': 'Aqara Smart Lock U200 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -3087,7 +3099,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_reboot_count-entry]
@@ -3150,7 +3162,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3190,7 +3202,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Aqara Smart Lock U200 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -3261,7 +3273,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3301,7 +3313,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Atios KNX Bridge Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -3442,6 +3454,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -3486,6 +3499,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Color Temperature Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -3499,7 +3513,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[color_temperature_light][sensor.mock_color_temperature_light_reboot_count-entry]
@@ -3562,7 +3576,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3602,7 +3616,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Color Temperature Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -3900,6 +3914,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -3944,6 +3959,7 @@
       'device_class': 'enum',
       'friendly_name': 'ecodeebot Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -4361,7 +4377,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4401,7 +4417,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'ecodeebot Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -4537,6 +4553,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -4581,6 +4598,7 @@
       'device_class': 'enum',
       'friendly_name': '2BAVS-AB6031X-44PE Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -4821,7 +4839,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4861,7 +4879,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '2BAVS-AB6031X-44PE Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -5048,7 +5066,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5088,7 +5106,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Door Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -5333,7 +5351,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5373,7 +5391,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Energy 20ECN4101 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -5676,7 +5694,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5716,7 +5734,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Energy Plug Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -6028,7 +6046,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6068,7 +6086,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Energy Plug Patched Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -6251,7 +6269,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6291,7 +6309,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Shutter Switch 20ECI1701 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -6536,7 +6554,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6576,7 +6594,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Thermo 20EBP1701 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -6811,7 +6829,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6851,7 +6869,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Thermo 20ECD1701 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -7260,7 +7278,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7300,7 +7318,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Eve Weather Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -7383,6 +7401,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -7427,6 +7446,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Extended Color Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -7440,7 +7460,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[extended_color_light][sensor.mock_extended_color_light_reboot_count-entry]
@@ -7503,7 +7523,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7543,7 +7563,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Extended Color Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -7678,6 +7698,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -7722,6 +7743,7 @@
       'device_class': 'enum',
       'friendly_name': 'HJMT-6B Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -8116,7 +8138,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8156,7 +8178,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'HJMT-6B Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -8509,7 +8531,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8549,7 +8571,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Smart CO sensor Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -8902,7 +8924,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8942,7 +8964,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Smart motion sensor Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -9127,6 +9149,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -9171,6 +9194,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smoke sensor Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -9184,7 +9208,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_reboot_count-entry]
@@ -9247,7 +9271,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9287,7 +9311,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Smoke sensor Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -9374,6 +9398,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -9418,6 +9443,7 @@
       'device_class': 'enum',
       'friendly_name': 'ALPSTUGA air quality monitor Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -9717,7 +9743,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9757,7 +9783,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'ALPSTUGA air quality monitor Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -10100,7 +10126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10140,7 +10166,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'BILRESA dual button Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -10854,7 +10880,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10894,7 +10920,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'BILRESA scroll wheel Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -10974,6 +11000,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -11018,6 +11045,7 @@
       'device_class': 'enum',
       'friendly_name': 'White Series OnOff Switch Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -11488,7 +11516,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11528,7 +11556,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'White Series OnOff Switch Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -11608,6 +11636,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -11652,6 +11681,7 @@
       'device_class': 'enum',
       'friendly_name': 'Inovelli Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -11665,7 +11695,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_config-entry]
@@ -11887,7 +11917,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11927,7 +11957,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Inovelli Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -11946,6 +11976,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -11990,6 +12021,7 @@
       'device_class': 'enum',
       'friendly_name': 'Longan link HVAC Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -12003,7 +12035,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
@@ -12182,7 +12214,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -12222,7 +12254,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Longan link HVAC Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -12363,6 +12395,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -12407,6 +12440,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Air Purifier Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -12420,7 +12454,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-entry]
@@ -13211,7 +13245,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13251,7 +13285,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Air Purifier Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -13867,7 +13901,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13907,7 +13941,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Battery Storage Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -13987,6 +14021,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14031,6 +14066,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Cooktop Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14044,7 +14080,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_cooktop][sensor.mock_cooktop_reboot_count-entry]
@@ -14165,7 +14201,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14205,7 +14241,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Cooktop Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -14224,6 +14260,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14268,6 +14305,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Dimmable Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14344,7 +14382,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14384,7 +14422,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Dimmable Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -14403,6 +14441,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14447,6 +14486,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dimmable Plugin Unit Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14460,7 +14500,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_dimmable_plugin_unit][sensor.dimmable_plugin_unit_reboot_count-entry]
@@ -14523,7 +14563,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14563,7 +14603,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Dimmable Plugin Unit Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -14582,6 +14622,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14626,6 +14667,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Door Lock Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14639,7 +14681,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_door_lock][sensor.mock_door_lock_reboot_count-entry]
@@ -14702,7 +14744,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14742,7 +14784,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Door Lock Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -14761,6 +14803,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14805,6 +14848,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Door Lock with unbolt Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -14818,7 +14862,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_reboot_count-entry]
@@ -14881,7 +14925,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14921,7 +14965,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Door Lock with unbolt Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -14994,6 +15038,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15038,6 +15083,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Extractor hood Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15051,7 +15097,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-entry]
@@ -15168,7 +15214,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15208,7 +15254,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Extractor hood Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -15227,6 +15273,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15271,6 +15318,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mocked Fan Switch Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15284,7 +15332,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_fan][sensor.mocked_fan_switch_reboot_count-entry]
@@ -15347,7 +15395,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15387,7 +15435,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mocked Fan Switch Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -15674,6 +15722,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15718,6 +15767,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Laundrydryer Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -15731,7 +15781,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_current_phase-entry]
@@ -15984,7 +16034,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16024,7 +16074,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Laundrydryer Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -16095,7 +16145,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16135,7 +16185,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Water Leak Detector Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -16209,6 +16259,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16253,6 +16304,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Lock Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16266,7 +16318,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-entry]
@@ -16435,7 +16487,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16475,7 +16527,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Lock Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -16494,6 +16546,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16538,6 +16591,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Microwave Oven Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16551,7 +16605,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_estimated_end_time-entry]
@@ -16793,7 +16847,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16833,7 +16887,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Microwave Oven Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -16852,6 +16906,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16896,6 +16951,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Mounted dimmable load control Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -16972,7 +17028,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17012,7 +17068,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Mounted dimmable load control Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -17031,6 +17087,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17075,6 +17132,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock OnOff Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17151,7 +17209,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17191,7 +17249,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock OnOff Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -17210,6 +17268,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17254,6 +17313,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock OnOff Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17330,7 +17390,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17370,7 +17430,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock OnOff Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -17389,6 +17449,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17433,6 +17494,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Light Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17509,7 +17571,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17549,7 +17611,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Light Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -17568,6 +17630,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17612,6 +17675,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Oven Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -17625,7 +17689,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_oven][sensor.mock_oven_current_phase-entry]
@@ -17928,7 +17992,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17968,7 +18032,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Oven Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -18389,7 +18453,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -18429,7 +18493,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Pump Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -18620,6 +18684,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -18664,6 +18729,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock solar inverter Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -18677,7 +18743,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_energy_exported-entry]
@@ -18862,7 +18928,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -18902,7 +18968,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock solar inverter Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -19034,7 +19100,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -19074,7 +19140,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock speaker Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -19151,6 +19217,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19195,6 +19262,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Thermostat Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19208,7 +19276,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_heating_demand-entry]
@@ -19438,7 +19506,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -19478,7 +19546,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Thermostat Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -19497,6 +19565,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19541,6 +19610,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Vacuum Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19554,7 +19624,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
@@ -19832,7 +19902,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -19872,7 +19942,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Vacuum Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -19942,6 +20012,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19986,6 +20057,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Valve Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -19999,7 +20071,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[mock_valve][sensor.mock_valve_reboot_count-entry]
@@ -20062,7 +20134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -20102,7 +20174,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock Valve Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -20278,6 +20350,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -20322,6 +20395,7 @@
       'device_class': 'enum',
       'friendly_name': 'Longan link WNCV DA01 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -20449,7 +20523,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -20489,7 +20563,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Longan link WNCV DA01 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -20614,6 +20688,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -20658,6 +20733,7 @@
       'device_class': 'enum',
       'friendly_name': 'D215S Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -20671,7 +20747,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[onoff_light_with_levelcontrol_present][sensor.d215s_reboot_count-entry]
@@ -20734,7 +20810,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -20774,7 +20850,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'D215S Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -20903,7 +20979,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -20943,7 +21019,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'X2S Smart Thermostat Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -21295,7 +21371,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -21335,7 +21411,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Robotic Vacuum Cleaner Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -21354,6 +21430,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -21398,6 +21475,7 @@
       'device_class': 'enum',
       'friendly_name': 'Secuyou Smart Lock Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -21474,7 +21552,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -21514,7 +21592,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Secuyou Smart Lock Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -21533,6 +21611,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -21577,6 +21656,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dishwasher Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -22027,7 +22107,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -22067,7 +22147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Dishwasher Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -23143,7 +23223,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23183,7 +23263,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'evse Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -23324,6 +23404,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -23368,6 +23449,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL_Fan Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -23444,7 +23526,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23484,7 +23566,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'SL_Fan Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -23503,6 +23585,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -23547,6 +23630,7 @@
       'device_class': 'enum',
       'friendly_name': 'LaundryWasher Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24057,7 +24141,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -24097,7 +24181,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'LaundryWasher Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -24116,6 +24200,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24160,6 +24245,7 @@
       'device_class': 'enum',
       'friendly_name': 'Light switch example Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24289,7 +24375,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -24329,7 +24415,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Light switch example Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -24348,6 +24434,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24392,6 +24479,7 @@
       'device_class': 'enum',
       'friendly_name': 'SL-RangeHood Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24468,7 +24556,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -24508,7 +24596,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'SL-RangeHood Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -24527,6 +24615,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24571,6 +24660,7 @@
       'device_class': 'enum',
       'friendly_name': 'Refrigerator Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -24647,7 +24737,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -24687,7 +24777,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Refrigerator Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -25610,7 +25700,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -25650,7 +25740,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Water Heater Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -25730,6 +25820,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -25774,6 +25865,7 @@
       'device_class': 'enum',
       'friendly_name': 'K11+ Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -25787,7 +25879,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unspecified',
   })
 # ---
 # name: test_sensors[switchbot_k11_plus][sensor.k11_operational_error-entry]
@@ -26014,7 +26106,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26054,7 +26146,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'K11+ Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -26073,6 +26165,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -26117,6 +26210,7 @@
       'device_class': 'enum',
       'friendly_name': 'Smart Radiator Thermostat X Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -26306,7 +26400,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26346,7 +26440,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Smart Radiator Thermostat X Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -26365,6 +26459,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -26409,6 +26504,7 @@
       'device_class': 'enum',
       'friendly_name': 'YNDX-00540 Boot reason',
       'options': list([
+        'unspecified',
         'power_on_reboot',
         'brown_out_reset',
         'software_watchdog_reset',
@@ -26601,7 +26697,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26641,7 +26737,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'YNDX-00540 Uptime',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
