@@ -18,15 +18,18 @@ from .conftest import MockOverkizClient, SetupOverkizIntegration
 
 from tests.common import load_json_array_fixture, snapshot_platform
 
+SCENARIO_FIXTURES = [
+    "scenarios/cozytouch.json",
+    "scenarios/tahoma_box_v1.json",
+    "scenarios/tahoma_classic_v2.json",
+    "scenarios/tahoma_switch.json",
+]
+
 
 def load_scenarios_fixture(fixture: str) -> list[Scenario]:
     """Load scenario fixture and return Scenario objects."""
     data = load_json_array_fixture(fixture, DOMAIN)
     return [Scenario(**humps.decamelize(s)) for s in data]
-
-
-TAHOMA_SWITCH_SCENARIOS = load_scenarios_fixture("scenarios/tahoma_switch.json")
-COZYTOUCH_SCENARIOS = load_scenarios_fixture("scenarios/cozytouch.json")
 
 
 @pytest.fixture(autouse=True)
@@ -36,15 +39,18 @@ def fixture_platforms() -> Generator[None]:
         yield
 
 
+@pytest.mark.parametrize("fixture", SCENARIO_FIXTURES)
 async def test_scene_entities_snapshot(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     mock_client: MockOverkizClient,
     snapshot: SnapshotAssertion,
+    fixture: str,
 ) -> None:
-    """Test scene entities via snapshot."""
-    mock_client.get_scenarios = AsyncMock(return_value=COZYTOUCH_SCENARIOS)
+    """Test scene entities via snapshot for each fixture."""
+    scenarios = load_scenarios_fixture(fixture)
+    mock_client.get_scenarios = AsyncMock(return_value=scenarios)
 
     config_entry = await setup_overkiz_integration()
 
@@ -57,7 +63,8 @@ async def test_scene_activate(
     mock_client: MockOverkizClient,
 ) -> None:
     """Test activating a scene calls execute_scenario with the correct OID."""
-    mock_client.get_scenarios = AsyncMock(return_value=TAHOMA_SWITCH_SCENARIOS)
+    scenarios = load_scenarios_fixture("scenarios/tahoma_switch.json")
+    mock_client.get_scenarios = AsyncMock(return_value=scenarios)
     mock_client.execute_scenario = AsyncMock(return_value="exec-1")
 
     await setup_overkiz_integration()
@@ -80,7 +87,8 @@ async def test_scene_activate_multiple(
     mock_client: MockOverkizClient,
 ) -> None:
     """Test activating different scenes uses the correct OID for each."""
-    mock_client.get_scenarios = AsyncMock(return_value=COZYTOUCH_SCENARIOS)
+    scenarios = load_scenarios_fixture("scenarios/cozytouch.json")
+    mock_client.get_scenarios = AsyncMock(return_value=scenarios)
     mock_client.execute_scenario = AsyncMock(return_value="exec-1")
 
     await setup_overkiz_integration()

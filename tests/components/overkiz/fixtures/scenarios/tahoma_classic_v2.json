@@ -1,0 +1,94 @@
+[
+  {
+    "creationTime": 1550508542000,
+    "lastUpdateTime": 1602072175000,
+    "label": "** **",
+    "shortcut": false,
+    "notificationTypeMask": 0,
+    "notificationCondition": "NEVER",
+    "actions": [
+      {
+        "deviceURL": "rts://1234-5678-1234/16765962",
+        "commands": [
+          {
+            "type": 1,
+            "name": "my",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "deviceURL": "rts://1234-5678-1234/16755525",
+        "commands": [
+          {
+            "type": 1,
+            "name": "my",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "deviceURL": "rts://1234-5678-1234/16737657",
+        "commands": [
+          {
+            "type": 1,
+            "name": "my",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "deviceURL": "io://1234-5678-1234/16108086",
+        "commands": [
+          {
+            "type": 1,
+            "name": "on",
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "oid": "353d8f5d-8854-4b12-9b71-2cf8621e2d0c"
+  },
+  {
+    "creationTime": 1550508523000,
+    "lastUpdateTime": 1602072175000,
+    "label": "** **",
+    "shortcut": false,
+    "notificationTypeMask": 0,
+    "notificationCondition": "NEVER",
+    "actions": [
+      {
+        "deviceURL": "rts://1234-5678-1234/16765962",
+        "commands": [
+          {
+            "type": 1,
+            "name": "open",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "deviceURL": "rts://1234-5678-1234/16755525",
+        "commands": [
+          {
+            "type": 1,
+            "name": "open",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "deviceURL": "rts://1234-5678-1234/16737657",
+        "commands": [
+          {
+            "type": 1,
+            "name": "open",
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    "oid": "b6b921ee-a5a8-44cb-a54d-76d1ce9cc899"
+  }
+]
