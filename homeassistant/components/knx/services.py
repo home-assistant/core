@@ -132,7 +132,7 @@ async def service_event_register_modify(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="service_event_register_ga_not_found",
             translation_placeholders={
-                "group_addresses": ", ".join(map(str, _error_gas))
+                "group_addresses": ", ".join(map(str, sorted(_error_gas)))
             },
         )
 
