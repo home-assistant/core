@@ -103,7 +103,10 @@ GV5125_BUTTON_1_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-36,
     manufacturer_data={
         60552: b"\x01\n.\xaf\xd9085Sg\x01\x01",
-        61320: b".\xaf\x00\x00\xfb\x0e\xc9h\xd7\x05l\xaf*\xf3\x1b\xe8w\xf1\xe1\xe8\xe3\xa7\xf8\xc6",
+        61320: (
+            b".\xaf\x00\x00\xfb\x0e\xc9h\xd7\x05l\xaf*\xf3\x1b"
+            b"\xe8w\xf1\xe1\xe8\xe3\xa7\xf8\xc6"
+        ),
     },
     service_data={},
     service_uuids=[],
@@ -116,7 +119,9 @@ GV5121_MOTION_SERVICE_INFO = BluetoothServiceInfo(
     address="C1:37:37:32:0F:45",
     rssi=-36,
     manufacturer_data={
-        61320: b"Y\x94\x00\x00\xf0\xb9\x197\xaeP\xb67,\x86j\xc2\xf3\xd0a\xe7\x17\xc0,\xef"
+        61320: (
+            b"Y\x94\x00\x00\xf0\xb9\x197\xaeP\xb67,\x86j\xc2\xf3\xd0a\xe7\x17\xc0,\xef"
+        )
     },
     service_data={},
     service_uuids=[],
@@ -129,7 +134,10 @@ GV5121_MOTION_SERVICE_INFO_2 = BluetoothServiceInfo(
     address="C1:37:37:32:0F:45",
     rssi=-36,
     manufacturer_data={
-        61320: b"Y\x94\x00\x06\xa3f6e\xc8\xe6\xfdv\x04\xaf\xe7k\xbf\xab\xeb\xbf\xb3\xa3\xd5\x19"
+        61320: (
+            b"Y\x94\x00\x06\xa3f6e\xc8\xe6\xfdv\x04\xaf\xe7k"
+            b"\xbf\xab\xeb\xbf\xb3\xa3\xd5\x19"
+        )
     },
     service_data={},
     service_uuids=[],

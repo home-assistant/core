@@ -22,20 +22,6 @@ from homeassistant.helpers.service_info.ssdp import (
 ATTR_HOST = "host"
 ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
 
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_DEVICES: [
-            {
-                CONF_HOST: "fake_host",
-                CONF_PORT: "1234",
-                CONF_PASSWORD: "fake_pass",
-                CONF_USERNAME: "fake_user",
-                CONF_SSL: False,
-            }
-        ]
-    }
-}
-
 MOCK_HOST = "fake_host"
 MOCK_IPS = {
     "fritz.box": "192.168.178.1",
@@ -92,7 +78,16 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     "LANConfigSecurity1": {
         "X_AVM-DE_GetCurrentUser": {
             "NewX_AVM-DE_CurrentUsername": "fake_user",
-            "NewX_AVM-DE_CurrentUserRights": "<rights><path>BoxAdmin</path><access>readwrite</access><path>Phone</path><access>readwrite</access><path>Dial</path><access>readwrite</access><path>NAS</path><access>none</access><path>HomeAuto</path><access>readwrite</access><path>App</path><access>readwrite</access></rights>",
+            "NewX_AVM-DE_CurrentUserRights": (
+                "<rights>"
+                "<path>BoxAdmin</path><access>readwrite</access>"
+                "<path>Phone</path><access>readwrite</access>"
+                "<path>Dial</path><access>readwrite</access>"
+                "<path>NAS</path><access>none</access>"
+                "<path>HomeAuto</path><access>readwrite</access>"
+                "<path>App</path><access>readwrite</access>"
+                "</rights>"
+            ),
         }
     },
     "Layer3Forwarding1": {
@@ -950,7 +945,9 @@ MOCK_HOST_ATTRIBUTES_DATA = [
         "X_AVM-DE_UpdateAvailable": False,
         "X_AVM-DE_UpdateSuccessful": "unknown",
         "X_AVM-DE_InfoURL": None,
-        "X_AVM-DE_MACAddressList": f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}",
+        "X_AVM-DE_MACAddressList": (
+            f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}"
+        ),
         "X_AVM-DE_Model": None,
         "X_AVM-DE_URL": f"http://{MOCK_IPS['fritz.box']}",
         "X_AVM-DE_Guest": False,
@@ -993,7 +990,19 @@ MOCK_HOST_ATTRIBUTES_DATA = [
 MOCK_CALL_DEFLECTION_DATA = {
     "X_AVM-DE_OnTel1": {
         "GetDeflections": {
-            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>1</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+            "NewDeflectionList": (
+                "<List><Item>"
+                "<DeflectionId>0</DeflectionId>"
+                "<Enable>1</Enable>"
+                "<Type>fromAll</Type>"
+                "<Number></Number>"
+                "<DeflectionToNumber>+1234657890"
+                "</DeflectionToNumber>"
+                "<Mode>eImmediately</Mode>"
+                "<Outgoing></Outgoing>"
+                "<PhonebookID></PhonebookID>"
+                "</Item></List>"
+            )
         }
     }
 }
@@ -1004,14 +1013,23 @@ MOCK_STATUS_AVM_DEVICE_LOG_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"][
     "NewDeviceLog"
 ]
 
-MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
+MOCK_USER_DATA = {
+    CONF_HOST: "fake_host",
+    CONF_PORT: 1234,
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_SSL: False,
+}
+
+MOCK_CONFIG = {DOMAIN: {CONF_DEVICES: [MOCK_USER_DATA]}}
+
 MOCK_USER_INPUT_SIMPLE = {
     CONF_HOST: "fake_host",
     CONF_PASSWORD: "fake_pass",
     CONF_USERNAME: "fake_user",
     CONF_SSL: False,
 }
+"""User input data without optional port."""
 
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
@@ -1027,4 +1045,22 @@ MOCK_SSDP_DATA = SsdpServiceInfo(
     },
 )
 
-MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>HomeAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'
+MOCK_REQUEST = (
+    b'<?xml version="1.0" encoding="utf-8"?>'
+    b"<SessionInfo>"
+    b"<SID>xxxxxxxxxxxxxxxx</SID>"
+    b"<Challenge>xxxxxxxx</Challenge>"
+    b"<BlockTime>0</BlockTime>"
+    b"<Rights>"
+    b"<Name>Dial</Name><Access>2</Access>"
+    b"<Name>App</Name><Access>2</Access>"
+    b"<Name>HomeAuto</Name><Access>2</Access>"
+    b"<Name>BoxAdmin</Name><Access>2</Access>"
+    b"<Name>Phone</Name><Access>2</Access>"
+    b"<Name>NAS</Name><Access>2</Access>"
+    b"</Rights>"
+    b"<Users>"
+    b'<User last="1">FakeFritzUser</User>'
+    b"</Users>"
+    b"</SessionInfo>\n"
+)
