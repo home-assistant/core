@@ -201,7 +201,8 @@ TEMPERATURE_SENSOR_CONFIG = {
             ["sensor.tasmota_tx23_speed_act", "sensor.tasmota_tx23_dir_card"],
             (
                 '{"TX23":{"Speed":{"Act":"12.3"},"Dir": {"Card": "WSW"}}}',
-                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},"Dir": {"Card": "ESE"}}}}',
+                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},'
+                '"Dir": {"Card": "ESE"}}}}',
             ),
         ),
         (
@@ -239,8 +240,10 @@ TEMPERATURE_SENSOR_CONFIG = {
             LIST_SENSOR_CONFIG_2,
             ["sensor.tasmota_energy_total_0", "sensor.tasmota_energy_total_1"],
             (
-                '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
+                '{"ENERGY":{"Total":[1.2, 3.4],'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],'
+                '"TotalStartTime":"2018-11-23T16:33:47"}}}',
             ),
         ),
         # Test dict Total sensors
@@ -251,8 +254,11 @@ TEMPERATURE_SENSOR_CONFIG = {
                 "sensor.tasmota_energy_total_phase2",
             ],
             (
-                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":{"Phase1":5.6, "Phase2":7.8},"TotalStartTime":"2018-11-23T15:33:47"}}}',
+                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":'
+                '{"Total":{"Phase1":5.6, "Phase2":7.8},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}}',
             ),
         ),
         (
@@ -292,7 +298,8 @@ TEMPERATURE_SENSOR_CONFIG = {
                 ),
             ),
         ),
-        # Test we automatically set state class to measurement on unknown numerical sensors
+        # Test we automatically set state class to measurement on
+        # unknown numerical sensors
         (
             DEFAULT_SENSOR_CONFIG_UNKNOWN,
             [

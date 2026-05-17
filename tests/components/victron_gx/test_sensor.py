@@ -126,7 +126,7 @@ async def test_victron_main_topic_sensor(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor whose metric has main_topic=True keeps translation key and uses device name."""
+    """Test sensor with main_topic=True keeps translation key and device name."""
     victron_hub, mock_config_entry = init_integration
 
     # Multi RS MPPT MppOperationMode is a main_topic metric

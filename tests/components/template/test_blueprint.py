@@ -229,7 +229,7 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
 
 
 async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> None:
-    """Test a state based blueprint initializes icon, name, and picture with variables."""
+    """Test blueprint initializes icon, name, and picture with variables."""
     blueprint = "test_init_attribute_variables.yaml"
     source = "switch.foo"
     entity_id = "sensor.foo"

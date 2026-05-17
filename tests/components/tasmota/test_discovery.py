@@ -400,7 +400,8 @@ async def test_device_remove_multiple_config_entries_2(
     assert device_entry.config_entries == {tasmota_entry.entry_id}
     mqtt_mock.async_publish.assert_not_called()
 
-    # Remove other config entry from the other device - Tasmota should not do any cleanup
+    # Remove other config entry from the other device
+    # Tasmota should not do any cleanup
     device_registry.async_update_device(
         other_device_entry.id, remove_config_entry_id=mock_entry.entry_id
     )

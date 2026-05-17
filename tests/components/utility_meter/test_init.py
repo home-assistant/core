@@ -553,7 +553,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_entity_entry: er.RegistryEntry,
     expected_entities: set[str],
 ) -> None:
-    """Test the utility_meter config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -628,7 +628,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     sensor_entity_entry: er.RegistryEntry,
     expected_entities: set[str],
 ) -> None:
-    """Test the utility_meter config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     # Add another config entry to the sensor device
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)

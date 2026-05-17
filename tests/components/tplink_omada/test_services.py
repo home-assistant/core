@@ -140,7 +140,7 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconnect client service raises the right kind of exception on service failure."""
+    """Test reconnect client service raises correct exception on failure."""
 
     mock_config_entry.add_to_hass(hass)
 

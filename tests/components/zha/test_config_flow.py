@@ -476,7 +476,7 @@ async def test_legacy_zeroconf_discovery_ip_change_ignored(hass: HomeAssistant) 
 async def test_legacy_zeroconf_discovery_confirm_final_abort_if_entries(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery aborts if ZHA was set up after the confirmation dialog is shown."""
+    """Test discovery aborts if ZHA set up after confirmation shown."""
     service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.200"),
         ip_addresses=[ip_address("192.168.1.200")],
@@ -793,7 +793,7 @@ async def test_multiple_zha_entries_aborts(hass: HomeAssistant, mock_app) -> Non
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_discovery_via_usb_duplicate_unique_id(hass: HomeAssistant) -> None:
-    """Test USB discovery when a config entry with a duplicate unique_id already exists."""
+    """Test USB discovery with duplicate unique_id config entry."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1006,7 +1006,7 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
 async def test_zeroconf_discovery_via_socket_already_setup_with_ip_match(
     hass: HomeAssistant,
 ) -> None:
-    """Test zeroconf discovery aborting when ZHA is already setup with socket and one IP matches."""
+    """Test zeroconf aborts when ZHA uses socket with matching IP."""
     MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE: {CONF_DEVICE_PATH: "socket://192.168.1.101:6638"}},
@@ -2744,7 +2744,8 @@ async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
             context={CONF_SOURCE: "choose_serial_port"},
             data={
                 CONF_DEVICE_PATH: (
-                    "/dev/ttyUSB1234 - Some serial port, s/n: 1234 - Virtual serial port"
+                    "/dev/ttyUSB1234 - Some serial port,"
+                    " s/n: 1234 - Virtual serial port"
                 )
             },
         )
@@ -2919,7 +2920,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
     backup,
     hass: HomeAssistant,
 ) -> None:
-    """Test restoring a manual backup on EZSP coordinators (overwrite IEEE) with a write failure."""
+    """Test restoring manual backup on EZSP with a write failure."""
     advanced_strategy_result = await advanced_pick_radio(RadioType.ezsp)
 
     upload_backup_result = await hass.config_entries.flow.async_configure(
@@ -3064,11 +3065,13 @@ async def test_plug_in_new_radio_retry(
             new_callable=DelayedAsyncMock,
             side_effect=[
                 HomeAssistantError(
-                    "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
+                    "Failed to connect to Zigbee adapter:"
+                    " [Errno 2] No such file or directory"
                 ),
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 HomeAssistantError(
-                    "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
+                    "Failed to connect to Zigbee adapter:"
+                    " [Errno 2] No such file or directory"
                 ),
                 None,
             ],

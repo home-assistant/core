@@ -69,7 +69,7 @@ def _get_hass_service_info_mock(
 async def test_instance_id_conflict_creates_repair_issue_remove(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test that a repair issue is created on instance ID conflict and gets removed when instance disappears."""
+    """Test repair issue on instance ID conflict removed on disappear."""
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
         patch.object(
@@ -115,7 +115,7 @@ async def test_instance_id_conflict_creates_repair_issue_remove(
 async def test_instance_id_conflict_creates_repair_issue_changing_id(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test that a repair issue is created on instance ID conflict and gets removed when instance ID changes."""
+    """Test repair issue on instance ID conflict removed on ID change."""
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
         patch.object(
@@ -170,7 +170,7 @@ async def test_instance_id_conflict_creates_repair_issue_changing_id(
 async def test_instance_id_no_repair_issue_own_ip(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test that no repair issue is created when the other instance ID matches our IP."""
+    """Test no repair issue when other instance ID matches our IP."""
     with (
         patch("homeassistant.helpers.instance_id.async_get", return_value="abc123"),
         patch.object(discovery, "AsyncServiceBrowser", side_effect=service_update_mock),

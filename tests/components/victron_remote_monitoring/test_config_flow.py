@@ -118,7 +118,8 @@ async def test_user_step_errors_then_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     flow_id = result["flow_id"]
-    # First call raises/returns error via side_effect, we then clear and set return value
+    # First call raises/returns error via side_effect,
+    # we then clear and set return value
     mock_vrm_client.users.list_sites.side_effect = side_effect
     result_err = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_API_TOKEN: "token"}
@@ -204,7 +205,7 @@ async def test_select_site_errors(
 async def test_select_site_duplicate_aborts(
     hass: HomeAssistant, mock_vrm_client: AsyncMock
 ) -> None:
-    """Selecting an already configured site aborts during the select step (multi-site)."""
+    """Selecting already configured site aborts during select step."""
     site_id = 555
     # Existing entry with same site id
 

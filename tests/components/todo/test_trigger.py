@@ -522,7 +522,7 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test removing and re-adding an entity to a target does not fire stale triggers."""
+    """Test removing and re-adding entity to target does not fire stale triggers."""
     label_both = label_registry.async_get_label_by_name("label_both_lists")
     assert label_both is not None
     label_both_id = label_both.label_id

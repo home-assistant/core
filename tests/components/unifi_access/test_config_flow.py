@@ -362,7 +362,7 @@ async def test_user_flow_ssl_context(
     verify_ssl: bool,
     expected_ssl_context_type: type,
 ) -> None:
-    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    """Test no-verify SSL context is passed when verify_ssl is False."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -803,7 +803,7 @@ async def test_discovery_ignored_entry(
 async def test_discovery_fallback_name_from_mac(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test discovery confirm uses MAC-based name when hostname and platform are absent."""
+    """Test discovery uses MAC-based name when hostname and platform are absent."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},

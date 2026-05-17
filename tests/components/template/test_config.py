@@ -131,7 +131,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+            "The auto_off option for template binary sensor:"
+            " name: Template Binary Sensor",
         ),
         (
             {
@@ -172,7 +173,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
         (
             {
@@ -195,7 +197,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
     ],
 )
@@ -376,7 +379,7 @@ async def test_combined_trigger_variables(
 async def test_state_init_attribute_variables(
     hass: HomeAssistant,
 ) -> None:
-    """Test a state based template entity initializes icon, name, and picture with variables."""
+    """Test state based template entity initializes attributes with variables."""
     source = "switch.foo"
     entity_id = "sensor.foo"
 
@@ -396,7 +399,9 @@ async def test_state_init_attribute_variables(
                     },
                     "name": "{{ state_attr(switch, 'friendly_name') }}",
                     "icon": "{{ on_icon if is_state(switch, 'on') else off_icon }}",
-                    "picture": "{{ on_picture if is_state(switch, 'on') else off_picture }}",
+                    "picture": (
+                        "{{ on_picture if is_state(switch, 'on') else off_picture }}"
+                    ),
                     "state": "{{ is_state(switch, 'on') }}",
                 },
             }
@@ -436,7 +441,8 @@ async def test_state_init_attribute_variables(
             {
                 "trigger": {"trigger": "event", "event_type": "my_event"},
             },
-            "Invalid template configuration found, trigger option is missing matching domain",
+            "Invalid template configuration found, trigger option is"
+            " missing matching domain",
         ),
         (
             {
@@ -520,10 +526,24 @@ async def test_multiple_configuration_keys(
                                 "action": "cover.stop_cover",
                             },
                             "default_entity_id": "cover.shades_reversed",
-                            "icon": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n   mdi:curtains-closed\n{% else %}\n   mdi:curtains\n{% endif %}",
+                            "icon": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n"
+                                "   mdi:curtains-closed\n"
+                                "{% else %}\n"
+                                "   mdi:curtains\n"
+                                "{% endif %}"
+                            ),
                             "name": "Shades Reversed",
                             "unique_id": "c0223bcb-32c6-430e-a2c1-3545f8031796",
-                            "state": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n  closed\n{% elif s == 'closed' %}\n  open\n{% elif s == 'opening' %}\n  closing\n{% elif s == 'closing' %}\n  opening\n{% else %}\n  unknown\n{% endif %}",
+                            "state": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n  closed\n"
+                                "{% elif s == 'closed' %}\n  open\n"
+                                "{% elif s == 'opening' %}\n  closing\n"
+                                "{% elif s == 'closing' %}\n  opening\n"
+                                "{% else %}\n  unknown\n{% endif %}"
+                            ),
                         }
                     ]
                 },

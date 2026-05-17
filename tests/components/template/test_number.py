@@ -266,7 +266,9 @@ def _verify(
     [
         (
             {
-                CONF_ICON: "{% if states.number.test_state.state == '1' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.number.test_state.state == '1' %}mdi:check{% endif %}"
+                ),
                 **TEST_REQUIRED,
             },
             ATTR_ICON,
@@ -274,7 +276,9 @@ def _verify(
         ),
         (
             {
-                CONF_PICTURE: "{% if states.number.test_state.state == '1' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.number.test_state.state == '1' %}check.jpg{% endif %}"
+                ),
                 **TEST_REQUIRED,
             },
             ATTR_ENTITY_PICTURE,
@@ -425,7 +429,9 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
             {
                 "set_value": [],
                 "state": "{{ states('number.test_state') }}",
-                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+                "availability": (
+                    "{{ is_state('binary_sensor.test_availability', 'on') }}"
+                ),
             },
         )
     ],

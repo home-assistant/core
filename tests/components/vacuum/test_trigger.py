@@ -117,7 +117,7 @@ async def test_vacuum_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
+    """Test vacuum state trigger fires when any vacuum changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_vacuums,
@@ -175,7 +175,7 @@ async def test_vacuum_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
+    """Test vacuum state trigger fires when first vacuum changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_vacuums,
@@ -233,7 +233,7 @@ async def test_vacuum_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
+    """Test vacuum state trigger fires when last vacuum changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_vacuums,

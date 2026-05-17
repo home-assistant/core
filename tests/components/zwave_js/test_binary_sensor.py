@@ -76,7 +76,7 @@ def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
 
 
 def _add_barrier_status_value(node_state: dict[str, Any]) -> dict[str, Any]:
-    """Return a node state with a Barrier status Access Control notification value added."""
+    """Return node state with Barrier status notification added."""
     updated_state = copy.deepcopy(node_state)
     updated_state["values"].append(
         {
@@ -112,7 +112,7 @@ def _add_barrier_status_value(node_state: dict[str, Any]) -> dict[str, Any]:
 def _move_notification_values_to_endpoint(
     node_state: dict[str, Any], endpoint: int
 ) -> dict[str, Any]:
-    """Return a node state with all Notification CC values moved to a different endpoint."""
+    """Return node state with Notification CC values on new endpoint."""
     updated_state = copy.deepcopy(node_state)
     for value_data in updated_state["values"]:
         if value_data.get("commandClass") == 113:
@@ -288,7 +288,8 @@ async def test_disabled_legacy_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
 ) -> None:
     """Test disabled legacy boolean binary sensor."""
-    # this node has Notification CC implemented so legacy binary sensor should be disabled
+    # this node has Notification CC implemented so legacy binary
+    # sensor should be disabled
 
     entity_id = DISABLED_LEGACY_BINARY_SENSOR
     state = hass.states.get(entity_id)
@@ -906,7 +907,7 @@ async def test_access_control_lock_state_notification_sensors(
     client,
     lock_august_asl03_state,
 ) -> None:
-    """Test Access Control lock state notification sensors from new discovery schemas."""
+    """Test Access Control lock state notification from new schemas."""
     node = Node(client, _add_lock_state_notification_states(lock_august_asl03_state))
     client.driver.controller.nodes[node.node_id] = node
 
@@ -944,7 +945,7 @@ async def test_access_control_catch_all_with_opening_state_present(
     client,
     hoppe_ehandle_connectsense_state,
 ) -> None:
-    """Test that unrelated Access Control values are discovered even when Opening state is present."""
+    """Test unrelated Access Control values found with Opening state."""
     node = Node(
         client,
         _add_barrier_status_value(hoppe_ehandle_connectsense_state),
@@ -967,7 +968,8 @@ async def test_access_control_catch_all_with_opening_state_present(
         and "barrier" in reg_entry.original_name.lower()
     ]
     assert len(barrier_entries) == 2, (
-        f"Expected 2 barrier status sensors, got {[e.original_name for e in barrier_entries]}"
+        "Expected 2 barrier status sensors, got"
+        f" {[e.original_name for e in barrier_entries]}"
     )
     for reg_entry in barrier_entries:
         state = hass.states.get(reg_entry.entity_id)

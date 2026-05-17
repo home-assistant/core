@@ -1672,7 +1672,8 @@ async def _test_self_reset(
 
     now += timedelta(seconds=30)
     with freeze_time(now):
-        # Listen for events and check that state in the first event after reset is actually 0, issue #142053
+        # Listen for events and check that state in the first event
+        # after reset is actually 0, issue #142053
         events = []
 
         async def handle_energy_bill_event(event):
@@ -1712,7 +1713,8 @@ async def _test_self_reset(
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
 
-    # Check next day when nothing should happen for weekly, monthly, bimonthly and yearly
+    # Check next day when nothing should happen for weekly,
+    # monthly, bimonthly and yearly
     if config["utility_meter"]["energy_bill"].get("cycle") in [
         QUARTER_HOURLY,
         HOURLY,
@@ -1982,7 +1984,7 @@ def test_calculate_adjustment_invalid_new_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that calculate_adjustment method returns None if the new state is invalid."""
+    """Test calculate_adjustment returns None if the new state is invalid."""
     mock_sensor = UtilityMeterSensor(
         hass,
         cron_pattern=None,
@@ -2009,7 +2011,7 @@ async def test_unit_of_measurement_missing_invalid_new_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a suggestion is created when new_state is missing unit_of_measurement."""
+    """Test suggestion is created when new_state has no unit_of_measurement."""
     yaml_config = {
         "utility_meter": {
             "energy_bill": {

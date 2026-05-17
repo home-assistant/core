@@ -180,7 +180,7 @@ async def test_step_import_load_json(hass: HomeAssistant, mock_tellduslive) -> N
 
 @pytest.mark.parametrize("supports_local_api", [False])
 async def test_step_disco_no_local_api(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test that we trigger when configuring from discovery, not supporting local api."""
+    """Test configuring from discovery, not supporting local api."""
     flow = init_config_flow(hass)
     flow.context = {"source": SOURCE_DISCOVERY}
 

@@ -144,7 +144,7 @@ async def test_timer_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when any timer's last_transition changes to a specific value."""
+    """Test timer trigger fires on any timer last_transition change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_timers,
@@ -202,7 +202,7 @@ async def test_timer_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when the first timer's last_transition changes to a specific value."""
+    """Test timer trigger fires on first timer last_transition change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_timers,
@@ -260,7 +260,7 @@ async def test_timer_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when the last timer's last_transition changes to a specific value."""
+    """Test timer trigger fires on last timer last_transition change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_timers,
@@ -388,7 +388,7 @@ async def test_time_remaining_trigger_paused_before_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer is paused before threshold."""
+    """Test time_remaining trigger does not fire when timer is paused."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -427,7 +427,7 @@ async def test_time_remaining_trigger_cancelled_before_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer is cancelled before threshold."""
+    """Test time_remaining trigger does not fire when timer is cancelled."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -516,7 +516,7 @@ async def test_time_remaining_trigger_short_timer(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer duration is shorter than remaining threshold."""
+    """Test time_remaining trigger skips when duration < threshold."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -585,7 +585,7 @@ async def test_time_remaining_trigger_already_active_past_threshold_at_attach(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test trigger does not schedule for timers already past the fire point at attach."""
+    """Test trigger ignores timers already past the fire point at attach."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 

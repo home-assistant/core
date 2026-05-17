@@ -450,7 +450,7 @@ async def test_indicator_test(
 async def test_light_device_class_is_null(
     hass: HomeAssistant, client, light_device_class_is_null, integration
 ) -> None:
-    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+    """Test Multilevel Switch CC with null device class is a light.
 
     Tied to #117121.
     """

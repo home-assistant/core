@@ -33,7 +33,7 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only set up the required platform and required base platforms to speed up tests."""
+    """Only set up required platform and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):

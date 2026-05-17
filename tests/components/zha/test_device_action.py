@@ -30,7 +30,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only set up the required platforms and required base platforms to speed up tests."""
+    """Only set up required platforms and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -273,7 +273,8 @@ async def test_client_unique_id_suffix_stripped(
                     "platform": "event",
                     "event_type": "zha_event",
                     "event_data": {
-                        "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006",  # no `_CLIENT` suffix
+                        # no `_CLIENT` suffix
+                        "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006",
                         "endpoint_id": 1,
                         "cluster_id": 6,
                         "command": "on",

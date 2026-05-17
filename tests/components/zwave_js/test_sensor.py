@@ -359,7 +359,7 @@ async def test_config_parameter_sensor(
 async def test_controller_status_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, client, integration
 ) -> None:
-    """Test controller status sensor is created and gets updated on controller state changes."""
+    """Test controller status sensor updates on state changes."""
     entity_id = "sensor.z_stick_gen5_usb_controller_status"
     entity_entry = entity_registry.async_get(entity_id)
 
@@ -710,8 +710,8 @@ async def test_special_meters(
             ],
         }
     )
-    # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to the state so we can test that
-    # it is handled differently (no device class)
+    # Add an ElectricScale.KILOVOLT_AMPERE_REACTIVE value to test
+    # that it is handled differently (no device class)
     node_data["values"].append(
         {
             "endpoint": 11,

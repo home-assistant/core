@@ -1168,8 +1168,9 @@ async def test_light_color_only(
 
     client.async_send_command.reset_mock()
 
-    # Assert that turning on light after off call with unknown off color/brightness state
-    # works and that light turns on to white with specified brightness
+    # Assert that turning on light after off call with unknown off
+    # color/brightness state works and turns on to white with
+    # specified brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,

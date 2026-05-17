@@ -1186,7 +1186,7 @@ async def test_trigger_with_negative_time_periods(
 async def test_trigger_template_delay_with_multiple_triggers(
     hass: HomeAssistant, delay_state: str, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test trigger based binary sensor with multiple triggers occurring during the delay."""
+    """Test trigger based binary sensor with multiple triggers during delay."""
     for _ in range(10):
         # State should still be unknown
         state = hass.states.get(TEST_BINARY_SENSOR.entity_id)

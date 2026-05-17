@@ -427,6 +427,8 @@ async def test_open_throws_hass_service_not_supported_error(
     data = {ATTR_ENTITY_ID: entity_id}
     with pytest.raises(
         ServiceNotSupported,
-        match=f"Entity {entity_id} does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
+        match=(
+            f"Entity {entity_id} does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}"
+        ),
     ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)

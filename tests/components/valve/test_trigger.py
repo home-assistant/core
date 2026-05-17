@@ -116,7 +116,7 @@ async def test_valve_state_trigger_behavior_any(
     trigger_options: dict[str, Any] | None,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the valve state trigger fires when any valve state changes to a specific state."""
+    """Test valve state trigger fires when any valve changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_valves,
@@ -145,7 +145,7 @@ async def test_valve_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the valve state trigger fires when the first valve changes to a specific state."""
+    """Test valve state trigger fires when first valve changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_valves,
@@ -174,7 +174,7 @@ async def test_valve_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the valve state trigger fires when the last valve changes to a specific state."""
+    """Test valve state trigger fires when last valve changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_valves,

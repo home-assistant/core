@@ -964,7 +964,8 @@ async def test_vehicle_detection_multiple_thumbnails(
 
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
 
-    # Create event with multiple vehicle thumbnails - best should be highest confidence LPR
+    # Create event with multiple vehicle thumbnails
+    # best should be highest confidence LPR
     event = Event(
         model=ModelType.EVENT,
         id="test_multi_thumbnail_id",
@@ -1605,5 +1606,6 @@ async def test_aiport_no_event_entities(
     """Test that AI Port devices do not create camera-specific event entities."""
     await init_entry(hass, ufp, [aiport])
 
-    # AI Port should not create any camera-specific event entities (doorbell, motion, etc.)
+    # AI Port should not create any camera-specific event entities
+    # (doorbell, motion, etc.)
     assert_entity_counts(hass, Platform.EVENT, 0, 0)

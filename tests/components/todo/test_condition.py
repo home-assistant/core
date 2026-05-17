@@ -180,7 +180,7 @@ def parametrize_incomplete_condition_states_any(
 def parametrize_incomplete_condition_states_all(
     condition: str,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for incomplete conditions with 'all' behavior."""
+    """Parametrize above/below threshold cases for incomplete 'all' conditions."""
     return [
         *parametrize_condition_states_all(
             condition=condition,

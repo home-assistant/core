@@ -81,17 +81,20 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         (
             True,
             WebOsTvCommandError("Some error"),
-            f"Communication error while sending notification to device {TV_NAME}: Some error",
+            "Communication error while sending notification to"
+            f" device {TV_NAME}: Some error",
         ),
         (
             True,
             FileNotFoundError("Some other error"),
-            f"Icon {ICON_PATH} not found when sending notification for device {TV_NAME}",
+            f"Icon {ICON_PATH} not found when sending notification"
+            f" for device {TV_NAME}",
         ),
         (
             False,
             None,
-            f"Error sending notification to device {TV_NAME}: Device is off and cannot be controlled",
+            f"Error sending notification to device {TV_NAME}:"
+            " Device is off and cannot be controlled",
         ),
     ],
 )
