@@ -171,10 +171,10 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb, name: str) -> None:
+    def __init__(self, light: avea.Bulb, entry_title: str) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = name
+        self._attr_name = entry_title
         self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs: Any) -> None:
