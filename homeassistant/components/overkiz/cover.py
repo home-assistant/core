@@ -162,6 +162,19 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override since DynamicPergola uses core:OpenClosedState and
+    # core:ClosureState (no slats support) instead of core:SlatsOpenClosedState
+    # uiClass is Pergola
+    OverkizCoverDescription(
+        key=UIWidget.DYNAMIC_PERGOLA,
+        device_class=CoverDeviceClass.AWNING,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+    ),
     # Needs override since PositionableGarageDoor reports
     # core:OpenClosedUnknownState instead of core:OpenClosedState
     # uiClass is GarageDoor

@@ -139,6 +139,11 @@ DYNAMIC_GATE = FixtureDevice(
     "ogp://1234-1234-6233/10410217",
     "cover.ogp_gate",
 )
+DYNAMIC_PERGOLA = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/14356699",
+    "cover.somfy_pergola",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -150,6 +155,7 @@ SNAPSHOT_FIXTURES = [
     DYNAMIC_EXTERIOR_VENETIAN_BLIND,
     POSITIONABLE_ROLLER_SHUTTER_UNO,
     POSITIONABLE_DUAL_ROLLER_SHUTTER,
+    DYNAMIC_PERGOLA,
 ]
 
 
