@@ -121,7 +121,7 @@ async def test_light_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
+    """Test light trigger fires when any light changes state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_lights,
@@ -166,7 +166,7 @@ async def test_light_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
+    """Test light trigger fires when any light changes state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_lights,
@@ -209,7 +209,7 @@ async def test_light_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when the first light changes to a specific state."""
+    """Test light trigger fires when first light changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_lights,
@@ -248,7 +248,7 @@ async def test_light_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the light state trigger fires when the first light state changes to a specific state."""
+    """Test light trigger fires on first light state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_lights,
@@ -291,7 +291,7 @@ async def test_light_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the light state trigger fires when the last light changes to a specific state."""
+    """Test light trigger fires when last light changes state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_lights,
@@ -330,7 +330,7 @@ async def test_light_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the light state trigger fires when the last light state changes to a specific state."""
+    """Test light trigger fires on last light state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_lights,

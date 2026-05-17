@@ -47,7 +47,8 @@ async def test_cover_unique_id(
 
     cover_entity_id = "cover.basement_bedroom_left_shade"
 
-    # Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID
+    # Assert that Caseta covers will have the bridge serial hash
+    # and the zone id as the uniqueID
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
 
 

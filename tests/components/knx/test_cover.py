@@ -72,8 +72,9 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
 
-    # in KNX this will result in a payload of 191, percent values are encoded from 0 to 255
-    # We need to transpile the position by using 100 - position due to the way KNX actuators work
+    # in KNX this will result in a payload of 191, percent values
+    # are encoded from 0 to 255. We need to transpile the position
+    # by using 100 - position due to the way KNX actuators work
     await knx.assert_write("1/0/3", (0xBF,))
 
     knx.assert_state(
@@ -119,8 +120,9 @@ async def test_cover_tilt_absolute(hass: HomeAssistant, knx: KNXTestKit) -> None
         blocking=True,
     )
 
-    # in KNX this will result in a payload of 191, percent values are encoded from 0 to 255
-    # We need to transpile the position by using 100 - position due to the way KNX actuators work
+    # in KNX this will result in a payload of 191, percent values
+    # are encoded from 0 to 255. We need to transpile the position
+    # by using 100 - position due to the way KNX actuators work
     await knx.assert_write("1/0/5", (0xBF,))
 
     assert len(events) == 1

@@ -19,7 +19,8 @@ async def test_button_unique_id(
     )
     caseta_button_entity_id = "button.dining_room_pico_stop"
 
-    # Assert that Caseta buttons will have the bridge serial hash and the zone id as the uniqueID
+    # Assert that Caseta buttons will have the bridge serial hash
+    # and the zone id as the uniqueID
     assert entity_registry.async_get(ra3_button_entity_id).unique_id == "000004d2_1372"
     assert (
         entity_registry.async_get(caseta_button_entity_id).unique_id == "000004d2_111"

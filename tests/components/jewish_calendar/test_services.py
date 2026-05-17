@@ -47,7 +47,10 @@ from homeassistant.core import HomeAssistant
                 CONF_LANGUAGE: "en",
                 ATTR_AFTER_SUNSET: True,
             },
-            "Today is the thirty-eighth day, which are five weeks and three days of the Omer",
+            (
+                "Today is the thirty-eighth day, which are"
+                " five weeks and three days of the Omer"
+            ),
             id="sefarad-english-after-sunset",
         ),
         pytest.param(
@@ -58,13 +61,19 @@ from homeassistant.core import HomeAssistant
                 CONF_LANGUAGE: "en",
                 ATTR_AFTER_SUNSET: False,
             },
-            "Today is the thirty-seventh day, which are five weeks and two days of the Omer",
+            (
+                "Today is the thirty-seventh day, which are"
+                " five weeks and two days of the Omer"
+            ),
             id="sefarad-english-before-sunset",
         ),
         pytest.param(
             dt.datetime(2025, 5, 20, 21, 0),
             {ATTR_NUSACH: "sfarad", CONF_LANGUAGE: "en"},
-            "Today is the thirty-eighth day, which are five weeks and three days of the Omer",
+            (
+                "Today is the thirty-eighth day, which are"
+                " five weeks and three days of the Omer"
+            ),
             id="sefarad-english-after-sunset-without-date",
         ),
         pytest.param(

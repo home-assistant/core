@@ -752,7 +752,7 @@ async def test_logbook_entity_filter_with_automations(
 async def test_logbook_entity_no_longer_in_state_machine(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook view with an entity that hass been removed from the state machine."""
+    """Test logbook view with entity removed from state machine."""
     await async_setup_component(hass, "logbook", {})
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
@@ -1122,7 +1122,7 @@ async def test_logbook_entity_context_id(
 async def test_logbook_context_id_automation_script_started_manually(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook populates context_ids for scripts and automations started manually."""
+    """Test logbook context_ids for manually started scripts/automations."""
     await asyncio.gather(
         *[
             async_setup_component(hass, comp, {})

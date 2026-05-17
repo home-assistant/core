@@ -167,7 +167,7 @@ async def test_unique_id_migration_conflict(
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
 ) -> None:
-    """Test that migration fails when the API is unreachable during unique_id backfill."""
+    """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],

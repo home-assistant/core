@@ -636,7 +636,8 @@ async def test_state_updates_zone(
     )
     entry.add_to_hass(hass)
 
-    # Add empty data field to ensure we process it correctly (possible if entry is ignored)
+    # Add empty data field to ensure we process it correctly
+    # (possible if entry is ignored)
     entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={})
     entry.add_to_hass(hass)
 
@@ -821,7 +822,8 @@ async def test_state_updates_pin(
     )
     entry.add_to_hass(hass)
 
-    # Add empty data field to ensure we process it correctly (possible if entry is ignored)
+    # Add empty data field to ensure we process it correctly
+    # (possible if entry is ignored)
     entry = MockConfigEntry(
         domain="konnected",
         title="Konnected Alarm Panel",

@@ -60,7 +60,8 @@ async def test_setup_entry_errors(
     assert mock_config_entry.state is expected_state
 
 
-# Test errors during get_device() call in coordinator setup (after successful get_devices)
+# Test errors during get_device() call in coordinator setup
+# (after successful get_devices)
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [

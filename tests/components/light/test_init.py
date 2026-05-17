@@ -1890,7 +1890,8 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp_kelvin": 6535}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
+    # Home Assistant uses RGBCW so a mireds of 153 should be
+    # maximum cold at 100% brightness so 255
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)}
 
     await hass.services.async_call(
@@ -1909,7 +1910,8 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 128, "color_temp_kelvin": 2000}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
+    # Home Assistant uses RGBCW so a mireds of 500 should be
+    # maximum warm at 50% brightness so 128
     assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 0, 128)}
 
     await hass.services.async_call(
@@ -1928,7 +1930,8 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     _, data = entity0.last_call("turn_on")
     assert data == {"brightness": 255, "color_temp_kelvin": 3058}
     _, data = entity1.last_call("turn_on")
-    # Home Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
+    # Home Assistant uses RGBCW so a mireds of 328 should be the
+    # midway point at 100% brightness so 127 (rounding), 128
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 127, 128)}
 
     await hass.services.async_call(

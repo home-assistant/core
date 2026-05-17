@@ -198,7 +198,8 @@ async def test_websocket_update_unavailable_preview_feature(
 
     client = await hass_ws_client(hass)
 
-    # Preview feature is pre-loaded, so update succeeds even though integration isn't loaded
+    # Preview feature is pre-loaded, so update succeeds even
+    # though integration isn't loaded
     await client.send_json_auto_id(
         {
             "type": "labs/update",

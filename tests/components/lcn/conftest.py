@@ -111,7 +111,9 @@ async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
-    hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
+    # needs to be mocked as hass.http.register_static_path is
+    # called when registering the frontend
+    hass.http = Mock()
     lcn_connection = None
 
     def lcn_connection_factory(*args, **kwargs):

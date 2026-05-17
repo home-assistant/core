@@ -14,7 +14,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-API_HEAT_METER_SERVICE = "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+API_HEAT_METER_SERVICE = (
+    "homeassistant.components.landisgyr_heat_meter"
+    ".config_flow.ultraheat_api.HeatMeterService"
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
