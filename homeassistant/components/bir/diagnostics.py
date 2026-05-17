@@ -1,0 +1,28 @@
+"""Diagnostics support for BIR."""
+
+from typing import Any
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant
+
+from .const import CONF_PROPERTY_ID
+from .coordinator import BirConfigEntry
+
+TO_REDACT = {CONF_ADDRESS, CONF_PROPERTY_ID}
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: BirConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    return {
+        "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
+        "coordinator_data": {
+            waste_type: {
+                "date": str(pickup["date"]),
+                "days_until": pickup["days_until"],
+            }
+            for waste_type, pickup in entry.runtime_data.data.items()
+        },
+    }

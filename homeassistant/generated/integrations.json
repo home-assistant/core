@@ -747,6 +747,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "bir": {
+      "name": "BIR",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "bitcoin": {
       "name": "Bitcoin",
       "integration_type": "hub",
