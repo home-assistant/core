@@ -76,13 +76,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     async def _async_cleanup_task() -> None:
         nonlocal _first_cleanup_call
-        is_first_run = _first_cleanup_call
-        _first_cleanup_call = False
-        if not is_first_run:
-            await controller.devices_coordinator.async_refresh()
+        await async_cleanup_devices(
+            hass,
+            controller,
+        )
+        if not _first_cleanup_call:
+            # Skip refresh on first run — data is already fresh from initialize_first_refresh()
             await controller.known_clients_coordinator.async_refresh()
-        await async_cleanup_devices(hass, controller)
-        await async_cleanup_client_trackers(hass, controller)
+        _first_cleanup_call = False
+        await async_cleanup_client_trackers(
+            hass,
+            controller,
+        )
 
     @callback
     def _schedule_cleanup(_now: datetime | None = None) -> None:
@@ -99,13 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    @callback
-    def _cancel_cleanup() -> None:
-        if _cleanup_task is not None and not _cleanup_task.done():
-            _cleanup_task.cancel()
-
     _schedule_cleanup()
-    entry.async_on_unload(_cancel_cleanup)
     entry.async_on_unload(
         async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
     )
