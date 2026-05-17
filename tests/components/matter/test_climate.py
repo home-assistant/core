@@ -625,7 +625,7 @@ async def test_eve_thermo_v5_presets(
     assert state
     assert state.attributes["preset_mode"] == "home"
 
-    # Test that preset_mode is updated when ActivePresetHandle changes to different preset
+    # Test preset_mode updates when ActivePresetHandle changes
     set_node_attribute(
         matter_node,
         1,
