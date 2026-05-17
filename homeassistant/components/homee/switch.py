@@ -185,12 +185,12 @@ class HomeegramSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if homeegram is executing."""
-        return self._homeegram.play
+        return bool(self._homeegram.play)
 
     @property
     def available(self) -> bool:
         """Return the availability of the homeegram based on host availability."""
-        return self._homeegram.active and self._host_connected
+        return bool(self._homeegram.active) and self._host_connected
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Trigger Homeegram on switching on."""

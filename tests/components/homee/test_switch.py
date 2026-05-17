@@ -34,11 +34,6 @@ async def platforms() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.fixture
-def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
-    """Make sure all entities are enabled."""
-
-
 async def test_switch_state(
     hass: HomeAssistant,
     mock_homee: MagicMock,
@@ -236,7 +231,7 @@ async def test_homeegram_button_disabled_by_default(
 
     entry = entity_registry.async_get("switch.homeegrams_test_hg_1")
     assert entry is not None
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_homeegram_connection_listener(
@@ -336,7 +331,7 @@ async def test_homeegram_inactive(
     assert states.state is not STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("enable_all_entities")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
