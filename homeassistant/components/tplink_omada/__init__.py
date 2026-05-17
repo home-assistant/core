@@ -104,7 +104,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    @callback
+    def _cancel_cleanup() -> None:
+        if _cleanup_task is not None and not _cleanup_task.done():
+            _cleanup_task.cancel()
+
     _schedule_cleanup()
+    entry.async_on_unload(_cancel_cleanup)
     entry.async_on_unload(
         async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
     )
