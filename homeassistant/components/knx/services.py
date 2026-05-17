@@ -114,7 +114,7 @@ async def service_event_register_modify(call: ServiceCall) -> None:
     knx_module = get_knx_module(call.hass)
 
     attr_address = call.data[KNX_ADDRESS]
-    group_addresses = list(map(parse_device_group_address, attr_address))
+    group_addresses = set(map(parse_device_group_address, attr_address))
 
     if call.data.get(SERVICE_KNX_ATTR_REMOVE):
         _error_gas = set()
