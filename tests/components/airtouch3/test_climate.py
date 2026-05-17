@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from homeassistant.components.airtouch3.climate import (
+    PARALLEL_UPDATES,
     AirtouchAC,
     AirtouchGroup,
     async_setup_entry,
@@ -98,6 +99,10 @@ async def test_async_setup_entry_adds_ac_and_zone_entities(
         "1.1.1.1_airtouch_1_group_1",
         "1.1.1.1_airtouch_1_group_2",
     ]
+    assert PARALLEL_UPDATES == 1
+    assert entities[0].translation_key == "air_conditioner"
+    assert entities[1].translation_key == "zone"
+    assert entities[0].device_info["manufacturer"] == "Polyaire"
 
 
 async def test_async_setup_entry_skips_missing_data(hass: HomeAssistant) -> None:

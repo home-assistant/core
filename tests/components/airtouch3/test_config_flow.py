@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.airtouch3.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -129,3 +131,85 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_updates_host(hass: HomeAssistant) -> None:
+    """Test reconfiguring the host."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: " 2.2.2.2 ",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "2.2.2.2",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(UpdateFailed("failed"), "cannot_connect", id="cannot-connect"),
+        pytest.param(RuntimeError("boom"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure error handling."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+
+    with patch(
+        "homeassistant.components.airtouch3.config_flow.async_fetch_airtouch_data",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+            },
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

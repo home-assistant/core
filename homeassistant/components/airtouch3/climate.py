@@ -27,6 +27,8 @@ from .coordinator import Airtouch3DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 # Map AirTouch AcMode enum to Home Assistant HVAC modes
 AT_TO_HA_STATE = {
     AcMode.AUTO: HVACMode.AUTO,
@@ -80,6 +82,7 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "air_conditioner"
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TURN_ON
@@ -98,7 +101,7 @@ class AirtouchAC(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEntit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.host}_ac_{ac_id}")},
             name="AirTouch 3",
-            manufacturer="AirTouch",
+            manufacturer="Polyaire",
             model="AirTouch 3",
         )
 
@@ -164,6 +167,7 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "zone"
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_ON
@@ -187,7 +191,7 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
         self._attr_unique_id = f"{coordinator.host}_airtouch_{ac_id}_group_{group_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.host}_group_{group_id}")},
-            manufacturer="AirTouch",
+            manufacturer="Polyaire",
             model="AirTouch 3",
             name=zone_name,
         )
