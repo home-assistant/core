@@ -109,7 +109,7 @@
       "title": "iTach IP2IR cannot be reached"
     },
     "invalid_config": {
-      "description": "Home Assistant could not set up {entry_title} because the stored configuration or device response is invalid: {error}. Reconfigure the integration or reload it after fixing the device/network configuration.",
+      "description": "Home Assistant could not set up the configured iTach IP2IR device because the stored configuration or device response is invalid. Reconfigure the integration or reload it after fixing the device or network configuration. Error: {error}",
       "title": "iTach IP2IR configuration problem"
     },
     "no_ir_ports": {
