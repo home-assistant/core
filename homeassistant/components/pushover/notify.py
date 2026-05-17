@@ -129,7 +129,8 @@ class PushoverNotificationService(BaseNotificationService):
         # Encrypt message and title if encrypted_key is provided
         if encrypted_key:
             message = self.encrypt(message, encrypted_key)
-            title = self.encrypt(title, encrypted_key)
+            if title is not None:
+                title = self.encrypt(title, encrypted_key)
 
         try:
             self.pushover.send_message(
