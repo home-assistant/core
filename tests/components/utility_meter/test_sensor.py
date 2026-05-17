@@ -657,6 +657,40 @@ async def test_device_class(
         assert state.attributes.get(attr) == value
 
 
+async def test_state_class_monetary_device_class(hass: HomeAssistant) -> None:
+    """Test that monetary device class uses state_class total, not total_increasing."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "utility_meter": {
+                "cost_meter": {
+                    "source": "sensor.energy_cost",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.energy_cost",
+        2,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.MONETARY,
+            ATTR_UNIT_OF_MEASUREMENT: "EUR",
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.cost_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
+
+
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
