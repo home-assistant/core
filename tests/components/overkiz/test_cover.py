@@ -115,8 +115,8 @@ UP_DOWN_SHEER_SCREEN = FixtureDevice(
     "cover.kitchen_sheer_screen",
 )
 DISCRETE_GARAGE_DOOR = FixtureDevice(
-    "setup/cloud_somfy_tahoma_v2_europe.json",
-    "io://1234-1234-6233/12745774",
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "io://1234-5678-3293/12745774",
     "cover.garage_door_rollixo",
 )
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
