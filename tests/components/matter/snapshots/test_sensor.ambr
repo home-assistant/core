@@ -2595,8 +2595,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -2640,8 +2640,8 @@
       'device_class': 'enum',
       'friendly_name': 'Connected Thermostat UTE 3000 Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -3239,8 +3239,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -3284,8 +3284,8 @@
       'device_class': 'enum',
       'friendly_name': 'ecodeebot Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -8482,8 +8482,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -8527,8 +8527,8 @@
       'device_class': 'enum',
       'friendly_name': 'Longan link HVAC Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10066,8 +10066,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10111,8 +10111,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Cooktop Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10252,8 +10252,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10297,8 +10297,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Dimmable Light Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10438,8 +10438,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10483,8 +10483,8 @@
       'device_class': 'enum',
       'friendly_name': 'Dimmable Plugin Unit Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10508,8 +10508,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10553,8 +10553,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Door Lock Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10578,8 +10578,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -10623,8 +10623,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Door Lock with unbolt Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11214,8 +11214,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11259,8 +11259,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Laundrydryer Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11445,8 +11445,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11490,8 +11490,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Lock Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11810,8 +11810,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11855,8 +11855,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock OnOff Light Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -11996,8 +11996,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -12041,8 +12041,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock OnOff Light Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -12182,8 +12182,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -12227,8 +12227,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Light Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -12492,8 +12492,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -12537,8 +12537,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Oven Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -13439,8 +13439,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -13484,8 +13484,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Thermostat Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -13942,8 +13942,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -13987,8 +13987,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Full Window Covering Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14128,8 +14128,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14173,8 +14173,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Lift Window Covering Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14365,8 +14365,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14410,8 +14410,8 @@
       'device_class': 'enum',
       'friendly_name': 'Longan link WNCV DA01 Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14551,8 +14551,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14596,8 +14596,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock PA Tilt Window Covering Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14737,8 +14737,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14782,8 +14782,8 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Tilt Window Covering Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14923,8 +14923,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -14968,8 +14968,8 @@
       'device_class': 'enum',
       'friendly_name': 'D215S Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -18800,8 +18800,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',
@@ -18845,8 +18845,8 @@
       'device_class': 'enum',
       'friendly_name': 'YNDX-00540 Wi-Fi version',
       'options': list([
-        'wifi_2',
         'wifi_1',
+        'wifi_2',
         'wifi_3',
         'wifi_4',
         'wifi_5',

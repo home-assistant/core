@@ -921,3 +921,22 @@ async def test_wifi_diagnostics_sensors(
     state = hass.states.get("sensor.m5stamp_lighting_app_wi_fi_version")
     assert state
     assert state.state == "wifi_4"
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_wifi_diagnostics_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test WiFiNetworkDiagnostics sensors are disabled by default."""
+    for entity_id in (
+        "sensor.m5stamp_lighting_app_wi_fi_channel",
+        "sensor.m5stamp_lighting_app_wi_fi_security_type",
+        "sensor.m5stamp_lighting_app_wi_fi_version",
+    ):
+        assert hass.states.get(entity_id) is None
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
