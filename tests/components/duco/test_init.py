@@ -145,14 +145,14 @@ async def test_setup_entry_unsupported_board_info(
     mock_duco_client: AsyncMock,
     unsupported_board_info: BoardInfo,
 ) -> None:
-    """Test that unsupported board info blocks setup for existing entries."""
+    """Test that unsupported board info does not block existing entries."""
     mock_duco_client.async_get_board_info.return_value = unsupported_board_info
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_unsupported_board_without_info_endpoint(
@@ -160,14 +160,14 @@ async def test_setup_entry_unsupported_board_without_info_endpoint(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test that boards without the /info endpoint are rejected during setup."""
+    """Test that existing entries can still load without the /info endpoint."""
     mock_duco_client.async_get_board_info.side_effect = DucoResponseError(404, "/info")
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(

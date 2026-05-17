@@ -4,7 +4,11 @@ from dataclasses import dataclass
 import logging
 
 from duco_connectivity import DucoClient
-from duco_connectivity.exceptions import DucoConnectionError, DucoError
+from duco_connectivity.exceptions import (
+    DucoConnectionError,
+    DucoError,
+    DucoResponseError,
+)
 from duco_connectivity.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +17,6 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
-from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,14 +56,20 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
         try:
-            # Re-check support during setup so older grandfathered entries do not
-            # keep running once they fall outside the integration's supported scope.
-            self.board_info = await async_get_supported_board_info(self.client)
-        except UnsupportedBoardError as err:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_board",
-            ) from err
+            self.board_info = await self.client.async_get_board_info()
+        except DucoResponseError as err:
+            if err.status != 404:
+                raise ConfigEntryError(f"Duco API error: {err}") from err
+            # Existing entries can still function on older boards without /info.
+            self.board_info = BoardInfo(
+                box_name=self.config_entry.title or "Duco",
+                box_sub_type_name="",
+                serial_board_box="",
+                serial_board_comm="",
+                serial_duco_box="",
+                serial_duco_comm="",
+                time=0,
+            )
         except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

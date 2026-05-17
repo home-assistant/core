@@ -361,7 +361,6 @@ async def test_reconfigure_flow_wrong_device(
     [
         (DucoConnectionError("Connection refused"), "cannot_connect"),
         (DucoError("Unexpected error"), "unknown"),
-        (DucoResponseError(404, "/info"), "unsupported_board"),
     ],
 )
 async def test_reconfigure_flow_error(
@@ -386,6 +385,26 @@ async def test_reconfigure_flow_error(
     assert result["errors"] == {"base": expected_error}
 
     mock_duco_client.async_get_board_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_without_info_endpoint(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow still succeeds when an existing board has no /info endpoint."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_duco_client.async_get_board_info.side_effect = DucoResponseError(404, "/info")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.168.1.200"}
     )
@@ -566,21 +585,12 @@ async def test_reconfigure_flow_unsupported_board_from_board_info(
     mock_board_info: BoardInfo,
     unsupported_board_info: BoardInfo,
 ) -> None:
-    """Test reconfigure flow shows unsupported_board error when board validation fails."""
+    """Test reconfigure flow still succeeds for existing unsupported boards."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_duco_client.async_get_board_info.return_value = unsupported_board_info
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.200"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "unsupported_board"}
-
-    mock_duco_client.async_get_board_info.return_value = mock_board_info
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.168.1.200"}
     )
