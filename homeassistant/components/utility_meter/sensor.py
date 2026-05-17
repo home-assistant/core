@@ -406,11 +406,12 @@ class UtilityMeterSensor(RestoreSensor):
         self._current_tz = None
         self._config_scheduler()
 
-    def _config_scheduler(self):
+    def _config_scheduler(self, start_time: datetime | None = None) -> None:
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
-                dt_util.now(
+                start_time
+                or dt_util.now(
                     dt_util.get_default_time_zone()
                 ),  # we need timezone for DST purposes (see issue #102984)
             )
@@ -608,8 +609,6 @@ class UtilityMeterSensor(RestoreSensor):
         # and we need to reconfigure the scheduler
         self._current_tz = self.hass.config.time_zone
 
-        await self._program_reset()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_RESET_METER, self.async_reset_meter
@@ -628,6 +627,13 @@ class UtilityMeterSensor(RestoreSensor):
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
+            # Reconfigure the scheduler from the restored last_reset so that
+            # next_reset is not shifted forward on entity restore/rename.
+            self._config_scheduler(
+                dt_util.as_local(self._last_reset) if self._last_reset else None
+            )
+
+        await self._program_reset()
 
         @callback
         def async_source_tracking(event):
