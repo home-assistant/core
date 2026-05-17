@@ -158,6 +158,7 @@ async def test_setup_entry_unsupported_board_info(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.board_info == unsupported_board_info
 
 
 async def test_setup_entry_unsupported_board_without_info_endpoint(
@@ -173,6 +174,8 @@ async def test_setup_entry_unsupported_board_without_info_endpoint(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.board_info.box_name == mock_config_entry.title
+    assert mock_config_entry.runtime_data.board_info.time == 0
 
 
 async def test_unload_entry(
