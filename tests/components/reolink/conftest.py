@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
+from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -50,6 +51,7 @@ TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
 TEST_PRIVACY = True
 TEST_BC_PORT = 5678
+TEST_BC_CON = ConnectionEnum.tcp.value
 
 
 @pytest.fixture
@@ -161,6 +163,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan_only = False
     # Disable tcp push by default for tests
     host_mock.baichuan.port = TEST_BC_PORT
+    host_mock.baichuan.connection_type = ConnectionEnum(TEST_BC_CON)
     host_mock.baichuan.events_active = False
     host_mock.baichuan.subscribe_events = AsyncMock()
     host_mock.baichuan.unsubscribe_events = AsyncMock()
