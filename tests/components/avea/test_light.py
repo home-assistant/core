@@ -133,14 +133,13 @@ async def test_update_state(
     bulb.get_rgb.assert_called_once()
     bulb.disconnect.assert_called_once()
 
-    assert bulb.mock_calls.index(call.connect()) < bulb.mock_calls.index(
-        call.get_brightness()
-    )
-    assert bulb.mock_calls.index(call.get_brightness()) < bulb.mock_calls.index(
-        call.get_rgb()
-    )
-    assert bulb.mock_calls.index(call.get_rgb()) < bulb.mock_calls.index(
-        call.disconnect()
+    bulb.assert_has_calls(
+        [
+            call.connect(),
+            call.get_brightness(),
+            call.get_rgb(),
+            call.disconnect(),
+        ]
     )
 
     state = hass.states.get("light.bedroom")
