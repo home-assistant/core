@@ -24,7 +24,10 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     address=FAKE_ADDRESS_1,
     rssi=-63,
     manufacturer_data={
-        13: b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        13: (
+            b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00"
+            b"\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        )
     },
     service_uuids=[],
     service_data={},
@@ -41,7 +44,10 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     address=FAKE_ADDRESS_2,
     rssi=-63,
     manufacturer_data={
-        13: b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        13: (
+            b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00"
+            b"\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        )
     },
     service_uuids=[],
     service_data={},
@@ -264,7 +270,7 @@ def patch_async_discovered_service_info(
 def patch_async_ble_device_from_address(
     return_value: BluetoothServiceInfoBleak | None = FAKE_SERVICE_INFO_1,
 ):
-    """Patch async_ble_device_from_address to return a mocked BluetoothServiceInfoBleak."""
+    """Patch async_ble_device_from_address to return a mock."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
         return_value=return_value,

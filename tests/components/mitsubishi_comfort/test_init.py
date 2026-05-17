@@ -97,7 +97,7 @@ async def test_setup_entry_skips_incomplete_devices(
     mock_device_info: DeviceInfo,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
-    """Test setup skips incomplete devices and only creates entities for complete ones."""
+    """Test setup skips incomplete devices and creates complete ones."""
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
         label="Bedroom",

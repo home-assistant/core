@@ -491,8 +491,8 @@ async def test_non_unique_triggers(
     # and therefore it was not set up.
     assert device_entry.name == "beer"
     assert (
-        "Config for device trigger bla2 conflicts with existing device trigger, cannot set up trigger"
-        in caplog.text
+        "Config for device trigger bla2 conflicts with existing"
+        " device trigger, cannot set up trigger" in caplog.text
     )
 
     assert await async_setup_component(

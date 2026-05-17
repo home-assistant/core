@@ -227,7 +227,7 @@ async def test_run_select_service_optimistic(
 async def test_run_select_service_optimistic_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in optimistic mode and with a command_template."""
+    """Test set_value in optimistic mode with a command_template."""
     fake_state = State("select.test_select", "milk")
     mock_restore_cache(hass, (fake_state,))
 
@@ -312,7 +312,7 @@ async def test_run_select_service(
 async def test_run_select_service_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in non optimistic mode and with a command_template."""
+    """Test set_value service with a command_template."""
     cmd_topic = "test/select/set"
     state_topic = "test/select"
 
@@ -503,7 +503,10 @@ async def test_discovery_update_unchanged_select(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered select."""
-    data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
     with patch(
         "homeassistant.components.mqtt.select.MqttSelect.discovery_update"
     ) as discovery_update:
@@ -518,7 +521,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    data2 = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
 
     await help_test_discovery_broken(hass, mqtt_mock_entry, select.DOMAIN, data1, data2)
 
@@ -769,7 +775,10 @@ async def test_persistent_state_after_reconfig(
 ) -> None:
     """Test of the state is persistent after reconfiguring the select options."""
     await mqtt_mock_entry()
-    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    discovery_data = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
     await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
 
     # assign an initial state
@@ -779,7 +788,10 @@ async def test_persistent_state_after_reconfig(
     assert state.attributes["options"] == ["milk", "beer"]
 
     # remove "milk" option
-    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["beer"]}'
+    discovery_data = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["beer"]}'
+    )
     await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
 
     # assert the state persistent
@@ -848,6 +860,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

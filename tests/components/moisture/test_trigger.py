@@ -127,7 +127,7 @@ async def test_moisture_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test moisture trigger fires for binary_sensor entities with device_class moisture."""
+    """Test moisture trigger fires for moisture binary_sensors."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,
@@ -310,7 +310,7 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test moisture crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -348,7 +348,7 @@ async def test_moisture_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test moisture crossed_threshold trigger fires when the last sensor changes state."""
+    """Test crossed_threshold trigger fires on last sensor change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,

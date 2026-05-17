@@ -109,7 +109,12 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
             "command_topic": "test/select",
             "name": "Test Select",
             "options": ["milk", "beer"],
-            "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
+            "command_template": (
+                '{"option": "{{ value }}",'
+                ' "entity_id": "{{ entity_id }}",'
+                ' "name": "{{ name }}",'
+                ' "this_object_state": "{{ this.state }}"}'
+            ),
         }
     ],
 )
@@ -140,7 +145,12 @@ async def test_command_template_variables(
 
     mqtt_mock.async_publish.assert_called_once_with(
         topic,
-        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select", "this_object_state": "milk"}',
+        (
+            '{"option": "beer",'
+            ' "entity_id": "select.test_select",'
+            ' "name": "Test Select",'
+            ' "this_object_state": "milk"}'
+        ),
         0,
         False,
         message_expiry_interval=None,
@@ -274,7 +284,9 @@ async def test_service_call_mqtt_entry_does_not_publish(
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
     with pytest.raises(
         ServiceValidationError,
-        match='Cannot publish to topic "test_topic", make sure MQTT is set up correctly',
+        match=(
+            'Cannot publish to topic "test_topic", make sure MQTT is set up correctly'
+        ),
     ):
         await hass.services.async_call(
             mqtt.DOMAIN,
@@ -434,8 +446,9 @@ async def test_publish_function_with_bad_encoding_conditions(
         hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
     )
     assert (
-        "Can't pass-through payload for publishing test-payload on some-topic with no encoding set, need 'bytes' got <class 'str'>"
-        in caplog.text
+        "Can't pass-through payload for publishing test-payload"
+        " on some-topic with no encoding set, need 'bytes'"
+        " got <class 'str'>" in caplog.text
     )
     caplog.clear()
     await mqtt.async_publish(
@@ -447,8 +460,8 @@ async def test_publish_function_with_bad_encoding_conditions(
         encoding="invalid_encoding",
     )
     assert (
-        "Can't encode payload for publishing test-payload on some-topic with encoding invalid_encoding"
-        in caplog.text
+        "Can't encode payload for publishing test-payload on"
+        " some-topic with encoding invalid_encoding" in caplog.text
     )
 
 
@@ -873,8 +886,8 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "extra keys not allowed @ data['platform'] for manually configured MQTT light item"
-        in caplog.text
+        "extra keys not allowed @ data['platform']"
+        " for manually configured MQTT light item" in caplog.text
     )
 
 
@@ -891,7 +904,7 @@ async def test_setup_manual_mqtt_with_invalid_config(
 async def test_default_entry_setting_are_applied(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test if the MQTT component loads when config entry data not has all default settings."""
+    """Test MQTT loads when config entry lacks all default settings."""
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -1334,7 +1347,7 @@ async def test_debug_info_multiple_entities_triggers(
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test we get correct debug_info for a device with multiple entities and triggers."""
+    """Test debug_info for a device with multiple entities."""
     await mqtt_mock_entry()
     config: list[_DebugInfo] = [
         {
@@ -1833,8 +1846,14 @@ async def test_disabling_and_enabling_entry(
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
     # Late discovery of a mqtt entity
-    config_tag = '{"topic": "0AFFD2/tag_scanned", "value_template": "{{ value_json.PN532.UID }}"}'
-    config_alarm_control_panel = '{"name": "test_new", "state_topic": "home/alarm", "command_topic": "home/alarm/set"}'
+    config_tag = (
+        '{"topic": "0AFFD2/tag_scanned",'
+        ' "value_template": "{{ value_json.PN532.UID }}"}'
+    )
+    config_alarm_control_panel = (
+        '{"name": "test_new", "state_topic": "home/alarm",'
+        ' "command_topic": "home/alarm/set"}'
+    )
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
     with patch(
@@ -1864,8 +1883,8 @@ async def test_disabling_and_enabling_entry(
         in caplog.text
     )
     assert (
-        "MQTT integration is disabled, skipping setup of discovered item MQTT alarm_control_panel"
-        in caplog.text
+        "MQTT integration is disabled, skipping setup of"
+        " discovered item MQTT alarm_control_panel" in caplog.text
     )
     assert (
         "MQTT integration is disabled, skipping setup of discovered item MQTT light"

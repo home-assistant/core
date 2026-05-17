@@ -113,7 +113,9 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     flow_id = step["flow_id"]
 
     with (
-        patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
+        patch(
+            # mock is_serial_port because otherwise the test will
+            # be platform dependent (/dev/ttyACMx vs COMx)
             "homeassistant.components.mysensors.config_flow.is_serial_port",
             return_value=True,
         ),

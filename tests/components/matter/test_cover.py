@@ -160,7 +160,7 @@ async def test_cover_lift_only(
     matter_node: MatterNode,
     entity_id: str,
 ) -> None:
-    """Test window covering devices with lift feature and without position aware lift feature."""
+    """Test window covering with lift but without position aware lift."""
 
     set_node_attribute(matter_node, 1, 258, 14, None)
     set_node_attribute(matter_node, 1, 258, 10, 0b000000)
@@ -291,7 +291,7 @@ async def test_cover_tilt_only(
     matter_node: MatterNode,
     entity_id: str,
 ) -> None:
-    """Test window covering devices with tilt feature and without position aware tilt feature."""
+    """Test window covering with tilt but without position aware tilt."""
 
     set_node_attribute(matter_node, 1, 258, 65529, [0, 1, 2])
     await trigger_subscription_callback(hass, matter_client)

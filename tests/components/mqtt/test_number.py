@@ -502,7 +502,7 @@ async def test_run_number_service_optimistic(
 async def test_run_number_service_optimistic_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in optimistic mode and with a command_template."""
+    """Test set_value in optimistic mode with a command_template."""
     topic = "test/number"
 
     RESTORE_DATA = {
@@ -626,7 +626,7 @@ async def test_run_number_service(
 async def test_run_number_service_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in non optimistic mode and with a command_template."""
+    """Test set_value service with a command_template."""
     cmd_topic = "test/number/set"
     state_topic = "test/number"
 
@@ -1365,6 +1365,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

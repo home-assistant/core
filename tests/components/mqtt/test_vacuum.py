@@ -328,7 +328,7 @@ async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test initial setup does not fire repair flow after cleanable segments are received."""
+    """Test setup does not fire repair after segments are received."""
     await mqtt_mock_entry()
     # Receive a valid state
     state = hass.states.get("vacuum.test")
@@ -521,7 +521,10 @@ async def test_clean_segments_command_template(
                     },
                 ),
             ),
-            "Option `clean_segments_command_topic` requires `unique_id` to be configured",
+            (
+                "Option `clean_segments_command_topic`"
+                " requires `unique_id` to be configured"
+            ),
         ),
     ],
 )
@@ -606,7 +609,7 @@ async def test_clean_area_feature_preserved_on_config_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test the clean area feature is preserved when config is updated with the same topic.
+    """Test clean area is preserved when config is updated.
 
     When a new config arrives that still has `clean_segments_command_topic` and
     segments were previously received from state, the CLEAN_AREA feature should

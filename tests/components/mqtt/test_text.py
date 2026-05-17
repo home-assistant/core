@@ -198,8 +198,8 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "other")
     await hass.async_block_till_done()
     assert (
-        "Entity text.test provides state other which does not match expected pattern (y|n)"
-        in caplog.text
+        "Entity text.test provides state other which does not"
+        " match expected pattern (y|n)" in caplog.text
     )
     state = hass.states.get("text.test")
     assert state.state == "yes"
@@ -209,8 +209,8 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
     await hass.async_block_till_done()
     assert (
-        "Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
-        in caplog.text
+        "Entity text.test provides state yesyesyesyes which is"
+        " too long (maximum length 10)" in caplog.text
     )
     state = hass.states.get("text.test")
     assert state.state == "yes"
@@ -577,7 +577,10 @@ async def test_discovery_update_unchanged_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered update."""
-    data1 = '{ "name": "Beer", "state_topic": "text-topic", "command_topic": "command-topic"}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "text-topic",'
+        ' "command_topic": "command-topic"}'
+    )
     with patch(
         "homeassistant.components.mqtt.text.MqttTextEntity.discovery_update"
     ) as discovery_update:
@@ -848,6 +851,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

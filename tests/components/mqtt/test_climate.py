@@ -1430,7 +1430,9 @@ async def test_get_target_temperature_low_high_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
-                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
+                    "swing_horizontal_mode_command_topic": (
+                        "swing-horizontal-mode-topic"
+                    ),
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1596,7 +1598,9 @@ async def test_get_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
-                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
+                    "swing_horizontal_mode_command_topic": (
+                        "swing-horizontal-mode-topic"
+                    ),
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1613,7 +1617,9 @@ async def test_get_with_templates(
                     "power_command_template": "power: {{ value }}",
                     "preset_mode_command_template": "preset_mode: {{ value }}",
                     "mode_command_template": "mode: {{ value }}",
-                    "swing_horizontal_mode_command_template": "swing_horizontal_mode: {{ value }}",
+                    "swing_horizontal_mode_command_template": (
+                        "swing_horizontal_mode: {{ value }}"
+                    ),
                     "swing_mode_command_template": "swing_mode: {{ value }}",
                     "temperature_command_template": "temp: {{ value }}",
                     "temperature_high_command_template": "temp_hi: {{ value }}",
@@ -2497,7 +2503,9 @@ async def test_unload_entry(
                     "current_temperature_topic": "current-temperature-topic",
                     "preset_mode_state_topic": "preset-mode-state-topic",
                     "preset_modes": ["eco", "away"],
-                    "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
+                    "swing_horizontal_mode_state_topic": (
+                        "swing-horizontal-mode-state-topic"
+                    ),
                     "swing_mode_state_topic": "swing-mode-state-topic",
                     "target_humidity_state_topic": "target-humidity-state-topic",
                     "temperature_high_state_topic": "temperature-high-state-topic",
@@ -2567,8 +2575,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 

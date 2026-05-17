@@ -190,7 +190,9 @@ async def test_rgb_light(
                         "schema": "template",
                         "name": "test",
                         "command_topic": "test_light/set",
-                        "command_on_template": "on,{{ brightness|d }},{{ color_temp|d }}",
+                        "command_on_template": (
+                            "on,{{ brightness|d }},{{ color_temp|d }}"
+                        ),
                         "command_off_template": "off",
                         "brightness_template": "{{ value.split(',')[1] }}",
                         "color_temp_template": "{{ value.split(',')[2] }}",
@@ -207,7 +209,9 @@ async def test_rgb_light(
                         "schema": "template",
                         "name": "test",
                         "command_topic": "test_light/set",
-                        "command_on_template": "on,{{ brightness|d }},{{ color_temp|d }}",
+                        "command_on_template": (
+                            "on,{{ brightness|d }},{{ color_temp|d }}"
+                        ),
                         "command_off_template": "off",
                         "brightness_template": "{{ value.split(',')[1] }}",
                         "color_temp_template": "{{ value.split(',')[2] }}",
@@ -1545,8 +1549,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 
@@ -1576,8 +1580,8 @@ async def test_rgb_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"r": 255, "g": 255, "b": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 

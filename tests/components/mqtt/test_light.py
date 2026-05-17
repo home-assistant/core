@@ -553,10 +553,18 @@ async def test_controlling_state_via_topic(
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": False,
                     }
                 }
@@ -571,10 +579,18 @@ async def test_controlling_state_via_topic(
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": True,
                     }
                 }
@@ -1581,8 +1597,12 @@ async def test_sending_mqtt_rgbww_command_with_template(
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
-                        "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
+                        "color_temp_command_template": (
+                            "{{ (1000 / value) | round(0) }}"
+                        ),
                         "color_temp_kelvin": False,
                         "payload_on": "on",
                         "payload_off": "off",
@@ -1598,7 +1618,9 @@ async def test_sending_mqtt_rgbww_command_with_template(
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_command_template": "{{ (0.5 * value) | round(0) }}",
                         "color_temp_kelvin": True,
                         "payload_on": "on",
@@ -2276,7 +2298,9 @@ async def test_on_command_rgb_template(
                     "name": "test",
                     "command_topic": "test_light/set",
                     "rgbw_command_topic": "test_light/rgbw",
-                    "rgbw_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ white }}",
+                    "rgbw_command_template": (
+                        "{{ red }}/{{ green }}/{{ blue }}/{{ white }}"
+                    ),
                 }
             }
         }
@@ -2385,10 +2409,14 @@ async def test_on_command_rgbww_template(
                     "on_command_type": "brightness",
                     "brightness_value_template": "{{ value_json.Dimmer }}",
                     "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
-                    "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+                    "rgb_value_template": (
+                        "{{value_json.Color.split(',')[0:3]|join(',')}}"
+                    ),
                     "white_command_topic": "tasmota_B94927/cmnd/White",
                     "white_scale": 100,
-                    "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+                    "color_mode_value_template": (
+                        "{% if value_json.White %} white {% else %} rgb {% endif %}"
+                    ),
                     "qos": "0",
                 }
             }
@@ -3058,7 +3086,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -3109,7 +3141,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state2",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -3123,15 +3159,27 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state2",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3316,7 +3364,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -3367,7 +3419,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -3381,7 +3437,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3962,7 +4022,9 @@ async def test_sending_mqtt_effect_command_with_template(
                     "name": "test",
                     "command_topic": "test_light_hs/set",
                     "hs_command_topic": "test_light_hs/hs_color/set",
-                    "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
+                    "hs_command_template": (
+                        '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}'
+                    ),
                     "qos": 0,
                 }
             }
@@ -4157,6 +4219,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
