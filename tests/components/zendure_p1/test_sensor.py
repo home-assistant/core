@@ -61,10 +61,17 @@ async def test_sensor_values(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", "zendure_p1", "SN123456-total_power"
-    )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "750"
+    for key, expected in (
+        ("a_apparent_power", "150"),
+        ("b_apparent_power", "250"),
+        ("c_apparent_power", "350"),
+        ("total_power", "750"),
+    ):
+        unique_id = f"SN123456-{key}"
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "zendure_p1", unique_id
+        )
+        assert entity_id is not None, f"Entity {unique_id} not found"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
