@@ -193,14 +193,14 @@ class AveaLight(LightEntity):
 
     def update(self) -> None:
         """Fetch new state data for this light."""
-        if not self._light.connect():
-            return
+        connected = self._light.connect()
 
         try:
             brightness = self._light.get_brightness()
             rgb_color = self._light.get_rgb()
         finally:
-            self._light.disconnect()
+            if connected:
+                self._light.disconnect()
 
         if brightness is not None:
             self._attr_is_on = brightness != 0

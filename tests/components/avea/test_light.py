@@ -148,3 +148,29 @@ async def test_update_state(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_HS_COLOR] == (120.0, 100.0)
+
+
+async def test_update_state_uses_cached_values_when_connect_fails(
+    hass: HomeAssistant, setup_integration: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test updating the entity state when the shared connection fails."""
+    bulb = setup_integration
+    bulb.reset_mock()
+    bulb.connect.return_value = False
+    bulb.get_brightness.return_value = 2048
+    bulb.get_rgb.return_value = (0, 255, 0)
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    bulb.connect.assert_called_once()
+    bulb.get_brightness.assert_called_once()
+    bulb.get_rgb.assert_called_once()
+    bulb.disconnect.assert_not_called()
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_HS_COLOR] == (120.0, 100.0)
