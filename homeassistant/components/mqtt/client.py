@@ -1243,15 +1243,9 @@ class MQTT:
     ) -> list[Subscription]:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
-            simple_subscriptions_for_topic = self._simple_subscriptions[topic]
-            if identifiers is None:
-                subscriptions.extend(simple_subscriptions_for_topic)
-            else:
-                subscriptions.extend(
-                    subscription
-                    for subscription in simple_subscriptions_for_topic
-                    if subscription.subscription_id in identifiers
-                )
+            # The subscription identifier is always 1 for simple subscriptions,
+            # so there is no need to check for the subscription identifier
+            subscriptions.extend(self._simple_subscriptions[topic])
         subscriptions.extend(
             subscription
             for subscription in self._wildcard_subscriptions
@@ -1273,9 +1267,10 @@ class MQTT:
             # So we assigned all wildcard subscriptions with a
             # unique SubscriptionIdentifier. Simple subscriptions are assigned
             # with SubscriptionIdentifier 1.
-            if msg.properties is not None and hasattr(
-                msg.properties, "SubscriptionIdentifier"
-            ):
+            if TYPE_CHECKING:
+                assert msg.properties is not None
+                assert hasattr(msg.properties, "SubscriptionIdentifier")
+            with contextlib.suppress(AttributeError):
                 identifiers = tuple(msg.properties.SubscriptionIdentifier)
         try:
             # msg.topic is a property that decodes the topic to a string
