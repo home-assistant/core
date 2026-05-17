@@ -265,6 +265,13 @@ async def test_cover_entities_snapshot(
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_PERGOLA, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_STOP_COVER,
+            "stop",
+            None,
+            CoverState.OPEN,
+        ),
+        (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_STOP_COVER,
             "stop",
@@ -376,6 +383,7 @@ async def test_cover_entities_snapshot(
         "stop-sliding-discrete-gate",
         "stop-partial-garage-door",
         "stop-dynamic-pergola",
+        "stop-pergola-horizontal-awning",
         "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
