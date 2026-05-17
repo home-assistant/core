@@ -178,6 +178,10 @@ charset-normalizer==3.4.3
 # NAM, Brother, and GIOS.
 dacite>=1.7.0
 
+# decorator 5.3.0 dropped license metadata required by script/licenses.py.
+# Pin to 5.2.1 until license metadata is restored.
+decorator==5.2.1
+
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
 chacha20poly1305-reuseable>=0.13.0
 
