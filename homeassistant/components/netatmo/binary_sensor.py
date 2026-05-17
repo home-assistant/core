@@ -367,7 +367,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         netatmo_device: NetatmoDevice,
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
-        """Initialize a Netatmo binary sensor."""
+        """Initialize a Netatmo opening binary sensor."""
 
         super().__init__(netatmo_device, description)
 
@@ -432,7 +432,7 @@ class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
         netatmo_device: NetatmoDevice,
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
-        """Initialize a Netatmo binary sensor."""
+        """Initialize a Netatmo connectivity binary sensor."""
 
         super().__init__(netatmo_device, description)
 
