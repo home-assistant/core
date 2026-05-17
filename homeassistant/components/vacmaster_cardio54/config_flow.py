@@ -93,7 +93,10 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
             assert entity_entry is not None
             self._transmitter_entity_id = entity_entry.entity_id
             self._transmitter_id = entity_entry.id
-            self._device_id = self._generate_device_id(self._transmitter_id)
+            try:
+                self._device_id = self._generate_device_id(self._transmitter_id)
+            except HomeAssistantError:
+                return self.async_abort(reason="cannot_allocate_device_id")
             await self.async_set_unique_id(
                 f"{self._transmitter_id}_{self._device_id:05X}"
             )

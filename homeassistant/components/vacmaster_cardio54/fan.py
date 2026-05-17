@@ -86,12 +86,25 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
             and not isinstance(last_pct, bool)
             and last_pct > 0
         ):
-            self._level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, last_pct))
+            # Clamp the input to 0-100 % and the resulting level to
+            # ``SPEED_COUNT`` so a corrupted / legacy attribute can't push
+            # ``self._level`` past the last entry of ``DATA_SPEEDS`` on the
+            # next ``turn_on`` (would IndexError).
+            level = math.ceil(
+                percentage_to_ranged_value(_SPEED_RANGE, min(last_pct, 100))
+            )
+            self._level = min(level, SPEED_COUNT)
         elif last.state == STATE_ON:
             # Older HA versions might restore an "on" state without the
             # percentage attribute; default to the lowest speed so the fan
             # comes back at a sensible level instead of "off".
             self._level = 1
+        # The base ``async_added_to_hass`` writes the initial state with
+        # ``_level == 0``; if restore set a non-zero level, the UI would
+        # otherwise show ``off`` until the next command. Push the restored
+        # state once.
+        if self._level > 0:
+            self.async_write_ha_state()
 
     async def async_turn_on(
         self,

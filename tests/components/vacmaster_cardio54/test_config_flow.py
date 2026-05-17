@@ -405,3 +405,37 @@ async def test_device_id_generator_raises_when_exhausted(
         pytest.raises(HomeAssistantError, match="Could not allocate"),
     ):
         flow._generate_device_id(registry_id)
+
+
+async def test_user_flow_aborts_when_device_id_space_exhausted(
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+) -> None:
+    """User flow aborts cleanly when ``_generate_device_id`` cannot allocate.
+
+    Covers the ``try/except HomeAssistantError`` branch in
+    ``async_step_user`` that catches the bounded-retry exhaustion and
+    surfaces it to the user as a friendly abort instead of crashing.
+    """
+    entity_id = _transmitter_entity_id(hass, mock_rf_entity)
+    registry_id = _transmitter_registry_id(hass, mock_rf_entity)
+    colliding_id = 0x33333
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Existing Cardio54",
+        data={CONF_TRANSMITTER: registry_id, CONF_DEVICE_ID: colliding_id},
+        unique_id=f"{registry_id}_{colliding_id:05X}",
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vacmaster_cardio54.config_flow.random.getrandbits",
+        return_value=colliding_id,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TRANSMITTER: entity_id}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_allocate_device_id"

@@ -234,6 +234,39 @@ async def test_restore_state_rejects_bool_percentage(
     assert state.state == STATE_OFF
 
 
+async def test_restore_state_clamps_corrupted_percentage(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """``ATTR_PERCENTAGE > 100`` must clamp ``_level`` to ``SPEED_COUNT``.
+
+    Without the clamp ``math.ceil(percentage_to_ranged_value((1, 3), 150))``
+    returns 5, which would index past ``DATA_SPEEDS`` on the next
+    ``turn_on`` and raise ``IndexError``. Clamping keeps the fan at the
+    top valid speed instead.
+    """
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_ON,
+                attributes={ATTR_PERCENTAGE: 150},
+            )
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    # Clamped to SPEED_COUNT=3 -> 100% (top of the 1..3 range).
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 100
+
+
 async def test_restore_state_does_not_transmit(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
