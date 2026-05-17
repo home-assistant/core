@@ -144,6 +144,11 @@ DYNAMIC_PERGOLA = FixtureDevice(
     "ogp://1234-1234-6233/14356699",
     "cover.somfy_pergola",
 )
+PERGOLA_HORIZONTAL_AWNING = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/11447718",
+    "cover.pergola_awning",
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -156,6 +161,7 @@ SNAPSHOT_FIXTURES = [
     POSITIONABLE_ROLLER_SHUTTER_UNO,
     POSITIONABLE_DUAL_ROLLER_SHUTTER,
     DYNAMIC_PERGOLA,
+    PERGOLA_HORIZONTAL_AWNING,
 ]
 
 
@@ -195,6 +201,14 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_PERGOLA, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_OPEN_COVER,
+            "deploy",
+            None,
+            CoverState.OPENING,
+        ),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_OPEN_COVER,
@@ -219,6 +233,14 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_PERGOLA, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_CLOSE_COVER,
+            "undeploy",
+            None,
+            CoverState.CLOSING,
+        ),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_CLOSE_COVER,
@@ -243,6 +265,7 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
         (SLIDING_DISCRETE_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_PERGOLA, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_STOP_COVER,
@@ -326,6 +349,8 @@ async def test_cover_entities_snapshot(
         "open-dynamic-gate",
         "open-sliding-discrete-gate",
         "open-partial-garage-door",
+        "open-dynamic-pergola",
+        "open-pergola-horizontal-awning",
         "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
@@ -338,6 +363,8 @@ async def test_cover_entities_snapshot(
         "close-dynamic-gate",
         "close-sliding-discrete-gate",
         "close-partial-garage-door",
+        "close-dynamic-pergola",
+        "close-pergola-horizontal-awning",
         "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
@@ -350,6 +377,7 @@ async def test_cover_entities_snapshot(
         "stop-dynamic-gate",
         "stop-sliding-discrete-gate",
         "stop-partial-garage-door",
+        "stop-dynamic-pergola",
         "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
@@ -414,8 +442,22 @@ async def test_cover_service_actions(
             [65, OverkizCommandParam.LOWSPEED],
             35,
         ),
+        (DYNAMIC_PERGOLA, DYNAMIC_PERGOLA.entity_id, "setClosure", [60], 40),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            PERGOLA_HORIZONTAL_AWNING.entity_id,
+            "setDeployment",
+            [80],
+            80,
+        ),
     ],
-    ids=["roller-shutter", "awning", "low-speed"],
+    ids=[
+        "roller-shutter",
+        "awning",
+        "low-speed",
+        "dynamic-pergola",
+        "pergola-horizontal-awning",
+    ],
 )
 async def test_cover_set_position(
     hass: HomeAssistant,
