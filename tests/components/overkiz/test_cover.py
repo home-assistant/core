@@ -145,8 +145,8 @@ DYNAMIC_VENETIAN_BLIND = FixtureDevice(
     "cover.bedroom_venetian_blind",
 )
 POSITIONABLE_VENETIAN_BLIND = FixtureDevice(
-    "setup/cloud_somfy_tahoma_v2_europe.json",
-    "zigbee://1234-1234-6233/16730099",
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "zigbee://1234-5678-3293/16730099",
     "cover.living_room_venetian_blind",
 )
 
