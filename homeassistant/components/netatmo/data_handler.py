@@ -373,7 +373,10 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_SWITCH,
                 NETATMO_CREATE_LEGACY_SENSOR,
             ],
-            NetatmoDeviceCategory.meter: [NETATMO_CREATE_LEGACY_SENSOR],
+            NetatmoDeviceCategory.meter: [
+                NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
+                NETATMO_CREATE_LEGACY_SENSOR,
+            ],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
             NetatmoDeviceCategory.opening: [
                 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,

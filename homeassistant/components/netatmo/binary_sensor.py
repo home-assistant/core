@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    CONF_URL_ENERGY,
     CONF_URL_SECURITY,
     DOORTAG_CATEGORY_DOOR,
     DOORTAG_CATEGORY_FURNITURE,
@@ -137,6 +138,7 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
 
 DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.meter: CONF_URL_ENERGY,
 }
 
 DEVICE_CATEGORY_WEATHER_BINARY_SENSORS: Final[
@@ -150,6 +152,7 @@ DEVICE_CATEGORY_CONNECTIVITY_BINARY_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
 ] = {
     NetatmoDeviceCategory.opening: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.meter: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
 }
 
 DEVICE_CATEGORY_OPENING_BINARY_SENSORS: Final[
