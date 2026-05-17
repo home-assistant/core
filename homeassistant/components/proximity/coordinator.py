@@ -35,6 +35,7 @@ from .const import (
     DEFAULT_DIR_OF_TRAVEL,
     DEFAULT_DIST_TO_ZONE,
     DEFAULT_NEAREST,
+    DEFAULT_SPEED_THRESHOLD,
     DOMAIN,
 )
 
@@ -140,7 +141,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialise the coordinator."""
         self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
-        self.speed_threshold: float = config_entry.data.get(CONF_SPEED_THRESHOLD, 0.5)
+        self.speed_threshold: float = config_entry.data.get(
+            CONF_SPEED_THRESHOLD, DEFAULT_SPEED_THRESHOLD
+        )
         self.tolerance: int = config_entry.data[CONF_TOLERANCE]
         self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
         self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
@@ -317,6 +320,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         Each segment speed is weighted by the recency of its endpoint:
           w[i] = 1 - age_of_sample[i] / total_period   (higher weight = more recent)
+        For better responsiveness, we only check the last 15 minutes of samples.
 
         Using actual great-circle distance between consecutive positions means
         that slow drifts and GPS jitter both contribute correctly to the average.
@@ -340,7 +344,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
             age = (now - samples[i].timestamp).total_seconds()
             if age > STALE_THRESHOLD_S_MAX:
-                break
+                continue
             weight = 1.0 - age / total_period
 
             seg_dist = distance(
@@ -491,14 +495,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             lon = tracked_entity_state.attributes.get(ATTR_LONGITUDE)
 
             dist_to_zone: int | None
-            if tracked_entity_state.state.lower() == self.proximity_zone_id.lower():
-                _LOGGER.debug(
-                    "%s: %s in zone -> direction_of_travel=arrived",
-                    self.name,
-                    entity_id,
-                )
-                dist_to_zone = 0
-            elif lat is None or lon is None:
+            if lat is None or lon is None:
                 _LOGGER.debug(
                     "%s: %s has no coordinates -> distance=None",
                     self.name,

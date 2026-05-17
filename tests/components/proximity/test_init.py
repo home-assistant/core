@@ -1,6 +1,6 @@
 """The tests for the Proximity component."""
 
-import asyncio
+from datetime import timedelta
 
 import pytest
 
@@ -20,9 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def async_setup_single_entry(
@@ -283,7 +283,7 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
 
-    await asyncio.sleep(0.1)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
 
     hass.states.async_set(
         "device_tracker.test1",
