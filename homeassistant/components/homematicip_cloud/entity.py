@@ -256,7 +256,10 @@ class HomematicipGenericEntity(Entity):
                     stripped = label_str[len(device_label) :].strip()
                     if stripped:
                         self._attr_name = stripped
-                        return
+                    # Otherwise channel label equals device label (modulo
+                    # whitespace); leave _attr_name unset so HA composes just
+                    # the device name without duplicating it.
+                    return
                 self._attr_name = label_str
                 return
             # Fallback: use post suffix or generic channel name.
@@ -292,7 +295,9 @@ class HomematicipGenericEntity(Entity):
                     stripped = label_str[len(device_label) :].strip()
                     if stripped:
                         self._attr_name = stripped
-                        return
+                    # Otherwise channel label equals device label (modulo
+                    # whitespace); leave _attr_name unset.
+                    return
                 self._attr_name = label_str
                 return
 
