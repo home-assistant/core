@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     RestoreSensor,
     SensorDeviceClass,
@@ -701,12 +702,18 @@ class UtilityMeterSensor(RestoreSensor):
 
     @property
     def state_class(self) -> SensorStateClass:
-        """Return the device class of the sensor."""
-        return (
-            SensorStateClass.TOTAL
-            if self._sensor_net_consumption
-            else SensorStateClass.TOTAL_INCREASING
-        )
+        """Return the state class of the sensor."""
+        if self._sensor_net_consumption:
+            return SensorStateClass.TOTAL
+        if (
+            self._input_device_class is not None
+            and SensorStateClass.TOTAL_INCREASING
+            not in DEVICE_CLASS_STATE_CLASSES.get(
+                self._input_device_class, {SensorStateClass.TOTAL_INCREASING}
+            )
+        ):
+            return SensorStateClass.TOTAL
+        return SensorStateClass.TOTAL_INCREASING
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
