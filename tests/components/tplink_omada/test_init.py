@@ -241,12 +241,12 @@ async def test_cleanup_devices_removes_orphans(
     assert device_registry.async_get(orphan.id) is None
 
 
-async def test_cleanup_lock_prevents_redundant_tasks(
+async def test_cleanup_task_guard_prevents_redundant_tasks(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cleanup lock prevents scheduling a second cleanup while one is running."""
+    """Test in-flight task guard prevents scheduling a second cleanup concurrently."""
     cleanup_call_count = 0
     cleanup_started = asyncio.Event()
     cleanup_proceed = asyncio.Event()
@@ -265,10 +265,10 @@ async def test_cleanup_lock_prevents_redundant_tasks(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Startup _schedule_cleanup() fires immediately; wait for it to acquire lock
+        # Startup _schedule_cleanup() fires immediately; wait for the task to start
         await cleanup_started.wait()
 
-        # Lock is now held — the 1-hour interval firing should be a no-op
+        # In-flight task guard is now active — the 1-hour interval should be a no-op
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
         await hass.async_block_till_done()
 
@@ -276,7 +276,7 @@ async def test_cleanup_lock_prevents_redundant_tasks(
         cleanup_proceed.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The second _schedule_cleanup call returned early due to the lock guard
+    # The second _schedule_cleanup call returned early due to the in-flight task guard
     assert cleanup_call_count == 1
 
 
@@ -311,3 +311,44 @@ async def test_cleanup_runs_hourly(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(stale_tracker.entity_id) is None
+
+
+async def test_unload_cancels_cleanup_and_interval(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entry unload cancels in-flight cleanup task and removes interval."""
+    cleanup_started = asyncio.Event()
+    cleanup_cancelled = False
+
+    async def blocking_cleanup(h: HomeAssistant, c: OmadaSiteController) -> None:
+        nonlocal cleanup_cancelled
+        cleanup_started.set()
+        try:
+            await asyncio.Event().wait()  # block forever until cancelled
+        except asyncio.CancelledError:
+            cleanup_cancelled = True
+            raise
+
+    with patch(
+        "homeassistant.components.tplink_omada.async_cleanup_devices",
+        new=blocking_cleanup,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await cleanup_started.wait()
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert cleanup_cancelled is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Firing the interval after unload must not start a new cleanup task
+    cleanup_started.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not cleanup_started.is_set()

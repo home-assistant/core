@@ -247,10 +247,11 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
         return None
-    parts = unique_id.split("_", 2)
-    if len(parts) != 3:
+    # Split from the right so site_ids containing underscores are handled
+    _, sep, mac = unique_id.rpartition("_")
+    if not sep or not mac:
         return None
-    return dr.format_mac(parts[2])
+    return dr.format_mac(mac)
 
 
 async def async_cleanup_client_trackers(
@@ -286,7 +287,7 @@ async def async_cleanup_devices(
         return
 
     device_registry = dr.async_get(hass)
-    entry_id = controller.clients_coordinator.config_entry.entry_id
+    entry_id = controller.devices_coordinator.config_entry.entry_id
     known_devices = {dr.format_mac(mac) for mac in controller.devices_coordinator.data}
 
     for device_entry in device_registry.devices.get_devices_for_config_entry_id(
