@@ -2269,7 +2269,9 @@ async def test_render_template_strict_with_timeout_and_error_2(
                 {
                     "type": "event",
                     "event": {
-                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "error": (
+                            "TypeError: object of type 'datetime.datetime' has no len()"
+                        ),
                         "level": "ERROR",
                     },
                 },
@@ -2277,7 +2279,9 @@ async def test_render_template_strict_with_timeout_and_error_2(
                 {
                     "type": "event",
                     "event": {
-                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "error": (
+                            "TypeError: object of type 'datetime.datetime' has no len()"
+                        ),
                         "level": "ERROR",
                     },
                 },
@@ -3564,7 +3568,8 @@ async def test_wait_integration_startup(
     # Allow setup to proceed
     setup_stall.set()
 
-    # The component is scheduled to load, this will block until the config entry is loaded
+    # The component is scheduled to load, this will block until
+    # the config entry is loaded
     await ws_client.send_json_auto_id({"type": "integration/wait", "domain": "test"})
     response = await ws_client.receive_json()
     assert response == {
@@ -3586,7 +3591,7 @@ async def test_extract_from_target(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
+    """Test extract_from_target command with mixed target types."""
 
     async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
@@ -3903,7 +3908,7 @@ async def test_get_triggers_conditions_for_target(
     automation_component: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
+    """Test get triggers/conditions for target with mixed types."""
 
     async def async_get_triggers_conditions(hass: HomeAssistant) -> dict[str, type]:
         return {

@@ -250,7 +250,8 @@ def mock_scene() -> AsyncMock:
     return scene
 
 
-# Fixture to set up the integration for testing, needs platform fixture, to be defined in each test file
+# Fixture to set up the integration for testing, needs platform fixture,
+# to be defined in each test file
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,

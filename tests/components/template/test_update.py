@@ -461,7 +461,10 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
         ),
         (
             "icon",
-            "{% if is_state('sensor.installed_update', 'on') %}mdi:something{% endif %}",
+            (
+                "{% if is_state('sensor.installed_update', 'on') %}"
+                "mdi:something{% endif %}"
+            ),
             ATTR_ICON,
             "mdi:something",
         ),
@@ -701,7 +704,10 @@ async def test_update_percent_template(
             TEST_INSTALLED_TEMPLATE,
             TEST_LATEST_TEMPLATE,
             "update_percentage",
-            "{% set e = 'sensor.test_update' %}{{ states(e) if e | has_value else None }}",
+            (
+                "{% set e = 'sensor.test_update' %}"
+                "{{ states(e) if e | has_value else None }}"
+            ),
         )
     ],
 )
