@@ -80,15 +80,15 @@ async def test_abort_already_configured(
 @pytest.mark.parametrize(
     "exception",
     [
-        ZendureP1ConnectionError,
-        ZendureP1TimeoutError,
-        ZendureP1ResponseError,
+        ZendureP1ConnectionError(),
+        ZendureP1TimeoutError(),
+        ZendureP1ResponseError(),
     ],
 )
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    exception: type[Exception],
+    exception: Exception,
 ) -> None:
     """Test we handle connection errors and the flow can recover."""
     result = await hass.config_entries.flow.async_init(

@@ -37,16 +37,16 @@ async def test_load_unload_entry(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        ZendureP1ConnectionError,
-        ZendureP1TimeoutError,
-        ZendureP1ResponseError,
+        ZendureP1ConnectionError(),
+        ZendureP1TimeoutError(),
+        ZendureP1ResponseError(),
     ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_zendure_p1_client: AsyncMock,
-    side_effect: type[Exception],
+    side_effect: Exception,
 ) -> None:
     """Test that a failed first refresh puts the entry in SETUP_RETRY state."""
     mock_zendure_p1_client.get_report.side_effect = side_effect
