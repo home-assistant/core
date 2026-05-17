@@ -367,7 +367,7 @@ async def test_dhcp_discovery_backfill_requires_ip_match(
     expected_step: str | None,
     expected_mac: str | None,
 ) -> None:
-    """MAC backfill on an entry without a stored MAC requires both IP and prefix to match.
+    """MAC backfill requires both IP and prefix to match.
 
     Two hubs from the same production batch share the 9-digit serial
     prefix but have different IPs. Requiring IP match prevents a DHCP

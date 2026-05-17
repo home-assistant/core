@@ -82,7 +82,8 @@ async def test_schedule_update_webhook_event(
     # Save initial state
     initial_state = hass.states.get(climate_entity_livingroom)
 
-    # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
+    # Create a schedule update event without a schedule_id (the
+    # event is sent when temperature sets of a schedule are changed)
     response = {
         "home_id": "91763b24c43d3e344f424e8b",
         "event_type": "schedule",
@@ -747,7 +748,8 @@ async def test_service_preset_mode_with_end_time_thermostats(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.livingroom"
 
-    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) and a valid end datetime
+    # Test setting a valid preset mode (that allow an end datetime
+    # in Netatmo == THERM_MODES) and a valid end datetime
     await hass.services.async_call(
         "netatmo",
         SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
@@ -792,7 +794,8 @@ async def test_service_preset_mode_with_end_time_thermostats(
             blocking=True,
         )
 
-    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
+    # Test setting a valid preset mode (that allow an end datetime
+    # in Netatmo == THERM_MODES) without an end datetime
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             "netatmo",

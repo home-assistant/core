@@ -195,7 +195,7 @@ async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
     mock_config_entry: MockConfigEntry,
     mock_opendisplay_device: MagicMock,
 ) -> None:
-    """Test battery % sensor uses LI_ION when capacity_estimator is 0 (not configured)."""
+    """Test battery % uses LI_ION when capacity_estimator is 0."""
     device_config = deepcopy(DEVICE_CONFIG)
     power = device_config.power
     device_config.power = PowerOption(
@@ -221,6 +221,7 @@ async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
 
     battery_state = hass.states.get("sensor.opendisplay_1234_battery")
     assert battery_state is not None
-    # capacity_estimator=0 should fall back to LI_ION, producing the same value as explicit LI_ION
+    # capacity_estimator=0 should fall back to LI_ION, producing
+    # the same value as explicit LI_ION
     expected = voltage_to_percent(3700, CapacityEstimator.LI_ION)
     assert battery_state.state == str(expected)

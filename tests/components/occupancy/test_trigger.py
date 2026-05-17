@@ -104,7 +104,7 @@ async def test_occupancy_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test occupancy trigger fires for binary_sensor entities with device_class occupancy."""
+    """Test occupancy trigger fires for occupancy binary_sensors."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,

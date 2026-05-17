@@ -27,7 +27,10 @@ from . import TEST_COPROCESSOR_VERSION
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-DEVICE_PATH = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+DEVICE_PATH = (
+    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+    "_9ab1da1ea4b3ed11956f4eaca7669f5d-if00-port0"
+)
 
 
 async def test_get_firmware_info(hass: HomeAssistant) -> None:

@@ -525,7 +525,8 @@ async def test_assist_api_tools_conversion(
     for tool in tools:
         msg = (
             f"Invalid schema for function '{tool['name']}': schema must have type "
-            "'object' and not have 'oneOf'/'anyOf'/'allOf'/'enum'/'not' at the top level."
+            "'object' and not have 'oneOf'/'anyOf'/'allOf'/"
+            "'enum'/'not' at the top level."
         )
         assert tool["parameters"]["type"] == "object", msg
         for key in ("oneOf", "anyOf", "allOf", "enum", "not"):
@@ -679,7 +680,10 @@ async def test_code_interpreter(
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    message = "I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758."
+    message = (
+        "I’ve calculated it with Python: the square root of"
+        " 55555 is approximately 235.70108188126758."
+    )
     mock_create_stream.return_value = [
         (
             *create_code_interpreter_item(

@@ -371,7 +371,7 @@ async def test_upload_image_invalid_encryption_key_format(
     mock_config_entry: MockConfigEntry,
     mock_resolve_media: MagicMock,
 ) -> None:
-    """Test that a malformed stored encryption key triggers reauth and raises an error."""
+    """Test malformed encryption key triggers reauth and error."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: "not-valid-hex!"},

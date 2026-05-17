@@ -9,7 +9,8 @@ def price_enc(country: int, day: int, hour: int, minute: int) -> float:
     """Encode the given data into a price.
 
     Format is CCDDhhmm000. Examples:
-    -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day of month), hh=01 (1 am), mm=15.
+    -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day),
+       hh=01 (1 am), mm=15.
     -   34 16 23 00 000 for CC=34 (Spain), DD=16 (day of month), hh=23 (11 pm), mm=00.
 
     This allows us to make assertions in tests without having

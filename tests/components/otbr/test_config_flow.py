@@ -51,7 +51,9 @@ HASSIO_DATA_OTBR = HassioServiceInfo(
         "host": "core-openthread-border-router",
         "port": 8081,
         "device": "/dev/ttyUSB1",
-        "firmware": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r",
+        "firmware": (
+            "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57\r"
+        ),
         "addon": "OpenThread Border Router",
     },
     name="OpenThread Border Router",

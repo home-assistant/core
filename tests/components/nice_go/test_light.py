@@ -175,7 +175,7 @@ async def test_auth_failed_error(
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that if an auth failed error occurs, the integration attempts a token refresh and a retry before throwing an error."""
+    """Test auth failure triggers token refresh and retry."""
 
     await setup_integration(hass, mock_config_entry, [Platform.LIGHT])
 
