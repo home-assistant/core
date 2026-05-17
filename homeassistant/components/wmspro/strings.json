@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "button": {
+      "rotation-reset": {
+        "name": "Reset Rotation"
+      }
+    },
     "cover": {
       "valance": {
         "name": "Valance"

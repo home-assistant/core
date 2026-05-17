@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "rotation-reset": {
+        "default": "mdi:numeric-0-box-multiple-outline"
+      }
+    },
     "number": {
       "rotation": {
         "default": "mdi:rotate-360"
