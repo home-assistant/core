@@ -10,4 +10,4 @@ PLATFORMS = [Platform.SENSOR]
 
 LOGGER = logging.getLogger(__package__)
 
-UPDATE_INTERVAL = timedelta(seconds=1)
+UPDATE_INTERVAL = timedelta(seconds=5)
