@@ -88,7 +88,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -453,7 +453,10 @@ async def test_preset_mode_functionality(
         option_key=option_key,
         value=allowed_values[0]
         if allowed_values
-        else "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+        else (
+            "HeatingVentilationAirConditioning"
+            ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+        ),
     )
     entity_state = hass.states.get(entity_id)
     assert entity_state
@@ -606,7 +609,7 @@ async def test_added_entity_automatically(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that no fan entity is created if no fan options are available but when they are added later, the entity is created."""
+    """Test fan entity created only after fan options become available."""
     entity_id = "fan.air_conditioner"
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(

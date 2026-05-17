@@ -90,7 +90,8 @@ MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
         (
             MOCK_USER_DATA_STEP_MANY_VIA,
             None,
-            "test_start test_destination via via_station_1, via_station_2, via_station_3",
+            "test_start test_destination via"
+            " via_station_1, via_station_2, via_station_3",
         ),
         (MOCK_USER_DATA_STEP_ARRIVAL, None, "test_start test_destination arrival"),
         (

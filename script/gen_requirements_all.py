@@ -14,9 +14,10 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
-# Requirements which can't be installed on all systems because they rely on additional
-# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
-# in requirements_all.txt and requirements_test_all.txt.
+# Requirements which can't be installed on all systems because they
+# rely on additional system packages. Requirements listed in
+# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
+# requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avion",
@@ -90,9 +91,11 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
-# these requirements are quite loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# httpx requires httpcore, and httpcore requires anyio and h11,
+# but the version constraints on these requirements are quite
+# loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful
+# for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.10.0
 h11==0.16.0
@@ -207,6 +210,10 @@ pytest-rerunfailures==16.0.1
 
 # Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
 aiomqtt>=2.5.0
+
+# aiofile 3.10.0 crashes on import due to KeyError on package metadata
+# https://github.com/mosquito/aiofile/pull/106
+aiofile==3.9.0
 
 # auth0-python v5.0 is a major rewrite with breaking changes
 # used by sharkiq==1.5.0
