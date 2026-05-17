@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_entities[pm6006_integrated_amplifier][media_player.marantz_pm6006_integrated_amplifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'cd',
+        'coax',
+        'network',
+        'optical',
+        'phono',
+        'recorder',
+        'tuner',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.marantz_pm6006_integrated_amplifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3464>,
+    'translation_key': 'receiver',
+    'unique_id': '01JTEST0000000000000000000_media_player',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[pm6006_integrated_amplifier][media_player.marantz_pm6006_integrated_amplifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'receiver',
+      'friendly_name': 'Marantz PM6006 Integrated Amplifier',
+      'source_list': list([
+        'cd',
+        'coax',
+        'network',
+        'optical',
+        'phono',
+        'recorder',
+        'tuner',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3464>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.marantz_pm6006_integrated_amplifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[sr_7000_receiver][media_player.marantz_sr_7000_receiver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.marantz_sr_7000_receiver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 1416>,
+    'translation_key': 'receiver',
+    'unique_id': '01JTEST0000000000000000000_media_player',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sr_7000_receiver][media_player.marantz_sr_7000_receiver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'receiver',
+      'friendly_name': 'Marantz SR-7000 Receiver',
+      'supported_features': <MediaPlayerEntityFeature: 1416>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.marantz_sr_7000_receiver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
