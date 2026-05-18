@@ -578,8 +578,12 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             last_distance = mov.distance_to_zone
             mov.distance_to_zone = dist_to_zone
 
-            # -- Arrived -------------------------------------------------------
-            if dist_to_zone == 0:
+            # -- Unknown -------------------------------------------------------
+            if dist_to_zone is None:
+                mov.direction = None
+                mov.speed = None
+            elif dist_to_zone == 0:
+                # -- Arrived ---------------------------------------------------
                 mov.direction = "arrived"
                 mov.speed = 0
             else:
@@ -588,7 +592,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
                 # -- Direction -------------------------------------------------
                 direction: str | None
-                if mov.speed is None or dist_to_zone is None:
+                if mov.speed is None:
                     direction = None
                 elif mov.speed < self.speed_threshold:
                     direction = "stationary"
