@@ -2512,7 +2512,7 @@ pysenz==1.0.2
 pysesame2==1.0.1
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.1.3
+pyseventeentrack==1.1.4
 
 # homeassistant.components.sia
 pysiaalarm==3.2.2

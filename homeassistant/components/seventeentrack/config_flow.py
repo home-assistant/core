@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
@@ -15,7 +16,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
-from .client import BrowserLikeSeventeenTrackClient as SeventeenTrackClient
 from .const import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
