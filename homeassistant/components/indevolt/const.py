@@ -57,6 +57,8 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltBattery.GEN_1_PACK_1_TEMPERATURE,
         IndevoltBattery.GEN_1_PACK_2_TEMPERATURE,
         IndevoltBattery.GEN_1_PACK_3_TEMPERATURE,
+        IndevoltBattery.GEN_1_MOS_TEMPERATURE_CHARGE,
+        IndevoltBattery.GEN_1_MOS_TEMPERATURE_DISCHARGE,
     ],
     2: [
         IndevoltSystem.OPERATING_MODE,
@@ -111,6 +113,11 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltBattery.PACK_3_TEMPERATURE,
         IndevoltBattery.PACK_4_TEMPERATURE,
         IndevoltBattery.PACK_5_TEMPERATURE,
+        IndevoltBattery.PACK_1_MOS_TEMPERATURE,
+        IndevoltBattery.PACK_2_MOS_TEMPERATURE,
+        IndevoltBattery.PACK_3_MOS_TEMPERATURE,
+        IndevoltBattery.PACK_4_MOS_TEMPERATURE,
+        IndevoltBattery.PACK_5_MOS_TEMPERATURE,
         IndevoltBattery.MAIN_VOLTAGE,
         IndevoltBattery.PACK_1_VOLTAGE,
         IndevoltBattery.PACK_2_VOLTAGE,
@@ -138,5 +145,7 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltBattery.PACK_5_HEATING_STATE,
         IndevoltGrid.METER_CONNECTED,
         IndevoltSolar.CUMULATIVE_PRODUCTION,
+        IndevoltBattery.GEN_2_CYCLE_COUNT,
+        IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
     ],
 }

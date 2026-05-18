@@ -1101,8 +1101,9 @@ async def test_unsubscribe_race(
     assert not calls_a
     assert calls_b
 
-    # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
-    # when both subscriptions were combined [subscribe]
+    # We allow either calls [subscribe, unsubscribe, subscribe],
+    # [subscribe, subscribe] or when both subscriptions were
+    # combined [subscribe]
     expected_calls_1 = [
         call.subscribe([("test/state", 0)]),
         call.unsubscribe("test/state"),
@@ -1287,7 +1288,8 @@ async def test_triggers_reauth_flow_if_auth_fails(
 ) -> None:
     """Test re-auth is triggered if authentication is failing."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
-    # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
+    # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED
+    # and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
     mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode(), None)
     mqtt_client_mock.on_connect(Mock(), None, None, reason_code)
     await hass.async_block_till_done()
@@ -1305,16 +1307,19 @@ async def test_handle_mqtt_on_callback(
     """Test receiving an ACK callback before waiting for it."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     with patch.object(mqtt_client_mock, "get_mid", return_value=100):
-        # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
+        # Simulate an ACK for mid == 100, this will call
+        # mqtt_mock._async_get_mid_future(mid)
         mqtt_client_mock.on_publish(
             mqtt_client_mock, None, 100, MockMqttReasonCode(), None
         )
         await hass.async_block_till_done()
         # Make sure the ACK has been received
         await hass.async_block_till_done()
-        # Now call publish without call back, this will call _async_async_wait_for_mid(msg_info.mid)
+        # Now call publish without call back, this will call
+        # _async_async_wait_for_mid(msg_info.mid)
         await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-        # Since the mid event was already set, we should not see any timeout warning in the log
+        # Since the mid event was already set, we should not see
+        # any timeout warning in the log
         await hass.async_block_till_done()
         assert "No ACK from MQTT server" not in caplog.text
 
@@ -1851,18 +1856,26 @@ async def test_delayed_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_options",
-    [ENTRY_DEFAULT_BIRTH_MESSAGE],
+    ("mqtt_config_entry_options", "discovery_qos"),
+    [
+        (ENTRY_DEFAULT_BIRTH_MESSAGE, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 0}, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 1}, 1),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 2}, 2),
+    ],
 )
 async def test_subscription_done_when_birth_message_is_sent(
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient, discovery_qos: int
 ) -> None:
     """Test sending birth message until initial subscription has been completed."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     for component in SUPPORTED_COMPONENTS:
-        assert (f"homeassistant/{component}/+/config", 0) in subscribe_calls
-        assert (f"homeassistant/{component}/+/+/config", 0) in subscribe_calls
+        assert (f"homeassistant/{component}/+/config", discovery_qos) in subscribe_calls
+        assert (
+            f"homeassistant/{component}/+/+/config",
+            discovery_qos,
+        ) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False, ANY
     )

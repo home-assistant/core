@@ -20,7 +20,10 @@ MOCK_CONF = {
     ATTR_VAPID_EMAIL: "test@example.com",
     ATTR_VAPID_PRV_KEY: "h6acSRds8_KR8hT9djD8WucTL06Gfe29XXyZ1KcUjN8",
 }
-MOCK_CONF_PUB_KEY = "BIUtPN7Rq_8U7RBEqClZrfZ5dR9zPCfvxYPtLpWtRVZTJEc7lzv2dhzDU6Aw1m29Ao0-UA1Uq6XO9Df8KALBKqA"
+MOCK_CONF_PUB_KEY = (
+    "BIUtPN7Rq_8U7RBEqClZrfZ5dR9zPCfvxYPtLpWtRVZTJEc7lzv2dhzDU6Aw1m29"
+    "Ao0-UA1Uq6XO9Df8KALBKqA"
+)
 
 
 @pytest.fixture(name="config_entry")

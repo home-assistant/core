@@ -183,6 +183,7 @@ async def async_setup_platform(
         """Reload the scene config."""
         try:
             config = await conf_util.async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return

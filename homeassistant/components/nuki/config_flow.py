@@ -51,6 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             DEFAULT_TIMEOUT,
         )
 
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         info = await hass.async_add_executor_job(bridge.info)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err

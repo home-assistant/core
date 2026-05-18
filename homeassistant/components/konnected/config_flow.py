@@ -1,4 +1,5 @@
 """Config flow for konnected.io integration."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import asyncio
 import copy
@@ -409,7 +410,8 @@ class OptionsFlowHandler(OptionsFlow):
             config_entry.options or config_entry.data[CONF_DEFAULT_OPTIONS]
         )
 
-        # as config proceeds we'll build up new options and then replace what's in the config entry
+        # as config proceeds we'll build up new options
+        # and then replace what's in the config entry
         self.new_opt: dict[str, Any] = {CONF_IO: {}}
         self.active_cfg: str | None = None
         self.io_cfg: dict[str, Any] = {}

@@ -117,7 +117,7 @@ async def test_device_registry(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Validate device registry snapshots for all devices, including unsupported ones."""
+    """Validate device registry snapshots for all devices."""
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 

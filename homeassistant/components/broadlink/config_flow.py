@@ -313,6 +313,8 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         data_schema = {vol.Required(CONF_NAME, default=device.name): str}
         return self.async_show_form(
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
