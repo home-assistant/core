@@ -247,7 +247,10 @@ async def test_ssdp_hostname_from_usn_only(hass: HomeAssistant, fc_class_mock) -
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert _flow_context(hass, result["flow_id"])["configuration_url"] == "http://fritz.box"
+    assert (
+        _flow_context(hass, result["flow_id"])["configuration_url"]
+        == "http://fritz.box"
+    )
     assert _flow_unique_id(hass, result["flow_id"]) == MOCK_FRITZ_SSDP_DEVICE_UUID
 
 
@@ -275,7 +278,10 @@ async def test_ssdp_fritz_box_from_usn_without_uuid(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert _flow_context(hass, result["flow_id"])["configuration_url"] == "http://fritz.box"
+    assert (
+        _flow_context(hass, result["flow_id"])["configuration_url"]
+        == "http://fritz.box"
+    )
     assert _flow_unique_id(hass, result["flow_id"]) == "fritz.box"
 
 
