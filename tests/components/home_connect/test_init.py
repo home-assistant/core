@@ -252,7 +252,7 @@ async def test_required_program_or_at_least_an_option(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    "Test that the set_program_and_options does raise an exception if no program nor options are set."
+    """Test set_program_and_options raises if no program nor options."""
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -354,7 +354,7 @@ async def test_entity_migration(
 
 
 async def test_bsh_key_transformations() -> None:
-    """Test that the key transformations are compatible valid translations keys and can be reversed."""
+    """Test key transformations produce valid translation keys."""
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
     assert RE_TRANSLATION_KEY.match(translation_key)

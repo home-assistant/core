@@ -14,9 +14,10 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
-# Requirements which can't be installed on all systems because they rely on additional
-# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
-# in requirements_all.txt and requirements_test_all.txt.
+# Requirements which can't be installed on all systems because they
+# rely on additional system packages. Requirements listed in
+# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
+# requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avion",
@@ -90,9 +91,11 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
-# these requirements are quite loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# httpx requires httpcore, and httpcore requires anyio and h11,
+# but the version constraints on these requirements are quite
+# loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful
+# for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.10.0
 h11==0.16.0
@@ -158,6 +161,10 @@ charset-normalizer==3.4.3
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
 dacite>=1.7.0
+
+# decorator 5.3.0 dropped license metadata required by script/licenses.py.
+# Pin to 5.2.1 until license metadata is restored.
+decorator==5.2.1
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
 chacha20poly1305-reuseable>=0.13.0

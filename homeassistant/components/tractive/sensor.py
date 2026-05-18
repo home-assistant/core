@@ -63,7 +63,11 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         else:
             dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
         super().__init__(
-            client, item.trackable, item.tracker_details, dispatcher_signal
+            client,
+            item.trackable,
+            item.tracker_details,
+            dispatcher_signal,
+            description.hardware_sensor,
         )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
@@ -83,7 +87,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
-        translation_key="tracker_battery_level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
