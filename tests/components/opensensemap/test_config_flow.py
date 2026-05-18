@@ -142,12 +142,15 @@ async def test_import_flow_with_yaml_name(
     assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
 
 
+@pytest.mark.parametrize("side_effect", [OpenSenseMapError, TimeoutError])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_opensensemap_api: AsyncMock
+    hass: HomeAssistant,
+    mock_opensensemap_api: AsyncMock,
+    side_effect: type[Exception],
 ) -> None:
     """Test importing when the API is unreachable."""
-    mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
+    mock_opensensemap_api.get_data.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

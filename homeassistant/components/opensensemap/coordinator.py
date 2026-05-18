@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import API_TIMEOUT, DOMAIN, LOGGER, SCAN_INTERVAL
 
 type OpenSenseMapConfigEntry = ConfigEntry[OpenSenseMapCoordinator]
 
@@ -38,7 +38,7 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch latest data from the openSenseMap API."""
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(API_TIMEOUT):
                 await self.api.get_data()
         except (OpenSenseMapError, TimeoutError) as err:
             raise UpdateFailed(

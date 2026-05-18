@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION_ID, DOMAIN, LOGGER
+from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
 
 
 class CannotConnect(HomeAssistantError):
@@ -34,11 +34,11 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         api = OpenSenseMap(station_id, session)
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(API_TIMEOUT):
                 await api.get_data()
         except (OpenSenseMapError, TimeoutError) as err:
             raise CannotConnect from err
-        if "name" not in api.data:
+        if not api.data or "name" not in api.data:
             raise InvalidStation
         return api.data["name"]
 
@@ -73,23 +73,14 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
         """Handle import of a YAML configuration."""
         station_id = import_data[CONF_STATION_ID]
-        # Abort on duplicate before contacting the API: air_quality.async_setup_platform
-        # only creates the generic deprecation issue when the abort reason is
-        # "already_configured", so this ordering must be preserved.
         await self.async_set_unique_id(station_id)
         self._abort_if_unique_id_configured()
 
         try:
             name = await self._async_get_station_name(station_id)
         except CannotConnect:
-            LOGGER.error(
-                "Failed to import openSenseMap station %s: cannot_connect", station_id
-            )
             return self.async_abort(reason="cannot_connect")
         except InvalidStation:
-            LOGGER.error(
-                "Failed to import openSenseMap station %s: invalid_station", station_id
-            )
             return self.async_abort(reason="invalid_station")
 
         return self.async_create_entry(

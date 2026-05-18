@@ -47,8 +47,12 @@ async def mock_opensensemap_api(
     ):
         instance = mock_client.return_value
         instance.data = station_data
-        instance.pm2_5 = float(station_data["sensors"][0]["lastMeasurement"]["value"])
-        instance.pm10 = float(station_data["sensors"][1]["lastMeasurement"]["value"])
+        sensor_values = {
+            sensor["title"]: float(sensor["lastMeasurement"]["value"])
+            for sensor in station_data["sensors"]
+        }
+        instance.pm2_5 = sensor_values["PM2.5"]
+        instance.pm10 = sensor_values["PM10"]
         yield instance
 
 
