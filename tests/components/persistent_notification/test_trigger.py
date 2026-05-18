@@ -113,4 +113,4 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
     assert result["update_type"] == pn.UpdateType.UPDATED
     assert result["notification"]["notification_id"] == "42"
     assert result["notification"]["message"] == "Is the answer to the ultimate question"
-    assert result_any[3] == result_id[0]
+    assert result_any[3] == result_id[1]
