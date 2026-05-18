@@ -81,6 +81,15 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.data is not None and len(self.data.state.segments) > 1
         )
 
+    @property
+    def segment_ids(self) -> set[int]:
+        """Return the set of segment IDs."""
+        return {
+            segment.segment_id
+            for segment in self.data.state.segments.values()
+            if segment.segment_id is not None
+        }
+
     @callback
     def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
