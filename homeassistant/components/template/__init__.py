@@ -233,7 +233,9 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                             "entities": [
                                 {
                                     **entity_conf,
-                                    "raw_blueprint_inputs": conf_section.raw_blueprint_inputs,
+                                    "raw_blueprint_inputs": (
+                                        conf_section.raw_blueprint_inputs
+                                    ),
                                     "raw_configs": conf_section.raw_config,
                                 }
                                 for entity_conf in conf_section[platform_domain]

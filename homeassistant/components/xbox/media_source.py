@@ -159,8 +159,11 @@ class XboxSource(MediaSource):
                         )
                     )
                 else:
-                    screenshot_response = await client.screenshots.get_recent_community_screenshots_by_title_id(
-                        identifier.title_id
+                    screenshots = client.screenshots
+                    screenshot_response = (
+                        await screenshots.get_recent_community_screenshots_by_title_id(
+                            identifier.title_id
+                        )
                     )
             except TimeoutException as e:
                 raise Unresolvable(
@@ -421,7 +424,10 @@ class XboxSource(MediaSource):
             identifier=str(identifier),
             media_class=MEDIA_CLASS_MAP[identifier.media_type],
             media_content_type=MediaClass.DIRECTORY,
-            title=f"Xbox / {entry.title} / {game.name} / {MAP_TITLE[identifier.media_type]}",
+            title=(
+                f"Xbox / {entry.title} / {game.name}"
+                f" / {MAP_TITLE[identifier.media_type]}"
+            ),
             can_play=False,
             can_expand=True,
             children=[
@@ -557,7 +563,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,
@@ -601,7 +608,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,

@@ -27,7 +27,8 @@ FROM ${{BUILD_FROM}}
 LABEL \
     io.hass.type="core" \
     org.opencontainers.image.authors="The Home Assistant Authors" \
-    org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
+    org.opencontainers.image.description=\
+    "Open-source home automation platform running on Python 3" \
     org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
     org.opencontainers.image.licenses="Apache-2.0" \
     org.opencontainers.image.title="Home Assistant" \
@@ -53,12 +54,14 @@ RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
     # Install uv at the version pinned in the requirements file
-    && pip3 install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{{print $2}}' homeassistant/requirements.txt)" \
+    && pip3 install --no-cache-dir \
+        "uv==$(awk -F'==' '/^uv==/{{print $2}}' homeassistant/requirements.txt)" \
     && uv pip install \
         --no-build \
         -r homeassistant/requirements.txt
 
-COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
+COPY requirements_all.txt home_assistant_frontend-* \
+    home_assistant_intents-* homeassistant/
 RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
@@ -150,26 +153,35 @@ COPY --parents requirements.txt homeassistant/ script /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \
-    --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly \
-    --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly \
+    --mount=type=bind,\
+source=requirements_test.txt,\
+target=/tmp/requirements_test.txt,readonly \
+    --mount=type=bind,\
+source=requirements_test_pre_commit.txt,\
+target=/tmp/requirements_test_pre_commit.txt,readonly \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     # Install uv at the version pinned in the requirements file
-    && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{{print $2}}' /usr/src/homeassistant/requirements.txt)" \
+    && pip install --no-cache-dir \
+        "uv==$(awk -F'==' '/^uv==/{{print $2}}' \
+/usr/src/homeassistant/requirements.txt)" \
     && uv pip install \
         --no-build \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        "pipdeptree==$(awk -F'==' '/^pipdeptree==/{{print $2}}' /tmp/requirements_test.txt)" \
+        "pipdeptree==$(awk -F'==' \
+'/^pipdeptree==/{{print $2}}' /tmp/requirements_test.txt)" \
         "tqdm==$(awk -F'==' '/^tqdm==/{{print $2}}' /tmp/requirements_test.txt)" \
-        "ruff==$(awk -F'==' '/^ruff==/{{print $2}}' /tmp/requirements_test_pre_commit.txt)"
+        "ruff==$(awk -F'==' '/^ruff==/{{print $2}}' \
+/tmp/requirements_test_pre_commit.txt)"
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
 
 LABEL "com.github.actions.name"="hassfest"
-LABEL "com.github.actions.description"="Run hassfest to validate standalone integration repositories"
+LABEL "com.github.actions.description"=\
+"Run hassfest to validate standalone integration repositories"
 LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
