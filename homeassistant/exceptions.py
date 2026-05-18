@@ -59,9 +59,9 @@ class HomeAssistantError(Exception):
     def __str__(self) -> str:
         """Return exception message.
 
-        If no message was passed to `__init__`, the exception message is generated from
-        the translation_key. The message will be in English, regardless of the configured
-        language.
+        If no message was passed to `__init__`, the exception message
+        is generated from the translation_key. The message will be in
+        English, regardless of the configured language.
         """
 
         if self._message:
@@ -182,8 +182,10 @@ class ConditionErrorIndex(ConditionError):
         """Initialize condition error with index.
 
         Args:
-            index: The zero-based index of the failed condition, for conditions with multiple parts.
-            total: The total number of parts in this condition, including non-failed parts.
+            index: The zero-based index of the failed condition,
+                for conditions with multiple parts.
+            total: The total number of parts in this condition,
+                including non-failed parts.
             error: The error that this error wraps.
         """
         super().__init__(type)

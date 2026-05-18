@@ -85,6 +85,7 @@ async def test_remove_config_entry_device_still_connected(
         None,
     )
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if rgb_device:
         # Try to remove device that's still connected - should be blocked
         result = await async_remove_config_entry_device(
@@ -173,7 +174,8 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
         via_device=(DOMAIN, entry_id),
     )
 
-    # Try to remove device - should succeed because the OpenRGB identifier is disconnected
+    # Try to remove device - should succeed because the OpenRGB
+    # identifier is disconnected
     result = await async_remove_config_entry_device(
         hass, mock_config_entry, device_with_multiple_identifiers
     )

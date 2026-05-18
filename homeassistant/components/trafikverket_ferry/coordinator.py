@@ -34,7 +34,7 @@ def next_weekday(fromdate: date, weekday: int) -> date:
 
 def next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
-    today_date = date.today()  # noqa: DTZ011
+    today_date = dt_util.now().date()
     today_weekday = date.weekday(today_date)
     if WEEKDAYS[today_weekday] in departure:
         return today_date
