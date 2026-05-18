@@ -41,6 +41,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
+    ATTR_LABEL_ID,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -54,6 +55,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -61,6 +63,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -69,6 +72,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
     FILTER_SCHEMA,
     EntityFilter,
 )
@@ -108,8 +117,10 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
+    CONF_EXCLUDE_LABELS,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_INCLUDE_LABELS,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -189,6 +200,98 @@ def _has_all_unique_names_and_ports(
     return bridges
 
 
+HOMEKIT_FILTER_SCHEMA = vol.Schema(
+    {
+        **BASE_FILTER_SCHEMA.schema,
+        vol.Optional(CONF_INCLUDE_LABELS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_EXCLUDE_LABELS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
+)
+
+
+def _entity_filter_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return the shared entity filter portion of a HomeKit filter config."""
+    return {
+        key: config[key]
+        for key in (
+            CONF_EXCLUDE_DOMAINS,
+            CONF_EXCLUDE_ENTITIES,
+            CONF_EXCLUDE_ENTITY_GLOBS,
+            CONF_INCLUDE_DOMAINS,
+            CONF_INCLUDE_ENTITIES,
+            CONF_INCLUDE_ENTITY_GLOBS,
+        )
+    }
+
+
+@callback
+def _async_label_registry_snapshot(
+    hass: HomeAssistant,
+) -> dict[str, dict[str, set[str]]]:
+    """Return labels for registries that can expand label targets."""
+    return {
+        "area": {
+            area.id: set(area.labels) for area in ar.async_get(hass).areas.values()
+        },
+        "device": {
+            device.id: set(device.labels)
+            for device in dr.async_get(hass).devices.values()
+        },
+        "entity": {
+            entity.entity_id: set(entity.labels)
+            for entity in er.async_get(hass).entities.values()
+        },
+    }
+
+
+@callback
+def _async_registry_label_change_matches(
+    hass: HomeAssistant,
+    event: Event[Any],
+    label_snapshot: dict[str, dict[str, set[str]]],
+    configured_labels: set[str],
+) -> bool:
+    """Return if a registry label change affects configured labels."""
+    registry: str
+    item_id: str | None
+    new_labels: set[str]
+    data = event.data
+
+    if event.event_type == er.EVENT_ENTITY_REGISTRY_UPDATED:
+        registry = "entity"
+        item_id = data["entity_id"]
+        if data["action"] == "update" and "labels" not in data.get("changes", {}):
+            return False
+        entry = er.async_get(hass).async_get(item_id)
+        new_labels = set(entry.labels) if entry else set()
+    elif event.event_type == dr.EVENT_DEVICE_REGISTRY_UPDATED:
+        registry = "device"
+        item_id = data["device_id"]
+        if data["action"] == "update" and "labels" not in data.get("changes", {}):
+            return False
+        entry = dr.async_get(hass).async_get(item_id)
+        new_labels = set(entry.labels) if entry else set()
+    else:
+        registry = "area"
+        item_id = data["area_id"]
+        if item_id is None:
+            return False
+        entry = ar.async_get(hass).async_get_area(item_id)
+        new_labels = set(entry.labels) if entry else set()
+
+    old_labels = label_snapshot[registry].get(item_id, set())
+    if data["action"] == "remove":
+        label_snapshot[registry].pop(item_id, None)
+    else:
+        label_snapshot[registry][item_id] = new_labels
+
+    return bool((old_labels ^ new_labels) & configured_labels)
+
+
 BRIDGE_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -203,7 +306,7 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_ADVERTISE_IP): vol.All(
                 cv.ensure_list, [ipaddress.ip_address], [cv.string]
             ),
-            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_FILTER, default={}): HOMEKIT_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_DEVICES): cv.ensure_list,
         },
@@ -361,7 +464,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     )
     homekit_mode: str = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config: dict[str, Any] = options.get(CONF_ENTITY_CONFIG, {}).copy()
-    entity_filter: EntityFilter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    filter_config = HOMEKIT_FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    entity_filter: EntityFilter = FILTER_SCHEMA(_entity_filter_config(filter_config))
     devices: list[str] = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
@@ -373,6 +477,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         exclude_accessory_mode,
         entity_config,
         homekit_mode,
+        filter_config[CONF_INCLUDE_LABELS],
+        filter_config[CONF_EXCLUDE_LABELS],
         advertise_ips,
         entry.entry_id,
         entry.title,
@@ -383,6 +489,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
+
+    if configured_labels := set(filter_config[CONF_INCLUDE_LABELS]) | set(
+        filter_config[CONF_EXCLUDE_LABELS]
+    ):
+        label_snapshot = _async_label_registry_snapshot(hass)
+
+        @callback
+        def _async_reload_on_label_change(event: Event[Any]) -> None:
+            """Reload HomeKit when a configured label assignment changes."""
+            if _async_registry_label_change_matches(
+                hass, event, label_snapshot, configured_labels
+            ):
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+        entry.async_on_unload(
+            hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED, _async_reload_on_label_change
+            )
+        )
+        entry.async_on_unload(
+            hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, _async_reload_on_label_change
+            )
+        )
+        entry.async_on_unload(
+            hass.bus.async_listen(
+                ar.EVENT_AREA_REGISTRY_UPDATED, _async_reload_on_label_change
+            )
+        )
 
     entry_data = HomeKitEntryData(
         homekit=homekit, pairing_qr=None, pairing_qr_secret=None
@@ -545,6 +680,8 @@ class HomeKit:
         exclude_accessory_mode: bool,
         entity_config: dict[str, Any],
         homekit_mode: str,
+        include_labels: list[str],
+        exclude_labels: list[str],
         advertise_ips: list[str],
         entry_id: str,
         entry_title: str,
@@ -564,6 +701,8 @@ class HomeKit:
         self._entry_id = entry_id
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
+        self._include_labels = include_labels
+        self._exclude_labels = exclude_labels
         self._devices = devices or []
         self.aid_storage: AccessoryAidStorage | None = None
         self.iid_storage: AccessoryIIDStorage | None = None
@@ -828,10 +967,32 @@ class HomeKit:
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
         entity_filter = self._filter.get_filter()
+        label_included_entity_ids = self._async_label_filtered_entity_ids(
+            self._include_labels
+        )
+        label_excluded_entity_ids = self._async_label_filtered_entity_ids(
+            self._exclude_labels
+        )
+        use_base_filter = bool(
+            not self._include_labels or self._filter.config[CONF_INCLUDE_DOMAINS]
+        )
         entries = ent_reg.entities
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            if not entity_filter(entity_id):
+            if self._filter.explicitly_included(entity_id):
+                pass
+            elif (
+                self._filter.explicitly_excluded(entity_id)
+                or (
+                    entity_id in label_included_entity_ids
+                    and state.domain in self._filter.config[CONF_EXCLUDE_DOMAINS]
+                )
+                or entity_id in label_excluded_entity_ids
+                or (
+                    entity_id not in label_included_entity_ids
+                    and not (use_base_filter and entity_filter(entity_id))
+                )
+            ):
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):
@@ -860,6 +1021,16 @@ class HomeKit:
             entity_states.append(state)
 
         return entity_states
+
+    @callback
+    def _async_label_filtered_entity_ids(self, labels: list[str]) -> set[str]:
+        """Expand label ids to entity ids."""
+        if not labels:
+            return set()
+        selected = async_extract_referenced_entity_ids(
+            self.hass, TargetSelection({ATTR_LABEL_ID: labels})
+        )
+        return selected.referenced | selected.indirectly_referenced
 
     async def async_start(self, *args: Any) -> None:
         """Load storage and start."""

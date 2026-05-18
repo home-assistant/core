@@ -745,6 +745,90 @@ async def test_options_flow_include_mode_basic(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+async def test_options_flow_include_mode_with_labels(hass: HomeAssistant) -> None:
+    """Test config flow options in include mode with labels."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.new", "off")
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "include",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "include"
+    assert _get_schema_default(result["data_schema"].schema, "include_labels") == []
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["climate.new"], "include_labels": ["homekit"]},
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": ["fan", "vacuum"],
+            "include_entities": ["climate.new"],
+            "include_labels": ["homekit"],
+        },
+    }
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_exclude_mode_with_labels(hass: HomeAssistant) -> None:
+    """Test config flow options in exclude mode with labels."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("climate.new", "off")
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "vacuum", "climate"],
+            "include_exclude_mode": "exclude",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "exclude"
+    assert _get_schema_default(result["data_schema"].schema, "exclude_labels") == []
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": ["climate.old"], "exclude_labels": ["private"]},
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": ["climate.old"],
+            "exclude_labels": ["private"],
+            "include_domains": ["fan", "vacuum", "climate"],
+            "include_entities": [],
+        },
+    }
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
 async def test_options_flow_exclude_mode_with_cameras(hass: HomeAssistant) -> None:
     """Test config flow options in exclude mode with cameras."""
 
@@ -944,6 +1028,7 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result["step_id"] == "exclude"
     assert result["data_schema"]({}) == {
         "entities": ["camera.native_h264", "camera.transcode_h264"],
+        "exclude_labels": [],
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "entities") == [
@@ -1078,6 +1163,7 @@ async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
     assert result["step_id"] == "exclude"
     assert result["data_schema"]({}) == {
         "entities": ["camera.audio", "camera.no_audio"],
+        "exclude_labels": [],
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "entities") == [

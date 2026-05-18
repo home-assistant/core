@@ -42,14 +42,16 @@
       },
       "exclude": {
         "data": {
-          "entities": "[%key:component::homekit::options::step::include::data::entities%]"
+          "entities": "[%key:component::homekit::options::step::include::data::entities%]",
+          "exclude_labels": "Labels"
         },
         "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
         "title": "Select the entities to be excluded"
       },
       "include": {
         "data": {
-          "entities": "Entities"
+          "entities": "Entities",
+          "include_labels": "Labels"
         },
         "description": "Select entities from each domain in \u201c{domains}\u201d. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
