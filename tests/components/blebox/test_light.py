@@ -461,6 +461,48 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass: HomeAssistant) -> Non
     assert state.state == STATE_ON
 
 
+async def test_wlightbox_turn_on_with_zero_brightness_turns_off(
+    wlightbox, hass: HomeAssistant
+) -> None:
+    """Test that setting brightness to 0 turns the light off instead of raising ValueError."""
+
+    feature_mock, entity_id = wlightbox
+
+    def initial_update():
+        feature_mock.is_on = True
+        feature_mock.rgbw_hex = "c1d2f3c7"
+        feature_mock.white_value = 0xC7
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    feature_mock.apply_brightness = MagicMock(return_value=[0, 0, 0, 0])
+
+    def turn_off():
+        feature_mock.is_on = False
+        feature_mock.white_value = 0x0
+        feature_mock.rgbw_hex = "00000000"
+
+    feature_mock.async_off = AsyncMock(side_effect=turn_off)
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, ATTR_BRIGHTNESS: 0},
+        blocking=True,
+    )
+
+    feature_mock.async_off.assert_called_once()
+    feature_mock.async_on.assert_not_called()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
 async def test_wlightbox_off(wlightbox, hass: HomeAssistant) -> None:
     """Test light off."""
 
