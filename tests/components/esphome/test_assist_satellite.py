@@ -77,7 +77,7 @@ async def test_no_satellite_without_voice_assistant(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that an assist satellite entity is not created if a voice assistant is not present."""
+    """Test satellite entity is not created without a voice assistant."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={},
@@ -617,7 +617,7 @@ async def test_pipeline_media_player(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
-    """Test a complete pipeline run with the TTS response sent to a media player instead of a speaker.
+    """Test pipeline run with TTS response sent to a media player.
 
     This test is not as comprehensive as test_pipeline_api_audio since we're
     mainly focused on tts_response_finished getting automatically called.
@@ -1785,7 +1785,7 @@ async def test_intent_progress_optimization(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that intent progress events are only sent when early TTS streaming is available."""
+    """Test intent progress events only sent with early TTS streaming."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -1981,7 +1981,7 @@ async def test_secondary_pipeline(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test that the secondary pipeline is used when the secondary wake word is given."""
+    """Test secondary pipeline is used with secondary wake word."""
     assert await async_setup_component(hass, "assist_pipeline", {})
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id_to_name: dict[str, str] = {}

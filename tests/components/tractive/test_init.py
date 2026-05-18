@@ -106,8 +106,8 @@ async def test_trackable_without_details(
     await init_integration(hass, mock_config_entry)
 
     assert (
-        "Tracker xyz098 has no details and will be skipped. This happens for shared trackers"
-        in caplog.text
+        "Tracker xyz098 has no details and will be skipped."
+        " This happens for shared trackers" in caplog.text
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

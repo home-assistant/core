@@ -167,7 +167,7 @@ async def test_discovery_success(hass: HomeAssistant, mock_discover) -> None:
 async def test_discovery_no_devices(
     hass: HomeAssistant, mock_discover, mock_s20
 ) -> None:
-    """Discovery with no found devices should go to discovery_failed and recover via edit."""
+    """Discovery with no devices goes to discovery_failed."""
     mock_discover.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
@@ -224,7 +224,7 @@ async def test_import_flow_success(
     expected_mac: str,
     mock_mac_bytes: bytes | None,
 ) -> None:
-    """Test importing configuration.yaml entry succeeds with provided or discovered MAC."""
+    """Test importing config entry with provided or discovered MAC."""
     mock_s20.return_value._mac = mock_mac_bytes
     mock_discover.return_value = {"192.168.1.5": {"mac": b"\x11\x22\x33\x44\x55\x66"}}
 

@@ -179,7 +179,7 @@ async def test_setup_auth_failed_on_permission_denied(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that error 10011 (no privilege) from device_list triggers reauth during setup."""
+    """Test error 10011 from device_list triggers reauth during setup."""
     error = growattServer.GrowattV1ApiError(
         message="Permission denied",
         error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
@@ -238,7 +238,7 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that invalid classic API credentials during coordinator update trigger reauth."""
+    """Test invalid classic API credentials trigger reauth on update."""
     mock_growatt_classic_api.device_list.return_value = [
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
     ]
