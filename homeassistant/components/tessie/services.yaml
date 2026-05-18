@@ -1,0 +1,59 @@
+set_scheduled_charging:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: tessie
+    enable:
+      required: true
+      default: true
+      selector:
+        boolean:
+    time:
+      required: false
+      selector:
+        time:
+
+set_scheduled_departure:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: tessie
+    enable:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preconditioning_enabled:
+      required: false
+      default: false
+      selector:
+        boolean:
+    preconditioning_weekdays_only:
+      required: false
+      default: false
+      selector:
+        boolean:
+    departure_time:
+      required: false
+      selector:
+        time:
+    off_peak_charging_enabled:
+      required: false
+      default: false
+      selector:
+        boolean:
+    off_peak_charging_weekdays_only:
+      required: false
+      default: false
+      selector:
+        boolean:
+    end_off_peak_time:
+      required: false
+      selector:
+        time:
