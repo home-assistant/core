@@ -146,10 +146,9 @@ async def async_setup_entry(
     """Set up Volkszaehler sensors from a config entry."""
     conditions = SENSOR_KEYS
 
-    session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(
         Volkszaehler(
-            session,
+            async_get_clientsession(hass),
             entry.data[CONF_UUID],
             host=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
