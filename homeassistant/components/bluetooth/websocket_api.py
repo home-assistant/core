@@ -37,7 +37,8 @@ def _async_get_source_from_config_entry(
 ) -> str | None:
     """Get source from config entry id.
 
-    Returns None if no config_entry_id provided or on error (after sending error response).
+    Returns None if no config_entry_id provided or on error
+    (after sending error response).
     If validate_source is True, also validates that the scanner exists.
     """
     if not config_entry_id:
@@ -93,8 +94,8 @@ def serialize_service_info(
         "address": service_info.address,
         "rssi": service_info.rssi,
         "manufacturer_data": {
-            str(manufacturer_id): manufacturer_data.hex()
-            for manufacturer_id, manufacturer_data in service_info.manufacturer_data.items()
+            str(manufacturer_id): data.hex()
+            for manufacturer_id, data in service_info.manufacturer_data.items()
         },
         "service_data": {
             service_uuid: service_data.hex()

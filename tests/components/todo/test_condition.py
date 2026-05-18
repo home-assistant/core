@@ -39,11 +39,15 @@ async def test_todo_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_TODO_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 5}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("todo.all_completed", {}, True, True),
+        ("todo.incomplete", _TODO_THRESHOLD, True, True),
     ],
 )
 async def test_todo_condition_options_validation(
@@ -176,7 +180,7 @@ def parametrize_incomplete_condition_states_any(
 def parametrize_incomplete_condition_states_all(
     condition: str,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for incomplete conditions with 'all' behavior."""
+    """Parametrize above/below threshold cases for incomplete 'all' conditions."""
     return [
         *parametrize_condition_states_all(
             condition=condition,

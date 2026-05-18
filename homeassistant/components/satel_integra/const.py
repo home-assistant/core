@@ -18,3 +18,5 @@ CONF_SWITCHABLE_OUTPUT_NUMBER = "switchable_output_number"
 CONF_ARM_HOME_MODE = "arm_home_mode"
 CONF_ZONE_TYPE = "type"
 CONF_ENCRYPTION_KEY = "encryption_key"
+
+CONF_ENABLE_TEMPERATURE_SENSOR = "enable_temperature_sensor"

@@ -62,7 +62,8 @@ def tts_options_schema(
     """Return schema for TTS options with default values from config or constants."""
     # If we are called from the config flow we want the defaults to be from constants
     # to allow clearing the current value (passed as suggested_value) in the UI.
-    # If we aren't called from the config flow we want the defaults to be from the config.
+    # If we aren't called from the config flow we want the
+    # defaults to be from the config.
     defaults = {} if from_config_flow else config_options
     return vol.Schema(
         {

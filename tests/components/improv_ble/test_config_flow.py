@@ -334,7 +334,8 @@ async def test_bluetooth_rediscovery_after_successful_provision(
     assert result["reason"] == "provision_successful"
 
     # Now inject the same device again (simulating factory reset)
-    # The match history was cleared after successful provision, so it should be rediscovered
+    # The match history was cleared after successful provision,
+    # so it should be rediscovered
     inject_bluetooth_service_info_bleak(hass, IMPROV_BLE_DISCOVERY_INFO)
     await hass.async_block_till_done()
 
@@ -898,8 +899,8 @@ async def test_provision_fails_invalid_data(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_improv_data"
     assert (
-        "Received invalid improv via BLE data '000000000000' from device with bluetooth address 'AA:BB:CC:DD:EE:F0'"
-        in caplog.text
+        "Received invalid improv via BLE data '000000000000'"
+        " from device with bluetooth address 'AA:BB:CC:DD:EE:F0'" in caplog.text
     )
 
 
