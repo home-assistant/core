@@ -84,35 +84,26 @@ async def test_light_entities_snapshot(
 @pytest.mark.parametrize(
     ("device", "service", "service_data", "command_name", "parameters"),
     [
-        pytest.param(ONOFF_LIGHT, SERVICE_TURN_ON, {}, "on", None, id="onoff-turn-on"),
-        pytest.param(
-            ONOFF_LIGHT, SERVICE_TURN_OFF, {}, "off", None, id="onoff-turn-off"
-        ),
-        pytest.param(
-            DIMMABLE_LIGHT,
-            SERVICE_TURN_ON,
-            {ATTR_BRIGHTNESS: 128},
-            "setIntensity",
-            [50],
-            id="dimmable-with-brightness",
-        ),
-        pytest.param(DIMMABLE_LIGHT, SERVICE_TURN_ON, {}, "on", None, id="dimmable-on"),
-        pytest.param(
+        (ONOFF_LIGHT, SERVICE_TURN_ON, {}, "on", None),
+        (ONOFF_LIGHT, SERVICE_TURN_OFF, {}, "off", None),
+        (DIMMABLE_LIGHT, SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 128}, "setIntensity", [50]),
+        (DIMMABLE_LIGHT, SERVICE_TURN_ON, {}, "on", None),
+        (
             RGB_LIGHT,
             SERVICE_TURN_ON,
             {ATTR_RGB_COLOR: (255, 0, 128)},
             "setRGB",
             [255, 0, 128],
-            id="rgb-with-color",
         ),
-        pytest.param(
-            RGB_LIGHT,
-            SERVICE_TURN_ON,
-            {ATTR_BRIGHTNESS: 200},
-            "setIntensity",
-            [78],
-            id="rgb-with-brightness",
-        ),
+        (RGB_LIGHT, SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 200}, "setIntensity", [78]),
+    ],
+    ids=[
+        "onoff-turn-on",
+        "onoff-turn-off",
+        "dimmable-with-brightness",
+        "dimmable-on",
+        "rgb-with-color",
+        "rgb-with-brightness",
     ],
 )
 async def test_light_service_actions(
