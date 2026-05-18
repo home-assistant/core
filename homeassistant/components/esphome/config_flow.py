@@ -156,7 +156,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 expected_mac = format_mac(self._reauth_entry.unique_id)
                 actual_mac = format_mac(self._device_mac)
                 if expected_mac != actual_mac:
-                    # Different device at the same IP - do not offer to remove encryption
+                    # Different device at the same IP -
+                    # do not offer to remove encryption
                     return self._async_abort_wrong_device(
                         self._reauth_entry, expected_mac, actual_mac
                     )
@@ -330,7 +331,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
             improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
             _LOGGER.debug(
-                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                "Notified Improv BLE of flow %s for BLE MAC %s"
+                " (derived from WiFi MAC %s)",
                 self.flow_id,
                 ble_mac,
                 mac_address,
@@ -531,7 +533,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 unique_id=self.unique_id,
                 data=self._async_make_config_data(),
                 options={
-                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                    CONF_ALLOW_SERVICE_CALLS: (
+                        DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+                    ),
                 },
             )
         await self.hass.config_entries.async_remove(

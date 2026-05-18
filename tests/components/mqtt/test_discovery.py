@@ -324,7 +324,7 @@ async def test_invalid_device_discovery_config(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test sending in JSON that violates the discovery schema if device or platform key is missing."""
+    """Test JSON violating schema when device or platform key missing."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -632,7 +632,8 @@ async def test_discovery_integration_info(
         "Processing device discovery for 'bla' from external "
         "application bla2mqtt, version: 1.0"
         in caplog.text
-        or f"Found new component: binary_sensor {discovery_id} from external application bla2mqtt, version: 1.0"
+        or f"Found new component: binary_sensor {discovery_id}"
+        " from external application bla2mqtt, version: 1.0"
         in caplog.text
     )
     caplog.clear()
@@ -2976,7 +2977,7 @@ async def test_unique_id_collission_has_priority(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the unique_id collision detection has priority over registry disabled items."""
+    """Test unique_id collision has priority over disabled items."""
     await mqtt_mock_entry()
     config = {
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
@@ -2989,7 +2990,8 @@ async def test_unique_id_collission_has_priority(
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
     }
-    # discover an entity that is not unique and disabled by default (part 1), will be added
+    # discover an entity that is not unique and disabled by default
+    # (part 1), will be added
     config_not_unique1 = copy.deepcopy(config)
     config_not_unique1["name"] = "sbfspot_12345_1"
     config_not_unique1["unique_id"] = "not_unique"
@@ -2998,7 +3000,8 @@ async def test_unique_id_collission_has_priority(
         "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
         json.dumps(config_not_unique1),
     )
-    # discover an entity that is not unique (part 2), will not be added, and the registry entry is cleared
+    # discover an entity that is not unique (part 2), will not be
+    # added, and the registry entry is cleared
     config_not_unique2 = copy.deepcopy(config_not_unique1)
     config_not_unique2["name"] = "sbfspot_12345_2"
     async_fire_mqtt_message(
@@ -3242,7 +3245,7 @@ async def test_discovery_with_late_via_device_update(
     tag_mock: AsyncMock,
     single_configs: list[tuple[str, dict[str, Any]]],
 ) -> None:
-    """Test a via device is available and the discovery of the via device is is set via an update."""
+    """Test via device discovery is set via an update."""
     await mqtt_mock_entry()
 
     await hass.async_block_till_done()

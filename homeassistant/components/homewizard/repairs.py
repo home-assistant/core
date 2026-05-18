@@ -41,8 +41,9 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
         ip_address = self.entry.data[CONF_IP_ADDRESS]
 
-        # Tell device we want a token, user must now press the button within 30 seconds
-        # The first attempt will always fail, but this opens the window to press the button
+        # Tell device we want a token, user must now press the
+        # button within 30 seconds. The first attempt will always
+        # fail, but this opens the window to press the button.
         token = await async_request_token(self.hass, ip_address)
         errors: dict[str, str] | None = None
 

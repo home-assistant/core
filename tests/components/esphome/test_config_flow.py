@@ -2699,7 +2699,7 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
 async def test_user_flow_starts_zwave_discovery(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test that the user flow starts Z-Wave JS discovery when device has Z-Wave capabilities."""
+    """Test user flow starts Z-Wave JS discovery with Z-Wave device."""
     # Mock device with Z-Wave capabilities
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
@@ -2781,7 +2781,7 @@ async def test_user_flow_starts_zwave_discovery(
 async def test_user_flow_no_zwave_discovery_without_home_id(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test that the user flow does not start Z-Wave JS discovery when zwave_home_id is not set."""
+    """Test user flow skips Z-Wave discovery when home_id is not set."""
     # Mock device with Z-Wave capabilities but no home ID
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
@@ -2834,7 +2834,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
 async def test_user_flow_no_zwave_discovery_without_capabilities(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test that the user flow does not start Z-Wave JS discovery when device has no Z-Wave capabilities."""
+    """Test user flow skips Z-Wave discovery without Z-Wave capabilities."""
     # Mock device without Z-Wave capabilities
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(

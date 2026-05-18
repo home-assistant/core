@@ -95,7 +95,7 @@ if TYPE_CHECKING:
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
-    from .infrared.common import MockInfraredEntity
+    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
     from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
@@ -109,7 +109,7 @@ RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
 def patch_zeroconf_multiple_catcher() -> Generator[None]:
-    """If installed, patch zeroconf wrapper that detects if multiple instances are used."""
+    """Patch zeroconf wrapper that detects multiple instances."""
     with patch(
         "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
         side_effect=lambda zc: None,
@@ -234,14 +234,28 @@ async def init_infrared_fixture(hass: HomeAssistant) -> None:
     await init_infrared_fixture_helper(hass)
 
 
-@pytest.fixture(name="mock_infrared_entity")
-async def mock_infrared_entity_fixture(
+@pytest.fixture(name="mock_infrared_emitter_entity")
+async def mock_infrared_emitter_entity_fixture(
     hass: HomeAssistant, init_infrared: None
-) -> MockInfraredEntity:
-    """Return a mock infrared entity."""
-    from .infrared.common import mock_infrared_entity_fixture_helper  # noqa: PLC0415
+) -> MockInfraredEmitterEntity:
+    """Return a mock infrared emitter entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_emitter_entity_fixture_helper,
+    )
 
-    return await mock_infrared_entity_fixture_helper(hass)
+    return await mock_infrared_emitter_entity_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_receiver_entity")
+async def mock_infrared_receiver_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredReceiverEntity:
+    """Return a mock infrared receiver entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_receiver_entity_fixture_helper,
+    )
+
+    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)

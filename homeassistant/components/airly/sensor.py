@@ -184,7 +184,8 @@ async def async_setup_entry(
         (
             AirlySensor(coordinator, name, description)
             for description in SENSOR_TYPES
-            # When we use the nearest method, we are not sure which sensors are available
+            # When we use the nearest method, we are not sure
+            # which sensors are available
             if coordinator.data.get(description.key)
         ),
         False,

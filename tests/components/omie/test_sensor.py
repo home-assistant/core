@@ -86,7 +86,8 @@ async def test_sensor_state_lisbon_timezone(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # CET has rolled over to the next date, one additional call to OMIE must be made.
+        # CET has rolled over to the next date, one additional
+        # call to OMIE must be made.
         assert mock_pyomie.spot_price.call_count == 1
         pt_state_23 = hass.states.get("sensor.omie_portugal_spot_price")
         es_state_23 = hass.states.get("sensor.omie_spain_spot_price")

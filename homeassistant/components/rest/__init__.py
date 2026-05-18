@@ -75,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
         conf = None
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         with contextlib.suppress(HomeAssistantError):
             conf = await async_integration_yaml_config(hass, DOMAIN)
         if conf is None:
