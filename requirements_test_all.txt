@@ -405,7 +405,7 @@ aiosolaredge==1.0.2
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.13.0
+aiostreammagic==2.13.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.1
@@ -1714,7 +1714,7 @@ pyHomee==1.4.0
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.37.5
+pyTibber==0.37.6
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2542,7 +2542,7 @@ sentry-sdk==2.48.0
 # homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.7.3
+serialx==1.8.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
