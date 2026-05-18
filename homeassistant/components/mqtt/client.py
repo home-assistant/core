@@ -481,7 +481,6 @@ class MQTT:
 
         self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
-        self._registered_subscriptions: dict[str, int] = {}  # topic, subscription_id
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
         )
@@ -856,8 +855,8 @@ class MQTT:
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
-            self._registered_subscriptions[subscription.topic] = (
-                subscription.subscription_id
+            self._mqtt_data.subscription_id_generator.restore(
+                subscription.subscription_id, subscription.topic
             )
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
@@ -966,11 +965,9 @@ class MQTT:
 
         if is_simple_match:
             subscription_id = 1
-        elif topic in self._registered_subscriptions:
-            subscription_id = self._registered_subscriptions[topic]
         else:
-            subscription_id = self._registered_subscriptions[topic] = (
-                self._mqtt_data.subscription_id_generator.generate()
+            subscription_id = self._mqtt_data.subscription_id_generator.get_or_generate(
+                topic
             )
 
         subscription = Subscription(
@@ -1054,9 +1051,9 @@ class MQTT:
         for topic, qos in pending_wildcard_subscriptions.items():
             if self._supports_subscription_identifiers:
                 properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
-                properties.SubscriptionIdentifier = self._registered_subscriptions[
-                    topic
-                ]
+                properties.SubscriptionIdentifier = (
+                    self._mqtt_data.subscription_id_generator.get_subscription_id(topic)
+                )
             else:
                 properties = None
 
@@ -1115,9 +1112,7 @@ class MQTT:
 
         # Remove stored subscription identifiers for topics that were just unsubscribed
         for topic in topics:
-            self._mqtt_data.subscription_id_generator.release(
-                self._registered_subscriptions.pop(topic, None)
-            )
+            self._mqtt_data.subscription_id_generator.release(topic)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage

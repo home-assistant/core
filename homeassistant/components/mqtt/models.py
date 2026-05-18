@@ -55,19 +55,16 @@ class SubscriptionID:
     _next_id: int = 2
     _used_ids: set[int]
     _available_ids: set[int]
+    _registered_subscriptions: dict[str, int]  # topic, subscription_id
 
     def __init__(self) -> None:
         """Initialize the Subscription Identifier generator."""
         self._used_ids = set()
         self._available_ids = set()
+        self._registered_subscriptions = {}
 
-    def generate(self) -> int:
-        """Generate a new subscription ID.
-
-        ID 0 is reserved.
-        ID 1 is used for non wildcard topics.
-        Generator starts at ID 2.
-        """
+    def _generate(self, topic: str) -> int:
+        """Generate a new subscription ID."""
         if self._available_ids:
             subscription_id = self._available_ids.pop()
             self._used_ids.add(subscription_id)
@@ -83,13 +80,41 @@ class SubscriptionID:
             )
         self._used_ids.add(subscription_id)
         self._next_id += 1
+        self._registered_subscriptions[topic] = subscription_id
         return subscription_id
 
-    def release(self, subscription_id: int | None) -> None:
+    def get_subscription_id(self, topic: str) -> int:
+        """Get a registered subscription ID."""
+        return self._registered_subscriptions[topic]
+
+    def get_or_generate(self, topic: str) -> int:
+        """Get an existing or generate a new subscription ID.
+
+        ID 0 is reserved.
+        ID 1 is used for non wildcard topics.
+        Generator starts at ID 2.
+        """
+        if topic in self._registered_subscriptions:
+            return self._registered_subscriptions[topic]
+        return self._generate(topic)
+
+    def release(self, topic: str) -> None:
         """Release a Subscription Identifier to allow reuse."""
-        if subscription_id and subscription_id in self._used_ids:
+        if (
+            (subscription_id := self._registered_subscriptions.pop(topic, None))
+            is not None
+            and subscription_id
+            and subscription_id in self._used_ids
+        ):
             self._used_ids.remove(subscription_id)
             self._available_ids.add(subscription_id)
+
+    def restore(self, subscription_id: int | None, topic: str) -> None:
+        """Restore a subscription."""
+        if subscription_id is None:
+            return
+        self._registered_subscriptions[topic] = subscription_id
+        self._used_ids.add(subscription_id)
 
 
 _LOGGER = logging.getLogger(__name__)

@@ -2596,36 +2596,36 @@ async def test_subscriptions_id_generation(hass: HomeAssistant) -> None:
     generator = mqtt.models.SubscriptionID()
     # Mock we are past the last subscriptions
     generator._next_id = mqtt.models.MAX_28BIT - 2
-    new_id_1 = generator.generate()
+    new_id_1 = generator.get_or_generate("test1/#")
     assert new_id_1 == mqtt.models.MAX_28BIT - 2
-    new_id_2 = generator.generate()
+    new_id_2 = generator.get_or_generate("test2/#")
     assert new_id_2 == mqtt.models.MAX_28BIT - 1
-    new_id_3 = generator.generate()
+    new_id_3 = generator.get_or_generate("test3/#")
     assert new_id_3 == mqtt.models.MAX_28BIT
     with pytest.raises(HomeAssistantError) as exc:
-        generator.generate()
+        generator.get_or_generate("test4/#")
     assert exc.value.translation_domain == mqtt.DOMAIN
     assert exc.value.translation_key == "mqtt_max_subscription_id_reached"
 
-    generator.release(new_id_2)
-    new_id_4 = generator.generate()
+    generator.release("test2/#")
+    new_id_4 = generator.get_or_generate("test4/#")
     # Check we reused the ID
     assert new_id_4 == mqtt.models.MAX_28BIT - 1
 
     with pytest.raises(HomeAssistantError) as exc:
-        generator.generate()
+        generator.get_or_generate("test5/#")
     assert exc.value.translation_domain == mqtt.DOMAIN
     assert exc.value.translation_key == "mqtt_max_subscription_id_reached"
 
-    generator.release(new_id_1)
-    generator.release(new_id_3)
+    generator.release("test1/#")
+    generator.release("test3/#")
 
-    new_id_5 = generator.generate()
-    new_id_6 = generator.generate()
+    new_id_5 = generator.get_or_generate("test5/#")
+    new_id_6 = generator.get_or_generate("test6/#")
 
     assert {new_id_5, new_id_6} == {new_id_1, new_id_3}
 
     with pytest.raises(HomeAssistantError) as exc:
-        generator.generate()
+        generator.get_or_generate("test7/#")
     assert exc.value.translation_domain == mqtt.DOMAIN
     assert exc.value.translation_key == "mqtt_max_subscription_id_reached"
