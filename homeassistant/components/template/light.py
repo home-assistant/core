@@ -268,8 +268,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, name: str, config: dict[str, Any]
     ) -> None:
