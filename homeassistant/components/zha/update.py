@@ -18,11 +18,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
+from .const import DOMAIN
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
@@ -34,16 +36,12 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
-OTA_MESSAGE_BATTERY_POWERED = (
-    "Battery powered devices can sometimes take multiple hours to update and you may"
-    " need to wake the device for the update to begin."
+TRANSLATION_KEY_RELEASE_NOTES_BATTERY_POWERED = (
+    f"component.{DOMAIN}.common.release_notes_battery_powered"
 )
-
 ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
-OTA_MESSAGE_RELIABILITY = (
-    "If you are having issues updating a specific device, make sure that you've"
-    f" eliminated [common environmental issues]({ZHA_DOCS_NETWORK_RELIABILITY}) that"
-    " could be affecting network reliability. OTA updates require a reliable network."
+TRANSLATION_KEY_RELEASE_NOTES_RELIABILITY = (
+    f"component.{DOMAIN}.common.release_notes_reliability"
 )
 
 
@@ -163,13 +161,22 @@ class ZHAFirmwareUpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
+        translations = await async_get_translations(
+            self.hass, self.hass.config.language, "common", {DOMAIN}
+        )
+        reliability = translations[TRANSLATION_KEY_RELEASE_NOTES_RELIABILITY].format(
+            zha_docs_network_reliability=ZHA_DOCS_NETWORK_RELIABILITY
+        )
 
         if self.entity_data.device_proxy.device.is_mains_powered:
-            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
+            header = f"<ha-alert alert-type='info'>{reliability}</ha-alert>"
         else:
+            battery_powered = translations[
+                TRANSLATION_KEY_RELEASE_NOTES_BATTERY_POWERED
+            ]
             header = (
                 "<ha-alert alert-type='info'>"
-                f"{OTA_MESSAGE_BATTERY_POWERED} {OTA_MESSAGE_RELIABILITY}"
+                f"{battery_powered} {reliability}"
                 "</ha-alert>"
             )
 
