@@ -1,5 +1,6 @@
 """Tests for Elke27 alarm control panel areas."""
 
+from enum import Enum
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -475,6 +476,30 @@ def test_area_state_unknown_string() -> None:
     assert (
         alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="unknown"))
         == "armed_away"
+    )
+
+
+def test_area_state_unknown_arm_mode_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify unknown ArmMode values do not default to armed_away."""
+    fake_arm_mode = Enum(
+        "ArmMode",
+        {
+            "DISARMED": "disarmed",
+            "ARMED_STAY": "armed_stay",
+            "ARMED_AWAY": "armed_away",
+            "ARMED_NIGHT": "armed_night",
+            "UNKNOWN": "unknown",
+        },
+    )
+    monkeypatch.setattr(alarm_module, "ArmMode", fake_arm_mode)
+
+    assert (
+        alarm_module._area_state_to_ha(
+            SimpleNamespace(arm_mode=alarm_module.ArmMode.UNKNOWN)
+        )
+        is None
     )
 
 

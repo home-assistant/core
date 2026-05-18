@@ -94,15 +94,15 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
             self._set_snapshot(self._hub.get_snapshot())
             return
         if _is_event(event, DomainCsmChanged):
-            domain = getattr(event, "domain", None) or getattr(
-                event, "csm_domain", None
+            domain = getattr(event, "csm_domain", None) or getattr(
+                event, "domain", None
             )
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
         if _is_event(event, TableCsmChanged):
-            domain = getattr(event, "domain", None) or getattr(
-                event, "csm_domain", None
+            domain = getattr(event, "csm_domain", None) or getattr(
+                event, "domain", None
             )
             if domain:
                 self._queue_domain_refresh({str(domain)})

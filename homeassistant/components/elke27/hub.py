@@ -11,7 +11,13 @@ from typing import Any
 
 from elke27_lib import ArmMode, ClientConfig, LinkKeys
 from elke27_lib.client import Elke27Client
-from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
+from elke27_lib.errors import (
+    Elke27ConnectionError,
+    Elke27DisconnectedError,
+    Elke27LinkRequiredError,
+    Elke27PinRequiredError,
+    Elke27TimeoutError,
+)
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -447,9 +453,15 @@ class Elke27Hub:
             try:
                 await self._async_connect()
             except Elke27LinkRequiredError:
-                _LOGGER.exception("Reconnect aborted")
+                _LOGGER.exception("Reconnect aborted because panel linking is required")
                 return
-            except Exception as err:  # noqa: BLE001
+            except (
+                ConfigEntryNotReady,
+                Elke27ConnectionError,
+                Elke27DisconnectedError,
+                Elke27TimeoutError,
+                OSError,
+            ) as err:
                 _LOGGER.debug("Reconnect attempt failed: %s", err)
             else:
                 self._reconnect_attempts = 0

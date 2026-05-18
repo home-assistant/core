@@ -227,7 +227,7 @@ def _get_area(snapshot: Any, area_id: int) -> Any | None:
     return None
 
 
-def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
+def _area_state_to_ha(area: Any) -> AlarmControlPanelState | None:
     if getattr(area, "alarm_active", False):
         return AlarmControlPanelState.TRIGGERED
     arm_mode = getattr(area, "arm_mode", None)
@@ -245,6 +245,7 @@ def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
             return AlarmControlPanelState.ARMED_NIGHT
         if arm_mode is ArmMode.ARMED_AWAY:
             return AlarmControlPanelState.ARMED_AWAY
+        return None
     mode_value = str(arm_mode).lower()
     if mode_value in {"disarmed", "disarm"}:
         return AlarmControlPanelState.DISARMED
