@@ -26,6 +26,7 @@ from homeassistant.components.openaq.const import (
     DOMAIN,
     MAX_RADIUS,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -240,6 +241,54 @@ async def test_location_subentry_map_flow_without_locality(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Albuquerque"
+
+
+async def test_location_subentry_select_aborts_when_location_was_just_configured(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test select aborts if the chosen location was configured during the flow."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999, name="South Valley")]
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
+        },
+    )
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: "other-api-key"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: 9999},
+                subentry_id="GHIJKL",
+                subentry_type="location",
+                title="South Valley",
+                unique_id="9999",
+            )
+        ],
+    )
+    second_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: "9999"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
