@@ -37,6 +37,20 @@
     }
   },
   "entity": {
+    "event": {
+      "button": {
+        "name": "Button {channel}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press_start": "Long press start",
+              "long_press_stop": "Long press stop",
+              "short_press": "Short press"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {
