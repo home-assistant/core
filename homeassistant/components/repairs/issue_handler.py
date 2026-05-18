@@ -22,6 +22,10 @@ from homeassistant.helpers.integration_platform import (
 from .const import DOMAIN, FlowType
 
 
+class UnknownIssue(data_entry_flow.FlowError):
+    """Error for issue not found in registry or issue_id not provided."""
+
+
 class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
     """Typed context dict for repair flow."""
 
@@ -60,7 +64,7 @@ class RepairsFlow(
         setting issue_id in __init__().
         """
         report_usage(
-            "sets issue_id directly using self.issue_id = <issue_id> which is ignored by the repairs "
+            "sets issue_id directly using self <issue_id> which is ignored by the repairs "
             "platform and set by the RepairsFlowManager",
             core_behavior=ReportBehavior.LOG,
             integration_domain=self.handler,
@@ -197,7 +201,8 @@ class RepairsFlowManager(
         """Start a RepairFlow."""
         context = context or {}
         if "issue_id" not in context:
-            assert data and "issue_id" in data
+            if data is None or "issue_id" not in data:
+                raise UnknownIssue("issue_id missing, cannot create flow")
             context["issue_id"] = data["issue_id"]
             report_usage(
                 'created a repair flow using data={"issue_id": <issue_id>} '
@@ -206,7 +211,6 @@ class RepairsFlowManager(
                 integration_domain=handler,
                 core_behavior=ReportBehavior.LOG,
             )
-        assert context["issue_id"]
         return await super().async_init(handler, context=context, data=data)
 
     async def async_create_flow(
@@ -222,7 +226,7 @@ class RepairsFlowManager(
         issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, context["issue_id"])
         if issue is None or not issue.is_fixable:
-            raise data_entry_flow.UnknownStep("Issue not found in registry")
+            raise UnknownIssue("Issue not found in registry")
 
         if "platforms" not in self.hass.data[DOMAIN]:
             await async_process_repairs_platforms(self.hass)

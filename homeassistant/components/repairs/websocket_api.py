@@ -21,7 +21,7 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
-from .issue_handler import RepairsFlowManager, RepairsFlowResult
+from .issue_handler import RepairsFlowManager, RepairsFlowResult, UnknownIssue
 
 
 @callback
@@ -112,7 +112,7 @@ def ws_list_issues(
     connection.send_result(msg["id"], {"issues": issues})
 
 
-class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowResult]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -137,6 +137,8 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
             )
         except data_entry_flow.UnknownStep as ex:
             return self.json_message(str(ex), HTTPStatus.NOT_FOUND)
+        except UnknownIssue as ex:
+            return self.json_message(str(ex), HTTPStatus.NOT_FOUND)
         except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
                 str(ex) or "next_flow is unknown", HTTPStatus.NOT_FOUND
@@ -149,7 +151,9 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         )
 
 
-class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
+class RepairsFlowResourceView(
+    FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
+):
     """View to interact with the repairs flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
@@ -166,18 +170,18 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         return await super().post(request, flow_id)
 
     @override
-    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:  # type: ignore[override]
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
 def _prepare_repairs_flow_result_json(
     result: RepairsFlowResult,
-    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+    prepare_result_json: Callable[[RepairsFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
     if "result" not in result:
-        return prepare_result_json(result)  # type: ignore[arg-type]
+        return prepare_result_json(result)
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
     if isinstance(result["result"], ConfigEntry):
         entry: ConfigEntry = result["result"]

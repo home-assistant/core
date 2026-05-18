@@ -12,6 +12,7 @@ from .issue_handler import (
     RepairsFlowContext,
     RepairsFlowManager,
     RepairsFlowResult,
+    UnknownIssue,
     async_get,
     async_setup as async_setup_issue_handler,
     repairs_flow_manager,
@@ -25,6 +26,7 @@ __all__ = [
     "RepairsFlowContext",
     "RepairsFlowManager",
     "RepairsFlowResult",
+    "UnknownIssue",
     "async_get",
     "repairs_flow_manager",
 ]

@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from http import HTTPStatus
+import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
@@ -108,6 +109,7 @@ EXPECTED_DATA = {
     "issue_2": {"blah": "bleh"},
     "abort_issue1": {"test": ANY},
     "create_entry_issue1": {"test": ANY},
+    "fake_issue_bad_setter": {"foo", "bar"},
 }
 
 
@@ -132,6 +134,14 @@ class MockFixFlow(RepairsFlow):
             return self.async_create_entry(data={})
 
         return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
+
+
+class MockInvalidFixFlow(MockFixFlow):
+    """Handler for flow fix that invalidly sets an issue_id."""
+
+    def __init__(self) -> None:
+        """Try and set issue_id here."""
+        self.issue_id = "fake_issue_bad_setter"
 
 
 class MockRepairsFlow(RepairsFlow):
@@ -352,6 +362,8 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
                 return MockFixFlowCreateEntry(flow_type="fake")
             if data["test"] == "invalid_next_flow":
                 return MockFixFlowCreateEntry(invalid_next_flow=True)
+        if issue_id == "fake_issue_bad_setter":
+            return MockInvalidFixFlow()
         return MockFixFlow()
 
     mock_platform(
@@ -738,6 +750,43 @@ async def test_fix_issue_unauth(
     )
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+async def test_fix_issue_useless_setter_report_usage(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that using an invalid issue_id setter."""
+
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await create_issues(
+        hass,
+        ws_client,
+        issues=[
+            {
+                **DEFAULT_ISSUES[0],
+                "issue_id": "fake_issue_bad_setter",
+                "data": EXPECTED_DATA["fake_issue_bad_setter"],
+            }
+        ],
+    )
+
+    with caplog.at_level(logging.WARNING):
+        url = "/api/repairs/issues/fix"
+        resp = await client.post(
+            url,
+            json={"handler": "fake_integration", "issue_id": "fake_issue_bad_setter"},
+        )
+        assert resp.ok
+        assert " sets issue_id directly " in caplog.messages.pop()
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])

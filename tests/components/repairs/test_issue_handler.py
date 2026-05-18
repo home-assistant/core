@@ -10,6 +10,7 @@ from homeassistant.components.repairs import (
     DOMAIN,
     RepairsFlowContext,
     RepairsFlowManager,
+    UnknownIssue,
     async_get,
     repairs_flow_manager,
 )
@@ -55,6 +56,9 @@ async def test_async_init(
             "fake_integration", context=RepairsFlowContext(issue_id="fake_issue")
         )
         assert not caplog.records
+        rfm.async_abort(flow["flow_id"])
+        with pytest.raises(UnknownIssue):
+            flow = await rfm.async_init("fake_integration")
 
 
 async def test_flow_manager_helper(hass: HomeAssistant) -> None:
