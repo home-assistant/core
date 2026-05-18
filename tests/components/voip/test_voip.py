@@ -14,7 +14,7 @@ from voip_utils import CallInfo
 from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
 from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
@@ -1120,7 +1120,8 @@ async def test_start_conversation_user_doesnt_pick_up(
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
-    # Protocol has already been mocked, but "outgoing_call" and "cancel_call" are not async
+    # Protocol has already been mocked, but "outgoing_call" and
+    # "cancel_call" are not async
     mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
     mock_protocol.outgoing_call = Mock()
     mock_protocol.cancel_call = Mock()

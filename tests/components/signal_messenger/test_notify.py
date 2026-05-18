@@ -160,8 +160,8 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
 
     assert "Sending signal message" in caplog.text
     assert (
-        "value must be one of ['normal', 'styled'] for dictionary value @ data['text_mode']"
-        in str(exc.value)
+        "value must be one of ['normal', 'styled'] for dictionary"
+        " value @ data['text_mode']" in str(exc.value)
     )
 
 
@@ -296,7 +296,7 @@ def test_get_attachments_with_large_attachment(
     signal_requests_mock_factory: Mocker,
     hass: HomeAssistant,
 ) -> None:
-    """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
+    """Test URL attachment with large Content-Length throws error."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
         signal_notification_service.get_attachments_as_bytes(
@@ -313,7 +313,7 @@ def test_get_attachments_with_large_attachment_no_header(
     signal_requests_mock_factory: Mocker,
     hass: HomeAssistant,
 ) -> None:
-    """Test getting attachments as URL with large attachment (per content length) throws error."""
+    """Test URL attachment with large content length throws error."""
     signal_requests_mock = signal_requests_mock_factory()
     with pytest.raises(ValueError) as exc:
         signal_notification_service.get_attachments_as_bytes(
@@ -398,7 +398,7 @@ def test_get_attachments_with_verify_set_true(
     signal_requests_mock_factory: Mocker,
     hass: HomeAssistant,
 ) -> None:
-    """Test getting attachments as URL with verify_ssl set to true results in verify=true."""
+    """Test URL attachment with verify_ssl=true uses verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
     data = {"verify_ssl": True, "urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
@@ -413,7 +413,7 @@ def test_get_attachments_with_verify_set_false(
     signal_requests_mock_factory: Mocker,
     hass: HomeAssistant,
 ) -> None:
-    """Test getting attachments as URL with verify_ssl set to false results in verify=false."""
+    """Test URL attachment with verify_ssl=false uses verify=false."""
     signal_requests_mock = signal_requests_mock_factory()
     data = {"verify_ssl": False, "urls": [URL_ATTACHMENT]}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
@@ -427,7 +427,7 @@ def test_get_attachments_with_verify_set_garbage(
     signal_notification_service: SignalNotificationService,
     hass: HomeAssistant,
 ) -> None:
-    """Test getting attachments as URL with verify_ssl set to garbage results in None."""
+    """Test URL attachment with verify_ssl=garbage returns None."""
     data = {"verify_ssl": "test", "urls": [URL_ATTACHMENT]}
     result = signal_notification_service.get_attachments_as_bytes(
         data, len(CONTENT), hass

@@ -245,12 +245,13 @@ class HKDevice:
 
     @callback
     def async_set_available_state(self, available: bool) -> None:
-        """Mark state of all entities on this connection when it becomes available or unavailable."""
+        """Mark state of all entities on this connection."""
         _LOGGER.debug(
             "Called async_set_available_state with %s for %s", available, self.unique_id
         )
-        # Don't mark entities as unavailable during shutdown to preserve their last known state
-        # Also skip if the availability state hasn't changed
+        # Don't mark entities as unavailable during shutdown to
+        # preserve their last known state. Also skip if the
+        # availability state hasn't changed.
         if (self.hass.is_stopping and not available) or self.available == available:
             return
         self.available = available
@@ -334,12 +335,14 @@ class HKDevice:
             # values (like 100°C) in their /accessories response after restarting.
             # We need to explicitly poll characteristics to get fresh sensor readings
             # before processing the entity map and creating devices.
-            # Use poll_all=True since entities haven't registered their characteristics yet.
+            # Use poll_all=True since entities haven't registered
+            # their characteristics yet.
             try:
                 await self.async_update(poll_all=True)
             except ValueError as exc:
                 _LOGGER.debug(
-                    "Accessory %s responded with unparsable response, first update was skipped: %s",
+                    "Accessory %s responded with unparsable"
+                    " response, first update was skipped: %s",
                     self.unique_id,
                     exc,
                 )
@@ -591,7 +594,7 @@ class HKDevice:
 
     @callback
     def async_reap_stale_entity_registry_entries(self) -> None:
-        """Delete entity registry entities for removed characteristics, services and accessories."""
+        """Delete entity registry entities for removed characteristics."""
         _LOGGER.debug(
             "Removing stale entity registry entries for pairing %s",
             self.unique_id,
@@ -643,7 +646,7 @@ class HKDevice:
 
     @callback
     def async_migrate_ble_unique_id(self) -> None:
-        """Config entries from step_bluetooth used incorrect identifier for unique_id."""
+        """Config entries from step_bluetooth used wrong unique_id."""
         unique_id = normalize_hkid(self.unique_id)
         if unique_id != self.config_entry.unique_id:
             _LOGGER.debug(
@@ -727,12 +730,15 @@ class HKDevice:
     async def async_process_entity_map(self) -> None:
         """Process the entity map and load any platforms or entities that need adding.
 
-        This is idempotent and will be called at startup and when we detect metadata changes
-        via the c# counter on the zeroconf record.
+        This is idempotent and will be called at startup and when
+        we detect metadata changes via the c# counter on the
+        zeroconf record.
         """
-        # Ensure the Pairing object has access to the latest version of the entity map. This
-        # is especially important for BLE, as the Pairing instance relies on the entity map
-        # to map aid/iid to GATT characteristics. So push it to there as well.
+        # Ensure the Pairing object has access to the latest
+        # version of the entity map. This is especially important
+        # for BLE, as the Pairing instance relies on the entity
+        # map to map aid/iid to GATT characteristics. So push it
+        # to there as well.
         self.async_detect_workarounds()
 
         # Migrate to new device ids
@@ -1093,7 +1099,8 @@ class HKDevice:
 
         except AccessoryNotFoundError as exc:
             _LOGGER.debug(
-                "%s: Failed to appear on local network as a Thread device, reverting to BLE",
+                "%s: Failed to appear on local network as a"
+                " Thread device, reverting to BLE",
                 self.unique_id,
             )
             raise HomeAssistantError("Could not migrate device to Thread") from exc

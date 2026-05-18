@@ -617,7 +617,7 @@ async def test_post_path_not_whitelisted(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the post service raising an error because the file path is not whitelisted."""
+    """Test post service error when file path is not whitelisted."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -641,7 +641,7 @@ async def test_idempotency_key_too_short(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the post service raising an error because the idempotency key is too short."""
+    """Test post service error when idempotency key is too short."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -793,12 +793,14 @@ async def test_service_entry_availability(
         ),
     ],
 )
+@pytest.mark.parametrize("return_response", [True, False])
 async def test_service_update_profile(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     kwargs: dict[str, str | None],
+    return_response: bool,
 ) -> None:
     """Test the update profile service."""
     assert await async_setup_component(hass, "media_source", {})
@@ -820,7 +822,7 @@ async def test_service_update_profile(
             SERVICE_UPDATE_PROFILE,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
             blocking=True,
-            return_response=True,
+            return_response=return_response,
         )
 
     mock_mastodon_client.account_update_credentials.assert_called_with(**kwargs)

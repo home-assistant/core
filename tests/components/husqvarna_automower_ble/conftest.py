@@ -52,7 +52,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_get_manufacturer_data(
     hass: HomeAssistant, enable_bluetooth: None
 ) -> Generator[None]:
-    """Mock async_get_manufacturer_data to return decoded data from injected service infos."""
+    """Mock async_get_manufacturer_data to return injected data."""
 
     async def _get_manufacturer_data(
         addresses: set[str], **kwargs

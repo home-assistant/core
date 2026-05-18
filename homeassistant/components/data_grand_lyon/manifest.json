@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["data-grand-lyon-ha==0.5.0"]
+  "requirements": ["data-grand-lyon-ha==0.7.0"]
 }
