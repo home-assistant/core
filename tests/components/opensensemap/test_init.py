@@ -146,6 +146,7 @@ async def test_yaml_import_already_configured(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
+    assert entries[0].entry_id == mock_config_entry.entry_id
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"

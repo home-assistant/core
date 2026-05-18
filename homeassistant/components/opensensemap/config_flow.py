@@ -74,6 +74,8 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(station_id)
         self._abort_if_unique_id_configured()
 
+        # Even when YAML provides a display name, validate the station before
+        # migrating so broken YAML does not create an entry that cannot set up.
         try:
             name = await self._async_get_station_name(station_id)
         except CannotConnect:

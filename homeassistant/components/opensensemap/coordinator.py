@@ -1,5 +1,7 @@
 """Data update coordinator for the openSenseMap integration."""
 
+from dataclasses import dataclass
+
 from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
@@ -9,10 +11,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+
+@dataclass(slots=True, frozen=True)
+class OpenSenseMapStationData:
+    """Immutable air quality measurements for an openSenseMap station."""
+
+    pm2_5: float | None
+    pm10: float | None
+
+
 type OpenSenseMapConfigEntry = ConfigEntry[OpenSenseMapCoordinator]
 
 
-class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMap]):
+class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMapStationData]):
     """Coordinator to manage data updates for an openSenseMap station."""
 
     config_entry: OpenSenseMapConfigEntry
@@ -33,7 +44,7 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMap]):
         )
         self.api = api
 
-    async def _async_update_data(self) -> OpenSenseMap:
+    async def _async_update_data(self) -> OpenSenseMapStationData:
         """Fetch latest data from the openSenseMap API."""
         try:
             # opensensemap_api wraps the request in a 5s aiohttp.ClientTimeout
@@ -43,4 +54,4 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMap]):
             raise UpdateFailed(
                 f"Unable to fetch data from openSenseMap: {err}"
             ) from err
-        return self.api
+        return OpenSenseMapStationData(pm2_5=self.api.pm2_5, pm10=self.api.pm10)

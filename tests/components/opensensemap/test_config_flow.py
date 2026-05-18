@@ -61,6 +61,7 @@ async def test_user_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Station"
+    assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
     assert result["result"].unique_id == TEST_STATION_ID
 
 
@@ -131,6 +132,23 @@ async def test_import_flow_with_yaml_name(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Station"
     assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow_with_yaml_name_cannot_connect(
+    hass: HomeAssistant,
+    mock_opensensemap_api: AsyncMock,
+) -> None:
+    """Test importing with a YAML name still validates the station."""
+    mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: TEST_STATION_ID, CONF_NAME: "My Station"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

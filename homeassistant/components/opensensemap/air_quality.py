@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_STATION_ID,
+    DEPRECATED_YAML_BREAKS_IN_VERSION,
     DOMAIN,
     INTEGRATION_TITLE,
     KNOWN_IMPORT_ABORT_REASONS,
@@ -39,6 +40,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import legacy YAML configuration into a config entry."""
+    # Keep the legacy platform entry point so existing YAML is migrated into a
+    # config entry instead of adding entities directly from YAML.
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -53,7 +56,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version="2026.11.0",
+            breaks_in_ha_version=DEPRECATED_YAML_BREAKS_IN_VERSION,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -71,7 +74,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.11.0",
+        breaks_in_ha_version=DEPRECATED_YAML_BREAKS_IN_VERSION,
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
