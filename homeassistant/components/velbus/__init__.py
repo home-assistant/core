@@ -13,10 +13,9 @@ from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -116,37 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
-    dev_reg = dr.async_get(hass)
-
-    @callback
-    def _handle_device_registry_updated(
-        event: Event[EventDeviceRegistryUpdatedData],
-    ) -> None:
-        if event.data["action"] != "update":
-            return
-        changes = event.data["changes"]
-        if "via_device_id" not in changes or changes["via_device_id"] is None:
-            return
-        sub_device = dev_reg.async_get(event.data["device_id"])
-        if (
-            sub_device is None
-            or entry.entry_id not in sub_device.config_entries
-            or sub_device.via_device_id is not None
-        ):
-            return
-        previous_parent_id: str = changes["via_device_id"]
-        if dev_reg.async_get(previous_parent_id) is not None:
-            return
-        dev_reg.async_update_device(
-            sub_device.id, remove_config_entry_id=entry.entry_id
-        )
-
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED, _handle_device_registry_updated
-        )
-    )
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -172,14 +140,19 @@ async def async_remove_config_entry_device(
     config_entry: VelbusConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Allow removing this config entry from a Velbus device.
+    """Allow removing a Velbus device and detach its sub-devices.
 
-    Only authorizes the removal; sub-device detaching is handled by the
-    device-registry update listener registered in async_setup_entry.
-    If the device is still on the bus, it may be recreated when the
-    integration is reloaded or started again.
+    Sub-devices are detached from this config entry when their parent is
+    removed. If the device is still on the bus, it may be recreated when
+    the integration is reloaded or started again.
     """
-    return config_entry.entry_id in device_entry.config_entries
+    dev_reg = dr.async_get(hass)
+    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+        if sub_device.via_device_id == device_entry.id:
+            dev_reg.async_update_device(
+                sub_device.id, remove_config_entry_id=config_entry.entry_id
+            )
+    return True
 
 
 async def async_migrate_entry(

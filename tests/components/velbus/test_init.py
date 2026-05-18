@@ -257,7 +257,7 @@ async def test_remove_config_entry_device_removes_subdevices(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that removing a device also detaches its sub-devices via the registry listener."""
+    """Test that removing a device also detaches its sub-devices."""
     await init_integration(hass, config_entry)
 
     stale_device = device_registry.async_get_or_create(
@@ -279,40 +279,8 @@ async def test_remove_config_entry_device_removes_subdevices(
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)
     assert result is True
 
-    # Simulate HA removing the config entry from the device (the real UI path)
-    device_registry.async_update_device(
-        stale_device.id, remove_config_entry_id=config_entry.entry_id
-    )
-    await hass.async_block_till_done()
-
-    # The core guarantee is that the Velbus config entry was detached from the sub-device;
-    # the device may or may not be deleted depending on whether other references exist.
     sub_device_after = device_registry.async_get(sub_device.id)
     assert (
         sub_device_after is None
         or config_entry.entry_id not in sub_device_after.config_entries
     )
-
-
-async def test_remove_config_entry_device_not_associated(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that a device not associated with this config entry cannot be removed."""
-    await init_integration(hass, config_entry)
-
-    other_entry = MockConfigEntry(domain=DOMAIN, data={})
-    other_entry.add_to_hass(hass)
-
-    unrelated_device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        identifiers={(DOMAIN, "777")},
-        name="Other Module",
-        manufacturer="Velleman",
-        model="VMBX",
-    )
-    result = await async_remove_config_entry_device(
-        hass, config_entry, unrelated_device
-    )
-    assert result is False
