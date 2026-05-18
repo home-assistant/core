@@ -2224,6 +2224,9 @@ pyteleinfo==0.4.0
 # homeassistant.components.motionmount
 python-MotionMount==2.3.0
 
+# homeassistant.components.aidot
+python-aidot==0.3.53
+
 # homeassistant.components.awair
 python-awair==0.2.5
 
