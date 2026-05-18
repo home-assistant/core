@@ -1923,7 +1923,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.9.0
+py-opendisplay==7.0.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2585,6 +2585,9 @@ pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
 python-MotionMount==2.3.0
+
+# homeassistant.components.aidot
+python-aidot==0.3.53
 
 # homeassistant.components.awair
 python-awair==0.2.5
