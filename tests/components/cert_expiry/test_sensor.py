@@ -286,3 +286,244 @@ async def test_error_attribute_is_none_when_cert_valid(hass: HomeAssistant) -> N
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid") is True
+
+
+async def test_update_sensor_connection_reset(hass: HomeAssistant) -> None:
+    """Test coordinator update handles ConnectionReset as a temporary failure.
+
+    ConnectionReset is a TemporaryFailure subclass, so it should raise
+    UpdateFailed, putting the sensor into STATE_UNAVAILABLE.
+    """
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    starting_time = static_datetime()
+    timestamp = future_timestamp(100)
+
+    with (
+        freeze_time(starting_time),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=timestamp,
+        ),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+
+    next_update = starting_time + timedelta(hours=12)
+    with (
+        freeze_time(next_update),
+        patch(
+            "homeassistant.components.cert_expiry.helper.async_get_cert",
+            side_effect=ConnectionResetError,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=12))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_sensor_connection_timeout(hass: HomeAssistant) -> None:
+    """Test coordinator update handles ConnectionTimeout as a temporary failure.
+
+    ConnectionTimeout is a TemporaryFailure subclass, so it should raise
+    UpdateFailed, putting the sensor into STATE_UNAVAILABLE.
+    """
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    starting_time = static_datetime()
+    timestamp = future_timestamp(100)
+
+    with (
+        freeze_time(starting_time),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=timestamp,
+        ),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+
+    next_update = starting_time + timedelta(hours=12)
+    with (
+        freeze_time(next_update),
+        patch(
+            "homeassistant.components.cert_expiry.helper.async_get_cert",
+            side_effect=TimeoutError,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=12))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_sensor_connection_refused(hass: HomeAssistant) -> None:
+    """Test coordinator update handles ConnectionRefused as a temporary failure.
+
+    ConnectionRefused is a TemporaryFailure subclass, so it should raise
+    UpdateFailed, putting the sensor into STATE_UNAVAILABLE.
+    """
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    starting_time = static_datetime()
+    timestamp = future_timestamp(100)
+
+    with (
+        freeze_time(starting_time),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=timestamp,
+        ),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+
+    next_update = starting_time + timedelta(hours=12)
+    with (
+        freeze_time(next_update),
+        patch(
+            "homeassistant.components.cert_expiry.helper.async_get_cert",
+            side_effect=ConnectionRefusedError,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=12))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_sensor_recovery_after_temporary_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test sensor recovers correctly after a temporary network failure.
+
+    Ensures that after a TemporaryFailure puts the sensor into
+    STATE_UNAVAILABLE, a successful poll on the next cycle restores
+    the correct state and clears the unavailable condition.
+    """
+    assert hass.state is CoreState.running
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    starting_time = static_datetime()
+    timestamp = future_timestamp(100)
+
+    with (
+        freeze_time(starting_time),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=timestamp,
+        ),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+    assert state.attributes.get("error") is None
+
+    # Temporary failure — sensor goes unavailable
+    next_update = starting_time + timedelta(hours=12)
+    with (
+        freeze_time(next_update),
+        patch(
+            "homeassistant.components.cert_expiry.helper.async_get_cert",
+            side_effect=ConnectionResetError,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=12))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Successful poll — sensor should fully recover
+    next_update = starting_time + timedelta(hours=24)
+    with (
+        freeze_time(next_update),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+            return_value=timestamp,
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("is_valid")
+    assert state.attributes.get("error") is None
+
+
+async def test_non_default_port(hass: HomeAssistant) -> None:
+    """Test sensor naming and unique_id when a non-default port is used.
+
+    When port != 443 the port should appear in the sensor name and unique_id.
+    """
+    assert hass.state is CoreState.running
+
+    non_default_port = 8443
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: non_default_port},
+        unique_id=f"{HOST}:{non_default_port}",
+    )
+
+    timestamp = future_timestamp(100)
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Entity id reflects the host:port name
+    state = hass.states.get("sensor.example_com_8443_cert_expiry")
+    assert state is not None
+    assert state.state == timestamp.isoformat()
+    assert entry.unique_id == f"{HOST}:{non_default_port}"
