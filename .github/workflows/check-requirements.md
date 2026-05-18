@@ -27,7 +27,7 @@ safe-outputs:
   add_comment:
     max: 1
 description: >
-  Checks changed Python package requirements on PRs targeting the core repo:
+  Checks changed Python package requirements on PRs targeting the core repo and
   verifies licenses match PyPI metadata, source
   repositories are publicly accessible, PyPI releases were uploaded via
   automated CI (Trusted Publisher attestation), the package's release pipeline
@@ -137,8 +137,9 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the concrete PR number provided in
-the workflow context for this run (`pull-request-number`).
+Read the PR body from the GitHub API using the PR number from the workflow
+context (`pull-request-number`). If that value is absent, use the
+`workflow_dispatch` input `pull_request_number`.
 Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required

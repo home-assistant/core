@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"f905e1c53ca41fc4479ab0c9d2b89de4adea215bc0ce3f6d2d2ad9aa4d235b84","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"2e5fe8f217227cc407c369f58a2e8ea563c6ab504e715d29689c6e1f401f646f","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"v0.68.3","version":"v0.68.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.20"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.2.19"},{"image":"ghcr.io/github/github-mcp-server:v0.32.0"},{"image":"node:lts-alpine"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -22,7 +22,7 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Checks changed Python package requirements on PRs targeting the core repo: verifies licenses match PyPI metadata, source repositories are publicly accessible, PyPI releases were uploaded via automated CI (Trusted Publisher attestation), the package's release pipeline uses OIDC or equivalent automated credentials (not static tokens), and the PR description contains the required links.
+# Checks changed Python package requirements on PRs targeting the core repo and verifies licenses match PyPI metadata, source repositories are publicly accessible, PyPI releases were uploaded via automated CI (Trusted Publisher attestation), the package's release pipeline uses OIDC or equivalent automated credentials (not static tokens), and the PR description contains the required links.
 #
 # Secrets used:
 #   - COPILOT_GITHUB_TOKEN
@@ -1211,7 +1211,11 @@ jobs:
               console.log('No PR number available, skipping comment search');
               return;
             }
-            for (let page = 1; ; page += 1) {
+            // Limit pagination to 20 pages (2000 comments) to avoid excessive API calls.
+            // If the marker comment is older than that window, this run will post a new
+            // comment instead of updating the older one in place.
+            const maxPages = 20;
+            for (let page = 1; page <= maxPages; page++) {
               const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -1227,10 +1231,11 @@ jobs:
                 }
               }
               if (comments.length < 100) {
-                break;
+                console.log('No existing requirements-check comment found');
+                return;
               }
             }
-            console.log('No existing requirements-check comment found');
+            console.log(`Reached pagination limit (${maxPages} pages) without finding an existing requirements-check comment`);
       - name: Process Safe Outputs
         id: process_safe_outputs
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
@@ -1263,6 +1268,8 @@ jobs:
             const newCommentId = parseInt(process.env.NEW_COMMENT_ID, 10) || 0;
             const newCommentUrl = process.env.NEW_COMMENT_URL || '';
             if (!newCommentId) {
+              // No add_comment safe output was produced (for example, if the agent
+              // emitted no safe outputs), so keep comment outputs empty.
               core.setOutput('comment_id', '');
               core.setOutput('comment_url', '');
               return;
