@@ -70,4 +70,4 @@ class BasePrivateDeviceEntity(Entity):
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Respond when the bluetooth device being tracked broadcasted updated information."""
+        """Respond when the tracked device broadcasted updated info."""

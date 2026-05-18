@@ -75,7 +75,7 @@ async def init_integration(
 async def mock_block_device_push_update_failure(
     hass: HomeAssistant, mock_block_device: Mock
 ) -> None:
-    """Create updates with COAP_REPLY indicating push update failure for block device."""
+    """Create COAP_REPLY updates indicating push update failure."""
     for _ in range(MAX_PUSH_UPDATE_FAILURES):
         mock_block_device.mock_update_reply()
         await hass.async_block_till_done()

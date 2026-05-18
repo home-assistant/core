@@ -69,7 +69,8 @@ async def test_updating(
     assert scene_entities, "No scene entities registered"
     entity_id = scene_entities[0].entity_id
 
-    # Capture current state (could be unknown or a timestamp depending on implementation)
+    # Capture current state (could be unknown or a timestamp
+    # depending on implementation)
     before = hass.states.get(entity_id)
     assert before is not None
 

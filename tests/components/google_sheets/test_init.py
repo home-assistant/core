@@ -326,7 +326,8 @@ async def test_get_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+        worksheet = mock_client.return_value.open_by_key.return_value.worksheet
+        worksheet.return_value.get_values.return_value = [
             ["col1", "col2"],
             ["a", "b"],
             ["c", "d"],
