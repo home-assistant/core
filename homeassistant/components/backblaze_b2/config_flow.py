@@ -134,7 +134,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not REQUIRED_CAPABILITIES.issubset(current_caps):
                     missing_caps = REQUIRED_CAPABILITIES - current_caps
                     _LOGGER.warning(
-                        "Missing required Backblaze B2 capabilities for Key ID '%s': %s",
+                        "Missing required Backblaze B2 capabilities"
+                        " for Key ID '%s': %s",
                         user_input[CONF_KEY_ID],
                         ", ".join(sorted(missing_caps)),
                     )
@@ -190,13 +191,15 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         except exception.MissingAccountData:
             # This generally indicates an issue with how InMemoryAccountInfo is used
             _LOGGER.error(
-                "Missing account data during Backblaze B2 authorization for Key ID '%s'",
+                "Missing account data during Backblaze B2"
+                " authorization for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "invalid_credentials"
         except Exception:
             _LOGGER.exception(
-                "An unexpected error occurred during Backblaze B2 configuration for Key ID '%s'",
+                "An unexpected error occurred during Backblaze B2"
+                " configuration for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "unknown"

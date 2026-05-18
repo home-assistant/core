@@ -56,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
             ),
         }
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_LOCK_STATE,
@@ -74,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
             ),
         }
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_PET_LOCATION,

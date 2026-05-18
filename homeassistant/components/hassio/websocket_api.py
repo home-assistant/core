@@ -39,6 +39,7 @@ from .const import (
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_addons_list
+from .exceptions import HassioNotReadyError
 from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
@@ -47,7 +48,8 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Endpoints needed for ingress can't require admin because add-ons can set `panel_admin: false`
+# Endpoints needed for ingress can't require admin because
+# add-ons can set `panel_admin: false`
 RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
 WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
 WS_NO_ADMIN_ENDPOINTS = re.compile(
@@ -132,8 +134,9 @@ async def websocket_supervisor_api(
     payload = msg.get(ATTR_DATA, {})
 
     if command == "/ingress/session":
-        # Send user ID on session creation, so the supervisor can correlate session tokens with users
-        # for every request that is authenticated with the given ingress session token.
+        # Send user ID on session creation, so the supervisor can
+        # correlate session tokens with users for every request that
+        # is authenticated with the given ingress session token.
         payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
 
     try:
@@ -174,7 +177,20 @@ async def websocket_update_addon(
     """Websocket handler to update an addon."""
     addon_name: str | None = None
     addon_version: str | None = None
-    addons_list: list[dict[str, Any]] = get_addons_list(hass) or []
+    try:
+        addons_list: list[dict[str, Any]] = get_addons_list(hass)
+    except HassioNotReadyError:
+        _LOGGER.error(
+            "Update command received for app %s but apps list is not available",
+            msg["addon"],
+        )
+        connection.send_error(
+            msg[WS_ID],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Apps list is not available",
+        )
+        return
+
     for addon in addons_list:
         if addon[ATTR_SLUG] == msg["addon"]:
             addon_name = addon[ATTR_NAME]

@@ -44,7 +44,10 @@ async def test_button_press_syncs_time(
 
     # Mock device time that differs from HA time
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Press the button
@@ -75,7 +78,10 @@ async def test_button_press_no_update_when_same(
     # Mock device time that matches HA time
     current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        f'{{"time": {{"name": "Time", "value": "{current_time_str}", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}}}'
+        f'{{"time": {{"name": "Time",'
+        f' "value": "{current_time_str}",'
+        f' "unit": "", "desc": "",'
+        f' "dataType": 0, "readonly": 0, "error": 0}}}}'
     )
 
     # Press the button
@@ -124,7 +130,10 @@ async def test_button_press_set_time_error(
 
     # Mock device time that differs
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Mock set_time() to raise an error

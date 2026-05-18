@@ -27,8 +27,9 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
-# Miele have used the same and overlapping names for fan_speeds and programs even
-# if the contexts are different. This is an attempt to make it clearer in the integration.
+# Miele have used the same and overlapping names for
+# fan_speeds and programs even if the contexts are different.
+# This is an attempt to make it clearer in the integration.
 
 
 class FanSpeed(IntEnum):
