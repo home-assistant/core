@@ -1757,7 +1757,7 @@ openhomedevice==2.2.0
 openrgb-python==0.3.6
 
 # homeassistant.components.opensensemap
-opensensemap-api==0.2.0
+opensensemap-api==0.4.1
 
 # homeassistant.components.enigma2
 openwebifpy==4.3.1
