@@ -17,5 +17,6 @@ ATTR_CALLBACK_URL: Final = "callback_url"
 ATTR_EXPIRE: Final = "expire"
 ATTR_TTL: Final = "ttl"
 ATTR_TIMESTAMP: Final = "timestamp"
+ATTR_ENCRYPTED_KEY: Final = "encrypted_key"
 
 CONF_USER_KEY: Final = "user_key"

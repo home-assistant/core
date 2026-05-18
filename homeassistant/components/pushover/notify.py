@@ -1,6 +1,14 @@
 """Pushover platform for notify component."""
 
 import logging
+import base64
+import hmac
+import hashlib
+import os
+import gzip
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.padding import PKCS7
+from cryptography.hazmat.backends import default_backend
 from typing import Any
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
@@ -28,6 +36,7 @@ from .const import (
     ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
+    ATTR_ENCRYPTED_KEY,
     CONF_USER_KEY,
     DOMAIN,
 )
@@ -62,6 +71,22 @@ class PushoverNotificationService(BaseNotificationService):
         self._user_key = user_key
         self.pushover = pushover
 
+
+    def encrypt(plaintext: str, key_hex: str) -> str:
+        """Encrypt the plaintext using AES-256-CBC with gzip compression and HMAC-SHA256."""
+        key = bytes.fromhex(key_hex)
+
+        iv = os.urandom(16)
+        compressed = gzip.compress(plaintext.encode(), compresslevel=9)
+        padder = PKCS7(128).padder()
+        padded = padder.update(compressed) + padder.finalize()
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        ct = encryptor.update(padded) + encryptor.finalize()
+        h = hmac.new(key, iv + ct, hashlib.sha256).digest()
+        final = iv + ct + h
+        return base64.b64encode(final).decode()
+
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -78,6 +103,8 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
+        encrypted_key = data.get(ATTR_ENCRYPTED_KEY)
+        encrypted = 1 if encrypted_key else 0
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
@@ -99,6 +126,12 @@ class PushoverNotificationService(BaseNotificationService):
                 # Remove attachment key to send without attachment.
                 image = None
 
+        # Encrypt message and title if encrypted_key is provided
+        if encrypted_key:
+            message = self.encrypt(message, encrypted_key)
+            if title is not None:
+                title = self.encrypt(title, encrypted_key)
+
         try:
             self.pushover.send_message(
                 user=self._user_key,
@@ -116,6 +149,7 @@ class PushoverNotificationService(BaseNotificationService):
                 sound=sound,
                 html=html,
                 ttl=ttl,
+                encrypted=encrypted,
             )
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
