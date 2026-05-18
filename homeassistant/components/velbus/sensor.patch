@@ -1,0 +1,84 @@
+diff --git a/homeassistant/components/velbus/sensor.py b/homeassistant/components/velbus/sensor.py
+index 229377355e4..f1b2b71c965 100644
+--- a/homeassistant/components/velbus/sensor.py
++++ b/homeassistant/components/velbus/sensor.py
+@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
+     SensorEntityDescription,
+     SensorStateClass,
+ )
++from homeassistant.const import EntityCategory
+ from homeassistant.core import HomeAssistant
+ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+ 
+@@ -34,6 +35,7 @@ class VelbusSensorEntityDescription(SensorEntityDescription):
+     )
+     unit_fn: Callable[[VelbusSensorChannel], str | None] | None = None
+     unique_id_suffix: str = ""
++    entity_category: EntityCategory | None = None
+ 
+ 
+ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
+@@ -63,6 +65,55 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
+         unit_fn=lambda channel: channel.get_counter_unit(),
+         unique_id_suffix="-counter",
+     ),
++    "PSULoad": VelbusSensorEntityDescription(
++        key="psuload",
++        device_class=SensorDeviceClass.POWER_FACTOR,
++        state_class=SensorStateClass.MEASUREMENT,
++        unit_fn=lambda channel: PERCENTAGE,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    ),
++    "PSUPower": VelbusSensorEntityDescription(
++        key="psuwatt",
++        device_class=SensorDeviceClass.POWER,
++        state_class=SensorStateClass.MEASUREMENT,
++        unit_fn=lambda channel: UnitOfPower.WATT,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    ),
++    "PSUVoltage": VelbusSensorEntityDescription(
++        key="psuvolt",
++        device_class=SensorDeviceClass.VOLTAGE,
++        state_class=SensorStateClass.MEASUREMENT,
++        unit_fn=lambda channel: UnitOfElectricPotential.VOLT,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    ),
++    "PSUCurrent": VelbusSensorEntityDescription(
++        key="psuampere",
++        device_class=SensorDeviceClass.CURRENT,
++        state_class=SensorStateClass.MEASUREMENT,
++        unit_fn=lambda channel: UnitOfElectricCurrent.AMPERE,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    ),
++    "LightValue": VelbusSensorEntityDescription(
++        key="lightvalue",
++        device_class=SensorDeviceClass.ILLUMINANCE,
++        state_class=SensorStateClass.MEASUREMENT,
++        unit_fn=lambda channel: LIGHT_LUX,
++    ),
++    "BusErrorTx": VelbusSensorEntityDescription(
++        key="buserrortx",
++        state_class=SensorStateClass.TOTAL_INCREASING,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    },
++    "BusErrorRx": VelbusSensorEntityDescription(
++        key="buserrorrx",
++        state_class=SensorStateClass.TOTAL_INCREASING,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    },
++    "BusErrorOff": VelbusSensorEntityDescription(
++        key="buserroroff",
++        state_class=SensorStateClass.TOTAL_INCREASING,
++        entity_category=EntityCategory.DIAGNOSTIC,
++    },
+ }
+ 
+ 
+@@ -113,6 +164,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
+         if description.unit_fn:
+             self._attr_native_unit_of_measurement = description.unit_fn(channel)
+         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
++        self._attr_entity_category = description.entity_category
+ 
+         # Modify name for counter entities
+         if is_counter:

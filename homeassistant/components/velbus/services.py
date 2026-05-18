@@ -88,21 +88,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         try:
             if call.data.get(CONF_ADDRESS):
-                await hass.async_add_executor_job(
-                    os.unlink,
-                    hass.config.path(
-                        STORAGE_DIR,
-                        f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
-                    ),
+                cache_path = hass.config.path(
+                    STORAGE_DIR,
+                    f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
                 )
+                if os.path.exists(cache_path):
+                    await hass.async_add_executor_job(os.unlink, cache_path)
             else:
-                await hass.async_add_executor_job(
-                    shutil.rmtree,
-                    hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
+                cache_path = hass.config.path(
+                    STORAGE_DIR, f"velbuscache-{entry.entry_id}/"
                 )
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except FileNotFoundError:
-            pass  # It's okay if the file doesn't exist
+                if os.path.isdir(cache_path):
+                    await hass.async_add_executor_job(shutil.rmtree, cache_path)
         except OSError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

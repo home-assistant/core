@@ -164,6 +164,7 @@ async def test_clear_cache(
 
     # Test with OSError
     with (
+        patch("os.path.exists", return_value=True),
         patch("os.unlink", side_effect=OSError("Boom")),
         pytest.raises(HomeAssistantError),
     ):
