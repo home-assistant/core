@@ -558,7 +558,6 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         key="last_seen",
         translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -630,7 +629,8 @@ async def async_setup_entry(
                 )
             )
         elif info.platform_hint == "notification":
-            # prevent duplicate entities for values that are already represented as binary sensors
+            # prevent duplicate entities for values that are
+            # already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
             entities.append(

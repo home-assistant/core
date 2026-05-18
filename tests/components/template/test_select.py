@@ -239,7 +239,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_ICON: "{% if states.sensor.test_state.state == 'yes' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "mdi:check{% endif %}"
+                ),
             },
             ATTR_ICON,
             "mdi:check",
@@ -247,7 +250,10 @@ def _verify(
         (
             {
                 **TEST_OPTIONS,
-                CONF_PICTURE: "{% if states.sensor.test_state.state == 'yes' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.sensor.test_state.state == 'yes' %}"
+                    "check.jpg{% endif %}"
+                ),
             },
             ATTR_ENTITY_PICTURE,
             "check.jpg",
@@ -441,7 +447,9 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
                 "state": "{{ states('sensor.test_state') }}",
-                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+                "availability": (
+                    "{{ is_state('binary_sensor.test_availability', 'on') }}"
+                ),
             },
         )
     ],
