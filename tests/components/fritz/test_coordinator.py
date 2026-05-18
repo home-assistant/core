@@ -613,7 +613,7 @@ async def test_async_trigger_cleanup(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the printer was removed from tracked devices
     assert (
@@ -633,7 +633,7 @@ async def test_async_trigger_cleanup(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the printer is registered again as tracked device
     assert device_registry.async_get_device(
