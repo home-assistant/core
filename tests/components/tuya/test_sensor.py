@@ -209,7 +209,7 @@ async def test_delta_report_sensor(
         (
             "znrb_gpzittzfnzhduquz",
             "sensor.inverter_pool_heat_pump_temperature",
-            "temp_set",
+            "temp_current",
             "",
             (
                 "Device class temperature ignored for incompatible unit  in "
