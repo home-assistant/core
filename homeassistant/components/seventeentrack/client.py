@@ -53,6 +53,15 @@ def _parse_datetime(value: str | None) -> str:
     return parsed.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
+def _package_status(package: dict[str, Any]) -> int:
+    """Return the Home Assistant package status code."""
+    api_status = package.get("package_status")
+    if not isinstance(api_status, str):
+        return 0
+
+    return PACKAGE_STATUS.get(api_status, 0)
+
+
 class ModernProfile(Profile):
     """Profile manager using the current 17Track web API."""
 
@@ -88,7 +97,7 @@ class ModernProfile(Profile):
         """Get the list of packages associated with the account."""
         packages = []
         for package in await self._tracklist():
-            status = PACKAGE_STATUS.get(package.get("package_status"), 0)
+            status = _package_status(package)
             if package_state and package_state not in (status, str(status)):
                 continue
 
@@ -111,7 +120,7 @@ class ModernProfile(Profile):
     async def summary(self, show_archived: bool = False) -> dict[str, int]:
         """Get a quick summary of how many packages are in an account."""
         summary = Counter(
-            STATUS_NAMES[PACKAGE_STATUS.get(package.get("package_status"), 0)]
+            STATUS_NAMES[_package_status(package)]
             for package in await self._tracklist()
         )
 
