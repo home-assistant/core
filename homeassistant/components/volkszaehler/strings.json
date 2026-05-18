@@ -15,6 +15,11 @@
           "port": "[%key:common::config_flow::data::port%]",
           "uuid": "UUID"
         },
+        "data_description": {
+          "host": "IP address or hostname of the Volkszaehler server.",
+          "port": "Port number of the Volkszaehler server.",
+          "uuid": "UUID of the channel to monitor. In the Volkszaehler Web UI, click the (i) icon next to the channel to find it."
+        },
         "description": "Enter your Volkszaehler channel details to add it to Home Assistant.",
         "title": "Set up Volkszaehler"
       }
