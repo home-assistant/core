@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "api_error": "The Karakeep API returned an unexpected response.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url_format": "Enter a valid URL including http:// or https://."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "token": "API token",
+          "url": "URL"
+        },
+        "description": "Connect to your Karakeep instance."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "archived": {
+        "name": "Archived"
+      },
+      "bookmarks": {
+        "name": "Bookmarks"
+      },
+      "favorites": {
+        "name": "Favorites"
+      },
+      "highlights": {
+        "name": "Highlights"
+      },
+      "lists": {
+        "name": "Lists"
+      },
+      "tags": {
+        "name": "Tags"
+      }
+    }
+  }
+}
