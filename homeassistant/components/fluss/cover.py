@@ -28,12 +28,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fluss covers for devices that report an open/closed status."""
     coordinator = entry.runtime_data
+    added_device_ids: set[str] = set()
 
-    async_add_entities(
-        FlussCover(coordinator, device_id, device)
-        for device_id, device in coordinator.data.items()
-        if "openCloseStatus" in device
-    )
+    def _async_add_new_entities() -> None:
+        new_entities = [
+            FlussCover(coordinator, device_id, device)
+            for device_id, device in coordinator.data.items()
+            if "openCloseStatus" in device and device_id not in added_device_ids
+        ]
+        if not new_entities:
+            return
+
+        added_device_ids.update(entity.device_id for entity in new_entities)
+        async_add_entities(new_entities)
+
+    _async_add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
 class FlussCover(FlussEntity, CoverEntity):
