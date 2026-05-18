@@ -9,6 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.syncthing.const import (
+    DOMAIN,
     FOLDER_PAUSED_RECEIVED,
     FOLDER_SUMMARY_RECEIVED,
     SCAN_INTERVAL,
@@ -23,13 +24,13 @@ from homeassistant.helpers import dispatcher, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
-    FOLDER_ENTITY_ID,
     FOLDER_ID,
     MOCK_FOLDER_PAUSED_EVENT,
     MOCK_FOLDER_STATUS,
     MOCK_FOLDER_SUMMARY_EVENT,
     MOCK_STATE_CHANGED_EVENT,
     SERVER_ID,
+    SERVER_ID_SHORT_HA,
     create_mock_syncthing_client,
 )
 
@@ -50,6 +51,7 @@ async def test_sensor_platform_setup(
 async def test_sensor_platform_no_sensors_on_config_error(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor platform does not create folder sensors when config fetch fails."""
     mock_client = create_mock_syncthing_client()
@@ -62,7 +64,10 @@ async def test_sensor_platform_no_sensors_on_config_error(
         await hass.config_entries.async_setup(entry.entry_id)
 
         assert entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(FOLDER_ENTITY_ID) is None
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{FOLDER_ID}"
+        )
+        assert entity_id is None
 
 
 @pytest.mark.parametrize(
@@ -97,9 +102,13 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_syncthing: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test folder sensor becomes unavailable when server is unavailable."""
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{FOLDER_ID}"
+    )
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == "idle"
 
     dispatcher.async_dispatcher_send(
@@ -108,7 +117,7 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == STATE_UNAVAILABLE
 
 
@@ -116,6 +125,7 @@ async def test_folder_sensor_available_on_server_available(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_syncthing: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test folder sensor becomes available when server comes back online."""
     dispatcher.async_dispatcher_send(
@@ -124,7 +134,10 @@ async def test_folder_sensor_available_on_server_available(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{FOLDER_ID}"
+    )
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == STATE_UNAVAILABLE
 
     dispatcher.async_dispatcher_send(
@@ -133,7 +146,7 @@ async def test_folder_sensor_available_on_server_available(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == "idle"
 
 
@@ -141,6 +154,7 @@ async def test_folder_sensor_polls_status(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_syncthing: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test folder sensor polls for status updates."""
     syncing_status = {**MOCK_FOLDER_STATUS, "state": "syncing"}
@@ -150,7 +164,10 @@ async def test_folder_sensor_polls_status(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{FOLDER_ID}"
+    )
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == "syncing"
 
 
@@ -158,6 +175,7 @@ async def test_folder_sensor_error_makes_unavailable(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_syncthing: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test folder sensor becomes unavailable on status error."""
     mock_syncthing.database.status = AsyncMock(side_effect=SyncthingError("Error"))
@@ -166,5 +184,8 @@ async def test_folder_sensor_error_makes_unavailable(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get(FOLDER_ENTITY_ID)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SERVER_ID_SHORT_HA}-{FOLDER_ID}"
+    )
+    state = hass.states.get(entity_id) if entity_id else None
     assert state is not None and state.state == STATE_UNAVAILABLE

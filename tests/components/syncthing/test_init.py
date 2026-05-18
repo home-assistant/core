@@ -141,15 +141,13 @@ async def test_syncthing_client_reconnect_on_error(
         return_value=mock_syncthing,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-
-        await asyncio.sleep(0.2)
         await hass.async_block_till_done()
 
-    assert len(server_unavailable_calls) >= 1
-    assert len(server_available_calls) == 0
+        assert len(server_unavailable_calls) >= 1
+        assert len(server_available_calls) == 0
 
-    future = dt_util.utcnow() + RECONNECT_INTERVAL
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+        future = dt_util.utcnow() + RECONNECT_INTERVAL
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-    assert len(server_available_calls) >= 1
+        assert len(server_available_calls) >= 1

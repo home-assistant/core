@@ -23,11 +23,8 @@ SERVER_NAME = "This Device"
 FOLDER_ID = "test-folder"
 FOLDER_LABEL = "Test Folder"
 
-SERVER_ID_SHORT_HA = SERVER_ID.split("-", maxsplit=1)[0].lower()
+SERVER_ID_SHORT_HA = SERVER_ID.split("-", maxsplit=1)[0]
 URL_HA = URL.lower().replace("://", "_").replace(".", "_").replace(":", "_")
-
-SERVER_ENTITY_ID = f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{SERVER_ID_SHORT_HA}_{SERVER_NAME.lower().replace(' ', '_')}"
-FOLDER_ENTITY_ID = f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{FOLDER_ID.lower().replace('-', '_')}_{FOLDER_LABEL.lower().replace(' ', '_')}"
 
 MOCK_SYSTEM_STATUS = load_json_object_fixture("system_status.json", DOMAIN)
 MOCK_SYSTEM_VERSION = load_json_object_fixture("system_version.json", DOMAIN)

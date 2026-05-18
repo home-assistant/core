@@ -40,3 +40,4 @@ async def mock_syncthing(
         await hass.async_block_till_done()
         yield mock_syncthing
         await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
