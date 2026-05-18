@@ -36,6 +36,9 @@
       "carbon_monoxide": {
         "name": "Carbon monoxide"
       },
+      "coil_freeze": {
+        "name": "Coil freeze/defrost"
+      },
       "cover_off": {
         "name": "Cover off"
       },
@@ -48,11 +51,26 @@
       "feeding": {
         "name": "Feeding"
       },
+      "filter_cleaning": {
+        "name": "Filter cleaning"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_temp": {
+        "name": "High temperature"
+      },
+      "low_humidity": {
+        "name": "Low humidity"
+      },
+      "low_temp": {
+        "name": "Low temperature"
+      },
       "methane": {
         "name": "Methane"
+      },
+      "motor_fault": {
+        "name": "Motor fault"
       },
       "pm25": {
         "name": "PM2.5"
@@ -62,6 +80,9 @@
       },
       "tankfull": {
         "name": "Tank full"
+      },
+      "temp_error": {
+        "name": "Temperature error"
       },
       "tilt": {
         "name": "Tilt"
@@ -213,6 +234,9 @@
       },
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
+      },
+      "irrigation_duration": {
+        "name": "Irrigation duration"
       },
       "maximum_brightness": {
         "name": "Maximum brightness"
@@ -652,6 +676,12 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
+      "coil_temperature": {
+        "name": "Coil temperature"
+      },
+      "compressor_strength": {
+        "name": "Compressor strength"
+      },
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
@@ -688,11 +718,17 @@
       "filter_utilization": {
         "name": "Filter utilization"
       },
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
       "gas": {
         "name": "Gas"
+      },
+      "heat_exchanger_temperature": {
+        "name": "Heat exchanger temperature"
       },
       "heat_index_temperature": {
         "name": "Heat index"
@@ -775,6 +811,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
       },
       "oxydo_reduction_potential": {
         "name": "Oxydo reduction potential"

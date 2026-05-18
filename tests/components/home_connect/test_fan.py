@@ -49,6 +49,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
+_FAN_SPEED_PERCENTAGE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+)
+
 
 @pytest.fixture
 def platforms() -> list[str]:
@@ -88,7 +92,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -279,7 +283,7 @@ async def test_speed_percentage_functionality(
 ) -> None:
     """Test speed percentage functionality."""
     entity_id = "fan.air_conditioner"
-    option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+    option_key = _FAN_SPEED_PERCENTAGE_KEY
     if set_active_program_options_side_effect:
         client.set_active_program_option.side_effect = (
             set_active_program_options_side_effect
@@ -453,7 +457,10 @@ async def test_preset_mode_functionality(
         option_key=option_key,
         value=allowed_values[0]
         if allowed_values
-        else "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+        else (
+            "HeatingVentilationAirConditioning"
+            ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+        ),
     )
     entity_state = hass.states.get(entity_id)
     assert entity_state
@@ -606,7 +613,7 @@ async def test_added_entity_automatically(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that no fan entity is created if no fan options are available but when they are added later, the entity is created."""
+    """Test fan entity created only after fan options become available."""
     entity_id = "fan.air_conditioner"
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(

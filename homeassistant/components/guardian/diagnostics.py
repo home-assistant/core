@@ -36,7 +36,9 @@ async def async_get_config_entry_diagnostics(
         "data": {
             "valve_controller": {
                 api_category: async_redact_data(coordinator.data, TO_REDACT)
-                for api_category, coordinator in data.valve_controller_coordinators.items()
+                for api_category, coordinator in (
+                    data.valve_controller_coordinators.items()
+                )
             },
             "paired_sensors": [
                 async_redact_data(coordinator.data, TO_REDACT)

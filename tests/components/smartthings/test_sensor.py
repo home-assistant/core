@@ -152,7 +152,7 @@ async def test_create_issue_with_items(
     expected_state: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
 
     entity_entry = entity_registry.async_get_or_create(
@@ -211,7 +211,9 @@ async def test_create_issue_with_items(
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
-        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+        "items": (
+            "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)"
+        ),
     }
     assert issue.breaks_in_ha_version == version
 
@@ -316,7 +318,7 @@ async def test_create_issue(
     expected_state: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     issue_id = f"deprecated_{issue_string}_{entity_id}"
 
     entity_entry = entity_registry.async_get_or_create(

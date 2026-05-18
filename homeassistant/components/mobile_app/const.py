@@ -90,8 +90,9 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        # Set to True to indicate that this registration will connect via websocket channel
-        # to receive push notifications.
+        # Set to True to indicate that this registration
+        # will connect via websocket channel to receive
+        # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,

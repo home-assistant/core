@@ -230,6 +230,13 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
         # Controls the irrigation duration for indexed water valves
         NumberEntityDescription(
+            key=DPCode.COUNTDOWN,
+            translation_key="irrigation_duration",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        # Controls the irrigation duration for indexed water valves
+        NumberEntityDescription(
             key=DPCode.COUNTDOWN_1,
             translation_key="indexed_irrigation_duration",
             translation_placeholders={"index": "1"},
@@ -536,7 +543,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
                 LOGGER.debug(
-                    "Device class %s ignored for incompatible unit %s in number entity %s",
+                    "Device class %s ignored for"
+                    " incompatible unit %s in number entity %s",
                     self.device_class,
                     self.native_unit_of_measurement,
                     self.unique_id,
