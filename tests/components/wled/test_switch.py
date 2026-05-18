@@ -207,3 +207,25 @@ async def test_switch_dynamically_handle_segments(
         segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
     )
     assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_segment_named"])
+async def test_switch_named_segments(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test if named segments get the custom name."""
+    assert {
+        entity_id: entity_registry.entities[entity_id].original_name
+        for entity_id in entity_registry.entities
+    } == {
+        "switch.wled_rgb_light_custom_segment_name_1_freeze": "Custom segment name 1 freeze",
+        "switch.wled_rgb_light_custom_segment_name_1_reverse": "Custom segment name 1 reverse",
+        "switch.wled_rgb_light_custom_segment_name_2_freeze": "Custom segment name 2 freeze",
+        "switch.wled_rgb_light_custom_segment_name_2_reverse": "Custom segment name 2 reverse",
+        "switch.wled_rgb_light_nightlight": "Nightlight",
+        "switch.wled_rgb_light_sync_receive": "Sync receive",
+        "switch.wled_rgb_light_sync_send": "Sync send",
+    }

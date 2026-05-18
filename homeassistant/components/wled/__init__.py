@@ -52,6 +52,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
     entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
     await entry.runtime_data.async_config_entry_first_refresh()
 
+    initial_segment_names = entry.runtime_data.segment_names
+
+    def _handle_metadata_update() -> None:
+        """Handle WLED data update."""
+        _LOGGER.debug(
+            "WLED data updated, checking if config entry needs to be reloaded"
+        )
+        segment_names = entry.runtime_data.segment_names
+        if segment_names != initial_segment_names:
+            _LOGGER.debug(
+                "Segment names changed from %s to %s, reloading config entry",
+                initial_segment_names,
+                segment_names,
+            )
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        entry.runtime_data.async_add_listener(_handle_metadata_update)
+    )
+
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

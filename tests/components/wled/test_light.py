@@ -78,7 +78,7 @@ async def test_segment_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_TRANSITION: 5},
         blocking=True,
     )
     assert mock_wled.segment.call_count == 1
@@ -94,7 +94,7 @@ async def test_segment_change_state(
         {
             ATTR_BRIGHTNESS: 42,
             ATTR_EFFECT: "Chase",
-            ATTR_ENTITY_ID: "light.wled_rgb_light",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
             ATTR_RGB_COLOR: [255, 0, 0],
             ATTR_TRANSITION: 5,
         },
@@ -119,7 +119,7 @@ async def test_main_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
         blocking=True,
     )
     assert mock_wled.master.call_count == 1
@@ -133,7 +133,7 @@ async def test_main_change_state(
         SERVICE_TURN_ON,
         {
             ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
+            ATTR_ENTITY_ID: "light.wled_rgb_light",
             ATTR_TRANSITION: 5,
         },
         blocking=True,
@@ -148,7 +148,7 @@ async def test_main_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
         blocking=True,
     )
     assert mock_wled.master.call_count == 3
@@ -162,7 +162,7 @@ async def test_main_change_state(
         SERVICE_TURN_ON,
         {
             ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
+            ATTR_ENTITY_ID: "light.wled_rgb_light",
             ATTR_TRANSITION: 5,
         },
         blocking=True,
@@ -196,9 +196,9 @@ async def test_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (main := hass.states.get("light.wled_rgb_light_main"))
+    assert (main := hass.states.get("light.wled_rgb_light"))
     assert main.state == STATE_ON
-    assert (segment0 := hass.states.get("light.wled_rgb_light"))
+    assert (segment0 := hass.states.get("light.wled_rgb_light_2"))
     assert segment0.state == STATE_ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_ON
@@ -209,7 +209,7 @@ async def test_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (main := hass.states.get("light.wled_rgb_light_main"))
+    assert (main := hass.states.get("light.wled_rgb_light_2"))
     assert main.state == STATE_UNAVAILABLE
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
@@ -301,14 +301,14 @@ async def test_light_errors(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0"},
             blocking=True,
         )
 
     assert ex.value.translation_domain == DOMAIN
     assert ex.value.translation_key == expected_translation_key
 
-    assert (state := hass.states.get("light.wled_rgb_light"))
+    assert (state := hass.states.get("light.wled_rgb_light_segment_0"))
     assert state.state == expected_state
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
@@ -345,9 +345,14 @@ async def test_single_segment_with_keep_main_light(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the behavior of the integration with a single segment."""
-    assert not hass.states.get("light.wled_rgb_light_main")
+    # The main entity is a segment entity, so the unique ID is based on the segment ID (0).
+    assert (
+        entity_registry.entities.get("light.wled_rgb_light").unique_id
+        == "aabbccddeeff_0"
+    )
 
     hass.config_entries.async_update_entry(
         init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
@@ -355,7 +360,7 @@ async def test_single_segment_with_keep_main_light(
     await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("light.wled_rgb_light_main"))
+    assert (state := hass.states.get("light.wled_rgb_light"))
     assert state.state == STATE_ON
 
 
@@ -388,3 +393,21 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
         on=True,
         segment_id=0,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_segment_named"])
+async def test_light_named_segments(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test if named segments get the custom name."""
+    assert {
+        entity_id: entity_registry.entities[entity_id].original_name
+        for entity_id in entity_registry.entities
+    } == {
+        "light.wled_rgb_light": None,
+        "light.wled_rgb_light_custom_segment_name_1": "Custom segment name 1",
+        "light.wled_rgb_light_custom_segment_name_2": "Custom segment name 2",
+    }
