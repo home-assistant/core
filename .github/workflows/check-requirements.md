@@ -124,16 +124,15 @@ Note: if PyPI returns an error fetching the per-version JSON, fall back to the
 latest JSON (`https://pypi.org/pypi/{package_name}/json`) and look up the
 specific version in the `releases` dict.
 
-## Step 3 — Check Repository Availability
+## Step 3 — Identify Repository URL
 
 For each new or bumped package:
 
 1. From the PyPI JSON at `info.project_urls`, find the source repository URL
    (keys such as `"Source"`, `"Homepage"`, `"Repository"`, or `"Source Code"`).
-2. Use web-fetch to perform a GET request to the repository URL.
-3. If the response returns HTTP 200 and the page is publicly accessible, mark ✅.
-4. If the URL is missing, returns a non-200 status, or redirects to a login
-   page, mark ❌ with a note that the repository could not be verified as public.
+2. Record that repository URL for later checks.
+3. If no suitable repository URL is present, mark ❌ with a note that the
+   source repository URL is missing and cannot be verified.
 
 ## Step 4 — Check PR Description
 
