@@ -124,8 +124,9 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         update_needed = await self._async_set_preset_mode_internal(preset_mode)
 
         if update_needed:
-            # This state change affects other entities like sensors. Force an immediate update that
-            # can be observed by all parties involved.
+            # This state change affects other entities like
+            # sensors. Force an immediate update that can be
+            # observed by all parties involved.
             await self.coordinator.async_request_refresh()
 
     async def async_turn_on(
@@ -149,8 +150,9 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             )
 
         if update_needed:
-            # This state change affects other entities like sensors. Force an immediate update that
-            # can be observed by all parties involved.
+            # This state change affects other entities like
+            # sensors. Force an immediate update that can be
+            # observed by all parties involved.
             await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

@@ -26,7 +26,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, shades: Shades, hub: Hub
     ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
+        """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades
         self.hub = hub
         # The hub tends to crash if there are multiple radio operations at the same time

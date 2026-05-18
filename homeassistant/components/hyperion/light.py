@@ -203,7 +203,11 @@ class HyperionLight(LightEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if light is on. Light is considered on when there is a source at the configured HA priority."""
+        """Return true if light is on.
+
+        Light is considered on when there is a source at the
+        configured HA priority.
+        """
         return self._get_priority_entry_that_dictates_state() is not None
 
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -57,7 +57,10 @@ SENSORPRO_SERVICE_INFO = make_bluetooth_service_info(
     rssi=-60,
     service_data={},
     manufacturer_data={
-        43605: b"\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01"
+        43605: (
+            b"\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01"
+            b"\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01"
+        )
     },
     service_uuids=[],
     source="local",

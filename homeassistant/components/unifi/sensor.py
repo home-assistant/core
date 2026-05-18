@@ -150,7 +150,7 @@ def async_device_clients_value_fn(hub: UnifiHub, device: Device) -> int:
 
 @callback
 def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | None:
-    """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
+    """Calculate the approximate time the device started."""
     if device.uptime <= 0:
         # Library defaults to 0 if uptime is not provided, e.g. when offline
         return None
@@ -161,7 +161,7 @@ def async_device_uptime_value_fn(hub: UnifiHub, device: Device) -> datetime | No
 def async_uptime_value_changed_fn(
     old: StateType | date | datetime | Decimal, new: datetime | float | str | None
 ) -> bool:
-    """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
+    """Reject new uptime if too similar to old. Avoids fluctuation."""
     if isinstance(old, datetime) and isinstance(new, datetime):
         return new != old and abs((new - old).total_seconds()) > 120
     return old is None or (new != old)
@@ -726,7 +726,8 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         """
         description = self.entity_description
         obj = description.object_fn(self.api, self._obj_id)
-        # Update the value only if value is considered to have changed relative to its previous state
+        # Update the value only if value is considered to
+        # have changed relative to its previous state
         if description.value_changed_fn(
             self.native_value, (value := description.value_fn(self.hub, obj))
         ):
