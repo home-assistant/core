@@ -202,7 +202,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
-    "opensensemap": {"opensensemap-api": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
