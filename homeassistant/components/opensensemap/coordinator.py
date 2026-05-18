@@ -40,7 +40,7 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
         try:
             async with asyncio.timeout(10):
                 await self.api.get_data()
-        except OpenSenseMapError as err:
+        except (OpenSenseMapError, TimeoutError) as err:
             raise UpdateFailed(
                 f"Unable to fetch data from openSenseMap: {err}"
             ) from err

@@ -1,6 +1,6 @@
 """Tests for the openSenseMap integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from opensensemap_api.exceptions import OpenSenseMapError
 import pytest
@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.opensensemap.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -118,4 +119,34 @@ async def test_yaml_import_invalid_station(
     assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_station"
+    )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.opensensemap.issues.deprecated_yaml_import_issue_future_unknown_reason.title",
+            "component.opensensemap.issues.deprecated_yaml_import_issue_future_unknown_reason.description",
+        ]
+    ],
+)
+async def test_yaml_import_unknown_abort_reason(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a YAML import aborted with an unknown reason still creates an issue."""
+    config = {
+        "air_quality": [{"platform": "opensensemap", CONF_STATION_ID: TEST_STATION_ID}]
+    }
+    with patch(
+        "homeassistant.config_entries.ConfigEntriesFlowManager.async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "future_unknown_reason"},
+    ):
+        assert await async_setup_component(hass, "air_quality", config)
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_future_unknown_reason"
     )

@@ -73,6 +73,9 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
         """Handle import of a YAML configuration."""
         station_id = import_data[CONF_STATION_ID]
+        # Abort on duplicate before contacting the API: air_quality.async_setup_platform
+        # only creates the generic deprecation issue when the abort reason is
+        # "already_configured", so this ordering must be preserved.
         await self.async_set_unique_id(station_id)
         self._abort_if_unique_id_configured()
 
@@ -89,8 +92,7 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_station")
 
-        title = import_data.get(CONF_NAME) or name
         return self.async_create_entry(
-            title=title,
+            title=import_data.get(CONF_NAME, name),
             data={CONF_STATION_ID: station_id},
         )

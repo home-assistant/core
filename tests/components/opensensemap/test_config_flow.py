@@ -70,6 +70,7 @@ async def test_user_flow_api_errors(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Station"
+    assert result["result"].unique_id == TEST_STATION_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

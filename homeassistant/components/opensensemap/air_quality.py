@@ -33,8 +33,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import legacy YAML configuration into a config entry."""
+    import_data: dict[str, str] = {CONF_STATION_ID: config[CONF_STATION_ID]}
+    if CONF_NAME in config:
+        import_data[CONF_NAME] = config[CONF_NAME]
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
     )
     if (
         result.get("type") is FlowResultType.ABORT
@@ -56,6 +61,9 @@ async def async_setup_platform(
         )
         return
 
+    # The "deprecated_yaml" translation key is provided by Home Assistant core
+    # under the "homeassistant" domain, so no matching key exists in this
+    # integration's strings.json.
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
