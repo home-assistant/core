@@ -744,7 +744,7 @@ async def test_vertical_cover_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for vertical covers based on current vs target position."""
+    """Test moving direction detection for vertical covers."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     await async_deliver_events(
@@ -809,7 +809,7 @@ async def test_awning_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for awnings based on current vs target position."""
+    """Test moving direction detection for awnings."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
     await async_deliver_events(
@@ -880,7 +880,7 @@ async def test_moving_offset_missing_closure_states(
     mock_client: MockOverkizClient,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that is_opening/is_closing return None when closure states are missing while moving."""
+    """Test is_opening/is_closing None when states missing."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
     await async_deliver_events(
@@ -1109,7 +1109,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
 ) -> None:
-    """ServiceValidationError must be raised when SET_CLOSURE_AND_ORIENTATION is missing.
+    """Error raised when SET_CLOSURE_AND_ORIENTATION is missing.
 
     Defence-in-depth: even when a cover advertises both SET_POSITION and
     SET_TILT_POSITION (so it passes the ``required_features`` filter), the
