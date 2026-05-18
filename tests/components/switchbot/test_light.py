@@ -29,6 +29,7 @@ from . import (
     BULB_SERVICE_INFO,
     CEILING_LIGHT_SERVICE_INFO,
     FLOOR_LAMP_SERVICE_INFO,
+    PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
@@ -379,6 +380,11 @@ async def test_strip_light_services_exception(
             "SwitchbotRgbicLight",
         ),
         ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
+        (
+            "permanent_outdoor_light",
+            PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
+            "SwitchbotPermanentOutdoorLight",
+        ),
     ],
 )
 @pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
