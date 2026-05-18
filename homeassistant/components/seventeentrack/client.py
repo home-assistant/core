@@ -169,7 +169,7 @@ class BrowserLikeSeventeenTrackClient(SeventeenTrackClient):
             headers["Sec-Fetch-Site"] = "same-site"
             return headers
 
-        if url == API_URL:
+        if str(url).startswith(API_URL):
             headers["Accept"] = "*/*"
             headers["Content-Type"] = "application/json"
             headers["Origin"] = "https://admin.17track.net"
