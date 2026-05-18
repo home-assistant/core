@@ -1972,6 +1972,15 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        # Simulate the Bluetooth management API being unavailable, as it is on
+        # CI and most dev machines. Letting the real setup() run would attempt
+        # real socket I/O on Linux hosts that do have BlueZ available, and
+        # mocking it as successful would enable the advertising side channel,
+        # changing the scanner code path the existing tests were written for.
+        patch(
+            "habluetooth.channels.bluez.MGMTBluetoothCtl.setup",
+            AsyncMock(side_effect=OSError),
+        ),
         patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
