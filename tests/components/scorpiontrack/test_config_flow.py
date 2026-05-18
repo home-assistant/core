@@ -1,0 +1,232 @@
+"""Test the ScorpionTrack config flow."""
+
+from dataclasses import replace
+from unittest.mock import AsyncMock, patch
+
+from pyscorpiontrack import (
+    ScorpionTrackClient,
+    ScorpionTrackConnectionError,
+    ScorpionTrackInvalidTokenError,
+    ScorpionTrackShare,
+    ScorpionTrackShareUnavailableError,
+)
+import pytest
+
+from homeassistant.components.scorpiontrack.config_flow import _async_validate_input
+from homeassistant.components.scorpiontrack.const import (
+    CONF_SHARE_TOKEN,
+    DEFAULT_NAME,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+
+
+async def test_user_flow_creates_entry(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """A valid token should create a config entry."""
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=mock_share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_SHARE_TOKEN: "https://app.scorpiontrack.com/shared/location?token=abc"
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Family Cars"
+    assert result["data"] == {CONF_SHARE_TOKEN: "canonical-token"}
+
+
+async def test_validate_input_strips_whitespace_and_uses_share_title(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """Validation should strip pasted whitespace and prefer the share title."""
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
+    ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
+        mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
+
+        share = await _async_validate_input(
+            hass,
+            {CONF_SHARE_TOKEN: "  canonical-token  \n"},
+        )
+
+    assert mock_client.call_args.kwargs["token"] == "canonical-token"
+    assert share is mock_share
+
+
+async def test_validate_input_extracts_token_from_share_url(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """Validation should accept the pasted ScorpionTrack share URL format."""
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
+    ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
+        mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
+
+        share = await _async_validate_input(
+            hass,
+            {
+                CONF_SHARE_TOKEN: (
+                    "  https://app.scorpiontrack.com/shared/location"
+                    "?token=canonical-token  "
+                )
+            },
+        )
+
+    assert mock_client.call_args.kwargs["token"] == "canonical-token"
+    assert share is mock_share
+
+
+async def test_validate_input_maps_malformed_input_to_invalid_token(
+    hass: HomeAssistant,
+) -> None:
+    """Malformed pasted values should show the invalid-token form error."""
+    with (
+        pytest.raises(ScorpionTrackInvalidTokenError),
+        patch(
+            "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient.extract_token",
+            side_effect=ValueError("Could not parse share link"),
+        ),
+    ):
+        await _async_validate_input(hass, {CONF_SHARE_TOKEN: "not a share"})
+
+
+async def test_user_flow_uses_vehicle_display_name_without_share_title(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """The config entry title should fall back to the first vehicle display name."""
+    share = replace(mock_share, title="")
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "canonical-token"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == share.vehicles[0].display_name
+
+
+async def test_user_flow_uses_default_name_without_title_or_vehicles(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """The config entry title should use the default name when nothing descriptive exists."""
+    share = replace(mock_share, title="", vehicles=())
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "canonical-token"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+
+
+async def test_user_flow_aborts_for_existing_share(
+    hass: HomeAssistant,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """The same share should not be configured twice."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Family Cars",
+        unique_id="101",
+        data={CONF_SHARE_TOKEN: "existing-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        return_value=mock_share,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "new-token"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (
+            ScorpionTrackConnectionError("Connection failed"),
+            "cannot_connect",
+        ),
+        (ScorpionTrackInvalidTokenError("Invalid token"), "invalid_token"),
+        (
+            ScorpionTrackShareUnavailableError("Share expired"),
+            "share_unavailable",
+        ),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_user_flow_shows_validation_errors(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Validation errors should surface the correct base error."""
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: "canonical-token"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected_error}
+
+
+async def test_user_flow_logs_without_echoing_share_token(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Validation warnings should not include the submitted token or URL."""
+    submitted_value = "https://app.scorpiontrack.com/shared/location?token=secret-token"
+
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        side_effect=ScorpionTrackInvalidTokenError("Invalid token"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: submitted_value},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_token"}
+    assert submitted_value not in caplog.text
+    assert "secret-token" not in caplog.text
