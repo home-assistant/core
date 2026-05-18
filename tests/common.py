@@ -43,6 +43,9 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import device_automation, persistent_notification as pn
+from homeassistant.components.device_automation import (
+    _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
+)
 from homeassistant.components.logger import (
     DOMAIN as LOGGER_DOMAIN,
     SERVICE_SET_LEVEL,
@@ -117,10 +120,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
-)
-
-async_get_device_automation_capabilities = (
-    device_automation._async_get_device_automation_capabilities
 )
 
 __all__ = [
