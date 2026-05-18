@@ -28,7 +28,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "*"
+          "value": "Connexoon"
         },
         {
           "type": 3,
@@ -41,7 +41,7 @@
           "value": "192.168.150.8"
         }
       ],
-      "label": "*",
+      "label": "Connexoon",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -381,7 +381,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "* (*)",
+      "label": "Connexoon (IO)",
       "subsystemId": 0,
       "attributes": [
         {

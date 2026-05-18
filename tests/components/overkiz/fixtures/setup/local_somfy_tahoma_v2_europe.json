@@ -882,7 +882,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "subsystemId": 0,
       "attributes": [
         {
@@ -947,7 +947,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "TaHoma Alarm"
         },
         {
           "type": 3,
@@ -970,7 +970,7 @@
           "value": 30
         }
       ],
-      "label": "**",
+      "label": "TaHoma",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1339,7 +1339,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "TaHoma"
         },
         {
           "type": 3,
@@ -1367,7 +1367,7 @@
           "value": "online"
         }
       ],
-      "label": "** **",
+      "label": "TaHoma Premium",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1478,7 +1478,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Hallway Light"
         },
         {
           "type": 3,
@@ -1496,7 +1496,7 @@
           "value": 60
         }
       ],
-      "label": "** **",
+      "label": "Hallway Light",
       "subsystemId": 0,
       "attributes": [
         {

@@ -46,7 +46,7 @@
     {
       "creationTime": 1527329167000,
       "lastUpdateTime": 1527329167000,
-      "label": "* *",
+      "label": "Garden Camera",
       "deviceURL": "camera://1234-1234-6233/00408cbef1e6",
       "shortcut": false,
       "controllableName": "camera:GenericCameraComponent",
@@ -80,7 +80,7 @@
     {
       "creationTime": 1606823644000,
       "lastUpdateTime": 1606823644000,
-      "label": "* (*)",
+      "label": "TaHoma (HomeKit)",
       "deviceURL": "homekit://1234-1234-6233/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
@@ -103,12 +103,12 @@
         {
           "name": "homekit:SetupPayload",
           "type": 3,
-          "value": "*://*"
+          "value": "X-HM://0000000000000"
         },
         {
           "name": "homekit:SetupCode",
           "type": 3,
-          "value": "*"
+          "value": "012-34-567"
         }
       ],
       "available": true,
@@ -122,7 +122,7 @@
     {
       "creationTime": 1501224146000,
       "lastUpdateTime": 1501224146000,
-      "label": "*",
+      "label": "Alarm",
       "deviceURL": "internal://1234-1234-6233/alarm/0",
       "shortcut": false,
       "controllableName": "internal:TSKAlarmComponent",
@@ -229,7 +229,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Home Alarm"
         },
         {
           "name": "internal:CurrentAlarmModeState",
@@ -263,7 +263,7 @@
     {
       "creationTime": 1501224054000,
       "lastUpdateTime": 1501224054000,
-      "label": "* *",
+      "label": "TaHoma V2",
       "deviceURL": "internal://1234-1234-6233/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV2Component",
@@ -362,7 +362,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "TaHoma"
         },
         {
           "name": "internal:BatteryStatusState",
@@ -2017,7 +2017,7 @@
     {
       "creationTime": 1501224336000,
       "lastUpdateTime": 1501224336000,
-      "label": "* * *&*",
+      "label": "Pool Pump On&Off",
       "deviceURL": "io://1234-1234-6233/16168460",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -2170,7 +2170,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *&*"
+          "value": "Pool Pump On&Off"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2216,7 +2216,7 @@
     {
       "creationTime": 1600767469000,
       "lastUpdateTime": 1600767469000,
-      "label": "* (*)",
+      "label": "TaHoma (IO)",
       "deviceURL": "io://1234-1234-6233/1684749",
       "shortcut": false,
       "controllableName": "io:StackComponent",
@@ -2599,7 +2599,7 @@
     {
       "creationTime": 1624791003000,
       "lastUpdateTime": 1624791003000,
-      "label": "*",
+      "label": "Protexiom",
       "deviceURL": "io://1234-1234-6233/2155276",
       "shortcut": false,
       "controllableName": "io:AlarmIOComponent",
@@ -2755,7 +2755,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "Protexiom"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3377,7 +3377,7 @@
     {
       "creationTime": 1544643386000,
       "lastUpdateTime": 1544643386000,
-      "label": "* * *",
+      "label": "Garden Light Switch",
       "deviceURL": "io://1234-1234-6233/6852535",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -3530,7 +3530,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Garden Light Switch"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -4551,7 +4551,7 @@
     {
       "creationTime": 1576263695000,
       "lastUpdateTime": 1576263695000,
-      "label": "* *",
+      "label": "Patio Light",
       "deviceURL": "io://1234-1234-6233/9474368",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -4704,7 +4704,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Patio Light"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -5080,7 +5080,7 @@
     {
       "creationTime": 1593517355000,
       "lastUpdateTime": 1593517355000,
-      "label": "* (*)",
+      "label": "Protect (Bridge)",
       "deviceURL": "ogp://1234-1234-6233/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5162,7 +5162,7 @@
     {
       "creationTime": 1593517357000,
       "lastUpdateTime": 1593517357000,
-      "label": "* * *",
+      "label": "Indoor Motion Sensor",
       "deviceURL": "ogp://1234-1234-6233/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5203,7 +5203,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Indoor Motion Sensor"
         }
       ],
       "attributes": [
@@ -5246,7 +5246,7 @@
     {
       "creationTime": 1593517356000,
       "lastUpdateTime": 1593517356000,
-      "label": "* * *",
+      "label": "Outdoor Motion Sensor",
       "deviceURL": "ogp://1234-1234-6233/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5287,7 +5287,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Outdoor Motion Sensor"
         }
       ],
       "attributes": [
@@ -5330,7 +5330,7 @@
     {
       "creationTime": 1501225111000,
       "lastUpdateTime": 1501225111000,
-      "label": "*é*é* *",
+      "label": "Télécommande Salon",
       "deviceURL": "rtds://1234-1234-6233/124768",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5402,7 +5402,7 @@
     {
       "creationTime": 1501225074000,
       "lastUpdateTime": 1501225074000,
-      "label": "*é*é* *",
+      "label": "Télécommande Bureau",
       "deviceURL": "rtds://1234-1234-6233/169771",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5474,7 +5474,7 @@
     {
       "creationTime": 1501224458000,
       "lastUpdateTime": 1501224458000,
-      "label": "*",
+      "label": "Hallway",
       "deviceURL": "rtds://1234-1234-6233/232949",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5525,7 +5525,7 @@
     {
       "creationTime": 1501224970000,
       "lastUpdateTime": 1501224970000,
-      "label": "É*",
+      "label": "Entrée",
       "deviceURL": "rtds://1234-1234-6233/246258",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5576,7 +5576,7 @@
     {
       "creationTime": 1501224664000,
       "lastUpdateTime": 1501224664000,
-      "label": "*",
+      "label": "Kitchen",
       "deviceURL": "rtds://1234-1234-6233/288316",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5627,7 +5627,7 @@
     {
       "creationTime": 1501224830000,
       "lastUpdateTime": 1501224830000,
-      "label": "*é*",
+      "label": "Fenêtre Garage",
       "deviceURL": "rtds://1234-1234-6233/394765",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5677,7 +5677,7 @@
     {
       "creationTime": 1501224801000,
       "lastUpdateTime": 1501224801000,
-      "label": "*",
+      "label": "Porte",
       "deviceURL": "rtds://1234-1234-6233/394781",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5727,7 +5727,7 @@
     {
       "creationTime": 1501225017000,
       "lastUpdateTime": 1501225017000,
-      "label": "*é* *",
+      "label": "Détecteur Fumée",
       "deviceURL": "rtds://1234-1234-6233/711548",
       "shortcut": false,
       "controllableName": "rtds:RTDSSmokeSensor",
@@ -5778,7 +5778,7 @@
     {
       "creationTime": 1546191792000,
       "lastUpdateTime": 1546191792000,
-      "label": "*",
+      "label": "Kitchen",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CA300AD801400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
@@ -5938,7 +5938,7 @@
     {
       "creationTime": 1526325424000,
       "lastUpdateTime": 1526325424000,
-      "label": "* *:*",
+      "label": "Living Room",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CA3011E801400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
@@ -6098,7 +6098,7 @@
     {
       "creationTime": 1546191792000,
       "lastUpdateTime": 1546191792000,
-      "label": "*",
+      "label": "Bedroom",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CACED56E01400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosOneComponent",
@@ -6258,7 +6258,7 @@
     {
       "creationTime": 1526325424000,
       "lastUpdateTime": 1526325424000,
-      "label": "*",
+      "label": "Lounge",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_949F3E479FC001400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosSubComponent",
@@ -6418,7 +6418,7 @@
     {
       "creationTime": 1510775207000,
       "lastUpdateTime": 1510775207000,
-      "label": "*",
+      "label": "Studio",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E9372FDA1201400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayFiveComponent",
@@ -6573,7 +6573,7 @@
     {
       "creationTime": 1530352152000,
       "lastUpdateTime": 1530352152000,
-      "label": "*",
+      "label": "Office",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E93744C18001400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayBaseComponent",
@@ -6733,7 +6733,7 @@
     {
       "creationTime": 1510775207000,
       "lastUpdateTime": 1510775207000,
-      "label": "* * *",
+      "label": "Guest Room Speaker",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E937BB9E2E01400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
