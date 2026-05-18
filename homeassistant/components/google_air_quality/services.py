@@ -51,7 +51,7 @@ def _get_config_entry_and_subentry_id(
             if config_entry is None or config_entry.domain != DOMAIN:
                 continue
 
-            gaq_config_entry: GoogleAirQualityConfigEntry = config_entry
+            gaq_config_entry = cast(GoogleAirQualityConfigEntry, config_entry)
             for subentry_id in subentry_ids:
                 if (
                     subentry_id is not None

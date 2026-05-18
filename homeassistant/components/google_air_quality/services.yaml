@@ -11,4 +11,5 @@ get_forecast:
         number:
           min: 1
           max: 96
+          step: 1
           mode: box
