@@ -304,14 +304,13 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
+
         # The set_preference method does only accept string values
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
-        )
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "vacHigh", str(high_perf)
-        )
+        def _set_fan_speed_preferences() -> None:
+            self.vacuum.set_preference("carpetBoost", str(carpet_boost))
+            self.vacuum.set_preference("vacHigh", str(high_perf))
+
+        await self.hass.async_add_executor_job(_set_fan_speed_preferences)
 
 
 class BraavaJet(IRobotVacuum):
@@ -387,15 +386,14 @@ class BraavaJet(IRobotVacuum):
             overlap = OVERLAP_DEEP
         else:
             overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "rankOverlap", overlap
-        )
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference,
-            "padWetness",
-            {"disposable": spray, "reusable": spray},
-        )
+
+        def _set_mop_preferences() -> None:
+            self.vacuum.set_preference("rankOverlap", overlap)
+            self.vacuum.set_preference(
+                "padWetness", {"disposable": spray, "reusable": spray}
+            )
+
+        await self.hass.async_add_executor_job(_set_mop_preferences)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
