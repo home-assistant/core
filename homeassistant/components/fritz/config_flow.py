@@ -5,7 +5,8 @@ import ipaddress
 import logging
 import socket
 from typing import Any, Self
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import urlparse
+from uuid import UUID
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -54,6 +55,69 @@ from .const import (
 from .coordinator import FritzConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _parse_device_uuid(value: str) -> str | None:
+    """Return a normalized UUID string, or None if the value is not a UUID."""
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        return str(UUID(value))
+    except ValueError:
+        return None
+
+
+def _uuid_from_upnp_udn(raw_udn: str) -> str | None:
+    return _parse_device_uuid(raw_udn.removeprefix("uuid:"))
+
+
+def _uuid_from_ssdp_usn(usn: str) -> str | None:
+    if not usn.startswith("uuid:"):
+        return None
+    return _parse_device_uuid(usn.split("::", 1)[0].removeprefix("uuid:"))
+
+
+def _uuid_from_discovery(discovery_info: SsdpServiceInfo) -> str | None:
+    """Device UUID from UPnP UDN or SSDP USN."""
+    if raw_udn := discovery_info.upnp.get(ATTR_UPNP_UDN):
+        if device_uuid := _uuid_from_upnp_udn(raw_udn):
+            return device_uuid
+    if discovery_info.ssdp_usn:
+        if device_uuid := _uuid_from_ssdp_usn(discovery_info.ssdp_usn):
+            return device_uuid
+    return None
+
+
+def _should_abort_ssdp_host(host: str | None) -> bool:
+    """Return True if SSDP discovery should be ignored (no host or link-local IP)."""
+    if not host:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_link_local
+    except ValueError:
+        return False
+
+
+def _host_from_ssdp(discovery_info: SsdpServiceInfo) -> str | None:
+    """Host from SSDP location, headers, or USN."""
+    if discovery_info.ssdp_location:
+        try:
+            if hostname := urlparse(discovery_info.ssdp_location).hostname:
+                return str(hostname)
+        except ValueError:
+            pass
+    if discovery_info.ssdp_headers:
+        location_header = discovery_info.ssdp_headers.get("location")
+        if isinstance(location_header, str):
+            try:
+                if hostname := urlparse(location_header).hostname:
+                    return str(hostname)
+            except ValueError:
+                pass
+    if discovery_info.ssdp_usn and "fritz.box" in discovery_info.ssdp_usn.lower():
+        return "fritz.box"
+    return None
 
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -159,29 +223,35 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
-        host = ssdp_location.hostname
-        if not host or ipaddress.ip_address(host).is_link_local:
+        host = _host_from_ssdp(discovery_info)
+        if _should_abort_ssdp_host(host):
             return self.async_abort(reason="ignore_ip6_link_local")
 
+        assert host is not None
         self._host = host
         self._name = (
             discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
         )
 
-        uuid: str | None
-        if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
-            uuid = uuid.removeprefix("uuid:")
-            await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._host})
+        device_uuid = _uuid_from_discovery(discovery_info)
+        unique_id_for_flow = device_uuid or host
+        await self.async_set_unique_id(unique_id_for_flow)
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
 
         if entry := await self.async_check_configured_entry():
-            if uuid and not entry.unique_id:
-                self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
+            if (
+                device_uuid
+                and entry.unique_id != device_uuid
+                # Placeholder unique_ids only (unset or host), not unrelated UUIDs.
+                and entry.unique_id in (None, host, entry.data.get(CONF_HOST))
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=device_uuid
+                )
             return self.async_abort(reason="already_configured")
 
         self.context.update(
