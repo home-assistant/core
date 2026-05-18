@@ -98,7 +98,9 @@ def async_create(
     notifications = _async_get_or_create_notifications(hass)
     if notification_id is None:
         notification_id = random_uuid_hex()
-    update_type = UpdateType.UPDATED if notification_id in notifications else UpdateType.ADDED
+    update_type = (
+        UpdateType.UPDATED if notification_id in notifications else UpdateType.ADDED
+    )
     notifications[notification_id] = {
         ATTR_MESSAGE: message,
         ATTR_NOTIFICATION_ID: notification_id,
