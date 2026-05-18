@@ -72,7 +72,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
+    """Test unique id is added if missing via directed discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS}, unique_id=None
     )
