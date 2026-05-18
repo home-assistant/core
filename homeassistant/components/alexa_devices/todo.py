@@ -152,6 +152,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
         # Update the list (important to get new version number)
         await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
+        self.async_write_ha_state()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the to-do list.
@@ -181,8 +182,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 uid,
                 existing_item.version,
             )
-
         await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
+        self.async_write_ha_state()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list.
@@ -234,3 +235,4 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if updated:
             # Update the list (important to get new version number)
             await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
+            self.async_write_ha_state()
