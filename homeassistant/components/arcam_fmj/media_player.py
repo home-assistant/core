@@ -79,11 +79,17 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
     @property
-    def state(self) -> MediaPlayerState:
-        """Return the state of the device."""
-        if self._state.get_power():
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+    def state(self) -> MediaPlayerState | None:
+        """Return the state of the device.
+
+        ``None`` is returned (surfaced as ``unknown``) when the device has
+        not yet reported a power state; this is distinct from a real
+        powered-off state and must not be collapsed to ``OFF``.
+        """
+        power = self._state.get_power()
+        if power is None:
+            return None
+        return MediaPlayerState.ON if power else MediaPlayerState.OFF
 
     @convert_exception
     async def async_mute_volume(self, mute: bool) -> None:

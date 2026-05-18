@@ -92,11 +92,21 @@ async def update(hass: HomeAssistant, client: Mock, entity_id: str) -> CoreState
 async def test_powered_off(hass: HomeAssistant, client: Mock, state_1: State) -> None:
     """Test properties in powered off state."""
     state_1.get_source.return_value = None
-    state_1.get_power.return_value = None
+    state_1.get_power.return_value = False
 
     data = await update(hass, client, MOCK_ENTITY_ID)
     assert "source" not in data.attributes
     assert data.state == "off"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_power_unknown(hass: HomeAssistant, client: Mock, state_1: State) -> None:
+    """Test that an unreported power state surfaces as unknown, not off."""
+    state_1.get_source.return_value = None
+    state_1.get_power.return_value = None
+
+    data = await update(hass, client, MOCK_ENTITY_ID)
+    assert data.state == "unknown"
 
 
 @pytest.mark.usefixtures("player_setup")
