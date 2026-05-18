@@ -1,12 +1,12 @@
 """Diagnostics for the cert_expiry integration."""
 
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .coordinator import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
+from .coordinator import CertExpiryConfigEntry
 
 TO_REDACT = {CONF_HOST, "name", "title", "unique_id"}
 
@@ -18,10 +18,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     entry_diagnostics = entry.as_dict()
 
-    coordinator = cast(
-        CertExpiryDataUpdateCoordinator | None,
-        getattr(entry, "runtime_data", None),
-    )
+    coordinator = getattr(entry, "runtime_data", None)
 
     coordinator_diagnostics: dict[str, Any] = {
         "host": None,
