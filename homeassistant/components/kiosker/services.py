@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
-import logging
 from typing import Any
 
 from kiosker import (
@@ -37,8 +36,6 @@ from .const import (
 )
 from .coordinator import KioskerDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def handle_kiosker_api_errors(
     func: Callable[[ServiceCall], Awaitable[None]],
@@ -63,9 +60,6 @@ def handle_kiosker_api_errors(
             raise ServiceValidationError(f"TLS verification failed: {ex}") from ex
         except BadRequestError as ex:
             raise ServiceValidationError(f"Bad request: {ex}") from ex
-        except Exception as ex:
-            _LOGGER.exception("Unexpected error in Kiosker service call")
-            raise HomeAssistantError(f"Unexpected error: {ex}") from ex
         else:
             return None
 
