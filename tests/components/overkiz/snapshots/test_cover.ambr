@@ -1188,6 +1188,61 @@
     'state': 'closed',
   })
 # ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_venetian_blind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_venetian_blind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 143>,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-1234-6233/16730100',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_venetian_blind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'current_tilt_position': 62,
+      'device_class': 'blind',
+      'friendly_name': 'Bedroom Venetian Blind',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 143>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_venetian_blind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3997,6 +4052,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_venetian_blind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_venetian_blind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 143>,
+    'translation_key': None,
+    'unique_id': 'zigbee://1234-5678-3293/16730099',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_venetian_blind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'current_tilt_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Living Room Venetian Blind',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 143>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_venetian_blind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-entry]
