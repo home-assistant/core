@@ -11,9 +11,14 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
-from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
+from .const import (
+    ABORT_CANNOT_CONNECT,
+    ABORT_INVALID_STATION,
+    API_TIMEOUT,
+    CONF_STATION_ID,
+    DOMAIN,
+)
 
 
 class CannotConnect(HomeAssistantError):
@@ -38,7 +43,7 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.get_data()
         except (OpenSenseMapError, TimeoutError) as err:
             raise CannotConnect from err
-        if not api.data or "name" not in api.data:
+        if not api.data or not api.data.get("name"):
             raise InvalidStation
         return api.data["name"]
 
@@ -55,9 +60,9 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 name = await self._async_get_station_name(station_id)
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors["base"] = ABORT_CANNOT_CONNECT
             except InvalidStation:
-                errors["base"] = "invalid_station"
+                errors["base"] = ABORT_INVALID_STATION
             else:
                 return self.async_create_entry(
                     title=name,
@@ -70,7 +75,7 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import of a YAML configuration."""
         station_id = import_data[CONF_STATION_ID]
         await self.async_set_unique_id(station_id)
@@ -79,9 +84,9 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             name = await self._async_get_station_name(station_id)
         except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=ABORT_CANNOT_CONNECT)
         except InvalidStation:
-            return self.async_abort(reason="invalid_station")
+            return self.async_abort(reason=ABORT_INVALID_STATION)
 
         return self.async_create_entry(
             title=import_data.get(CONF_NAME, name),

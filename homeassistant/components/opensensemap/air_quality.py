@@ -19,14 +19,18 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_STATION_ID, DOMAIN, INTEGRATION_TITLE
+from .const import (
+    CONF_STATION_ID,
+    DOMAIN,
+    INTEGRATION_TITLE,
+    KNOWN_IMPORT_ABORT_REASONS,
+    LOGGER,
+)
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
-
-KNOWN_IMPORT_ABORT_REASONS = {"cannot_connect", "invalid_station"}
 
 
 async def async_setup_platform(
@@ -44,8 +48,9 @@ async def async_setup_platform(
         context={"source": SOURCE_IMPORT},
         data=import_data,
     )
-    if result.get("type") is FlowResultType.ABORT:
-        reason = result.get("reason")
+
+    if result["type"] is FlowResultType.ABORT:
+        reason = result["reason"]
         if reason in KNOWN_IMPORT_ABORT_REASONS:
             ir.async_create_issue(
                 hass,
@@ -63,6 +68,7 @@ async def async_setup_platform(
             )
             return
         if reason != "already_configured":
+            LOGGER.warning("YAML import aborted with unexpected reason: %s", reason)
             return
 
     # The "deprecated_yaml" translation key is provided by Home Assistant core
