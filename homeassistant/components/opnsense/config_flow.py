@@ -112,8 +112,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input, None)
 
-        self._abort_if_unique_id_configured()
-
         verify_ssl = user_input[CONF_VERIFY_SSL]
         session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
         client = OPNsenseClient(
@@ -133,8 +131,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (name := ifinfo.get("name"))
             ]
             self.available_interfaces = list(known_interfaces)
-            unique_id = await client.get_device_unique_id()
-            await self.async_set_unique_id(unique_id)
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
@@ -154,6 +150,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return await self.async_step_interfaces(user_input)
+
+        unique_id = await client.get_device_unique_id()
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
         return await self._show_setup_form(user_input, errors)
 
@@ -177,8 +178,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a Yaml config."""
-        self._abort_if_unique_id_configured()
-
         # Test connection
         session = async_get_clientsession(
             self.hass, verify_ssl=import_data[CONF_VERIFY_SSL]
@@ -218,6 +217,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # Allowed in config flows
             _LOGGER.exception("Unexpected exception during import")
             return self._abort_import(reason="unknown", url=import_data[CONF_URL])
+
+        unique_id = await client.get_device_unique_id()
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
         # Validate CONF_TRACKER_INTERFACES if present and not empty
         verified_data = dict(import_data)
@@ -262,10 +266,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                             "integration_title": "OPNsense",
                         },
                     )
-
-        unique_id = await client.get_device_unique_id()
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
 
         # Clear any previous import issues if interfaces are now valid
         async_delete_issue(

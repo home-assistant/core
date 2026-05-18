@@ -82,6 +82,31 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
     assert result.get("title") == CONFIG_DATA_IMPORT["url"]
 
 
+async def test_import_unique_id_already_configured(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test import step when unique ID is already configured (should abort)."""
+    # The fixture patches config_flow and component clients separately.
+    # Import uses the config_flow client default unique ID from setup_mock_opnsense_client.
+    existing_unique_id = "mocked_unique_id"
+    # First, create a config entry with the same unique ID
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_DATA_IMPORT, "unique_id": existing_unique_id},
+        unique_id=existing_unique_id,
+    )
+    existing_entry.add_to_hass(hass)
+
+    # Now attempt to import, which should abort due to duplicate unique ID
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=CONFIG_DATA_IMPORT,
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
 async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
     """Test user config."""
     mock_opnsense_client.return_value.get_device_unique_id.return_value = (
