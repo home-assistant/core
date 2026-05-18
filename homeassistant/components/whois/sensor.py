@@ -63,10 +63,9 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 def _get_status_type(status: str | None) -> str | None:
     """Get the status type from the status string.
 
-    Returns the status type in snake_case, so it can be
-    used as a key for the translations.
-    E.g: "clientDeleteProhibited
-    https://icann.org/epp#clientDeleteProhibited"
+    Return the status type in snake_case for translations.
+
+    E.g: "clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited"
     -> "client_delete_prohibited".
     """
     if status is None:

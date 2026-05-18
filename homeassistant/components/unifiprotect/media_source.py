@@ -266,10 +266,8 @@ class ProtectMediaSource(MediaSource):
             sorted in reverse chronological order
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}
             List of folders for each day in month + all events for month
-        * {nvr_id}:browse:all|{camera_id}:all|
-          {event_type}:range:{year}:{month}:all|{day}
-            Listing of all events for given
-            {day} + {month} + {year} combination
+        * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
+            All events for given day/month/year
             in chronological order
         """
 
