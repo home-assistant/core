@@ -21,6 +21,7 @@ from .models import UNSET, MatterDiscoverySchema, MatterEntityInfo
 from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
 from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
+from .siren import DISCOVERY_SCHEMAS as SIREN_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
 from .vacuum import DISCOVERY_SCHEMAS as VACUUM_SCHEMAS
@@ -39,6 +40,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.NUMBER: NUMBER_SCHEMAS,
     Platform.SELECT: SELECT_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
+    Platform.SIREN: SIREN_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
     Platform.UPDATE: UPDATE_SCHEMAS,
     Platform.VACUUM: VACUUM_SCHEMAS,
