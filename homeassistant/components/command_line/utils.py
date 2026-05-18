@@ -4,7 +4,7 @@ import asyncio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.entity_platform import create_platform_not_supported_issue
 from homeassistant.helpers.template import Template
 
 from .const import DOMAIN, LOGGER
@@ -98,13 +98,9 @@ def create_platform_yaml_not_supported_issue(
     hass: HomeAssistant, platform_domain: str
 ) -> None:
     """Create an issue when platform yaml is used."""
-    async_create_issue(
+    create_platform_not_supported_issue(
         hass,
         DOMAIN,
-        f"{platform_domain}_platform_yaml_not_supported",
-        is_fixable=False,
-        severity=IssueSeverity.ERROR,
-        translation_key="platform_yaml_not_supported",
-        translation_placeholders={"platform": platform_domain},
+        platform_domain,
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
     )

@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -11,11 +11,12 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    create_platform_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
+from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +54,11 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter select."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'select:' in configuration.yaml"
+        create_platform_not_supported_issue(
+            hass,
+            DOMAIN,
+            SELECT_DOMAIN,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
         )
         return
 

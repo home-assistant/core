@@ -36,6 +36,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    create_platform_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -46,7 +47,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import DOMAIN, TriggerUpdateCoordinator, validators as template_validators
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -238,9 +239,7 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        _LOGGER.warning(
-            "Template weather entities can only be configured under template:"
-        )
+        create_platform_not_supported_issue(hass, DOMAIN, WEATHER_DOMAIN)
         return
 
     # Modern and Trigger

@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_get_platforms,
+    create_platform_not_supported_issue,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.script import async_validate_actions_config
@@ -371,8 +372,11 @@ async def async_setup_template_platform(
                 None,
             )
         else:
-            _LOGGER.warning(
-                "Template %s entities can only be configured under template:", domain
+            create_platform_not_supported_issue(
+                hass,
+                DOMAIN,
+                domain,
+                learn_more_url="https://www.home-assistant.io/integrations/template/",
             )
         return
 
