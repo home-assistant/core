@@ -637,14 +637,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
@@ -652,7 +650,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
@@ -1167,14 +1164,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
@@ -1182,7 +1177,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
