@@ -101,7 +101,10 @@ class TuyaEntity(Entity):
         """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
         if DPCode.TEMP_UNIT_CONVERT not in self.device.status:
             return None
-        value = str(self.device.status.get(DPCode.TEMP_UNIT_CONVERT)).lower()
+        raw_value = self.device.status.get(DPCode.TEMP_UNIT_CONVERT)
+        if raw_value is None:
+            return None
+        value = str(raw_value).lower()
         if value in CELSIUS_ALIASES:
             return UnitOfTemperature.CELSIUS
         if value in FAHRENHEIT_ALIASES:
