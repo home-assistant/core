@@ -45,4 +45,6 @@ async def test_config_entry_diagnostics(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+        assert (
+            await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+        )
