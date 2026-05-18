@@ -294,10 +294,10 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add_comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
-> **Note on deduplication**: The workflow automatically updates any previous
-> requirements-check comment on the PR in place (preserving its position in the
-> thread). If no previous comment exists, the newly created comment is kept as-is.
-> You do not need to search for or update previous comments yourself.
+**Note on deduplication**: The workflow automatically updates any previous
+requirements-check comment on the PR in place (preserving its position in the
+thread). If no previous comment exists, the newly created comment is kept as-is.
+You do not need to search for or update previous comments yourself.
 
 ### Comment structure
 
