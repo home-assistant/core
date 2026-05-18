@@ -159,12 +159,10 @@ class XboxSource(MediaSource):
                         )
                     )
                 else:
-                    screenshots = client.screenshots
-                    screenshot_response = (
-                        await screenshots.get_recent_community_screenshots_by_title_id(
-                            identifier.title_id
-                        )
+                    get_community = (
+                        client.screenshots.get_recent_community_screenshots_by_title_id
                     )
+                    screenshot_response = await get_community(identifier.title_id)
             except TimeoutException as e:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
