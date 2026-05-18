@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device at the new address does not match the configured device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "[%key:component::zendure_p1::config::step::user::data_description::host%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Zendure Smart Meter P1 device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "phase_1_apparent_power": {
+        "name": "Phase 1 apparent power"
+      },
+      "phase_2_apparent_power": {
+        "name": "Phase 2 apparent power"
+      },
+      "phase_3_apparent_power": {
+        "name": "Phase 3 apparent power"
+      },
+      "total_power": {
+        "name": "Total power"
+      }
+    }
+  }
+}

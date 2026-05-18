@@ -863,6 +863,7 @@ FLOWS = {
         "youless",
         "youtube",
         "zamg",
+        "zendure_p1",
         "zerproc",
         "zeversolar",
         "zha",
