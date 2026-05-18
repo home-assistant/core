@@ -65,8 +65,17 @@ class ModernProfile(Profile):
         )
 
         code = (tracklist_resp or {}).get("code", 0)
-        if code != 0:
+        if code == -6:
             raise NotLoggedInError(
+                f"Not logged in (Code: {code}, Message: "
+                f"{(tracklist_resp or {}).get('message')})"
+            )
+        
+        if code != 0:
+            raise SeventeenTrackError(
+                f"17TRACK API error (Code: {code}, Message: "
+                f"{(tracklist_resp or {}).get('message')})"
+            )
                 f"Not logged in (Code: {code}, Message: "
                 f"{(tracklist_resp or {}).get('message')})"
             )
@@ -178,10 +187,6 @@ class BrowserLikeSeventeenTrackClient(SeventeenTrackClient):
 
             if self._session:
                 cookies = self._session.cookie_jar.filter_cookies(API_TRACK_URL)
-                if cookies:
-                    headers["Cookie"] = "; ".join(
-                        f"{name}={morsel.value}" for name, morsel in cookies.items()
-                    )
                 if csrf_token := cookies.get("csrf_token"):
                     headers["x-csrf-token"] = csrf_token.value
 
