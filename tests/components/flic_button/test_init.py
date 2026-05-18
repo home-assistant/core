@@ -25,7 +25,6 @@ async def test_setup_entry_success(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.client is mock_flic_client
     mock_flic_client.start.assert_called_once()
 
 

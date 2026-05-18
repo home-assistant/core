@@ -164,28 +164,26 @@ async def test_bluetooth_discovery_already_configured(
 
 @pytest.mark.usefixtures("mock_discovered_service_info")
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("connect_side_effect", "pairing_side_effect", "error"),
     [
-        (BleakError("Connection failed"), "cannot_connect"),
-        (TimeoutError(), "cannot_connect"),
-        (FlicPairingError("Pairing failed"), "pairing_failed"),
-        (FlicAuthenticationError("Invalid signature"), "invalid_signature"),
-        (RuntimeError("Unexpected error"), "unknown"),
+        (BleakError("Connection failed"), None, "cannot_connect"),
+        (TimeoutError(), None, "cannot_connect"),
+        (None, FlicPairingError("Pairing failed"), "pairing_failed"),
+        (None, FlicAuthenticationError("Invalid signature"), "invalid_signature"),
+        (None, RuntimeError("Unexpected error"), "unknown"),
     ],
 )
 async def test_pairing_errors_recover(
     hass: HomeAssistant,
     mock_flic_client: MagicMock,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception,
+    connect_side_effect: Exception | None,
+    pairing_side_effect: Exception | None,
     error: str,
 ) -> None:
     """Each pairing error path falls back to the form and recovers to CREATE_ENTRY."""
-    # Route the failure through whichever client method is invoked first
-    if isinstance(side_effect, (BleakError, TimeoutError)):
-        mock_flic_client.connect.side_effect = side_effect
-    else:
-        mock_flic_client.full_verify_pairing.side_effect = side_effect
+    mock_flic_client.connect.side_effect = connect_side_effect
+    mock_flic_client.full_verify_pairing.side_effect = pairing_side_effect
 
     result = await _init_bt_flow(hass, DeviceType.FLIC2)
     assert result["step_id"] == "pair"
