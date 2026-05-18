@@ -30,6 +30,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_all_appliances[peacock_hob]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999008120_00:99907833-443E073D986E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'TU84CF43CB',
+    'model_id': None,
+    'name': 'Peacock hob',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '99907833',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[pux_oven]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

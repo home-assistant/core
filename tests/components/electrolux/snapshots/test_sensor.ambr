@@ -36,7 +36,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:information-outline',
+    'original_icon': None,
     'original_name': 'Appliance state',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -52,7 +52,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Fenix Appliance state',
-      'icon': 'mdi:information-outline',
       'options': list([
         'alarm',
         'delayed_start',
@@ -103,7 +102,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:thermometer',
+    'original_icon': None,
     'original_name': 'Current temperature',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -119,7 +118,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Fenix Current temperature',
-      'icon': 'mdi:thermometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -162,7 +160,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:thermometer-probe',
+    'original_icon': None,
     'original_name': 'Food probe state',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -178,7 +176,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Fenix Food probe state',
-      'icon': 'mdi:thermometer-probe',
       'options': list([
         'inserted',
         'not_inserted',
@@ -223,7 +220,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:thermometer-probe',
+    'original_icon': None,
     'original_name': 'Food probe temperature',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -239,7 +236,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Fenix Food probe temperature',
-      'icon': 'mdi:thermometer-probe',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -284,7 +280,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:remote',
+    'original_icon': None,
     'original_name': 'Remote control',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -300,7 +296,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Fenix Remote control',
-      'icon': 'mdi:remote',
       'options': list([
         'disabled',
         'enabled',
@@ -353,7 +348,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:information-outline',
+    'original_icon': None,
     'original_name': 'Appliance state',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -369,7 +364,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'PUX pizza oven Appliance state',
-      'icon': 'mdi:information-outline',
       'options': list([
         'alarm',
         'delayed_start',
@@ -420,7 +414,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:thermometer',
+    'original_icon': None,
     'original_name': 'Current temperature',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -436,7 +430,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'PUX pizza oven Current temperature',
-      'icon': 'mdi:thermometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -481,7 +474,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:remote',
+    'original_icon': None,
     'original_name': 'Remote control',
     'platform': 'electrolux',
     'previous_unique_id': None,
@@ -497,7 +490,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'PUX pizza oven Remote control',
-      'icon': 'mdi:remote',
       'options': list([
         'disabled',
         'enabled',

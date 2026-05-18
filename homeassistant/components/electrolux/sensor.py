@@ -35,6 +35,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
+from .util import convert_to_snake_case
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,7 +194,7 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
             snake_case_options = [
                 snake_case_option
                 for option in options
-                if (snake_case_option := _convert_to_snake_case(option))
+                if (snake_case_option := convert_to_snake_case(option))
                 in description.known_values
             ]
 
@@ -205,7 +206,7 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
     def _update_attr_state(self) -> bool:
         new_value = self._get_value()
         if isinstance(new_value, str):
-            new_value = _convert_to_snake_case(new_value)
+            new_value = convert_to_snake_case(new_value)
 
             if self.entity_description.known_values:
                 new_value = _map_to_known_value(
@@ -259,18 +260,6 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         return ELECTROLUX_TO_HA_TEMPERATURE_UNIT.get(
             temp_unit, UnitOfTemperature.CELSIUS
         )
-
-
-def _convert_to_snake_case(x: str) -> str:
-    """Converts a string to snake case."""
-    lower_case = x.lower()
-    return "".join([_convert_char_to_snake_case(char) for char in lower_case])
-
-
-def _convert_char_to_snake_case(char: str) -> str:
-    if char.isspace():
-        return "_"
-    return char
 
 
 def _map_to_known_value(

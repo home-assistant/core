@@ -25,6 +25,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bottomoven_door_state": {
+        "name": "Lower door state"
+      },
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "door_state": {
+        "name": "Door state"
+      },
+      "drawer_status": {
+        "name": "Drawer status"
+      },
+      "hood_auto_switch_off_event": {
+        "name": "Auto switch off event"
+      },
+      "upperoven_door_state": {
+        "name": "Upper door state"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "name": "Appliance state",
