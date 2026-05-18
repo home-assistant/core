@@ -28,6 +28,7 @@ TTS_SUPPORTED_LANGUAGES = [
     "fr",
     "es",
     "ko",
+    "ru",
 ]
 
 
