@@ -1,6 +1,7 @@
 """Tests for the syncthing sensor platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
@@ -33,7 +34,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import Any
 
 
 async def test_sensor_platform_setup(

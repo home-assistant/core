@@ -3,7 +3,10 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
+from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+
+from tests.common import load_json_object_fixture
 
 URL = "http://127.0.0.1:8384"
 TOKEN = "token"
@@ -21,101 +24,21 @@ FOLDER_ID = "test-folder"
 FOLDER_LABEL = "Test Folder"
 
 SERVER_ID_SHORT_HA = SERVER_ID.split("-", maxsplit=1)[0].lower()
-SERVER_NAME_HA = SERVER_NAME.lower().replace(" ", "_")
-FOLDER_ID_HA = FOLDER_ID.lower().replace("-", "_")
-FOLDER_LABEL_HA = FOLDER_LABEL.lower().replace(" ", "_")
 URL_HA = URL.lower().replace("://", "_").replace(".", "_").replace(":", "_")
 
-SERVER_ENTITY_ID = f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{SERVER_ID_SHORT_HA}_{SERVER_NAME_HA}"
-FOLDER_ENTITY_ID = (
-    f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
+SERVER_ENTITY_ID = f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{SERVER_ID_SHORT_HA}_{SERVER_NAME.lower().replace(' ', '_')}"
+FOLDER_ENTITY_ID = f"sensor.syncthing_{URL_HA}_{SERVER_ID_SHORT_HA}_{FOLDER_ID.lower().replace('-', '_')}_{FOLDER_LABEL.lower().replace(' ', '_')}"
+
+MOCK_SYSTEM_STATUS = load_json_object_fixture("system_status.json", DOMAIN)
+MOCK_SYSTEM_VERSION = load_json_object_fixture("system_version.json", DOMAIN)
+MOCK_PING = load_json_object_fixture("ping.json", DOMAIN)
+MOCK_CONFIG = load_json_object_fixture("config.json", DOMAIN)
+MOCK_FOLDER_STATUS = load_json_object_fixture("folder_status.json", DOMAIN)
+MOCK_FOLDER_SUMMARY_EVENT = load_json_object_fixture(
+    "folder_summary_event.json", DOMAIN
 )
-
-MOCK_SYSTEM_STATUS = {"myID": SERVER_ID}
-
-MOCK_SYSTEM_VERSION = {"version": "v1.23.0"}
-
-MOCK_PING = {"ping": "pong"}
-
-MOCK_CONFIG = {
-    "folders": [
-        {
-            "id": FOLDER_ID,
-            "label": FOLDER_LABEL,
-        }
-    ],
-    "devices": [
-        {
-            "deviceID": SERVER_ID,
-            "name": SERVER_NAME,
-        }
-    ],
-}
-
-MOCK_FOLDER_STATUS = {
-    "errors": 0,
-    "globalBytes": 1000000,
-    "globalDeleted": 0,
-    "globalDirectories": 10,
-    "globalFiles": 100,
-    "globalSymlinks": 0,
-    "globalTotalItems": 110,
-    "ignorePatterns": False,
-    "inSyncBytes": 1000000,
-    "inSyncFiles": 100,
-    "invalid": "",
-    "localBytes": 1000000,
-    "localDeleted": 0,
-    "localDirectories": 10,
-    "localFiles": 100,
-    "localSymlinks": 0,
-    "localTotalItems": 110,
-    "needBytes": 0,
-    "needDeletes": 0,
-    "needDirectories": 0,
-    "needFiles": 0,
-    "needSymlinks": 0,
-    "needTotalItems": 0,
-    "pullErrors": 0,
-    "state": "idle",
-}
-
-MOCK_FOLDER_SUMMARY_EVENT = {
-    "id": 5,
-    "globalID": 5,
-    "type": "FolderSummary",
-    "time": "2024-01-01T00:04:00.000000000Z",
-    "data": {
-        "folder": FOLDER_ID,
-        "summary": {
-            **MOCK_FOLDER_STATUS,
-            "state": "syncing",
-        },
-    },
-}
-
-MOCK_STATE_CHANGED_EVENT = {
-    "id": 6,
-    "globalID": 6,
-    "type": "StateChanged",
-    "time": "2024-01-01T00:05:00.000000000Z",
-    "data": {
-        "folder": FOLDER_ID,
-        "from": "idle",
-        "to": "syncing",
-    },
-}
-
-MOCK_FOLDER_PAUSED_EVENT = {
-    "id": 7,
-    "globalID": 7,
-    "type": "FolderPaused",
-    "time": "2024-01-01T00:06:00.000000000Z",
-    "data": {
-        "id": FOLDER_ID,
-        "label": FOLDER_LABEL,
-    },
-}
+MOCK_STATE_CHANGED_EVENT = load_json_object_fixture("state_changed_event.json", DOMAIN)
+MOCK_FOLDER_PAUSED_EVENT = load_json_object_fixture("folder_paused_event.json", DOMAIN)
 
 
 def create_mock_syncthing_client() -> MagicMock:
