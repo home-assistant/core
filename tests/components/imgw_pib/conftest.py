@@ -1,7 +1,6 @@
 """Common fixtures for the IMGW-PIB tests."""
 
 from collections.abc import Generator
-import copy
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
@@ -66,7 +65,7 @@ def mock_imgw_pib_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.create.return_value
-        client.get_hydrological_data.return_value = copy.deepcopy(HYDROLOGICAL_DATA)
+        client.get_hydrological_data.return_value = HYDROLOGICAL_DATA
         client.hydrological_stations = {"123": "River Name (Station Name)"}
 
         yield client
