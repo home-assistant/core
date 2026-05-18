@@ -354,6 +354,13 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, NetatmoBinarySensor
         """Initialize a Netatmo weather binary sensor."""
 
         super().__init__(netatmo_device, description=description)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
 
 
 class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
