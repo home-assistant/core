@@ -1,7 +1,7 @@
 """Hub wrapper for the Elke27 client lifecycle."""
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import contextlib
 from enum import Enum
 from functools import partial
@@ -20,15 +20,6 @@ from .const import READY_TIMEOUT
 from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _method_parameters(
-    method: Callable[..., Any],
-) -> Mapping[str, inspect.Parameter]:
-    """Return inspectable method parameters, or an empty mapping."""
-    with contextlib.suppress(TypeError, ValueError):
-        return inspect.signature(method).parameters
-    return {}
 
 
 def _raise_command_error(action: str, error: BaseException) -> None:
@@ -86,7 +77,7 @@ class Elke27Hub:
 
     @property
     def panel_name(self) -> str | None:
-        """Return the discovered panel name if available."""
+        """Return the configured panel name if available."""
         return self._panel_name
 
     async def async_connect(self) -> None:
@@ -110,11 +101,6 @@ class Elke27Hub:
 
             try:
                 await client.async_connect(self._host, self._port, link_keys)
-                if self._panel_name is None:
-                    panel_name = await self._async_discover_panel_name(client)
-                    if panel_name:
-                        self._panel_name = panel_name
-                        _LOGGER.debug("Discovered panel name: %s", panel_name)
                 ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
                 if not ready:
                     _raise_not_ready()
@@ -153,14 +139,6 @@ class Elke27Hub:
         self._clear_typed_subscriptions()
         if was_connected and not self._stopping:
             self._log_unavailable()
-
-    async def _async_discover_panel_name(self, client: Elke27Client) -> str | None:
-        """Return the panel name from discovery if available."""
-        panels = await client.async_discover(timeout_s=5, address=self._host)
-        if not panels:
-            return None
-        panel = panels[0]
-        return getattr(panel, "panel_name", None)
 
     def get_snapshot(self) -> Any | None:
         """Return the latest client snapshot."""
@@ -217,173 +195,6 @@ class Elke27Hub:
         if client is None:
             return False
         return client.unsubscribe_typed(listener)
-
-    async def async_set_output(self, output_id: int, *, state: bool) -> bool:
-        """Request an output state change if supported."""
-        client = self._client
-        if client is None:
-            return False
-
-        method = getattr(client, "async_set_output", None)
-        if method is None:
-            method = getattr(client, "set_output", None)
-        if method is None:
-            _LOGGER.warning(
-                "Output control is not supported by the client for output %s",
-                output_id,
-            )
-            return False
-        params = _method_parameters(method)
-        if "on" in params:
-            if inspect.iscoroutinefunction(method):
-                result = await method(output_id, on=state)
-            else:
-                result = await self._hass.async_add_executor_job(
-                    partial(method, output_id, on=state)
-                )
-        elif inspect.iscoroutinefunction(method):
-            result = await method(output_id, state)
-        else:
-            result = await self._hass.async_add_executor_job(method, output_id, state)
-        return bool(result) if isinstance(result, bool) else True
-
-    async def async_set_light(
-        self, light_id: int, *, state: bool, level: int | None = None
-    ) -> bool:
-        """Request a light state change if supported."""
-        client = self._client
-        if client is None:
-            return False
-
-        method = getattr(client, "async_set_light", None)
-        if method is None:
-            method = getattr(client, "set_light", None)
-        if method is not None:
-            params = _method_parameters(method)
-            if "on" in params:
-                if inspect.iscoroutinefunction(method):
-                    result = await method(light_id, on=state)
-                else:
-                    result = await self._hass.async_add_executor_job(
-                        partial(method, light_id, on=state)
-                    )
-            elif inspect.iscoroutinefunction(method):
-                result = await method(light_id, state)
-            else:
-                result = await self._hass.async_add_executor_job(
-                    method, light_id, state
-                )
-            return bool(result) if isinstance(result, bool) else True
-
-        status = "ON" if state else "OFF"
-        payload: dict[str, Any] = {
-            "light_id": light_id,
-            "status": status,
-        }
-        payload["level"] = (level if level is not None else 99) if state else 0
-        result = await client.async_execute("light_set_status", **payload)
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            if error is not None:
-                _raise_command_error("Light control", error)
-            return False
-        return True
-
-    async def async_set_lock(self, lock_id: int, *, locked: bool) -> bool:
-        """Request a lock state change if supported."""
-        client = self._client
-        if client is None:
-            return False
-
-        method = getattr(client, "async_set_lock", None)
-        if method is None:
-            method = getattr(client, "set_lock", None)
-        if method is not None:
-            params = _method_parameters(method)
-            if "locked" in params:
-                if inspect.iscoroutinefunction(method):
-                    result = await method(lock_id, locked=locked)
-                else:
-                    result = await self._hass.async_add_executor_job(
-                        partial(method, lock_id, locked=locked)
-                    )
-            elif "on" in params:
-                if inspect.iscoroutinefunction(method):
-                    result = await method(lock_id, on=locked)
-                else:
-                    result = await self._hass.async_add_executor_job(
-                        partial(method, lock_id, on=locked)
-                    )
-            elif inspect.iscoroutinefunction(method):
-                result = await method(lock_id, locked)
-            else:
-                result = await self._hass.async_add_executor_job(
-                    method, lock_id, locked
-                )
-            return bool(result) if isinstance(result, bool) else True
-
-        status = "ON" if locked else "OFF"
-        result = await client.async_execute(
-            "lock_set_status",
-            lock_id=lock_id,
-            status=status,
-        )
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            if error is not None:
-                _raise_command_error("Lock control", error)
-            return False
-        return True
-
-    async def async_set_tstat_status(
-        self,
-        tstat_id: int,
-        *,
-        mode: str | None = None,
-        fan_mode: str | None = None,
-        cool_setpoint: int | None = None,
-        heat_setpoint: int | None = None,
-    ) -> bool:
-        """Request thermostat status changes if supported."""
-        client = self._client
-        if client is None:
-            return False
-
-        kwargs: dict[str, Any] = {
-            "mode": mode,
-            "fan_mode": fan_mode,
-            "cool_setpoint": cool_setpoint,
-            "heat_setpoint": heat_setpoint,
-        }
-        filtered_kwargs = {
-            key: value for key, value in kwargs.items() if value is not None
-        }
-        if not filtered_kwargs:
-            return True
-
-        method = getattr(client, "async_set_tstat_status", None)
-        if method is None:
-            method = getattr(client, "set_tstat_status", None)
-        if method is not None:
-            if inspect.iscoroutinefunction(method):
-                result = await method(tstat_id, **filtered_kwargs)
-            else:
-                result = await self._hass.async_add_executor_job(
-                    partial(method, tstat_id, **filtered_kwargs)
-                )
-            return bool(result) if isinstance(result, bool) else True
-
-        result = await client.async_execute(
-            "tstat_set_status",
-            tstat_id=tstat_id,
-            **filtered_kwargs,
-        )
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            if error is not None:
-                _raise_command_error("Thermostat control", error)
-            return False
-        return True
 
     async def async_set_zone_bypass(
         self, zone_id: int, *, bypassed: bool, pin: str | None = None

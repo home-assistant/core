@@ -3,21 +3,10 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from elke27_lib import ArmMode, LinkKeys
+from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
-import pytest
 
-from homeassistant.components.elke27 import (
-    ATTR_CODE,
-    ATTR_MODE,
-    SERVICE_ALARM_ARM_AUTOMATIC,
-    _async_arm_automatic_entity,
-    _async_handle_alarm_arm_automatic,
-    _async_migrate_unique_ids,
-    _panel_name_from_entry,
-    _service_mode_to_arm_mode,
-    async_setup,
-)
+from homeassistant.components.elke27 import _async_migrate_unique_ids
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LEGACY_PIN,
@@ -28,8 +17,7 @@ from homeassistant.components.elke27.const import (
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -185,13 +173,6 @@ async def test_setup_link_required_raises_auth_failed(
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-def test_panel_name_from_entry() -> None:
-    """Verify panel name extraction from entry data."""
-    assert _panel_name_from_entry({"panel_name": "Panel"}) == "Panel"
-    assert _panel_name_from_entry({"name": "Panel 2"}) == "Panel 2"
-    assert _panel_name_from_entry(None) is None
-
-
 async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
     """Verify unique IDs are migrated to the new format."""
     entry = MockConfigEntry(
@@ -254,7 +235,7 @@ async def test_migrate_unique_ids_skips_other_entry(hass: HomeAssistant) -> None
 async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> None:
     """Verify integration serial is generated and pin is removed."""
     hub = SimpleNamespace(
-        panel_name="Panel",
+        panel_name=None,
         async_connect=AsyncMock(return_value=None),
         async_disconnect=AsyncMock(return_value=None),
     )
@@ -271,7 +252,6 @@ async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> 
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
             CONF_LEGACY_PIN: "1234",
-            "panel": {"panel_name": "Panel"},
         },
     )
     entry.add_to_hass(hass)
@@ -378,303 +358,3 @@ async def test_migrate_unique_ids_skips_unmatched(hass: HomeAssistant) -> None:
     )
 
     await _async_migrate_unique_ids(hass, entry, base)
-
-
-async def test_alarm_arm_automatic_service_calls_hub(hass: HomeAssistant) -> None:
-    """Verify the automatic arm service forwards the extra arm options."""
-    await async_setup(hass, {})
-
-    hub = SimpleNamespace(
-        async_arm_area=AsyncMock(return_value=True),
-        async_disconnect=AsyncMock(return_value=None),
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.30"},
-    )
-    entry.add_to_hass(hass)
-    entry.runtime_data = Elke27RuntimeData(
-        hub=hub,
-        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
-    )
-    entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-            config_entry=entry,
-        )
-        .entity_id
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ALARM_ARM_AUTOMATIC,
-        {
-            "entity_id": entity_id,
-            ATTR_MODE: "away",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-
-    hub.async_arm_area.assert_awaited_once_with(
-        1,
-        ArmMode.ARMED_AWAY,
-        "1234",
-        auto_stay_cancel=True,
-        exit_delay_cancel=True,
-    )
-
-
-async def test_alarm_arm_automatic_home_also_uses_automatic_flags(
-    hass: HomeAssistant,
-) -> None:
-    """Verify automatic arming always uses the built-in Elke27 flags."""
-    await async_setup(hass, {})
-
-    hub = SimpleNamespace(
-        async_arm_area=AsyncMock(return_value=True),
-        async_disconnect=AsyncMock(return_value=None),
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.31"},
-    )
-    entry.add_to_hass(hass)
-    entry.runtime_data = Elke27RuntimeData(
-        hub=hub,
-        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
-    )
-    entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-            config_entry=entry,
-        )
-        .entity_id
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ALARM_ARM_AUTOMATIC,
-        {
-            "entity_id": entity_id,
-            ATTR_MODE: "home",
-            ATTR_CODE: "1234",
-        },
-        blocking=True,
-    )
-
-    hub.async_arm_area.assert_awaited_once_with(
-        1,
-        ArmMode.ARMED_STAY,
-        "1234",
-        auto_stay_cancel=True,
-        exit_delay_cancel=True,
-    )
-
-
-async def test_alarm_arm_automatic_rejects_non_elke27_entity(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service rejects non-Elke27 alarm entities."""
-    await async_setup(hass, {})
-
-    other_entry = MockConfigEntry(domain="test", data={CONF_HOST: "192.168.1.32"})
-    other_entry.add_to_hass(hass)
-    other_entry.mock_state(hass, ConfigEntryState.LOADED)
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            "test",
-            "other-alarm-1",
-            config_entry=other_entry,
-        )
-        .entity_id
-    )
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="is not an Elke27 alarm control panel",
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ALARM_ARM_AUTOMATIC,
-            {
-                "entity_id": entity_id,
-                ATTR_MODE: "away",
-                ATTR_CODE: "1234",
-            },
-            blocking=True,
-        )
-
-
-async def test_alarm_arm_automatic_rejects_missing_target(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service requires a target alarm entity."""
-    call = ServiceCall(
-        hass,
-        DOMAIN,
-        SERVICE_ALARM_ARM_AUTOMATIC,
-        {ATTR_MODE: "away", ATTR_CODE: "1234"},
-    )
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="No Elke27 alarm control panel target was provided",
-    ):
-        await _async_handle_alarm_arm_automatic(hass, call)
-
-
-async def test_alarm_arm_automatic_rejects_missing_entity_config_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service rejects an entity without a config entry."""
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-        )
-        .entity_id
-    )
-
-    with pytest.raises(ServiceValidationError, match="Config entry .* was not found"):
-        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
-
-
-async def test_alarm_arm_automatic_rejects_missing_config_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service rejects an entity with a stale config entry reference."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.34"})
-    entry.add_to_hass(hass)
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-            config_entry=entry,
-        )
-        .entity_id
-    )
-    hass.config_entries._entries.pop(entry.entry_id)
-
-    with pytest.raises(ServiceValidationError, match="Config entry .* was not found"):
-        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
-
-
-async def test_alarm_arm_automatic_rejects_unloaded_config_entry(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service rejects an entity whose config entry is not loaded."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.35"})
-    entry.add_to_hass(hass)
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-            config_entry=entry,
-        )
-        .entity_id
-    )
-
-    with pytest.raises(ServiceValidationError, match="is not loaded"):
-        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
-
-
-async def test_alarm_arm_automatic_rejects_missing_runtime_data(
-    hass: HomeAssistant,
-) -> None:
-    """Verify the service rejects a loaded entry without runtime data."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.36"})
-    entry.add_to_hass(hass)
-    entry.mock_state(hass, ConfigEntryState.LOADED)
-    entry.runtime_data = None
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            "aa:bb:cc:dd:ee:ff:area:1",
-            config_entry=entry,
-        )
-        .entity_id
-    )
-
-    with pytest.raises(ServiceValidationError, match="Runtime data .* is unavailable"):
-        await _async_arm_automatic_entity(hass, entity_id, "away", "1234")
-
-
-def test_service_mode_to_arm_mode_rejects_unsupported_mode() -> None:
-    """Verify unsupported automatic arming modes are rejected."""
-    with pytest.raises(ServiceValidationError, match="Unsupported arming mode"):
-        _service_mode_to_arm_mode("night")
-
-
-@pytest.mark.parametrize(
-    "unique_id",
-    [
-        "aa:bb:cc:dd:ee:ff_area_1",
-        "aa:bb:cc:dd:ee:ff:area:abc",
-    ],
-)
-async def test_alarm_arm_automatic_rejects_malformed_unique_id(
-    hass: HomeAssistant,
-    unique_id: str,
-) -> None:
-    """Verify automatic arming rejects malformed Elke27 area unique IDs."""
-    await async_setup(hass, {})
-
-    hub = SimpleNamespace(
-        async_arm_area=AsyncMock(return_value=True),
-        async_disconnect=AsyncMock(return_value=None),
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.33"},
-    )
-    entry.add_to_hass(hass)
-    entry.runtime_data = Elke27RuntimeData(
-        hub=hub,
-        coordinator=SimpleNamespace(async_stop=AsyncMock(return_value=None)),
-    )
-    entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    entity_id = (
-        er.async_get(hass)
-        .async_get_or_create(
-            "alarm_control_panel",
-            DOMAIN,
-            unique_id,
-            config_entry=entry,
-        )
-        .entity_id
-    )
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ALARM_ARM_AUTOMATIC,
-            {
-                "entity_id": entity_id,
-                ATTR_MODE: "away",
-                ATTR_CODE: "1234",
-            },
-            blocking=True,
-        )
-    hub.async_arm_area.assert_not_awaited()

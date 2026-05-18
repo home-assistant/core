@@ -1,13 +1,17 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: The initial alarm control panel platform does not expose custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: The initial alarm control panel platform does not expose custom actions.
   docs-high-level-description: done
   docs-installation-instructions:
     status: done
@@ -24,7 +28,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: The initial alarm control panel platform does not expose custom actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -32,12 +38,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery: todo
   discovery-update-info: todo
   docs-data-update: todo
