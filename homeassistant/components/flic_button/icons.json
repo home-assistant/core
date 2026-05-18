@@ -1,0 +1,11 @@
+{
+  "entity": {
+    "event": {
+      "button": { "default": "mdi:gesture-tap-button" },
+      "button_big": { "default": "mdi:gesture-tap-button" },
+      "button_small": { "default": "mdi:gesture-tap-button" },
+      "button_twist": { "default": "mdi:gesture-tap-button" },
+      "button_twist_default": { "default": "mdi:gesture-tap-button" }
+    }
+  }
+}
