@@ -1,7 +1,5 @@
 """Select platform for Indevolt integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -13,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -27,7 +26,7 @@ class IndevoltSelectEntityDescription(SelectEntityDescription):
     write_key: str
     value_to_option: dict[IndevoltEnergyMode, str]
     unavailable_values: list[IndevoltEnergyMode] = field(default_factory=list)
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 SELECTS: Final = (
@@ -110,4 +109,8 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
             await self.coordinator.async_request_refresh()
 
         else:
-            raise HomeAssistantError(f"Failed to set option {option} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

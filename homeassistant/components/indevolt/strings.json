@@ -35,6 +35,32 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_pack_1_electric_heating_state": {
+        "name": "Battery pack 1 electric heating"
+      },
+      "battery_pack_2_electric_heating_state": {
+        "name": "Battery pack 2 electric heating"
+      },
+      "battery_pack_3_electric_heating_state": {
+        "name": "Battery pack 3 electric heating"
+      },
+      "battery_pack_4_electric_heating_state": {
+        "name": "Battery pack 4 electric heating"
+      },
+      "battery_pack_5_electric_heating_state": {
+        "name": "Battery pack 5 electric heating"
+      },
+      "electric_heating_state": {
+        "name": "Electric heating"
+      },
+      "main_electric_heating_state": {
+        "name": "Main electric heating"
+      },
+      "meter_connected": {
+        "name": "Meter connected"
+      }
+    },
     "button": {
       "stop": {
         "name": "Enable standby mode"
@@ -88,6 +114,9 @@
       "battery_pack_1_current": {
         "name": "Battery pack 1 current"
       },
+      "battery_pack_1_mos_temperature": {
+        "name": "Battery pack 1 MOS temperature"
+      },
       "battery_pack_1_serial_number": {
         "name": "Battery pack 1 SN"
       },
@@ -102,6 +131,9 @@
       },
       "battery_pack_2_current": {
         "name": "Battery pack 2 current"
+      },
+      "battery_pack_2_mos_temperature": {
+        "name": "Battery pack 2 MOS temperature"
       },
       "battery_pack_2_serial_number": {
         "name": "Battery pack 2 SN"
@@ -118,6 +150,9 @@
       "battery_pack_3_current": {
         "name": "Battery pack 3 current"
       },
+      "battery_pack_3_mos_temperature": {
+        "name": "Battery pack 3 MOS temperature"
+      },
       "battery_pack_3_serial_number": {
         "name": "Battery pack 3 SN"
       },
@@ -133,6 +168,9 @@
       "battery_pack_4_current": {
         "name": "Battery pack 4 current"
       },
+      "battery_pack_4_mos_temperature": {
+        "name": "Battery pack 4 MOS temperature"
+      },
       "battery_pack_4_serial_number": {
         "name": "Battery pack 4 SN"
       },
@@ -147,6 +185,9 @@
       },
       "battery_pack_5_current": {
         "name": "Battery pack 5 current"
+      },
+      "battery_pack_5_mos_temperature": {
+        "name": "Battery pack 5 MOS temperature"
       },
       "battery_pack_5_serial_number": {
         "name": "Battery pack 5 SN"
@@ -180,6 +221,9 @@
       },
       "cumulative_production": {
         "name": "Cumulative production"
+      },
+      "cycle_count": {
+        "name": "Cycle count"
       },
       "daily_production": {
         "name": "Daily production"
@@ -241,6 +285,9 @@
       "grid_voltage": {
         "name": "Grid voltage"
       },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
       "main_current": {
         "name": "Main current"
       },
@@ -267,11 +314,31 @@
           "sub": "Cluster (sub)"
         }
       },
+      "mos_temperature_charge": {
+        "name": "MOS temperature charge"
+      },
+      "mos_temperature_discharge": {
+        "name": "MOS temperature discharge"
+      },
       "off_grid_output_energy": {
         "name": "Off-grid output energy"
       },
       "rated_capacity": {
         "name": "Rated capacity"
+      },
+      "realtime_command": {
+        "name": "Real-time mode",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "realtime_power_limit": {
+        "name": "Real-time power limit"
+      },
+      "realtime_target_soc": {
+        "name": "Real-time target SOC"
       },
       "serial_number": {
         "name": "Serial number"
@@ -284,6 +351,9 @@
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
+      },
+      "transformer_temperature": {
+        "name": "Transformer temperature"
       }
     },
     "switch": {
@@ -325,6 +395,9 @@
     },
     "soc_below_minimum": {
       "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    },
+    "write_error": {
+      "message": "Cannot update value for {name}"
     }
   },
   "services": {

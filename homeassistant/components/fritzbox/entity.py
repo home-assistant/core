@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 from pyfritzhome import FritzhomeDevice
@@ -18,6 +16,8 @@ from .coordinator import FritzboxDataUpdateCoordinator
 class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
     """Basis FritzBox entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: FritzboxDataUpdateCoordinator,
@@ -29,11 +29,9 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
         self.ain = ain
         if entity_description is not None:
-            self._attr_has_entity_name = True
             self.entity_description = entity_description
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
-            self._attr_name = self.data.name
             self._attr_unique_id = ain
 
     @property
@@ -43,7 +41,7 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
 
 class FritzBoxDeviceEntity(FritzBoxEntity):
-    """Reflects FritzhomeDevice and uses its attributes to construct FritzBoxDeviceEntity."""
+    """Reflect FritzhomeDevice and construct FritzBoxDeviceEntity."""
 
     @property
     def available(self) -> bool:

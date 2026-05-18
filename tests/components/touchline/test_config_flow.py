@@ -1,7 +1,5 @@
 """Test the Touchline config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homeassistant import config_entries

@@ -1,7 +1,5 @@
 """Config flow for ZHA."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 import collections
@@ -41,6 +39,7 @@ from homeassistant.helpers.selector import (
     FileSelector,
     FileSelectorConfig,
     SerialPortSelector,
+    SerialPortSelectorConfig,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -63,7 +62,8 @@ DECONZ_DOMAIN = "deconz"
 # The ZHA config flow takes different branches depending on if you are migrating to a
 # new adapter via discovery or setting it up from scratch
 
-# For the fast path, we automatically migrate everything and restore the most recent backup
+# For the fast path, we automatically migrate everything
+# and restore the most recent backup
 MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
 MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
 
@@ -209,7 +209,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             {
                 vol.Required(
                     CONF_DEVICE_PATH, default=default_path
-                ): SerialPortSelector(),
+                ): SerialPortSelector(
+                    SerialPortSelectorConfig(
+                        extra_recommended_domains=[
+                            "homeassistant_yellow",
+                            "homeassistant_sky_connect",
+                            "homeassistant_connect_zbt2",
+                        ]
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)

@@ -1,7 +1,5 @@
 """Matter update."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -178,15 +176,22 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
-                f"Update provided by {self._software_update.update_source.value}. "
-                "Installing this update is at your own risk and you may run into unexpected "
-                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+                "Update provided by "
+                f"{self._software_update.update_source.value}. "
+                "Installing this update is at your own risk "
+                "and you may run into unexpected "
+                "problems such as the need to re-add and "
+                "factory reset your device.</ha-alert>\n\n"
             )
         return release_notes + (
-            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
-            "especially for battery powered devices. Please be patient and wait until the update "
-            "process is fully completed. Do not remove power from the device while it's updating. "
-            "The device may restart during the update process and be unavailable for several minutes."
+            "\n\n<ha-alert alert-type='info'>"
+            "The update process can take a while, "
+            "especially for battery powered devices. "
+            "Please be patient and wait until the update "
+            "process is fully completed. Do not remove power "
+            "from the device while it's updating. "
+            "The device may restart during the update process "
+            "and be unavailable for several minutes."
             "</ha-alert>\n\n"
         )
 

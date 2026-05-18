@@ -1,11 +1,9 @@
 """The Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -60,9 +58,10 @@ async def async_setup_entry(
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 
-    if (os_info := get_os_info(hass)) is None:
-        # The hassio integration has not yet fetched data from the supervisor
-        raise ConfigEntryNotReady
+    try:
+        os_info = get_os_info(hass)
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady from err
 
     if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
@@ -133,9 +132,11 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
-            # Add-on startup with type service get started before Core, always (e.g. the
-            # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
-            # so we can't safely probe here. Instead, we must make an educated guess!
+            # Add-on startup with type service get started before
+            # Core, always (e.g. the Multi-Protocol add-on).
+            # Probing the firmware would interfere with the
+            # add-on, so we can't safely probe here. Instead,
+            # we must make an educated guess!
             firmware_guess = await guess_firmware_info(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}

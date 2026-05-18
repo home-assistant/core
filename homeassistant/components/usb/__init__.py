@@ -1,7 +1,5 @@
 """The USB Discovery integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from contextlib import suppress
@@ -555,7 +553,19 @@ async def websocket_usb_list_serial_ports(
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
         return
-    connection.send_result(
-        msg["id"],
-        [dataclasses.asdict(port) for port in ports],
-    )
+
+    result = []
+    for port in ports:
+        entry = dataclasses.asdict(port)
+
+        if isinstance(port, USBDevice):
+            matchers = async_get_usb_matchers_for_device(hass, port)
+            entry["matching_integrations"] = list(
+                dict.fromkeys(matcher["domain"] for matcher in matchers)
+            )
+        else:
+            entry["matching_integrations"] = []
+
+        result.append(entry)
+
+    connection.send_result(msg["id"], result)

@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
@@ -479,6 +480,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     down_filled_items = 129
     cottons_eco = 133
     quick_power_wash = 146, 10031
+    quick_intense = 177
     eco_40_60 = 190, 10007
     bed_linen = 10047
     easy_care = 10016

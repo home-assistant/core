@@ -52,7 +52,7 @@ async def test_select_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("select.is_option_selected", {"option": ["option_a"]}, True, False),
+        ("select.is_option_selected", {"option": ["option_a"]}, True, True),
     ],
 )
 async def test_select_condition_options_validation(
@@ -227,7 +227,7 @@ async def test_input_select_condition_behavior_all(
 async def test_select_condition_evaluates_both_domains(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the select condition evaluates both select and input_select entities."""
+    """Test select condition evaluates both select and input_select."""
     entity_id_select = "select.test_select"
     entity_id_input_select = "input_select.test_input_select"
 

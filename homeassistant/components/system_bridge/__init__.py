@@ -1,7 +1,5 @@
 """The System Bridge integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import asdict
 import logging
@@ -348,6 +346,7 @@ async def async_setup_entry(
         )
         return asdict(response)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PROCESS_BY_ID,
@@ -361,6 +360,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PROCESSES_BY_NAME,
@@ -374,6 +374,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_PATH,
@@ -387,6 +388,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_POWER_COMMAND,
@@ -400,6 +402,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_URL,
@@ -413,6 +416,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_KEYPRESS,
@@ -429,6 +433,7 @@ async def async_setup_entry(
         },
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_TEXT,

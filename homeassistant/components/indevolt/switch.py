@@ -1,8 +1,6 @@
 """Switch platform for Indevolt integration."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Final
 
 from indevolt_api import IndevoltConfig
@@ -17,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -31,14 +30,14 @@ class IndevoltSwitchEntityDescription(SwitchEntityDescription):
     write_key: str
     read_on_value: int = 1
     read_off_value: int = 0
-    generation: list[int] = field(default_factory=lambda: [1, 2])
+    generation: tuple[int, ...] = (1, 2)
 
 
 SWITCHES: Final = (
     IndevoltSwitchEntityDescription(
         key="grid_charging",
         translation_key="grid_charging",
-        generation=[2],
+        generation=(2,),
         read_key=IndevoltConfig.READ_GRID_CHARGING,
         write_key=IndevoltConfig.WRITE_GRID_CHARGING,
         read_on_value=1001,
@@ -48,7 +47,7 @@ SWITCHES: Final = (
     IndevoltSwitchEntityDescription(
         key="light",
         translation_key="light",
-        generation=[2],
+        generation=(2,),
         read_key=IndevoltConfig.READ_LIGHT,
         write_key=IndevoltConfig.WRITE_LIGHT,
         device_class=SwitchDeviceClass.SWITCH,
@@ -56,7 +55,7 @@ SWITCHES: Final = (
     IndevoltSwitchEntityDescription(
         key="bypass",
         translation_key="bypass",
-        generation=[2],
+        generation=(2,),
         read_key=IndevoltConfig.READ_BYPASS,
         write_key=IndevoltConfig.WRITE_BYPASS,
         device_class=SwitchDeviceClass.SWITCH,
@@ -130,4 +129,8 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
             await self.coordinator.async_request_refresh()
 
         else:
-            raise HomeAssistantError(f"Failed to set value {value} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

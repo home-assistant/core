@@ -157,9 +157,6 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
-      "uptime": {
-        "name": "Last boot"
-      },
       "volume_disk_temp_avg": {
         "name": "Average disk temp"
       },
@@ -188,6 +185,17 @@
       "update": {
         "name": "DSM update"
       }
+    }
+  },
+  "exceptions": {
+    "execution_error": {
+      "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
+    },
+    "missing_serial": {
+      "message": "More than one DSM configured, must specify one of serials: {serials}."
+    },
+    "serial_not_found": {
+      "message": "DSM with specified serial {serial} not found."
     }
   },
   "issues": {

@@ -1,7 +1,5 @@
 """Support for ZHA covers."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any

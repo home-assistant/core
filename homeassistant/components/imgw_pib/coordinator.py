@@ -1,7 +1,5 @@
 """Data Update Coordinator for IMGW-PIB integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

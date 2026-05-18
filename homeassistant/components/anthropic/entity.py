@@ -464,7 +464,8 @@ def _convert_content(  # noqa: C901
                 # If there is only one text block, simplify the content to a string
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
+            # Note: We don't pass SystemContent here as it's
+            # passed to the API as the prompt
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unexpected_chat_log_content",
@@ -479,7 +480,8 @@ class AnthropicDeltaStream:
 
     A typical stream of responses might look something like the following:
     - RawMessageStartEvent with no content
-    - RawContentBlockStartEvent with an empty ThinkingBlock (if extended thinking is enabled)
+    - RawContentBlockStartEvent with an empty ThinkingBlock
+      (if extended thinking is enabled)
     - RawContentBlockDeltaEvent with a ThinkingDelta
     - RawContentBlockDeltaEvent with a ThinkingDelta
     - RawContentBlockDeltaEvent with a ThinkingDelta
@@ -659,7 +661,8 @@ class AnthropicDeltaStream:
 
     def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
         """Handle TextBlock."""
-        if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
+        if (  # Do not start a new assistant content just for
+            # citations, concatenate consecutive blocks instead.
             self._first_block
             or (
                 not self._content_details.has_citations()
@@ -1198,7 +1201,8 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)
             except anthropic.AuthenticationError as err:
-                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                # Trigger coordinator to confirm the auth failure
+                # and trigger the reauth flow.
                 await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

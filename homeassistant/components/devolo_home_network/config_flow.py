@@ -1,7 +1,5 @@
 """Config flow for devolo Home Network integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -42,9 +40,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     await device.async_connect(session_instance=async_client)
 
-    # Try a password protected, non-writing device API call that raises, if the password is wrong.
-    # If only the plcnet API is available, we can continue without trying a password as the plcnet
-    # API does not require a password.
+    # Try a password protected, non-writing device API
+    # call that raises, if the password is wrong.
+    # If only the plcnet API is available, we can continue
+    # without trying a password as the plcnet API does not
+    # require a password.
     if device.device:
         await device.device.async_uptime()
 

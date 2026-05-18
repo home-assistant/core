@@ -42,10 +42,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_import(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test sensor initialization."""

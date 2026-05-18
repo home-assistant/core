@@ -1,7 +1,5 @@
 """Support for OralB sensors."""
 
-from __future__ import annotations
-
 from oralb_ble import OralBSensor, SensorUpdate
 from oralb_ble.parser import (
     IO_SERIES_MODES,

@@ -1,8 +1,7 @@
 """Commands part of Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
@@ -57,6 +56,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
+    async_track_time_interval,
 )
 from homeassistant.helpers.json import (
     JSON_DUMP,
@@ -126,6 +126,7 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
@@ -909,8 +910,8 @@ async def handle_get_triggers_for_target(
 ) -> None:
     """Handle get triggers for target command.
 
-    This command returns all triggers that can be used with any entities that are currently
-    part of a target.
+    This command returns all triggers that can be used
+    with any entities that are currently part of a target.
     """
     triggers = await async_get_triggers_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -932,8 +933,8 @@ async def handle_get_conditions_for_target(
 ) -> None:
     """Handle get conditions for target command.
 
-    This command returns all conditions that can be used with any entities that are currently
-    part of a target.
+    This command returns all conditions that can be used
+    with any entities that are currently part of a target.
     """
     conditions = await async_get_conditions_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -955,8 +956,8 @@ async def handle_get_services_for_target(
 ) -> None:
     """Handle get services for target command.
 
-    This command returns all services that can be used with any entities that are currently
-    part of a target.
+    This command returns all services that can be used
+    with any entities that are currently part of a target.
     """
     services = await async_get_services_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -1039,6 +1040,55 @@ async def handle_test_condition(
 
 @decorators.websocket_command(
     {
+        vol.Required("type"): "subscribe_condition",
+        vol.Required("condition"): cv.CONDITION_SCHEMA,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_subscribe_condition(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe condition command."""
+    condition_config = await async_validate_condition_config(hass, msg["condition"])
+
+    condition = await async_condition_from_config(hass, condition_config)
+    event_data: dict[str, Any] = {}
+
+    @callback
+    def evaluate_condition(now: datetime | None) -> None:
+        """Forward events to websocket."""
+        nonlocal event_data
+        new_event_data: dict[str, Any]
+
+        try:
+            new_event_data = {"result": condition.async_check()}
+        except HomeAssistantError as err:
+            new_event_data = {"error": str(err)}
+        if new_event_data == event_data:
+            return
+        event_data = new_event_data
+        connection.send_event(msg["id"], event_data)
+
+    @callback
+    def unsubscribe() -> None:
+        """Unsubscribe from condition updates."""
+        condition.async_unload()
+        unsub()
+
+    unsub = async_track_time_interval(
+        hass,
+        evaluate_condition,
+        timedelta(seconds=1),
+        name="websocket_api_condition_subscription",
+    )
+    connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_result(msg["id"])
+    evaluate_condition(None)
+
+
+@decorators.websocket_command(
+    {
         vol.Required("type"): "execute_script",
         vol.Required("sequence"): cv.SCRIPT_SCHEMA,
         vol.Optional("variables"): dict,
@@ -1076,6 +1126,8 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
+    finally:
+        await script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {

@@ -1,7 +1,5 @@
 """The FireServiceRota integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -181,6 +179,7 @@ class FireServiceRotaClient:
                 self.token_refresh_failure = False
                 await self._hass.async_add_executor_job(self.websocket.start_listener)
 
+                # pylint: disable-next=home-assistant-sequential-executor-jobs
                 return await self._hass.async_add_executor_job(func, *args)
 
     async def async_update(self) -> dict | None:

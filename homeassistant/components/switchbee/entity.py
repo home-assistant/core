@@ -73,7 +73,10 @@ class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
         return self._is_online and super().available
 
     def _check_if_became_offline(self) -> None:
-        """Check if the device was online (now offline), log message and mark it as Unavailable."""
+        """Check if the device was online (now offline).
+
+        Log message and mark it as unavailable.
+        """
 
         if self._is_online:
             _LOGGER.warning(

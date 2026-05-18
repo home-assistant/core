@@ -1,7 +1,5 @@
 """Tesla Fleet Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from random import randint
 from time import time
@@ -247,7 +245,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
 
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
+    """Manage fetching energy site history from the Tesla Fleet API."""
 
     config_entry: TeslaFleetConfigEntry
 

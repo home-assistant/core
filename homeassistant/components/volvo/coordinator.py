@@ -1,7 +1,5 @@
 """Volvo coordinators."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -263,9 +261,21 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
             api.async_get_odometer,
         ]
 
-        location = await api.async_get_location()
+        # Volvo is returning FORBIDDEN for the location request in case the vehicle
+        # is in an unsupported region. Since we can't know where the vehicle is
+        # located, we silently ignore the failure. If (re-)authentication is needed,
+        # other requests will fail as well and trigger the re-auth flow.
+        location = None
+        try:
+            location = await api.async_get_location()
+        except VolvoAuthException as ex:
+            _LOGGER.debug(
+                "%s - Location not supported for this vehicle. %s",
+                self.config_entry.entry_id,
+                ex.message,
+            )
 
-        if location.get("location") is not None:
+        if location and location.get("location") is not None:
             api_calls.append(api.async_get_location)
 
         return api_calls

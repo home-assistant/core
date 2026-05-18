@@ -1,7 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
@@ -155,6 +153,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
+    client.has_public_bootstrap = False
     return client
 
 
@@ -471,7 +470,7 @@ def mock_ufp_reauth_entry():
 
 @pytest.fixture(name="ufp_reauth_entry_alt")
 def mock_ufp_reauth_entry_alt():
-    """Mock the unifiprotect config entry with alternate port/SSL for reauth/reconfigure tests."""
+    """Mock the unifiprotect config entry with alt port/SSL for reauth tests."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={

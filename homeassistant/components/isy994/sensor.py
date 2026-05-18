@@ -1,7 +1,5 @@
 """Support for ISY sensors."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import (
@@ -367,7 +365,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 

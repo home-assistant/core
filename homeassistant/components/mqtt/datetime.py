@@ -1,7 +1,5 @@
 """Support for MQTT datetime platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import datetime as datetime_library
 import logging
@@ -148,7 +146,8 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
             value = parse(payload)
         except ParserError:
             _LOGGER.warning(
-                "Invalid received date/time expression on topic %s for entity %s, got %s",
+                "Invalid received date/time expression on topic"
+                " %s for entity %s, got %s",
                 msg.topic,
                 self.entity_id,
                 msg.payload,

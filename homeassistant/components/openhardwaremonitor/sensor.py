@@ -1,7 +1,5 @@
 """Support for Open Hardware Monitor Sensor Platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

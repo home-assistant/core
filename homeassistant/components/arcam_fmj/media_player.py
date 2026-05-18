@@ -1,7 +1,5 @@
 """Arcam media player."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import functools
 import logging
@@ -20,10 +18,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import EVENT_TURN_ON
+from .const import DOMAIN, EVENT_TURN_ON
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
 from .entity import ArcamFmjEntity
 
@@ -54,7 +52,7 @@ def convert_exception[**_P, _R](
             return await func(*args, **kwargs)
         except ConnectionFailed as exception:
             raise HomeAssistantError(
-                f"Connection failed to device during {func}"
+                translation_domain=DOMAIN, translation_key="connection_failed"
             ) from exception
 
     return _convert_exception
@@ -98,9 +96,12 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         """Select a specific source."""
         try:
             value = SourceCodes[source]
-        except KeyError:
-            _LOGGER.error("Unsupported source %s", source)
-            return
+        except KeyError as exception:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_source",
+                translation_placeholders={"source": source},
+            ) from exception
 
         await self._state.set_source(value)
         self.async_write_ha_state()
@@ -111,8 +112,10 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         try:
             await self._state.set_decode_mode(sound_mode)
         except (KeyError, ValueError) as exception:
-            raise HomeAssistantError(
-                f"Unsupported sound_mode {sound_mode}"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
             ) from exception
 
         self.async_write_ha_state()
@@ -195,8 +198,11 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
             preset = int(media_id[7:])
             await self._state.set_tuner_preset(preset)
         else:
-            _LOGGER.error("Media %s is not supported", media_id)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media",
+                translation_placeholders={"media": media_id},
+            )
 
     @property
     def source(self) -> str | None:

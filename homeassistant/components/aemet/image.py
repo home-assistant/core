@@ -1,7 +1,5 @@
 """Support for the AEMET OpenData images."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from aemet_opendata.const import AOD_DATETIME, AOD_IMG_BYTES, AOD_IMG_TYPE, AOD_RADAR
