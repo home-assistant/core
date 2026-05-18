@@ -1,6 +1,5 @@
 """The seventeentrack component."""
 
-from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -10,9 +9,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .client import BrowserLikeSeventeenTrackClient as SeventeenTrackClient
 from .const import DOMAIN
 from .coordinator import SeventeenTrackConfigEntry, SeventeenTrackCoordinator
 from .services import async_setup_services
+from .util import create_cookie_jar
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -32,13 +33,15 @@ async def async_setup_entry(
 ) -> bool:
     """Set up 17Track from a config entry."""
 
-    session = async_create_clientsession(hass)
+    session = async_create_clientsession(hass, cookie_jar=create_cookie_jar())
     client = SeventeenTrackClient(session=session)
 
     try:
         await client.profile.login(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     except SeventeenTrackError as err:
         raise ConfigEntryNotReady from err
+
+    client.copy_login_cookies_to_api_domain()
 
     seventeen_coordinator = SeventeenTrackCoordinator(hass, entry, client)
 

@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
@@ -16,6 +15,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
+from .client import BrowserLikeSeventeenTrackClient as SeventeenTrackClient
 from .const import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
@@ -24,6 +24,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import SeventeenTrackConfigEntry
+from .util import create_cookie_jar
 
 CONF_SHOW = {
     vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
@@ -98,5 +99,7 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_client(self):
-        session = aiohttp_client.async_create_clientsession(self.hass)
+        session = aiohttp_client.async_create_clientsession(
+            self.hass, cookie_jar=create_cookie_jar()
+        )
         return SeventeenTrackClient(session=session)
