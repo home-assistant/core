@@ -1,6 +1,7 @@
 """Test config validators."""
 
 from collections import OrderedDict
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 import enum
 from functools import partial
@@ -2031,3 +2032,73 @@ def test_stop_action_schema_error_false_with_response() -> None:
     # no error with response_variable should work
     config = schema({"stop": "Done", "response_variable": "result"})
     assert config["response_variable"] == "result"
+
+
+_COMMENT_SCHEMA_PARAMS = [
+    pytest.param(
+        cv.TRIGGER_BASE_SCHEMA,
+        {"platform": "event"},
+        id="trigger_base",
+    ),
+    pytest.param(
+        cv.CONDITION_SCHEMA,
+        {"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"},
+        id="condition",
+    ),
+    pytest.param(
+        cv.script_action,
+        {"action": "test.foo"},
+        id="script_action",
+    ),
+]
+
+
+@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(
+    ("comment", "expected"),
+    [
+        pytest.param("Single line", "Single line", id="plain"),
+        pytest.param(
+            "Multi-line\ncomment\nspans rows",
+            "Multi-line\ncomment\nspans rows",
+            id="multiline",
+        ),
+        pytest.param(
+            "  whitespace preserved  ", "  whitespace preserved  ", id="whitespace"
+        ),
+        pytest.param("", "", id="empty"),
+        pytest.param(42, "42", id="coerce_int"),
+        pytest.param(True, "True", id="coerce_bool"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_base_schemas_accept_comment(
+    validator: Callable[[dict[str, Any]], dict[str, Any]],
+    base_config: dict[str, Any],
+    comment: Any,
+    expected: str,
+) -> None:
+    """Test that script, condition, trigger base schemas accept a comment field."""
+    validated = validator({**base_config, "comment": comment})
+    assert validated["comment"] == expected
+
+
+@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(
+    ("invalid_comment", "error"),
+    [
+        pytest.param(None, "string value is None", id="none"),
+        pytest.param([], "value should be a string", id="list"),
+        pytest.param({}, "value should be a string", id="dict"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_base_schemas_reject_invalid_comment(
+    validator: Callable[[dict[str, Any]], dict[str, Any]],
+    base_config: dict[str, Any],
+    invalid_comment: Any,
+    error: str,
+) -> None:
+    """Test that script, condition, trigger base schemas reject non-string comments."""
+    with pytest.raises(vol.Invalid, match=error):
+        validator({**base_config, "comment": invalid_comment})
