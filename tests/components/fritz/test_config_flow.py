@@ -19,6 +19,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.fritz.config_flow import (
     _host_from_ssdp,
     _host_from_ssdp_usn,
+    _hostname_from_url,
     _is_link_local_host,
     _is_placeholder_unique_id,
     _parse_device_uuid,
@@ -182,19 +183,23 @@ def test_host_from_ssdp_usn() -> None:
     )
 
 
-def test_host_from_ssdp_location_value_error_uses_usn() -> None:
-    """Test host falls back to USN when location URL parsing fails."""
-    discovery = SsdpServiceInfo(
-        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
-        ssdp_st="mock_st",
-        ssdp_location="https://[invalid",
-        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
-    )
+def test_hostname_from_url_value_error() -> None:
+    """Test malformed locations return None instead of raising."""
     with patch(
         "homeassistant.components.fritz.config_flow.urlparse",
         side_effect=ValueError(),
     ):
-        assert _host_from_ssdp(discovery) == "fritz.box"
+        assert _hostname_from_url("https://[invalid") is None
+
+
+def test_host_from_ssdp_uses_usn_when_location_missing() -> None:
+    """Test host falls back to USN when SSDP location is absent."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert _host_from_ssdp(discovery) == "fritz.box"
 
 
 def test_is_link_local_host() -> None:
