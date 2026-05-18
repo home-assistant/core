@@ -113,7 +113,7 @@ class InfraredEntityStateTracker:
         infrared_entity_id: str,
         availability_changed: Callable[[bool], None],
     ) -> None:
-        """Initialize the state tracker and subscribe to state changes."""
+        """Initialize the state tracker."""
         self._hass = entity.hass
         self._entity = entity
         self._infrared_entity_id = infrared_entity_id
