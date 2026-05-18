@@ -1,7 +1,5 @@
 """Config flow to configure iss component."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow

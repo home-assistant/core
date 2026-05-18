@@ -1,7 +1,5 @@
 """Test the helper method for writing tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import (
     AsyncGenerator,
@@ -25,12 +23,13 @@ import os
 import pathlib
 import time
 from types import FrameType, ModuleType
-from typing import Any, Literal, NoReturn
+from typing import TYPE_CHECKING, Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
+from paho.mqtt.client import MQTTMessage
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -122,6 +121,9 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+if TYPE_CHECKING:
+    import paho.mqtt.client as mqtt
 
 __all__ = [
     "async_get_device_automation_capabilities",
@@ -322,7 +324,8 @@ async def async_test_home_assistant(
                 StoreWithoutWriteLoad,
             ),
             patch(
-                "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+                # Floor & label registry are different
+                "homeassistant.helpers.storage.Store",
                 StoreWithoutWriteLoad,
             ),
             patch(
@@ -453,13 +456,9 @@ def async_fire_mqtt_message(
     payload: bytes | str,
     qos: int = 0,
     retain: bool = False,
+    properties: mqtt.Properties | None = None,
 ) -> None:
     """Fire the MQTT message."""
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
-
     from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
@@ -470,6 +469,7 @@ def async_fire_mqtt_message(
     msg.qos = qos
     msg.retain = retain
     msg.timestamp = time.monotonic()
+    msg.properties = properties
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -1254,7 +1254,7 @@ def patch_yaml_files(files_dict, endswith=True):
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
-            setattr(res, "name", fname)
+            res.name = fname
             return res
 
         # Match using endswith
@@ -1262,7 +1262,7 @@ def patch_yaml_files(files_dict, endswith=True):
             if fname.endswith(ends):
                 _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
-                setattr(res, "name", fname)
+                res.name = fname
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)
@@ -1450,12 +1450,12 @@ class MockEntity(entity.Entity):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled in the registry when first added."""
         return self._handle("entity_registry_enabled_default")
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible in the registry when first added."""
         return self._handle("entity_registry_visible_default")
 
     @property
@@ -1631,7 +1631,8 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
+            "Mocked unable to import platform"
+            f" '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 

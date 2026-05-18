@@ -1,11 +1,9 @@
 """Roborock Coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -357,10 +355,9 @@ async def _refresh_traits(traits: list[Any]) -> None:
             ) from ex
 
 
-_V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)
-
-
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]]):
+class RoborockDataUpdateCoordinatorA01[
+    _V: RoborockDyadDataProtocol | RoborockZeoProtocol
+](DataUpdateCoordinator[dict[_V, StateType]]):
     """Class to manage fetching data from the API for A01 devices."""
 
     config_entry: RoborockConfigEntry
@@ -550,6 +547,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.WIND,
             RoborockB01Props.WATER,
             RoborockB01Props.MODE,
+            RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
         ]
 
@@ -608,8 +606,9 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
-        This sends a fire-and-forget REQUEST_DPS command. The actual data
-        update will arrive asynchronously via the push listener.
+        This coordinator does not wait for any specific MQTT payload because
+        push messages are asynchronous and not guaranteed to contain every
+        field. Entities subscribe to trait updates and update as values arrive.
         """
         try:
             await self.api.refresh()

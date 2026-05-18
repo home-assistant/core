@@ -1,7 +1,5 @@
 """Support for the for Danfoss Air HRV sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from pydanfossair.commands import ReadCommand

@@ -1,7 +1,5 @@
 """Support for Iperf3 sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -38,7 +36,7 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 

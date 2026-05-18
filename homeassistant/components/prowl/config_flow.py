@@ -1,7 +1,5 @@
 """The config flow for the Prowl component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -47,6 +45,8 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Schema(
                     {
                         vol.Required(CONF_API_KEY): str,
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(CONF_NAME): str,
                     },
                 ),

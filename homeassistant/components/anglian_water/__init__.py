@@ -1,7 +1,5 @@
 """The Anglian Water integration."""
 
-from __future__ import annotations
-
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth

@@ -1,13 +1,11 @@
 """Infrared platform for ESPHome."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
 from aioesphomeapi import EntityState, InfraredCapability, InfraredInfo
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEntity
+from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.core import callback
 
 from .entity import (
@@ -21,8 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEntity):
-    """ESPHome infrared entity using native API."""
+class EsphomeInfraredEntity(
+    EsphomeEntity[InfraredInfo, EntityState], InfraredEmitterEntity
+):
+    """ESPHome infrared emitter entity using native API."""
 
     @callback
     def _on_device_update(self) -> None:
@@ -35,11 +35,7 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
     @convert_api_error_ha_error
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
-        timings = [
-            interval
-            for timing in command.get_raw_timings()
-            for interval in (timing.high_us, -timing.low_us)
-        ]
+        timings = command.get_raw_timings()
         _LOGGER.debug("Sending command: %s", timings)
 
         self._client.infrared_rf_transmit_raw_timings(

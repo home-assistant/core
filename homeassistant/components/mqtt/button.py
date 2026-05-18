@@ -1,7 +1,5 @@
 """Support for MQTT buttons."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components import button

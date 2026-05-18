@@ -1,7 +1,5 @@
 """Immich as a media source."""
 
-from __future__ import annotations
-
 from logging import getLogger
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
@@ -124,11 +122,11 @@ class ImmichMediaSource(MediaSource):
                     identifier=f"{identifier.unique_id}|{collection}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
-                    title=collection,
+                    title=collection.split("|", maxsplit=1)[0],
                     can_play=False,
                     can_expand=True,
                 )
-                for collection in ("albums", "people", "tags")
+                for collection in ("albums", "favorites|favorites", "people", "tags")
             ]
 
         # --------------------------------------------------------
@@ -237,6 +235,12 @@ class ImmichMediaSource(MediaSource):
                 assets = await immich_api.search.async_get_all_by_person_ids(
                     [identifier.collection_id]
                 )
+            except ImmichError:
+                return []
+        elif identifier.collection == "favorites":
+            LOGGER.debug("Render all assets for favorites collection")
+            try:
+                assets = await immich_api.search.async_get_all_favorites()
             except ImmichError:
                 return []
 

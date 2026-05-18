@@ -17,12 +17,14 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
@@ -35,7 +37,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State as CoreState
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_ENTITY_ID
@@ -90,11 +92,21 @@ async def update(hass: HomeAssistant, client: Mock, entity_id: str) -> CoreState
 async def test_powered_off(hass: HomeAssistant, client: Mock, state_1: State) -> None:
     """Test properties in powered off state."""
     state_1.get_source.return_value = None
-    state_1.get_power.return_value = None
+    state_1.get_power.return_value = False
 
     data = await update(hass, client, MOCK_ENTITY_ID)
     assert "source" not in data.attributes
     assert data.state == "off"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_power_unknown(hass: HomeAssistant, client: Mock, state_1: State) -> None:
+    """Test that an unreported power state surfaces as unknown, not off."""
+    state_1.get_source.return_value = None
+    state_1.get_power.return_value = None
+
+    data = await update(hass, client, MOCK_ENTITY_ID)
+    assert data.state == "unknown"
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -187,14 +199,14 @@ async def test_update_lost(
 
 @pytest.mark.parametrize(
     ("source", "value"),
-    [("PVR", SourceCodes.PVR), ("BD", SourceCodes.BD), ("INVALID", None)],
+    [("PVR", SourceCodes.PVR), ("BD", SourceCodes.BD)],
 )
 @pytest.mark.usefixtures("player_setup")
-async def test_select_source(
+async def test_select_valid_source(
     hass: HomeAssistant,
     state_1: State,
     source: str,
-    value: SourceCodes | None,
+    value: SourceCodes,
 ) -> None:
     """Test selection of source."""
     await hass.services.async_call(
@@ -204,10 +216,29 @@ async def test_select_source(
         blocking=True,
     )
 
-    if value:
-        state_1.set_source.assert_called_with(value)
-    else:
-        state_1.set_source.assert_not_called()
+    state_1.set_source.assert_called_with(value)
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_select_invalid_source(
+    hass: HomeAssistant,
+    state_1: State,
+) -> None:
+    """Test selection of source."""
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: (
+            e.translation_domain == "arcam_fmj"
+            and e.translation_key == "unsupported_source"
+        ),
+    ):
+        await hass.services.async_call(
+            "media_player",
+            SERVICE_SELECT_SOURCE,
+            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
+            blocking=True,
+        )
+    state_1.set_source.assert_not_called()
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -240,6 +271,28 @@ async def test_select_sound_mode(
 
 
 @pytest.mark.usefixtures("player_setup")
+async def test_select_invalid_sound_mode(
+    hass: HomeAssistant,
+    state_1: State,
+) -> None:
+    """Test selection of source."""
+    state_1.set_decode_mode.side_effect = KeyError()
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: (
+            e.translation_domain == "arcam_fmj"
+            and e.translation_key == "unsupported_sound_mode"
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_SOUND_MODE: "INVALID"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("player_setup")
 async def test_volume_up(hass: HomeAssistant, state_1: State) -> None:
     """Test mute functionality."""
     await hass.services.async_call(
@@ -261,6 +314,45 @@ async def test_volume_down(hass: HomeAssistant, state_1: State) -> None:
         blocking=True,
     )
     state_1.dec_volume.assert_called_with()
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_play_media(hass: HomeAssistant, state_1: State) -> None:
+    """Test mute functionality."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        service_data={
+            ATTR_ENTITY_ID: MOCK_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "preset:1",
+        },
+        blocking=True,
+    )
+    state_1.set_tuner_preset.assert_called_with(1)
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_play_media_invalid(hass: HomeAssistant, state_1: State) -> None:
+    """Test mute functionality."""
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: (
+            e.translation_domain == "arcam_fmj"
+            and e.translation_key == "unsupported_media"
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            service_data={
+                ATTR_ENTITY_ID: MOCK_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "invalid",
+            },
+            blocking=True,
+        )
+    state_1.set_tuner_preset.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -360,7 +452,13 @@ async def test_set_volume_level_lost(hass: HomeAssistant, state_1: State) -> Non
 
     state_1.set_volume.side_effect = ConnectionFailed()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        check=lambda e: (
+            e.translation_domain == "arcam_fmj"
+            and e.translation_key == "connection_failed"
+        ),
+    ):
         await hass.services.async_call(
             "media_player",
             SERVICE_VOLUME_SET,

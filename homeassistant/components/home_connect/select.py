@@ -88,7 +88,7 @@ class HomeConnectProgramSelectEntityDescription(
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSelectEntityDescription(SelectEntityDescription):
-    """Entity Description class for settings and options that have enumeration values."""
+    """Entity Description class for settings and options with enum values."""
 
     translation_key_values: dict[str, str]
     values_translation_key: dict[str, str]
@@ -133,7 +133,9 @@ SELECT_ENTITY_DESCRIPTIONS = (
         translation_key_values=FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            for translation_key, value in (
+                FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            )
         },
     ),
     HomeConnectSelectEntityDescription(
@@ -436,7 +438,11 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             else None
         )
         if (
-            program_key == ProgramKey.BSH_COMMON_FAVORITE_001
+            program_key
+            in (
+                ProgramKey.BSH_COMMON_FAVORITE_001,
+                ProgramKey.BSH_COMMON_FAVORITE_002,
+            )
             and (
                 base_program_event := self.appliance.events.get(
                     EventKey.BSH_COMMON_OPTION_BASE_PROGRAM

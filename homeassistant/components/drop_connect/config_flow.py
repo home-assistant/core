@@ -1,7 +1,5 @@
 """Config flow for drop_connect integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -56,8 +54,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             f"{self._drop_discovery.hub_id}_{self._drop_discovery.device_id}"
         )
         if existing_entry is not None:
-            # Note: returning "invalid_discovery_info" here instead of "already_configured"
-            # allows discovery of additional device types.
+            # Note: returning "invalid_discovery_info" here
+            # instead of "already_configured" allows discovery
+            # of additional device types.
             return self.async_abort(reason="invalid_discovery_info")
 
         self.context.update({"title_placeholders": {"name": self._drop_discovery.name}})

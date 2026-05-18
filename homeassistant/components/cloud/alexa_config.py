@@ -1,7 +1,5 @@
 """Alexa configuration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
@@ -232,7 +230,8 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                     ALEXA_SETTINGS_VERSION,
                 )
                 if self._prefs.alexa_settings_version < 2 or (
-                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    # Recover from a bug we had in 2023.5.0
+                    # where entities didn't get exposed
                     self._prefs.alexa_settings_version < 3
                     and not any(
                         settings.get("should_expose", False)
