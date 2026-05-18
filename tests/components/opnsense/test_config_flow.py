@@ -246,14 +246,23 @@ async def test_interfaces_step_user_input_missing(
     """Test async_step_interfaces when _step_user_input is not a dict or missing CONF_URL."""
     flow = config_flow.OPNsenseConfigFlow()
     flow.hass = hass
-    flow._step_user_input = None  # Not a dict
     flow._entry_data = {}
     with pytest.raises(KeyError):
         await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
-    flow._step_user_input = {}
     flow._entry_data = {}
     with pytest.raises(KeyError):
         await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
+    # with valid data
+    flow._entry_data = {"url": TEST_URL, "verify_ssl": True}
+    with (
+        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
+            return_value={"LAN": {"name": "LAN"}},
+        ),
+    ):
+        result = await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_import_exceptions(hass: HomeAssistant) -> None:
