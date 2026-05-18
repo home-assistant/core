@@ -13,6 +13,8 @@ from yarl import URL
 API_URL = "https://api.17track.net/track/v2.4/gettracklist"
 API_TRACK_URL = URL(API_URL)
 USER_URL = URL(API_URL_USER)
+TRACKLIST_ORDER_BY_REGISTER_TIME_ASC = "11"
+TRACKLIST_TIME_ZONE_OFFSET = 0
 
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -40,6 +42,25 @@ STATUS_NAMES = {
 }
 
 
+def _is_archived(package: dict[str, Any]) -> bool:
+    """Return whether a package is archived according to the API response."""
+    return bool(
+        package.get("archived")
+        or package.get("is_archived")
+        or package.get("is_archive")
+        or package.get("archived_at")
+    )
+
+
+def _package_value(package: dict[str, Any], key: str) -> str | None:
+    """Return a string package value."""
+    value = package.get(key)
+    if isinstance(value, str):
+        return value
+
+    return None
+
+
 def _parse_datetime(value: str | None) -> str:
     """Parse an ISO timestamp from the 17Track API for pyseventeentrack."""
     if not value:
@@ -65,12 +86,16 @@ def _package_status(package: dict[str, Any]) -> int:
 class ModernProfile(Profile):
     """Profile manager using the current 17Track web API."""
 
-    async def _tracklist(self) -> list[dict[str, Any]]:
+    async def _tracklist(self, show_archived: bool = False) -> list[dict[str, Any]]:
         """Get package data from the current 17Track track list API."""
         tracklist_resp: dict[str, Any] = await self._request(
             "post",
             API_URL,
-            json={"page_no": 1, "order_by": "11", "timeZoneOffset": 0},
+            json={
+                "page_no": 1,
+                "order_by": TRACKLIST_ORDER_BY_REGISTER_TIME_ASC,
+                "timeZoneOffset": TRACKLIST_TIME_ZONE_OFFSET,
+            },
         )
 
         code = (tracklist_resp or {}).get("code", 0)
@@ -86,7 +111,19 @@ class ModernProfile(Profile):
                 f"{(tracklist_resp or {}).get('message')})"
             )
 
-        return (tracklist_resp.get("data") or {}).get("accepted") or []
+        data = tracklist_resp.get("data")
+        if not isinstance(data, dict):
+            return []
+
+        accepted = data.get("accepted")
+        if not isinstance(accepted, list):
+            return []
+
+        packages = [package for package in accepted if isinstance(package, dict)]
+        if show_archived:
+            return packages
+
+        return [package for package in packages if not _is_archived(package)]
 
     async def packages(
         self,
@@ -96,18 +133,25 @@ class ModernProfile(Profile):
     ) -> list[Package]:
         """Get the list of packages associated with the account."""
         packages = []
-        for package in await self._tracklist():
+        for package in await self._tracklist(show_archived=show_archived):
+            tracking_number = _package_value(package, "number")
+            if not tracking_number:
+                continue
+
             status = _package_status(package)
-            if package_state and package_state not in (status, str(status)):
+            if package_state != "" and package_state not in (status, str(status)):
                 continue
 
             packages.append(
                 Package(
-                    package["number"],
+                    tracking_number,
                     destination_country=0,
-                    friendly_name=package.get("tag") or package.get("remark"),
-                    info_text=package.get("latest_event_info"),
-                    timestamp=_parse_datetime(package.get("latest_event_time")),
+                    friendly_name=_package_value(package, "tag")
+                    or _package_value(package, "remark"),
+                    info_text=_package_value(package, "latest_event_info"),
+                    timestamp=_parse_datetime(
+                        _package_value(package, "latest_event_time")
+                    ),
                     origin_country=0,
                     package_type=0,
                     status=status,
@@ -121,7 +165,7 @@ class ModernProfile(Profile):
         """Get a quick summary of how many packages are in an account."""
         summary = Counter(
             STATUS_NAMES[_package_status(package)]
-            for package in await self._tracklist()
+            for package in await self._tracklist(show_archived=show_archived)
         )
 
         return {status: summary[status] for status in STATUS_NAMES.values()}
@@ -166,8 +210,9 @@ class BrowserLikeSeventeenTrackClient(SeventeenTrackClient):
             json=json,
         )
 
-    def _headers_for_url(self, url: str) -> dict[str, str]:
+    def _headers_for_url(self, url: str | URL) -> dict[str, str]:
         """Return browser-like headers for a 17Track API URL."""
+        request_url = URL(str(url))
         headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en-US,en;q=0.9",
@@ -178,13 +223,16 @@ class BrowserLikeSeventeenTrackClient(SeventeenTrackClient):
             "X-Requested-With": "XMLHttpRequest",
         }
 
-        if url == API_URL_USER:
+        if request_url.host == USER_URL.host and request_url.path == USER_URL.path:
             headers["Origin"] = "https://www.17track.net"
             headers["Referer"] = "https://www.17track.net/"
             headers["Sec-Fetch-Site"] = "same-site"
             return headers
 
-        if url.startswith(API_URL):
+        if (
+            request_url.host == API_TRACK_URL.host
+            and request_url.path == API_TRACK_URL.path
+        ):
             headers["Accept"] = "*/*"
             headers["Content-Type"] = "application/json"
             headers["Origin"] = "https://admin.17track.net"
