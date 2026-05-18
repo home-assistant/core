@@ -57,7 +57,6 @@ from .coordinator import FritzConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 _FRITZ_BOX_HOST = "fritz.box"
-_FRITZ_BOX_USN_LOCATION_MARKER = f"://{_FRITZ_BOX_HOST}"
 
 
 def _parse_device_uuid(value: str) -> str | None:
@@ -103,9 +102,23 @@ def _is_link_local_host(host: str) -> bool:
 
 
 def _host_from_ssdp_usn(usn: str) -> str | None:
-    """Return fritz.box when the USN contains a URL segment for that host."""
-    if _FRITZ_BOX_USN_LOCATION_MARKER in usn.lower():
-        return _FRITZ_BOX_HOST
+    """Return fritz.box when the USN contains a URL with that exact hostname."""
+    search_start = 0
+    while (scheme_pos := usn.find("://", search_start)) != -1:
+        fragment_start = scheme_pos + 1
+        fragment_end = fragment_start
+        while fragment_end < len(usn) and usn[fragment_end] not in " \t\r\n":
+            if (
+                fragment_end > fragment_start
+                and usn[fragment_end : fragment_end + 2] == "::"
+            ):
+                break
+            fragment_end += 1
+        fragment = usn[fragment_start:fragment_end]
+        if hostname := urlparse(f"http:{fragment}").hostname:
+            if hostname.lower() == _FRITZ_BOX_HOST:
+                return _FRITZ_BOX_HOST
+        search_start = scheme_pos + 3
     return None
 
 
@@ -113,12 +126,12 @@ def _host_from_ssdp(discovery_info: SsdpServiceInfo) -> str | None:
     """Host from SSDP location, headers, or USN."""
     if discovery_info.ssdp_location:
         if hostname := urlparse(discovery_info.ssdp_location).hostname:
-            return str(hostname)
+            return hostname
     if discovery_info.ssdp_headers:
         location_header = discovery_info.ssdp_headers.get("location")
         if isinstance(location_header, str):
             if hostname := urlparse(location_header).hostname:
-                return str(hostname)
+                return hostname
     if discovery_info.ssdp_usn:
         return _host_from_ssdp_usn(discovery_info.ssdp_usn)
     return None
@@ -253,12 +266,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         device_uuid = _uuid_from_discovery(discovery_info)
-        unique_id_for_flow = device_uuid or host
-        await self.async_set_unique_id(unique_id_for_flow)
-        self._abort_if_unique_id_configured({CONF_HOST: self._host})
-
-        if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
 
         if entry := await self.async_check_configured_entry():
             if (
@@ -272,6 +279,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     entry, unique_id=device_uuid
                 )
             return self.async_abort(reason="already_configured")
+
+        unique_id_for_flow = device_uuid or host
+        await self.async_set_unique_id(unique_id_for_flow)
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
+
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
 
         self.context.update(
             {

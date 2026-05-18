@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import dataclasses
+from typing import Any
 from unittest.mock import patch
 
 from fritzconnection.core.exceptions import (
@@ -71,12 +72,17 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-def _flow_unique_id(hass: HomeAssistant, flow_id: str) -> str | None:
-    """Return unique_id from an in-progress config flow (public API)."""
+def _flow_context(hass: HomeAssistant, flow_id: str) -> dict[str, Any]:
+    """Return context from an in-progress config flow (public API)."""
     for progress in hass.config_entries.flow.async_progress():
         if progress["flow_id"] == flow_id:
-            return progress["context"].get("unique_id")
-    return None
+            return progress["context"]
+    return {}
+
+
+def _flow_unique_id(hass: HomeAssistant, flow_id: str) -> str | None:
+    """Return unique_id from an in-progress config flow (public API)."""
+    return _flow_context(hass, flow_id).get("unique_id")
 
 
 def test_parse_device_uuid() -> None:
@@ -159,12 +165,17 @@ def test_host_from_ssdp_fritz_box_from_usn() -> None:
 
 
 def test_host_from_ssdp_usn() -> None:
-    """Test USN host extraction requires a URL segment for fritz.box."""
+    """Test USN host extraction requires an exact fritz.box URL hostname."""
     assert (
         _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box") == "fritz.box"
     )
+    assert (
+        _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://FRITZ.box") == "fritz.box"
+    )
     assert _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice") is None
     assert _host_from_ssdp_usn("uuid:device-1::vendor:my-fritz.box-repeater") is None
+    assert _host_from_ssdp_usn("uuid:device-1::upnp://fritz.box.local") is None
+    assert _host_from_ssdp_usn("uuid:device-1::vendor://fritz.box.example/path") is None
 
 
 def test_is_link_local_host() -> None:
@@ -212,7 +223,7 @@ def test_uuid_from_discovery_falls_back_to_usn() -> None:
 
 
 async def test_ssdp_hostname_from_usn_only(hass: HomeAssistant, fc_class_mock) -> None:
-    """Test SSDP flow accepts fritz.box hostname from USN without crashing."""
+    """Test SSDP flow uses fritz.box from USN and the device UUID from UDN."""
     discovery = SsdpServiceInfo(
         ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
         ssdp_st="mock_st",
@@ -236,7 +247,64 @@ async def test_ssdp_hostname_from_usn_only(hass: HomeAssistant, fc_class_mock) -
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    assert _flow_context(hass, result["flow_id"])["configuration_url"] == "http://fritz.box"
     assert _flow_unique_id(hass, result["flow_id"]) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_fritz_box_from_usn_without_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP uses fritz.box host and host unique_id when no UUID is advertised."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert _flow_context(hass, result["flow_id"])["configuration_url"] == "http://fritz.box"
+    assert _flow_unique_id(hass, result["flow_id"]) == "fritz.box"
+
+
+async def test_ssdp_already_configured_skips_host_unique_id_without_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP without UUID still aborts when the host is already configured."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_DATA, CONF_HOST: "fritz.box"},
+        unique_id=MOCK_FRITZ_SSDP_DEVICE_UUID,
+    )
+    mock_config.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    with patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IPS["fritz.box"],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
 
 
 @pytest.mark.parametrize(
@@ -1221,7 +1289,7 @@ async def test_ssdp_aborts_when_host_missing(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_host"
 
 
-async def test_ssdp_host_from_location_header(hass: HomeAssistant) -> None:
+def test_host_from_ssdp_location_header() -> None:
     """Test host is read from SSDP headers when location is missing."""
     discovery = SsdpServiceInfo(
         ssdp_usn="mock_usn",
