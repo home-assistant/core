@@ -6,7 +6,6 @@ on:
       - "requirements*.txt"
       - "homeassistant/package_constraints.txt"
       - "pyproject.toml"
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -25,11 +24,11 @@ tools:
   github:
     toolsets: [default]
 safe-outputs:
-  add-comment:
+  add_comment:
     max: 1
 description: >
-  Checks changed Python package requirements on PRs targeting the core repo
-  (including fork PRs): verifies licenses match PyPI metadata, source
+  Checks changed Python package requirements on PRs targeting the core repo:
+  verifies licenses match PyPI metadata, source
   repositories are publicly accessible, PyPI releases were uploaded via
   automated CI (Trusted Publisher attestation), the package's release pipeline
   uses OIDC or equivalent automated credentials (not static tokens), and the PR
@@ -138,7 +137,8 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the PR number `${{ github.event.pull_request.number || inputs.pull_request_number }}`.
+Read the PR body from the GitHub API using the concrete PR number provided in
+the workflow context for this run (`pull-request-number`).
 Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required
@@ -291,7 +291,7 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 
 ## Step 7 — Post a Review Comment
 
-**Always** post a review comment using `add-comment`, regardless of whether
+**Always** post a review comment using `add_comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
 > **Note on deduplication**: The workflow automatically updates any previous
