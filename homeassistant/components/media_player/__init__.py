@@ -1512,6 +1512,17 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
+
+    # Build a redacted form of the URL up front so every log line in this
+    # function uses it. Credentials in the URL (`http://user:pass@host/...`)
+    # must never reach the log; the fetch itself still uses the original.
+    url_parts = URL(url)
+    if url_parts.user is not None:
+        url_parts = url_parts.with_user("xxxx")
+    if url_parts.password is not None:
+        url_parts = url_parts.with_password("xxxxxxxx")
+    redacted_url = str(url_parts)
+
     # Also suppress aiohttp.ClientError so that ClientPayloadError raised by
     # the chunked-stream path (and any other client-side aiohttp failure)
     # falls into the same "Error retrieving proxied image" path as a timeout
@@ -1531,18 +1542,12 @@ async def async_fetch_image(
                     logger.warning(
                         "Discarding truncated image response from %s "
                         "(%d bytes, content-type %s)",
-                        url,
+                        redacted_url,
                         len(body),
                         ct,
                     )
 
     if content is None:
-        url_parts = URL(url)
-        if url_parts.user is not None:
-            url_parts = url_parts.with_user("xxxx")
-        if url_parts.password is not None:
-            url_parts = url_parts.with_password("xxxxxxxx")
-        url = str(url_parts)
-        logger.warning("Error retrieving proxied image from %s", url)
+        logger.warning("Error retrieving proxied image from %s", redacted_url)
 
     return content, content_type

@@ -178,6 +178,41 @@ async def test_get_image_http_log_credentials_redacted(
     ) in caplog.text
 
 
+async def test_get_image_http_truncated_log_credentials_redacted(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Credentials must be redacted in the truncated-response warning too.
+
+    The 'Discarding truncated image response' warning is a second log site
+    that carries the upstream URL. It needs the same credential redaction
+    the 'Error retrieving proxied image' path already has.
+    """
+    url = "http://vi:pass@example.com/truncated.jpg"
+    truncated = b"\xff\xd8\xff\xe0" + b"\x00" * 200  # JPEG SOI without EOI
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(
+            url, content=truncated, headers={"Content-Type": "image/jpeg"}
+        )
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Discarding truncated image response from {url}" not in caplog.text
+    redacted = url.replace("pass", "xxxxxxxx").replace("vi", "xxxx")
+    assert f"Discarding truncated image response from {redacted}" in caplog.text
+
+
 @pytest.mark.parametrize(
     "fetch_exception",
     [
