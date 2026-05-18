@@ -1,7 +1,5 @@
 """Support for LiteJet lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylitejet import LiteJet, LiteJetError
@@ -13,12 +11,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LiteJetConfigEntry
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 ATTR_NUMBER = "number"
@@ -26,12 +24,12 @@ ATTR_NUMBER = "number"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LiteJetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = config_entry.runtime_data
 
     entities = []
     for index in system.loads():
@@ -52,7 +50,7 @@ class LiteJetLight(LightEntity):
     _attr_name = None
 
     def __init__(
-        self, config_entry: ConfigEntry, system: LiteJet, index: int, name: str
+        self, config_entry: LiteJetConfigEntry, system: LiteJet, index: int, name: str
     ) -> None:
         """Initialize a LiteJet light."""
         self._config_entry = config_entry

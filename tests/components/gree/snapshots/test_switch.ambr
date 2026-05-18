@@ -66,8 +66,9 @@
 # name: test_registry_settings
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -100,8 +101,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -134,8 +136,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -168,8 +171,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -202,8 +206,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,

@@ -92,7 +92,8 @@
       },
       "entry_type": "Allowed chat ID",
       "error": {
-        "chat_not_found": "Chat not found"
+        "chat_not_found": "Chat not found",
+        "telegram_error": "[%key:component::telegram_bot::config::error::telegram_error%]"
       },
       "initiate_flow": {
         "user": "Add allowed chat ID"
@@ -105,7 +106,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
-          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.",
+          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.\n\nMost recent chat: {most_recent_chat}",
           "title": "Add chat"
         }
       }
@@ -199,6 +200,12 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_directory_path": {
+      "message": "Invalid directory path: {directory_path}. The path must not contain `~` or `..`."
+    },
+    "invalid_file_name": {
+      "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
+    },
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
     },
@@ -276,6 +283,18 @@
         "upload_video": "Uploading video",
         "upload_video_note": "Uploading video note",
         "upload_voice": "Uploading voice"
+      }
+    },
+    "media": {
+      "fields": {
+        "authentication": "Authentication",
+        "caption": "Caption",
+        "file": "File",
+        "media_type": "Media type",
+        "password": "Password",
+        "url": "URL",
+        "username": "Username",
+        "verify_ssl": "Verify SSL"
       }
     },
     "media_type": {
@@ -828,6 +847,53 @@
         }
       }
     },
+    "send_media_group": {
+      "description": "Sends a group of photos, videos, documents or audios as an album. Documents and audio files can only be grouped in an album with messages of the same type.",
+      "fields": {
+        "chat_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::chat_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the media group.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "disable_notification": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "media": {
+          "description": "A list of media to be sent.",
+          "name": "Media"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "protect_content": {
+          "description": "Protects the contents of the sent message from forwarding and saving.",
+          "name": "Protect content"
+        },
+        "reply_to_message_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        }
+      },
+      "name": "Send media group",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        }
+      }
+    },
     "send_message": {
       "description": "Sends a notification.",
       "fields": {
@@ -888,6 +954,45 @@
       "sections": {
         "advanced": {
           "name": "Advanced"
+        }
+      }
+    },
+    "send_message_draft": {
+      "description": "Shows a partial message (draft) in Telegram while the full message is still being generated.",
+      "fields": {
+        "chat_id": {
+          "description": "One or more pre-authorized chat IDs to send the message draft to.",
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the message draft.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "draft_id": {
+          "description": "Unique identifier of the message draft. Changes of drafts with the same identifier are animated.",
+          "name": "Draft ID"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "message": {
+          "description": "Available part of the message for temporary notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message::name%]"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        }
+      },
+      "name": "Send message draft",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
         }
       }
     },

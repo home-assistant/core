@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_media_player_psvita[presence_payload0][media_player.playstation_vita-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -53,8 +54,9 @@
 # ---
 # name: test_media_player_psvita[presence_payload1][media_player.playstation_vita-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -110,8 +112,9 @@
 # ---
 # name: test_media_player_psvita[presence_payload2][media_player.playstation_vita-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -164,8 +167,9 @@
 # ---
 # name: test_platform[PS4_idle][media_player.playstation_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -218,8 +222,9 @@
 # ---
 # name: test_platform[PS4_offline][media_player.playstation_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -270,8 +275,9 @@
 # ---
 # name: test_platform[PS4_playing][media_player.playstation_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -327,8 +333,9 @@
 # ---
 # name: test_platform[PS5_idle][media_player.playstation_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -381,8 +388,9 @@
 # ---
 # name: test_platform[PS5_offline][media_player.playstation_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -433,8 +441,9 @@
 # ---
 # name: test_platform[PS5_playing][media_player.playstation_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),

@@ -1,7 +1,5 @@
 """Matter event entities from Node events."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,13 +12,12 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SwitchFeature = clusters.Switch.Bitmaps.Feature
@@ -39,11 +36,11 @@ EVENT_TYPES_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.EVENT, async_add_entities)
 
 
@@ -82,7 +79,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
             # momentary switch without multi press support
             event_types.append("initial_press")
             if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                # momentary switch without multi press support can optionally support release
+                # momentary switch without multi press support
+                # can optionally support release
                 event_types.append("short_release")
 
         # a momentary switch can optionally support long press

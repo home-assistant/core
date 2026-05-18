@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 from pylitterbot import FeederRobot, Robot
 import pytest
 
-from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -13,7 +12,8 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
@@ -93,45 +93,16 @@ async def test_feeder_robot_switch(
         assert state.state == new_state
 
 
-@pytest.mark.parametrize(
-    ("preexisting_entity", "disabled_by", "expected_entity", "expected_issue"),
-    [
-        (True, None, True, True),
-        (True, er.RegistryEntryDisabler.USER, False, False),
-        (False, None, False, False),
-    ],
-)
-async def test_litterrobot_4_deprecated_switch(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_4: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    entity_registry: er.EntityRegistry,
-    preexisting_entity: bool,
-    disabled_by: er.RegistryEntryDisabler,
-    expected_entity: bool,
-    expected_issue: bool,
+async def test_switch_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
 ) -> None:
-    """Test switch deprecation issue."""
-    entity_uid = "LR4C010001-night_light_mode_enabled"
-    if preexisting_entity:
-        suggested_id = NIGHT_LIGHT_MODE_ENTITY_ID.replace(f"{SWITCH_DOMAIN}.", "")
-        entity_registry.async_get_or_create(
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, SWITCH_DOMAIN)
+
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
+        await hass.services.async_call(
             SWITCH_DOMAIN,
-            DOMAIN,
-            entity_uid,
-            suggested_object_id=suggested_id,
-            disabled_by=disabled_by,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
+            blocking=True,
         )
-
-    await setup_integration(hass, mock_account_with_litterrobot_4, SWITCH_DOMAIN)
-
-    assert (
-        entity_registry.async_get(NIGHT_LIGHT_MODE_ENTITY_ID) is not None
-    ) is expected_entity
-    assert (
-        issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{entity_uid}",
-        )
-        is not None
-    ) is expected_issue

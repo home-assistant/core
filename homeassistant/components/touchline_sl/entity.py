@@ -19,7 +19,7 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
         super().__init__(coordinator)
         self.zone_id = zone_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(zone_id))},
+            identifiers={(DOMAIN, f"{coordinator.data.module.id}-{zone_id}")},
             name=self.zone.name,
             manufacturer="Roth",
             via_device=(DOMAIN, coordinator.data.module.id),

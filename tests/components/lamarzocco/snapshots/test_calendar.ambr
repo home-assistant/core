@@ -85,8 +85,9 @@
 # ---
 # name: test_calendar_events[entry.GS012345_auto_on_off_schedule_axfz5bj]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -121,8 +122,9 @@
 # ---
 # name: test_calendar_events[entry.GS012345_auto_on_off_schedule_os2oswx]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

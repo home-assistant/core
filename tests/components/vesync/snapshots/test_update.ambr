@@ -35,8 +35,9 @@
 # name: test_update_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -132,8 +133,9 @@
 # name: test_update_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -229,8 +231,9 @@
 # name: test_update_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -326,8 +329,9 @@
 # name: test_update_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -423,8 +427,9 @@
 # name: test_update_state[CS158-AF Air Fryer Cooking][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -520,8 +525,9 @@
 # name: test_update_state[CS158-AF Air Fryer Standby][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -617,8 +623,9 @@
 # name: test_update_state[Dimmable Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -704,8 +711,9 @@
 # name: test_update_state[Dimmer Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -801,8 +809,9 @@
 # name: test_update_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -898,8 +907,9 @@
 # name: test_update_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -995,8 +1005,9 @@
 # name: test_update_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1092,8 +1103,9 @@
 # name: test_update_state[Outlet][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1189,8 +1201,9 @@
 # name: test_update_state[SmartTowerFan][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1286,8 +1299,9 @@
 # name: test_update_state[Temperature Light][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1383,8 +1397,9 @@
 # name: test_update_state[Wall Switch][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,

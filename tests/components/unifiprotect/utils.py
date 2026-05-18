@@ -1,7 +1,5 @@
 """Test helpers for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
@@ -38,6 +36,7 @@ class MockUFPFixture:
     api: ProtectApiClient
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -127,7 +126,7 @@ async def ids_from_device_description(
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id using real Home Assistant translation logic."""
+    """Return expected unique_id and entity_id using HA translation logic."""
 
     entity_name = normalize_name(device.display_name)
 

@@ -17,6 +17,7 @@ MOCK_VEHICLES = {
     "zoe_40": {
         "endpoints": {
             "battery_status": "battery_status_charging.json",
+            "battery_soc": "battery_soc.json",
             "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.1.json",
@@ -25,6 +26,7 @@ MOCK_VEHICLES = {
     "zoe_50": {
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
+            "battery_soc": "battery_soc.json",
             "charge_mode": "charge_mode_schedule.json",
             "charging_settings": "charging_settings.json",
             "cockpit": "cockpit_ev.json",

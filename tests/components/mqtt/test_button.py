@@ -81,7 +81,7 @@ async def test_sending_mqtt_commands(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer press", 2, False
+        "command-topic", "beer press", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("button.test_button")
@@ -121,7 +121,11 @@ async def test_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{ "milky_way_press": "button.test" }', 0, False
+        "command-topic",
+        '{ "milky_way_press": "button.test" }',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 

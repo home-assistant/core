@@ -18,6 +18,59 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-01-15 12:30:00")
+async def test_sph_sensors_v1_api(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test SPH device sensor entities with V1 API."""
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [{"device_sn": "SPH123456", "type": 5}]
+    }
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_sph_sensor_unavailable_on_coordinator_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test SPH sensors become unavailable when coordinator fails."""
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [{"device_sn": "SPH123456", "type": 5}]
+    }
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.sph123456_state_of_charge")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_growatt_v1_api.sph_detail.side_effect = growattServer.GrowattV1ApiError(
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.sph123456_state_of_charge")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_min_sensors_v1_api(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -74,6 +127,29 @@ async def test_sensors_classic_api(
     )
 
 
+@pytest.mark.freeze_time("2023-10-21")
+async def test_mix_empty_chart_data(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test mix device handles empty chart data without crashing."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "MIX123456", "deviceType": "mix"}
+    ]
+    mock_growatt_classic_api.mix_detail.return_value = {
+        "deviceSn": "MIX123456",
+        "chartData": {},
+    }
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry_classic)
+
+    # Should not crash - entities should still be created
+    states = hass.states.async_entity_ids("sensor")
+    assert len(states) > 0
+
+
 async def test_sensor_coordinator_updates(
     hass: HomeAssistant,
     mock_growatt_v1_api,
@@ -124,7 +200,9 @@ async def test_sensor_unavailable_on_coordinator_error(
 
     # Cause coordinator update to fail
     mock_growatt_v1_api.min_detail.side_effect = growattServer.GrowattV1ApiError(
-        "Connection timeout"
+        message="Rate limited",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Too many requests",
     )
 
     # Trigger coordinator refresh

@@ -1,7 +1,5 @@
 """Provides triggers for humidity."""
 
-from __future__ import annotations
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
@@ -15,47 +13,63 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    EntityNumericalStateAttributeChangedTriggerBase,
-    EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    EntityTriggerBase,
+    EntityNumericalStateChangedTriggerBase,
+    EntityNumericalStateCrossedThresholdTriggerBase,
+    EntityNumericalStateTriggerBase,
     Trigger,
-    get_device_class_or_undefined,
 )
 
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    CLIMATE_DOMAIN: DomainSpec(
+        value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
+    ),
+    HUMIDIFIER_DOMAIN: DomainSpec(
+        value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+    ),
+    SENSOR_DOMAIN: DomainSpec(
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    WEATHER_DOMAIN: DomainSpec(
+        value_source=ATTR_WEATHER_HUMIDITY,
+    ),
+}
 
-class _HumidityTriggerMixin(EntityTriggerBase):
-    """Mixin for humidity triggers providing entity filtering and value extraction."""
 
-    _attributes = {
-        CLIMATE_DOMAIN: CLIMATE_ATTR_CURRENT_HUMIDITY,
-        HUMIDIFIER_DOMAIN: HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
-        SENSOR_DOMAIN: None,  # Use state.state
-        WEATHER_DOMAIN: ATTR_WEATHER_HUMIDITY,
-    }
-    _domains = {SENSOR_DOMAIN, CLIMATE_DOMAIN, HUMIDIFIER_DOMAIN, WEATHER_DOMAIN}
+class _HumidityTriggerMixin(EntityNumericalStateTriggerBase):
+    """Mixin for humidity triggers providing entity filtering."""
 
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities: all climate/humidifier/weather, sensor only with device_class humidity."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] != SENSOR_DOMAIN
-            or get_device_class_or_undefined(self._hass, entity_id)
-            == SensorDeviceClass.HUMIDITY
-        }
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
+    _valid_unit = "%"
+
+    def _should_include(self, state: State) -> bool:
+        """Skip attribute-source entities that lack the humidity attribute.
+
+        For domains whose tracked value comes from an attribute
+        (climate / humidifier / weather), require the attribute to be
+        present; otherwise the all/count check would treat an entity that
+        cannot report a humidity as a non-match and block behavior=last.
+        Sensor entities source their value from `state.state`, so they
+        fall through to the base impl.
+        """
+        if not super()._should_include(state):
+            return False
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is None:
+            return True
+        return state.attributes.get(domain_spec.value_source) is not None
 
 
 class HumidityChangedTrigger(
-    _HumidityTriggerMixin, EntityNumericalStateAttributeChangedTriggerBase
+    _HumidityTriggerMixin, EntityNumericalStateChangedTriggerBase
 ):
     """Trigger for humidity value changes across multiple domains."""
 
 
 class HumidityCrossedThresholdTrigger(
-    _HumidityTriggerMixin, EntityNumericalStateAttributeCrossedThresholdTriggerBase
+    _HumidityTriggerMixin, EntityNumericalStateCrossedThresholdTriggerBase
 ):
     """Trigger for humidity value crossing a threshold across multiple domains."""
 

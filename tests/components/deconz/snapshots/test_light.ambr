@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_groups[input0-light_payload0][light.dimmable_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_groups[input0-light_payload0][light.group-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -149,8 +151,9 @@
 # ---
 # name: test_groups[input0-light_payload0][light.rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -229,8 +232,9 @@
 # ---
 # name: test_groups[input0-light_payload0][light.tunable_white_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
@@ -307,8 +311,9 @@
 # ---
 # name: test_groups[input1-light_payload0][light.dimmable_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -367,8 +372,9 @@
 # ---
 # name: test_groups[input1-light_payload0][light.group-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -455,8 +461,9 @@
 # ---
 # name: test_groups[input1-light_payload0][light.rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -535,8 +542,9 @@
 # ---
 # name: test_groups[input1-light_payload0][light.tunable_white_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
@@ -613,8 +621,9 @@
 # ---
 # name: test_groups[input2-light_payload0][light.dimmable_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -673,8 +682,9 @@
 # ---
 # name: test_groups[input2-light_payload0][light.group-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -761,8 +771,9 @@
 # ---
 # name: test_groups[input2-light_payload0][light.rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -841,8 +852,9 @@
 # ---
 # name: test_groups[input2-light_payload0][light.tunable_white_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
@@ -919,8 +931,9 @@
 # ---
 # name: test_lights[light_payload0][light.hue_go-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -1008,8 +1021,9 @@
 # ---
 # name: test_lights[light_payload1][light.hue_ensis-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -1097,8 +1111,9 @@
 # ---
 # name: test_lights[light_payload2][light.lidl_xmas_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -1207,8 +1222,9 @@
 # ---
 # name: test_lights[light_payload3][light.hue_white_ambiance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -1285,8 +1301,9 @@
 # ---
 # name: test_lights[light_payload4][light.hue_filament-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1345,8 +1362,9 @@
 # ---
 # name: test_lights[light_payload5][light.simple_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -1404,8 +1422,9 @@
 # ---
 # name: test_lights[light_payload6][light.gradient_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([

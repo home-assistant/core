@@ -17,10 +17,9 @@ from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_customer_api_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_customer_api_client: AsyncMock
 ) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -80,9 +79,9 @@ async def test_form_unique_id(
         (DecodeError("Bad API token"), "invalid_access_token"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_customer_api_client: AsyncMock,
     exception: Exception,
     error: str,

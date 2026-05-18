@@ -1,7 +1,5 @@
 """Helper functions for the ZHA integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
@@ -77,6 +75,8 @@ from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReport
 from zha.zigbee.device import (
     ClusterHandlerConfigurationComplete,
     Device,
+    DeviceEntityAddedEvent,
+    DeviceEntityRemovedEvent,
     DeviceFirmwareInfoUpdatedEvent,
     ZHAEvent,
 )
@@ -206,6 +206,7 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
+SIGNAL_REMOVE_ENTITY = "zha_remove_entity"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
 ENTITIES = "entities"
@@ -494,6 +495,41 @@ class ZHADeviceProxy(EventBase):
                 },
             },
         )
+
+    @callback
+    def handle_zha_device_entity_added_event(
+        self, event: DeviceEntityAddedEvent
+    ) -> None:
+        """Handle a new entity being added to a device at runtime."""
+        key = (event.platform, event.unique_id)
+        if (entity := self.device.platform_entities.get(key)) is None:
+            return
+        ha_zha_data = get_zha_data(self.gateway_proxy.hass)
+        ha_zha_data.platforms[Platform(event.platform)].append(
+            EntityData(entity=entity, device_proxy=self, group_proxy=None)
+        )
+        async_dispatcher_send(self.gateway_proxy.hass, SIGNAL_ADD_ENTITIES)
+
+    @callback
+    def handle_zha_device_entity_removed_event(
+        self, event: DeviceEntityRemovedEvent
+    ) -> None:
+        """Handle an entity being removed from a device at runtime."""
+        if not event.remove:
+            # Soft remove: signal the entity to unload; registry entry stays
+            async_dispatcher_send(
+                self.gateway_proxy.hass,
+                f"{SIGNAL_REMOVE_ENTITY}_{event.platform}_{event.unique_id}",
+            )
+            return
+
+        # Hard remove: delete from registry, also works without a live entity loaded
+        entity_registry = er.async_get(self.gateway_proxy.hass)
+        domain = Platform(event.platform)
+        if entity_id := entity_registry.async_get_entity_id(
+            domain, DOMAIN, event.unique_id
+        ):
+            entity_registry.async_remove(entity_id)
 
 
 class EntityReference(NamedTuple):
@@ -814,13 +850,12 @@ class ZHAGatewayProxy(EventBase):
 
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
-        if entity.zha_device.ieee in self.ha_entity_refs:
-            entity_refs = self.ha_entity_refs.get(entity.zha_device.ieee)
-            self.ha_entity_refs[entity.zha_device.ieee] = [
-                e
-                for e in entity_refs  # type: ignore[union-attr]
-                if e.ha_entity_id != entity.entity_id
-            ]
+        ieee = entity.entity_data.device_proxy.device.ieee
+        if (entity_refs := self._ha_entity_refs.get(ieee)) is None:
+            return
+        self._ha_entity_refs[ieee] = [
+            e for e in entity_refs if e.ha_entity_id != entity.entity_id
+        ]
 
     def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
@@ -894,8 +929,9 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove entity registry entries for group entities when the groups are removed from HA."""
-        # first we collect the potential unique ids for entities that could be created from this group
+        """Remove entity registry entries for removed group entities."""
+        # first we collect the potential unique ids for
+        # entities that could be created from this group
         possible_entity_unique_ids = [
             f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
@@ -1214,9 +1250,12 @@ def async_add_entities(
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
-        # broad exception to prevent a single entity from preventing an entire platform from loading
-        # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
-        # alternative is adding try/catch to each entity class __init__ method with a specific exception
+        # broad exception to prevent a single entity from
+        # preventing an entire platform from loading.
+        # this can potentially be caused by a misbehaving
+        # device or a bad quirk. Not ideal but the
+        # alternative is adding try/catch to each entity
+        # class __init__ method with a specific exception
         except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data

@@ -107,6 +107,12 @@
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       },
+      "pipeline_n": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline_n::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
       "vad_sensitivity": {
         "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
         "state": {
@@ -116,10 +122,17 @@
         }
       },
       "wake_word": {
-        "name": "Wake word{index}",
+        "name": "Wake word",
         "state": {
           "no_wake_word": "No wake word",
           "okay_nabu": "Okay Nabu"
+        }
+      },
+      "wake_word_n": {
+        "name": "Wake word {index}",
+        "state": {
+          "no_wake_word": "[%key:component::esphome::entity::select::wake_word::state::no_wake_word%]",
+          "okay_nabu": "[%key:component::esphome::entity::select::wake_word::state::okay_nabu%]"
         }
       }
     }

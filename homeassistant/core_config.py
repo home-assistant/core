@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Sequence
 from contextlib import suppress
@@ -369,9 +367,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             [{"type": "totp", "id": "totp", "name": "Authenticator app"}],
         )
 
-        setattr(
-            hass, "auth", await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
-        )
+        hass.auth = await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
 
     await hass.config.async_load()
 
@@ -526,7 +522,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
-    def discard(self, value: str) -> None:
+    def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 
