@@ -22,6 +22,7 @@ from .const import (
     CONF_TYPE_SEARCH_TRANSLATION_KEY,
     CONF_UUID,
     DOMAIN,
+    MAWAQIT_URL,
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
 )
@@ -86,7 +87,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
-            description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
+            description_placeholders={"mawaqit_url": MAWAQIT_URL},
         )
 
     async def async_step_mosques_coordinates(
@@ -379,5 +380,5 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(options),
-            description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
+            description_placeholders={"mawaqit_url": MAWAQIT_URL},
         )

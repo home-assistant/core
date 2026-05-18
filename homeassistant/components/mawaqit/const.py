@@ -4,6 +4,8 @@ DOMAIN = "mawaqit"
 
 CONF_CALC_METHOD = "calculation_method"
 
+MAWAQIT_URL = "https://mawaqit.net/"
+
 # Config Entry
 
 CONF_UUID: str = "uuid"
