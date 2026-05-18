@@ -81,11 +81,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_NAME: "2.8.0",
         CONF_PLATFORM: "volkszaehler",
     }
-
-    async def dummy_add_entities():
-        pass
-
-    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
+    await sensor.async_setup_platform(hass, import_data, None)
 
     await hass.async_block_till_done()
 
@@ -108,12 +104,8 @@ async def test_import_once(hass: HomeAssistant) -> None:
         CONF_PORT: 8080,
         CONF_PLATFORM: "volkszaehler",
     }
-
-    async def dummy_add_entities():
-        pass
-
-    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
-    await sensor.async_setup_platform(hass, import_data, dummy_add_entities)
+    await sensor.async_setup_platform(hass, import_data, None)
+    await sensor.async_setup_platform(hass, import_data, None)
 
     await hass.async_block_till_done()
 
