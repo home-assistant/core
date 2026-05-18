@@ -246,7 +246,7 @@ async def test_get_conditions_no_unit_or_stateclass(
     unit,
     condition_types,
 ) -> None:
-    """Test we get the expected conditions from an entity with no unit or state class."""
+    """Test conditions from entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
