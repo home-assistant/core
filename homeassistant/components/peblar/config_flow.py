@@ -1,7 +1,5 @@
 """Config flow to configure the Peblar integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -165,6 +163,8 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                 await peblar.login(password=user_input[CONF_PASSWORD])
             except PeblarAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except PeblarConnectionError:
+                errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

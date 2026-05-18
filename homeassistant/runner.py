@@ -1,7 +1,5 @@
 """Run Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -92,7 +90,8 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
             if content := f.read().strip():
                 existing_info = json.loads(content)
                 start_dt = datetime.fromtimestamp(existing_info["start_ts"])
-                # Format with timezone abbreviation if available, otherwise add local time indicator
+                # Format with timezone abbreviation if available,
+                # otherwise add local time indicator
                 if tz_abbr := start_dt.strftime("%Z"):
                     start_time = start_dt.strftime(f"%Y-%m-%d %H:%M:%S {tz_abbr}")
                 else:
@@ -146,7 +145,8 @@ def ensure_single_execution(config_dir: str) -> Generator[SingleExecutionLock]:
         # If we got the lock (no exception), write our instance info
         _write_lock_info(lock_file)
 
-        # Yield the context - lock will be released when the with statement closes the file
+        # Yield the context - lock will be released when the
+        # with statement closes the file
         # IMPORTANT: We don't unlink the file to avoid races where multiple processes
         # could create different lock files
         yield lock_context

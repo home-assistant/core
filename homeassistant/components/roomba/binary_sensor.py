@@ -1,23 +1,21 @@
 """Roomba binary sensor entities."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import roomba_reported_state
-from .const import DOMAIN
 from .entity import IRobotEntity
-from .models import RoombaData
+from .models import RoombaConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoombaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
     status = roomba_reported_state(roomba).get("bin", {})

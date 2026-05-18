@@ -1,7 +1,5 @@
 """Helper to help coordinating calls."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools
@@ -9,7 +7,6 @@ import inspect
 from typing import Any, Literal, assert_type, cast, overload
 
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 type _FuncType[_T] = Callable[[HomeAssistant], _T]
@@ -51,7 +48,6 @@ def singleton[_S, _T, _U](
         if not inspect.iscoroutinefunction(func):
 
             @functools.lru_cache(maxsize=1)
-            @bind_hass
             @functools.wraps(func)
             def wrapped(hass: HomeAssistant) -> _U:
                 if data_key not in hass.data:
@@ -60,7 +56,6 @@ def singleton[_S, _T, _U](
 
             return wrapped
 
-        @bind_hass
         @functools.wraps(func)
         async def async_wrapped(hass: HomeAssistant) -> _T:
             if data_key not in hass.data:

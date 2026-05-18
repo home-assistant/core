@@ -1,7 +1,5 @@
 """Support for Apple TV media player."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -465,7 +463,8 @@ class AppleTvMediaPlayer(
         """Implement the websocket media browsing helper."""
         if media_content_id == "apps" or (
             # If we can't stream files or URLs, we can't browse media.
-            # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
+            # In that case the `BROWSE_MEDIA` feature was added
+            # because of AppList/LaunchApp
             not self._is_feature_available(FeatureName.PlayUrl)
             and not self._is_feature_available(FeatureName.StreamFile)
         ):

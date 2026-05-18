@@ -1,7 +1,5 @@
 """Support updates for SLZB-06 ESP32 and Zigbee firmwares."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -243,6 +241,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                     ):
                         await self.coordinator.async_refresh()
                         await asyncio.sleep(1)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TimeoutError:
                 LOGGER.warning(
                     "Timeout waiting for %s to reboot after update",

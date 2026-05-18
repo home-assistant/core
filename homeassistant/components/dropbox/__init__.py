@@ -1,7 +1,5 @@
 """The Dropbox integration."""
 
-from __future__ import annotations
-
 from python_dropbox_api import (
     DropboxAPIClient,
     DropboxAuthException,

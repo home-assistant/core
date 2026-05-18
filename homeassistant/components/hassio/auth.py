@@ -6,52 +6,60 @@ import logging
 import os
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPNotFound, HTTPUnauthorized
+from aiohttp.web_exceptions import (
+    HTTPNotFound,
+    HTTPServiceUnavailable,
+    HTTPUnauthorized,
+)
 import voluptuous as vol
 
-from homeassistant.auth.models import User
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
+from homeassistant.components.http.const import is_supervisor_unix_socket_request
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME, DATA_HASSIO_SUPERVISOR_USER
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_auth_view(hass: HomeAssistant, user: User) -> None:
+def async_setup_auth_view(hass: HomeAssistant) -> None:
     """Auth setup."""
-    hassio_auth = HassIOAuth(hass, user)
-    hassio_password_reset = HassIOPasswordReset(hass, user)
-
-    hass.http.register_view(hassio_auth)
-    hass.http.register_view(hassio_password_reset)
+    hass.http.register_view(HassIOAuth(hass))
+    hass.http.register_view(HassIOPasswordReset(hass))
 
 
 class HassIOBaseAuth(HomeAssistantView):
     """Hass.io view to handle auth requests."""
 
-    def __init__(self, hass: HomeAssistant, user: User) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize WebView."""
         self.hass = hass
-        self.user = user
 
     def _check_access(self, request: web.Request) -> None:
         """Check if this call is from Supervisor."""
-        # Check caller IP
-        hassio_ip = os.environ["SUPERVISOR"].split(":")[0]
-        assert request.transport
-        if ip_address(request.transport.get_extra_info("peername")[0]) != ip_address(
-            hassio_ip
-        ):
-            _LOGGER.error("Invalid auth request from %s", request.remote)
-            raise HTTPUnauthorized
+        user = self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)
+        if user is None:
+            raise HTTPServiceUnavailable
+
+        # Requests over the Supervisor Unix socket are authenticated by the
+        # http auth middleware as the Supervisor user, so the caller-IP check
+        # below does not apply (and would crash, since `peername` is empty for
+        # Unix sockets). The user-ID check still runs to ensure only the
+        # Supervisor user can reach this endpoint.
+        if not is_supervisor_unix_socket_request(request):
+            hassio_ip = os.environ["SUPERVISOR"].split(":")[0]
+            assert request.transport
+            peername = request.transport.get_extra_info("peername")
+            if not peername or ip_address(peername[0]) != ip_address(hassio_ip):
+                _LOGGER.error("Invalid auth request from %s", request.remote)
+                raise HTTPUnauthorized
 
         # Check caller token
-        if request[KEY_HASS_USER].id != self.user.id:
+        if request[KEY_HASS_USER].id != user.id:
             _LOGGER.error("Invalid auth request from %s", request[KEY_HASS_USER].name)
             raise HTTPUnauthorized
 

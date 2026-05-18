@@ -1,7 +1,5 @@
 """Test the Melnor sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant

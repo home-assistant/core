@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiotractive.exceptions import TractiveError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -182,12 +183,16 @@ async def test_switch_on_with_exception(
 
     mock_tractive_client.tracker.return_value.set_led_active.side_effect = TractiveError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"An error occurred while trying to turn on {entity_id}",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -216,12 +221,16 @@ async def test_switch_off_with_exception(
         TractiveError
     )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"An error occurred while trying to turn off {entity_id}",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -248,10 +257,7 @@ async def test_switch_unavailable(
 
     event = {
         "tracker_id": "device_id_123",
-        "buzzer_control": {"active": True},
-        "led_control": {"active": False},
-        "live_tracking": {"active": True},
-        "tracker_state_reason": "POWER_SAVING",
+        "hardware": {"power_saving_zone_id": "zone_id_123"},
     }
     mock_tractive_client.send_switch_event(mock_config_entry, event)
     await hass.async_block_till_done()
@@ -260,7 +266,9 @@ async def test_switch_unavailable(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    event["hardware"]["power_saving_zone_id"] = None
+
+    mock_tractive_client.send_switch_event(mock_config_entry, event)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

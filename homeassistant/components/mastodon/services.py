@@ -52,6 +52,7 @@ from .const import (
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
+    ATTR_QUOTE_APPROVAL_POLICY,
     ATTR_STATUS,
     ATTR_VALUE,
     ATTR_VISIBILITY,
@@ -71,6 +72,14 @@ class StatusVisibility(StrEnum):
     UNLISTED = "unlisted"
     PRIVATE = "private"
     DIRECT = "direct"
+
+
+class QuoteApprovalPolicy(StrEnum):
+    """QuoteApprovalPolicy model."""
+
+    PUBLIC = "public"
+    FOLLOWERS = "followers"
+    NOBODY = "nobody"
 
 
 SERVICE_GET_ACCOUNT = "get_account"
@@ -107,6 +116,9 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_QUOTE_APPROVAL_POLICY): vol.In(
+            [x.lower() for x in QuoteApprovalPolicy]
+        ),
         vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_LANGUAGE): str,
@@ -165,7 +177,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_UPDATE_PROFILE,
         _async_update_profile,
         schema=SERVICE_UPDATE_PROFILE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 
@@ -287,6 +299,11 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
         if ATTR_VISIBILITY in call.data
         else None
     )
+    quote_approval_policy: str | None = (
+        QuoteApprovalPolicy(call.data[ATTR_QUOTE_APPROVAL_POLICY])
+        if ATTR_QUOTE_APPROVAL_POLICY in call.data
+        else None
+    )
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
@@ -307,6 +324,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             client=client,
             status=status,
             visibility=visibility,
+            quote_approval_policy=quote_approval_policy,
             idempotency_key=idempotency_key,
             spoiler_text=spoiler_text,
             language=language,
@@ -364,7 +382,7 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
         ) from err
 
 
-async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
     """Update profile information."""
     params = dict(call.data.copy())
 
@@ -388,7 +406,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             if field[ATTR_NAME].strip()
         ]
     try:
-        return await call.hass.async_add_executor_job(
+        response: Account = await call.hass.async_add_executor_job(
             lambda: client.account_update_credentials(**params)
         )
     except MastodonUnauthorizedError as error:
@@ -403,6 +421,9 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="unable_to_update_profile",
         ) from err
+    if call.return_response:
+        return response
+    return None
 
 
 async def _resolve_media(

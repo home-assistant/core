@@ -1,7 +1,5 @@
 """Support for Roborock sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -257,6 +255,7 @@ SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         key="mop_clean_remaining",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.status.rdt,
         translation_key="mop_drying_remaining_time",
@@ -537,7 +536,8 @@ async def async_setup_entry(
         )
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
-        # Note: Currently coordinator.data is always available on startup but won't be in the future
+        # Note: Currently coordinator.data is always available
+        # on startup but won't be in the future
         if (
             coordinator.data is not None
             and description.value_fn(coordinator.data) is not None

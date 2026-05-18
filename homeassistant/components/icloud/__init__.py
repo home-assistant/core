@@ -1,7 +1,5 @@
 """The iCloud component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

@@ -1,7 +1,5 @@
 """The Aladdin Connect Genie integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 

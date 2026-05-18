@@ -1,7 +1,5 @@
 """Support for media browsing."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
@@ -48,9 +46,11 @@ type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
 def fix_image_url(url: str) -> str:
-    """Update the image url to fully encode characters to allow image display in media_browser UI.
+    """Update the image url to fully encode characters.
 
-    Images whose file path contains characters such as ',()+ are not loaded without escaping them.
+    This allows image display in media_browser UI. Images
+    whose file path contains characters such as ',()+ are
+    not loaded without escaping them.
     """
 
     # Before parsing encode the plus sign; otherwise it'll be interpreted as a space.
@@ -110,7 +110,8 @@ def _get_title(id_string: str) -> str:
     """Extract a suitable title from the content id string."""
     if id_string.startswith("S:"):
         # Format is S://server/share/folder
-        # If just S: this will be in the mappings; otherwise use the last folder in path.
+        # If just S: this will be in the mappings;
+        # otherwise use the last folder in path.
         title = LIBRARY_TITLES_MAPPING.get(
             id_string, urllib.parse.unquote(id_string.rsplit("/", maxsplit=1)[-1])
         )
@@ -623,9 +624,10 @@ def get_media(
         )
         matches = [result]
     else:
-        # When requesting media by album_artist, composer, genre use the browse interface
-        # to navigate the hierarchy. This occurs when invoked from media browser or service
-        # calls
+        # When requesting media by album_artist, composer,
+        # genre use the browse interface to navigate the
+        # hierarchy. This occurs when invoked from media
+        # browser or service calls
         # Example: A:ALBUMARTIST/Neil Young/Greatest Hits - get specific album
         # Example: A:ALBUMARTIST/Neil Young - get all albums
         # Others: composer, genre

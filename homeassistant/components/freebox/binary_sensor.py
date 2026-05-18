@@ -1,7 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -114,7 +112,11 @@ class FreeboxDwsSensor(FreeboxHomeBinarySensor):
 
 
 class FreeboxCoverSensor(FreeboxHomeBinarySensor):
-    """Representation of a cover Freebox plastic removal cover binary sensor (for some sensors: motion detector, door opener detector...)."""
+    """Represent a Freebox plastic removal cover sensor.
+
+    Applies to some sensors: motion detector,
+    door opener detector, etc.
+    """
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
     _attr_entity_category = EntityCategory.DIAGNOSTIC

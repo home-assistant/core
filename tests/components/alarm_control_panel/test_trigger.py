@@ -17,6 +17,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -26,7 +27,7 @@ from tests.components.common import (
 
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple alarm control panel entities associated with different targets."""
+    """Create alarm control panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
 
@@ -47,6 +48,36 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the ACP triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("alarm_control_panel.armed", {}, True, True),
+        ("alarm_control_panel.armed_away", {}, True, True),
+        ("alarm_control_panel.armed_home", {}, True, True),
+        ("alarm_control_panel.armed_night", {}, True, True),
+        ("alarm_control_panel.armed_vacation", {}, True, True),
+        ("alarm_control_panel.disarmed", {}, True, True),
+        ("alarm_control_panel.triggered", {}, True, True),
+    ],
+)
+async def test_alarm_control_panel_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that alarm_control_panel triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -132,7 +163,11 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
+    """Test alarm control panel state trigger.
+
+    Fires when any alarm control panel state changes to a
+    specific state.
+    """
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_alarm_control_panels,
@@ -228,7 +263,11 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
+    """Test alarm control panel state trigger.
+
+    Fires when the first alarm control panel changes to a
+    specific state.
+    """
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_alarm_control_panels,
@@ -324,7 +363,11 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
+    """Test alarm_control_panel state trigger.
+
+    Fires when the last alarm_control_panel changes to a
+    specific state.
+    """
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_alarm_control_panels,

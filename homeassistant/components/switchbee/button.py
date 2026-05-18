@@ -4,23 +4,21 @@ from switchbee.api.central_unit import SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchBeeCoordinator
+from .coordinator import SwitchBeeConfigEntry
 from .entity import SwitchBeeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchBeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbee button."""
-    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SwitchBeeButton(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()

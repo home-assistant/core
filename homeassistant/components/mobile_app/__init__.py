@@ -1,4 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 from functools import partial
@@ -55,7 +56,12 @@ from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -168,7 +174,8 @@ async def _async_setup_cloudhook(
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
-        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        # If we have a cloudhook but no longer logged in
+        # to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))

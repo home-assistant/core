@@ -1,6 +1,5 @@
 """Assist satellite entity for VoIP integration."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from datetime import timedelta
@@ -149,7 +148,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the VAD sensitivity entity ID for next conversation."""
         return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
@@ -299,7 +298,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def _check_announcement_pickup(self) -> None:
         """Continuously checks if an audio chunk was received within a time limit.
 
-        If not, the caller is presumed to have not picked up the phone and the announcement is ended.
+        If not, the caller is presumed to have not picked
+        up the phone and the announcement is ended.
         """
         while True:
             current_time = time.monotonic()
@@ -453,7 +453,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 # length of the TTS audio.
                 await self._tts_done.wait()
         except TimeoutError:
-            # This shouldn't happen anymore, we are detecting hang ups with a separate task
+            # This shouldn't happen anymore, we are detecting
+            # hang ups with a separate task
             _LOGGER.exception("Timeout error")
             self.disconnect()  # caller hung up
         except asyncio.CancelledError:
@@ -571,7 +572,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                         or (sample_channels != CHANNELS)
                     ):
                         raise ValueError(
-                            f"Expected rate/width/channels as {RATE}/{WIDTH}/{CHANNELS},"
+                            "Expected rate/width/channels as"
+                            f" {RATE}/{WIDTH}/{CHANNELS},"
                             f" got {sample_rate}/{sample_width}/{sample_channels}"
                         )
 

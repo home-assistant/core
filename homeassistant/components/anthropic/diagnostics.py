@@ -1,7 +1,5 @@
 """Diagnostics support for Anthropic."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from anthropic import __title__, __version__

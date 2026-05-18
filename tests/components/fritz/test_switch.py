@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools switch platform."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -36,6 +34,7 @@ from .const import (
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_MASTER_MAC,
+    MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
 
@@ -60,7 +59,11 @@ MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -84,7 +87,11 @@ MOCK_WLANCONFIGS_SAME_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -110,7 +117,11 @@ MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -134,7 +145,11 @@ MOCK_WLANCONFIGS_DIFF_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -160,7 +175,11 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -184,7 +203,11 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
             "NewBasicAuthenticationMode": "None",
             "NewMaxCharsSSID": 32,
             "NewMinCharsSSID": 1,
-            "NewAllowedCharsSSID": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+            "NewAllowedCharsSSID": (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz"
+                " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            ),
             "NewMinCharsPSK": 64,
             "NewMaxCharsPSK": 64,
             "NewAllowedCharsPSK": "0123456789ABCDEFabcdef",
@@ -332,30 +355,42 @@ async def test_switch_no_mesh_wifi_uplink(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_switch_device_no_wan_access(
+@pytest.mark.parametrize(
+    ("wan_access_data", "expected_state"),
+    [
+        (None, STATE_UNAVAILABLE),
+        ("unknown", STATE_UNAVAILABLE),
+        ("error", STATE_UNAVAILABLE),
+        ("granted", STATE_ON),
+        ("denied", STATE_OFF),
+    ],
+)
+async def test_switch_device_wan_access(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    wan_access_data: str | None,
+    expected_state: str,
 ) -> None:
-    """Test Fritz!Tools switches when device has no WAN access."""
+    """Test Fritz!Tools switches have proper WAN access state."""
 
     entity_id = "switch.printer_internet_access"
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    attributes = [
-        {k: v for k, v in host.items() if k != "X_AVM-DE_WANAccess"}
-        for host in MOCK_HOST_ATTRIBUTES_DATA
-    ]
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    for host in attributes:
+        host["X_AVM-DE_WANAccess"] = wan_access_data
+
     fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
 
 async def test_switch_device_no_ip_address(
@@ -515,8 +550,8 @@ async def test_migrate_to_new_unique_id(
     for old_description, new_identifier in zip(
         old_descriptions, new_identifiers, strict=True
     ):
-        old_unique_id = f"{MOCK_MESH_MASTER_MAC}-{slugify(old_description)}"
-        new_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_{new_identifier}"
+        old_unique_id = f"{MOCK_SERIAL_NUMBER}-{slugify(old_description)}"
+        new_unique_id = f"{MOCK_SERIAL_NUMBER}-wi_fi_{new_identifier}"
         old_unique_ids.append(old_unique_id)
         new_unique_ids.append(new_unique_id)
         entity_ids.append(f"switch.fritz_{slugify(old_unique_id)}")
@@ -531,7 +566,7 @@ async def test_migrate_to_new_unique_id(
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, MOCK_UNIQUE_ID)},
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)},
         connections={
             (dr.CONNECTION_NETWORK_MAC, MOCK_MESH_MASTER_MAC),
         },

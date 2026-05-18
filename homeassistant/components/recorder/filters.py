@@ -1,7 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Collection, Iterable
 from typing import Any
 
@@ -159,7 +157,8 @@ class Filters:
         # - All entities included
         if not have_include and not have_exclude:
             raise RuntimeError(
-                "No filter configuration provided, check has_config before calling this method."
+                "No filter configuration provided, check"
+                " has_config before calling this method."
             )
 
         # Case 2 - Only includes

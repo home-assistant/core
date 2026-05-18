@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping_81',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_guest',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_guest',
+    'unique_id': '1CED6F123411-wi_fi_guest',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_main_2_4ghz',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_main_2_4ghz',
+    'unique_id': '1CED6F123411-wi_fi_main_2_4ghz',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,7 +286,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping',
     'unit_of_measurement': None,
   })
 # ---
@@ -337,7 +337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping_81',
     'unit_of_measurement': None,
   })
 # ---
@@ -388,7 +388,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_guest',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_guest',
+    'unique_id': '1CED6F123411-wi_fi_guest',
     'unit_of_measurement': None,
   })
 # ---
@@ -439,7 +439,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_main_2_4ghz',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_main_2_4ghz',
+    'unique_id': '1CED6F123411-wi_fi_main_2_4ghz',
     'unit_of_measurement': None,
   })
 # ---
@@ -540,7 +540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping',
     'unit_of_measurement': None,
   })
 # ---
@@ -591,7 +591,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping_81',
     'unit_of_measurement': None,
   })
 # ---
@@ -642,7 +642,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_guest',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_guest',
+    'unique_id': '1CED6F123411-wi_fi_guest',
     'unit_of_measurement': None,
   })
 # ---
@@ -693,7 +693,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_main_2_4ghz',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_main_2_4ghz',
+    'unique_id': '1CED6F123411-wi_fi_main_2_4ghz',
     'unit_of_measurement': None,
   })
 # ---
@@ -794,7 +794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-call_deflection_0',
+    'unique_id': '1CED6F123411-call_deflection_0',
     'unit_of_measurement': None,
   })
 # ---
@@ -851,7 +851,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping',
     'unit_of_measurement': None,
   })
 # ---
@@ -902,7 +902,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unique_id': '1CED6F123411-port_forward_test_port_mapping_81',
     'unit_of_measurement': None,
   })
 # ---
@@ -953,7 +953,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_guest',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_guest',
+    'unique_id': '1CED6F123411-wi_fi_guest',
     'unit_of_measurement': None,
   })
 # ---
@@ -1004,7 +1004,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_main_2_4ghz',
-    'unique_id': '1C:ED:6F:12:34:11-wi_fi_main_2_4ghz',
+    'unique_id': '1CED6F123411-wi_fi_main_2_4ghz',
     'unit_of_measurement': None,
   })
 # ---
