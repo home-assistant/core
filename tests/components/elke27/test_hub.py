@@ -394,7 +394,7 @@ async def test_log_unavailable_skips_when_logged(hass: HomeAssistant) -> None:
 async def test_reconnect_loop_exception_path(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Verify reconnect loop handles exceptions and delays."""
+    """Verify reconnect loop handles expected connection exceptions and delays."""
     hub = Elke27Hub(
         hass,
         "192.168.1.94",
@@ -406,11 +406,29 @@ async def test_reconnect_loop_exception_path(
 
     async def _connect_fail():
         hub._stopping = True
-        raise RuntimeError("boom")
+        raise ConfigEntryNotReady("boom")
 
     hub._async_connect = _connect_fail
     monkeypatch.setattr(asyncio, "sleep", AsyncMock(return_value=None))
     await hub._async_reconnect_loop()
+
+
+async def test_reconnect_loop_reraises_unexpected_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Verify reconnect loop does not swallow unexpected errors."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.94",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._async_connect = AsyncMock(side_effect=RuntimeError("boom"))
+
+    with pytest.raises(RuntimeError, match="boom"):
+        await hub._async_reconnect_loop()
 
 
 async def test_reconnect_loop_success_resets_attempts(hass: HomeAssistant) -> None:
