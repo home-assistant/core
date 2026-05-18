@@ -61,7 +61,10 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         coordinator: IntellifireDataUpdateCoordinator,
         description: ClimateEntityDescription,
     ) -> None:
-        """Configure climate entry - and override last_temp if the thermostat is currently on."""
+        """Configure climate entry.
+
+        Override last_temp if the thermostat is currently on.
+        """
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:

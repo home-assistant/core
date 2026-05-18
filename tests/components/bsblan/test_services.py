@@ -436,7 +436,10 @@ async def test_sync_time_service(
 
     # Mock device time that differs from HA time
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Call the service
@@ -474,7 +477,10 @@ async def test_sync_time_service_no_update_when_same(
     # Mock device time that matches HA time
     current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        f'{{"time": {{"name": "Time", "value": "{current_time_str}", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}}}'
+        f'{{"time": {{"name": "Time",'
+        f' "value": "{current_time_str}",'
+        f' "unit": "", "desc": "",'
+        f' "dataType": 0, "readonly": 0, "error": 0}}}}'
     )
 
     # Call the service
@@ -537,7 +543,10 @@ async def test_sync_time_service_set_time_error(
 
     # Mock device time that differs
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Mock set_time() to raise an error

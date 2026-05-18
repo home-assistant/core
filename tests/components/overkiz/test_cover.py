@@ -109,6 +109,16 @@ UP_DOWN_VENETIAN_BLIND = FixtureDevice(
     "rts://1234-1234-6362/16747291",
     "cover.office_venetian_blind",
 )
+UP_DOWN_SHEER_SCREEN = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16753206",
+    "cover.kitchen_sheer_screen",
+)
+DISCRETE_GARAGE_DOOR = FixtureDevice(
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "io://1234-5678-3293/12745774",
+    "cover.garage_door_rollixo",
+)
 DYNAMIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/16730050",
@@ -124,10 +134,40 @@ PARTIAL_GARAGE_DOOR = FixtureDevice(
     "io://1234-1234-6233/7433515",
     "cover.partial_garage_door",
 )
+RTS_GATE_4T = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "rts://1234-1234-6233/16730717",
+    "cover.rts_gate",
+)
+CYCLIC_GARAGE_DOOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/6416929",
+    "cover.cyclic_garage_door",
+)
+CYCLIC_SWINGING_GATE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-8983/1959462",
+    "cover.swinging_gate",
+)
+SLIDING_DISCRETE_GATE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16730051",
+    "cover.sliding_gate",
+)
 DYNAMIC_GATE = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "ogp://1234-1234-6233/10410217",
     "cover.ogp_gate",
+)
+DYNAMIC_PERGOLA = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/14356699",
+    "cover.somfy_pergola",
+)
+PERGOLA_HORIZONTAL_AWNING = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/11447718",
+    "cover.pergola_awning",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -174,10 +214,23 @@ async def test_cover_entities_snapshot(
         (SHUTTER, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (AWNING, SERVICE_OPEN_COVER, "deploy", None, CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DISCRETE_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (RTS_GATE_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
+        (CYCLIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
+        (CYCLIC_SWINGING_GATE, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
+        (SLIDING_DISCRETE_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (PARTIAL_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (DYNAMIC_PERGOLA, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_OPEN_COVER,
+            "deploy",
+            None,
+            CoverState.OPENING,
+        ),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_OPEN_COVER,
@@ -187,9 +240,11 @@ async def test_cover_entities_snapshot(
         ),
         (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (AWNING, SERVICE_CLOSE_COVER, "undeploy", None, CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DISCRETE_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (DYNAMIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             DYNAMIC_GARAGE_DOOR_OGP,
@@ -199,7 +254,21 @@ async def test_cover_entities_snapshot(
             CoverState.CLOSING,
         ),
         (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        # Cycle command is used for both open and close; device reports OPENING
+        # since the RTS protocol has no directional feedback.
+        (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
+        (CYCLIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
+        (CYCLIC_SWINGING_GATE, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
+        (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (PARTIAL_GARAGE_DOOR, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (DYNAMIC_PERGOLA, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_CLOSE_COVER,
+            "undeploy",
+            None,
+            CoverState.CLOSING,
+        ),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_CLOSE_COVER,
@@ -215,13 +284,24 @@ async def test_cover_entities_snapshot(
             CoverState.CLOSING,
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (GARAGE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DISCRETE_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (DYNAMIC_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
+        (SLIDING_DISCRETE_GATE, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
         (PARTIAL_GARAGE_DOOR, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (DYNAMIC_PERGOLA, SERVICE_STOP_COVER, "stop", None, CoverState.CLOSED),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            SERVICE_STOP_COVER,
+            "stop",
+            None,
+            CoverState.OPEN,
+        ),
         (
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_STOP_COVER,
@@ -252,6 +332,7 @@ async def test_cover_entities_snapshot(
             STATE_UNKNOWN,
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
@@ -273,44 +354,89 @@ async def test_cover_entities_snapshot(
             [0],
             STATE_UNKNOWN,
         ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_OPEN_COVER_TILT,
+            "tiltPositive",
+            [15, 1],
+            CoverState.OPENING,
+        ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_CLOSE_COVER_TILT,
+            "tiltNegative",
+            [15, 1],
+            CoverState.CLOSING,
+        ),
+        (
+            UP_DOWN_SHEER_SCREEN,
+            SERVICE_STOP_COVER_TILT,
+            "stop",
+            [0],
+            STATE_UNKNOWN,
+        ),
     ],
     ids=[
         "open-roller-shutter",
         "open-awning",
         "open-garage-door",
+        "open-discrete-garage-door",
         "open-dynamic-garage-door",
         "open-dynamic-garage-door-ogp",
         "open-dynamic-gate",
+        "open-rts-gate-4t",
+        "open-cyclic-garage-door",
+        "open-cyclic-swinging-gate",
+        "open-sliding-discrete-gate",
         "open-partial-garage-door",
+        "open-dynamic-pergola",
+        "open-pergola-horizontal-awning",
         "open-up-down-bioclimatic-pergola",
         "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
+        "open-sheer-screen-rts",
         "close-roller-shutter",
         "close-awning",
         "close-garage-door",
+        "close-discrete-garage-door",
         "close-dynamic-garage-door",
         "close-dynamic-garage-door-ogp",
         "close-dynamic-gate",
+        "close-rts-gate-4t",
+        "close-cyclic-garage-door",
+        "close-cyclic-swinging-gate",
+        "close-sliding-discrete-gate",
         "close-partial-garage-door",
+        "close-dynamic-pergola",
+        "close-pergola-horizontal-awning",
         "close-up-down-bioclimatic-pergola",
         "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
+        "close-sheer-screen-rts",
         "stop-roller-shutter",
         "stop-awning",
         "stop-garage-door",
+        "stop-discrete-garage-door",
         "stop-dynamic-garage-door",
         "stop-dynamic-garage-door-ogp",
         "stop-dynamic-gate",
+        "stop-sliding-discrete-gate",
         "stop-partial-garage-door",
+        "stop-dynamic-pergola",
+        "stop-pergola-horizontal-awning",
         "stop-up-down-bioclimatic-pergola",
         "stop-tilt-only-venetian-blind",
         "open-tilt-tilt-only-venetian-blind",
         "close-tilt-tilt-only-venetian-blind",
         "stop-tilt-tilt-only-venetian-blind",
         "stop-venetian-blind-rts",
+        "stop-sheer-screen-rts",
         "open-tilt-venetian-blind-rts",
         "close-tilt-venetian-blind-rts",
         "stop-tilt-venetian-blind-rts",
+        "open-tilt-sheer-screen-rts",
+        "close-tilt-sheer-screen-rts",
+        "stop-tilt-sheer-screen-rts",
     ],
 )
 async def test_cover_service_actions(
@@ -362,8 +488,22 @@ async def test_cover_service_actions(
             [65, OverkizCommandParam.LOWSPEED],
             35,
         ),
+        (DYNAMIC_PERGOLA, DYNAMIC_PERGOLA.entity_id, "setClosure", [60], 40),
+        (
+            PERGOLA_HORIZONTAL_AWNING,
+            PERGOLA_HORIZONTAL_AWNING.entity_id,
+            "setDeployment",
+            [80],
+            80,
+        ),
     ],
-    ids=["roller-shutter", "awning", "low-speed"],
+    ids=[
+        "roller-shutter",
+        "awning",
+        "low-speed",
+        "dynamic-pergola",
+        "pergola-horizontal-awning",
+    ],
 )
 async def test_cover_set_position(
     hass: HomeAssistant,
@@ -687,7 +827,7 @@ async def test_vertical_cover_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for vertical covers based on current vs target position."""
+    """Test moving direction detection for vertical covers."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     await async_deliver_events(
@@ -752,7 +892,7 @@ async def test_awning_moving_direction(
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
 ) -> None:
-    """Test moving direction detection for awnings based on current vs target position."""
+    """Test moving direction detection for awnings."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
     await async_deliver_events(
@@ -823,7 +963,7 @@ async def test_moving_offset_missing_closure_states(
     mock_client: MockOverkizClient,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that is_opening/is_closing return None when closure states are missing while moving."""
+    """Test is_opening/is_closing None when states missing."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
     await async_deliver_events(
@@ -1052,7 +1192,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
 ) -> None:
-    """ServiceValidationError must be raised when SET_CLOSURE_AND_ORIENTATION is missing.
+    """Error raised when SET_CLOSURE_AND_ORIENTATION is missing.
 
     Defence-in-depth: even when a cover advertises both SET_POSITION and
     SET_TILT_POSITION (so it passes the ``required_features`` filter), the

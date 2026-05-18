@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==4.0.0",
+  "aiodns==4.0.3",
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
@@ -57,9 +57,9 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==47.0.0",
+  "cryptography==48.0.0",
   "Pillow==12.2.0",
-  "propcache==0.4.1",
+  "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
   "orjson==3.11.9",
   "packaging>=23.1",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.11",
+  "uv==0.11.13",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
@@ -743,6 +743,7 @@ select = [
   "RUF037", # Unnecessary empty iterable within deque call
   "RUF046", # Unnecessary cast to int
   "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
+  "RUF057", # Unnecessary round call
   "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
@@ -822,7 +823,6 @@ ignore = [
   "TRY003", # Avoid specifying long messages outside the exception class
   "TRY400", # Use `logging.exception` instead of `logging.error`
 
-  "UP046", # Non PEP 695 generic class
   "UP047", # Non PEP 696 generic function
   "UP049", # Avoid private type parameter names
 

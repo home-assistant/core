@@ -75,7 +75,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
@@ -217,7 +217,7 @@ async def test_select_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if select entities availability are based on the appliance connection state."""
+    """Test select entities availability based on appliance connection."""
     entity_ids = ["select.washer_active_program", "select.washer_temperature"]
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(

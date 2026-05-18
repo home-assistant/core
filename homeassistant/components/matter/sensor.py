@@ -162,7 +162,9 @@ ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
-    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: (
+        "power_adjust_active"
+    ),
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
 }
 
@@ -515,8 +517,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatReplacementDescription",
             translation_key="battery_replacement_description",
-            native_unit_of_measurement=None,
-            device_class=None,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterSensor,
@@ -608,7 +608,6 @@ DISCOVERY_SCHEMAS = [
             key="EveWeatherWeatherTrend",
             translation_key="eve_weather_trend",
             device_class=SensorDeviceClass.ENUM,
-            native_unit_of_measurement=None,
             options=[x for x in EVE_CLUSTER_WEATHER_MAP.values() if x is not None],
             device_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
         ),
@@ -701,8 +700,6 @@ DISCOVERY_SCHEMAS = [
             key="AirQuality",
             translation_key="air_quality",
             device_class=SensorDeviceClass.ENUM,
-            state_class=None,
-            # convert to set first to remove the duplicate unknown value
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
             device_to_ha=lambda x: AIR_QUALITY_MAP[x],
         ),
@@ -766,7 +763,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="HepaFilterCondition",
             native_unit_of_measurement=PERCENTAGE,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="hepa_filter_condition",
         ),
@@ -778,7 +774,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ActivatedCarbonFilterCondition",
             native_unit_of_measurement=PERCENTAGE,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="activated_carbon_filter_condition",
         ),
@@ -879,8 +874,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="SwitchCurrentPosition",
-            native_unit_of_measurement=None,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="switch_current_position",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -1180,8 +1173,6 @@ DISCOVERY_SCHEMAS = [
             key="OperationalStateCountdownTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # Add countdown to current datetime to get the estimated end time
             device_to_ha=(
                 lambda x: dt_util.utcnow() + timedelta(seconds=x) if x > 0 else None
             ),
@@ -1539,8 +1530,6 @@ DISCOVERY_SCHEMAS = [
             key="ValveConfigurationAndControlAutoCloseTime",
             translation_key="auto_close_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # AutoCloseTime is defined as epoch-us in the spec
             device_to_ha=matter_epoch_microseconds_to_utc,
         ),
         entity_class=MatterSensor,
@@ -1555,8 +1544,6 @@ DISCOVERY_SCHEMAS = [
             key="ServiceAreaEstimatedEndTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # EstimatedEndTime is defined as epoch-s (Matter 2000 epoch) in the spec
             device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,

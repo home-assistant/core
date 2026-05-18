@@ -350,8 +350,11 @@ class SlackNotificationService(BaseNotificationService):
             channel_name = channel_name.lstrip("#")
 
             # Get channel list
-            # Multiple types is not working. Tested here: https://api.slack.com/methods/conversations.list/test
-            # response = await self._client.conversations_list(types="public_channel,private_channel")
+            # Multiple types is not working. Tested here:
+            # https://api.slack.com/methods/conversations.list/test
+            # response = await self._client.conversations_list(
+            #     types="public_channel,private_channel"
+            # )
             #
             # Workaround for the types parameter not working
             channels = []
