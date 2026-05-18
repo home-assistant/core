@@ -60,7 +60,6 @@ async def test_select_option_updates_stepper(
     options = state.attributes["options"]
     assert options
 
-    # Select option
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -80,7 +79,6 @@ async def test_select_option_updates_stepper(
         message_expiry_interval=None,
     )
 
-    # Simulate response
     async_fire_mqtt_message(
         hass, _TOPIC_STEPPER_STATE, _PAYLOAD_STEPPER_STATE_THE_HOTSTEPPER
     )
