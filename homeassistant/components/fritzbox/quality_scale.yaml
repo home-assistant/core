@@ -62,7 +62,7 @@ rules:
     comment: |
       buttons are named by the user, as they represent
       smarthome-templates defined by the user
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
