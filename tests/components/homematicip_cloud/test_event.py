@@ -108,7 +108,11 @@ async def test_wrc6_button_ignores_repeating_long(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,
 ) -> None:
-    """KEY_PRESS_LONG (the repeating tick) must not advance the entity state."""
+    """KEY_PRESS_LONG (the repeating tick) must not change the entity state.
+
+    Fire a recognized event first so the entity advances past STATE_UNKNOWN,
+    then fire KEY_PRESS_LONG and assert nothing about the entity changed.
+    """
     entity_id = "event.wandtaster_6_fach_button_3"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wandtaster - 6-fach"]
@@ -119,8 +123,18 @@ async def test_wrc6_button_ignores_repeating_long(
 
     ch.fire_channel_event(
         ChannelEvent(
+            channelEventType="KEY_PRESS_SHORT", channelIndex=3, deviceId=ch.device.id
+        )
+    )
+    state_after_short = hass.states.get(entity_id)
+    assert state_after_short.state != STATE_UNKNOWN
+    assert state_after_short.attributes["event_type"] == "short_press"
+
+    ch.fire_channel_event(
+        ChannelEvent(
             channelEventType="KEY_PRESS_LONG", channelIndex=3, deviceId=ch.device.id
         )
     )
-
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    state_after_long = hass.states.get(entity_id)
+    assert state_after_long.state == state_after_short.state
+    assert state_after_long.attributes["event_type"] == "short_press"

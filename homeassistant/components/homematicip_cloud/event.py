@@ -24,9 +24,8 @@ from .hap import HomematicIPConfigEntry, HomematicipHAP
 class HmipEventEntityDescription(EventEntityDescription):
     """Description of a HomematicIP Cloud event."""
 
-    channel_event_types: list[str] | None = None
-    channel_selector_fn: Callable[[FunctionalChannel], bool] | None = None
-    event_type_map: dict[str, str] | None = None
+    event_type_map: dict[str, str]
+    channel_selector_fn: Callable[[FunctionalChannel], bool]
     is_multi_channel: bool = False
 
 
@@ -36,7 +35,6 @@ EVENT_DESCRIPTIONS: tuple[HmipEventEntityDescription, ...] = (
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         event_types=["ring"],
-        channel_event_types=["DOOR_BELL_SENSOR_EVENT"],
         event_type_map={"DOOR_BELL_SENSOR_EVENT": "ring"},
         channel_selector_fn=lambda channel: channel.channelRole == "DOOR_BELL_INPUT",
     ),
@@ -45,11 +43,6 @@ EVENT_DESCRIPTIONS: tuple[HmipEventEntityDescription, ...] = (
         translation_key="button",
         device_class=EventDeviceClass.BUTTON,
         event_types=["short_press", "long_press_start", "long_press_stop"],
-        channel_event_types=[
-            "KEY_PRESS_SHORT",
-            "KEY_PRESS_LONG_START",
-            "KEY_PRESS_LONG_STOP",
-        ],
         event_type_map={
             "KEY_PRESS_SHORT": "short_press",
             "KEY_PRESS_LONG_START": "long_press_start",
@@ -76,7 +69,7 @@ async def async_setup_entry(
         for description in EVENT_DESCRIPTIONS
         for device in hap.home.devices
         for channel in device.functionalChannels
-        if description.channel_selector_fn and description.channel_selector_fn(channel)
+        if description.channel_selector_fn(channel)
     )
 
 
@@ -117,18 +110,14 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
     def name(self) -> str:
         """Return the entity name.
 
-        For multi-channel events, bypass HmIP's legacy name composition
-        and use HA's standard resolution (``translation_key`` +
-        ``translation_placeholders``). For single-channel events
-        (doorbell), keep the base class's composed name.
+        For multi-channel events, skip HmIP's legacy name composition and
+        fall through to HA's standard name property, which resolves the
+        name from ``translation_key`` + ``translation_placeholders`` when
+        ``has_entity_name`` is set. For single-channel events (doorbell),
+        keep the base class's composed name.
         """
         if self.entity_description.is_multi_channel:
-            platform_translations = (
-                self.platform_data.platform_translations if self.platform_data else {}
-            )
-            resolved = self._name_internal(
-                self._device_class_name, platform_translations
-            )
+            resolved = super(HomematicipGenericEntity, self).name
             return resolved if isinstance(resolved, str) else ""
         return super().name
 
@@ -143,10 +132,7 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
     def _async_handle_event(self, *args, **kwargs) -> None:
         """Handle the event fired by the functional channel."""
         raised_channel_event = self._get_channel_event_from_args(*args)
-        event_type_map = self.entity_description.event_type_map
-        if event_type_map is None:
-            return
-        public_event = event_type_map.get(raised_channel_event)
+        public_event = self.entity_description.event_type_map.get(raised_channel_event)
         if public_event is None:
             return
         self._trigger_event(event_type=public_event)
