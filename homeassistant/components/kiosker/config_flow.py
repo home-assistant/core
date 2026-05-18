@@ -1,7 +1,5 @@
 """Config flow for the Kiosker integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -47,7 +45,8 @@ async def validate_input(
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    Returns a tuple of (errors dict, device_id). If validation succeeds, errors will be empty.
+    Returns a tuple of (errors dict, device_id).
+    If validation succeeds, errors will be empty.
     """
     api = KioskerAPI(
         host=data[CONF_HOST],

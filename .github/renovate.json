@@ -141,7 +141,8 @@
         "home-assistant-bluetooth",
         "home-assistant-frontend",
         "home-assistant-intents",
-        "infrared-protocols"
+        "infrared-protocols",
+        "rf-protocols"
       ],
       "enabled": true,
       "minimumReleaseAge": null,

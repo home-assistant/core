@@ -1,7 +1,5 @@
 """Config flow for Waze Travel Time integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -103,6 +101,8 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_ORIGIN): TextSelector(),
         vol.Required(CONF_DESTINATION): TextSelector(),

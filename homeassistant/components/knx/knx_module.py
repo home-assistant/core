@@ -1,7 +1,5 @@
 """Base module for the KNX integration."""
 
-from __future__ import annotations
-
 import logging
 
 from xknx import XKNX
@@ -282,7 +280,9 @@ class KNXModule:
                 or next(
                     (
                         _transcoder
-                        for _filter, _transcoder in self._address_filter_transcoder.items()
+                        for _filter, _transcoder in (
+                            self._address_filter_transcoder.items()
+                        )
                         if _filter.match(telegram.destination_address)
                     ),
                     None,

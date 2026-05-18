@@ -33,7 +33,7 @@ RESULT_INVALID_AUTH = "invalid_auth"
 
 
 def _try_connect_and_fetch_basic_info(host, token):
-    """Attempt to connect and call the ping endpoint and, if successful, fetch basic information."""
+    """Connect, call ping endpoint, and fetch basic info."""
 
     # Perform the ping. This doesn't validate authentication.
     controller = VilfoClient(host=host, token=token)

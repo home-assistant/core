@@ -1,7 +1,5 @@
 """Support for RainMachine devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -458,6 +456,7 @@ async def async_setup_entry(  # noqa: C901
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN,
             service_name,

@@ -1,7 +1,5 @@
 """Mock data for Roborock tests."""
 
-from __future__ import annotations
-
 from PIL import Image
 from roborock.data import (
     B01Props,
@@ -159,7 +157,9 @@ HOME_DATA_RAW = {
                     "code": "main_brush_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -168,7 +168,9 @@ HOME_DATA_RAW = {
                     "code": "side_brush_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -177,7 +179,9 @@ HOME_DATA_RAW = {
                     "code": "filter_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -1201,10 +1205,30 @@ HOME_DATA_RAW = {
                 "237": 0,
                 "10007": '{"mqttOtaData":{"mqttOtaStatus":{"status":"IDLE"}}}',
                 "227": 1320,
-                "10005": '{"sn":"dyad_sn","ssid":"dyad_ssid","timezone":"Europe/Stockholm","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"1.123.12.1","mac":"b0:4a:33:33:33:33","oba":{"language":"en","name":"A.03.0291_CE","bom":"A.03.0291","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","featureset":"0"}"}',
+                "10005": (
+                    '{"sn":"dyad_sn","ssid":"dyad_ssid",'
+                    '"timezone":"Europe/Stockholm",'
+                    '"posix_timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3",'
+                    '"ip":"1.123.12.1",'
+                    '"mac":"b0:4a:33:33:33:33",'
+                    '"oba":{"language":"en",'
+                    '"name":"A.03.0291_CE",'
+                    '"bom":"A.03.0291","location":"de",'
+                    '"wifiplan":"EU",'
+                    '"timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3;'
+                    'Europe/Berlin",'
+                    '"logserver":"awsde0",'
+                    '"featureset":"0"}"}'
+                ),
                 "213": 1,
                 "207": 4,
-                "10004": '{"sid_in_use":25,"sid_version":5,"location":"de","bom":"A.03.0291","language":"en"}',
+                "10004": (
+                    '{"sid_in_use":25,"sid_version":5,'
+                    '"location":"de","bom":"A.03.0291",'
+                    '"language":"en"}'
+                ),
                 "206": 3,
                 "216": 0,
                 "221": 100,
@@ -1217,7 +1241,11 @@ HOME_DATA_RAW = {
                 "200": 0,
                 "226": 0,
                 "208": 1,
-                "229": "000,000,003,000,005,000,000,000,003,000,005,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,012,003,000,000",
+                "229": (
+                    "000,000,003,000,005,000,000,000,003,000,"
+                    "005,000,000,000,000,000,000,000,000,000,"
+                    "000,000,000,000,000,000,012,003,000,000"
+                ),
                 "201": 3,
                 "215": 513,
                 "204": 1,
@@ -1330,7 +1358,23 @@ HOME_DATA_RAW = {
                 "220": 0,
                 "201": 0,
                 "202": 1,
-                "10005": '{"sn":"zeo_sn","ssid":"internet","timezone":"Europe/Berlin","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"192.111.11.11","mac":"b0:4a:00:00:00:00","rssi":-57,"oba":{"language":"en","name":"A.03.0403_CE","bom":"A.03.0403","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","loglevel":"4","featureset":"0"}}',
+                "10005": (
+                    '{"sn":"zeo_sn","ssid":"internet",'
+                    '"timezone":"Europe/Berlin",'
+                    '"posix_timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3",'
+                    '"ip":"192.111.11.11",'
+                    '"mac":"b0:4a:00:00:00:00","rssi":-57,'
+                    '"oba":{"language":"en",'
+                    '"name":"A.03.0403_CE",'
+                    '"bom":"A.03.0403","location":"de",'
+                    '"wifiplan":"EU",'
+                    '"timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3;'
+                    'Europe/Berlin",'
+                    '"logserver":"awsde0","loglevel":"4",'
+                    '"featureset":"0"}}'
+                ),
                 "211": 1,
                 "210": 1,
                 "217": 0,

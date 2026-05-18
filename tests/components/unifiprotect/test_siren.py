@@ -1,7 +1,5 @@
 """Tests for the UniFi Protect siren (Public API) entities."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
@@ -181,7 +179,7 @@ async def test_siren_turn_on_with_duration(
     seconds: int,
     expected: SirenDuration,
 ) -> None:
-    """Passing a valid duration to turn_on calls play with the matching SirenDuration."""
+    """Valid duration to turn_on calls play with matching SirenDuration."""
     await init_entry(hass, ufp_with_siren, [])
 
     await hass.services.async_call(
@@ -605,7 +603,7 @@ async def test_siren_auto_off_timer_scheduled_at_startup(
     ufp_with_siren: MockUFPFixture,
     siren: Mock,
 ) -> None:
-    """Auto-off timer is scheduled during async_added_to_hass for an already-active siren.
+    """Auto-off timer is scheduled for an already-active siren.
 
     If a timed run is already in progress when HA starts, the entity must
     schedule its own auto-off callback immediately (not wait for a WS update)

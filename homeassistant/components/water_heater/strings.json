@@ -25,6 +25,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         }
       },
       "name": "Water heater is on"
@@ -34,6 +37,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         },
         "operation_mode": {
           "description": "The operation mode to check for.",
@@ -47,6 +53,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         },
         "threshold": {
           "name": "[%key:component::water_heater::common::condition_threshold_name%]"

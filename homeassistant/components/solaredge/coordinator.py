@@ -1,10 +1,8 @@
 """Provides the data update coordinators for SolarEdge."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from aiosolaredge import SolarEdge
@@ -117,7 +115,8 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
-        # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
+        # Sanity check the energy values. SolarEdge API sometimes
+        # reports "lifetimedata" of zero,
         # while values for last Year, Month and Day energy are still OK.
         # See https://github.com/home-assistant/core/issues/59285 .
         if set(energy_keys).issubset(self.data.keys()):
@@ -225,9 +224,8 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            now = datetime.now()
-            today = date.today()
-            midnight = datetime.combine(today, datetime.min.time())
+            now = dt_util.now()
+            midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
             data = await self.api.get_energy_details(
                 self.site_id,
                 midnight,
@@ -455,8 +453,9 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint and update statistics."""
         equipment: dict[int, dict[str, Any]] = await self.api.async_get_equipment()
-        # We fetch last week's data from the API and refresh every 12h so we overwrite recent
-        # statistics. This is intended to allow adding any corrected/updated data from the API.
+        # We fetch last week's data from the API and refresh
+        # every 12h so we overwrite recent statistics. This is
+        # intended to allow adding any corrected/updated data.
         energy_data_list: list[EnergyData] = await self.api.async_get_energy_data(
             TimeUnit.WEEK
         )
@@ -547,9 +546,10 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             if statistic_id in current_stats:
                 statistic_sum = current_stats[statistic_id][0]["sum"]
             else:
-                # If no statistics found right before start_time, try to get the last statistic
-                # but use it only if it's before start_time.
-                # This is needed if the integration hasn't run successfully for at least a week.
+                # If no statistics found right before start_time,
+                # try to get the last statistic but use it only
+                # if it's before start_time. This is needed if
+                # the integration hasn't run for at least a week.
                 last_stat = await get_instance(self.hass).async_add_executor_job(
                     get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
                 )

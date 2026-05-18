@@ -1,7 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
@@ -472,7 +470,7 @@ def mock_ufp_reauth_entry():
 
 @pytest.fixture(name="ufp_reauth_entry_alt")
 def mock_ufp_reauth_entry_alt():
-    """Mock the unifiprotect config entry with alternate port/SSL for reauth/reconfigure tests."""
+    """Mock the unifiprotect config entry with alt port/SSL for reauth tests."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={

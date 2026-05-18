@@ -1,7 +1,5 @@
 """Data coordinator for Watts Vision integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -215,7 +213,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             )
 
         try:
-            device = await self.client.get_device(self.device_id, refresh=True)
+            device = await self.client.get_device(self.device_id)
         except (
             WattsVisionAuthError,
             WattsVisionConnectionError,

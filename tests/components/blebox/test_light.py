@@ -1,13 +1,15 @@
 """BleBox light entities tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.blebox.const import LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -329,6 +331,73 @@ def wlightbox_fixture():
     return (feature, "light.my_wlightbox_wlightbox_color")
 
 
+@pytest.fixture(name="wlightbox_ct")
+def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
+    """Return a default light entity mock for color temperature testing."""
+
+    feature = mock_feature(
+        "lights",
+        blebox_uniapi.light.Light,
+        unique_id="BleBox-wLightBox-1afe34e750b8-color",
+        full_name="wLightBox-ct",
+        device_class=None,
+        is_on=None,
+        supports_color=True,
+        supports_white=True,
+        white_value=None,
+        rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.CT,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My wLightBox")
+    type(product).model = PropertyMock(return_value="wLightBox")
+    return feature, "light.my_wlightbox_wlightbox_ct"
+
+
+@pytest.mark.parametrize("kelvin_requested", [1000, 2700, 3000, 4000, 5000, 6500, 8000])
+async def test_wlightbox_on_color_temp(
+    hass: HomeAssistant,
+    wlightbox_ct: tuple[MagicMock, str],
+    kelvin_requested: int,
+) -> None:
+    """Test light on with color temperature change."""
+
+    feature_mock, entity_id = wlightbox_ct
+
+    # Capture the native scale value passed to the device to verify the
+    # conversion is correct without depending on blebox_uniapi internals.
+    transient_temp: int = -1
+
+    def return_color_temp_with_brightness(value: int, _brightness: int) -> list[int]:
+        nonlocal transient_temp
+        transient_temp = value
+        return [0x00, 0x39, 0xB0, 0xFF]
+
+    def turn_on(_: list[int]) -> None:
+        feature_mock.is_on = True
+        feature_mock.color_temp = transient_temp
+
+    feature_mock.return_color_temp_with_brightness = return_color_temp_with_brightness
+    feature_mock.async_on = AsyncMock(side_effect=turn_on)
+
+    await async_setup_entity(hass, entity_id)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, ATTR_COLOR_TEMP_KELVIN: kelvin_requested},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert 0 <= transient_temp <= 255
+
+    kelvin_actual = state.attributes[ATTR_COLOR_TEMP_KELVIN]
+    assert LIGHT_MIN_KELVINS <= kelvin_actual <= LIGHT_MAX_KELVINS
+
+
 async def test_wlightbox_init(
     wlightbox, hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -459,6 +528,48 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass: HomeAssistant) -> Non
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_RGBW_COLOR] == (0xF1, 0xE2, 0xD3, 0xE4)
     assert state.state == STATE_ON
+
+
+async def test_wlightbox_turn_on_with_zero_brightness_turns_off(
+    wlightbox, hass: HomeAssistant
+) -> None:
+    """Test that setting brightness to 0 turns the light off instead of raising ValueError."""
+
+    feature_mock, entity_id = wlightbox
+
+    def initial_update():
+        feature_mock.is_on = True
+        feature_mock.rgbw_hex = "c1d2f3c7"
+        feature_mock.white_value = 0xC7
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    feature_mock.apply_brightness = MagicMock(return_value=[0, 0, 0, 0])
+
+    def turn_off():
+        feature_mock.is_on = False
+        feature_mock.white_value = 0x0
+        feature_mock.rgbw_hex = "00000000"
+
+    feature_mock.async_off = AsyncMock(side_effect=turn_off)
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, ATTR_BRIGHTNESS: 0},
+        blocking=True,
+    )
+
+    feature_mock.async_off.assert_called_once()
+    feature_mock.async_on.assert_not_called()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
 
 
 async def test_wlightbox_off(wlightbox, hass: HomeAssistant) -> None:

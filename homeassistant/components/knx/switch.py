@@ -1,7 +1,5 @@
 """Support for KNX switch entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx.devices import Switch as XknxSwitch

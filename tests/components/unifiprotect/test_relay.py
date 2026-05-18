@@ -1,7 +1,5 @@
 """Tests for the UniFi Protect relay (Public API) switch entities."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -449,7 +447,7 @@ async def test_relay_switch_command_when_output_gone(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
 ) -> None:
-    """Command raises HomeAssistantError when the relay output channel is no longer present."""
+    """Command raises HomeAssistantError when relay output channel is gone."""
     ufp, relay = ufp_with_relay
     await init_entry(hass, ufp, [])
 

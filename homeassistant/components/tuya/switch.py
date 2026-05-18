@@ -1,11 +1,9 @@
 """Support for Tuya switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.definition.switch import (
-    TuyaSwitchDefinition,
+    SwitchDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -719,6 +717,16 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="motion_alarm",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SZ: (
         SwitchEntityDescription(
@@ -894,6 +902,12 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
     ),
     DeviceCategory.ZNRB: (
         SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
@@ -945,7 +959,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        definition: TuyaSwitchDefinition,
+        definition: SwitchDefinition,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager, description)

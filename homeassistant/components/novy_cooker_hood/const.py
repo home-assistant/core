@@ -1,7 +1,5 @@
 """Constants for the Novy Cooker Hood integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from rf_protocols import ModulationType

@@ -47,6 +47,9 @@
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::light::common::condition_threshold_name%]"
         }

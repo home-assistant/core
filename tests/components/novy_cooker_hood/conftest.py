@@ -1,12 +1,10 @@
 """Common fixtures for the Novy Cooker Hood tests."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from rf_protocols import CodeCollection
+from rf_protocols.loader import CodeCollection
 
 from homeassistant.components.novy_cooker_hood.const import (
     CONF_CODE,
@@ -32,9 +30,19 @@ def mock_get_codes() -> Iterator[MagicMock]:
     fake_collection.async_load_command = AsyncMock(
         side_effect=lambda name: MockRadioFrequencyCommand()
     )
-    with patch(
-        "homeassistant.components.novy_cooker_hood.commands.get_codes",
-        return_value=fake_collection,
+    with (
+        patch(
+            "homeassistant.components.novy_cooker_hood.light.get_codes_for_code",
+            return_value=fake_collection,
+        ),
+        patch(
+            "homeassistant.components.novy_cooker_hood.fan.get_codes_for_code",
+            return_value=fake_collection,
+        ),
+        patch(
+            "homeassistant.components.novy_cooker_hood.config_flow.get_codes_for_code",
+            return_value=fake_collection,
+        ),
     ):
         yield fake_collection
 

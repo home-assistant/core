@@ -1,7 +1,5 @@
 """Image platform for Habitica integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -96,7 +94,10 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         self._avatar = extract_avatar(self.user)
 
     def _handle_coordinator_update(self) -> None:
-        """Check if equipped gear and other things have changed since last avatar image generation."""
+        """Check if equipped gear and other things have changed.
+
+        Since last avatar image generation.
+        """
 
         if self.user is not None and self._avatar != self.user:
             self._avatar = extract_avatar(self.user)

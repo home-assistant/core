@@ -1,7 +1,5 @@
 """The Derivative integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +63,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_options = {**config_entry.options}
 
             if new_options.get("unit_prefix") == "none":
-                # Before we had support for optional selectors, "none" was used for selecting nothing
+                # Before we had support for optional selectors,
+                # "none" was used for selecting nothing
                 del new_options["unit_prefix"]
 
             hass.config_entries.async_update_entry(

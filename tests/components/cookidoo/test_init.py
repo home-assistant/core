@@ -269,7 +269,11 @@ async def test_migration_from_with_error(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
-        title=f"MIGRATION_TEST from {from_version}.{from_minor_version} with login exception '{login_exception}'",
+        title=(
+            f"MIGRATION_TEST from {from_version}."
+            f"{from_minor_version} with login"
+            f" exception '{login_exception}'"
+        ),
         version=from_version,
         minor_version=from_minor_version,
         unique_id=unique_id,

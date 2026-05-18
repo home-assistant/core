@@ -1,7 +1,5 @@
 """Code to handle pins on a Firmata board."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import cast

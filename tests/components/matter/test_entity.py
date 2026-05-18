@@ -1,7 +1,5 @@
 """Test Matter entity behavior."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
@@ -410,8 +408,9 @@ async def test_bridged_entity_subscribes_to_reachable_attribute(
         and call.kwargs.get("event_filter") == EventType.ATTRIBUTE_UPDATED
         for call in subscribe_calls
     ), (
-        f"Expected a subscribe_events call with attr_path_filter={_REACHABLE_ATTR_PATH!r} "
-        "and event_filter=ATTRIBUTE_UPDATED, but none was found."
+        "Expected a subscribe_events call with attr_path_filter="
+        f"{_REACHABLE_ATTR_PATH!r} and event_filter=ATTRIBUTE_UPDATED,"
+        " but none was found."
     )
 
 
@@ -435,5 +434,142 @@ async def test_non_bridged_entity_does_not_subscribe_to_reachable(
         and "/57/17" in call.kwargs["attr_path_filter"]
         for call in subscribe_calls
     ), (
-        "Unexpected subscribe_events call for BridgedDeviceBasicInformation.Reachable on a non-bridged entity."
+        "Unexpected subscribe_events call for"
+        " BridgedDeviceBasicInformation.Reachable"
+        " on a non-bridged entity."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tests for composed devices with parent Reachable attribute.
+#
+# Fixture used for composed device tests: "fritz_bridge" (node_id=1,
+# is_bridge=True). This fixture has composed devices where endpoint 40 is
+# a composed device under endpoint 42's PartsList, carrying the
+# BridgedDeviceBasicInformation cluster (57) with the Reachable attribute
+# (attribute_id=17) on the parent endpoint 42.
+#
+# Entity used as proxy: switch.my_device (on endpoint 40)
+# Parent Reachable path: "42/57/17" (on endpoint 42)
+# ---------------------------------------------------------------------------
+
+_COMPOSED_ENTITY_ID = "switch.my_device"
+# AttributePath for BridgedDeviceBasicInformation.Reachable on parent endpoint 42.
+_COMPOSED_PARENT_REACHABLE_ATTR_PATH = "42/57/17"
+
+
+async def test_composed_entity_state_updates_when_parent_reachable_changes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test composed entity becomes (un-)available when parent Reachable changes.
+
+    Sequence:
+    1. Setup with parent Reachable=False → entity unavailable.
+    2. Set parent Reachable=True via set_node_attribute.
+    3. Fire ATTRIBUTE_UPDATED event → entity must become available.
+    4. Set parent Reachable=False via set_node_attribute.
+    5. Fire ATTRIBUTE_UPDATED event → entity must become unavailable.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "fritz_bridge", matter_client
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Simulate the parent endpoint reporting as reachable again.
+    set_node_attribute(matter_node, 42, 57, 17, True)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, True),
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate the parent endpoint reporting as unreachable again.
+    set_node_attribute(matter_node, 42, 57, 17, False)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.ATTRIBUTE_UPDATED,
+        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, False),
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_composed_entity_unavailable_when_parent_node_goes_offline(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test composed entity becomes unavailable when the bridge node goes offline.
+
+    Even if parent BridgedDeviceBasicInformation.Reachable is True, the composed
+    entity must become unavailable when node.available is False, because
+    Entity.available is computed as node.available AND parent Reachable.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass,
+        "fritz_bridge",
+        matter_client,
+        # fake as reachable at startup so we can test the node
+        # going offline while reachable
+        {_COMPOSED_PARENT_REACHABLE_ATTR_PATH: True},
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Take the whole node offline.
+    matter_node.node_data.available = False
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Bring the node back online.
+    matter_node.node_data.available = True
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+
+    state = hass.states.get(_COMPOSED_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_composed_entity_subscribes_to_parent_reachable_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test composed entity subscribes to parent Reachable.
+
+    When an endpoint belongs to a composed device, the BridgedDeviceBasicInformation
+    cluster lives on the parent endpoint. The entity must create an ATTRIBUTE_UPDATED
+    subscription for the parent's Reachable attribute path so that reachability
+    changes on the parent trigger the matter event callback and update Entity.available.
+    """
+    await setup_integration_with_node_fixture(hass, "fritz_bridge", matter_client)
+
+    subscribe_calls = matter_client.subscribe_events.call_args_list
+    assert any(
+        call.kwargs.get("attr_path_filter") == _COMPOSED_PARENT_REACHABLE_ATTR_PATH
+        and call.kwargs.get("event_filter") == EventType.ATTRIBUTE_UPDATED
+        for call in subscribe_calls
+    ), (
+        "Expected a subscribe_events call with attr_path_filter="
+        f"{_COMPOSED_PARENT_REACHABLE_ATTR_PATH!r}"
+        " and event_filter=ATTRIBUTE_UPDATED, but none was found."
     )

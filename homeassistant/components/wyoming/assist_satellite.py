@@ -1,7 +1,5 @@
 """Assist satellite entity for Wyoming integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 import io
@@ -142,7 +140,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the VAD sensitivity entity ID for next conversation."""
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
@@ -301,7 +299,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 and not self._is_tts_streaming
                 and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
             ):
-                # Send TTS only if we haven't already started streaming it in INTENT_PROGRESS.
+                # Send TTS only if we haven't already started
+                # streaming it in INTENT_PROGRESS.
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._stream_tts(stream),

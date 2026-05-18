@@ -1,7 +1,5 @@
 """Config flow for ZHA."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 import collections
@@ -64,7 +62,8 @@ DECONZ_DOMAIN = "deconz"
 # The ZHA config flow takes different branches depending on if you are migrating to a
 # new adapter via discovery or setting it up from scratch
 
-# For the fast path, we automatically migrate everything and restore the most recent backup
+# For the fast path, we automatically migrate everything
+# and restore the most recent backup
 MIGRATION_STRATEGY_RECOMMENDED = "migration_strategy_recommended"
 MIGRATION_STRATEGY_ADVANCED = "migration_strategy_advanced"
 

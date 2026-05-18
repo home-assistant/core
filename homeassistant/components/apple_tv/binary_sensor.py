@@ -1,7 +1,5 @@
 """Binary sensor support for Apple TV."""
 
-from __future__ import annotations
-
 from pyatv.const import FeatureName, FeatureState, KeyboardFocusState
 from pyatv.interface import AppleTV, KeyboardListener
 

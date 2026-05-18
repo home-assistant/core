@@ -11,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed"

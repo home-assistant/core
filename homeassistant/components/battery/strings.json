@@ -26,6 +26,9 @@
         "behavior": {
           "name": "[%key:component::battery::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::battery::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::battery::common::condition_threshold_name%]"
         }

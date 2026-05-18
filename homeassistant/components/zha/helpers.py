@@ -1,7 +1,5 @@
 """Helper functions for the ZHA integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
@@ -931,8 +929,9 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove entity registry entries for group entities when the groups are removed from HA."""
-        # first we collect the potential unique ids for entities that could be created from this group
+        """Remove entity registry entries for removed group entities."""
+        # first we collect the potential unique ids for
+        # entities that could be created from this group
         possible_entity_unique_ids = [
             f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
@@ -1251,9 +1250,12 @@ def async_add_entities(
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
-        # broad exception to prevent a single entity from preventing an entire platform from loading
-        # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
-        # alternative is adding try/catch to each entity class __init__ method with a specific exception
+        # broad exception to prevent a single entity from
+        # preventing an entire platform from loading.
+        # this can potentially be caused by a misbehaving
+        # device or a bad quirk. Not ideal but the
+        # alternative is adding try/catch to each entity
+        # class __init__ method with a specific exception
         except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data

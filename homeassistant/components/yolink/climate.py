@@ -1,7 +1,5 @@
 """YoLink Thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from yolink.const import ATTR_DEVICE_THERMOSTAT

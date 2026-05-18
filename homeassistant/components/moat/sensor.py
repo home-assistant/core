@@ -1,7 +1,5 @@
 """Support for moat ble sensors."""
 
-from __future__ import annotations
-
 from moat_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (

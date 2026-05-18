@@ -1,7 +1,5 @@
 """Support forked_daapd media player."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import logging
@@ -350,7 +348,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._queue["count"] >= 1
             and self._queue["items"][0]["data_kind"] == "pipe"
             and self._queue["items"][0]["title"] in KNOWN_PIPES
-        ):  # if we're playing a pipe, set the source automatically so we can forward controls
+        ):  # if playing a pipe, set source to forward controls
             self._source = f"{self._queue['items'][0]['title']} (pipe)"
         self._update_track_info()
         event.set()
@@ -470,9 +468,11 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return self._player["volume"] == 0
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self._player["item_id"]
+        if (item_id := self._player["item_id"]) == 0:
+            return None
+        return str(item_id)
 
     @property
     def media_content_type(self):

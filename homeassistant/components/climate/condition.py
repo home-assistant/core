@@ -13,8 +13,8 @@ from homeassistant.helpers.condition import (
     Condition,
     ConditionConfig,
     EntityConditionBase,
+    EntityNumericalConditionBase,
     EntityNumericalConditionWithUnitBase,
-    make_entity_numerical_condition,
     make_entity_state_condition,
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -59,15 +59,36 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    def _should_include(self, state: State) -> bool:
+        """Skip climate entities that do not expose a target temperature."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_TEMPERATURE) is not None
+        )
+
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
         # Climate entities convert temperatures to the system unit via show_temp
         return self._hass.config.units.temperature_unit
 
 
+class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
+    """Condition for climate target humidity."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
+    _valid_unit = "%"
+
+    def _should_include(self, state: State) -> bool:
+        """Skip climate entities that do not expose a target humidity."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_HUMIDITY) is not None
+        )
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "is_hvac_mode": ClimateHVACModeCondition,
-    "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF, support_duration=True),
+    "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF),
     "is_on": make_entity_state_condition(
         DOMAIN,
         {
@@ -88,10 +109,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_heating": make_entity_state_condition(
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
-    "target_humidity": make_entity_numerical_condition(
-        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
-        valid_unit="%",
-    ),
+    "target_humidity": ClimateTargetHumidityCondition,
     "target_temperature": ClimateTargetTemperatureCondition,
 }
 

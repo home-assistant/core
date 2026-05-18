@@ -1,7 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
 
-from __future__ import annotations
-
 import io
 import ipaddress
 import logging
@@ -535,7 +533,8 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 def density_to_air_quality_voc(density: float) -> int:
     """Map VOCs μg/m3 to HomeKit AirQuality level.
 
-    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    The VOC mappings use the IAQ guidelines for Europe released
+    by the WHO (World Health Organization).
     Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
     """
@@ -689,7 +688,7 @@ def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
 
 
 def state_needs_accessory_mode(state: State) -> bool:
-    """Return if the entity represented by the state must be paired in accessory mode."""
+    """Return if the entity state must be paired in accessory mode."""
     if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 

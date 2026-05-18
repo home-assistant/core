@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import AbsenceType
@@ -72,7 +70,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     Heat mode is supported for all heating devices incl. their defined profiles.
     Boost is available for radiator thermostats only.
-    Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
+    Cool mode is only available for floor heating systems, if
+    basically enabled in the hmip app.
     """
 
     _attr_supported_features = (
@@ -287,7 +286,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ]
 
     def _get_qualified_profile_name(self, profile: HeatingCoolingProfile) -> str:
-        """Get a name for the given profile. If exists, this is the name of the profile."""
+        """Get a name for the given profile."""
         if profile.name != "":
             return profile.name
         if profile.index in NICE_PROFILE_NAMES:

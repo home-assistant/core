@@ -1,7 +1,5 @@
 """Support for Button entities of the Evohome integration."""
 
-from __future__ import annotations
-
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity

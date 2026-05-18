@@ -1,7 +1,5 @@
 """Tests for the UniFi Access binary sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
@@ -159,7 +157,7 @@ async def test_v2_device_update_empty_location_id_ignored(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.data.v2.device.update with empty location_id does not update state."""
+    """Test device.update with empty location_id does not update state."""
     handlers = _get_ws_handlers(mock_client)
 
     update_msg = V2DeviceUpdate(

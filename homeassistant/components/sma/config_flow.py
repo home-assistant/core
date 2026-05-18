@@ -1,7 +1,5 @@
 """Config flow for the sma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -257,7 +255,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
 
-        # Finally, check if the hostname (which represents the SMA serial number) is unique
+        # Finally, check if the hostname
+        # (which represents the SMA serial number) is unique
         serial_number = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
         # Remove 'sma' prefix and strip everything after the dash (including the dash)

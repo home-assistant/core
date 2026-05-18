@@ -1,8 +1,8 @@
 """Light platform for the Novy Cooker Hood."""
 
-from __future__ import annotations
-
 from typing import Any
+
+from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .commands import COMMAND_LIGHT, get_codes_for_code
+from .commands import COMMAND_LIGHT
 from .const import CONF_CODE
 from .entity import NovyCookerHoodEntity
 

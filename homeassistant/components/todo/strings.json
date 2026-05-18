@@ -23,6 +23,9 @@
         "behavior": {
           "name": "[%key:component::todo::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::todo::common::condition_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::todo::common::condition_threshold_name%]"
         }
