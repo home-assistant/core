@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_FAN_SPEED_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -28,10 +29,8 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_MIDDLE,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
     FAN_OFF,
     FAN_ON,
     SERVICE_SET_FAN_MODE,
@@ -132,8 +131,13 @@ HC_HEAT_COOL_PREFER_COOL = [
     HC_HEAT_COOL_OFF,
 ]
 
-ORDERED_FAN_SPEEDS = [FAN_LOW, FAN_MIDDLE, FAN_MEDIUM, FAN_HIGH]
-PRE_DEFINED_FAN_MODES = set(ORDERED_FAN_SPEEDS)
+NON_SPEED_FAN_MODES = {
+    FAN_ON,
+    FAN_OFF,
+    FAN_AUTO,
+    FAN_FOCUS,
+    FAN_DIFFUSE,
+}
 SWING_MODE_PREFERRED_ORDER = [SWING_ON, SWING_BOTH, SWING_HORIZONTAL, SWING_VERTICAL]
 PRE_DEFINED_SWING_MODES = set(SWING_MODE_PREFERRED_ORDER)
 
@@ -210,6 +214,7 @@ class Thermostat(HomeAccessory):
                 ATTR_MAX_TEMP,
                 ATTR_MIN_TEMP,
                 ATTR_FAN_MODES,
+                ATTR_FAN_SPEED_MODES,
                 ATTR_HVAC_MODES,
             )
         )
@@ -326,10 +331,22 @@ class Thermostat(HomeAccessory):
                 fan_mode.lower(): fan_mode
                 for fan_mode in attributes.get(ATTR_FAN_MODES) or []
             }
-            if fan_modes and PRE_DEFINED_FAN_MODES.intersection(fan_modes):
+            if (
+                ATTR_FAN_SPEED_MODES in attributes
+                and (fan_speed_modes := attributes[ATTR_FAN_SPEED_MODES]) is not None
+            ):
                 self.ordered_fan_speeds = [
-                    speed for speed in ORDERED_FAN_SPEEDS if speed in fan_modes
+                    fan_mode.lower()
+                    for fan_mode in fan_speed_modes
+                    if fan_mode.lower() in fan_modes
                 ]
+            else:
+                self.ordered_fan_speeds = [
+                    fan_mode
+                    for fan_mode in fan_modes
+                    if fan_mode not in NON_SPEED_FAN_MODES
+                ]
+            if self.ordered_fan_speeds:
                 self.fan_chars.append(CHAR_ROTATION_SPEED)
 
         if FAN_AUTO in fan_modes and (FAN_ON in fan_modes or self.ordered_fan_speeds):
@@ -399,13 +416,17 @@ class Thermostat(HomeAccessory):
 
     def _set_fan_speed(self, speed: int) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
-        mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
+        mode = self.fan_modes[
+            percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
+        ]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _get_on_mode(self) -> str:
         if self.ordered_fan_speeds:
-            return percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+            return self.fan_modes[
+                percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+            ]
         return self.fan_modes[FAN_ON]
 
     def _set_fan_active(self, active: int) -> None:
