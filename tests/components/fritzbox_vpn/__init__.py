@@ -1,0 +1,1 @@
+"""FritzBox VPN integration tests."""

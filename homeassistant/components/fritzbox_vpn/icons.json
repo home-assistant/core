@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "switch": {
+      "vpn": {
+        "default": "mdi:vpn"
+      }
+    },
+    "binary_sensor": {
+      "connected": {
+        "default": "mdi:connection"
+      }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:information"
+      },
+      "connection_uid": {
+        "default": "mdi:identifier"
+      },
+      "vpn_uid": {
+        "default": "mdi:identifier"
+      }
+    }
+  }
+}
