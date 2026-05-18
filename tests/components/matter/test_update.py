@@ -1,7 +1,7 @@
 """Test Matter number entities."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -15,11 +15,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.matter.update import (
-    SCAN_INTERVAL,
-    TRANSLATION_KEY_RELEASE_NOTES_INFO,
-    TRANSLATION_KEY_RELEASE_NOTES_WARNING,
-)
+from homeassistant.components.matter.update import SCAN_INTERVAL
 from homeassistant.components.update import (
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -275,9 +271,9 @@ async def test_update_check_with_same_numeric_version(
             UpdateSource.LOCAL,
             [
                 "<ha-alert alert-type='warning'>",
-                "Translated warning for local.",
+                "Update provided by local.",
                 "<ha-alert alert-type='info'>",
-                "Translated update process info.",
+                "The update process can take a while",
             ],
             [],
         ),
@@ -285,11 +281,11 @@ async def test_update_check_with_same_numeric_version(
             UpdateSource.MAIN_NET_DCL,
             [
                 "<ha-alert alert-type='info'>",
-                "Translated update process info.",
+                "The update process can take a while",
             ],
             [
                 "<ha-alert alert-type='warning'>",
-                "Translated warning",
+                "Update provided by",
             ],
         ),
     ],
@@ -319,34 +315,23 @@ async def test_update_release_notes(
 
     ws_client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.matter.update.async_get_translations",
-        AsyncMock(
-            return_value={
-                TRANSLATION_KEY_RELEASE_NOTES_WARNING: (
-                    "Translated warning for {update_source}."
-                ),
-                TRANSLATION_KEY_RELEASE_NOTES_INFO: "Translated update process info.",
-            }
-        ),
-    ):
-        await hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
+        },
+        blocking=True,
+    )
 
-        await ws_client.send_json(
-            {
-                "id": 1,
-                "type": "update/release_notes",
-                "entity_id": "update.mock_dimmable_light_firmware",
-            }
-        )
-        result = await ws_client.receive_json()
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.mock_dimmable_light_firmware",
+        }
+    )
+    result = await ws_client.receive_json()
 
     assert result["success"]
     release_notes = result["result"]
