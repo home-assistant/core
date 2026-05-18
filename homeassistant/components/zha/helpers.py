@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
+from zha.application import Platform as ZhaPlatform
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_DEVICE_IEEE,
@@ -501,6 +502,9 @@ class ZHADeviceProxy(EventBase):
         self, event: DeviceEntityAddedEvent
     ) -> None:
         """Handle a new entity being added to a device at runtime."""
+        if event.platform is ZhaPlatform.VIRTUAL:
+            return
+
         key = (event.platform, event.unique_id)
         if (entity := self.device.platform_entities.get(key)) is None:
             return
@@ -515,6 +519,9 @@ class ZHADeviceProxy(EventBase):
         self, event: DeviceEntityRemovedEvent
     ) -> None:
         """Handle an entity being removed from a device at runtime."""
+        if event.platform is ZhaPlatform.VIRTUAL:
+            return
+
         if not event.remove:
             # Soft remove: signal the entity to unload; registry entry stays
             async_dispatcher_send(
@@ -911,6 +918,9 @@ class ZHAGatewayProxy(EventBase):
 
         if isinstance(proxy_object, ZHADeviceProxy):
             for entity in proxy_object.device.platform_entities.values():
+                if entity.PLATFORM is ZhaPlatform.VIRTUAL:
+                    continue
+
                 ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
                     EntityData(
                         entity=entity, device_proxy=proxy_object, group_proxy=None
@@ -918,6 +928,9 @@ class ZHAGatewayProxy(EventBase):
                 )
         else:
             for entity in proxy_object.group.group_entities.values():
+                if entity.PLATFORM is ZhaPlatform.VIRTUAL:
+                    continue
+
                 ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
                     EntityData(
                         entity=entity,
