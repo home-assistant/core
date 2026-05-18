@@ -923,7 +923,9 @@ async def test_device_scan_error_is_silent(
 
     # Simulate a scan failure
     mock_growatt_v1_api.device_list.side_effect = growattServer.GrowattV1ApiError(
-        "Temporary error"
+        message="Temporary error",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Temporary error",
     )
 
     freezer.tick(DEVICE_SCAN_INTERVAL)
@@ -958,7 +960,11 @@ async def test_dynamic_device_refresh_fails_is_skipped(
 
     def min_detail_side_effect(device_sn: str) -> dict:
         if device_sn == "NEW456789":
-            raise growattServer.GrowattV1ApiError("Device not reachable")
+            raise growattServer.GrowattV1ApiError(
+                message="Device not reachable",
+                error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+                error_msg="Device not reachable",
+            )
         return mock_growatt_v1_api.min_detail.return_value
 
     mock_growatt_v1_api.min_detail.side_effect = min_detail_side_effect
