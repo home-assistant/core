@@ -24,7 +24,6 @@ from .const import (
     DOMAIN,
     INTEGRATION_TITLE,
     KNOWN_IMPORT_ABORT_REASONS,
-    LOGGER,
 )
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
@@ -40,40 +39,33 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import legacy YAML configuration into a config entry."""
-    import_data: dict[str, str] = {CONF_STATION_ID: config[CONF_STATION_ID]}
-    if CONF_NAME in config:
-        import_data[CONF_NAME] = config[CONF_NAME]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=import_data,
+        data={k: config[k] for k in (CONF_STATION_ID, CONF_NAME) if k in config},
     )
 
-    if result["type"] is FlowResultType.ABORT:
-        reason = result["reason"]
-        if reason in KNOWN_IMPORT_ABORT_REASONS:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{reason}",
-                breaks_in_ha_version="2026.11.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{reason}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            return
-        if reason != "already_configured":
-            LOGGER.warning("YAML import aborted with unexpected reason: %s", reason)
-            return
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] in KNOWN_IMPORT_ABORT_REASONS
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
-    # The "deprecated_yaml" translation key is provided by Home Assistant core
-    # under the "homeassistant" domain, so no matching key exists in this
-    # integration's strings.json.
+    # "deprecated_yaml" translation key lives under the "homeassistant" core domain.
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,

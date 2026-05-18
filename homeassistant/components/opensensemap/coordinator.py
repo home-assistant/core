@@ -1,7 +1,5 @@
 """Data update coordinator for the openSenseMap integration."""
 
-import asyncio
-
 from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
@@ -9,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_TIMEOUT, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 type OpenSenseMapConfigEntry = ConfigEntry[OpenSenseMapCoordinator]
 
@@ -38,9 +36,10 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch latest data from the openSenseMap API."""
         try:
-            async with asyncio.timeout(API_TIMEOUT):
-                await self.api.get_data()
-        except (OpenSenseMapError, TimeoutError) as err:
+            # opensensemap_api wraps the request in a 5s aiohttp.ClientTimeout
+            # and re-raises asyncio.TimeoutError as OpenSenseMapConnectionError.
+            await self.api.get_data()
+        except OpenSenseMapError as err:
             raise UpdateFailed(
                 f"Unable to fetch data from openSenseMap: {err}"
             ) from err

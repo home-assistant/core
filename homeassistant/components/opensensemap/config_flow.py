@@ -1,6 +1,5 @@
 """Config flow for the openSenseMap integration."""
 
-import asyncio
 from typing import Any
 
 from opensensemap_api import OpenSenseMap
@@ -12,13 +11,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    ABORT_CANNOT_CONNECT,
-    ABORT_INVALID_STATION,
-    API_TIMEOUT,
-    CONF_STATION_ID,
-    DOMAIN,
-)
+from .const import ABORT_CANNOT_CONNECT, ABORT_INVALID_STATION, CONF_STATION_ID, DOMAIN
 
 
 class CannotConnect(HomeAssistantError):
@@ -39,9 +32,10 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         api = OpenSenseMap(station_id, session)
         try:
-            async with asyncio.timeout(API_TIMEOUT):
-                await api.get_data()
-        except (OpenSenseMapError, TimeoutError) as err:
+            # opensensemap_api wraps the request in a 5s aiohttp.ClientTimeout
+            # and re-raises asyncio.TimeoutError as OpenSenseMapConnectionError.
+            await api.get_data()
+        except OpenSenseMapError as err:
             raise CannotConnect from err
         if not api.data or not api.data.get("name"):
             raise InvalidStation

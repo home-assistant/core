@@ -35,22 +35,13 @@ async def test_user_flow(hass: HomeAssistant, mock_opensensemap_api: AsyncMock) 
     assert result["result"].unique_id == TEST_STATION_ID
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (OpenSenseMapError, "cannot_connect"),
-        (TimeoutError, "cannot_connect"),
-    ],
-)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_api_errors(
+async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_opensensemap_api: AsyncMock,
-    side_effect: type[Exception],
-    expected_error: str,
 ) -> None:
     """Test that API errors during the user flow surface as form errors."""
-    mock_opensensemap_api.get_data.side_effect = side_effect
+    mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -60,7 +51,7 @@ async def test_user_flow_api_errors(
         {CONF_STATION_ID: TEST_STATION_ID},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": expected_error}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # Recovery after the error is cleared.
     mock_opensensemap_api.get_data.side_effect = None
@@ -142,15 +133,13 @@ async def test_import_flow_with_yaml_name(
     assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
 
 
-@pytest.mark.parametrize("side_effect", [OpenSenseMapError, TimeoutError])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_cannot_connect(
     hass: HomeAssistant,
     mock_opensensemap_api: AsyncMock,
-    side_effect: type[Exception],
 ) -> None:
     """Test importing when the API is unreachable."""
-    mock_opensensemap_api.get_data.side_effect = side_effect
+    mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
