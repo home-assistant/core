@@ -31,12 +31,16 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
+    CONF_CUSTOM_URL,
     CONF_ENTRY_CODE,
     CONF_REGION,
     CONF_SHOW_BACKGROUND,
@@ -74,6 +78,8 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
+            if region == "custom":
+                return await self.async_step_custom_url()
             base_url = None
             if region != "auto":
                 base_url = f"https://{region}iot.roborock.com"
@@ -97,6 +103,34 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="region",
                         )
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_custom_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle custom server URL entry."""
+        errors: dict[str, str] = {}
+        assert self._username
+        if user_input is not None:
+            self._client = RoborockApiClient(
+                self._username,
+                base_url=user_input[CONF_CUSTOM_URL],
+                session=async_get_clientsession(self.hass),
+            )
+            errors = await self._request_code()
+            if not errors:
+                return await self.async_step_code()
+
+        return self.async_show_form(
+            step_id="custom_url",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CUSTOM_URL): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.URL)
                     ),
                 }
             ),

@@ -25,6 +25,15 @@
         },
         "description": "Type the verification code sent to your email"
       },
+      "custom_url": {
+        "data": {
+          "custom_url": "Custom server URL"
+        },
+        "data_description": {
+          "custom_url": "The URL of your custom server."
+        },
+        "description": "Enter the URL of your custom server."
+      },
       "reauth_confirm": {
         "description": "The Roborock integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
@@ -764,6 +773,7 @@
       "options": {
         "auto": "Auto",
         "cn": "CN",
+        "custom": "Custom server",
         "eu": "EU",
         "ru": "RU",
         "us": "US"
