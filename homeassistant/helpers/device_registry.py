@@ -461,7 +461,9 @@ class DeviceEntry:
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
                         entry_id: list(subentries)
-                        for entry_id, subentries in self.config_entries_subentries.items()
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
@@ -560,7 +562,9 @@ class DeletedDeviceEntry:
                     "config_entries": list(self.config_entries),
                     "config_entries_subentries": {
                         entry_id: list(subentries)
-                        for entry_id, subentries in self.config_entries_subentries.items()
+                        for entry_id, subentries in (
+                            self.config_entries_subentries.items()
+                        )
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,

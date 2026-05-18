@@ -59,7 +59,7 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners since we are not testing for these."""
+    """Return listeners without final write listeners."""
     return {
         key: value
         for key, value in listeners.items()
@@ -121,7 +121,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 async def _async_mock_entity_with_broken_logbook_platform(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> er.RegistryEntry:
-    """Mock an integration that provides an entity that are described by the logbook that raises."""
+    """Mock an integration with an entity that raises in logbook."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
     entry = entity_registry.async_get_or_create(
@@ -1583,7 +1583,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with specific entities and an end_time."""
+    """Test logbook stream with specific entities and an end_time."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -2541,7 +2541,7 @@ async def test_recorder_is_far_behind(
 async def test_subscribe_all_entities_are_continuous(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with entities that are always filtered."""
+    """Test logbook stream with always-filtered entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -2602,7 +2602,7 @@ async def test_subscribe_all_entities_are_continuous(
 async def test_subscribe_all_entities_have_uom_multiple(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test logbook stream with specific request for multiple entities that are always filtered."""
+    """Test logbook stream for multiple always-filtered entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -2887,7 +2887,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
+    """Test logbook stream with always-filtered entities and device."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -3136,7 +3136,7 @@ async def test_consistent_stream_and_recorder_filtering(
     attributes: dict,
     result_count: int,
 ) -> None:
-    """Test that the logbook live stream and get_events apis use consistent filtering rules."""
+    """Test logbook stream and get_events use consistent filtering."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -3501,7 +3501,7 @@ async def test_logbook_get_events_user_id_from_parent_context(
 async def test_logbook_get_events_user_id_from_parent_context_filtered(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test user attribution from parent context in historical logbook with entity filter.
+    """Test user attribution from parent context with entity filter.
 
     Uses logbook/get_events with entity_ids, which triggers the filtered
     SQL query path. The query must also fetch parent context rows so that

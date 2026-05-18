@@ -47,7 +47,7 @@ async def test_send_command(hass: HomeAssistant, mock_lg_netcast: MagicMock) -> 
 async def test_send_command_invalid(
     hass: HomeAssistant, mock_lg_netcast: MagicMock
 ) -> None:
-    """Test remote.send_command raises ServiceValidationError  for an unknown command name."""
+    """Test send_command raises error for unknown command name."""
     await setup_lgnetcast(hass)
 
     with pytest.raises(ServiceValidationError, match="Unknown command"):
