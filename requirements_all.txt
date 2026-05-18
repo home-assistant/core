@@ -1272,7 +1272,7 @@ home-assistant-intents==2026.5.5
 homekit-audio-proxy==1.2.1
 
 # homeassistant.components.gentex_homelink
-homelink-integration-api==0.0.1
+homelink-integration-api==0.0.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.12.0
