@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from aioamazondevices.implementation.todo import is_item_complete
 from aioamazondevices.structures import ListType
 
 from homeassistant.components.todo import (
@@ -12,9 +13,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import slugify
 
-from .const import DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 
 if TYPE_CHECKING:
@@ -77,7 +76,7 @@ class AlexaToDoList(TodoListEntity):
         self._attr_unique_id = alexa_list.id
 
         # Friendly entity id
-        self.entity_id = f"todo.{DOMAIN}_{slugify(self._list.name)}"
+        # self.entity_id = f"todo.{DOMAIN}_{slugify(self._list.name)}"
 
         self.name = alexa_list.name
 
@@ -114,9 +113,9 @@ class AlexaToDoList(TodoListEntity):
         return [
             TodoItem(
                 uid=item.id,
-                summary=item.name,
+                summary=item.name.capitalize(),
                 status=TodoItemStatus.COMPLETED
-                if item.is_complete
+                if is_item_complete(item)
                 else TodoItemStatus.NEEDS_ACTION,
             )
             for item in todo_items
@@ -199,7 +198,7 @@ class AlexaToDoList(TodoListEntity):
 
         updated = False
 
-        if existing_item.is_complete != (item.status == TodoItemStatus.COMPLETED):
+        if is_item_complete(existing_item) != (item.status == TodoItemStatus.COMPLETED):
             # Update the checked status
             _LOGGER.debug(
                 "Updating item %s with checked status %s", item.uid, item.status
