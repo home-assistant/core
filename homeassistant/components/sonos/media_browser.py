@@ -17,8 +17,11 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -207,6 +210,49 @@ async def async_browse_media(
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
     return response
+
+
+async def async_search_media(
+    hass: HomeAssistant,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
+    query: SearchMediaQuery,
+) -> SearchMedia:
+    """Search media."""
+    media_content_type = query.media_content_type or MediaType.TRACK
+    search_type = MEDIA_TYPES_TO_SONOS.get(media_content_type)
+    if search_type is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_content_type",
+            translation_placeholders={
+                "media_content_type": media_content_type,
+            },
+        )
+    items = await hass.async_add_executor_job(
+        partial(
+            media.library.get_music_library_information,
+            search_type,
+            search_term=query.search_query,
+            full_album_art_uri=True,
+            complete_result=True,
+        )
+    )
+    result = []
+    for item in items:
+        with suppress(UnknownMediaType):
+            result.append(
+                item_payload(
+                    item,
+                    get_thumbnail_url=partial(
+                        get_thumbnail_url_full,
+                        media,
+                        is_internal_request(hass),
+                        get_browse_image_url,
+                    ),
+                )
+            )
+    return SearchMedia(result=result)
 
 
 def build_item_response(
