@@ -310,8 +310,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
     "linode": {"homeassistant": {"linode-api"}},
-    # https://github.com/timmo001/aiolyric
-    "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {
         "homeassistant": {"microbeespy"},
