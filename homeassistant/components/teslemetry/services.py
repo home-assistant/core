@@ -345,7 +345,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
@@ -445,7 +446,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]

@@ -1347,7 +1347,8 @@ async def test_missing_supported_components(
     )
     assert warning_msg in caplog.text
 
-    # Clear caplog and call async_get_calendars again to verify warning is not logged again
+    # Clear caplog and call async_get_calendars again to verify
+    # warning is not logged again
     caplog.clear()
     client = MagicMock()
     client.principal().calendars.return_value = calendars
@@ -1355,8 +1356,9 @@ async def test_missing_supported_components(
     await async_get_calendars(hass, client, "VEVENT")
     assert warning_msg not in caplog.text
 
-    # Verify that querying a *different* component for the same calendar DOES log the warning again
-    # because de-duplication is keyed by (url, component).
+    # Verify that querying a *different* component for the same
+    # calendar DOES log the warning again because de-duplication
+    # is keyed by (url, component).
     vjournal_warning = (
         "CalDAV server does not report supported components for calendar Example. "
         "Not assuming support for requested component 'VJOURNAL'"
@@ -1370,7 +1372,7 @@ async def test_missing_supported_components_not_assumed(
     calendars: list[Mock],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test get_calendars excludes calendars when KeyError is raised for non-assumed components."""
+    """Test get_calendars excludes calendars on KeyError."""
     caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
     calendars[0].get_supported_components.side_effect = KeyError()
     client = MagicMock()
@@ -1385,7 +1387,8 @@ async def test_missing_supported_components_not_assumed(
     )
     assert warning_msg in caplog.text
 
-    # Clear caplog and call async_get_calendars again to verify warning is not logged again
+    # Clear caplog and call async_get_calendars again to verify
+    # warning is not logged again
     caplog.clear()
     await async_get_calendars(hass, client, "VJOURNAL")
     assert warning_msg not in caplog.text
