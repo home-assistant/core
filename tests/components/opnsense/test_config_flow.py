@@ -212,7 +212,11 @@ async def test_abort_if_already_setup(
         (OPNsenseBelowMinFirmware, "invalid_version"),
     ],
 )
-async def test_user_exceptions(hass: HomeAssistant, exc, expected) -> None:
+async def test_user_exceptions(
+    hass: HomeAssistant,
+    exc: type[Exception] | tuple[type[Exception], ...],
+    expected: str,
+) -> None:
     """Test all exception branches in async_step_user."""
     patch_target = (
         "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"
