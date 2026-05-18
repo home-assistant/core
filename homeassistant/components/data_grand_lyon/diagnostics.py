@@ -16,18 +16,16 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: DataGrandLyonConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
-
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "coordinator_data": {
             "stops": {
                 subentry_id: [asdict(passage) for passage in passages]
-                for subentry_id, passages in coordinator.data.stops.items()
+                for subentry_id, passages in entry.runtime_data.tcl_coordinator.data.items()
             },
             "velov_stations": {
                 subentry_id: asdict(station)
-                for subentry_id, station in coordinator.data.velov_stations.items()
+                for subentry_id, station in entry.runtime_data.velov_coordinator.data.items()
             },
         },
     }
