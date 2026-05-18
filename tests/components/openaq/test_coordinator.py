@@ -1,6 +1,7 @@
 """Test OpenAQ data coordinator helpers."""
 
 from types import MappingProxyType
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import httpx
@@ -25,7 +26,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import API_KEY, LOCATION_ID, make_latest, make_sensor
+from .conftest import (
+    API_KEY,
+    LOCATION_ID,
+    make_latest,
+    make_location,
+    make_response,
+    make_sensor,
+)
 
 from tests.common import MockConfigEntry
 
@@ -186,3 +194,56 @@ def test_normalize_latest_measurements_normalizes_unit_aliases() -> None:
             )
         }
     )
+
+
+def test_normalize_latest_measurements_allows_missing_units() -> None:
+    """Test normalizing a measurement without a reported unit."""
+    measurements = normalize_latest_measurements(
+        [make_latest(1, 12.1)],
+        [make_sensor(1, "pm10", cast(str, None))],
+    )
+
+    assert measurements == MappingProxyType(
+        {
+            "pm10": OpenAQMeasurement(
+                parameter="pm10",
+                value=12.1,
+                unit=None,
+            )
+        }
+    )
+
+
+async def test_update_data_allows_missing_location_coordinates(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+) -> None:
+    """Test location data with missing coordinates has no home distance."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            )
+        ],
+    )
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        config_entry,
+        next(iter(config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    mock_openaq_client.locations.get.return_value = make_response(
+        [make_location(coordinates=(cast(float, None), -106.6))]
+    )
+
+    data = await coordinator._async_update_data()
+
+    assert data.distance_to_home is None
