@@ -73,10 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
         _LOGGER.debug("Setup of DeviceDataCoordinator")
 
-        entry.runtime_data.device_data_coordinator = SolarLogDeviceDataCoordinator(
-            hass, entry, solarlog
-        )
-        await entry.runtime_data.device_data_coordinator.async_config_entry_first_refresh()
+        device_coordinator = SolarLogDeviceDataCoordinator(hass, entry, solarlog)
+        entry.runtime_data.device_data_coordinator = device_coordinator
+        await device_coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
