@@ -18,11 +18,19 @@ from .const import CONF_BASE_PATH, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PAGE_COUNT_ATTRIBUTES = (
+# Integer page-count attributes returned by Get-Printer-Attributes
+PAGE_COUNT_INT_ATTRIBUTES = (
     "printer-impressions-completed",
     "printer-pages-completed",
     "printer-media-sheets-completed",
-    "printer-impressions-completed-col",
+)
+
+# Collection page-count attributes — dicts of monochrome/full-color sub-counters
+PAGE_COUNT_COLLECTION_ATTRIBUTES = ("printer-impressions-completed-col",)
+
+REQUESTED_PAGE_COUNT_ATTRIBUTES = (
+    *PAGE_COUNT_INT_ATTRIBUTES,
+    *PAGE_COUNT_COLLECTION_ATTRIBUTES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +92,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                 IppOperation.GET_PRINTER_ATTRIBUTES,
                 {
                     "operation-attributes-tag": {
-                        "requested-attributes": PAGE_COUNT_ATTRIBUTES,
+                        "requested-attributes": REQUESTED_PAGE_COUNT_ATTRIBUTES,
                     },
                 },
             )
@@ -98,18 +106,18 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
         # returning a subset of attributes) doesn't drop known keys
         page_counts: dict[str, int] = dict(previous_page_counts)
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
-        for attr in PAGE_COUNT_ATTRIBUTES:
-            if attr not in parsed:
-                continue
-            value = parsed[attr]
+
+        for attr in PAGE_COUNT_INT_ATTRIBUTES:
+            value = parsed.get(attr)
             if isinstance(value, int):
                 page_counts[attr] = value
-            elif isinstance(value, dict):
-                # Handle collection attributes like
-                # printer-impressions-completed-col
-                # which contain sub-keys like "monochrome" and "full-color"
-                for sub_key, sub_value in value.items():
-                    if isinstance(sub_value, int):
-                        page_counts[f"{attr}/{sub_key}"] = sub_value
+
+        for attr in PAGE_COUNT_COLLECTION_ATTRIBUTES:
+            collection = parsed.get(attr)
+            if not isinstance(collection, dict):
+                continue
+            for sub_key, sub_value in collection.items():
+                if isinstance(sub_value, int):
+                    page_counts[f"{attr}/{sub_key}"] = sub_value
 
         return page_counts
