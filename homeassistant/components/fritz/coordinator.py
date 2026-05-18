@@ -717,6 +717,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
+                self._devices.pop(entry_mac, None)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -731,12 +732,28 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
 
-        tracked_devices = self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id]
-        for mac in tracked_devices.copy():
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        tracked = fritz_data.tracked.get(self.unique_id, set())
+        for mac in tracked.copy():
             if mac in device_hosts:
                 continue
-            _LOGGER.debug("Removing orphan mac address %s from tracked devices", mac)
-            tracked_devices.remove(mac)
+            _LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
+            tracked.remove(mac)
+
+        profile_switches = fritz_data.profile_switches.get(self.unique_id, set())
+        for mac in profile_switches.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
+            profile_switches.remove(mac)
+
+        wol_buttons = fritz_data.wol_buttons.get(self.unique_id, set())
+        for mac in wol_buttons.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
+            wol_buttons.remove(mac)
 
 
 class AvmWrapper(FritzBoxTools):
