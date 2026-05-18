@@ -216,6 +216,7 @@ aiobotocore==2.21.1
 
 # homeassistant.components.ccl
 aioccl==2026.3.3
+
 # homeassistant.components.centriconnect
 aiocentriconnect==0.2.3
 
