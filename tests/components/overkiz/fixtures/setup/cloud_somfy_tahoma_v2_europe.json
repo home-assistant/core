@@ -8342,6 +8342,217 @@
       "widget": "DynamicGate",
       "oid": "a8d3e9f1-4b2c-4d5e-8f6a-1234567890ab",
       "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1722449164000,
+      "lastUpdateTime": 1722449164000,
+      "label": "Somfy Pergola",
+      "deviceURL": "ogp://1234-1234-6233/14356699",
+      "shortcut": false,
+      "controllableName": "ogp:Pergola",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicPergola",
+        "uiProfiles": [
+          "StatefulCloseable",
+          "Closeable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "Pergola",
+        "qualifiedName": "ogp:Pergola",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicPergola",
+      "type": 1,
+      "oid": "60df5650-2d35-4fae-bfff-787521598e7f",
+      "uiClass": "Pergola"
+    },
+    {
+      "creationTime": 1633183247000,
+      "lastUpdateTime": 1633183247000,
+      "label": "Pergola Awning",
+      "deviceURL": "io://1234-1234-6233/11447718",
+      "shortcut": false,
+      "controllableName": "io:PergolaRailGuidedAwningIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DeploymentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "PergolaHorizontalAwning",
+        "uiProfiles": [
+          "StatefulSlidingPergola",
+          "StatefulDeployable",
+          "Deployable",
+          "DeployUndeploy",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "Pergola",
+        "qualifiedName": "io:PergolaRailGuidedAwningIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DeploymentState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PergolaHorizontalAwning",
+      "type": 1,
+      "oid": "71df5650-2d35-4fae-bfff-787521598e7f",
+      "uiClass": "Pergola"
     }
   ],
   "zones": [],
