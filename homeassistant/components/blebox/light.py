@@ -201,7 +201,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             else:
                 value = feature.apply_brightness(value, brightness)
 
-        if isinstance(value, list) and not any(value):
+        if isinstance(value, (list, tuple)) and not any(value):
             await self._feature.async_off()
             return
 
