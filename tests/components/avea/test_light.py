@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import AVEA_DISCOVERY_INFO
@@ -59,7 +59,7 @@ async def test_init_state(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Bedroom"
+    assert state.name == "Bedroom"
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
 
 
