@@ -73,8 +73,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.ENUM,
     ),
     IndevoltSensorEntityDescription(
-        key=IndevoltBattery.RATED_CAPACITY_GEN2,
-        generation=(2,),
+        key=IndevoltBattery.RATED_CAPACITY,
         translation_key="rated_capacity",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
