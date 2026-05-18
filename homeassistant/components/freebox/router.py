@@ -162,6 +162,13 @@ class FreeboxRouter:
             }
         )
 
+        # Drop devices the Freebox no longer reports (e.g. the user forgot
+        # them in the LAN browser). The Freebox keeps offline devices in its
+        # host list with active=False, so a disappearance is always intentional.
+        fbx_macs = {fbx_device["l2ident"]["id"] for fbx_device in fbx_devices}
+        for stale_mac in set(self.devices) - fbx_macs:
+            del self.devices[stale_mac]
+
         for fbx_device in fbx_devices:
             device_mac = fbx_device["l2ident"]["id"]
 
@@ -253,6 +260,16 @@ class FreeboxRouter:
             self.home_granted = False
             _LOGGER.warning("Home access is not granted")
             return
+
+        # Drop Home nodes the Freebox no longer reports (e.g. unpaired in the
+        # Freebox app). Mirrors the prune done for LAN devices.
+        current_ids = {
+            home_node["id"]
+            for home_node in home_nodes
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES
+        }
+        for stale_id in set(self.home_devices) - current_ids:
+            del self.home_devices[stale_id]
 
         new_device = False
         for home_node in home_nodes:

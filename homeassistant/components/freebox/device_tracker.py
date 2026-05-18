@@ -70,7 +70,10 @@ class FreeboxDevice(ScannerEntity):
     @callback
     def async_update_state(self) -> None:
         """Update the Freebox device."""
-        device = self._router.devices[self._mac]
+        # The router prunes stale devices on each scan; if this entity's MAC
+        # was just dropped, skip the refresh and let the entity expire.
+        if (device := self._router.devices.get(self._mac)) is None:
+            return
         self._active = device["active"]
         if device.get("attrs") is None:
             # device
