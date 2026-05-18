@@ -235,8 +235,27 @@
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "Location not found."
+    },
     "unable_to_fetch": {
       "message": "[%key:component::google_air_quality::common::unable_to_fetch%]"
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "description": "Get an air quality forecast for a configured location.",
+      "fields": {
+        "device_id": {
+          "description": "The location to fetch the forecast for.",
+          "name": "Location"
+        },
+        "hours": {
+          "description": "How many hours into the future to forecast.",
+          "name": "Hours"
+        }
+      },
+      "name": "Get forecast"
     }
   }
 }
