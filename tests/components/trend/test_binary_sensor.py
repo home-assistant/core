@@ -112,62 +112,51 @@ async def test_trend_setup_from_yaml_with_unique_id(
 
 
 @pytest.mark.parametrize(
-    ("states", "inverted", "expected_state"),
+    ("states", "inverted", "expected_state", "source_entity_id"),
     [
-        (["1", "2"], False, STATE_ON),
-        (["2", "1"], False, STATE_OFF),
-        (["1", "2"], True, STATE_OFF),
-        (["2", "1"], True, STATE_ON),
+        (["1", "2"], False, STATE_ON, "sensor.test_state"),
+        (["2", "1"], False, STATE_OFF, "sensor.test_state"),
+        (["1", "2"], True, STATE_OFF, "sensor.test_state"),
+        (["2", "1"], True, STATE_ON, "sensor.test_state"),
+        (["1", "2"], False, STATE_ON, "counter.people"),
     ],
-    ids=["up", "down", "up inverted", "down inverted"],
+    ids=[
+        "sensor up",
+        "sensor down",
+        "sensor up inverted",
+        "sensor down inverted",
+        "counter up",
+    ],
 )
 async def test_basic_trend(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_component: ComponentSetup,
     states: list[str],
     inverted: bool,
     expected_state: str,
+    source_entity_id: str,
 ) -> None:
     """Test trend with a basic setup."""
-    await setup_component(
-        {
-            "invert": inverted,
-        },
-    )
-
-    for state in states:
-        hass.states.async_set("sensor.test_state", state)
-        await hass.async_block_till_done()
-
-    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
-    assert sensor_state.state == expected_state
-
-
-async def test_basic_trend_with_counter_entity(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test trend with a counter entity."""
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
         options={
             **config_entry.options,
             "name": "test_trend_sensor",
-            "entity_id": "counter.people",
+            "entity_id": source_entity_id,
+            "invert": inverted,
         },
         title="test_trend_sensor",
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for state in ("1", "2"):
-        hass.states.async_set("counter.people", state)
+    for state in states:
+        hass.states.async_set(source_entity_id, state)
         await hass.async_block_till_done()
 
     assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
-    assert sensor_state.state == STATE_ON
+    assert sensor_state.state == expected_state
 
 
 @pytest.mark.parametrize(
