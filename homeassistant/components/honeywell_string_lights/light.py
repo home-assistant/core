@@ -5,13 +5,16 @@ from typing import Any
 from rf_protocols.codes.honeywell.string_lights import CODES
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.components.radio_frequency import async_send_command
+from homeassistant.components.radio_frequency import (
+    RadioFrequencyTransmitterConsumerEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import CONF_TRANSMITTER
 from .entity import HoneywellStringLightsEntity
 
 PARALLEL_UPDATES = 1
@@ -26,14 +29,23 @@ async def async_setup_entry(
     async_add_entities([HoneywellStringLight(config_entry)])
 
 
-class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEntity):
+class HoneywellStringLight(
+    HoneywellStringLightsEntity,
+    RadioFrequencyTransmitterConsumerEntity,
+    LightEntity,
+    RestoreEntity,
+):
     """Representation of a Honeywell String Lights set controlled via RF."""
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_name = None
-    _attr_should_poll = False
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the entity."""
+        super().__init__(entry)
+        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
 
     async def async_added_to_hass(self) -> None:
         """Restore last known state."""
@@ -43,19 +55,17 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._async_send_command("turn_on")
+        await self._async_send_rf_command("turn_on")
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._async_send_command("turn_off")
+        await self._async_send_rf_command("turn_off")
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def _async_send_command(self, name: str) -> None:
+    async def _async_send_rf_command(self, name: str) -> None:
         """Load the named command and send it via the configured transmitter."""
         command = await CODES.async_load_command(name)
-        await async_send_command(
-            self.hass, self._transmitter, command, context=self._context
-        )
+        await self._send_command(command)
