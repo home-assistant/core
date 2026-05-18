@@ -285,6 +285,7 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
     assert state.state == STATE_UNKNOWN
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "device_tracker.test1",
@@ -347,7 +348,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "away_from"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "42.3"
+        assert float(state.state) == pytest.approx(42.3)
 
         now = freeze_now.tick(timedelta(seconds=200))
         async_fire_time_changed(hass, now)
@@ -356,7 +357,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "away_from"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "18.51"
+        assert float(state.state) == pytest.approx(18.51)
 
         now = freeze_now.tick(timedelta(seconds=200))
         async_fire_time_changed(hass, now)
@@ -365,7 +366,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "away_from"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "10.07"
+        assert float(state.state) == pytest.approx(10.07)
 
         now = freeze_now.tick(timedelta(seconds=200))
         async_fire_time_changed(hass, now)
@@ -374,7 +375,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "away_from"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "5.29"
+        assert float(state.state) == pytest.approx(5.29)
 
         now = freeze_now.tick(timedelta(seconds=200))
         async_fire_time_changed(hass, now)
@@ -383,7 +384,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "away_from"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "2.63"
+        assert float(state.state) == pytest.approx(2.63)
 
         now = freeze_now.tick(timedelta(seconds=200))
         async_fire_time_changed(hass, now)
@@ -392,7 +393,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == "stationary"
         state = hass.states.get(f"{entity_base_name}_speed")
-        assert state.state == "0"
+        assert float(state.state) == 0.0
 
 
 async def test_device_trackers_in_zone(hass: HomeAssistant) -> None:
