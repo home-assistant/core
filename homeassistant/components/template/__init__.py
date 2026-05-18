@@ -79,8 +79,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
         # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_reload_template_entities",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         integration = await async_get_integration(hass, DOMAIN)
         conf = await conf_util.async_process_component_and_handle_errors(
