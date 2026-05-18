@@ -193,7 +193,8 @@ async def test_sensor_throttling_after_init(
 
 # scan interval in seconds = (3600 * num_calls) / MAX_CALLS_PER_HOURS
 # MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour
-# num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ... + num_coordinator_car_n
+# num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ...
+# + num_coordinator_car_n
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
@@ -232,7 +233,8 @@ async def test_dynamic_scan_interval(
 
 # scan interval in seconds = (3600 * num_calls) / MAX_CALLS_PER_HOURS
 # MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour
-# num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ... + num_coordinator_car_n
+# num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ...
+# + num_coordinator_car_n
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [

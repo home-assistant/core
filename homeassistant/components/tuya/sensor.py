@@ -47,7 +47,6 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_CLASS_UNITS,
-    DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -1070,7 +1069,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.SFKZQ: (
-        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        # Total seconds of irrigation. Read-write value;
+        # the device appears to ignore the write action
         TuyaSensorEntityDescription(
             key=DPCode.TIME_USE,
             translation_key="total_watering_time",
@@ -1755,9 +1755,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
-            (device_class := self.device_class) is None
-            or device_class is SensorDeviceClass.ENUM
-            or device_class.startswith(DOMAIN)
+            device_class := self.entity_description.device_class
+        ) is SensorDeviceClass.ENUM:
+            self._attr_native_unit_of_measurement = None
+            return
+        if (
+            device_class is None
             # we do not need to check mappings if the API UOM is allowed
             or tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]
         ):
@@ -1788,8 +1791,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # If the device provides TEMP_UNIT_CONVERT, use it to determine the unit.
         if (
-                self.device_class == SensorDeviceClass.TEMPERATURE
-                and (temp_unit := self._get_converted_temp_unit()) is not None
+            self.device_class == SensorDeviceClass.TEMPERATURE
+            and (temp_unit := self._get_converted_temp_unit()) is not None
         ):
             self._attr_native_unit_of_measurement = temp_unit
             return

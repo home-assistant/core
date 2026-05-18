@@ -18,6 +18,8 @@ from .const import (
 from .coordinator import SatelConfigEntry, SatelIntegraBaseCoordinator
 from .entity import SatelIntegraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,6 +79,8 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
     SatelIntegraEntity[_CoordinatorT], BinarySensorEntity
 ):
     """Base binary sensor for Satel Integra."""
+
+    _attr_name = None
 
     def __init__(
         self,

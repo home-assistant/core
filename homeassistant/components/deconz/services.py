@@ -85,6 +85,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         else:
             try:
                 hub = get_master_hub(hass)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError:
                 LOGGER.error("No master gateway available")
                 return

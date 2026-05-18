@@ -110,7 +110,7 @@ async def test_lock_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lock state trigger fires when any lock state changes to a specific state."""
+    """Test lock trigger fires when any lock changes state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_locks,
@@ -163,7 +163,7 @@ async def test_lock_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lock state trigger fires when the first lock changes to a specific state."""
+    """Test lock trigger fires when first lock changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_locks,
@@ -216,7 +216,7 @@ async def test_lock_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the lock state trigger fires when the last lock changes to a specific state."""
+    """Test lock trigger fires when last lock changes state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_locks,

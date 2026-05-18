@@ -84,7 +84,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities([AveaLight(entry.runtime_data)], update_before_add=True)
+    async_add_entities(
+        [AveaLight(entry.runtime_data, entry.title)], update_before_add=True
+    )
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -109,7 +111,8 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
 
         if brightness is None:
             _LOGGER.warning(
-                "Skipping Avea bulb %s during YAML import due to read failure: brightness is None",
+                "Skipping Avea bulb %s during YAML import due to"
+                " read failure: brightness is None",
                 address,
             )
             continue
@@ -168,10 +171,10 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb) -> None:
+    def __init__(self, light: avea.Bulb, entry_title: str) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = light.name
+        self._attr_name = entry_title
         self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs: Any) -> None:
@@ -192,6 +195,16 @@ class AveaLight(LightEntity):
 
     def update(self) -> None:
         """Fetch new state data for this light."""
-        if (brightness := self._light.get_brightness()) is not None:
+        connected = self._light.connect()
+
+        try:
+            brightness = self._light.get_brightness()
+            rgb_color = self._light.get_rgb()
+        finally:
+            if connected:
+                self._light.disconnect()
+
+        if brightness is not None:
             self._attr_is_on = brightness != 0
             self._attr_brightness = round(255 * (brightness / 4095))
+        self._attr_hs_color = color_util.color_RGB_to_hs(*rgb_color)
