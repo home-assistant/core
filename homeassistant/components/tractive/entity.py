@@ -32,7 +32,7 @@ class TractiveEntity(Entity):
                 name=f"Tracker {tracker_details['_id']}",
                 manufacturer="Tractive GmbH",
                 sw_version=tracker_details["fw_version"],
-                model=tracker_details["model_number"],
+                model_id=tracker_details["model_number"],
             )
         else:
             self._attr_device_info = DeviceInfo(
