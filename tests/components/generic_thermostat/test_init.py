@@ -167,7 +167,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the generic_thermostat config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
     assert await hass.config_entries.async_setup(
@@ -244,7 +244,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the generic_thermostat config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
     # Add another config entry to the source device
@@ -650,7 +650,8 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     result = await generic_thermostat.async_migrate_entry(hass, config_entry)
     assert result is True
 
-    # After migration, cooldown should be set to min_cycle_duration and minor version bumped
+    # After migration, cooldown should be set to min_cycle_duration
+    # and minor version bumped
     assert config_entry.options.get(CONF_DUR_COOLDOWN) == {
         "hours": 0,
         "minutes": 5,

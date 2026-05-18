@@ -88,7 +88,7 @@ async def test_cleanup_orphaned_temperature_entities(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that stale temperature entity entries from prior versions are removed on setup."""
+    """Test stale temperature entities from prior versions are removed on setup."""
     mock_config_entry.add_to_hass(hass)
 
     old_unique_ids = [
@@ -133,7 +133,9 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status=DiagStatus.OK)
         ]
-        mock_client_class.return_value.async_get_write_requests_remaining.return_value = 100
+        (
+            mock_client_class.return_value.async_get_write_requests_remaining
+        ).return_value = 100
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

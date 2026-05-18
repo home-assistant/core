@@ -41,8 +41,8 @@ async def test_invalid_json(caplog: pytest.LogCaptureFixture) -> None:
         HomeAssistantView.json({"hello": Decimal("2.0")})
 
     assert (
-        "Unable to serialize to JSON. Bad data found at $.hello=2.0(<class 'decimal.Decimal'>"
-        in caplog.text
+        "Unable to serialize to JSON. Bad data found at"
+        " $.hello=2.0(<class 'decimal.Decimal'>" in caplog.text
     )
 
 
@@ -128,7 +128,7 @@ async def test_requires_auth_includes_www_authenticate(
 async def test_requires_auth_omits_www_authenticate_without_url(
     mock_request: Mock,
 ) -> None:
-    """Test that 401 responses omit WWW-Authenticate header when no URL is configured."""
+    """Test 401 responses omit WWW-Authenticate when no URL configured."""
     mock_request.get = Mock(return_value=False)
     with (
         patch(
