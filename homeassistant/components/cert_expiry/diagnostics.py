@@ -23,31 +23,36 @@ async def async_get_config_entry_diagnostics(
         getattr(entry, "runtime_data", None),
     )
 
-    if coordinator is None:
-        return {
-            "entry": async_redact_data(entry_diagnostics, TO_REDACT),
-            "coordinator": None,
-        }
-
-    expiry = coordinator.data.isoformat() if coordinator.data else None
-    cert_error = (
-        (
-            f"{type(coordinator.cert_error).__module__}."
-            f"{type(coordinator.cert_error).__qualname__}"
-        )
-        if coordinator.cert_error
-        else None
-    )
-
-    coordinator_diagnostics = {
-        "host": coordinator.host,
-        "port": coordinator.port,
-        "name": coordinator.name,
-        "expiry_datetime": expiry,
-        "is_cert_valid": coordinator.is_cert_valid,
-        "cert_error": cert_error,
-        "last_update_success": coordinator.last_update_success,
+    coordinator_diagnostics: dict[str, Any] = {
+        "host": None,
+        "port": None,
+        "name": None,
+        "expiry_datetime": None,
+        "is_cert_valid": None,
+        "cert_error": None,
+        "last_update_success": None,
     }
+
+    if coordinator is not None:
+        expiry = coordinator.data.isoformat() if coordinator.data else None
+        cert_error = (
+            (
+                f"{type(coordinator.cert_error).__module__}."
+                f"{type(coordinator.cert_error).__qualname__}"
+            )
+            if coordinator.cert_error
+            else None
+        )
+
+        coordinator_diagnostics = {
+            "host": coordinator.host,
+            "port": coordinator.port,
+            "name": coordinator.name,
+            "expiry_datetime": expiry,
+            "is_cert_valid": coordinator.is_cert_valid,
+            "cert_error": cert_error,
+            "last_update_success": coordinator.last_update_success,
+        }
 
     return {
         "entry": async_redact_data(entry_diagnostics, TO_REDACT),
