@@ -166,7 +166,11 @@ def _async_register_mac(
 
 
 class BaseTrackerEntity(Entity):
-    """Represent a tracked device."""
+    """Represent a tracked device.
+
+    Not intended to be directly inherited by integrations. Integrations should
+    inherit TrackerEntity, BaseScannerEntity or ScannerEntity instead.
+    """
 
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -304,6 +308,26 @@ class TrackerEntity(
         return attr
 
 
+class BaseScannerEntity(BaseTrackerEntity):
+    """Base class for a tracked device that can be connected or disconnected.
+
+    Unlike ScannerEntity, this entity does not make assumptions about MAC
+    addresses being used to identify the device.
+    """
+
+    @property
+    def state(self) -> str:
+        """Return the state of the device."""
+        if self.is_connected:
+            return STATE_HOME
+        return STATE_NOT_HOME
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected."""
+        raise NotImplementedError
+
+
 class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
@@ -316,7 +340,7 @@ CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
 
 
 class ScannerEntity(
-    BaseTrackerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
+    BaseScannerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
 ):
     """Base class for a tracked device that is on a scanned network."""
 
@@ -340,18 +364,6 @@ class ScannerEntity(
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._attr_hostname
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self.is_connected:
-            return STATE_HOME
-        return STATE_NOT_HOME
-
-    @property
-    def is_connected(self) -> bool:
-        """Return true if the device is connected to the network."""
-        raise NotImplementedError
 
     @property
     def unique_id(self) -> str | None:

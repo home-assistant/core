@@ -16,6 +16,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import (
     CONNECTED_DEVICE_REGISTERED,
+    BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
     TrackerEntity,
@@ -242,6 +243,64 @@ def tracker_entity_fixture(
     return entity
 
 
+class MockBaseScannerEntity(BaseScannerEntity):
+    """Test base scanner entity."""
+
+    def __init__(
+        self,
+        connected: bool = False,
+        unique_id: str | None = None,
+    ) -> None:
+        """Initialize entity."""
+        self._connected = connected
+        self._unique_id = unique_id
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False for the test entity."""
+        return False
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type, eg gps or router, of the device."""
+        return SourceType.BLUETOOTH_LE
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._connected
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return hostname of the device."""
+        return self._unique_id
+
+    @callback
+    def set_connected(self, connected: bool) -> None:
+        """Set connected state."""
+        self._connected = connected
+        self.async_write_ha_state()
+
+
+@pytest.fixture(name="unique_id")
+def unique_id_fixture() -> str | None:
+    """Return the unique_id of the entity for the test."""
+    return None
+
+
+@pytest.fixture(name="base_scanner_entity")
+def base_scanner_entity_fixture(
+    entity_id: str,
+    unique_id: str | None,
+) -> MockBaseScannerEntity:
+    """Create a test base scanner entity."""
+    entity = MockBaseScannerEntity(
+        unique_id=unique_id,
+    )
+    entity.entity_id = entity_id
+    return entity
+
+
 class MockScannerEntity(ScannerEntity):
     """Test scanner entity."""
 
@@ -320,12 +379,6 @@ def hostname_fixture() -> str | None:
     return None
 
 
-@pytest.fixture(name="unique_id")
-def unique_id_fixture() -> str | None:
-    """Return the unique_id of the entity for the test."""
-    return None
-
-
 @pytest.fixture(name="scanner_entity")
 def scanner_entity_fixture(
     entity_id: str,
@@ -345,7 +398,49 @@ def scanner_entity_fixture(
     return entity
 
 
-async def test_load_unload_entry(
+async def test_load_unload_entry_base_scanner(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test loading and unloading a config entry with a device tracker entity."""
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+
+async def test_load_unload_entry_scanner(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    scanner_entity: MockScannerEntity,
+) -> None:
+    """Test loading and unloading a config entry with a device tracker entity."""
+    config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+
+async def test_load_unload_entry_tracker(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_id: str,
@@ -490,6 +585,31 @@ async def test_tracker_entity_state(
     assert state.attributes == expected_attributes
 
 
+async def test_base_scanner_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test BaseScannerEntity based device tracker."""
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+    }
+    assert entity_state.state == STATE_NOT_HOME
+
+    base_scanner_entity.set_connected(True)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+
+
 @pytest.mark.parametrize(
     ("ip_address", "mac_address", "hostname"),
     [("0.0.0.0", "ad:de:ef:be:ed:fe", "test.hostname.org")],
@@ -568,6 +688,18 @@ def test_tracker_entity() -> None:
     test_entity.is_polling = True
 
     assert not test_entity.force_update
+
+
+def test_base_scanner_entity() -> None:
+    """Test coverage for base BaseScannerEntity entity class."""
+    entity = BaseScannerEntity()
+    with pytest.raises(NotImplementedError):
+        assert entity.source_type is None
+    with pytest.raises(NotImplementedError):
+        assert entity.is_connected is None
+    with pytest.raises(NotImplementedError):
+        assert entity.state == STATE_NOT_HOME
+    assert entity.battery_level is None
 
 
 def test_scanner_entity() -> None:
