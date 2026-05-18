@@ -51,8 +51,8 @@ class TibberRuntimeData:
         """Return a valid Tibber access token."""
         await self.session.async_ensure_token_valid()
         token = self.session.token
-        access_token = token.get(CONF_ACCESS_TOKEN)
-        if not isinstance(access_token, str) or not access_token:
+        access_token: str | None = token.get(CONF_ACCESS_TOKEN)
+        if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
         return access_token
 
