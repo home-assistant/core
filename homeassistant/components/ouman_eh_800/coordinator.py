@@ -22,7 +22,6 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
-    ServiceValidationError,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -113,8 +112,6 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             raise HomeAssistantError("Authentication failed") from err
         except OumanClientCommunicationError as err:
             raise HomeAssistantError("Error communicating with API") from err
-        except ValueError as err:
-            raise ServiceValidationError(str(err)) from err
 
         self.async_set_updated_data({**self.data, endpoint: result})
         # Separate refresh on all endpoints to catch cascading changes.

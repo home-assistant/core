@@ -30,7 +30,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SCENARIOS
@@ -161,14 +161,6 @@ async def test_async_select_option(
             HomeAssistantError,
             "Error communicating with API",
             id="communication_failure",
-        ),
-        pytest.param(
-            ValueError(
-                "Value for l1_water_out_minimum_temperature out of bounds [5,95]: 200"
-            ),
-            ServiceValidationError,
-            r"Value for l1_water_out_minimum_temperature out of bounds \[5,95\]: 200",
-            id="value_out_of_range",
         ),
     ],
 )
