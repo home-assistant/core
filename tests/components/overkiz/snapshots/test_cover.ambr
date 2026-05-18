@@ -2101,6 +2101,60 @@
     'state': 'closed',
   })
 # ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.pergola_awning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.pergola_awning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/11447718',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.pergola_awning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 20,
+      'device_class': 'awning',
+      'friendly_name': 'Pergola Awning',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.pergola_awning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.rts_gate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2256,6 +2310,60 @@
     }),
     'context': <ANY>,
     'entity_id': 'cover.sliding_gate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.somfy_pergola-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.somfy_pergola',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-1234-6233/14356699',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.somfy_pergola-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'awning',
+      'friendly_name': 'Somfy Pergola',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.somfy_pergola',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3729,6 +3837,59 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garage_door_rollixo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garage_door_rollixo',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/12745774',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garage_door_rollixo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Garage Door Rollixo',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garage_door_rollixo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garden_pergola-entry]
