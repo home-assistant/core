@@ -131,9 +131,9 @@ class InfraredEntityStateTracker:
 
         # Set initial availability based on current infrared entity state
         ir_state = self._hass.states.get(self._infrared_entity_id)
-        self._availability_changed(
-            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
-        )
+        ir_available = ir_state is not None and ir_state.state != STATE_UNAVAILABLE
+        if ir_available != self._entity.available:
+            self._availability_changed(ir_available)
 
     @callback
     def _async_ir_state_changed(self, event: Event[EventStateChangedData]) -> None:
