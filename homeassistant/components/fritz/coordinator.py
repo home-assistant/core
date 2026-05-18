@@ -188,6 +188,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         await self.hass.async_add_executor_job(self.setup)
 
         self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(

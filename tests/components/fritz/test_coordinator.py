@@ -93,9 +93,6 @@ async def fixture_fritz_tools(
     )
 
     hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
-    hass.data[FRITZ_DATA_KEY].tracked[mock_config_entry.unique_id] = set()
-    hass.data[FRITZ_DATA_KEY].profile_switches[mock_config_entry.unique_id] = set()
-    hass.data[FRITZ_DATA_KEY].wol_buttons[mock_config_entry.unique_id] = set()
 
     await coordinator.async_setup()
     return coordinator
