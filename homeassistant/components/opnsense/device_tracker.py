@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_OPNSENSE_CLIENT, CONF_TRACKER_INTERFACES
 from .coordinator import OPNsenseDeviceTrackerCoordinator
 from .types import DeviceDetails
 
@@ -19,8 +18,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for OPNsense component."""
-    client = entry.runtime_data[CONF_OPNSENSE_CLIENT]
-    interfaces = entry.runtime_data.get(CONF_TRACKER_INTERFACES, [])
+    client = entry.runtime_data.client
+    interfaces = entry.runtime_data.tracker_interfaces
 
     coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
 

@@ -1,5 +1,6 @@
 """Support for OPNsense Routers."""
 
+from dataclasses import dataclass
 import logging
 
 from aiopnsense import (
@@ -23,12 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_OPNSENSE_CLIENT,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-)
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +46,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
+
+
+@dataclass(slots=True)
+class OPNsenseRuntimeData:
+    """Runtime data for OPNsense config entries."""
+
+    client: OPNsenseClient
+    tracker_interfaces: list[str]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -144,10 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
                 return False
 
-    config_entry.runtime_data = {
-        CONF_OPNSENSE_CLIENT: client,
-        CONF_TRACKER_INTERFACES: tracker_interfaces,
-    }
+    config_entry.runtime_data = OPNsenseRuntimeData(
+        client=client,
+        tracker_interfaces=tracker_interfaces,
+    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
