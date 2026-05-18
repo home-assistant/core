@@ -254,7 +254,10 @@ class SupervisorIssues:
         return set(self._issues.values())
 
     def add_issue(self, issue: Issue) -> None:
-        """Add or update an issue in the list. Create or update a repair if necessary."""
+        """Add or update an issue in the list.
+
+        Create or update a repair if necessary.
+        """
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
             if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
                 placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()

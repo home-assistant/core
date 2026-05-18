@@ -253,7 +253,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._gatewayscanner = GatewayScanner(
             self._xknx, stop_on_found=0, timeout_in_seconds=2
         )
-        # keep a reference to the generator to scan in background until user selects a connection type
+        # keep a reference to the generator to scan in
+        # background until user selects a connection type
         self._async_scan_gen = self._gatewayscanner.async_scan()
         try:
             await anext(self._async_scan_gen)
@@ -340,7 +341,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 label=(
                     f"{tunnel}"
                     f"{' TCP' if tunnel.supports_tunnelling_tcp else ' UDP'}"
-                    f"{' 🔐 Secure tunneling' if tunnel.tunnelling_requires_secure else ''}"
+                    f"{
+                        ' 🔐 Secure tunneling'
+                        if tunnel.tunnelling_requires_secure
+                        else ''
+                    }"
                 ),
             )
             for tunnel in self._found_tunnels
@@ -389,7 +394,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.finish_flow()
 
-        # this step is only called from async_step_tunnel so self._selected_tunnel is always set
+        # this step is only called from async_step_tunnel
+        # so self._selected_tunnel is always set
         assert self._selected_tunnel
         # skip if only one tunnel endpoint or no tunnelling slot infos
         if len(self._selected_tunnel.tunnelling_slots) <= 1:
@@ -405,7 +411,13 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             selector.SelectOptionDict(
                 value=str(slot),
                 label=(
-                    f"{slot} - {'current connection' if slot == _current_ia else 'occupied' if not slot_status.free else 'free'}"
+                    f"{slot} - {
+                        'current connection'
+                        if slot == _current_ia
+                        else 'occupied'
+                        if not slot_status.free
+                        else 'free'
+                    }"
                 ),
             )
             for slot, slot_status in self._selected_tunnel.tunnelling_slots.items()
@@ -432,7 +444,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_manual_tunnel(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Manually configure tunnel connection parameters. Fields default to preselected gateway if one was found."""
+        """Manually configure tunnel connection parameters.
+
+        Fields default to preselected gateway if one was found.
+        """
         errors: dict = {}
 
         if user_input is not None:
@@ -486,11 +501,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return await self.async_step_secure_key_source_menu_tunnel()
-                self.new_title = (
-                    "Tunneling "
-                    f"{'UDP' if selected_tunneling_type == CONF_KNX_TUNNELING else 'TCP'} "
-                    f"@ {_host}"
+                _proto = (
+                    "UDP" if selected_tunneling_type == CONF_KNX_TUNNELING else "TCP"
                 )
+                self.new_title = f"Tunneling {_proto} @ {_host}"
                 return self.finish_flow()
 
         _reconfiguring_existing_tunnel = (
@@ -620,7 +634,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
                     ],
                 )
-                self.new_title = f"Secure Routing as {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                self.new_title = (
+                    "Secure Routing as"
+                    f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+                )
                 return self.finish_flow()
 
         fields = {
@@ -682,7 +699,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.finish_flow()
 
                 # Tunneling / Automatic
-                # skip selection step if we have a keyfile update that includes a configured tunnel
+                # skip selection step if we have a keyfile update
+                # that includes a configured tunnel
                 if self.tunnel_endpoint_ia is not None and self.tunnel_endpoint_ia in [
                     str(_if.individual_address) for _if in self._keyring.interfaces
                 ]:
@@ -743,7 +761,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.finish_flow()
 
-        # this step is only called from async_step_secure_knxkeys so self._keyring is always set
+        # this step is only called from async_step_secure_knxkeys
+        # so self._keyring is always set
         assert self._keyring
 
         # Filter for selected tunnel

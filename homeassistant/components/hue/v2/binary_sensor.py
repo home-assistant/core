@@ -69,11 +69,13 @@ def _resource_valid(resource: SensorType, controller: ControllerType) -> bool:
             ResourceTypes.SERVICE_GROUP,
         ):
             return False
-        # guard against GroupedMotion without parent (should not happen, but just in case)
+        # guard against GroupedMotion without parent
+        # (should not happen, but just in case)
         if not (parent := controller.get_parent(resource.id)):
             return False
-        # filter out GroupedMotion sensors that have only one member, because Hue creates one
-        # default grouped Motion sensor per zone/room, which is not useful to expose in HA
+        # filter out GroupedMotion sensors that have only one member,
+        # because Hue creates one default grouped Motion sensor per
+        # zone/room, which is not useful to expose in HA
         if len(parent.children) <= 1:
             return False
     # default/other checks can go here (none for now)
@@ -188,9 +190,7 @@ class HueMotionAwareSensor(HueMotionSensor):
     resource: SecurityAreaMotion
 
     entity_description = BinarySensorEntityDescription(
-        key="motion_sensor",
-        device_class=BinarySensorDeviceClass.MOTION,
-        has_entity_name=False,
+        key="motion_sensor", device_class=BinarySensorDeviceClass.MOTION
     )
 
     @property
@@ -235,9 +235,7 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     resource: EntertainmentConfiguration
 
     entity_description = BinarySensorEntityDescription(
-        key="entertainment_active_sensor",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        has_entity_name=False,
+        key="entertainment_active_sensor", device_class=BinarySensorDeviceClass.RUNNING
     )
 
     @property

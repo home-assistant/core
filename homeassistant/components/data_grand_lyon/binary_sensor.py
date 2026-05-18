@@ -6,15 +6,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SUBENTRY_TYPE_VELOV_STATION
-from .coordinator import DataGrandLyonConfigEntry, DataGrandLyonCoordinator
+from .const import SUBENTRY_TYPE_VELOV_STATION
+from .coordinator import DataGrandLyonConfigEntry
+from .entity import DataGrandLyonVelovEntity
 
 PARALLEL_UPDATES = 0
 
@@ -45,41 +43,8 @@ async def async_setup_entry(
         )
 
 
-class DataGrandLyonVelovBinarySensor(
-    CoordinatorEntity[DataGrandLyonCoordinator], BinarySensorEntity
-):
+class DataGrandLyonVelovBinarySensor(DataGrandLyonVelovEntity, BinarySensorEntity):
     """Binary sensor for Data Grand Lyon Vélo'v station."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataGrandLyonCoordinator,
-        subentry: ConfigSubentry,
-        description: BinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._subentry_id = subentry.subentry_id
-        assert subentry.unique_id is not None
-
-        self._attr_unique_id = f"{subentry.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, subentry.unique_id)},
-            name=subentry.title,
-            manufacturer="JCDecaux",
-            model="Station",
-            entry_type=DeviceEntryType.SERVICE,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return true if the station data is available."""
-        return (
-            super().available
-            and self._subentry_id in self.coordinator.data.velov_stations
-        )
 
     @property
     def is_on(self) -> bool:
