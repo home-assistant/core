@@ -3,7 +3,7 @@
 from datetime import date
 from unittest.mock import MagicMock
 
-from easyenergy import VatOption
+from easyenergy import ElectricityGranularity, VatOption
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -11,6 +11,8 @@ import voluptuous as vol
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
     ATTR_CONFIG_ENTRY,
+    ATTR_GRANULARITY,
+    ATTR_PRICE_TYPE,
     ENERGY_RETURN_SERVICE_NAME,
     ENERGY_USAGE_SERVICE_NAME,
     GAS_SERVICE_NAME,
@@ -133,8 +135,112 @@ async def test_service_filters_datetime_range(
         mock_easyenergy.gas_prices.assert_called_once_with(**expected_call)
         mock_easyenergy.energy_prices.assert_not_called()
     else:
+        expected_call["granularity"] = ElectricityGranularity.HOUR
         mock_easyenergy.energy_prices.assert_called_once_with(**expected_call)
         mock_easyenergy.gas_prices.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "expected_prices"),
+    [
+        (
+            GAS_SERVICE_NAME,
+            [
+                {"timestamp": "2026-04-18 22:00:00+00:00", "price": 1.4227},
+            ],
+        ),
+        (
+            ENERGY_USAGE_SERVICE_NAME,
+            [
+                {"timestamp": "2026-04-19 00:00:00+00:00", "price": 0.26476},
+                {"timestamp": "2026-04-19 01:00:00+00:00", "price": 0.25756},
+                {"timestamp": "2026-04-19 02:00:00+00:00", "price": 0.25782},
+            ],
+        ),
+    ],
+)
+async def test_usage_services_invoice_price_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_easyenergy: MagicMock,
+    service: str,
+    expected_prices: list[dict[str, str | float]],
+) -> None:
+    """Test usage services can return invoice prices."""
+    mock_easyenergy.reset_mock()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            ATTR_PRICE_TYPE: "invoice",
+            "incl_vat": True,
+            "start": "2026-04-19 02:00:00+02:00",
+            "end": "2026-04-19 05:00:00+02:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"prices": expected_prices}
+
+    expected_call = {
+        "start_date": date(2026, 4, 19),
+        "end_date": date(2026, 4, 19),
+        "vat": VatOption.INCLUDE,
+    }
+    if service == GAS_SERVICE_NAME:
+        mock_easyenergy.gas_prices.assert_called_once_with(**expected_call)
+        mock_easyenergy.energy_prices.assert_not_called()
+    else:
+        expected_call["granularity"] = ElectricityGranularity.HOUR
+        mock_easyenergy.energy_prices.assert_called_once_with(**expected_call)
+        mock_easyenergy.gas_prices.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        ENERGY_USAGE_SERVICE_NAME,
+        ENERGY_RETURN_SERVICE_NAME,
+    ],
+)
+async def test_energy_services_quarter_granularity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_easyenergy: MagicMock,
+    service: str,
+) -> None:
+    """Test energy services can request quarter-hour prices."""
+    service_data: dict[str, str | bool] = {
+        ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+        ATTR_GRANULARITY: "quarter",
+        "start": "2026-04-19",
+        "end": "2026-04-19",
+    }
+    if service == ENERGY_USAGE_SERVICE_NAME:
+        service_data["incl_vat"] = True
+
+    mock_easyenergy.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        service_data,
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_easyenergy.energy_prices.assert_called_once_with(
+        start_date=date(2026, 4, 19),
+        end_date=date(2026, 4, 19),
+        granularity=ElectricityGranularity.QUARTER,
+        vat=VatOption.INCLUDE,
+    )
+    mock_easyenergy.gas_prices.assert_not_called()
 
 
 @pytest.fixture
@@ -206,6 +312,83 @@ async def test_service_schema_validation_vat(
             DOMAIN,
             service,
             {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_USAGE_SERVICE_NAME])
+@pytest.mark.parametrize(
+    ("service_data", "error_message"),
+    [
+        (
+            {"incl_vat": True, ATTR_PRICE_TYPE: "incorrect price type"},
+            "value must be one of .+",
+        ),
+        (
+            {"incl_vat": True, ATTR_PRICE_TYPE: True},
+            "value must be one of .+",
+        ),
+    ],
+)
+async def test_service_schema_validation_usage_price_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, str | bool],
+    error_message: str,
+) -> None:
+    """Test usage service schema validation for price type."""
+
+    with pytest.raises(vol.er.Error, match=error_message):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        ENERGY_USAGE_SERVICE_NAME,
+        ENERGY_RETURN_SERVICE_NAME,
+    ],
+)
+@pytest.mark.parametrize(
+    ("service_data", "error_message"),
+    [
+        (
+            {ATTR_GRANULARITY: "incorrect granularity"},
+            "value must be one of .+",
+        ),
+        (
+            {ATTR_GRANULARITY: True},
+            "value must be one of .+",
+        ),
+    ],
+)
+async def test_service_schema_validation_granularity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, str | bool],
+    error_message: str,
+) -> None:
+    """Test energy service schema validation for granularity."""
+    data = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data
+    if service == ENERGY_USAGE_SERVICE_NAME:
+        data["incl_vat"] = True
+
+    with pytest.raises(vol.er.Error, match=error_message):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            data,
             blocking=True,
             return_response=True,
         )
