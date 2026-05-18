@@ -77,7 +77,6 @@ SENSORS: Final = (
         translation_key="rated_capacity",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltConfig.READ_DISCHARGE_LIMIT,
