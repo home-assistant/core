@@ -1,6 +1,6 @@
 ---
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - "requirements*.txt"
@@ -27,8 +27,8 @@ safe-outputs:
   add_comment:
     max: 1
 description: >
-  Checks changed Python package requirements on PRs targeting the core repo and
-  verifies licenses match PyPI metadata, source
+  Checks changed Python package requirements on PRs targeting the core repo
+  (including PRs opened from forks) and verifies licenses match PyPI metadata, source
   repositories are publicly accessible, PyPI releases were uploaded via
   automated CI (Trusted Publisher attestation), the package's release pipeline
   uses OIDC or equivalent automated credentials (not static tokens), and the PR
