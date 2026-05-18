@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pyseventeentrack import Client as SeventeenTrackClient
-from pyseventeentrack.errors import NotLoggedInError
+from pyseventeentrack.errors import NotLoggedInError, SeventeenTrackError
 from pyseventeentrack.package import Package
 from pyseventeentrack.profile import API_URL_USER, Profile
 from yarl import URL
@@ -70,13 +70,10 @@ class ModernProfile(Profile):
                 f"Not logged in (Code: {code}, Message: "
                 f"{(tracklist_resp or {}).get('message')})"
             )
-        
+
         if code != 0:
             raise SeventeenTrackError(
                 f"17TRACK API error (Code: {code}, Message: "
-                f"{(tracklist_resp or {}).get('message')})"
-            )
-                f"Not logged in (Code: {code}, Message: "
                 f"{(tracklist_resp or {}).get('message')})"
             )
 
