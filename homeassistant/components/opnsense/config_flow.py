@@ -149,6 +149,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            self._entry_data = dict(user_input)
             return await self.async_step_interfaces(user_input)
 
         unique_id = await client.get_device_unique_id()
@@ -156,14 +157,12 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
-        return await self._show_setup_form(user_input, errors)
+        return await self._show_setup_form({}, errors)
 
     async def async_step_interfaces(
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle tracker interface selection step."""
-        if CONF_URL in user_input:
-            self._entry_data = dict(user_input)
         if CONF_TRACKER_INTERFACES not in user_input:
             return await self._show_interfaces_form(user_input, None)
 
