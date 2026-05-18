@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 import pytest
-import serial
 
 from homeassistant import config_entries
 from homeassistant.components.dsmr.const import DOMAIN
@@ -366,7 +365,7 @@ async def test_setup_serial_fail(
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([serial.SerialException], repeat(DEFAULT)),
+        side_effect=chain([OSError], repeat(DEFAULT)),
     )
 
     assert result["type"] is FlowResultType.FORM
