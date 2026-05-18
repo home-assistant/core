@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"c8d2de3bd620fcdd77e83b8c7bda2ea97fb02a745beba4589c2bd8ff148913d2","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"fb27b6cf5e2bd541c2618768a7ae632801335f0bea4ab437db52383209852b0a","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"v0.68.3","version":"v0.68.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.20"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.2.19"},{"image":"ghcr.io/github/github-mcp-server:v0.32.0"},{"image":"node:lts-alpine"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -47,7 +47,7 @@
 
 name: "Requirements License and Availability Check"
 "on":
-  pull_request_target:
+  pull_request:
     paths:
     - requirements*.txt
     - homeassistant/package_constraints.txt
@@ -58,6 +58,11 @@ name: "Requirements License and Availability Check"
     - reopened
   workflow_dispatch:
     inputs:
+      aw_context:
+        default: ""
+        description: Agent caller context (used internally by Agentic Workflows).
+        required: false
+        type: string
       pull_request_number:
         description: Pull request number to (re-)check
         required: true
@@ -66,7 +71,7 @@ name: "Requirements License and Availability Check"
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.inputs.pull_request_number || github.ref || github.run_id }}"
+  group: "gh-aw-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}"
   cancel-in-progress: true
 
 run-name: "Requirements License and Availability Check"
@@ -74,7 +79,8 @@ run-name: "Requirements License and Availability Check"
 jobs:
   activation:
     needs: pre_activation
-    if: needs.pre_activation.outputs.activated == 'true'
+    if: >
+      needs.pre_activation.outputs.activated == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.id == github.repository_id)
     runs-on: ubuntu-slim
     permissions:
       actions: read
@@ -177,7 +183,7 @@ jobs:
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
           GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pull_request_number }}
+          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
@@ -185,14 +191,14 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_eb706dca9fa042f9_EOF'
+          cat << 'GH_AW_PROMPT_dd6a62399847cc3f_EOF'
           <system>
-          GH_AW_PROMPT_eb706dca9fa042f9_EOF
+          GH_AW_PROMPT_dd6a62399847cc3f_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_eb706dca9fa042f9_EOF'
+          cat << 'GH_AW_PROMPT_dd6a62399847cc3f_EOF'
           <safe-output-tools>
           Tools: add_comment, missing_tool, missing_data, noop
           </safe-output-tools>
@@ -224,18 +230,17 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_eb706dca9fa042f9_EOF
+          GH_AW_PROMPT_dd6a62399847cc3f_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_eb706dca9fa042f9_EOF'
+          cat << 'GH_AW_PROMPT_dd6a62399847cc3f_EOF'
           </system>
           {{#runtime-import .github/workflows/check-requirements.md}}
-          GH_AW_PROMPT_eb706dca9fa042f9_EOF
+          GH_AW_PROMPT_dd6a62399847cc3f_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
-          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pull_request_number }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -250,7 +255,7 @@ jobs:
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
           GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pull_request_number }}
+          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
@@ -367,7 +372,7 @@ jobs:
       - name: Checkout PR branch
         id: checkout-pr
         if: |
-          github.event.pull_request || github.event.issue.pull_request || github.event.inputs.pull_request_number
+          github.event.pull_request || github.event.issue.pull_request
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -401,9 +406,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_ec7e81ab0dbc1e21_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_70d1b46c67fbd74e_EOF'
           {"add_comment":{"max":1},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_ec7e81ab0dbc1e21_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_70d1b46c67fbd74e_EOF
       - name: Write Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -587,7 +592,7 @@ jobs:
           export MCP_GATEWAY_DOCKER_COMMAND='docker run -i --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -e MCP_GATEWAY_PORT -e MCP_GATEWAY_DOMAIN -e MCP_GATEWAY_API_KEY -e MCP_GATEWAY_PAYLOAD_DIR -e MCP_GATEWAY_PAYLOAD_SIZE_THRESHOLD -e DEBUG -e MCP_GATEWAY_LOG_DIR -e GH_AW_MCP_LOG_DIR -e GH_AW_SAFE_OUTPUTS -e GH_AW_SAFE_OUTPUTS_CONFIG_PATH -e GH_AW_SAFE_OUTPUTS_TOOLS_PATH -e GH_AW_ASSETS_BRANCH -e GH_AW_ASSETS_MAX_SIZE_KB -e GH_AW_ASSETS_ALLOWED_EXTS -e DEFAULT_BRANCH -e GITHUB_MCP_SERVER_TOKEN -e GITHUB_MCP_GUARD_MIN_INTEGRITY -e GITHUB_MCP_GUARD_REPOS -e GITHUB_REPOSITORY -e GITHUB_SERVER_URL -e GITHUB_SHA -e GITHUB_WORKSPACE -e GITHUB_TOKEN -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RUN_ATTEMPT -e GITHUB_JOB -e GITHUB_ACTION -e GITHUB_EVENT_NAME -e GITHUB_EVENT_PATH -e GITHUB_ACTOR -e GITHUB_ACTOR_ID -e GITHUB_TRIGGERING_ACTOR -e GITHUB_WORKFLOW -e GITHUB_WORKFLOW_REF -e GITHUB_WORKFLOW_SHA -e GITHUB_REF -e GITHUB_REF_NAME -e GITHUB_REF_TYPE -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GH_AW_SAFE_OUTPUTS_PORT -e GH_AW_SAFE_OUTPUTS_API_KEY -v /tmp/gh-aw/mcp-payloads:/tmp/gh-aw/mcp-payloads:rw -v /opt:/opt:ro -v /tmp:/tmp:rw -v '"${GITHUB_WORKSPACE}"':'"${GITHUB_WORKSPACE}"':rw ghcr.io/github/gh-aw-mcpg:v0.2.19'
           
           mkdir -p /home/runner/.copilot
-          cat << GH_AW_MCP_CONFIG_33ff44b720a8f303_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
+          cat << GH_AW_MCP_CONFIG_1873fcd645cdd82e_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
           {
             "mcpServers": {
               "github": {
@@ -628,7 +633,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_33ff44b720a8f303_EOF
+          GH_AW_MCP_CONFIG_1873fcd645cdd82e_EOF
       - name: Download activation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -1038,7 +1043,7 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           WORKFLOW_NAME: "Requirements License and Availability Check"
-          WORKFLOW_DESCRIPTION: "Checks changed Python package requirements on PRs targeting the core repo (including fork PRs): verifies licenses match PyPI metadata, source repositories are publicly accessible, PyPI releases were uploaded via automated CI (Trusted Publisher attestation), the package's release pipeline uses OIDC or equivalent automated credentials (not static tokens), and the PR description contains the required links."
+          WORKFLOW_DESCRIPTION: "Checks changed Python package requirements on PRs targeting the core repo (including PRs opened from forks) and verifies licenses match PyPI metadata, source repositories are publicly accessible, PyPI releases were uploaded via automated CI (Trusted Publisher attestation), the package's release pipeline uses OIDC or equivalent automated credentials (not static tokens), and the PR description contains the required links."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1110,9 +1115,10 @@ jobs:
             await main();
 
   pre_activation:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.id == github.repository_id
     runs-on: ubuntu-slim
     outputs:
-      activated: ${{ github.event_name == 'pull_request_target' || steps.check_membership.outputs.is_team_member == 'true' }}
+      activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
       matched_command: ''
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
     steps:
@@ -1160,8 +1166,8 @@ jobs:
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
-      comment_id: ${{ steps.reconcile-comment.outputs.comment_id }}
-      comment_url: ${{ steps.reconcile-comment.outputs.comment_url }}
+      comment_id: ${{ steps.process_safe_outputs.outputs.comment_id }}
+      comment_url: ${{ steps.process_safe_outputs.outputs.comment_url }}
       create_discussion_error_count: ${{ steps.process_safe_outputs.outputs.create_discussion_error_count }}
       create_discussion_errors: ${{ steps.process_safe_outputs.outputs.create_discussion_errors }}
       process_safe_outputs_processed_count: ${{ steps.process_safe_outputs.outputs.processed_count }}
@@ -1197,45 +1203,6 @@ jobs:
           GH_HOST="${GITHUB_SERVER_URL#https://}"
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Find previous requirements-check comment
-        id: find-existing-comment
-        continue-on-error: true
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pull_request_number }}
-        with:
-          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = parseInt(process.env.PR_NUMBER, 10);
-            if (!prNumber) {
-              console.log('No PR number available, skipping comment search');
-              return;
-            }
-            // Limit pagination to 20 pages (2000 comments) to avoid excessive API calls.
-            // If the marker comment is older than that window, this run will post a new
-            // comment instead of updating the older one in place.
-            const maxPages = 20;
-            for (let page = 1; page <= maxPages; page++) {
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                per_page: 100,
-                page,
-              });
-              for (const comment of comments) {
-                if (comment.body && comment.body.includes('<!-- requirements-check -->')) {
-                  console.log(`Found existing requirements-check comment ${comment.id}`);
-                  core.setOutput('comment_id', String(comment.id));
-                  return;
-                }
-              }
-              if (comments.length < 100) {
-                console.log('No existing requirements-check comment found');
-                return;
-              }
-            }
-            console.log(`Reached pagination limit (${maxPages} pages) without finding an existing requirements-check comment`);
       - name: Process Safe Outputs
         id: process_safe_outputs
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
@@ -1252,57 +1219,6 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/safe_output_handler_manager.cjs');
             await main();
-      - name: Update existing comment or keep new one
-        id: reconcile-comment
-        if: steps.process_safe_outputs.outputs.comment_id != ''
-        continue-on-error: true
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          EXISTING_COMMENT_ID: ${{ steps.find-existing-comment.outputs.comment_id }}
-          NEW_COMMENT_ID: ${{ steps.process_safe_outputs.outputs.comment_id }}
-          NEW_COMMENT_URL: ${{ steps.process_safe_outputs.outputs.comment_url }}
-        with:
-          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-          script: |
-            const existingCommentId = parseInt(process.env.EXISTING_COMMENT_ID, 10) || 0;
-            const newCommentId = parseInt(process.env.NEW_COMMENT_ID, 10) || 0;
-            const newCommentUrl = process.env.NEW_COMMENT_URL || '';
-            if (!newCommentId) {
-              // No add_comment safe output was produced (for example, if the agent
-              // emitted no safe outputs), so keep comment outputs empty.
-              core.setOutput('comment_id', '');
-              core.setOutput('comment_url', '');
-              return;
-            }
-            if (!existingCommentId || existingCommentId === newCommentId) {
-              console.log('No previous comment to update, new comment kept as-is');
-              core.setOutput('comment_id', String(newCommentId));
-              core.setOutput('comment_url', newCommentUrl);
-              return;
-            }
-            // Fetch the body of the newly posted comment
-            const { data: newComment } = await github.rest.issues.getComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: newCommentId,
-            });
-            // Update the original comment in place (preserves its position in the thread)
-            const { data: updatedComment } = await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: existingCommentId,
-              body: newComment.body,
-            });
-            console.log(`Updated existing comment ${existingCommentId} with new content`);
-            // Delete the newly created comment so only the original remains
-            await github.rest.issues.deleteComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: newCommentId,
-            });
-            console.log(`Deleted new comment ${newCommentId} (content merged into existing)`);
-            core.setOutput('comment_id', String(existingCommentId));
-            core.setOutput('comment_url', updatedComment.html_url || '');
       - name: Upload Safe Outputs Items
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1312,3 +1228,4 @@ jobs:
             /tmp/gh-aw/safe-output-items.jsonl
             /tmp/gh-aw/temporary-id-map.json
           if-no-files-found: ignore
+

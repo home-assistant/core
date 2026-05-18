@@ -1,6 +1,6 @@
 ---
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "requirements*.txt"
@@ -24,7 +24,7 @@ tools:
   github:
     toolsets: [default]
 safe-outputs:
-  add_comment:
+  add-comment:
     max: 1
 description: >
   Checks changed Python package requirements on PRs targeting the core repo
