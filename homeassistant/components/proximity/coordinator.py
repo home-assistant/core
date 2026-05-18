@@ -215,7 +215,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 stale_threshold_s = min(
                     1.1
                     * (latest - mov.samples[0].timestamp).total_seconds()
-                    / len(mov.samples),
+                    / (len(mov.samples) - 1),
                     stale_threshold_s,
                 )
         stale_threshold_s = max(stale_threshold_s, STALE_THRESHOLD_S_MIN)
@@ -334,7 +334,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         latest = mov.samples[-1].timestamp
         # Allow for some jitter beyond the threshold.
         stale_threshold_s = (
-            1.1 * (latest - mov.samples[0].timestamp).total_seconds() / len(mov.samples)
+            1.1
+            * (latest - mov.samples[0].timestamp).total_seconds()
+            / (len(mov.samples) - 1)
             if len(mov.samples) > 1
             else STALE_THRESHOLD_S_MAX
         )
@@ -455,12 +457,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
           cos theta < -DOT_THRESHOLD_COS  ->  "away_from"
           |cos theta| <=  DOT_THRESHOLD_COS  ->  perpendicular; return last_valid
         """
-        sample_list = list(samples)
-        if len(sample_list) < 2:
+        if len(samples) < 2:
             return None
 
-        last = sample_list[-1]
-        first = sample_list[0]
+        last = samples[-1]
+        first = samples[0]
 
         # Local Cartesian system centred on the newest position.
         ref_lat, ref_lon = last.latitude, last.longitude
