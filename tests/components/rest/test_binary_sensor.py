@@ -376,6 +376,80 @@ async def test_setup_get_on(
     assert state.state == STATE_ON
 
 
+async def test_setup_get_json_mislabeled_as_x_javascript(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup when JSON is mislabeled with a JavaScript content type."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        headers={"content-type": "application/x-javascript"},
+        text='{"dog": true}',
+    )
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.dog }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state
+    assert state.state == STATE_ON
+
+    assert "REST xml result could not be parsed" not in caplog.text
+
+
+async def test_setup_get_xml_mislabeled_as_x_javascript(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup when XML is mislabeled with a JSON/JS content type."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        headers={"content-type": "application/x-javascript"},
+        text="<dog>1</dog>",
+    )
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.dog }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state
+    assert state.state == STATE_ON
+
+    assert "REST xml result could not be parsed" not in caplog.text
+
+
 async def test_setup_get_xml(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
