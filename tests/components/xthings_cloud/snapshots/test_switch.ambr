@@ -5,8 +5,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -57,8 +56,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
