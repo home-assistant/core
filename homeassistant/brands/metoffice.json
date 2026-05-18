@@ -1,0 +1,5 @@
+{
+  "domain": "metoffice",
+  "name": "Met Office",
+  "integrations": ["metoffice", "metoffice_warnings"]
+}

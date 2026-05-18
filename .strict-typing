@@ -370,6 +370,7 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
+homeassistant.components.metoffice_warnings.*
 homeassistant.components.miele.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
