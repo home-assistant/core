@@ -180,6 +180,7 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
         side_effect=socket.gaierror,
     ):
         await hass.async_start()
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == STATE_UNAVAILABLE
