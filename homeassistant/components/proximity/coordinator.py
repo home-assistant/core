@@ -2,7 +2,7 @@
 
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import math
 from typing import cast
@@ -73,11 +73,6 @@ STALE_THRESHOLD_S_MAX: float = 900.0
    speed to decay toward 0 and the entity to become 'stationary' when no real
    GPS updates arrive (decay mechanism)."""
 
-DECAY_INTERVAL: timedelta = timedelta(seconds=30)
-"""Delay before scheduling a decay tick when no new GPS position is received.
-   The timer is started (or restarted) after each update that still reports a
-   non-zero speed, and is cancelled as soon as a real GPS fix arrives."""
-
 # -- Type alias -----------------------------------------------------------------
 type ProximityConfigEntry = ConfigEntry["ProximityDataUpdateCoordinator"]
 
@@ -141,7 +136,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                    projection.  Perpendicular movement preserves the last valid
                    direction.  Solves the "orbiting" case cleanly.
     * Decay      - when no new GPS fix arrives, a one-shot timer fires after
-                   DECAY_INTERVAL and injects a synthetic stationary sample,
+                   the usual sample period and injects a synthetic stationary sample,
                    diluting the speed average toward 0.  The timer is cancelled
                    immediately when a real GPS fix is received, and rescheduled
                    after each decay tick as long as any entity still moves.
@@ -196,7 +191,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     @callback
     def _schedule_decay(self) -> None:
-        """(Re)schedule a one-shot decay refresh after DECAY_INTERVAL.
+        """(Re)schedule a one-shot decay refresh after the usual sample period.
 
         Called at the end of each update that still reports non-zero speed for
         at least one entity.  Any previously scheduled timer is cancelled first
