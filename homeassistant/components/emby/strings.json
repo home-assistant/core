@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "api_key": "An API key for your Emby server. You can create an API key in the Emby web interface under 'Advanced' > 'API Keys'.",
+          "host": "The hostname or IP address of your Emby server.",
+          "port": "The port number your Emby server is listening on (leave blank for default).",
+          "ssl": "Whether to use SSL to connect to your Emby server (false by default)."
+        }
+      }
+    }
+  }
+}
