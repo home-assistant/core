@@ -224,6 +224,7 @@ def async_setup_two_sonos_speakers(
         await soco_br.zoneGroupTopology.subscribe.return_value.wait_for_callback_to_be_set()
         group_speakers(soco_lr, soco_br)
         await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     return _wrapper
 

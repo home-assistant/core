@@ -135,6 +135,7 @@ async def test_group_volume_sets_backend_and_updates_state(
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert soco_lr.group.volume == 33
 
@@ -159,6 +160,7 @@ async def test_group_volume_rounds_in_range(
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert soco_lr.group.volume == 50
 
@@ -208,6 +210,7 @@ async def test_group_volume_exception(
         mock_volume.side_effect = SoCoException("Boom!")
         await _setup_numbers_only(async_setup_two_sonos_speakers)
         await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     state = hass.states.get("number.living_room_group_volume")
     assert state is not None
@@ -240,6 +243,7 @@ async def test_group_volume_transitions_to_unknown_after_good_read(
         ungroup_speakers(soco_lr, soco_br)
         group_speakers(soco_lr, soco_br)
         await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     state = hass.states.get("number.living_room_group_volume")
     assert state is not None
@@ -266,6 +270,7 @@ async def test_group_volume_refreshes_on_topology_change(
     ungroup_speakers(soco_lr, soco_br)
     group_speakers(soco_lr, soco_br)
     await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     state = hass.states.get("number.living_room_group_volume")
     assert state is not None
@@ -318,10 +323,12 @@ async def test_group_volume_shows_player_volume_after_ungroup(
 
     ungroup_speakers(soco_lr, soco_br)
     await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     # Advance time past the 0.5 s _do_update debounce to trigger the refresh.
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     # After ungrouping the solo player's volume is the source of truth.
     state = hass.states.get("number.living_room_group_volume")
