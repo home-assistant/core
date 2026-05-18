@@ -345,6 +345,7 @@ FLOWS = {
         "leaone",
         "led_ble",
         "lektrico",
+        "lepro",
         "letpot",
         "lg_netcast",
         "lg_soundbar",
