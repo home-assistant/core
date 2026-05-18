@@ -8,6 +8,7 @@ from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -17,6 +18,7 @@ from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 if TYPE_CHECKING:
     from . import CastConfigEntry
 
+CONF_MORE_OPTIONS = "more_options"
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(
     {
@@ -24,6 +26,19 @@ KNOWN_HOSTS_SCHEMA = vol.Schema(
             CONF_KNOWN_HOSTS,
         ): SelectSelector(
             SelectSelectorConfig(custom_value=True, options=[], multiple=True),
+        )
+    }
+)
+OPTIONS_SCHEMA = KNOWN_HOSTS_SCHEMA.extend(
+    {
+        vol.Required(CONF_MORE_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_UUID): str,
+                    vol.Optional(CONF_IGNORE_CEC): str,
+                }
+            ),
+            SectionConfig(collapsed=True),
         )
     }
 )
@@ -92,10 +107,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self) -> None:
-        """Initialize Google Cast options flow."""
-        self.updated_config: dict[str, Any] = {}
-
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the Google Cast options."""
         return await self.async_step_basic_options()
@@ -106,58 +117,40 @@ class CastOptionsFlowHandler(OptionsFlow):
         """Manage the Google Cast options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
-            self.updated_config = dict(self.config_entry.data)
-            self.updated_config[CONF_KNOWN_HOSTS] = known_hosts
-
-            if self.show_advanced_options:
-                return await self.async_step_advanced_options()
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=self.updated_config
+            bad_cec, ignore_cec = _string_to_list(
+                user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, ""),
+                IGNORE_CEC_SCHEMA,
             )
-            return self.async_create_entry(title="", data={})
+            bad_uuid, wanted_uuid = _string_to_list(
+                user_input[CONF_MORE_OPTIONS].get(CONF_UUID, ""), WANTED_UUID_SCHEMA
+            )
+            if not bad_cec and not bad_uuid:
+                known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
+                updated_config = dict(self.config_entry.data)
+                updated_config[CONF_IGNORE_CEC] = ignore_cec
+                updated_config[CONF_KNOWN_HOSTS] = known_hosts
+                updated_config[CONF_UUID] = wanted_uuid
+
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=updated_config
+                )
+                return self.async_create_entry(title="", data={})
+            suggested: dict[str, Any] = user_input
+        else:
+            # No user input, prime suggested with current values
+            suggested = {CONF_MORE_OPTIONS: {}}
+            if CONF_KNOWN_HOSTS in self.config_entry.data:
+                suggested[CONF_KNOWN_HOSTS] = self.config_entry.data[CONF_KNOWN_HOSTS]
+            for key in (CONF_UUID, CONF_IGNORE_CEC):
+                if key not in self.config_entry.data:
+                    continue
+                suggested[CONF_MORE_OPTIONS][key] = _list_to_string(
+                    self.config_entry.data[key]
+                )
 
         return self.async_show_form(
             step_id="basic_options",
-            data_schema=self.add_suggested_values_to_schema(
-                KNOWN_HOSTS_SCHEMA, self.config_entry.data
-            ),
-            errors=errors,
-            last_step=not self.show_advanced_options,
-        )
-
-    async def async_step_advanced_options(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the Google Cast options."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            bad_cec, ignore_cec = _string_to_list(
-                user_input.get(CONF_IGNORE_CEC, ""), IGNORE_CEC_SCHEMA
-            )
-            bad_uuid, wanted_uuid = _string_to_list(
-                user_input.get(CONF_UUID, ""), WANTED_UUID_SCHEMA
-            )
-
-            if not bad_cec and not bad_uuid:
-                self.updated_config[CONF_IGNORE_CEC] = ignore_cec
-                self.updated_config[CONF_UUID] = wanted_uuid
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=self.updated_config
-                )
-                return self.async_create_entry(title="", data={})
-
-        fields: dict[vol.Marker, type[str]] = {}
-        current_config = self.config_entry.data
-        suggested_value = _list_to_string(current_config.get(CONF_UUID))
-        _add_with_suggestion(fields, CONF_UUID, suggested_value)
-        suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
-        _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
-
-        return self.async_show_form(
-            step_id="advanced_options",
-            data_schema=vol.Schema(fields),
+            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
             errors=errors,
             last_step=True,
         )
@@ -183,9 +176,3 @@ def _string_to_list(string, schema):
 
 def _trim_items(items: list[str]) -> list[str]:
     return [x.strip() for x in items if x.strip()]
-
-
-def _add_with_suggestion(
-    fields: dict[vol.Marker, type[str]], key: str, suggested_value: str
-) -> None:
-    fields[vol.Optional(key, description={"suggested_value": suggested_value})] = str
