@@ -249,11 +249,14 @@ class AlexaResponse:
         change state but the effects of those changes are applied
         asynchronously. Thus, handlers should call this method to confirm
         changes before returning.
+
+        For state and change report, a 'timeOfSample' and
+        'uncertaintyInMilliseconds' value may be added to the prop argument.
         """
         self._properties().append(prop)
 
     def merge_context_properties(self, endpoint: AlexaEntity) -> None:
-        """Add all properties from given endpoint if not already set.
+        """Add all properties from given endpoint if not already set and track timeOfSample value.
 
         Handlers should be using .add_context_property().
         """
@@ -263,6 +266,28 @@ class AlexaResponse:
         for prop in endpoint.serialize_properties():
             if (prop["namespace"], prop["name"]) not in already_set:
                 self.add_context_property(prop)
+
+    def update_tos_for_state_report(
+        self, entity_id: str, config: AbstractConfig
+    ) -> None:
+        """Inject the time of sample values for a state report.
+
+        StateReport:
+        - Polled by the Alexa Skill (lambda expression).
+        - All properties with timestamps are in the "context" path.
+        - https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-statereport.html
+
+        ChangeReport:
+        - Sent proactively to an endpoint.
+        - Changed properties with timestamps are in the "event.payload" path.
+        - Unchanged properties are in the "context" path.
+        - https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-changereport.html
+
+        The separation into changed and unchanged properties is handled in
+        _async_entity_state_listener.
+        """
+        for prop in self._properties():
+            config.inject_time_of_sample(entity_id, prop)
 
     def serialize(self) -> dict[str, Any]:
         """Return response as a JSON-able data structure."""
@@ -364,8 +389,32 @@ async def async_enable_proactive_mode(
         ):
             return
 
+        # Partition alexa_properties by whether their time of sample changed
+        # into changed and unchanged properties.
+        changed_properties: list[dict[str, Any]] = []
+        unchanged_properties: list[dict[str, Any]] = []
+        for prop in alexa_properties:
+            prop = prop.copy()
+            if smart_home_config.inject_time_of_sample(
+                alexa_changed_entity.entity_id, prop
+            ):
+                changed_properties.append(prop)
+            else:
+                unchanged_properties.append(prop)
+
+        if not changed_properties:
+            _LOGGER.debug(
+                "Skipping sending report to Alexa for %s, because it is not dirty",
+                alexa_changed_entity.entity_id,
+            )
+            return
+
         await async_send_changereport_message(
-            hass, smart_home_config, alexa_changed_entity, alexa_properties
+            hass,
+            smart_home_config,
+            alexa_changed_entity,
+            changed_properties,
+            unchanged_properties,
         )
 
     return hass.bus.async_listen(
@@ -379,7 +428,8 @@ async def async_send_changereport_message(
     hass: HomeAssistant,
     config: AbstractConfig,
     alexa_entity: AlexaEntity,
-    alexa_properties: list[dict[str, Any]],
+    changed_properties: list[dict[str, Any]],
+    unchanged_properties: list[dict[str, Any]],
     *,
     invalidate_access_token: bool = True,
 ) -> None:
@@ -403,12 +453,14 @@ async def async_send_changereport_message(
     payload: dict[str, Any] = {
         API_CHANGE: {
             "cause": {"type": Cause.APP_INTERACTION},
-            "properties": alexa_properties,
+            "properties": changed_properties,
         }
     }
 
     message = AlexaResponse(name="ChangeReport", namespace="Alexa", payload=payload)
     message.set_endpoint_full(token, endpoint)
+    for prop in unchanged_properties:
+        message.add_context_property(prop)
 
     message_serialized = message.serialize()
     session = async_get_clientsession(hass)
@@ -449,7 +501,8 @@ async def async_send_changereport_message(
                 hass,
                 config,
                 alexa_entity,
-                alexa_properties,
+                changed_properties,
+                unchanged_properties,
                 invalidate_access_token=False,
             )
             return
