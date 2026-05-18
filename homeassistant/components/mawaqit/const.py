@@ -1,10 +1,14 @@
 """Constants for the Mawaqit Integration."""
 
+# GENERAL
+
+MAWAQIT_URL = "https://mawaqit.net/"
+
+# INTEGRATION
 DOMAIN = "mawaqit"
 
 CONF_CALC_METHOD = "calculation_method"
 
-MAWAQIT_URL = "https://mawaqit.net/"
 
 # Config Entry
 
