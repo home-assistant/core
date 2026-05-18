@@ -772,9 +772,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     media_id,
                     err,
                 )
+            # Fallback: if playlist parsing fails, forward the raw URL to the device
             # pylint: disable-next=home-assistant-action-swallowed-exception
             except PlaylistError as err:
-                # Fallback: forward the raw URL to the device
                 _LOGGER.warning(
                     "[%s %s] Failed to parse playlist %s: %s",
                     self.entity_id,
