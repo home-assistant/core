@@ -1755,8 +1755,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
-            (device_class := self.entity_description.device_class) is None
-            or device_class is SensorDeviceClass.ENUM
+            device_class := self.entity_description.device_class
+        ) is SensorDeviceClass.ENUM:
+            self._attr_native_unit_of_measurement = None
+            return
+        if (
+            device_class is None
             # we do not need to check mappings if the API UOM is allowed
             or tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]
         ):
