@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -19,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switches(
@@ -27,58 +28,73 @@ async def test_switches(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch entities are created correctly."""
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
-    entry_50 = entity_registry.async_get("switch.smart_plug_50")
-    assert entry_50 is not None
-    assert entry_50.unique_id == "dev_plug_001"
-    assert entry_50.platform == "xthings_cloud"
-    assert entry_50.config_entry_id == mock_config_entry.entry_id
-
-    entry_100 = entity_registry.async_get("switch.smart_plug_100")
-    assert entry_100 is not None
-    assert entry_100.unique_id == "dev_plug_002"
-    assert entry_100.platform == "xthings_cloud"
-    assert entry_100.config_entry_id == mock_config_entry.entry_id
-
-    state_50 = hass.states.get("switch.smart_plug_50")
-    assert state_50 is not None
-    assert state_50.state == STATE_ON
-    assert state_50.attributes["friendly_name"] == "Smart Plug 50"
-
-    state_100 = hass.states.get("switch.smart_plug_100")
-    assert state_100 is not None
-    assert state_100.state == STATE_OFF
-    assert state_100.attributes["friendly_name"] == "Smart Plug 100"
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize(
-    ("service", "method"),
+    ("entity_id", "device_id", "device_type", "service", "method"),
     [
-        (SERVICE_TURN_ON, "async_plug_on"),
-        (SERVICE_TURN_OFF, "async_plug_off"),
+        (
+            "switch.smart_plug_50",
+            "dev_plug_001",
+            "plug",
+            SERVICE_TURN_ON,
+            "async_plug_on",
+        ),
+        (
+            "switch.smart_plug_50",
+            "dev_plug_001",
+            "plug",
+            SERVICE_TURN_OFF,
+            "async_plug_off",
+        ),
+        (
+            "switch.smart_plug_100",
+            "dev_plug_002",
+            "switch",
+            SERVICE_TURN_ON,
+            "async_switch_on",
+        ),
+        (
+            "switch.smart_plug_100",
+            "dev_plug_002",
+            "switch",
+            SERVICE_TURN_OFF,
+            "async_switch_off",
+        ),
     ],
 )
-async def test_plug_turn_on_off(
+async def test_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
+    entity_id: str,
+    device_id: str,
+    device_type: str,
     service: str,
     method: str,
 ) -> None:
-    """Test turning on and off a plug."""
-    await setup_integration(hass, mock_config_entry)
+    """Test turning on and off a device."""
+    get_device_by_id(mock_api_client, device_id)["type"] = device_type
+
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.smart_plug_50"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    getattr(mock_api_client, method).assert_called_once_with("dev_plug_001")
+    getattr(mock_api_client, method).assert_called_once_with(device_id)
 
 
 async def test_plug_unavailable_when_offline(
