@@ -108,7 +108,7 @@ async def test_alarm_status_callback(
     source_state: AlarmState,
     resulting_state: AlarmControlPanelState,
 ) -> None:
-    """Test alarm control panel correctly changes state after a callback from the panel."""
+    """Test alarm panel state changes after a panel callback."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     assert (

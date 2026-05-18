@@ -1469,7 +1469,7 @@ async def test_set_lock_credential_auto_find_defaults_to_five(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test set_lock_credential falls back to 5 slots when capacity attribute is None."""
+    """Test set_lock_credential falls back to 5 slots when capacity is None."""
     # All GetCredentialStatus calls return occupied
     matter_client.send_device_command = AsyncMock(
         return_value={
@@ -1658,7 +1658,7 @@ async def test_get_lock_credential_status_with_fabric_indices(
     expected_creator: int | None,
     expected_last_modified: int | None,
 ) -> None:
-    """Test get_lock_credential_status returns fabric indices and normalizes NullValue."""
+    """Test get_lock_credential_status returns fabric indices."""
     matter_client.send_device_command = AsyncMock(
         return_value={
             "credentialExists": True,
@@ -1828,7 +1828,7 @@ async def test_set_lock_credential_rfid_auto_find_slot(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test set_lock_credential auto-finds RFID slot using NumberOfRFIDUsersSupported."""
+    """Test set_lock_credential auto-finds RFID slot."""
     # Place the empty slot at index 3 (the last position within
     # NumberOfRFIDUsersSupported=3) so the test would fail if the code
     # used a smaller bound like NumberOfCredentialsSupportedPerUser=2
@@ -1957,7 +1957,7 @@ async def test_set_lock_credential_fingerprint_auto_find_slot(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test set_lock_credential auto-finds fingerprint slot using NumberOfTotalUsersSupported."""
+    """Test set_lock_credential auto-finds fingerprint slot."""
     # Place the empty slot at index 3 (the last position within
     # NumberOfTotalUsersSupported=3) so the test would fail if the code
     # used NumberOfPINUsersSupported (10) or NumberOfCredentialsSupportedPerUser (2).

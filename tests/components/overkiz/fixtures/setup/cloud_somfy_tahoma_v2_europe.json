@@ -7442,6 +7442,128 @@
       "uiClass": "Gate"
     },
     {
+      "creationTime": 1654894302000,
+      "lastUpdateTime": 1654894302000,
+      "label": "Sliding Gate",
+      "deviceURL": "io://1234-1234-6233/16730051",
+      "shortcut": false,
+      "controllableName": "io:SlidingDiscreteGateOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "pedestrian", "unknown"],
+            "qualifiedName": "core:OpenClosedPedestrianState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PedestrianPositionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "SlidingDiscreteGateWithPedestrianPosition",
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
+        "uiClass": "Gate",
+        "qualifiedName": "io:SlidingDiscreteGateOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Sliding Gate"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 50.0
+        },
+        {
+          "name": "core:OpenClosedPedestrianState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:PedestrianPositionState",
+          "type": 1,
+          "value": 50
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5107456G05"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "SlidingDiscreteGateWithPedestrianPosition",
+      "type": 1,
+      "oid": "c1e2f3a4-b5d6-7890-abcd-ef1234567890",
+      "uiClass": "Gate"
+    },
+    {
       "creationTime": 1521964729000,
       "lastUpdateTime": 1521964729000,
       "label": "Garage Door",

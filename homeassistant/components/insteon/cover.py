@@ -59,7 +59,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
             pos = self._insteon_device_group.value
         else:
             pos = 0
-        return int(math.ceil(pos * 100 / 255))
+        return math.ceil(pos * 100 / 255)
 
     @property
     def is_closed(self) -> bool:

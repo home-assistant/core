@@ -170,7 +170,8 @@ async def async_migrate_entry(
         new_data[CONF_ENTITIES] = new_entities_data
 
     if config_entry.version < 3:
-        # update to 3.1 (remove resource parameter, add climate target lock value parameter)
+        # update to 3.1 (remove resource parameter,
+        # add climate target lock value parameter)
         for entity in new_data[CONF_ENTITIES]:
             entity.pop(CONF_RESOURCE, None)
 

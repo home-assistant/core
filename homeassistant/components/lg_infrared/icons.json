@@ -73,6 +73,9 @@
       "ok": {
         "default": "mdi:check"
       },
+      "power": {
+        "default": "mdi:power"
+      },
       "power_off": {
         "default": "mdi:power-off"
       },
