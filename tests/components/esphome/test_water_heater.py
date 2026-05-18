@@ -476,8 +476,8 @@ async def test_water_heater_set_away_mode(
         (
             3,
             UnitOfTemperature.CELSIUS,
-        ),  # unknown value falls back to Celsius via HA's TEMPERATURE_UNIT_MAP default
-        (None, UnitOfTemperature.CELSIUS) # None value falls back to Celsius
+        ),  # unknown value falls back to Celsius
+        (None, UnitOfTemperature.CELSIUS),  # None value falls back to Celsius
     ],
 )
 async def test_water_heater_temperature_unit(
