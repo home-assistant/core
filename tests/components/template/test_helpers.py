@@ -286,7 +286,7 @@ async def test_yaml_device_actions(
     entity_registry: er.EntityRegistry,
     calls: list,
 ) -> None:
-    """Test device actions in platforms that support both trigger and modern configurations."""
+    """Test device actions in platforms supporting trigger and modern configs."""
     await _setup_and_test_yaml_device_action(
         hass,
         style,
@@ -542,7 +542,7 @@ async def test_config_entry_device_actions(
 async def test_platform_not_ready(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_setup_template_platform raises PlatformNotReady when trigger object is None."""
+    """Test async_setup_template_platform raises PlatformNotReady."""
     with pytest.raises(PlatformNotReady):
         await async_setup_template_platform(
             hass,

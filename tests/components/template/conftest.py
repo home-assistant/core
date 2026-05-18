@@ -218,12 +218,13 @@ async def setup_and_test_nested_unique_id(
     entity_config: ConfigType | None,
     state_template: str | None = None,
 ) -> None:
-    """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
+    """Setup 2 entities with unique_ids in a template section with a unique_id.
 
-    The test will verify that 2 entities are created where the unique_id appends the
-    section unique_id to each entity unique_id.
+    The test will verify that 2 entities are created where the unique_id
+    appends the section unique_id to each entity unique_id.
 
-    The entity_config should not provide name or unique_id, those are added automatically.
+    The entity_config should not provide name or unique_id, those are
+    added automatically.
     """
     state_config = {"state": state_template} if state_template else {}
     entities = [

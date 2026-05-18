@@ -94,6 +94,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             self._last_image = await self._door_station.device.get_image(
                 self._url, timeout=_TIMEOUT
             )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image

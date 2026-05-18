@@ -632,7 +632,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Dependency review
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           license-check: false # We use our own license audit checks
 
@@ -853,7 +853,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant pylint
+          mypy --num-workers=4 homeassistant pylint
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -862,7 +862,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
+          mypy --num-workers=4 $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   prepare-pytest-full:
     name: Split tests for full run
@@ -1088,6 +1088,7 @@ jobs:
         options: >-
           --health-cmd="if command -v mariadb-admin >/dev/null; then mariadb-admin ping -uroot -ppassword; else mysqladmin ping -uroot -ppassword; fi"
           --health-interval=5s --health-timeout=2s --health-retries=3
+          --tmpfs /var/lib/mysql:size=2g,mode=0750
     needs:
       - info
       - base
@@ -1245,7 +1246,10 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: password
-        options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: >-
+          --health-cmd="pg_isready -hlocalhost -Upostgres"
+          --health-interval=5s --health-timeout=2s --health-retries=3
+          --tmpfs /var/lib/postgresql/data:size=2g,mode=0700
     needs:
       - info
       - base

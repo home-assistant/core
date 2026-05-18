@@ -121,7 +121,8 @@ class SonosMockEvent:
             soco: The mock SoCo device associated with this event.
             service: The Sonos mock service that generated the event.
             variables: A dictionary of event variables and their values.
-            zone_player_uui_ds_in_group: Optional comma-separated string of unique zone IDs in the group.
+            zone_player_uui_ds_in_group: Optional comma-separated string
+                of unique zone IDs in the group.
 
         """
         self.sid = f"{soco.uid}_sub0000000001"
@@ -227,7 +228,7 @@ class MockSoCo(MagicMock):
 
     @property
     def visible_zones(self):
-        """Return visible zones and allow property to be overridden by device classes."""
+        """Return visible zones, overridable by device classes."""
         return {self}
 
     @property
@@ -684,9 +685,12 @@ def alarm_clock_fixture() -> SonosMockAlarmClock:
         {
             "CurrentAlarmListVersion": "RINCON_test:14",
             "CurrentAlarmList": "<Alarms>"
-            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
-            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
-            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            '<Alarm ID="14" StartTime="07:00:00"'
+            ' Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="1" RoomUUID="RINCON_test"'
+            ' ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT"'
+            ' Volume="25" '
             'IncludeLinkedZones="0"/>'
             "</Alarms>",
         }
@@ -700,13 +704,15 @@ def alarm_clock_fixture_extended() -> SonosMockAlarmClock:
         {
             "CurrentAlarmListVersion": "RINCON_test:15",
             "CurrentAlarmList": "<Alarms>"
-            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00"'
+            ' Recurrence="DAILY" '
             'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
             'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
             'IncludeLinkedZones="0"/>'
             '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
             'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
-            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData=""'
+            ' PlayMode="SHUFFLE_NOREPEAT" '
             'Volume="25" IncludeLinkedZones="0"/>'
             "</Alarms>",
         }
@@ -793,7 +799,10 @@ def alarm_event_fixture(soco):
     """Create alarm_event fixture."""
     variables = {
         "time_zone": "ffc40a000503000003000502ffc4",
-        "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
+        "time_server": (
+            "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,"
+            "2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org"
+        ),
         "time_generation": "20000001",
         "alarm_list_version": "RINCON_test:1",
         "time_format": "INV",
@@ -959,7 +968,7 @@ def create_zgs_sonos_event(
     soco_2: MockSoCo,
     create_uui_ds_in_group: bool = True,
 ) -> SonosMockEvent:
-    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
+    """Create a Sonos Event for zone group state."""
     zgs = load_fixture(fixture_file, DOMAIN)
     variables = {}
     variables["ZoneGroupState"] = zgs

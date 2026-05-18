@@ -135,7 +135,8 @@ class SmappeeFlowHandler(
                 errors={},
             )
 
-        # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
+        # Environment chosen, request additional host information
+        # for LOCAL or OAuth2 flow for CLOUD
         # Ask for host detail
         if user_input["environment"] == ENV_LOCAL:
             return await self.async_step_local()
@@ -160,7 +161,8 @@ class SmappeeFlowHandler(
         ip_address = user_input["host"]
         serial_number = None
 
-        # Attempt 1: try to use the local api (older generation) to resolve host to serialnumber
+        # Attempt 1: try to use the local api (older generation)
+        # to resolve host to serialnumber
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is not None:
@@ -171,7 +173,8 @@ class SmappeeFlowHandler(
                 if config_item["key"] == "mdnsHostName":
                     serial_number = config_item["value"]
         else:
-            # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
+            # Attempt 2: try to use the local mqtt broker
+            # (newer generation) to resolve host to serialnumber
             smappee_mqtt = mqtt.SmappeeLocalMqtt()
             connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
@@ -180,6 +183,7 @@ class SmappeeFlowHandler(
             serial_number = await self.hass.async_add_executor_job(
                 smappee_mqtt.start_and_wait_for_config
             )
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             await self.hass.async_add_executor_job(smappee_mqtt.stop)
             if serial_number is None:
                 return self.async_abort(reason="cannot_connect")

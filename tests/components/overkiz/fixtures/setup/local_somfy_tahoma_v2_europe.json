@@ -742,6 +742,71 @@
       }
     },
     {
+      "deviceURL": "rts://1234-5678-3293/16757826",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [],
+      "label": "Kitchen Pergola",
+      "subsystemId": 0,
+      "attributes": [],
+      "enabled": true,
+      "controllableName": "rts:BioclimaticPergolaRTSComponent",
+      "definition": {
+        "states": [],
+        "widgetName": "UpDownBioclimaticPergola",
+        "type": "ACTUATOR",
+        "attributes": [],
+        "commands": [
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltPositive",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "my",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stop",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltNegative",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "down",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "open",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "up",
+            "paramsSig": "*p1"
+          }
+        ],
+        "uiClass": "Pergola"
+      }
+    },
+    {
       "creationTime": 1686173907452,
       "deviceURL": "rts://1234-5678-3293/16757362",
       "available": true,
@@ -817,7 +882,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "subsystemId": 0,
       "attributes": [
         {
@@ -882,7 +947,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "TaHoma Alarm"
         },
         {
           "type": 3,
@@ -905,7 +970,7 @@
           "value": 30
         }
       ],
-      "label": "**",
+      "label": "TaHoma",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1274,7 +1339,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "TaHoma"
         },
         {
           "type": 3,
@@ -1302,7 +1367,7 @@
           "value": "online"
         }
       ],
-      "label": "** **",
+      "label": "TaHoma Premium",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1413,7 +1478,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Hallway Light"
         },
         {
           "type": 3,
@@ -1431,7 +1496,7 @@
           "value": 60
         }
       ],
-      "label": "** **",
+      "label": "Hallway Light",
       "subsystemId": 0,
       "attributes": [
         {

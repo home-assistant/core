@@ -55,7 +55,7 @@ def get_delay_in_minutes(delay=0):
 def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0):
     """Calculate the total travel time in minutes."""
     duration = arrival_time - departure_time
-    duration_time = int(round(duration.total_seconds() / 60))
+    duration_time = round(duration.total_seconds() / 60)
     return duration_time + get_delay_in_minutes(delay)
 
 
@@ -224,7 +224,10 @@ class NMBSSensor(SensorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         if self._name is None:
-            return f"Train from {self._station_from.standard_name} to {self._station_to.standard_name}"
+            return (
+                f"Train from {self._station_from.standard_name}"
+                f" to {self._station_to.standard_name}"
+            )
         return self._name
 
     @property

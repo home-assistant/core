@@ -1000,7 +1000,10 @@ async def test_not_optimistic(
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_SEGMENTS_ACTION,
-                "segments": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
+                "segments": (
+                    "{{ [{'id': '1', 'name': 'Livingroom'},"
+                    " {'id': '2', 'name': 'Kitchen'}] }}"
+                ),
             },
         )
     ],
@@ -1116,39 +1119,47 @@ async def test_get_segments(
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'id': '1'} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'name': 'kitchen'} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}"
+                ),
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {"unique_id": TEST_VACUUM.entity_id, "segments": "{{ [[]] }}"},
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
     ],
 )
@@ -1183,7 +1194,11 @@ async def test_invalid_segments(
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_SEGMENTS_ACTION,
-                "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen'},"
+                    " {'id': '2', 'name':"
+                    " states('sensor.test_attribute')}] }}"
+                ),
             },
         )
     ],

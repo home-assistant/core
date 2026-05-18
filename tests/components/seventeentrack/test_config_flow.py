@@ -31,8 +31,9 @@ VALID_CONFIG_OLD = {
 }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_seventeentrack: AsyncMock
+    hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
