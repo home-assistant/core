@@ -56,7 +56,7 @@ async def test_state(
 async def test_state_away_mode_unsupported(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test that away mode is not supported if the water heater does not support vacation mode."""
+    """Test away mode unsupported if water heater lacks vacation mode."""
     state = hass.states.get("water_heater.my_water_heater")
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)

@@ -101,7 +101,8 @@ async def test_setup_network_rfxtrx(
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {}
 
-    # set-up DSMRProtocol to yield no valid telegram, this will retry with RFXtrxDSMRProtocol
+    # set-up DSMRProtocol to yield no valid telegram,
+    # this will retry with RFXtrxDSMRProtocol
     protocol.telegram = {}
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
@@ -269,7 +270,8 @@ async def test_setup_serial_rfxtrx(
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
-    # set-up DSMRProtocol to yield no valid telegram, this will retry with RFXtrxDSMRProtocol
+    # set-up DSMRProtocol to yield no valid telegram,
+    # this will retry with RFXtrxDSMRProtocol
     protocol.telegram = {}
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):

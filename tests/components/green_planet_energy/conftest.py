@@ -64,7 +64,8 @@ def mock_api() -> Generator[MagicMock]:
         # Make get_electricity_prices async since coordinator uses it
         mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)
 
-        # Mock the calculation methods to return actual values in Cent/kWh (not coroutines)
+        # Mock the calculation methods to return actual values in
+        # Cent/kWh (not coroutines)
         # Highest price today: 20 + (23 * 1) = 43 Cent/kWh at hour 23
         mock_api_instance.get_highest_price_today.return_value = 43.0
         mock_api_instance.get_highest_price_today_with_hour.return_value = (43.0, 23)

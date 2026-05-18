@@ -17,6 +17,8 @@ from .const import (
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

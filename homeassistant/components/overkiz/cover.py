@@ -70,6 +70,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
@@ -80,6 +81,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
@@ -148,6 +150,20 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_SHEER_SCREEN,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
     # Needs override since PositionableGarageDoor reports
     # core:OpenClosedUnknownState instead of core:OpenClosedState
     # uiClass is GarageDoor
@@ -183,6 +199,52 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since SlidingDiscreteGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.SLIDING_DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since OpenCloseGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since OpenCloseSlidingGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since PositionableGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
         stop_command=OverkizCommand.STOP,
     ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
@@ -294,6 +356,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.SCREEN,

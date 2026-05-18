@@ -38,11 +38,9 @@ async def test_user_flow_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_aborts_if_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_projector: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_projector: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user flow aborts if already configured."""
 
@@ -124,11 +122,9 @@ async def test_import_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_aborts_if_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_projector: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_projector: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test importing a YAML config aborts if already configured."""
 

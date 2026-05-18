@@ -243,7 +243,8 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
         blocking=True,
     )
-    # no attribute on first change wouldn't work because no attribute change since last test
+    # no attribute on first change wouldn't work because no
+    # attribute change since last test
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 30})
     await hass.async_block_till_done()
     await knx.assert_write(test_address, (30,))

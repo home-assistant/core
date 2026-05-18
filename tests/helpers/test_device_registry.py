@@ -5253,7 +5253,8 @@ async def test_device_name_translation_placeholders(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English dev {2ndplaceholder}"
+                    "component.test.device.test_device.name": "{placeholder} English dev"
+                    " {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -5268,7 +5269,8 @@ async def test_device_name_translation_placeholders(
             "test_device",
             {
                 "en": {
-                    "component.test.device.test_device.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.device.test_device.name": "{placeholder} English ent"
+                    " {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -5351,7 +5353,11 @@ async def test_async_get_or_create_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls device_registry._async_update_device from a thread.",
+        match=(
+            "Detected code that calls"
+            " device_registry._async_update_device"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             partial(
@@ -5381,7 +5387,11 @@ async def test_async_remove_device_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls device_registry.async_remove_device from a thread.",
+        match=(
+            "Detected code that calls"
+            " device_registry.async_remove_device"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             device_registry.async_remove_device, device.id
