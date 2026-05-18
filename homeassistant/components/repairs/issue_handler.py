@@ -211,7 +211,7 @@ class RepairsFlowManager(
                 integration_domain=handler,
                 core_behavior=ReportBehavior.LOG,
             )
-        return await super().async_init(handler, context=context, data=data)
+        return await super().async_init(handler, context=context, data=None)
 
     async def async_create_flow(
         self,
@@ -226,7 +226,7 @@ class RepairsFlowManager(
         issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, context["issue_id"])
         if issue is None or not issue.is_fixable:
-            raise UnknownIssue("Issue not found in registry")
+            raise UnknownIssue("Fixable issue not found in registry")
 
         if "platforms" not in self.hass.data[DOMAIN]:
             await async_process_repairs_platforms(self.hass)
@@ -240,7 +240,6 @@ class RepairsFlowManager(
                 self.hass, context["issue_id"], issue.data
             )
 
-        flow.handler = handler_key
         flow.data = issue.data
         return flow
 
