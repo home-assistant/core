@@ -416,7 +416,9 @@ async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
                         "select": ".release-date",
                         "name": "HA Date",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                     }
                 ],
             ),
@@ -620,8 +622,16 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                         CONF_SELECT: ".current-version h1",
                         CONF_INDEX: 0,
                         CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                        CONF_ICON: '{% if states("sensor.input1")=="on" %} mdi:on {% else %} mdi:off {% endif %}',
-                        CONF_PICTURE: '{% if states("sensor.input1")=="on" %} /local/picture1.jpg {% else %} /local/picture2.jpg {% endif %}',
+                        CONF_ICON: (
+                            '{% if states("sensor.input1")=="on" %}'
+                            " mdi:on {% else %} mdi:off {% endif %}"
+                        ),
+                        CONF_PICTURE: (
+                            '{% if states("sensor.input1")=="on" %}'
+                            " /local/picture1.jpg"
+                            " {% else %} /local/picture2.jpg"
+                            " {% endif %}"
+                        ),
                         CONF_AVAILABILITY: '{{ states("sensor.input2")=="on" }}',
                     }
                 ]
@@ -706,8 +716,16 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                         "advanced": {
                             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
                             CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
-                            CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
-                            CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
+                            CONF_ICON: (
+                                'mdi:o{{ "n" if'
+                                ' states("sensor.input1")=="on"'
+                                ' else "ff" }}'
+                            ),
+                            CONF_PICTURE: (
+                                'o{{ "n" if'
+                                ' states("sensor.input1")=="on"'
+                                ' else "ff" }}.jpg'
+                            ),
                         },
                     },
                     # "subentry_id": "01JZN07D8D23994A49YKS649S7",
@@ -781,8 +799,9 @@ async def test_template_render_with_availability_syntax_error(
     assert state.state == "2021.12.10"
 
     assert (
-        "Error rendering availability template for sensor.current_version: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for"
+        " sensor.current_version: UndefinedError:"
+        " 'what_the_heck' is undefined" in caplog.text
     )
 
 
