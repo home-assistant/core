@@ -9,7 +9,7 @@
 -r requirements_test_pre_commit.txt
 # ast-serialize is an internal mypy dependency
 ast-serialize==0.3.0
-astroid==4.0.4
+astroid==4.1.2
 coverage==7.14.0
 freezegun==1.5.5
 # librt is an internal mypy dependency
