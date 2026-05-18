@@ -115,6 +115,16 @@ def test_host_from_ssdp_returns_none() -> None:
     assert _host_from_ssdp(discovery) is None
 
 
+def test_host_from_ssdp_returns_none_without_usn() -> None:
+    """Test host extraction when SSDP provides no USN."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert _host_from_ssdp(discovery) is None
+
+
 def test_host_from_ssdp_skips_non_string_header_location() -> None:
     """Test host extraction ignores non-string header location values."""
     discovery = SsdpServiceInfo(
