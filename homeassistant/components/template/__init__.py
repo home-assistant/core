@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery, issue_registry as ir
+from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
@@ -43,16 +43,6 @@ from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
-DATA_DEPRECATION: HassKey[list[str]] = HassKey("deprecate_legacy_templates")
-
-
-def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
-    if (found_issues := hass.data.pop(DATA_DEPRECATION, None)) is not None:
-        issue_registry = ir.async_get(hass)
-        for domain, issue_id in set(issue_registry.issues):
-            if domain != DOMAIN or issue_id in found_issues:
-                continue
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,9 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Register template as valid domain for Blueprint
     blueprints = async_get_blueprints(hass)
-
-    # Clean up any legacy template deprecations.
-    _clean_up_legacy_template_deprecations(hass)
 
     # Add some default blueprints to blueprints/template, does nothing
     # if blueprints/template already exists but still has to create
@@ -76,7 +63,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
-        hass.data.pop(DATA_DEPRECATION, None)
 
         await async_get_blueprints(hass).async_reset_cache()
         try:
