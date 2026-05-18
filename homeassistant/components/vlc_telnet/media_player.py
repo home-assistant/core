@@ -78,11 +78,13 @@ def catch_vlc_errors[_VlcDeviceT: VlcDevice, **_P](
                         translation_placeholders={"error": str(err)},
                     ) from err
             except ConnectError as err:
-                if self._attr_available:
-                    if log:
+                if log:
+                    if self._attr_available:
                         LOGGER.error("Connection error: %s", err)
+                        self._attr_available = False
+                else:
                     self._attr_available = False
-                if not log:
+                    self.async_write_ha_state()
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="connect_error",

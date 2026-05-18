@@ -146,10 +146,17 @@ async def test_action_handler_raises_homeassistant_error(
 
 
 @pytest.mark.parametrize(
-    ("error_class", "expected_state"),
+    ("error_class", "expected_state", "expected_log"),
     [
-        pytest.param(CommandError, "idle", id="command_error"),
-        pytest.param(ConnectError, STATE_UNAVAILABLE, id="connect_error"),
+        pytest.param(
+            CommandError, "idle", "Command error: test error", id="command_error"
+        ),
+        pytest.param(
+            ConnectError,
+            STATE_UNAVAILABLE,
+            "Connection error: test error",
+            id="connect_error",
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
@@ -157,8 +164,10 @@ async def test_update_logs_error_instead_of_raising(
     hass: HomeAssistant,
     vlc_mock: MagicMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     error_class: type[Exception],
     expected_state: str,
+    expected_log: str,
 ) -> None:
     """Test that async_update logs VLC errors instead of raising."""
     vlc_mock.status.side_effect = error_class("test error")
@@ -170,3 +179,4 @@ async def test_update_logs_error_instead_of_raising(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == expected_state
+    assert expected_log in caplog.text
