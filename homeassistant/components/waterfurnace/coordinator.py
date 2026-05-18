@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from waterfurnace.waterfurnace import (
     WaterFurnace,
     WFCredentialError,
+    WFError,
     WFException,
     WFGateway,
     WFNoDataError,
@@ -172,7 +173,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                 frequency="1H",
                 timezone_str=self.hass.config.time_zone,
             )
-        except WFCredentialError:
+        except WFCredentialError, WFError:
             try:
                 self.client.login()
             except WFCredentialError as err:
@@ -189,6 +190,10 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             except WFCredentialError as err:
                 raise UpdateFailed(
                     "Authentication failed during energy data fetch"
+                ) from err
+            except WFError as err:
+                raise UpdateFailed(
+                    "Error fetching energy data after re-authentication"
                 ) from err
         return [
             (reading.timestamp, reading.total_power)
@@ -362,7 +367,8 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             self._backfill_task.add_done_callback(self._backfill_done_callback)
             return
 
-        # Normal poll: fetch recent data (up to BACKFILL_GAP_THRESHOLD) and insert any missing hours
+        # Normal poll: fetch recent data (up to
+        # BACKFILL_GAP_THRESHOLD) and insert missing hours
         _LOGGER.debug("Last stat: ts=%s, sum=%s", last_dt.isoformat(), last_sum)
         local_tz = dt_util.DEFAULT_TIME_ZONE
         start_date = last_dt.astimezone(local_tz).strftime("%Y-%m-%d")

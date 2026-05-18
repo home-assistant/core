@@ -6,6 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_cct_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -46,6 +49,9 @@
       'brightness': 255,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED CCT light',
+      'group_entities': list([
+        'light.wled_cct_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -526,6 +532,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_rgb_light_segment_0',
+        'light.wled_rgb_light_segment_1',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -566,6 +576,10 @@
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED RGB Light',
+      'group_entities': list([
+        'light.wled_rgb_light_segment_0',
+        'light.wled_rgb_light_segment_1',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -1490,6 +1504,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_rgb_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -1530,6 +1547,9 @@
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED RGB Light',
+      'group_entities': list([
+        'light.wled_rgb_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -2002,6 +2022,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_websocket_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -2042,6 +2065,9 @@
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED WebSocket',
+      'group_entities': list([
+        'light.wled_websocket_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -2514,6 +2540,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_rgbw_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -2554,6 +2583,9 @@
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED RGBW Light',
+      'group_entities': list([
+        'light.wled_rgbw_light_segment_0',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),

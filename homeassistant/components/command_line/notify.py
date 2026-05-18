@@ -4,25 +4,29 @@ import logging
 import subprocess
 from typing import Any
 
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import render_template_args
+from .utils import create_platform_yaml_not_supported_issue, render_template_args
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, NOTIFY_DOMAIN)
         return None
 
     notify_config = discovery_info
@@ -62,6 +66,7 @@ class CommandLineNotificationService(BaseNotificationService):
                         proc.returncode,
                         command,
                     )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except subprocess.TimeoutExpired:
                 _LOGGER.error("Timeout for command: %s", command)
                 kill_subprocess(proc)

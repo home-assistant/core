@@ -353,19 +353,18 @@ async def test_non_numerical_states_from_source_entity(
 
 async def test_source_state_none(hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
-    config = {
-        "sensor": [
-            {
-                "platform": "template",
-                "sensors": {
-                    "uncompensated": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "uncompensated",
+                    "state": "{{ states.sensor.test_state.state }}",
                 },
-            },
-        ]
-    }
-    await async_setup_component(hass, "sensor", config)
+            }
+        },
+    )
     await async_setup_compensation(hass, TEST_CONFIG)
 
     hass.states.async_set("sensor.test_state", 4)

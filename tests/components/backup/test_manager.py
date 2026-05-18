@@ -376,7 +376,8 @@ async def test_create_backup_when_busy(
         ),
         (
             {"agent_ids": ["non_existing"]},
-            "At least one available backup agent must be selected, got ['non_existing']",
+            "At least one available backup agent must be"
+            " selected, got ['non_existing']",
         ),
         (
             {"include_addons": ["ssl"], "include_all_addons": True},

@@ -178,7 +178,10 @@ class PacketSequence:
             size = 3
 
             def __str__(self) -> str:
-                return f"FakePacket<stream={self.stream}, pts={self.pts}, key={self.is_keyframe}>"
+                return (
+                    f"FakePacket<stream={self.stream},"
+                    f" pts={self.pts}, key={self.is_keyframe}>"
+                )
 
         return FakePacket()
 
@@ -312,7 +315,7 @@ async def async_decode_stream(
     py_av: MockPyAv | None = None,
     stream_settings: StreamSettings | None = None,
 ) -> FakePyAvBuffer:
-    """Start a stream worker that decodes incoming stream packets into output segments."""
+    """Start a stream worker that decodes packets into segments."""
     stream = Stream(
         hass,
         STREAM_SOURCE,
@@ -336,8 +339,9 @@ async def async_decode_stream(
         try:
             run_worker(hass, stream, STREAM_SOURCE, stream_settings)
         except StreamEndedError:
-            # Tests only use a limited number of packets, then the worker exits as expected. In
-            # production, stream ending would be unexpected.
+            # Tests only use a limited number of packets, then the
+            # worker exits as expected. In production, stream ending
+            # would be unexpected.
             pass
         finally:
             # Wait for all packets to be flushed even when exceptions are thrown
@@ -414,6 +418,7 @@ async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if out_of_order_index % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
         longer_segment_index = int((out_of_order_index - 1) * SEGMENTS_PER_PACKET)
@@ -709,7 +714,8 @@ async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
         worker_wake.set()
         await stream.stop()
 
-    # Stream is still considered available when the worker was still active and asked to stop
+    # Stream is still considered available when the worker was still
+    # active and asked to stop
     assert stream.available
 
 
@@ -726,8 +732,8 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
         dynamic_stream_settings(),
     )
     stream.add_provider(HLS_PROVIDER)
-    # Note that retries are disabled by default in tests, however the stream is "restarted" when
-    # the stream source is updated.
+    # Note that retries are disabled by default in tests, however
+    # the stream is "restarted" when the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -916,8 +922,9 @@ async def test_has_keyframe(
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                # Our test video has keyframes every second. Use smaller parts so we have more
-                # part boundaries to better test keyframe logic.
+                # Our test video has keyframes every second. Use
+                # smaller parts so we have more part boundaries to
+                # better test keyframe logic.
                 CONF_PART_DURATION: 0.25,
             }
         },

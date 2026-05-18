@@ -1,6 +1,6 @@
 """Repairs implementation for the VoIP integration."""
 
-from homeassistant.components.assist_pipeline.repair_flows import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.repair_flows import (  # pylint: disable=home-assistant-component-root-import
     AssistInProgressDeprecatedRepairFlow,
 )
 from homeassistant.components.repairs import RepairsFlow

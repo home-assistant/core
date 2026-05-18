@@ -182,7 +182,7 @@ async def test_discovery_aborts_same_system(
     config_entry: MockConfigEntry,
     system: HeosSystem,
 ) -> None:
-    """Test discovery does not update when current host is part of discovered's system."""
+    """Test discovery does not update when current host is in discovered system."""
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
@@ -313,7 +313,7 @@ async def test_zeroconf_discovery_aborts_same_system(
     config_entry: MockConfigEntry,
     system: HeosSystem,
 ) -> None:
-    """Test discovery does not update when current host is part of discovered's system."""
+    """Test discovery does not update when current host is in discovered system."""
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
@@ -562,7 +562,7 @@ async def test_options_flow_missing_one_param_recovers(
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:
-    """Test options flow signs-in after recovering from only username or password being entered."""
+    """Test options flow signs-in after recovering from partial credentials."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.mock_set_connection_state(ConnectionState.CONNECTED)
@@ -783,7 +783,7 @@ async def test_reauth_flow_missing_one_param_recovers(
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:
-    """Test reauth flow signs-in after recovering from only username or password being entered."""
+    """Test reauth flow signs-in after recovering from partial credentials."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.mock_set_connection_state(ConnectionState.CONNECTED)

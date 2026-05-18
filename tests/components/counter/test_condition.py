@@ -25,11 +25,17 @@ async def target_counters(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "counter")
 
 
-async def test_counter_condition_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "counter.is_value",
+    ],
+)
+async def test_counter_conditions_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the counter condition is gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, "counter.is_value")
+    """Test the counter conditions are gated by the labs flag."""
+    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
