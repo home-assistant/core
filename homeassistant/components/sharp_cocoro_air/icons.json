@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "dust": {
+        "default": "mdi:blur"
+      },
+      "smell": {
+        "default": "mdi:scent"
+      },
+      "pci_sensor": {
+        "default": "mdi:air-purifier"
+      },
+      "light_sensor": {
+        "default": "mdi:brightness-6"
+      },
+      "filter_usage": {
+        "default": "mdi:air-filter"
+      },
+      "cleaning_mode": {
+        "default": "mdi:broom"
+      },
+      "airflow": {
+        "default": "mdi:weather-windy"
+      }
+    }
+  }
+}
