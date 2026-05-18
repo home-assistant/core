@@ -396,7 +396,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             return None
 
         now = samples[-1].timestamp
-        total_period = max(
+        total_period = min(
             (now - samples[0].timestamp).total_seconds(), STALE_THRESHOLD_S_MAX
         )
         if total_period <= 0:
