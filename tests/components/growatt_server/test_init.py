@@ -1052,8 +1052,6 @@ async def test_classic_api_stale_device_removed(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The device should be removed from HA
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")}) is None
-    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")}) is None
     # The coordinator should be removed from runtime_data
     assert "TLX123456" not in mock_config_entry_classic.runtime_data.devices

@@ -98,6 +98,49 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
 
+    def _sync_fetch_device_list(self) -> None:
+        """Fetch the device list for the current plant."""
+        if self.api_version == "v1":
+            try:
+                devices_dict = self.api.device_list(self.plant_id)
+                devices = devices_dict.get("devices", [])
+                self.device_list = [
+                    {
+                        "deviceSn": device.get("device_sn", ""),
+                        "deviceType": V1_DEVICE_TYPES[device.get("type")],
+                    }
+                    for device in devices
+                    if device.get("type") in V1_DEVICE_TYPES
+                ]
+            except growattServer.GrowattV1ApiError as err:
+                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                    ) from err
+                _LOGGER.debug("Failed to fetch V1 device list during scan: %s", err)
+                self.device_list = None
+        else:
+            try:
+                # login() was already called above; reuse the same session.
+                devices = self.api.device_list(self.plant_id)
+                self.device_list = [
+                    {
+                        "deviceSn": device["deviceSn"],
+                        "deviceType": device["deviceType"],
+                    }
+                    for device in devices
+                ]
+            except (
+                RequestException,
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+            ) as err:
+                _LOGGER.debug(
+                    "Failed to fetch Classic device list during scan: %s", err
+                )
+                self.device_list = None
+
     def _sync_update_data(self) -> dict[str, Any]:
         """Update data via library synchronously."""
         _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.device_type)
@@ -147,27 +190,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
                 total_info["invTodayPpv"] = total_info["current_power"]
-                if fetch_device_list:
-                    try:
-                        devices_dict = self.api.device_list(self.plant_id)
-                        devices = devices_dict.get("devices", [])
-                        self.device_list = [
-                            {
-                                "deviceSn": device.get("device_sn", ""),
-                                "deviceType": V1_DEVICE_TYPES[device.get("type")],
-                            }
-                            for device in devices
-                            if device.get("type") in V1_DEVICE_TYPES
-                        ]
-                    except growattServer.GrowattV1ApiError as err:
-                        if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
-                            raise ConfigEntryAuthFailed(
-                                f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
-                            ) from err
-                        _LOGGER.debug(
-                            "Failed to fetch V1 device list during scan: %s", err
-                        )
-                        self.device_list = None
             else:
                 # Classic API: use plant_info as before.
                 # Copy the response to avoid mutating the dict returned by the library
@@ -177,27 +199,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 plant_money_text, currency = total_info["plantMoneyText"].split("/")
                 total_info["plantMoneyText"] = plant_money_text
                 total_info["currency"] = currency
-                if fetch_device_list:
-                    try:
-                        # login() was already called above; reuse the same session.
-                        devices = self.api.device_list(self.plant_id)
-                        self.device_list = [
-                            {
-                                "deviceSn": device["deviceSn"],
-                                "deviceType": device["deviceType"],
-                            }
-                            for device in devices
-                        ]
-                    except (
-                        RequestException,
-                        json.JSONDecodeError,
-                        KeyError,
-                        TypeError,
-                    ) as err:
-                        _LOGGER.debug(
-                            "Failed to fetch Classic device list during scan: %s", err
-                        )
-                        self.device_list = None
+            if fetch_device_list:
+                self._sync_fetch_device_list()
             _LOGGER.debug("Total info for plant %s: %r", self.plant_id, total_info)
             self.data = total_info
         elif self.device_type == "inverter":
