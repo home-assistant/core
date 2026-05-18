@@ -1242,9 +1242,11 @@ class MQTT:
         self, topic: str, identifiers: tuple[int, ...] | None
     ) -> list[Subscription]:
         subscriptions: list[Subscription] = []
-        if topic in self._simple_subscriptions:
+        if topic in self._simple_subscriptions and (
+            identifiers is None or 1 in identifiers
+        ):
             # The subscription identifier is always 1 for simple subscriptions,
-            # so there is no need to check for the subscription identifier
+            # so only include them when no identifiers are provided or 1 matches.
             subscriptions.extend(self._simple_subscriptions[topic])
         subscriptions.extend(
             subscription
