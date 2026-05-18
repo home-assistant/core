@@ -109,7 +109,7 @@ EXPECTED_DATA = {
     "issue_2": {"blah": "bleh"},
     "abort_issue1": {"test": ANY},
     "create_entry_issue1": {"test": ANY},
-    "fake_issue_bad_setter": {"foo", "bar"},
+    "fake_issue_bad_setter": {"foo": "bar"},
 }
 
 
