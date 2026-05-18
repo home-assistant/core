@@ -33,9 +33,9 @@ class EnOceanEntity(Entity):
 
         try:
             address = Address(dev_id)
-            if address.is_eurid():
+            if address.is_eurid:
                 self.address = EURID(int(address))
-            elif address.is_base_address():
+            elif address.is_base_address:
                 self.address = BaseAddress(int(address))
         except ValueError:
             self.address = None
