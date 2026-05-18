@@ -633,6 +633,8 @@ class SonosSpeaker:
                         "Invalid value for %s %s", enum_var, variables[enum_var]
                     )
 
+        # Every speaker holds its own RenderingControl subscription, so this fires on
+        # all speakers. Route the group volume refresh to the coordinator in all cases.
         coordinator = self.coordinator or self
         coordinator.schedule_group_volume_refresh()
 
