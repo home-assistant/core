@@ -190,7 +190,8 @@ class VlcDevice(MediaPlayerEntity):
         self._attr_media_title = _get_str(data.get("data", {}), "title")
         now_playing = _get_str(data.get("data", {}), "now_playing")
 
-        # Many radio streams put artist/title/album in now_playing and title is the station name.
+        # Many radio streams put artist/title/album in
+        # now_playing and title is the station name.
         if now_playing:
             if not self.media_artist:
                 self._attr_media_artist = self._attr_media_title

@@ -43,7 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         # Since pyvlx raises the same exception for auth and connection errors,
         # we need to check the exception message to distinguish them.
         # Ultimately this should be fixed in pyvlx to raise specialized exceptions,
-        # right now it's been a while since the last pyvlx release, so we do this workaround here.
+        # right now it's been a while since the last pyvlx
+        # release, so we do this workaround here.
         if (
             isinstance(ex, PyVLXException)
             and ex.description == "Login to KLF 200 failed, check credentials"
@@ -99,7 +100,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bo
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Disconnect from gateway only after platforms are successfully unloaded.
-        # Disconnecting will reboot the gateway in the pyvlx library, which is needed to allow new
+        # Disconnecting will reboot the gateway in the pyvlx
+        # library, which is needed to allow new
         # connections to be made later.
         await entry.runtime_data.disconnect()
     return unload_ok

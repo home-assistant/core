@@ -70,11 +70,13 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id}"
+            f" is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id}"
+            f" doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 
