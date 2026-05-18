@@ -6,12 +6,14 @@ on:
       - "requirements*.txt"
       - "homeassistant/package_constraints.txt"
       - "pyproject.toml"
+    forks: ["*"]
   workflow_dispatch:
     inputs:
       pull_request_number:
         description: "Pull request number to (re-)check"
         required: true
         type: number
+  roles: all
 permissions:
   contents: read
   pull-requests: read
