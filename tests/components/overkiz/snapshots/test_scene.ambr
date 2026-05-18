@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.label_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Label 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Label 1',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0a0589bb-9471-4667-a2a9-4602beb2a2e8',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Label 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.label_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.label_2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Label 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Label 2',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '50d39fc3-9368-49c9-bcbf-c74f3ce1678a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Label 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.label_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_scene_entities_snapshot[scenarios/tahoma_switch.json][scene.i_m_arriving-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.i_m_arriving',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': "I'm arriving",
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': "I'm arriving",
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd1b689e1-4087-473d-b726-d3b24770856f',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_scene_entities_snapshot[scenarios/tahoma_switch.json][scene.i_m_arriving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "I'm arriving",
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.i_m_arriving',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
