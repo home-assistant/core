@@ -11,7 +11,6 @@ from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject
-import serial
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -117,7 +116,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except serial.SerialException, OSError:
+        except OSError:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
