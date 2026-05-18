@@ -545,6 +545,9 @@
   "exceptions": {
     "code_format_template_error": {
       "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"
+    },
+    "failed_to_reload_template_entities": {
+      "message": "Error reloading template entities: {error}"
     }
   },
   "issues": {
