@@ -8,17 +8,19 @@ from aiohttp import web
 from aiohttp.hdrs import METH_POST
 
 from homeassistant.components import webhook
-from homeassistant.components.http import NoURLAvailableError
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DEVICES, DOMAIN, NAME
+from .const import DOMAIN, NAME
 from .coordinator import CCLConfigEntry, CCLCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+KEY_DEVICES: HassKey[dict[str, CCLDevice]] = HassKey("ccl_devices")
 
 
 async def register_webhook(hass: HomeAssistant, webhook_id: str) -> None:
@@ -28,7 +30,7 @@ async def register_webhook(hass: HomeAssistant, webhook_id: str) -> None:
         hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> Any:
         """Handle incoming requests from CCL devices."""
-        return await CCLServer.handler(request, hass.data[DEVICES])
+        return await CCLServer.handler(request, hass.data[KEY_DEVICES])
 
     webhook.async_register(
         hass,
@@ -45,14 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     # Create the device and register a webhook after restart
 
-    hass.data.setdefault(DEVICES, []).append(webhook_id)
-    device = hass.data[DEVICES][webhook_id] = CCLDevice(webhook_id)
+    device = hass.data.setdefault(KEY_DEVICES, {})[webhook_id] = CCLDevice(webhook_id)
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
     try:
         await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
-    except (ValueError, NoURLAvailableError) as err:
+    except ValueError as err:
         _LOGGER.error("Failed to register webhook: %s", err)
         raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
     _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
@@ -74,6 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    hass.data[DEVICES].pop(entry.data[CONF_WEBHOOK_ID], None)
+    hass.data[KEY_DEVICES].pop(entry.data[CONF_WEBHOOK_ID], None)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

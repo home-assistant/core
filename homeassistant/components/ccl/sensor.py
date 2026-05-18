@@ -191,7 +191,7 @@ async def async_setup_entry(
                     CCLSensorEntity(
                         coordinator,
                         entity_description,
-                        coordinator.data[entity_description.key],
+                        sensor,
                     )
                 )
 

@@ -1,5 +1,6 @@
 """Test the CCL Electronics config flow."""
 
+import contextlib
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
@@ -7,8 +8,8 @@ from aioccl.exception import CCLDeviceRegistrationException
 from aiohttp import web
 
 from homeassistant import config_entries
+from homeassistant.components.ccl import KEY_DEVICES
 from homeassistant.components.ccl.const import DOMAIN
-from homeassistant.components.ccl.devices import devices
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -116,7 +117,7 @@ async def test_ccl_device_registration_exception_handled(
         ),
     ):
         # Add device to the devices dict before test starts
-        devices[WEBHOOK_ID] = mock_ccl
+        hass.data[KEY_DEVICES][WEBHOOK_ID] = mock_ccl
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -155,35 +156,6 @@ async def test_value_error_webhook_registration(
         assert result["reason"] == "invalid_webhook"
 
 
-async def test_no_url_available_error_webhook_registration(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_ccl: MagicMock,
-) -> None:
-    """Test handling of NoURLAvailableError during webhook registration."""
-    hass.config.external_url = "http://example.com"
-    await async_setup_component(hass, "http", {})
-    await async_setup_component(hass, "webhook", {})
-
-    with (
-        patch(
-            "homeassistant.components.webhook.async_generate_id",
-            return_value=WEBHOOK_ID,
-        ),
-        patch(
-            "homeassistant.components.ccl.config_flow.register_webhook",
-            side_effect=NoURLAvailableError(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        # Should abort with invalid_webhook reason
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "invalid_webhook"
-
-
 async def test_timeout_error_task_one(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
@@ -194,16 +166,31 @@ async def test_timeout_error_task_one(
     await async_setup_component(hass, "http", {})
     await async_setup_component(hass, "webhook", {})
 
-    with patch(
-        "homeassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
+    async def mock_wait_for_timeout(coro, timeout):
+        """Mock wait_for that raises TimeoutError."""
+        # Close the coroutine to avoid warning
+        with contextlib.suppress(AttributeError, GeneratorExit):
+            coro.close()
+        raise TimeoutError
+
+    with (
+        patch(
+            "homeassistant.components.webhook.async_generate_id",
+            return_value=WEBHOOK_ID,
+        ),
+        patch("asyncio.wait_for", side_effect=mock_wait_for_timeout),
     ):
-        # Initial step should return SHOW_PROGRESS
+        # Create the flow - the asyncio.wait_for will timeout immediately
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        # Verify the flow starts in SHOW_PROGRESS state
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "user"
+
+        # Wait for background tasks to process
+        await hass.async_block_till_done()
+
+        # The flow should abort with connect_timeout due to the timeout
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "connect_timeout"
 
 
 async def test_abort_flow_already_configured(

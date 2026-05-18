@@ -15,8 +15,8 @@ from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from . import register_webhook
-from .const import DEVICES, DOMAIN
+from . import KEY_DEVICES, register_webhook
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,17 +62,17 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device = CCLDevice(self.webhook_id)
             # Try to register the device, but if it already exists, use the existing one
             try:
-                register(self.hass.data[DEVICES], self.device)
+                register(self.hass.data.setdefault(KEY_DEVICES, {}), self.device)
             except CCLDeviceRegistrationException:
                 _LOGGER.debug(
                     "Device with webhook ID %s is already registered",
                     self.webhook_id,
                 )
-                self.device = self.hass.data[DEVICES][self.webhook_id]
+                self.device = self.hass.data[KEY_DEVICES][self.webhook_id]
             # Try to register the webhook
             try:
                 await register_webhook(self.hass, self.webhook_id)
-            except (ValueError, NoURLAvailableError) as err:
+            except ValueError as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
                 return self.async_abort(reason="invalid_webhook")
             _LOGGER.debug("Webhook registered at hass: %s", self.webhook_id)
@@ -106,13 +106,13 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Timed out waiting for device update during config flow")
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[DEVICES].pop(self.webhook_id, None)
+                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 return self.async_abort(reason="connect_timeout")
             except AbortFlow:
                 _LOGGER.debug("Device already configured during config flow")
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[DEVICES].pop(self.webhook_id, None)
+                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 return self.async_abort(reason="already_configured")
 
         if uncompleted_task:
@@ -127,7 +127,6 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self.async_update_progress(1)
         return self.async_show_progress_done(next_step_id="finish")
 
     async def async_step_finish(
@@ -155,4 +154,4 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Remove the device from the global devices dict
         if CONF_WEBHOOK_ID in self.data:
-            self.hass.data[DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
+            self.hass.data[KEY_DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
