@@ -144,6 +144,32 @@ async def test_basic_trend(
     assert sensor_state.state == expected_state
 
 
+async def test_basic_trend_with_counter_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test trend with a counter entity."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            **config_entry.options,
+            "name": "test_trend_sensor",
+            "entity_id": "counter.people",
+        },
+        title="test_trend_sensor",
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for state in ("1", "2"):
+        hass.states.async_set("counter.people", state)
+        await hass.async_block_till_done()
+
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == STATE_ON
+
+
 @pytest.mark.parametrize(
     ("state_series", "inverted", "expected_states"),
     [
