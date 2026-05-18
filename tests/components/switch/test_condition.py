@@ -257,7 +257,7 @@ async def test_input_boolean_state_condition_behavior_all(
 async def test_switch_condition_evaluates_both_domains(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the switch condition evaluates both switch and input_boolean entities."""
+    """Test switch condition evaluates both switch and input_boolean."""
     entity_id_switch = "switch.test_switch"
     entity_id_input_boolean = "input_boolean.test_input_boolean"
 
