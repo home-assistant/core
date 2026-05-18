@@ -694,7 +694,7 @@ def slugify(value: Any) -> str:
 
 
 def string(value: Any) -> str:
-    """Coerce value to string, except for None."""
+    """Coerce value to string, except for None, list or dict."""
     if value is None:
         raise vol.Invalid("string value is None")
 
