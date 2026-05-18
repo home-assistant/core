@@ -1,7 +1,7 @@
 """Sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, cast
 
 from indevolt_api import (
     IndevoltBattery,
@@ -100,11 +100,18 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.BYPASS_POWER,
-        generation=(2,),
         translation_key="bypass_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_CYCLE_COUNT,
+        generation=(2,),
+        translation_key="cycle_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Electrical Energy Information
     IndevoltSensorEntityDescription(
@@ -116,7 +123,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.TOTAL_OUTPUT_ENERGY,
-        generation=(2,),
         translation_key="total_ac_output_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -124,7 +130,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.OFF_GRID_OUTPUT_ENERGY,
-        generation=(2,),
         translation_key="off_grid_output_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -132,7 +137,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.BYPASS_INPUT_ENERGY,
-        generation=(2,),
         translation_key="bypass_input_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -140,7 +144,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.DAILY_CHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_daily_charging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -148,7 +151,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.DAILY_DISCHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_daily_discharging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -156,7 +158,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.TOTAL_CHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_total_charging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -164,7 +165,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.TOTAL_DISCHARGING_ENERGY,
-        generation=(2,),
         translation_key="battery_total_discharging_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -227,6 +227,16 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
+        generation=(2,),
+        translation_key="transformer_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     # PV Operating Parameters
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_OUTPUT_POWER,
@@ -252,7 +262,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_CURRENT_1,
-        generation=(2,),
         translation_key="dc_input_current_1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -261,7 +270,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_VOLTAGE_1,
-        generation=(2,),
         translation_key="dc_input_voltage_1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -278,7 +286,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_CURRENT_2,
-        generation=(2,),
         translation_key="dc_input_current_2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -287,7 +294,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSolar.DC_INPUT_VOLTAGE_2,
-        generation=(2,),
         translation_key="dc_input_voltage_2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -472,6 +478,26 @@ SENSORS: Final = (
         entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_MOS_TEMPERATURE_CHARGE,
+        generation=(1,),
+        translation_key="mos_temperature_charge",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_MOS_TEMPERATURE_DISCHARGE,
+        generation=(1,),
+        translation_key="mos_temperature_discharge",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
         key=IndevoltBattery.GEN_1_PACK_1_TEMPERATURE,
         generation=(1,),
         translation_key="battery_pack_1_temperature",
@@ -555,6 +581,57 @@ SENSORS: Final = (
         key=IndevoltBattery.PACK_5_TEMPERATURE,
         generation=(2,),
         translation_key="battery_pack_5_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Battery Pack MOS Temperature
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_1_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_1_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_2_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_2_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_3_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_3_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_4_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_4_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_5_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_5_mos_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -685,12 +762,13 @@ SENSORS: Final = (
     ),
 )
 
-# Sensors per battery pack (SN, SOC, Temperature, Voltage, Current)
+# Sensors per battery pack (SN, SOC, Temperature, MOS Temperature, Voltage, Current)
 BATTERY_PACK_SENSOR_KEYS = [
     (
         IndevoltBattery.PACK_1_SERIAL_NUMBER,
         IndevoltBattery.PACK_1_SOC,
         IndevoltBattery.PACK_1_TEMPERATURE,
+        IndevoltBattery.PACK_1_MOS_TEMPERATURE,
         IndevoltBattery.PACK_1_VOLTAGE,
         IndevoltBattery.PACK_1_CURRENT,
     ),
@@ -698,6 +776,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_2_SERIAL_NUMBER,
         IndevoltBattery.PACK_2_SOC,
         IndevoltBattery.PACK_2_TEMPERATURE,
+        IndevoltBattery.PACK_2_MOS_TEMPERATURE,
         IndevoltBattery.PACK_2_VOLTAGE,
         IndevoltBattery.PACK_2_CURRENT,
     ),
@@ -705,6 +784,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_3_SERIAL_NUMBER,
         IndevoltBattery.PACK_3_SOC,
         IndevoltBattery.PACK_3_TEMPERATURE,
+        IndevoltBattery.PACK_3_MOS_TEMPERATURE,
         IndevoltBattery.PACK_3_VOLTAGE,
         IndevoltBattery.PACK_3_CURRENT,
     ),
@@ -712,6 +792,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_4_SERIAL_NUMBER,
         IndevoltBattery.PACK_4_SOC,
         IndevoltBattery.PACK_4_TEMPERATURE,
+        IndevoltBattery.PACK_4_MOS_TEMPERATURE,
         IndevoltBattery.PACK_4_VOLTAGE,
         IndevoltBattery.PACK_4_CURRENT,
     ),
@@ -719,6 +800,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_5_SERIAL_NUMBER,
         IndevoltBattery.PACK_5_SOC,
         IndevoltBattery.PACK_5_TEMPERATURE,
+        IndevoltBattery.PACK_5_MOS_TEMPERATURE,
         IndevoltBattery.PACK_5_VOLTAGE,
         IndevoltBattery.PACK_5_CURRENT,
     ),
@@ -780,4 +862,4 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.ENUM:
             return self.entity_description.state_mapping.get(raw_value)
 
-        return raw_value
+        return cast(str | int | float, raw_value)

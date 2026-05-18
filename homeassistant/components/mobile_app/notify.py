@@ -1,5 +1,5 @@
 """Support for mobile_app push notifications."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from functools import partial
@@ -95,7 +95,8 @@ class MobileAppNotifyEntity(NotifyEntity):
         if title is not None:
             data[ATTR_TITLE] = title
 
-        # Sends notification via local push if available and fallback to cloud push if fails
+        # Sends notification via local push if available
+        # and fallback to cloud push if fails
         if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
             DOMAIN
         ][DATA_PUSH_CHANNEL]:
@@ -228,7 +229,9 @@ class MobileAppNotificationService(BaseNotificationService):
 
         if failed_targets:
             raise HomeAssistantError(
-                f"Device(s) with webhook id(s) {', '.join(failed_targets)} not connected to local push notifications"
+                "Device(s) with webhook id(s)"
+                f" {', '.join(failed_targets)}"
+                " not connected to local push notifications"
             )
 
     async def _async_send_remote_message_target(
