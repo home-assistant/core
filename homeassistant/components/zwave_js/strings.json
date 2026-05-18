@@ -319,7 +319,7 @@
     "credential_rejected_unknown": {
       "message": "The device rejected the credential without giving a reason."
     },
-    "credential_rejected_wrong_uui": {
+    "credential_rejected_wrong_uuid": {
       "message": "The device rejected the credential because the user unique identifier does not match."
     },
     "credential_slot_out_of_range": {

@@ -12,6 +12,7 @@ from zwave_js_server.const.command_class.access_control import (
     UserCredentialType,
     UserCredentialUserType,
 )
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.access_control import AccessControlAPI, SetUserOptions
 from zwave_js_server.model.node import Node
 
@@ -561,6 +562,20 @@ async def test_set_duplicate_credential_rejection_raises(
     )
 
 
+@pytest.mark.parametrize(
+    ("set_user_result", "translation_key"),
+    [
+        (
+            SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED,
+            "user_rejected_add_occupied",
+        ),
+        (
+            SetUserResult.ERROR_MODIFY_REJECTED_LOCATION_EMPTY,
+            "user_rejected_modify_empty",
+        ),
+        (SetUserResult.ERROR_UNKNOWN, "user_rejected_unknown"),
+    ],
+)
 async def test_set_user_rejection_raises(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -568,10 +583,12 @@ async def test_set_user_rejection_raises(
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
+    set_user_result: SetUserResult,
+    translation_key: str,
 ) -> None:
-    """A device-reported rejection on set_user must raise."""
+    """A device-reported rejection on set_user must raise with a key per result."""
     api = _mock_access_control(lock_schlage_be469)
-    api.set_user.return_value = SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
+    api.set_user.return_value = set_user_result
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
@@ -588,7 +605,7 @@ async def test_set_user_rejection_raises(
             return_response=True,
         )
 
-    assert exc.value.translation_key == "user_rejected_add_occupied"
+    assert exc.value.translation_key == translation_key
     api.set_user.assert_called_once_with(
         1,
         SetUserOptions(
@@ -597,6 +614,65 @@ async def test_set_user_rejection_raises(
             user_name="Guest",
             credential_rule=None,
         ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("set_credential_result", "translation_key"),
+    [
+        (
+            SetCredentialResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED,
+            "credential_rejected_add_occupied",
+        ),
+        (
+            SetCredentialResult.ERROR_MODIFY_REJECTED_LOCATION_EMPTY,
+            "credential_rejected_modify_empty",
+        ),
+        (
+            SetCredentialResult.ERROR_MANUFACTURER_SECURITY_RULES,
+            "credential_rejected_manufacturer_rules",
+        ),
+        (
+            SetCredentialResult.ERROR_WRONG_USER_UNIQUE_IDENTIFIER,
+            "credential_rejected_wrong_uuid",
+        ),
+        (SetCredentialResult.ERROR_UNKNOWN, "credential_rejected_unknown"),
+    ],
+)
+async def test_set_credential_rejection_raises(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    set_credential_result: SetCredentialResult,
+    translation_key: str,
+) -> None:
+    """A device-reported rejection on set_credential surfaces a key per result."""
+    api = _mock_access_control(lock_schlage_be469)
+    api.set_credential.return_value = set_credential_result
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_credential",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 1,
+                "credential_type": "pin_code",
+                "credential_data": "1234",
+                "credential_slot": 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc.value.translation_key == translation_key
+    api.set_credential.assert_called_once_with(
+        1, UserCredentialType.PIN_CODE, 1, "1234"
     )
 
 
@@ -1114,4 +1190,154 @@ async def test_get_users_supports_multi_target(
                 }
             ],
         },
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "failing_attr",
+        "service",
+        "extra_payload",
+        "returns_response",
+        "translation_key",
+        "placeholders",
+    ),
+    [
+        (
+            "set_user",
+            "set_user",
+            {"user_id": 1, "user_name": "Alice"},
+            True,
+            "set_user_failed",
+            {},
+        ),
+        (
+            "delete_user",
+            "delete_user",
+            {"user_id": 3},
+            False,
+            "delete_user_failed",
+            {"user_id": "3"},
+        ),
+        (
+            "delete_all_users",
+            "delete_all_users",
+            {},
+            False,
+            "delete_all_users_failed",
+            {},
+        ),
+        (
+            "get_user_capabilities_cached",
+            "get_credential_capabilities",
+            {},
+            True,
+            "get_credential_capabilities_failed",
+            {},
+        ),
+        (
+            "get_users_cached",
+            "get_users",
+            {},
+            True,
+            "get_users_failed",
+            {},
+        ),
+        (
+            "set_credential",
+            "set_credential",
+            {
+                "user_id": 1,
+                "credential_type": "pin_code",
+                "credential_data": "1234",
+                "credential_slot": 1,
+            },
+            True,
+            "set_credential_failed",
+            {},
+        ),
+        (
+            "delete_credential",
+            "delete_credential",
+            {"user_id": 1, "credential_type": "pin_code", "credential_slot": 1},
+            False,
+            "delete_credential_failed",
+            {},
+        ),
+    ],
+)
+async def test_server_error_wrapped_with_translation_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    failing_attr: str,
+    service: str,
+    extra_payload: dict,
+    returns_response: bool,
+    translation_key: str,
+    placeholders: dict,
+) -> None:
+    """zwave-js-server errors from helper calls surface a per-service translation key."""
+    api = _mock_access_control(lock_schlage_be469)
+    getattr(api, failing_attr).side_effect = FailedZWaveCommand("boom", 1, "boom")
+
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **extra_payload},
+            blocking=True,
+            return_response=returns_response,
+        )
+
+    assert exc.value.translation_key == translation_key
+    # The wrapper always renders the server error message; per-service
+    # placeholders such as user_id must also be carried through.
+    expected_placeholders = {
+        "error": "zwave_error: Z-Wave error 1 - boom"
+    } | placeholders
+    assert exc.value.translation_placeholders == expected_placeholders
+
+
+async def test_delete_all_credentials_failure_wrapped(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """A server error during delete_all_credentials surfaces the wrap key."""
+    api = _mock_access_control(lock_schlage_be469)
+
+    cred = MagicMock()
+    cred.type = UserCredentialType.PIN_CODE
+    cred.slot = 1
+    api.get_credentials_cached.return_value = [cred]
+    api.delete_credential.side_effect = FailedZWaveCommand("boom", 1, "boom")
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "delete_all_credentials",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 7,
+            },
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "delete_all_credentials_failed"
+    assert exc.value.translation_placeholders == {
+        "error": "zwave_error: Z-Wave error 1 - boom",
+        "user_id": "7",
     }

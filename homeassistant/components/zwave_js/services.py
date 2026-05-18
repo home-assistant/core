@@ -43,7 +43,6 @@ from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
 
 from . import const
-from .access_control_helpers import CREDENTIAL_RULE_REVERSE_MAP, USER_TYPE_REVERSE_MAP
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
     async_get_node_from_device_id,
@@ -52,6 +51,7 @@ from .helpers import (
     async_get_nodes_from_targets,
     get_value_id_from_unique_id,
 )
+from .lock_helpers import CREDENTIAL_RULE_REVERSE_MAP, USER_TYPE_REVERSE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 

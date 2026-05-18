@@ -1,4 +1,4 @@
-"""Access-control helpers for Z-Wave JS credential management.
+"""Lock helpers for Z-Wave JS credential management.
 
 Provides business logic for user/credential CRUD, capability queries,
 auto-find logic, and validation.
@@ -108,7 +108,7 @@ _SET_CREDENTIAL_RESULT_KEYS: dict[SetCredentialResult, str] = {
     ),
     SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE: "credential_rejected_duplicate",
     SetCredentialResult.ERROR_WRONG_USER_UNIQUE_IDENTIFIER: (
-        "credential_rejected_wrong_uui"
+        "credential_rejected_wrong_uuid"
     ),
     SetCredentialResult.ERROR_UNKNOWN: "credential_rejected_unknown",
 }
