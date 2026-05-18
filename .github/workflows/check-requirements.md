@@ -33,8 +33,11 @@ description: >
   (including PRs opened from forks) and verifies licenses match PyPI metadata, source
   repositories are publicly accessible, PyPI releases were uploaded via
   automated CI (Trusted Publisher attestation), the package's release pipeline
-  uses OIDC or equivalent automated credentials (not static tokens), and the PR
-  description contains the required links.
+  uses OIDC or equivalent automated credentials (not static tokens), the
+  package source does not show obvious signs of malicious behavior (Home
+  Assistant secret/config access, download-and-execute, install-time
+  arbitrary code, credential exfiltration, obfuscated dynamic execution),
+  and the PR description contains the required links.
 ---
 
 # Requirements License and Availability Check
@@ -291,7 +294,158 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 3. If no CI configuration can be retrieved, mark ⚠️ — "Release pipeline could
    not be inspected; hosting provider is not GitHub or GitLab."
 
-## Step 7 — Post a Review Comment
+## Step 7 — Security Sanity Check
+
+This step is a **baseline check only** — a cheap first pass intended to catch
+the most obvious supply-chain red flags. It is not a security review, not a
+malware audit, and not a substitute for human judgement. A clean result here
+means "nothing obvious stood out in a quick scan", not "this package is
+safe". Reviewers and maintainers remain responsible for the real security
+assessment.
+
+For each new or bumped package, perform a lightweight scan of the package's
+source for behavior patterns that have historically appeared in supply-chain
+attacks. The goal is to surface suspicious code paths so a human reviewer can
+decide.
+
+Use the source repository URL recorded in Step 3. Skip this step and mark `—`
+when:
+- The repository is not publicly accessible (Step 5 failed), **or**
+- The host is neither GitHub nor GitLab and no CI configuration files were
+  retrievable in Step 6.
+
+### 7a — Fetch a representative slice of the source
+
+- For **GitHub** repos:
+  1. Resolve the default branch via `GET /repos/{owner}/{repo}`.
+  2. List the tree with
+     `GET /repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1`.
+  3. Identify the package's actual Python module directory (`{package_name}/`
+     or `src/{package_name}/`, normalising `-` ↔ `_`).
+- For **GitLab** repos use the equivalent REST API calls; for any non-GitHub
+  host fall back to `web-fetch` of raw file URLs.
+- Fetch the **raw contents** of:
+  - `setup.py` if present — install-time code runs on every consumer machine.
+  - `pyproject.toml` — inspect `[build-system]` and any custom build backend.
+  - The package's `__init__.py`.
+  - Up to **8** additional Python files inside the package directory,
+    prioritising files referenced from `entry_points`, plus any file whose
+    name suggests bootstrap, loader, or self-update behavior
+    (`update*.py`, `loader*.py`, `bootstrap*.py`, `_native.py`,
+    `_post_install*.py`, etc.).
+
+If the source tree is too large to inspect within the available API budget,
+inspect at least `setup.py`, `pyproject.toml`, and the package's
+`__init__.py`, then mark this step ⚠️ with a note that only a partial scan
+was performed.
+
+### 7b — Patterns to flag
+
+Reason from principles, not a fixed checklist. For each fetched file, ask:
+*would a well-behaved Python library that does what this package's PyPI
+description claims to do need to do this?* If the answer is "no" or
+"unclear", record a finding. The categories below describe the **shape** of
+concerning behavior; the specific APIs, filenames, and storage keys mentioned
+are illustrative examples — treat any equivalent construct (including ones
+that did not exist when this workflow was written) the same way.
+
+For every finding include the file path, line number, a snippet
+(≤ 120 chars), a permalink of the form
+`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` (or the
+GitLab equivalent), and one sentence explaining why the behavior is out of
+scope for the package's stated purpose.
+
+1. **Reaches outside the package's declared scope into Home Assistant
+   internals.**
+   A third-party library should interact with Home Assistant only through
+   the public, documented Python API it imports — never by touching the
+   filesystem of `config_dir` or by reading internal authentication /
+   session state. Flag any code that opens, reads, writes, or resolves paths
+   to artifacts it does not own (top-level YAML it did not create, anything
+   under `.storage/`, files owned by other integrations / domains), or that
+   reads tokens, refresh tokens, auth providers, or other internal session
+   state. Examples like `secrets.yaml`, `.storage/auth*`, `hass.auth`, or
+   `hass.config.path("secrets.yaml")` are illustrative — the principle is
+   *out-of-scope access*, not a static list of names.
+
+2. **Network input flows into an execution sink (download-and-execute).**
+   Bytes obtained from a remote source must never reach an interpreter.
+   Flag any data-flow path where the response body of a network call
+   (any HTTP / WebSocket / raw-socket client, sync or async) ends up at
+   *any* execution sink: `exec`, `eval`, `compile`, `marshal.loads`,
+   `pickle.loads`, `types.FunctionType`, `importlib.util.spec_from_loader`,
+   `subprocess.*`, `os.system`, shell pipelines such as `curl … | sh`, or
+   a file that is subsequently imported or executed. The same applies to
+   package-manager invocations (`pip install`, `pip download`, …) whose
+   arguments are resolved from network responses at runtime. Future
+   language or stdlib features that achieve the same effect should be
+   treated identically.
+
+3. **Build-time or install-time code is non-deterministic or non-local.**
+   `setup.py`, `setup.cfg` `cmdclass`, custom PEP 517 backends, and any
+   other build hook must be self-contained: they may only compile and copy
+   files that ship in the source distribution. Flag any build-stage code
+   that opens a network socket, shells out to external binaries, writes
+   outside the build / install tree, or pulls in a build backend whose
+   source is not on PyPI (e.g. referenced via Git URL or local path).
+
+4. **Reads user secrets and combines them with an egress path.**
+   The concerning shape is *secret-source → outbound-channel*, not any
+   single API. Flag code that reads credential / authentication material
+   from the host (environment variables that look like tokens or API keys,
+   files under the user's home that store credentials, OS keychain APIs,
+   browser-profile directories, Home Assistant token stores) **and** in the
+   same code path sends that data to a destination the package does not
+   need to talk to. Reading secrets alone is not enough; sending data out
+   alone is not enough; the *combination* is the signal.
+
+5. **Hides what it does from a reader.**
+   Source that a maintainer cannot reasonably review is itself a smell.
+   Flag any pattern where opaque data flows into an execution sink: large
+   encoded / compressed / hex strings (decoded via `base64`, `codecs`,
+   `zlib`, `lzma`, `bytes.fromhex`, or any future equivalent) passed to
+   `exec` / `eval` / `compile` / `__import__`; identifiers assembled at
+   runtime from non-literal pieces and then imported; or any other
+   construct whose evident purpose is to make the real behavior unreadable.
+
+6. **Hard-coded network destination that does not match the package's
+   stated purpose.**
+   Flag outbound URLs or hosts that do not appear in the package's PyPI
+   `project_urls` and have no obvious connection to its function —
+   especially short-link / paste services, ephemeral tunnels, raw IP
+   addresses, or non-default ports against unknown hosts — and any
+   network call originating from module top-level / `__init__.py` (which
+   executes on import for every consumer).
+
+If a behavior is clearly out of scope for the package's stated purpose but
+does not fit any of the categories above, flag it under whichever category
+fits best and explain in the finding. The list of categories is meant to
+guide reasoning, not bound it.
+
+### 7c — Outcome
+
+Aggregate the findings per package. **The Security column uses a different
+icon set from the other columns** to make clear that a "pass" here is a
+baseline result, not a trust signal:
+
+- ☑️ — baseline scan complete and nothing obvious stood out. This is **not**
+  a ✅ and must not be reported as one. It means "the cheap checks found
+  nothing"; it does not mean the package is safe. Always use ☑️ in this
+  column for the success case — never ✅.
+- ⚠️ — flagged patterns with plausible legitimate uses (e.g. an integration
+  helper that legitimately reads `configuration.yaml`, or a self-update
+  feature documented upstream). List every match so the reviewer can decide.
+- ❌ — patterns with no legitimate explanation for a Python dependency, for
+  example: install-time network execution, decode-and-exec of opaque blobs,
+  reads of `secrets.yaml` or `.storage/auth*`, or env-var / token
+  exfiltration to an external host.
+
+Be precise. Include the file path, line number, snippet, and reasoning for
+every finding. False positives are expected — when in doubt, prefer ⚠️ with
+context over ❌. This step is informational and never blocks the workflow on
+its own; a human reviewer decides whether to merge.
+
+## Step 8 — Post a Review Comment
 
 **Always** post a review comment using `add_comment`, regardless of whether
 packages pass or fail. Use the following structure:
@@ -307,34 +461,43 @@ Begin every comment with the HTML marker `<!-- requirements-check -->` on its
 own line (this is used by the workflow to find the previous comment and update
 it on the next run).
 
-### 7a — Overall summary line
+### 8a — Overall summary line
 
 Begin the comment with a single summary line, before anything else:
 
 - If everything passed: `All requirements checks passed. ✅`
 - If there are failures or warnings: `⚠️ Some checks require attention — see the details below.`
 
-### 7b — Summary table
+### 8b — Summary table
 
 Render a compact table where every check column contains **only the status
-icon** (✅, ⚠️, or ❌). No explanatory text belongs inside the table cells —
-all detail goes in the per-package sections below.
+icon**. No explanatory text belongs inside the table cells — all detail goes
+in the per-package sections below.
 
-Use `—` (em dash) when a check was skipped (e.g. Release Pipeline is skipped
-when the repository is not publicly accessible).
+Icon set:
+- All columns except **Security** use ✅, ⚠️, or ❌.
+- The **Security** column uses ☑️ (baseline scan passed, *not* a trust
+  signal — see Step 7c), ⚠️, or ❌. Never write ✅ in the Security column.
+- Use `—` (em dash) in any column when a check was skipped (e.g. Release
+  Pipeline and Security are skipped when the repository is not publicly
+  accessible).
 
 ```
 <!-- requirements-check -->
 ## Requirements Check
 
-| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
-|---------|------|---------|---------|-------------|-----------|------------------|---------|-----------------|
-| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PackageB | new  | —→4.5.6 | ❌ | ✅ | ❌ | ⚠️ | ❌ | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | ⚠️ | ✅ |
+> ☑️ in the **Security** column means a baseline scan found nothing
+> obvious — it is **not** an endorsement. See Step 7 for what the scan
+> covers and, importantly, what it does not.
+
+| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | Security | PR Link | Diff Consistent |
+|---------|------|---------|---------|-------------|-----------|------------------|----------|---------|-----------------|
+| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ☑️ | ✅ | ✅ |
+| PackageB | new  | —→4.5.6 | ❌ | ✅ | ❌ | ⚠️ | ❌ | ❌ | ✅ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | — | ⚠️ | ✅ |
 ```
 
-### 7c — Per-package detail sections
+### 8c — Per-package detail sections
 
 After the table, add one collapsible `<details>` block per package.
 
@@ -345,10 +508,11 @@ After the table, add one collapsible `<details>` block per package.
 
 Each block must include the full detail for every check: the license found, the
 repository URL, whether a provenance attestation was found, the release
-pipeline findings, the PR link found (or missing), and whether the diff is
-consistent. For failed or warned checks, explain exactly what the contributor
-must fix, including the expected source repository URL, expected version range,
-etc.
+pipeline findings, the security-scan findings (with file paths, line numbers,
+and snippets for any matches), the PR link found (or missing), and whether the
+diff is consistent. For failed or warned checks, explain exactly what the
+contributor must fix, including the expected source repository URL, expected
+version range, etc.
 
 Template (repeat for each package):
 
@@ -360,6 +524,7 @@ Template (repeat for each package):
 - **Repository Public**: ✅ https://github.com/example/packageb is publicly accessible.
 - **CI Upload**: ❌ No provenance attestation found for any distribution file. The release may have been uploaded manually.
 - **Release Pipeline**: ⚠️ No publish workflow found in the repository; it is unclear how this package is released to PyPI.
+- **Security**: ❌ `setup.py` performs a network download and executes the result at install time — see https://github.com/example/packageb/blob/abc123/setup.py#L42 (`exec(urlopen("https://...").read())`).
 - **PR Link**: ❌ PR description must link to the source repository at https://github.com/example/packageb (a PyPI page link is not sufficient).
 - **Diff Consistent**: ✅
 
@@ -376,6 +541,7 @@ Collapsed example (all checks passed):
 - **Repository Public**: ✅ https://github.com/example/packagea
 - **CI Upload**: ✅ Trusted Publisher attestation found (GitHub Actions).
 - **Release Pipeline**: ✅ OIDC via `pypa/gh-action-pypi-publish`; triggered on `release: published`; `environment: release` gate.
+- **Security**: ☑️ Baseline scan found nothing obvious in `setup.py`, `pyproject.toml`, `__init__.py`, and 6 additional inspected files. This is not a security review — see Step 7 for what was and was not checked.
 - **PR Link**: ✅ https://github.com/example/packagea/compare/v1.2.3...v1.3.0
 - **Diff Consistent**: ✅
 
@@ -392,8 +558,16 @@ Collapsed example (all checks passed):
   `pyproject.toml` without being tied to a specific integration, the PR
   description link requirement still applies.
 - When checking test-only packages (from `requirements_test.txt` or
-  `requirements_test_all.txt`), apply the same license, repository, and PR
-  description checks as for production dependencies.
+  `requirements_test_all.txt`), apply the same license, repository, security,
+  and PR description checks as for production dependencies. Malicious test
+  dependencies still execute on contributor and CI machines.
+- The Security Sanity Check (Step 7) is a **baseline** check, not a full
+  security review. It is informational only — it surfaces findings for a
+  human reviewer but never blocks the workflow on its own. The Security
+  column intentionally uses ☑️ (and *never* ✅) for the success case so
+  that a passing scan does not read as an endorsement: it only means
+  nothing obvious stood out. A ❌ is a strong signal to a reviewer, not an
+  automatic rejection.
 - A package that appears in both a production file and a test file should only
   be reported once; use the production file entry as the canonical one.
 - This workflow is only triggered when a commit actually changes one of the
