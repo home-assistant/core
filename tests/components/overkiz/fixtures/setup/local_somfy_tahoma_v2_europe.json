@@ -1676,6 +1676,242 @@
       }
     },
     {
+      "creationTime": 1590511973000,
+      "lastUpdateTime": 1590511973000,
+      "label": "Light Terras RGB",
+      "deviceURL": "io://1234-5678-3293/14608095",
+      "shortcut": false,
+      "controllableName": "io:DimmableRGBLightIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setIntensity",
+            "nparams": 1
+          },
+          {
+            "commandName": "setIntensityWithTimer",
+            "nparams": 3
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRGB",
+            "nparams": 3
+          },
+          {
+            "commandName": "setRGBWithTimer",
+            "nparams": 4
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:BlueColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:GreenColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LightIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "values": ["off", "on"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RedColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "values": ["available", "unavailable"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DimmerRGBColouredLight",
+        "uiClass": "Light",
+        "qualifiedName": "io:DimmableRGBLightIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Light Terras RGB"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 28.0
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:LightIntensityState",
+          "type": 1,
+          "value": 59
+        },
+        {
+          "name": "core:RedColorIntensityState",
+          "type": 1,
+          "value": 128
+        },
+        {
+          "name": "core:GreenColorIntensityState",
+          "type": 1,
+          "value": 64
+        },
+        {
+          "name": "core:BlueColorIntensityState",
+          "type": 1,
+          "value": 200
+        }
+      ],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "widget": "DimmerRGBColouredLight",
+      "type": 1,
+      "uiClass": "Light"
+    },
+    {
       "deviceURL": "io://1234-5678-3293/12745774",
       "available": true,
       "synced": true,
