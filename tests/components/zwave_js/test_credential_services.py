@@ -519,50 +519,6 @@ async def test_set_credential_multi_target(
 
 
 @pytest.mark.parametrize(
-    "result",
-    [
-        SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
-        SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE,
-    ],
-)
-async def test_set_duplicate_credential_rejection_raises(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-    result: SetCredentialResult,
-) -> None:
-    """A device-reported duplicate credential rejection must surface as HomeAssistantError."""
-    api = _mock_access_control(lock_schlage_be469)
-    api.set_credential.return_value = result
-
-    with pytest.raises(HomeAssistantError) as exc:
-        await hass.services.async_call(
-            DOMAIN,
-            "set_credential",
-            {
-                ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
-                ),
-                "user_id": 1,
-                "credential_type": "pin_code",
-                "credential_data": "1234",
-                "credential_slot": 1,
-            },
-            blocking=True,
-            return_response=True,
-        )
-    # While Z-Wave can report that a credential matches the admin code,
-    # we don't want to expose this information to the user.
-    assert exc.value.translation_key == "credential_rejected_duplicate"
-    api.set_credential.assert_called_once_with(
-        1, UserCredentialType.PIN_CODE, 1, "1234"
-    )
-
-
-@pytest.mark.parametrize(
     ("set_user_result", "translation_key"),
     [
         (
@@ -627,6 +583,16 @@ async def test_set_user_rejection_raises(
         (
             SetCredentialResult.ERROR_MODIFY_REJECTED_LOCATION_EMPTY,
             "credential_rejected_modify_empty",
+        ),
+        # Z-Wave reports duplicate-admin-code separately, but we collapse it
+        # to the generic duplicate key so the admin code is not leaked.
+        (
+            SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
+            "credential_rejected_duplicate",
+        ),
+        (
+            SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE,
+            "credential_rejected_duplicate",
         ),
         (
             SetCredentialResult.ERROR_MANUFACTURER_SECURITY_RULES,
