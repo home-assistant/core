@@ -9,7 +9,6 @@
       'last_update_success': True,
       'name': '**REDACTED**',
       'port': 443,
-      'update_interval': '12:00:00',
     }),
     'entry': dict({
       'created_at': '2020-06-12T08:00:00+00:00',

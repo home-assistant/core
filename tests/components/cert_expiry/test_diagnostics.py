@@ -8,7 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
@@ -42,7 +41,7 @@ async def test_config_entry_diagnostics(
         return_value=timestamp,
     ):
         entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        assert await hass.config_entries.async_setup(entry.entry_id)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 

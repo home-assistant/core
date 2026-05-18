@@ -34,7 +34,6 @@ async def async_get_config_entry_diagnostics(
         "is_cert_valid": coordinator.is_cert_valid,
         "cert_error": cert_error,
         "last_update_success": coordinator.last_update_success,
-        "update_interval": str(coordinator.update_interval),
     }
 
     return {
