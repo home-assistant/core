@@ -115,6 +115,8 @@ class LgIrReceivedCommandEvent(LgIrEntity, InfraredReceiverConsumerEntity, Event
         try:
             command_code = LGTVCode(nec_command.command)
         except ValueError:
+            # Ensure that a future change to the LGTVCode enum doesn't break
+            # this and shows as unknown.
             event_type = _EVENT_TYPE_UNKNOWN
         else:
             event_type = _COMMAND_CODE_TO_EVENT_TYPE.get(

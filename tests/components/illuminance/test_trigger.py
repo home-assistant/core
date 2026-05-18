@@ -130,7 +130,7 @@ async def test_illuminance_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for binary_sensor entities with device_class light."""
+    """Test trigger fires for binary_sensor with device_class light."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,
@@ -278,7 +278,7 @@ async def test_illuminance_trigger_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for sensor entities with device_class illuminance."""
+    """Test trigger fires for sensor with device_class illuminance."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_sensors,
@@ -316,7 +316,7 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -354,7 +354,7 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires when the last sensor changes state."""
+    """Test crossed_threshold trigger fires on last sensor change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,

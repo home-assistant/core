@@ -378,8 +378,8 @@ async def test_expose_conversion_exception(
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
-        in caplog.text
+        "Could not expose fake.entity fake_attribute"
+        f' value "{invalid_attribute}" to KNX:' in caplog.text
     )
 
 

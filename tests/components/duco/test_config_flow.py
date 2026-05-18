@@ -117,7 +117,7 @@ async def test_user_flow_duplicate(
 async def test_zeroconf_discovery_new_device(
     hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
-    """Test zeroconf discovery of a new device shows confirmation form and creates entry."""
+    """Test zeroconf discovery shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
