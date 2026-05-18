@@ -37,7 +37,8 @@ def _async_get_source_from_config_entry(
 ) -> str | None:
     """Get source from config entry id.
 
-    Returns None if no config_entry_id provided or on error (after sending error response).
+    Returns None if no config_entry_id provided or on error
+    (after sending error response).
     If validate_source is True, also validates that the scanner exists.
     """
     if not config_entry_id:

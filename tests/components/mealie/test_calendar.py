@@ -93,7 +93,7 @@ async def test_legacy_calendars(
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that only legacy calendars are created for Mealie versions prior to 3.7.0."""
+    """Test only legacy calendars created for Mealie versions < 3.7.0."""
 
     mock_mealie_client.get_about.return_value = About(version="v3.6.0")
 

@@ -263,7 +263,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         matcher: Callable[[Any], bool],
         include_uninitialized: bool = False,
     ) -> list[_FlowResultT]:
-        """Return flows in progress init matching by data type as a partial FlowResult."""
+        """Return flows in progress matching by data type."""
         return self._async_flow_handler_to_flow_result(
             [
                 progress
@@ -363,7 +363,8 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     try:
                         _map_error_to_schema_errors(schema_errors, error, data_schema)
                     except ValueError:
-                        # If we get here, the path in the exception does not exist in the schema.
+                        # If we get here, the path in the exception
+                        # does not exist in the schema.
                         schema_errors.setdefault("base", []).append(str(error))
                 raise InvalidData(
                     "Schema validation failed",
@@ -585,7 +586,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flows: Iterable[FlowHandler[_FlowContextT, _FlowResultT, _HandlerT]],
         include_uninitialized: bool,
     ) -> list[_FlowResultT]:
-        """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
+        """Convert a list of FlowHandler to a partial FlowResult."""
         return [
             self._flow_result(
                 flow_id=flow.flow_id,

@@ -115,7 +115,10 @@ class DevoloDeviceEntity(Entity):
 
 
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
-    """Representation of a multi level switch device within devolo Home Control. Something like a dimmer or a thermostat."""
+    """Representation of a multi level switch device within devolo Home Control.
+
+    Something like a dimmer or a thermostat.
+    """
 
     _attr_name = None
 

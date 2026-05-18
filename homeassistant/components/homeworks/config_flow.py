@@ -1,4 +1,5 @@
 """Lutron Homeworks Series 4 and 8 config flow."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from functools import partial
 import logging
