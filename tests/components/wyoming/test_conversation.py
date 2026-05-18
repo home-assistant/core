@@ -275,7 +275,7 @@ async def test_supported_languages_empty_means_all(
     info_kwargs: dict,
     agent_id: str,
 ) -> None:
-    """Test that an empty list of supported languages means the agent supports all languages."""
+    """Test empty supported languages means agent supports all."""
     config_entry: ConfigEntry = request.getfixturevalue(config_entry_fixture)
 
     with (
