@@ -1,9 +1,10 @@
 """Test the aidot config flow."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock
 
 from aidot.exceptions import AidotUserOrPassIncorrect
+from aiohttp import ClientError
+import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_config_flow_cloud_login_success(
-    hass: HomeAssistant, mock_setup_entry: Generator[AsyncMock]
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test a successful config flow using cloud login."""
     result = await hass.config_entries.flow.async_init(
@@ -43,8 +44,20 @@ async def test_config_flow_cloud_login_success(
     assert result["result"].unique_id == TEST_LOGIN_RESP["id"]
 
 
-async def test_config_flow_login_user_password_incorrect(
-    hass: HomeAssistant, patch_aidot_client: MagicMock
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AidotUserOrPassIncorrect, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_config_flow_errors(
+    hass: HomeAssistant,
+    patch_aidot_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test a failed config flow using cloud connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +67,7 @@ async def test_config_flow_login_user_password_incorrect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    patch_aidot_client.async_post_login.side_effect = AidotUserOrPassIncorrect()
+    patch_aidot_client.async_post_login.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -65,7 +78,7 @@ async def test_config_flow_login_user_password_incorrect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error}
 
     patch_aidot_client.async_post_login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
