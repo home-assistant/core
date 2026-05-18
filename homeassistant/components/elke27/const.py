@@ -6,7 +6,6 @@ DEFAULT_PORT = 2101
 READY_TIMEOUT = 30
 
 CONF_LINK_KEYS_JSON = "link_keys_json"
-CONF_PANEL = "panel"
 CONF_INTEGRATION_SERIAL = "integration_serial"
 CONF_LEGACY_PIN = "pin"
 

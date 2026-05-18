@@ -34,9 +34,6 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
     """Test hub connect subscribes and disconnects cleanly."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
-    client.async_discover = AsyncMock(
-        return_value=[SimpleNamespace(panel_name="Panel A")]
-    )
     client.set_client_identity = Mock()
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
@@ -75,7 +72,6 @@ async def test_connect_wait_ready_false_disconnects(
     """Test hub connect disconnects when ready is false."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
-    client.async_discover = AsyncMock(return_value=[])
     client.set_client_identity = Mock()
     client.wait_ready = AsyncMock(return_value=False)
     client.async_disconnect = AsyncMock(return_value=None)
@@ -120,8 +116,10 @@ async def test_refresh_and_subscribe_errors(hass: HomeAssistant) -> None:
         hub.subscribe(_listener)
 
 
-async def test_actions_return_false_when_no_client(hass: HomeAssistant) -> None:
-    """Verify action methods return False when no client is set."""
+async def test_area_commands_return_false_when_no_client(
+    hass: HomeAssistant,
+) -> None:
+    """Verify area command methods return False when no client is set."""
     hub = Elke27Hub(
         hass,
         "192.168.1.72",
@@ -130,22 +128,15 @@ async def test_actions_return_false_when_no_client(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    assert await hub.async_set_output(1, state=True) is False
-    assert await hub.async_set_light(1, state=True) is False
-    assert await hub.async_set_lock(1, locked=True) is False
-    assert await hub.async_set_tstat_status(1, mode="HEAT") is False
     assert await hub.async_set_zone_bypass(1, bypassed=True, pin="1234") is False
     assert await hub.async_arm_area(1, "ARMED_AWAY", pin="1234") is False
     assert await hub.async_disarm_area(1, pin="1234") is False
 
 
-async def test_connect_sets_panel_name_and_reconnect_log(hass: HomeAssistant) -> None:
-    """Verify connect discovers panel name and clears unavailable log."""
+async def test_connect_clears_unavailable_log(hass: HomeAssistant) -> None:
+    """Verify connect clears unavailable log."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
-    client.async_discover = AsyncMock(
-        return_value=[SimpleNamespace(panel_name="Panel X")]
-    )
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     client.subscribe = Mock(return_value=Mock())
@@ -165,7 +156,6 @@ async def test_connect_sets_panel_name_and_reconnect_log(hass: HomeAssistant) ->
         )
         hub._unavailable_logged = True
         await hub.async_connect()
-        assert hub.panel_name == "Panel X"
         assert hub._unavailable_logged is False
 
 
@@ -253,24 +243,6 @@ async def test_subscribe_and_unsubscribe_typed_client(hass: HomeAssistant) -> No
     hub._client = client
     assert hub.subscribe(lambda *_: None) == "token"
     assert hub.unsubscribe_typed(lambda *_: None) is True
-
-
-async def test_async_set_output_async_no_on(hass: HomeAssistant) -> None:
-    """Verify async_set_output handles coroutine without on parameter."""
-
-    async def _async_set(output_id: int, state: bool) -> bool:
-        return output_id == 1 and state is True
-
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.86",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    hub._client = SimpleNamespace(async_set_output=_async_set)
-    assert await hub.async_set_output(1, state=True) is True
 
 
 async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
@@ -473,417 +445,6 @@ def test_event_type_and_connection_state_extra() -> None:
     assert _connection_state(event) is False
     event = SimpleNamespace()
     assert _event_type(event) is None
-
-
-async def test_async_set_output_supports_async_and_sync(
-    hass: HomeAssistant,
-) -> None:
-    """Verify output commands use async or sync client methods."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.72",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-
-    async def _async_set(output_id: int, *, on: bool) -> bool:
-        assert output_id == 1
-        return on
-
-    def _sync_set(output_id: int, state: bool) -> bool:
-        assert output_id == 2
-        return state
-
-    hub._client = SimpleNamespace(async_set_output=_async_set)
-    assert await hub.async_set_output(1, state=True) is True
-
-    hub._client = SimpleNamespace(set_output=_sync_set)
-    assert await hub.async_set_output(2, state=False) is False
-
-    def _sync_on(output_id: int, *, on: bool) -> None:
-        assert output_id == 3
-        assert on is True
-
-    hub._client = SimpleNamespace(set_output=_sync_on)
-    assert await hub.async_set_output(3, state=True) is True
-
-
-async def test_async_set_helpers_handle_uninspectable_signatures(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Verify helpers fall back when client method signatures are unavailable."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.72",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.elke27.hub.inspect.signature",
-        Mock(side_effect=ValueError("signature unavailable")),
-    )
-
-    async def _async_output(output_id: int, state: bool) -> bool:
-        return output_id == 1 and state is True
-
-    async def _async_light(light_id: int, state: bool) -> bool:
-        return light_id == 2 and state is False
-
-    async def _async_lock(lock_id: int, locked: bool) -> bool:
-        return lock_id == 3 and locked is True
-
-    hub._client = SimpleNamespace(async_set_output=_async_output)
-    assert await hub.async_set_output(1, state=True) is True
-
-    hub._client = SimpleNamespace(async_set_light=_async_light)
-    assert await hub.async_set_light(2, state=False) is True
-
-    hub._client = SimpleNamespace(async_set_lock=_async_lock)
-    assert await hub.async_set_lock(3, locked=True) is True
-
-
-async def test_async_set_output_missing_method(
-    hass: HomeAssistant,
-) -> None:
-    """Verify output commands return false when unsupported."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    hub._client = SimpleNamespace()
-    assert await hub.async_set_output(1, state=True) is False
-
-
-async def test_async_set_light_and_lock(
-    hass: HomeAssistant,
-) -> None:
-    """Verify light and lock control uses async_execute fallback."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    execute = AsyncMock(return_value=SimpleNamespace(ok=True))
-    hub._client = SimpleNamespace(async_execute=execute)
-
-    assert await hub.async_set_light(1, state=True) is True
-    execute.assert_awaited_with(
-        "light_set_status",
-        light_id=1,
-        status="ON",
-        level=99,
-    )
-
-    execute.reset_mock()
-    assert await hub.async_set_lock(2, locked=False) is True
-    execute.assert_awaited_with("lock_set_status", lock_id=2, status="OFF")
-
-    execute = AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    hub._client = SimpleNamespace(async_execute=execute)
-    assert await hub.async_set_light(1, state=False) is False
-    assert await hub.async_set_lock(1, locked=True) is False
-
-    execute = AsyncMock(
-        return_value=SimpleNamespace(ok=False, error=ValueError("light failed"))
-    )
-    hub._client = SimpleNamespace(async_execute=execute)
-    with pytest.raises(HomeAssistantError, match="light failed"):
-        await hub.async_set_light(1, state=False)
-
-    execute = AsyncMock(
-        return_value=SimpleNamespace(ok=False, error=ValueError("lock failed"))
-    )
-    hub._client = SimpleNamespace(async_execute=execute)
-    with pytest.raises(HomeAssistantError, match="lock failed"):
-        await hub.async_set_lock(1, locked=True)
-
-
-@pytest.mark.parametrize(
-    ("method_name", "method_factory", "state"),
-    [
-        (
-            "async_set_light",
-            "_async_light_on",
-            True,
-        ),
-        (
-            "set_light",
-            "_sync_light_on",
-            True,
-        ),
-        (
-            "set_light",
-            "_sync_light",
-            False,
-        ),
-    ],
-)
-async def test_async_set_light_uses_client_methods(
-    hass: HomeAssistant,
-    method_name: str,
-    method_factory: str,
-    state: bool,
-) -> None:
-    """Verify light control uses direct client methods when available."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
-
-    assert await hub.async_set_light(1, state=state) is True
-    assert calls == [(1, state)]
-
-
-def _async_light_on(calls: list[Any]) -> Any:
-    async def _method(light_id: int, *, on: bool) -> bool:
-        calls.append((light_id, on))
-        return True
-
-    return _method
-
-
-def _sync_light(calls: list[Any]) -> Any:
-    def _method(light_id: int, state: bool) -> bool:
-        calls.append((light_id, state))
-        return True
-
-    return _method
-
-
-def _sync_light_on(calls: list[Any]) -> Any:
-    def _method(light_id: int, *, on: bool) -> bool:
-        calls.append((light_id, on))
-        return True
-
-    return _method
-
-
-@pytest.mark.parametrize(
-    ("method_name", "method_factory", "locked"),
-    [
-        (
-            "async_set_lock",
-            "_async_lock_locked",
-            True,
-        ),
-        (
-            "set_lock",
-            "_sync_lock_locked",
-            False,
-        ),
-        (
-            "async_set_lock",
-            "_async_lock_on",
-            True,
-        ),
-        (
-            "set_lock",
-            "_sync_lock_on",
-            False,
-        ),
-        (
-            "async_set_lock",
-            "_async_lock_positional",
-            True,
-        ),
-        (
-            "set_lock",
-            "_sync_lock_positional",
-            False,
-        ),
-    ],
-)
-async def test_async_set_lock_uses_client_methods(
-    hass: HomeAssistant,
-    method_name: str,
-    method_factory: str,
-    locked: bool,
-) -> None:
-    """Verify lock control uses direct client methods when available."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
-
-    assert await hub.async_set_lock(2, locked=locked) is True
-    assert calls == [(2, locked)]
-
-
-def _async_lock_locked(calls: list[Any]) -> Any:
-    async def _method(lock_id: int, *, locked: bool) -> bool:
-        calls.append((lock_id, locked))
-        return True
-
-    return _method
-
-
-def _sync_lock_locked(calls: list[Any]) -> Any:
-    def _method(lock_id: int, *, locked: bool) -> bool:
-        calls.append((lock_id, locked))
-        return True
-
-    return _method
-
-
-def _async_lock_on(calls: list[Any]) -> Any:
-    async def _method(lock_id: int, *, on: bool) -> bool:
-        calls.append((lock_id, on))
-        return True
-
-    return _method
-
-
-def _sync_lock_on(calls: list[Any]) -> Any:
-    def _method(lock_id: int, *, on: bool) -> bool:
-        calls.append((lock_id, on))
-        return True
-
-    return _method
-
-
-def _async_lock_positional(calls: list[Any]) -> Any:
-    async def _method(lock_id: int, locked: bool) -> bool:
-        calls.append((lock_id, locked))
-        return True
-
-    return _method
-
-
-def _sync_lock_positional(calls: list[Any]) -> Any:
-    def _method(lock_id: int, state: bool) -> bool:
-        calls.append((lock_id, state))
-        return True
-
-    return _method
-
-
-async def test_async_set_tstat_status(
-    hass: HomeAssistant,
-) -> None:
-    """Verify thermostat status updates use async_execute fallback."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    execute = AsyncMock(return_value=SimpleNamespace(ok=True))
-    hub._client = SimpleNamespace(async_execute=execute)
-
-    assert await hub.async_set_tstat_status(1) is True
-    execute.assert_not_awaited()
-
-    assert (
-        await hub.async_set_tstat_status(
-            3,
-            mode="COOL",
-            fan_mode="ON",
-            cool_setpoint=72,
-        )
-        is True
-    )
-    execute.assert_awaited_with(
-        "tstat_set_status",
-        tstat_id=3,
-        mode="COOL",
-        fan_mode="ON",
-        cool_setpoint=72,
-    )
-
-    execute = AsyncMock(
-        return_value=SimpleNamespace(ok=False, error=ValueError("tstat failed"))
-    )
-    hub._client = SimpleNamespace(async_execute=execute)
-    with pytest.raises(HomeAssistantError, match="tstat failed"):
-        await hub.async_set_tstat_status(3, mode="HEAT")
-
-
-@pytest.mark.parametrize(
-    ("method_name", "method_factory"),
-    [
-        ("async_set_tstat_status", "_async_tstat_status"),
-        ("set_tstat_status", "_sync_tstat_status"),
-    ],
-)
-async def test_async_set_tstat_status_uses_client_methods(
-    hass: HomeAssistant,
-    method_name: str,
-    method_factory: str,
-) -> None:
-    """Verify thermostat control uses direct client methods when available."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
-
-    assert await hub.async_set_tstat_status(3, mode="HEAT") is True
-    assert calls == [(3, {"mode": "HEAT"})]
-
-
-def _async_tstat_status(calls: list[Any]) -> Any:
-    async def _method(tstat_id: int, **kwargs: Any) -> bool:
-        calls.append((tstat_id, kwargs))
-        return True
-
-    return _method
-
-
-def _sync_tstat_status(calls: list[Any]) -> Any:
-    def _method(tstat_id: int, **kwargs: Any) -> bool:
-        calls.append((tstat_id, kwargs))
-        return True
-
-    return _method
-
-
-async def test_async_set_tstat_status_returns_false_on_command_failure(
-    hass: HomeAssistant,
-) -> None:
-    """Verify thermostat control returns false on command failure without error."""
-    hub = Elke27Hub(
-        hass,
-        "192.168.1.73",
-        2101,
-        LinkKeys("tk", "lk", "lh").to_json(),
-        "112233445566",
-        None,
-    )
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    )
-
-    assert await hub.async_set_tstat_status(3, mode="HEAT") is False
 
 
 async def test_zone_bypass_validation_and_errors(
