@@ -124,3 +124,19 @@ charge_set_schedules:
       required: true
       selector:
         object:
+
+vehicle_get_picture:
+  fields:
+    vehicle:
+      required: true
+      selector:
+        device:
+          integration: renault
+    size:
+      selector:
+        select:
+          options:
+            - label: Large
+              value: "1"
+            - label: Small
+              value: "0"

@@ -4,11 +4,13 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
+from renault_api.kamereon.enums import AssetPictureSize
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -18,6 +20,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+ATTR_PICTURE_SIZE = "size"
 ATTR_SCHEDULES = "schedules"
 ATTR_TEMPERATURE = "temperature"
 ATTR_VEHICLE = "vehicle"
@@ -94,6 +97,13 @@ SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
         ),
     }
 )
+SERVICE_VEHICLE_GET_PICTURE_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_PICTURE_SIZE, default=AssetPictureSize.LARGE.value): vol.All(
+            vol.Coerce(int), vol.Coerce(AssetPictureSize)
+        ),
+    }
+)
 
 
 async def ac_cancel(service_call: ServiceCall) -> None:
@@ -165,6 +175,14 @@ async def ac_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
+async def vehicle_get_picture(service_call: ServiceCall) -> JsonObjectType:
+    """Get vehicle picture URL."""
+    image_size: AssetPictureSize = service_call.data[ATTR_PICTURE_SIZE]
+    proxy = get_vehicle_proxy(service_call)
+    url = proxy.details.get_picture(image_size)
+    return {"url": url}
+
+
 def get_vehicle_proxy(service_call: ServiceCall) -> RenaultVehicleProxy:
     """Get vehicle from service_call data."""
     device_registry = dr.async_get(service_call.hass)
@@ -226,4 +244,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "ac_set_schedules",
         ac_set_schedules,
         schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "vehicle_get_picture",
+        vehicle_get_picture,
+        schema=SERVICE_VEHICLE_GET_PICTURE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )

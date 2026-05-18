@@ -290,6 +290,20 @@
         }
       },
       "name": "Start charging"
+    },
+    "vehicle_get_picture": {
+      "description": "Returns the picture URL for the vehicle.",
+      "fields": {
+        "size": {
+          "description": "Picture size (LARGE or SMALL, defaults to LARGE).",
+          "name": "Size"
+        },
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Get vehicle picture"
     }
   }
 }
