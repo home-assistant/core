@@ -63,9 +63,10 @@ async def async_setup_platform(
                 "integration_title": INTEGRATION_TITLE,
             },
         )
-        return
 
     # "deprecated_yaml" translation key lives under the "homeassistant" core domain.
+    # Always raised so users see the deprecation notice even when the import
+    # fails — they need to remove the YAML block once they recover.
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
@@ -113,9 +114,9 @@ class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQuality
     @property
     def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self.coordinator.api.pm2_5
+        return self.coordinator.data.pm2_5
 
     @property
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self.coordinator.api.pm10
+        return self.coordinator.data.pm10

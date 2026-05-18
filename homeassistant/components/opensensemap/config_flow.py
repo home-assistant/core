@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ABORT_CANNOT_CONNECT, ABORT_INVALID_STATION, CONF_STATION_ID, DOMAIN
+from .const import CONF_STATION_ID, DOMAIN, ERROR_CANNOT_CONNECT, ERROR_INVALID_STATION
 
 
 class CannotConnect(HomeAssistantError):
@@ -48,16 +48,15 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             station_id = user_input[CONF_STATION_ID]
-            await self.async_set_unique_id(station_id)
-            self._abort_if_unique_id_configured()
-
             try:
                 name = await self._async_get_station_name(station_id)
             except CannotConnect:
-                errors["base"] = ABORT_CANNOT_CONNECT
+                errors["base"] = ERROR_CANNOT_CONNECT
             except InvalidStation:
-                errors["base"] = ABORT_INVALID_STATION
+                errors["base"] = ERROR_INVALID_STATION
             else:
+                await self.async_set_unique_id(station_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=name,
                     data={CONF_STATION_ID: station_id},
@@ -78,9 +77,9 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             name = await self._async_get_station_name(station_id)
         except CannotConnect:
-            return self.async_abort(reason=ABORT_CANNOT_CONNECT)
+            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
         except InvalidStation:
-            return self.async_abort(reason=ABORT_INVALID_STATION)
+            return self.async_abort(reason=ERROR_INVALID_STATION)
 
         return self.async_create_entry(
             title=import_data.get(CONF_NAME, name),

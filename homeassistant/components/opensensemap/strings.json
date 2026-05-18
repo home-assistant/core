@@ -16,7 +16,9 @@
         },
         "data_description": {
           "station_id": "The unique identifier of your openSenseMap station. You can find it in the URL when viewing the station on opensensemap.org."
-        }
+        },
+        "description": "Add an openSenseMap station to monitor its measurements.",
+        "title": "Add openSenseMap station"
       }
     }
   },

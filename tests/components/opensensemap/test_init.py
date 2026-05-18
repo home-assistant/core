@@ -105,6 +105,7 @@ async def test_yaml_import_cannot_connect(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
 
 
 async def test_yaml_import_invalid_station(
@@ -123,5 +124,32 @@ async def test_yaml_import_invalid_station(
 
     assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_invalid_station"
+    )
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+
+
+@pytest.mark.usefixtures("mock_opensensemap_api")
+async def test_yaml_import_already_configured(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test importing YAML when a config entry already exists still creates the deprecation issue."""
+    mock_config_entry.add_to_hass(hass)
+
+    config = {
+        "air_quality": [{"platform": "opensensemap", CONF_STATION_ID: TEST_STATION_ID}]
+    }
+    assert await async_setup_component(hass, "air_quality", config)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_station"
     )

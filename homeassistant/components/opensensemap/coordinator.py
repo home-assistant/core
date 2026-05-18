@@ -12,7 +12,7 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 type OpenSenseMapConfigEntry = ConfigEntry[OpenSenseMapCoordinator]
 
 
-class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
+class OpenSenseMapCoordinator(DataUpdateCoordinator[OpenSenseMap]):
     """Coordinator to manage data updates for an openSenseMap station."""
 
     config_entry: OpenSenseMapConfigEntry
@@ -33,7 +33,7 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> OpenSenseMap:
         """Fetch latest data from the openSenseMap API."""
         try:
             # opensensemap_api wraps the request in a 5s aiohttp.ClientTimeout
@@ -43,3 +43,4 @@ class OpenSenseMapCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 f"Unable to fetch data from openSenseMap: {err}"
             ) from err
+        return self.api
