@@ -1906,7 +1906,7 @@ async def test_device_with_no_matching_temperatures(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Verify that device temperature sensors is not created if there is no matching data."""
+    """Verify device temperature sensors are not created without matching data."""
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2

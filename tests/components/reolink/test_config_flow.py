@@ -666,7 +666,7 @@ async def test_dhcp_ip_update(
     expected: str,
     host_call_list: list[str],
 ) -> None:
-    """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
+    """Test dhcp discovery aborts if already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -742,7 +742,7 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
     reolink_host_class: MagicMock,
     reolink_host: MagicMock,
 ) -> None:
-    """Test dhcp discovery is ignored when the camera is still properly connected to HA."""
+    """Test dhcp discovery is ignored when camera is connected."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
