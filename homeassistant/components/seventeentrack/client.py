@@ -96,7 +96,7 @@ class ModernProfile(Profile):
                     origin_country=0,
                     package_type=0,
                     status=status,
-                    tz="UTC",
+                    tz=tz,
                 )
             )
 
