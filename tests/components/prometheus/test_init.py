@@ -91,6 +91,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -1351,24 +1352,27 @@ async def test_geo_location(
     body = await generate_latest_metrics(client)
 
     EntityMetric(
-        metric_name="geo_location_state",
+        metric_name="geo_location_distance_meters",
         domain="geo_location",
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
-    ).withValue(25.5).assert_in_metrics(body)
+        source="usgs_earthquakes",
+    ).withValue(25500.0).assert_in_metrics(body)
 
     EntityMetric(
-        metric_name="geo_location_attr_latitude",
+        metric_name="geo_location_latitude_degrees",
         domain="geo_location",
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
+        source="usgs_earthquakes",
     ).withValue(34.05).assert_in_metrics(body)
 
     EntityMetric(
-        metric_name="geo_location_attr_longitude",
+        metric_name="geo_location_longitude_degrees",
         domain="geo_location",
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
+        source="usgs_earthquakes",
     ).withValue(-118.25).assert_in_metrics(body)
 
 
@@ -2804,7 +2808,12 @@ async def geo_location_fixture(
         hass,
         geo_location_1,
         25.5,
-        {"source": "usgs_earthquakes", "latitude": 34.05, "longitude": -118.25},
+        {
+            "source": "usgs_earthquakes",
+            "latitude": 34.05,
+            "longitude": -118.25,
+            "unit_of_measurement": UnitOfLength.KILOMETERS,
+        },
     )
     data["geo_location_1"] = geo_location_1
 
