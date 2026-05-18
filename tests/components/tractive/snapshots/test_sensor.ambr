@@ -266,7 +266,7 @@
     'state': '122',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_battery-entry]
+# name: test_sensor[sensor.tracker_device_id_123_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -280,7 +280,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_pet_tracker_battery',
+    'entity_id': 'sensor.tracker_device_id_123_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -288,37 +288,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Tracker battery',
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Tracker battery',
+    'original_name': 'Battery',
     'platform': 'tractive',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'tracker_battery_level',
+    'translation_key': None,
     'unique_id': 'pet_id_123_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_battery-state]
+# name: test_sensor[sensor.tracker_device_id_123_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Test Pet Tracker battery',
+      'friendly_name': 'Tracker device_id_123 Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_pet_tracker_battery',
+    'entity_id': 'sensor.tracker_device_id_123_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '88',
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_state-entry]
+# name: test_sensor[sensor.tracker_device_id_123_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -340,7 +340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_pet_tracker_state',
+    'entity_id': 'sensor.tracker_device_id_123_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -348,12 +348,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Tracker state',
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Tracker state',
+    'original_name': 'Status',
     'platform': 'tractive',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -363,11 +363,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_pet_tracker_state-state]
+# name: test_sensor[sensor.tracker_device_id_123_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Test Pet Tracker state',
+      'friendly_name': 'Tracker device_id_123 Status',
       'options': list([
         'inaccurate_position',
         'not_reporting',
@@ -377,7 +377,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_pet_tracker_state',
+    'entity_id': 'sensor.tracker_device_id_123_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
