@@ -53,8 +53,7 @@ async def test_select_option_updates_stepper(
 ) -> None:
     """Test selecting an option."""
 
-    entity_id = "select.ctd_000001_stepper"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(_STEPPER_ENTITY_ID)
     assert state is not None
 
     options = state.attributes["options"]

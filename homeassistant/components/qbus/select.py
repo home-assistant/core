@@ -79,7 +79,7 @@ class QbusStepper(QbusEntity, SelectEntity):
             )
 
         state = QbusMqttStepperState(id=self._mqtt_output.id, type=StateType.STATE)
-        state.write_value(self._name_to_value[option])
+        state.write_value(value)
 
         await self._async_publish_output_state(state)
 
