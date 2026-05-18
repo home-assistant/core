@@ -18,8 +18,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "farm_mode": {
+        "name": "Farm mode"
+      },
       "mmu": {
         "name": "MMU"
+      },
+      "sd_ready": {
+        "name": "SD card"
       }
     },
     "button": {

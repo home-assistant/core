@@ -49,6 +49,8 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
         "location": "Workshop",
+        "sd_ready": True,
+        "farm_mode": False,
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp
@@ -84,6 +86,7 @@ def mock_get_status_idle() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 100,
             "fan_print": 75,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
@@ -112,6 +115,7 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 5000,
             "fan_print": 2500,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
