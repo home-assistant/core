@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DEVICE_CLASS_UNITS,
-    DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -526,7 +525,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         # match Home Assistants requirements.
         if (
             (device_class := self.device_class) is None
-            or device_class.startswith(DOMAIN)
             # we do not need to check mappings if the API UOM is allowed
             or tuya_uom in NUMBER_DEVICE_CLASS_UNITS[device_class]
         ):

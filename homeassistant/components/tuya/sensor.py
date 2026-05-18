@@ -47,7 +47,6 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_CLASS_UNITS,
-    DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
@@ -1756,9 +1755,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
-            (device_class := self.device_class) is None
+            (device_class := self.entity_description.device_class) is None
             or device_class is SensorDeviceClass.ENUM
-            or device_class.startswith(DOMAIN)
             # we do not need to check mappings if the API UOM is allowed
             or tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]
         ):
