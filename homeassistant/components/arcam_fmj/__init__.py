@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import CONNECT_TIMEOUT, DEFAULT_SCAN_INTERVAL
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     try:
-        async with timeout(DEFAULT_SCAN_INTERVAL):
+        async with timeout(CONNECT_TIMEOUT):
             await client.start()
     except (ConnectionFailed, TimeoutError) as err:
         raise ConfigEntryNotReady(
@@ -67,7 +67,7 @@ async def _run_client(
     while True:
         try:
             async with AsyncExitStack() as stack:
-                async with timeout(interval):
+                async with timeout(CONNECT_TIMEOUT):
                     await client.start()
                 stack.push_async_callback(client.stop)
 
