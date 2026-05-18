@@ -80,7 +80,12 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
 
     @property
     def state(self) -> MediaPlayerState | None:
-        """Return the state of the device."""
+        """Return the state of the device.
+
+        ``None`` is returned (surfaced as ``unknown``) when the device has
+        not yet reported a power state; this is distinct from a real
+        powered-off state and must not be collapsed to ``OFF``.
+        """
         power = self._state.get_power()
         if power is None:
             return None
