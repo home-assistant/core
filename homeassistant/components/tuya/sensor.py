@@ -1070,7 +1070,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
     ),
     DeviceCategory.SFKZQ: (
-        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        # Total seconds of irrigation. Read-write value;
+        # the device appears to ignore the write action
         TuyaSensorEntityDescription(
             key=DPCode.TIME_USE,
             translation_key="total_watering_time",

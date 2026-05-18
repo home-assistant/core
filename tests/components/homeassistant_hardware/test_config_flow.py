@@ -1075,7 +1075,8 @@ async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_zha
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    # Should show migrate option for Zigbee since ZHA exists (migrating from ZHA to Zigbee)
+    # Should show migrate option for Zigbee since ZHA exists (migrating from ZHA to
+    # Zigbee)
     menu_options = init_result["menu_options"]
     assert "pick_firmware_zigbee_migrate" in menu_options
     assert "pick_firmware_thread" in menu_options  # Normal option for Thread
@@ -1100,7 +1101,8 @@ async def test_config_flow_pick_firmware_shows_migrate_options_with_existing_otb
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    # Should show migrate option for Thread since OTBR exists (migrating from OTBR to Thread)
+    # Should show migrate option for Thread since OTBR exists (migrating from OTBR to
+    # Thread)
     menu_options = init_result["menu_options"]
     assert "pick_firmware_thread_migrate" in menu_options
     assert "pick_firmware_zigbee" in menu_options  # Normal option for Zigbee

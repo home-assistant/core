@@ -117,7 +117,7 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
 
     async def async_turn_on(self) -> None:
         """Send discrete power-on command."""
-        await self._send_marantz_command(MarantzAudioCode.POWER_ON)
+        await self._send_marantz_command(MarantzAudioCode.POWER_ON, repeat_count=5)
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 

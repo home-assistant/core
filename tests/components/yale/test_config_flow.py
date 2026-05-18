@@ -218,7 +218,7 @@ async def test_reauth_wrong_account(
     reauth_jwt_wrong_account: str,
     jwt: str,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
+    """Test reauthentication aborts when using another account."""
     assert mock_config_entry.data["token"]["access_token"] == jwt
 
     mock_config_entry.add_to_hass(hass)
