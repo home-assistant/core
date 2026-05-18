@@ -164,6 +164,22 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState
+    # and core:SlateOrientationState (tilt-only, no position)
+    # uiClass is Pergola
+    OverkizCoverDescription(
+        key=UIWidget.BIOCLIMATIC_PERGOLA,
+        device_class=CoverDeviceClass.AWNING,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        open_tilt_command=OverkizCommand.OPEN_SLATS,
+        close_tilt_command=OverkizCommand.CLOSE_SLATS,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
     # Needs override since PositionableGarageDoor reports
     # core:OpenClosedUnknownState instead of core:OpenClosedState
     # uiClass is GarageDoor
@@ -382,15 +398,12 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.AWNING,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
-        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
-        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
-        open_tilt_command=OverkizCommand.OPEN_SLATS,
-        close_tilt_command=OverkizCommand.CLOSE_SLATS,
-        stop_tilt_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
     OverkizCoverDescription(
         key=UIClass.ROLLER_SHUTTER,
