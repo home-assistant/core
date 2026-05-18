@@ -80,7 +80,7 @@ def _get_possible_thread_routes(
 ) -> tuple[dict[str, dict[str, Route]], dict[str, set[str]]]:
     # Build a list of possible thread routes
     # Right now, this is ipv6 /64's that have a gateway
-    # We cross reference with zerconf data to confirm
+    # We cross reference with zeroconf data to confirm
     # which via's are known border routers
     routes: dict[str, dict[str, Route]] = {}
     reverse_routes: dict[str, set[str]] = {}

@@ -259,7 +259,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
         # The Xbox API constantly fluctuates the "last seen"
         # timestamp between two close values, causing
         # unnecessary updates. We only accept the most
-        # recent one as valild to prevent this.
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

@@ -268,7 +268,7 @@ class ProtectMediaSource(MediaSource):
             List of folders for each day in month + all events for month
         * {nvr_id}:browse:all|{camera_id}:all|
           {event_type}:range:{year}:{month}:all|{day}
-            Listing of all events for give
+            Listing of all events for given
             {day} + {month} + {year} combination
             in chronological order
         """
