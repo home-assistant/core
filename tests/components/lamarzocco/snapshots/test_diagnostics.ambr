@@ -584,6 +584,10 @@
         ]),
       }),
       'schedule': dict({
+        'auto_on_off': None,
+        'auto_on_off_supported': False,
+        'auto_stand_by': None,
+        'auto_stand_by_supported': False,
         'available_firmware_update': False,
         'ble_auth_token': None,
         'coffee_station': None,
@@ -597,6 +601,8 @@
         'offline_mode': False,
         'require_firmware_update': False,
         'serial_number': '**REDACTED**',
+        'smart_stand_by': None,
+        'smart_stand_by_supported': False,
         'smart_wake_up_sleep': dict({
           'schedules': list([
             dict({
