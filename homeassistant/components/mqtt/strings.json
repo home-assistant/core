@@ -1099,6 +1099,9 @@
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
     },
+    "mqtt_max_subscription_id_reached": {
+      "message": "MQTT Subscription ID limit reached. Cannot generate more IDs to subscribe."
+    },
     "mqtt_message_expiry_interval_not_supported": {
       "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
     },
