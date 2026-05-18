@@ -18,6 +18,11 @@
       }
     }
   },
+  "exceptions": {
+    "app_not_supported": {
+      "message": "App {app_name} is not supported"
+    }
+  },
   "options": {
     "error": {
       "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
