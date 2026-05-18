@@ -16,10 +16,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_local_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_geniushub_client: AsyncMock,
+    hass: HomeAssistant, mock_geniushub_client: AsyncMock
 ) -> None:
     """Test full local flow."""
     result = await hass.config_entries.flow.async_init(
@@ -70,9 +69,9 @@ async def test_full_local_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_local_flow_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_geniushub_client: AsyncMock,
     exception: Exception,
     error: str,
@@ -182,10 +181,9 @@ async def test_local_duplicate_mac(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_cloud_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_geniushub_client: AsyncMock,
+    hass: HomeAssistant, mock_geniushub_client: AsyncMock
 ) -> None:
     """Test full cloud flow."""
     result = await hass.config_entries.flow.async_init(
@@ -231,9 +229,9 @@ async def test_full_cloud_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_cloud_flow_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_geniushub_client: AsyncMock,
     exception: Exception,
     error: str,

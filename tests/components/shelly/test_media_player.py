@@ -140,7 +140,12 @@ STATUS_AUDIO_FILE = {
             "artist": "Artist",
             "duration": 132415,
             "position": 64644,
-            "thumb": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA",
+            "thumb": (
+                "data:image/webp;base64,"
+                "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAA"
+                "QUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFA"
+                "JiWkAANwAP79NmgA"
+            ),
             "title": "Title",
         },
         "media_type": "AUDIO",
@@ -564,11 +569,13 @@ async def test_rpc_media_player_browse_media_unsupported_media_type(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for media_player.test_name of Test name",
+            "Device communication error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for media_player.test_name of Test name",
+            "RPC call error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             InvalidAuthError,

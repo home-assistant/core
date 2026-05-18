@@ -254,7 +254,7 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
 async def test_infrared_fan_subentry_flow_no_infrared_entities(
     hass: HomeAssistant,
 ) -> None:
-    """Test infrared fan subentry flow aborts when no infrared entities are available."""
+    """Test infrared fan subentry aborts with no infrared entities."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
 
