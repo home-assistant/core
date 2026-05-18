@@ -38,10 +38,10 @@
   },
   "exceptions": {
     "command_error": {
-      "message": "Command error"
+      "message": "Command error: {error}"
     },
     "connect_error": {
-      "message": "Connection error"
+      "message": "Connection error: {error}"
     }
   }
 }
