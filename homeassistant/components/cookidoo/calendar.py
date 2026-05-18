@@ -10,6 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
@@ -58,7 +59,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         if not self.coordinator.data.week_plan:
             return None
 
-        today = date.today()  # noqa: DTZ011
+        today = dt_util.now().date()
         for day_data in self.coordinator.data.week_plan:
             day_date = date.fromisoformat(day_data.id)
             if day_date >= today and day_data.recipes:
