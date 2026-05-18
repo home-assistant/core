@@ -57,7 +57,7 @@ standards.
 ## Step 1 — Identify Changed Packages
 
 Use the GitHub tool to fetch the PR diff. Look for lines that were added (`+`)
-or removed (`-`) in **all** of these files:
+or removed (`-`) in **any** of these files:
 - `requirements.txt`
 - `requirements_all.txt`
 - `requirements_test.txt`
@@ -75,22 +75,23 @@ classify it as:
 Record the **old version** and **new version** for every version bump — you
 will need these values in Step 4.
 
-Ignore comment lines (starting with `#`), lines that start with `-r ` (file
-includes), and lines that don't contain `==`.
 
 ## Step 2 — Check License via PyPI
 
 For each new or bumped package:
 
 1. Fetch `https://pypi.org/pypi/{package_name}/json` (use the exact
-   package name as it appears on PyPI).
+   package name as it appears on the requirements file).
 2. From the JSON response, extract:
    - `info.license` — free-text license field
    - `info.license_expression` — SPDX expression (if present)
-   - `info.classifiers` — filter for entries starting with `"License ::"`.
+   - `info.classifiers` — filter for entries starting with `"License ::"`,
+     then normalize each match the same way as `script/licenses.py` by
+     extracting the final ` :: ` segment (for example,
+     `"License :: OSI Approved :: MIT License"` → `"MIT License"`).
 3. Determine if the license is in the approved list from `script/licenses.py`:
    - SPDX identifiers: compare against `OSI_APPROVED_LICENSES_SPDX`
-   - Classifier strings: compare against `OSI_APPROVED_LICENSES`
+   - Normalized classifier strings: compare against `OSI_APPROVED_LICENSES`
 4. Flag a package as ❌ if the license is unknown, missing, or not in the
    approved list. Flag as ⚠️ if the license information is ambiguous or cannot
    be definitively determined.
@@ -137,7 +138,7 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the PR number `${{ github.event.pull_request.number }}`.
+Read the PR body from the GitHub API using the PR number `${{ github.event.pull_request.number || inputs.pull_request_number }}`.
 Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required
