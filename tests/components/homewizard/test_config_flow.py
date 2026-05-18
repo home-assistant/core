@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1"])
 async def test_manual_flow_works(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -51,12 +52,50 @@ async def test_manual_flow_works(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_homewizardenergy", "mock_setup_entry")
-async def test_discovery_flow_works(
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-SKT-21"])
+@pytest.mark.parametrize(("usage"), ["consumption", "generation"])
+async def test_manual_flow_works_device_energy_monitoring(
     hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_setup_entry: AsyncMock,
     snapshot: SnapshotAssertion,
+    usage: str,
 ) -> None:
-    """Test discovery setup flow works."""
+    """Test config flow accepts user configuration for energy plug."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usage"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usage": usage}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result == snapshot
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_homewizardenergy.close.mock_calls) == 1
+    assert len(mock_homewizardenergy.device.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy", "mock_setup_entry")
+@pytest.mark.parametrize("usage", ["consumption", "generation"])
+async def test_power_monitoring_discovery_flow_works(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, usage: str
+) -> None:
+    """Test discovery energy monitoring setup flow works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -73,6 +112,42 @@ async def test_discovery_flow_works(
                 "product_name": "Energy Socket",
                 "product_type": "HWE-SKT",
                 "serial": "5c2fafabcdef",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usage"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"usage": usage}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result == snapshot
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy", "mock_setup_entry")
+async def test_water_monitoring_discovery_flow_works(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test discovery energy monitoring setup flow works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            port=80,
+            hostname="watermeter-ddeeff.local.",
+            type="",
+            name="",
+            properties={
+                "api_enabled": "1",
+                "path": "/api/v1",
+                "product_name": "Watermeter",
+                "product_type": "HWE-WTR",
+                "serial": "3c39efabcdef",
             },
         ),
     )
@@ -620,7 +695,7 @@ async def test_reconfigure_cannot_connect(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1"])
 async def test_manual_flow_works_with_v2_api_support(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
@@ -652,7 +727,70 @@ async def test_manual_flow_works_with_v2_api_support(
     mock_homewizardenergy_v2.device.side_effect = None
     mock_homewizardenergy_v2.get_token.side_effect = None
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.homewizard.config_flow.has_v2_api", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-KWH1"])
+async def test_manual_flow_energy_monitoring_works_with_v2_api_support(
+    hass: HomeAssistant,
+    mock_homewizardenergy_v2: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test config flow accepts user configuration for energy monitoring.
+
+    This should trigger authorization when v2 support is detected.
+    It should ask for usage if a energy monitoring device is configured.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Simulate v2 support but not authorized
+    mock_homewizardenergy_v2.device.side_effect = UnauthorizedError
+    mock_homewizardenergy_v2.get_token.side_effect = DisabledError
+    with (
+        patch(
+            "homeassistant.components.homewizard.config_flow.has_v2_api",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+
+    # Simulate user authorizing
+    mock_homewizardenergy_v2.device.side_effect = None
+    mock_homewizardenergy_v2.get_token.side_effect = None
+
+    with (
+        patch(
+            "homeassistant.components.homewizard.config_flow.has_v2_api",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usage"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"usage": "generation"},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -700,7 +838,16 @@ async def test_manual_flow_detects_failed_user_authorization(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Energy monitoring devices with an with configurable usage have an extra flow step
+    assert (
+        result["type"] is FlowResultType.CREATE_ENTRY and result["data"][CONF_TOKEN]
+    ) or (result["type"] is FlowResultType.FORM and result["step_id"] == "usage")
+
+    if result["type"] is FlowResultType.FORM and result["step_id"] == "usage":
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"usage": "generation"}
+        )
+
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -830,10 +977,12 @@ async def test_discovery_with_v2_api_ask_authorization(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
 
+    mock_homewizardenergy_v2.device.side_effect = None
     mock_homewizardenergy_v2.get_token.side_effect = None
-    mock_homewizardenergy_v2.get_token.return_value = "cool_token"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_TOKEN] == "cool_token"
+    # Energy monitoring devices with an with configurable usage have an extra flow step
+    assert (
+        result["type"] is FlowResultType.CREATE_ENTRY and result["data"][CONF_TOKEN]
+    ) or (result["type"] is FlowResultType.FORM and result["step_id"] == "usage")
