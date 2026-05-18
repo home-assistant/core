@@ -1081,7 +1081,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             )
             return FakeInfo(mid)
 
-        def _subscribe(topic, qos=0):
+        def _subscribe(topic_or_list, qos=0, **kwargs):
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
