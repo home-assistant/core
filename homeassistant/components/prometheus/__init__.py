@@ -775,15 +775,11 @@ class PrometheusMetrics:
         self._numeric_metric(state, "person", "person")
 
     def _handle_geo_location(self, state: State) -> None:
-        labels = self._labels(
-            state, {"source": state.attributes.get("source", "")}
-        )
+        labels = self._labels(state, {"source": state.attributes.get("source", "")})
         if (value := self.state_as_number(state)) is not None:
             unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is not None:
-                value = DistanceConverter.convert(
-                    value, unit, UnitOfLength.METERS
-                )
+                value = DistanceConverter.convert(value, unit, UnitOfLength.METERS)
             self._metric(
                 "geo_location_distance_meters",
                 prometheus_client.Gauge,
