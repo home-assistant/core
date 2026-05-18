@@ -196,7 +196,12 @@ class IntesisAC(ClimateEntity):
 
         # Setup HVAC modes
         if modes := controller.get_mode_list(ih_device_id):
-            mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
+            mode_list = []
+            for mode in modes:
+                if mode in MAP_IH_TO_HVAC_MODE:
+                    mode_list.append(MAP_IH_TO_HVAC_MODE[mode])
+                else:
+                    _LOGGER.warning("Unexpected mode: %s", mode)
             self._attr_hvac_modes.extend(mode_list)
         self._attr_hvac_modes.append(HVACMode.OFF)
 
