@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart Plug 50',
-      'supported_features': <SwitchEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'switch.smart_plug_50',
@@ -91,7 +90,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart Plug 100',
-      'supported_features': <SwitchEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'switch.smart_plug_100',
