@@ -1,6 +1,6 @@
 """Constants for the pylint_home_assistant plugin package."""
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 
 class Platform(StrEnum):
@@ -92,3 +92,76 @@ class Module(StrEnum):
     DEVICE_TRIGGER = "device_trigger"
     DIAGNOSTICS = "diagnostics"
     ENTITY = "entity"
+
+
+class QualityScaleTier(IntEnum):
+    """Quality scale tiers, ordered by level."""
+
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
+
+
+class QualityScaleRule(StrEnum):
+    """Integration quality scale rule names."""
+
+    # Bronze
+    ACTION_SETUP = "action-setup"
+    APPROPRIATE_POLLING = "appropriate-polling"
+    BRANDS = "brands"
+    COMMON_MODULES = "common-modules"
+    CONFIG_FLOW = "config-flow"
+    CONFIG_FLOW_TEST_COVERAGE = "config-flow-test-coverage"
+    DEPENDENCY_TRANSPARENCY = "dependency-transparency"
+    DOCS_ACTIONS = "docs-actions"
+    DOCS_HIGH_LEVEL_DESCRIPTION = "docs-high-level-description"
+    DOCS_INSTALLATION_INSTRUCTIONS = "docs-installation-instructions"
+    DOCS_REMOVAL_INSTRUCTIONS = "docs-removal-instructions"
+    ENTITY_EVENT_SETUP = "entity-event-setup"
+    ENTITY_UNIQUE_ID = "entity-unique-id"
+    HAS_ENTITY_NAME = "has-entity-name"
+    RUNTIME_DATA = "runtime-data"
+    TEST_BEFORE_CONFIGURE = "test-before-configure"
+    TEST_BEFORE_SETUP = "test-before-setup"
+    UNIQUE_CONFIG_ENTRY = "unique-config-entry"
+
+    # Silver
+    ACTION_EXCEPTIONS = "action-exceptions"
+    CONFIG_ENTRY_UNLOADING = "config-entry-unloading"
+    DOCS_CONFIGURATION_PARAMETERS = "docs-configuration-parameters"
+    DOCS_INSTALLATION_PARAMETERS = "docs-installation-parameters"
+    ENTITY_UNAVAILABLE = "entity-unavailable"
+    INTEGRATION_OWNER = "integration-owner"
+    LOG_WHEN_UNAVAILABLE = "log-when-unavailable"
+    PARALLEL_UPDATES = "parallel-updates"
+    REAUTHENTICATION_FLOW = "reauthentication-flow"
+    TEST_COVERAGE = "test-coverage"
+
+    # Gold
+    DEVICES = "devices"
+    DIAGNOSTICS = "diagnostics"
+    DISCOVERY = "discovery"
+    DISCOVERY_UPDATE_INFO = "discovery-update-info"
+    DOCS_DATA_UPDATE = "docs-data-update"
+    DOCS_EXAMPLES = "docs-examples"
+    DOCS_KNOWN_LIMITATIONS = "docs-known-limitations"
+    DOCS_SUPPORTED_DEVICES = "docs-supported-devices"
+    DOCS_SUPPORTED_FUNCTIONS = "docs-supported-functions"
+    DOCS_TROUBLESHOOTING = "docs-troubleshooting"
+    DOCS_USE_CASES = "docs-use-cases"
+    DYNAMIC_DEVICES = "dynamic-devices"
+    ENTITY_CATEGORY = "entity-category"
+    ENTITY_DEVICE_CLASS = "entity-device-class"
+    ENTITY_DISABLED_BY_DEFAULT = "entity-disabled-by-default"
+    ENTITY_TRANSLATIONS = "entity-translations"
+    EXCEPTION_TRANSLATIONS = "exception-translations"
+    ICON_TRANSLATIONS = "icon-translations"
+    RECONFIGURATION_FLOW = "reconfiguration-flow"
+    REPAIR_ISSUES = "repair-issues"
+    STALE_DEVICES = "stale-devices"
+
+    # Platinum
+    ASYNC_DEPENDENCY = "async-dependency"
+    INJECT_WEBSESSION = "inject-websession"
+    STRICT_TYPING = "strict-typing"

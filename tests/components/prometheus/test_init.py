@@ -56,7 +56,8 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 
-# Alias water_heater constants to avoid name clashes with similarly named climate constants
+# Alias water_heater constants to avoid name clashes with similarly
+# named climate constants
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
@@ -205,7 +206,7 @@ def test_entity_metric_generates_metric_name_string_without_value() -> None:
 
 
 def test_entity_metric_generates_metric_string_with_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with a metric value included."""
+    """Test EntityMetric formats metric string with a value."""
     domain = "sensor"
     object_id = "outside_temperature"
     entity_metric = EntityMetric(
@@ -245,7 +246,7 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
 
 
 def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> None:
-    """Test using EntityMetric to raise exception when required label value is empty string."""
+    """Test EntityMetric raises on empty required label value."""
     domain = "sensor"
     object_id = "outside_temperature"
     test_kwargs = {
@@ -266,7 +267,7 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
 
 
 def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
-    """Test using EntityMetric to format a simple metric string with labels alphabetically ordered."""
+    """Test EntityMetric orders labels alphabetically."""
     domain = "sensor"
     object_id = "outside_temperature"
 
@@ -300,7 +301,7 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
 
 
 def test_entity_metric_generates_metric_string_with_non_required_labels() -> None:
-    """Test using EntityMetric to format a simple metric string but with extra labels and values included."""
+    """Test EntityMetric with extra labels and values."""
     mode_entity_metric = EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
@@ -1869,7 +1870,8 @@ async def test_entity_becomes_unavailable(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    # Check that the availability changed on sensor_1 and the metric with the value is gone.
+    # Check that the availability changed on sensor_1 and the metric
+    # with the value is gone.
     EntityMetric(
         metric_name="sensor_temperature_celsius",
         domain="sensor",

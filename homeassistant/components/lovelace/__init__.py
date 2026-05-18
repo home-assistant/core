@@ -127,6 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Reload yaml resources."""
         try:
             conf = await async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
@@ -393,7 +394,8 @@ async def _async_migrate_default_config(
     3. Creates a new dashboard entry with url_path "lovelace"
     4. Handles storage files:
        a. If .storage/lovelace.lovelace does not exist, copies data and removes old file
-       b. If .storage/lovelace.lovelace already exists, renames old file to lovelace_old as backup
+       b. If .storage/lovelace.lovelace already exists,
+          renames old file to lovelace_old as backup
     5. Sets the default panel to "lovelace" if not already configured
     """
     # 1. Skip if already migrated (dashboard with url_path "lovelace" exists)

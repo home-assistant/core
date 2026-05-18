@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -355,10 +355,9 @@ async def _refresh_traits(traits: list[Any]) -> None:
             ) from ex
 
 
-_V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)
-
-
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]]):
+class RoborockDataUpdateCoordinatorA01[
+    _V: RoborockDyadDataProtocol | RoborockZeoProtocol
+](DataUpdateCoordinator[dict[_V, StateType]]):
     """Class to manage fetching data from the API for A01 devices."""
 
     config_entry: RoborockConfigEntry

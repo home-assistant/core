@@ -508,10 +508,9 @@ async def test_dhcp_discovery_backfill_proceeds_when_ip_mismatched(
     assert result["result"].unique_id == "102000100099"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_skips_broadcast_when_mac_known(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
+    hass: HomeAssistant, mock_unload_entry: AsyncMock
 ) -> None:
     """A configured entry with a stored MAC refreshes its IP without broadcasting."""
     config_entry = MockConfigEntry(
@@ -613,10 +612,9 @@ async def test_dhcp_discovery_proceeds_when_ignored_mac_differs(
     assert result["result"].unique_id == "102000100098"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_configured_wins_over_ignored_mac(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
+    hass: HomeAssistant, mock_unload_entry: AsyncMock
 ) -> None:
     """A configured entry's IP refresh wins over an ignored entry with the same MAC.
 
