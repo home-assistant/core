@@ -254,7 +254,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             }
 
     def _update_sources(self) -> None:
-        """Update list of sources from current source, apps, inputs and configured list."""
+        """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}

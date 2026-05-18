@@ -66,7 +66,9 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         ATTR_PUBLISHED_AT: video.snippet.added_at,
                         ATTR_TITLE: video.snippet.title,
                         ATTR_DESCRIPTION: video.snippet.description,
-                        ATTR_THUMBNAIL: video.snippet.thumbnails.get_highest_quality().url,
+                        ATTR_THUMBNAIL: (
+                            video.snippet.thumbnails.get_highest_quality().url
+                        ),
                         ATTR_VIDEO_ID: video.content_details.video_id,
                     }
                 res[channel.channel_id] = {

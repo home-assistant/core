@@ -90,7 +90,9 @@ class WaterHeaterTargetTemperatureCrossedThresholdTrigger(
 TRIGGERS: dict[str, type[Trigger]] = {
     "operation_mode_changed": WaterHeaterOperationModeChangedTrigger,
     "target_temperature_changed": WaterHeaterTargetTemperatureChangedTrigger,
-    "target_temperature_crossed_threshold": WaterHeaterTargetTemperatureCrossedThresholdTrigger,
+    "target_temperature_crossed_threshold": (
+        WaterHeaterTargetTemperatureCrossedThresholdTrigger
+    ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_origin_state_trigger(DOMAIN, from_state=STATE_OFF),
 }

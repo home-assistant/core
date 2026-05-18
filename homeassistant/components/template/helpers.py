@@ -271,7 +271,8 @@ def create_legacy_template_issue(
 
     breadcrumb = _get_config_breadcrumbs(config)
 
-    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hashlib.md5(','.join(config.keys()).encode()).hexdigest()}"
+    config_hash = hashlib.md5(",".join(config.keys()).encode()).hexdigest()
+    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{config_hash}"
 
     if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
         hass.data[DATA_DEPRECATION] = deprecation_list = []

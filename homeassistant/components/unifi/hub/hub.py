@@ -146,7 +146,8 @@ class UnifiHub:
         }
         for key, value in check_keys.items():
             if key == CONF_VERIFY_SSL:
-                # ssl_context is either False or a SSLContext object, so we need to compare it differently
+                # ssl_context is either False or a SSLContext
+                # object, so we need to compare it differently
                 if config_entry.data[CONF_VERIFY_SSL] != bool(
                     getattr(hub.config, value)
                 ):

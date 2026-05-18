@@ -158,7 +158,8 @@ class BaseTelegramBot:
 
         # establish event type: text, command or callback_query
         if update.callback_query:
-            # NOTE: Check for callback query first since effective message will be populated with the message
+            # NOTE: Check for callback query first since
+            # effective message will be populated with the message
             # in .callback_query (python-telegram-bot docs are wrong)
             event_type, event_data = self._get_callback_query_event_data(
                 update.callback_query
@@ -202,7 +203,8 @@ class BaseTelegramBot:
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
         if filters.COMMAND.filter(message):
-            # This is a command message - set event type to command and split data into command and args
+            # This is a command message - set event type
+            # to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -224,7 +226,7 @@ class BaseTelegramBot:
             photos = cast(Sequence[PhotoSize], message.effective_attachment)
             return {
                 ATTR_FILE_ID: photos[-1].file_id,
-                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_MIME_TYPE: "image/jpeg",
                 ATTR_FILE_SIZE: photos[-1].file_size,
             }
         return {
@@ -544,7 +546,7 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send media group to a chat ID.
 
-        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        Returns a dict mapping each chat_id to message_ids.
         """
         params = self._get_msg_kwargs(kwargs)
 

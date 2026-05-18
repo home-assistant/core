@@ -217,13 +217,15 @@ async def _execute_cluster_handler_command_based_action(
 
     if action_cluster_handler is None:
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute cluster handler action - cluster handler: {cluster_handler_name} action:"
+            f"Unable to execute cluster handler action -"
+            f" cluster handler: {cluster_handler_name} action:"
             f" {action_type}"
         )
 
     if not hasattr(action_cluster_handler, action_type):
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute cluster handler - cluster handler: {cluster_handler_name} action:"
+            f"Unable to execute cluster handler -"
+            f" cluster handler: {cluster_handler_name} action:"
             f" {action_type}"
         )
 
@@ -235,5 +237,7 @@ async def _execute_cluster_handler_command_based_action(
 
 ZHA_ACTION_TYPES = {
     ZHA_ACTION_TYPE_SERVICE_CALL: _execute_service_based_action,
-    ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND: _execute_cluster_handler_command_based_action,
+    ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND: (
+        _execute_cluster_handler_command_based_action
+    ),
 }

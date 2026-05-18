@@ -147,7 +147,7 @@ async def async_firewall_policy_control_fn(
 
 @callback
 def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if firewall policy is able to be controlled. Predefined policies are unable to be turned off."""
+    """Check if firewall policy can be controlled."""
     policy = hub.api.firewall_policies[obj_id]
     return not policy.predefined
 

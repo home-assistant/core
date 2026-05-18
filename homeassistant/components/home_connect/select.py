@@ -133,7 +133,9 @@ SELECT_ENTITY_DESCRIPTIONS = (
         translation_key_values=FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            for translation_key, value in (
+                FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            )
         },
     ),
     HomeConnectSelectEntityDescription(

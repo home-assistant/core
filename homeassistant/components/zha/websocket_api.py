@@ -1501,7 +1501,8 @@ def async_load_api(hass: HomeAssistant) -> None:
                 await cluster_handler.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
+                    "Squawking IASWD: %s: [%s] is missing"
+                    " the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
@@ -1546,7 +1547,8 @@ def async_load_api(hass: HomeAssistant) -> None:
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
+                    "Warning IASWD: %s: [%s] is missing"
+                    " the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )

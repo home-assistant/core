@@ -106,7 +106,8 @@ async def async_migrate_entry(
             ]
             if ignored_entries:
                 _LOGGER.info(
-                    "Found %d ignored WLED config entries with the same MAC address, removing them",
+                    "Found %d ignored WLED config entries"
+                    " with the same MAC address, removing them",
                     len(ignored_entries),
                 )
                 await asyncio.gather(
@@ -117,7 +118,9 @@ async def async_migrate_entry(
                 )
             if len(duplicate_entries) - len(ignored_entries) > 1:
                 _LOGGER.warning(
-                    "Found multiple WLED config entries with the same MAC address, cannot migrate to version 1.2"
+                    "Found multiple WLED config entries with"
+                    " the same MAC address, cannot migrate"
+                    " to version 1.2"
                 )
                 return False
 

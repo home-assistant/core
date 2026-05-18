@@ -82,7 +82,8 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._wilight_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight_device")
 
-        # Check if all components of this WiLight are allowed in this version of the HA integration
+        # Check if all components of this WiLight are
+        # allowed in this version of the HA integration
         component_ok = all(
             wilight_component in ALLOWED_WILIGHT_COMPONENTS
             for wilight_component in self._wilight_components

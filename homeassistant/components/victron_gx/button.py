@@ -53,7 +53,8 @@ class VictronButton(VictronBaseEntity, ButtonEntity):
 
     @callback
     def _on_update_cb(self, _value: Any) -> None:
-        # Buttons are stateless in HA; incoming metric updates are intentionally ignored.
+        # Buttons are stateless in HA; incoming metric
+        # updates are intentionally ignored.
         pass
 
     async def async_press(self) -> None:

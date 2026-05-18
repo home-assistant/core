@@ -629,7 +629,9 @@ class ConfigEntry[_DataT = Any]:
                             subentry_flow_handler, "async_step_reconfigure"
                         )
                     }
-                    for subentry_flow_type, subentry_flow_handler in supported_flows.items()
+                    for subentry_flow_type, subentry_flow_handler in (
+                        supported_flows.items()
+                    )
                 },
             )
         return self._supported_subentry_types or {}

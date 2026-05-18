@@ -143,7 +143,7 @@ class WeatherKitWeather(
 
     @property
     def supported_features(self) -> WeatherEntityFeature:
-        """Determine supported features based on available data sets reported by WeatherKit."""
+        """Determine supported features based on available data sets."""
         features = WeatherEntityFeature(0)
 
         if not self.coordinator.supported_data_sets:

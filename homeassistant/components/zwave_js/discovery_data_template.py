@@ -491,7 +491,7 @@ class FanValueMappingDataTemplate:
 
 @dataclass
 class ConfigurableFanValueMappingValueMix:
-    """Mixin data class for defining fan properties that change based on a device configuration option."""
+    """Mixin for fan properties that change based on device config."""
 
     configuration_option: ZwaveValueID
     configuration_value_to_fan_value_mapping: dict[int, FanValueMapping]

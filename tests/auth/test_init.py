@@ -299,7 +299,8 @@ async def test_linking_user_to_two_auth_providers(
     await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
-    # Linking a credential to a user while the credential is already linked to another user should raise
+    # Linking a credential to a user while the credential is
+    # already linked to another user should raise
     user_2 = await manager.async_create_user("User 2")
     with pytest.raises(ValueError):
         await manager.async_link_user(user_2, new_credential)

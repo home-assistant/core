@@ -129,7 +129,8 @@ class ViaggiaTrenoSensor(SensorEntity):
             self._tstatus = self._viaggiatreno.get_line_status(self._line)
             if self._tstatus is None:
                 _LOGGER.error(
-                    "Received status for line %s: None. Check the train and station IDs",
+                    "Received status for line %s: None."
+                    " Check the train and station IDs",
                     self._line,
                 )
                 return

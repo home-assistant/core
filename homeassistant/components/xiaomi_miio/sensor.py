@@ -674,15 +674,17 @@ VACUUM_SENSORS = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    f"clean_history_{ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement="",
-        icon="mdi:counter",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
-        translation_key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
+    f"clean_history_{ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT}": (
+        XiaomiMiioSensorDescription(
+            native_unit_of_measurement="",
+            icon="mdi:counter",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+            parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
+            translation_key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -711,14 +713,16 @@ VACUUM_SENSORS = {
         translation_key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:eye-outline",
-        device_class=SensorDeviceClass.DURATION,
-        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
-        translation_key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+    f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": (
+        XiaomiMiioSensorDescription(
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            icon="mdi:eye-outline",
+            device_class=SensorDeviceClass.DURATION,
+            key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+            parent_key=VacuumCoordinatorDataAttributes.consumable_status,
+            translation_key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
     ),
 }
 

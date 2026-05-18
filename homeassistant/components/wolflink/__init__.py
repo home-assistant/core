@@ -88,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: int):
-    """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
+    """Fetch all parameters via WolfClient, raising ConfigEntryNotReady on error."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)
     except (FetchFailed, RequestError) as exception:

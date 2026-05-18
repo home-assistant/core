@@ -91,7 +91,8 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # Paths:
-    # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # 1: ssdp(discovery_info) --> ssdp_confirm(None)
+    #    --> ssdp_confirm({}) --> create_entry()
     # 2: user(None): scan --> user({...}) --> create_entry()
 
     @staticmethod

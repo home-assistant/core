@@ -256,8 +256,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
 
-        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
-        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        # The Xbox API constantly fluctuates the "last seen"
+        # timestamp between two close values, causing
+        # unnecessary updates. We only accept the most
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

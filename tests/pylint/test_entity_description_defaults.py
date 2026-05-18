@@ -196,7 +196,7 @@ def test_local_entity_description_name_ignored(
     linter: UnittestLinter,
     defaults_checker: EntityDescriptionDefaultsChecker,
 ) -> None:
-    """Test that a local class named EntityDescription is not confused with the real one."""
+    """Test local EntityDescription class is not confused."""
     root_node = astroid.parse(
         """
 class EntityDescription:

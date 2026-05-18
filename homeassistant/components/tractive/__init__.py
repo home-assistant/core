@@ -160,7 +160,8 @@ async def _generate_trackables(
 
     if "details" not in trackable_data:
         _LOGGER.warning(
-            "Tracker %s has no details and will be skipped. This happens for shared trackers",
+            "Tracker %s has no details and will be"
+            " skipped. This happens for shared trackers",
             trackable_data["device_id"],
         )
         return None
@@ -176,7 +177,8 @@ async def _generate_trackables(
 
     if not tracker_details.get("_id"):
         raise ConfigEntryNotReady(
-            f"Tractive API returns incomplete data for tracker {trackable_data['device_id']}",
+            "Tractive API returns incomplete data"
+            f" for tracker {trackable_data['device_id']}",
         )
 
     return Trackables(

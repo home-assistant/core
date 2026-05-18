@@ -38,10 +38,12 @@ from .util import (
     renormalize,
 )
 
+_CC_COLOR_MODE = clusters.ColorControl.Enums.ColorModeEnum
+
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
+    _CC_COLOR_MODE.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    _CC_COLOR_MODE.kCurrentXAndCurrentY: ColorMode.XY,
+    _CC_COLOR_MODE.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # Maximum Mireds value per the Matter spec is 65279
@@ -362,24 +364,16 @@ class MatterLight(MatterEntity, LightEntity):
 
                 assert capabilities is not None
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
-                ):
+                color_caps = clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap
+                if capabilities & color_caps.kHueSaturation:
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
-                ):
+                if capabilities & color_caps.kXy:
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
-                ):
+                if capabilities & color_caps.kColorTemperature:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
                     min_mireds = self.get_matter_attribute_value(

@@ -58,6 +58,9 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
         self._attr_is_on = value
 
 
+_PUMP_STATUS = clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap
+_VALVE_FAULT = clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     # device specific: translate Hue motion to sensor to HA Motion sensor
@@ -374,11 +377,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # DeviceFault or SupplyFault bit enabled
             device_to_ha=lambda x: bool(
-                x
-                & (
-                    clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
-                    | clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault
-                )
+                x & (_PUMP_STATUS.kDeviceFault | _PUMP_STATUS.kSupplyFault)
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -393,10 +392,7 @@ DISCOVERY_SCHEMAS = [
             key="PumpStatusRunning",
             translation_key="pump_running",
             device_class=BinarySensorDeviceClass.RUNNING,
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
-            ),
+            device_to_ha=lambda x: bool(x & _PUMP_STATUS.kRunning),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -442,10 +438,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # GeneralFault bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kGeneralFault),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -461,10 +454,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Blocked bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kBlocked),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -480,10 +470,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Leaking bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kLeaking),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(

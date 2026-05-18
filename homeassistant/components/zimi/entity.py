@@ -42,7 +42,7 @@ class ZimiEntity(Entity):
 
     @property
     def available(self) -> bool:
-        """Return True if Home Assistant is able to read the state and control the underlying device."""
+        """Return True if HA can read state and control the device."""
         return self._device.is_connected
 
     async def async_added_to_hass(self) -> None:

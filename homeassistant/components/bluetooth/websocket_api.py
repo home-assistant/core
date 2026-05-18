@@ -94,8 +94,8 @@ def serialize_service_info(
         "address": service_info.address,
         "rssi": service_info.rssi,
         "manufacturer_data": {
-            str(manufacturer_id): manufacturer_data.hex()
-            for manufacturer_id, manufacturer_data in service_info.manufacturer_data.items()
+            str(manufacturer_id): data.hex()
+            for manufacturer_id, data in service_info.manufacturer_data.items()
         },
         "service_data": {
             service_uuid: service_data.hex()
