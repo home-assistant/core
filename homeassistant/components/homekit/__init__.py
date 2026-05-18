@@ -266,22 +266,22 @@ def _async_registry_label_change_matches(
         item_id = data["entity_id"]
         if data["action"] == "update" and "labels" not in data.get("changes", {}):
             return False
-        entry = er.async_get(hass).async_get(item_id)
-        new_labels = set(entry.labels) if entry else set()
+        entity_entry = er.async_get(hass).async_get(item_id)
+        new_labels = set(entity_entry.labels) if entity_entry else set()
     elif event.event_type == dr.EVENT_DEVICE_REGISTRY_UPDATED:
         registry = "device"
         item_id = data["device_id"]
         if data["action"] == "update" and "labels" not in data.get("changes", {}):
             return False
-        entry = dr.async_get(hass).async_get(item_id)
-        new_labels = set(entry.labels) if entry else set()
+        device_entry = dr.async_get(hass).async_get(item_id)
+        new_labels = set(device_entry.labels) if device_entry else set()
     else:
         registry = "area"
         item_id = data["area_id"]
         if item_id is None:
             return False
-        entry = ar.async_get(hass).async_get_area(item_id)
-        new_labels = set(entry.labels) if entry else set()
+        area_entry = ar.async_get(hass).async_get_area(item_id)
+        new_labels = set(area_entry.labels) if area_entry else set()
 
     old_labels = label_snapshot[registry].get(item_id, set())
     if data["action"] == "remove":
