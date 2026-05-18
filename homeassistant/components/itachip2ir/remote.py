@@ -105,6 +105,7 @@ class InfraredRemoteEntity(RemoteEntity):
     """Virtual remote backed by a Home Assistant infrared entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = False
 
     def __init__(
         self,
@@ -227,8 +228,26 @@ class InfraredRemoteEntity(RemoteEntity):
         kwargs: dict[str, Any] | None = None,
     ) -> None:
         """Resolve and send a named or raw infrared command."""
-        raw_command = self._commands.get(command, command)
-        ir_command = _parse_remote_command(raw_command, kwargs or {})
+        command_is_configured = command in self._commands
+        raw_command = self._commands[command] if command_is_configured else command
+
+        try:
+            ir_command = _parse_remote_command(raw_command, kwargs or {})
+        except HomeAssistantError as err:
+            looks_like_named_command = (
+                not command_is_configured
+                and bool(command)
+                and " " not in command
+                and all(char.isalnum() or char in {"_", "-"} for char in command)
+            )
+            if looks_like_named_command:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="remote_command_missing",
+                    translation_placeholders={"command": command},
+                ) from err
+            raise
+
         entity_id = self._resolve_infrared_entity_id()
 
         hass = getattr(self, "hass", None)

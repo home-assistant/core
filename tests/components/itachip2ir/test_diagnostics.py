@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.itachip2ir import ItachRuntimeData
 from homeassistant.components.itachip2ir.const import DOMAIN
 from homeassistant.components.itachip2ir.diagnostics import (
+    _extract_client,
     async_get_config_entry_diagnostics,
 )
 from homeassistant.components.itachip2ir.pyitach import ItachClient
@@ -38,6 +39,12 @@ class FakeClient:
             raise self.version_error
 
         return self.version
+
+
+class RuntimeWithInvalidClient:
+    """Runtime wrapper with an invalid client object."""
+
+    client = object()
 
 
 def _make_entry(
@@ -83,6 +90,11 @@ def _make_entry(
     )
 
     return entry
+
+
+def test_extract_client_returns_none_for_invalid_client() -> None:
+    """Test invalid runtime client is ignored."""
+    assert _extract_client(RuntimeWithInvalidClient()) is None
 
 
 async def test_diagnostics_returns_redacted_entry_and_device_data(

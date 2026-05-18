@@ -61,7 +61,10 @@ async def test_create_repair_issue_explicitly_fixable(hass: HomeAssistant) -> No
     assert issue is not None
     assert issue.is_fixable is True
     assert issue.translation_key == "invalid_config"
-    assert issue.translation_placeholders is None
+    assert issue.translation_placeholders == {
+        "entry_title": "iTach IP2IR",
+        "error": "unknown",
+    }
 
 
 async def test_delete_repair_issue(hass: HomeAssistant) -> None:

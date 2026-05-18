@@ -30,10 +30,13 @@ def async_create_repair_issue(
             **_DEFAULT_PLACEHOLDERS,
             **(placeholders or {}),
         }
-    elif translation_key == ISSUE_INVALID_CONFIG and placeholders is not None:
+    elif translation_key == ISSUE_INVALID_CONFIG:
+        invalid_config_placeholders = placeholders or {}
         translation_placeholders = {
-            "entry_title": placeholders.get("entry_title", "iTach IP2IR"),
-            "error": placeholders.get("error", "unknown"),
+            "entry_title": invalid_config_placeholders.get(
+                "entry_title", "iTach IP2IR"
+            ),
+            "error": invalid_config_placeholders.get("error", "unknown"),
         }
 
     ir.async_create_issue(
