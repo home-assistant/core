@@ -2013,3 +2013,21 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     # Check error handling if data is not a dict
     with pytest.raises(vol.Invalid, match="expected a dictionary"):
         renamed_schema([])
+
+
+def test_stop_action_schema_error_false_with_response() -> None:
+    """Test stop action allows error: false with response_variable."""
+    schema = cv._SCRIPT_STOP_SCHEMA
+
+    # error: true with response_variable should fail
+    with pytest.raises(vol.Invalid, match="not allowed to add a response"):
+        schema({"stop": "Error", "error": True, "response_variable": "result"})
+
+    # error: false with response_variable should work
+    config = schema({"stop": "Done", "error": False, "response_variable": "result"})
+    assert config["error"] is False
+    assert config["response_variable"] == "result"
+
+    # no error with response_variable should work
+    config = schema({"stop": "Done", "response_variable": "result"})
+    assert config["response_variable"] == "result"

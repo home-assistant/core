@@ -1,6 +1,6 @@
 """Support for control of ElkM1 sensors."""
 
-from typing import Any
+from typing import Any, cast
 
 from elkm1_lib.const import SettingFormat, ZoneType
 from elkm1_lib.counters import Counter
@@ -20,13 +20,19 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
-from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .entity import (
+    ElkAttachedEntity,
+    ElkEntity,
+    create_elk_entities,
+    generate_unique_id,
+)
+from .util import deprecate_entity
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
@@ -58,11 +64,37 @@ async def async_setup_entry(
     elk_data = config_entry.runtime_data
     elk = elk_data.elk
     entities: list[ElkEntity] = []
+    elk_settings: list[Setting] = []
+
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
-    create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
+
+    entity_registry = er.async_get(hass)
+    for setting in elk.settings:
+        setting = cast(Setting, setting)
+        domain = (
+            "time" if setting.value_format == SettingFormat.TIME_OF_DAY else "number"
+        )
+
+        orig_unique_id = generate_unique_id(elk_data.prefix, setting)
+        new_unique_id = orig_unique_id
+        new_entity_id = f"{domain}.elkm1_{setting.name.replace(' ', '_')}".lower()
+
+        if deprecate_entity(
+            hass,
+            entity_registry,
+            "sensor",
+            orig_unique_id,
+            f"deprecated_sensor_{orig_unique_id}",
+            "deprecated_sensor",
+            new_unique_id,
+            new_entity_id,
+        ):
+            elk_settings.append(setting)
+
+    create_elk_entities(elk_data, elk_settings, "setting", ElkSetting, entities)
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
