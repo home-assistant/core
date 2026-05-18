@@ -21568,7 +21568,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '19.06',
+    'state': '19060.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.soria_temperature-entry]
@@ -21779,14 +21779,14 @@
     'supported_features': 0,
     'translation_key': 'remaining_time',
     'unique_id': 'tuya.hyda5jsihokacvaqjzmremain_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': 'min',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sous_vide_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sous Vide Remaining time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sous_vide_remaining_time',
