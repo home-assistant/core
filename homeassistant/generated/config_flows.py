@@ -304,6 +304,7 @@ FLOWS = {
         "hikvision",
         "hisense_aehw4a1",
         "hive",
+        "hivi_speaker",
         "hko",
         "hlk_sw16",
         "holiday",

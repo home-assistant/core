@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "HiVi Speaker is already configured."
+    },
+    "step": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "confirm_refresh": "Confirm to refresh"
+        },
+        "data_description": {
+          "confirm_refresh": "When enabled, runs an immediate device discovery refresh."
+        },
+        "description": "Confirm to refresh device discovery?"
+      },
+      "success": {
+        "description": "Device discovery has begun. New devices will be added automatically."
+      }
+    }
+  }
+}
