@@ -912,9 +912,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -932,11 +930,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -945,23 +940,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Aqara Door and Window Sensor P2 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqara_door_and_window_sensor_p2_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '243908',
+    'state': '2024-12-29T18:14:52+00:00',
   })
 # ---
 # name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery-entry]
@@ -1314,9 +1307,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1334,11 +1325,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -1347,23 +1335,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Aqara Motion and Light Sensor P2 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14088',
+    'state': '2025-01-01T10:05:12+00:00',
   })
 # ---
 # name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_battery-entry]
@@ -1661,9 +1647,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1681,11 +1665,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -1694,23 +1675,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Multi-State Sensor P100 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.multi_state_sensor_p100_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '679',
+    'state': '2025-01-01T13:48:41+00:00',
   })
 # ---
 # name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery-entry]
@@ -2176,9 +2155,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2196,11 +2173,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -2209,23 +2183,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Presence Multi-Sensor FP300 1 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.presence_multi_sensor_fp300_1_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1126229',
+    'state': '2024-12-19T13:09:31+00:00',
   })
 # ---
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery-entry]
@@ -2795,9 +2767,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2815,11 +2785,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -2828,23 +2795,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Climate Sensor W100 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.climate_sensor_w100_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '299',
+    'state': '2025-01-01T13:55:01+00:00',
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_active_current-entry]
@@ -3211,9 +3176,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3231,11 +3194,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -3244,23 +3204,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Floor Heating Thermostat Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.floor_heating_thermostat_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '175',
+    'state': '2025-01-01T13:57:05+00:00',
   })
 # ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
@@ -3508,9 +3466,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3528,11 +3484,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -3541,23 +3494,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Aqara Smart Lock U200 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqara_smart_lock_u200_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '46',
+    'state': '2025-01-01T13:59:14+00:00',
   })
 # ---
 # name: test_sensors[atios_knx_bridge][sensor.atios_knx_bridge_reboot_count-entry]
@@ -3619,9 +3570,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3639,11 +3588,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -3652,23 +3598,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000003E-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[atios_knx_bridge][sensor.atios_knx_bridge_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Atios KNX Bridge Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.atios_knx_bridge_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '66',
+    'state': '2025-01-01T13:58:54+00:00',
   })
 # ---
 # name: test_sensors[atios_knx_bridge][sensor.electricity_monitor_ac_energy-entry]
@@ -3922,9 +3866,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3942,11 +3884,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -3955,23 +3894,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[color_temperature_light][sensor.mock_color_temperature_light_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Color Temperature Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_color_temperature_light_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '834681',
+    'state': '2024-12-22T22:08:39+00:00',
   })
 # ---
 # name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
@@ -4723,9 +4660,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4743,11 +4678,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -4756,23 +4688,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[ecovacs_deebot][sensor.ecodeebot_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'ecodeebot Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ecodeebot_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '48490',
+    'state': '2025-01-01T00:31:50+00:00',
   })
 # ---
 # name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-entry]
@@ -5185,9 +5115,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5205,11 +5133,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -5218,23 +5143,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': '2BAVS-AB6031X-44PE Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.2bavs_ab6031x_44pe_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '159947',
+    'state': '2024-12-30T17:34:13+00:00',
   })
 # ---
 # name: test_sensors[eve_contact_sensor][sensor.eve_door_battery-entry]
@@ -5412,9 +5335,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5432,11 +5353,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -5445,23 +5363,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_contact_sensor][sensor.eve_door_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Door Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_door_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '653',
+    'state': '2025-01-01T13:49:07+00:00',
   })
 # ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
@@ -5697,9 +5613,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5717,11 +5631,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -5730,23 +5641,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Energy 20ECN4101 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_energy_20ecn4101_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '216584',
+    'state': '2024-12-30T01:50:16+00:00',
   })
 # ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
@@ -6040,9 +5949,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6060,11 +5967,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -6073,23 +5977,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Energy Plug Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_energy_plug_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '268574',
+    'state': '2024-12-29T11:23:46+00:00',
   })
 # ---
 # name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_voltage-entry]
@@ -6392,9 +6294,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6412,11 +6312,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -6425,23 +6322,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Energy Plug Patched Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_energy_plug_patched_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '268574',
+    'state': '2024-12-29T11:23:46+00:00',
   })
 # ---
 # name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_voltage-entry]
@@ -6615,9 +6510,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6635,11 +6528,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -6648,23 +6538,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Shutter Switch 20ECI1701 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_shutter_switch_20eci1701_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '213',
+    'state': '2025-01-01T13:56:27+00:00',
   })
 # ---
 # name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-entry]
@@ -6900,9 +6788,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6920,11 +6806,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -6933,23 +6816,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Thermo 20EBP1701 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_thermo_20ebp1701_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '306352',
+    'state': '2024-12-29T00:54:08+00:00',
   })
 # ---
 # name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-entry]
@@ -7175,9 +7056,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7195,11 +7074,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -7208,23 +7084,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Thermo 20ECD1701 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_thermo_20ecd1701_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11',
+    'state': '2025-01-01T13:59:49+00:00',
   })
 # ---
 # name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_valve_position-entry]
@@ -7624,9 +7498,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7644,11 +7516,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -7657,23 +7526,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Eve Weather Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eve_weather_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3416207',
+    'state': '2024-11-23T01:03:13+00:00',
   })
 # ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-entry]
@@ -7869,9 +7736,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7889,11 +7754,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -7902,23 +7764,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[extended_color_light][sensor.mock_extended_color_light_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Extended Color Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_extended_color_light_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '834681',
+    'state': '2024-12-22T22:08:39+00:00',
   })
 # ---
 # name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-entry]
@@ -8484,9 +8344,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8504,11 +8362,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -8517,23 +8372,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[haojai_switch][sensor.hjmt_6b_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'HJMT-6B Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hjmt_6b_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21582509',
+    'state': '2024-04-26T18:51:31+00:00',
   })
 # ---
 # name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-entry]
@@ -8877,9 +8730,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8897,11 +8748,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -8910,23 +8758,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Smart CO sensor Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_co_sensor_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '158',
+    'state': '2025-01-01T13:57:22+00:00',
   })
 # ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery-entry]
@@ -9270,9 +9116,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -9290,11 +9134,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -9303,23 +9144,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Smart motion sensor Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_motion_sensor_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7',
+    'state': '2025-01-01T13:59:53+00:00',
   })
 # ---
 # name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery-entry]
@@ -9617,9 +9456,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -9637,11 +9474,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -9650,23 +9484,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Smoke sensor Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smoke_sensor_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '247340',
+    'state': '2024-12-29T17:17:40+00:00',
   })
 # ---
 # name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_air_quality-entry]
@@ -10089,9 +9921,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10109,11 +9939,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -10122,23 +9949,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'ALPSTUGA air quality monitor Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.alpstuga_air_quality_monitor_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '45201',
+    'state': '2025-01-01T01:26:39+00:00',
   })
 # ---
 # name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery-entry]
@@ -10472,9 +10297,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10492,11 +10315,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -10505,23 +10325,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'BILRESA dual button Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bilresa_dual_button_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '2025-01-01T13:59:10+00:00',
   })
 # ---
 # name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery-entry]
@@ -11226,9 +11044,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -11246,11 +11062,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -11259,23 +11072,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'BILRESA scroll wheel Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bilresa_scroll_wheel_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '54',
+    'state': '2025-01-01T13:59:06+00:00',
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_active_current-entry]
@@ -11862,9 +11673,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -11882,11 +11691,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -11895,23 +11701,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'White Series OnOff Switch Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.white_series_onoff_switch_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1788280',
+    'state': '2024-12-11T21:15:20+00:00',
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
@@ -12263,9 +12067,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -12283,11 +12085,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -12296,23 +12095,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[inovelli_vtm31][sensor.inovelli_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Inovelli Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inovelli_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1069632',
+    'state': '2024-12-20T04:52:48+00:00',
   })
 # ---
 # name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_boot_reason-entry]
@@ -12560,9 +12357,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -12580,11 +12375,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -12593,23 +12385,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Longan link HVAC Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.longan_link_hvac_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': '2025-01-01T13:59:30+00:00',
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
@@ -13591,9 +13381,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -13611,11 +13399,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -13624,23 +13409,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Air Purifier Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_air_purifier_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': '2025-01-01T13:59:38+00:00',
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
@@ -14247,9 +14030,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14267,11 +14048,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -14280,23 +14058,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Battery Storage Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_battery_storage_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '245',
+    'state': '2025-01-01T13:55:55+00:00',
   })
 # ---
 # name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_voltage-entry]
@@ -14547,9 +14323,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14567,11 +14341,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -14580,23 +14351,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_cooktop][sensor.mock_cooktop_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Cooktop Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_cooktop_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '23',
+    'state': '2025-01-01T13:59:37+00:00',
   })
 # ---
 # name: test_sensors[mock_dimmable_light][sensor.mock_dimmable_light_boot_reason-entry]
@@ -14728,9 +14497,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14748,11 +14515,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -14761,23 +14525,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_dimmable_light][sensor.mock_dimmable_light_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Dimmable Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_dimmable_light_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31279',
+    'state': '2025-01-01T05:18:41+00:00',
   })
 # ---
 # name: test_sensors[mock_dimmable_plugin_unit][sensor.dimmable_plugin_unit_boot_reason-entry]
@@ -14909,9 +14671,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14929,11 +14689,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -14942,23 +14699,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_dimmable_plugin_unit][sensor.dimmable_plugin_unit_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Dimmable Plugin Unit Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dimmable_plugin_unit_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86407',
+    'state': '2024-12-31T13:59:53+00:00',
   })
 # ---
 # name: test_sensors[mock_door_lock][sensor.mock_door_lock_boot_reason-entry]
@@ -15090,9 +14845,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15110,11 +14863,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -15123,23 +14873,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_door_lock][sensor.mock_door_lock_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Door Lock Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_door_lock_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25',
+    'state': '2025-01-01T13:59:35+00:00',
   })
 # ---
 # name: test_sensors[mock_door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_boot_reason-entry]
@@ -15271,9 +15019,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15291,11 +15037,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -15304,23 +15047,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Door Lock with unbolt Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_door_lock_with_unbolt_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25',
+    'state': '2025-01-01T13:59:35+00:00',
   })
 # ---
 # name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
@@ -15560,9 +15301,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15580,11 +15319,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -15593,23 +15329,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Extractor hood Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_extractor_hood_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32',
+    'state': '2025-01-01T13:59:28+00:00',
   })
 # ---
 # name: test_sensors[mock_fan][sensor.mocked_fan_switch_boot_reason-entry]
@@ -15741,9 +15475,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15761,11 +15493,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -15774,23 +15503,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_fan][sensor.mocked_fan_switch_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mocked Fan Switch Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mocked_fan_switch_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5688',
+    'state': '2025-01-01T12:25:12+00:00',
   })
 # ---
 # name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-entry]
@@ -16380,9 +16107,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16400,11 +16125,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -16413,23 +16135,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Laundrydryer Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_laundrydryer_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11',
+    'state': '2025-01-01T13:59:49+00:00',
   })
 # ---
 # name: test_sensors[mock_leak_sensor][sensor.water_leak_detector_reboot_count-entry]
@@ -16491,9 +16211,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16511,11 +16229,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -16524,23 +16239,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000020-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_leak_sensor][sensor.water_leak_detector_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Water Leak Detector Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_leak_detector_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '17',
+    'state': '2025-01-01T13:59:43+00:00',
   })
 # ---
 # name: test_sensors[mock_light_sensor][sensor.mock_light_sensor_illuminance-entry]
@@ -16833,9 +16546,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16853,11 +16564,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -16866,23 +16574,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_lock][sensor.mock_lock_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Lock Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_lock_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '19',
+    'state': '2025-01-01T13:59:41+00:00',
   })
 # ---
 # name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_boot_reason-entry]
@@ -17193,9 +16899,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17213,11 +16917,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -17226,23 +16927,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Microwave Oven Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_microwave_oven_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16',
+    'state': '2025-01-01T13:59:44+00:00',
   })
 # ---
 # name: test_sensors[mock_mounted_dimmable_load_control_fixture][sensor.mock_mounted_dimmable_load_control_boot_reason-entry]
@@ -17374,9 +17073,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17394,11 +17091,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -17407,16 +17101,14 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_mounted_dimmable_load_control_fixture][sensor.mock_mounted_dimmable_load_control_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Mounted dimmable load control Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_mounted_dimmable_load_control_uptime',
@@ -17555,9 +17247,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17575,11 +17265,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -17588,23 +17275,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_onoff_light][sensor.mock_onoff_light_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock OnOff Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_onoff_light_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31279',
+    'state': '2025-01-01T05:18:41+00:00',
   })
 # ---
 # name: test_sensors[mock_onoff_light_alt_name][sensor.mock_onoff_light_boot_reason_2-entry]
@@ -17736,9 +17421,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17756,11 +17439,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -17769,23 +17449,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_onoff_light_alt_name][sensor.mock_onoff_light_uptime_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock OnOff Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_onoff_light_uptime_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31279',
+    'state': '2025-01-01T05:18:41+00:00',
   })
 # ---
 # name: test_sensors[mock_onoff_light_no_name][sensor.mock_light_boot_reason-entry]
@@ -17917,9 +17595,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17937,11 +17613,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -17950,23 +17623,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_onoff_light_no_name][sensor.mock_light_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Light Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_light_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31279',
+    'state': '2025-01-01T05:18:41+00:00',
   })
 # ---
 # name: test_sensors[mock_oven][sensor.mock_oven_boot_reason-entry]
@@ -18338,9 +18009,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18358,11 +18027,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -18371,23 +18037,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_oven][sensor.mock_oven_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Oven Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_oven_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26',
+    'state': '2025-01-01T13:59:34+00:00',
   })
 # ---
 # name: test_sensors[mock_pressure_sensor][sensor.mock_pressure_sensor_pressure-entry]
@@ -18799,9 +18463,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18819,11 +18481,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -18832,23 +18491,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_pump][sensor.mock_pump_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Pump Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_pump_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '282',
+    'state': '2025-01-01T13:55:18+00:00',
   })
 # ---
 # name: test_sensors[mock_room_airconditioner][sensor.room_airconditioner_reboot_count-entry]
@@ -19274,9 +18931,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19294,11 +18949,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -19307,23 +18959,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock solar inverter Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_solar_inverter_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '37',
+    'state': '2025-01-01T13:59:23+00:00',
   })
 # ---
 # name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_voltage-entry]
@@ -19446,9 +19096,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19466,11 +19114,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -19479,23 +19124,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_speaker][sensor.mock_speaker_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock speaker Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_speaker_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '105',
+    'state': '2025-01-01T13:58:15+00:00',
   })
 # ---
 # name: test_sensors[mock_temperature_sensor][sensor.mock_temperature_sensor_temperature-entry]
@@ -19852,9 +19495,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -19872,11 +19513,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -19885,23 +19523,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Thermostat Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_thermostat_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16',
+    'state': '2025-01-01T13:59:44+00:00',
   })
 # ---
 # name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_boot_reason-entry]
@@ -20248,9 +19884,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20268,11 +19902,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -20281,23 +19912,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Vacuum Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_vacuum_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '47',
+    'state': '2025-01-01T13:59:13+00:00',
   })
 # ---
 # name: test_sensors[mock_valve][sensor.mock_valve_auto_close_time-entry]
@@ -20480,9 +20109,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20500,11 +20127,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -20513,23 +20137,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_valve][sensor.mock_valve_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Mock Valve Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_valve_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '77',
+    'state': '2025-01-01T13:58:43+00:00',
   })
 # ---
 # name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_reboot_count-entry]
@@ -20869,9 +20491,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20889,11 +20509,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -20902,23 +20519,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Longan link WNCV DA01 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.longan_link_wncv_da01_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '123',
+    'state': '2025-01-01T13:57:57+00:00',
   })
 # ---
 # name: test_sensors[mock_window_covering_pa_tilt][sensor.mock_pa_tilt_window_covering_reboot_count-entry]
@@ -21156,9 +20771,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21176,11 +20789,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -21189,23 +20799,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[onoff_light_with_levelcontrol_present][sensor.d215s_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'D215S Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.d215s_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2380987',
+    'state': '2024-12-05T00:36:53+00:00',
   })
 # ---
 # name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_reboot_count-entry]
@@ -21325,9 +20933,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21345,11 +20951,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -21358,23 +20961,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'X2S Smart Thermostat Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.x2s_smart_thermostat_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5105',
+    'state': '2025-01-01T12:34:55+00:00',
   })
 # ---
 # name: test_sensors[roborock_saros_10][sensor.robotic_vacuum_cleaner_battery-entry]
@@ -21717,9 +21318,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21737,11 +21336,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -21750,23 +21346,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-00000000000000CA-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[roborock_saros_10][sensor.robotic_vacuum_cleaner_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Robotic Vacuum Cleaner Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.robotic_vacuum_cleaner_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8',
+    'state': '2025-01-01T13:59:52+00:00',
   })
 # ---
 # name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_boot_reason-entry]
@@ -21898,9 +21492,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21918,11 +21510,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -21931,23 +21520,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Secuyou Smart Lock Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.secuyou_smart_lock_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9242040',
+    'state': '2024-09-16T14:46:00+00:00',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_boot_reason-entry]
@@ -22453,9 +22040,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -22473,11 +22058,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -22486,23 +22068,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Dishwasher Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '2025-01-01T13:59:50+00:00',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_active_current-entry]
@@ -23569,9 +23149,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -23589,11 +23167,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -23602,23 +23177,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'evse Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.evse_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10129',
+    'state': '2025-01-01T11:11:11+00:00',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_user_max_charge_current-entry]
@@ -23872,9 +23445,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -23892,11 +23463,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -23905,23 +23473,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_fan][sensor.sl_fan_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'SL_Fan Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sl_fan_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '394',
+    'state': '2025-01-01T13:53:26+00:00',
   })
 # ---
 # name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_boot_reason-entry]
@@ -24487,9 +24053,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24507,11 +24071,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -24520,23 +24081,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'LaundryWasher Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.laundrywasher_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1934',
+    'state': '2025-01-01T13:27:46+00:00',
   })
 # ---
 # name: test_sensors[silabs_light_switch][sensor.light_switch_example_boot_reason-entry]
@@ -24721,9 +24280,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24741,11 +24298,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -24754,23 +24308,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_light_switch][sensor.light_switch_example_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Light switch example Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.light_switch_example_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '195',
+    'state': '2025-01-01T13:56:45+00:00',
   })
 # ---
 # name: test_sensors[silabs_range_hood][sensor.sl_rangehood_boot_reason-entry]
@@ -24902,9 +24454,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24922,11 +24472,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -24935,23 +24482,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_range_hood][sensor.sl_rangehood_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'SL-RangeHood Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sl_rangehood_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '118',
+    'state': '2025-01-01T13:58:02+00:00',
   })
 # ---
 # name: test_sensors[silabs_refrigerator][sensor.refrigerator_boot_reason-entry]
@@ -25083,9 +24628,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -25103,11 +24646,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -25116,23 +24656,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_refrigerator][sensor.refrigerator_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Refrigerator Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.refrigerator_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '141',
+    'state': '2025-01-01T13:57:39+00:00',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
@@ -26046,9 +25584,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -26066,11 +25602,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -26079,23 +25612,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Water Heater Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_heater_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '970',
+    'state': '2025-01-01T13:43:50+00:00',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_voltage-entry]
@@ -26452,9 +25983,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -26472,11 +26001,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -26485,23 +26011,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000061-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[switchbot_k11_plus][sensor.k11_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'K11+ Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.k11_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2025-01-01T14:00:00+00:00',
   })
 # ---
 # name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_boot_reason-entry]
@@ -26746,9 +26270,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -26766,11 +26288,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -26779,23 +26298,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'Smart Radiator Thermostat X Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_radiator_thermostat_x_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '110',
+    'state': '2025-01-01T13:58:10+00:00',
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_boot_reason-entry]
@@ -27043,9 +26560,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -27063,11 +26578,8 @@
     'name': None,
     'object_id_base': 'Uptime',
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'matter',
@@ -27076,23 +26588,21 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'uptime',
       'friendly_name': 'YNDX-00540 Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yndx_00540_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '124',
+    'state': '2025-01-01T13:57:56+00:00',
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_voltage-entry]

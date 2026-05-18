@@ -1602,11 +1602,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="GeneralDiagnosticsUpTime",
             translation_key="uptime",
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            device_class=SensorDeviceClass.DURATION,
+            device_class=SensorDeviceClass.UPTIME,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_to_ha=lambda uptime: dt_util.utcnow() - timedelta(seconds=uptime),
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.UpTime,),
