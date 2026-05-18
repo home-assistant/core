@@ -110,7 +110,6 @@ TIMEOUT_ACK = 10
 SUBSCRIBE_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
@@ -331,8 +330,9 @@ class Subscription:
     is_simple_match: bool
     complex_matcher: Callable[[str], bool] | None
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
-    qos: int = 0
-    encoding: str | None = "utf-8"
+    qos: int
+    encoding: str | None
+    subscription_id: int
 
 
 class MqttClientSetup:
@@ -439,6 +439,7 @@ class MQTT:
     _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
+    _supports_subscription_identifiers: bool = False
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
@@ -854,6 +855,9 @@ class MQTT:
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
+            self._mqtt_data.subscription_id_generator.restore(
+                subscription.subscription_id, subscription.topic
+            )
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -959,7 +963,17 @@ class MQTT:
         is_simple_match = not ("+" in topic or "#" in topic)
         matcher = None if is_simple_match else _matcher_for_topic(topic)
 
-        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
+        if is_simple_match:
+            subscription_id = 1
+        else:
+            subscription_id = self._mqtt_data.subscription_id_generator.get_or_generate(
+                topic
+            )
+
+        subscription = Subscription(
+            topic, is_simple_match, matcher, job, qos, encoding, subscription_id
+        )
+
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -978,15 +992,15 @@ class MQTT:
             del self._retained_topics[subscription]
         # Only unsubscribe if currently connected
         if self.connected:
-            self._async_unsubscribe(subscription.topic)
+            self._async_unsubscribe(subscription.topic, subscription.subscription_id)
 
     @callback
-    def _async_unsubscribe(self, topic: str) -> None:
+    def _async_unsubscribe(self, topic: str, subscription_id: int) -> None:
         """Unsubscribe from a topic."""
         if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
-            subs = self._matching_subscriptions(topic)
+            subs = self._matching_subscriptions(topic, (subscription_id,))
             self._max_qos[topic] = max(sub.qos for sub in subs)
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
@@ -1012,33 +1026,60 @@ class MQTT:
         #
         # Since we do not know if a published value is retained we need to
         # (re)subscribe, to ensure retained messages are replayed
-
         if not self._pending_subscriptions:
             return
 
         # Split out the wildcard subscriptions, we subscribe to them one by one
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
         pending_subscriptions: dict[str, int] = self._pending_subscriptions
         pending_wildcard_subscriptions = {
             subscription.topic: pending_subscriptions.pop(subscription.topic)
             for subscription in self._wildcard_subscriptions
             if subscription.topic in pending_subscriptions
         }
+        subscribe_chain = chunked_or_all(
+            pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
+        )
+        if self._supports_subscription_identifiers and pending_subscriptions:
+            bulk_properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
+            bulk_properties.SubscriptionIdentifier = 1
+        else:
+            bulk_properties = None
 
         self._pending_subscriptions = {}
 
-        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
+        for topic, qos in pending_wildcard_subscriptions.items():
+            if self._supports_subscription_identifiers:
+                properties = mqtt.Properties(packetType=mqtt.PacketTypes.SUBSCRIBE)  # type: ignore[no-untyped-call]
+                properties.SubscriptionIdentifier = (
+                    self._mqtt_data.subscription_id_generator.get_subscription_id(topic)
+                )
+            else:
+                properties = None
 
-        for chunk in chain(
-            chunked_or_all(
-                pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
-            ),
-            chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
-        ):
+            result, mid = self._mqttc.subscribe(topic, qos, properties=properties)
+            if debug_enabled:
+                _LOGGER.debug(
+                    "Subscribing with mid: %s to topic %s "
+                    "with qos: %s and properties: %s",
+                    mid,
+                    topic,
+                    qos,
+                    properties,
+                )
+            self._last_subscribe = time.monotonic()
+
+            await self._async_wait_for_mid_or_raise(mid, result)
+            async_dispatcher_send(
+                self.hass, MQTT_PROCESSED_SUBSCRIPTIONS, [(topic, qos)]
+            )
+
+        for chunk in subscribe_chain:
             chunk_list = list(chunk)
             if not chunk_list:
                 continue
 
-            result, mid = self._mqttc.subscribe(chunk_list)
+            result, mid = self._mqttc.subscribe(chunk_list, properties=bulk_properties)
 
             if debug_enabled:
                 _LOGGER.debug(
@@ -1069,6 +1110,10 @@ class MQTT:
 
             await self._async_wait_for_mid_or_raise(mid, result)
 
+        # Remove stored subscription identifiers for topics that were just unsubscribed
+        for topic in topics:
+            self._mqtt_data.subscription_id_generator.release(topic)
+
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
     ) -> None:
@@ -1096,13 +1141,34 @@ class MQTT:
         _userdata: None,
         _connect_flags: mqtt.ConnectFlags,
         reason_code: mqtt.ReasonCode,
-        _properties: mqtt.Properties | None = None,
+        properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
+        if self.is_mqttv5:
+            # Check if the server explicitly disabled Subscription Identifiers
+            if (
+                properties is not None
+                and hasattr(properties, "SubscriptionIdentifierAvailable")
+                and properties.SubscriptionIdentifierAvailable == 0
+            ):
+                _LOGGER.warning(
+                    "Your MQTT broker reports it does not support "
+                    "Subscription Identifiers, see "
+                    "https://docs.oasis-open.org/"
+                    "mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901092. "
+                    "Please use a supported MQTT broker; got broker properties: %s",
+                    properties,
+                )
+                self._supports_subscription_identifiers = False
+            else:
+                self._supports_subscription_identifiers = True
+        else:
+            self._supports_subscription_identifiers = False
+
         if reason_code.is_failure:
             # 24: Continue authentication
             # 25: Re-authenticate
@@ -1167,9 +1233,15 @@ class MQTT:
         )
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
-    def _matching_subscriptions(self, topic: str) -> list[Subscription]:
+    def _matching_subscriptions(
+        self, topic: str, identifiers: tuple[int, ...] | None
+    ) -> list[Subscription]:
         subscriptions: list[Subscription] = []
-        if topic in self._simple_subscriptions:
+        if topic in self._simple_subscriptions and (
+            identifiers is None or 1 in identifiers
+        ):
+            # The subscription identifier is always 1 for simple subscriptions,
+            # so only include them when no identifiers are provided or 1 matches.
             subscriptions.extend(self._simple_subscriptions[topic])
         subscriptions.extend(
             subscription
@@ -1177,6 +1249,7 @@ class MQTT:
             # mypy doesn't know that complex_matcher is always set when
             # is_simple_match is False
             if subscription.complex_matcher(topic)  # type: ignore[misc]
+            and (identifiers is None or subscription.subscription_id in identifiers)
         )
         return subscriptions
 
@@ -1184,6 +1257,18 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
+        identifiers: tuple[int, ...] | None = None
+        if self._supports_subscription_identifiers:
+            # It is possible we have multiple messages if there
+            # are overlapping wildcard subscriptions.
+            # So we assigned all wildcard subscriptions with a
+            # unique SubscriptionIdentifier. Simple subscriptions are assigned
+            # with SubscriptionIdentifier 1.
+            if TYPE_CHECKING:
+                assert msg.properties is not None
+                assert hasattr(msg.properties, "SubscriptionIdentifier")
+            with contextlib.suppress(AttributeError):
+                identifiers = tuple(msg.properties.SubscriptionIdentifier)
         try:
             # msg.topic is a property that decodes the topic to a string
             # every time it is accessed. Save the result to avoid
@@ -1200,16 +1285,16 @@ class MQTT:
             )
             return
         _LOGGER.debug(
-            "Received%s message on %s (qos=%s): %s",
+            "Received%s message on %s (qos=%s) IDs=%s: %s",
             " retained" if msg.retain else "",
             topic,
             msg.qos,
+            identifiers,
             msg.payload[0:8192],
         )
-        subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
-        for subscription in subscriptions:
+        for subscription in self._matching_subscriptions(topic, identifiers):
             if msg.retain:
                 retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message

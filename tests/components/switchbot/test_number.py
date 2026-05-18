@@ -38,7 +38,7 @@ async def test_meter_pro_co2_display_time_offset_initial_state(
     offset_seconds_on_device: int,
     expected_state: int,
 ) -> None:
-    """Test the display_time_offset entity gets the initial state from a MeterProCO2 device."""
+    """Test display_time_offset gets initial state from MeterProCO2."""
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
@@ -152,7 +152,11 @@ async def test_set_display_time_offset_out_of_range(
 
         with pytest.raises(
             ServiceValidationError,
-            match=r"Value -?\d+\.0 for number\.test_name_display_time_offset is outside valid range",
+            match=(
+                r"Value -?\d+\.0 for"
+                r" number\.test_name_display_time_offset"
+                r" is outside valid range"
+            ),
         ):
             await hass.services.async_call(
                 NUMBER_DOMAIN,
