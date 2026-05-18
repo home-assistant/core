@@ -1190,7 +1190,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             {"placeholder": "special"},
@@ -1201,7 +1202,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "English ent {placeholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1265,7 +1267,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1279,7 +1282,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1290,7 +1294,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             None,

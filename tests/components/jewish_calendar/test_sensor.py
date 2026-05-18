@@ -414,7 +414,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "ערב שבועות",
         },
         None,
-        id="currently_first_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
+        # Type 1 = Sat/Sun/Mon
+        id="currently_first_day_of_three_day_type1_yomtov_in_diaspora",
     ),
     pytest.param(
         "New York",
@@ -430,7 +431,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "שבועות",
         },
         None,
-        id="currently_second_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
+        # Type 1 = Sat/Sun/Mon
+        id="currently_second_day_of_three_day_type1_yomtov_in_diaspora",
     ),
     pytest.param(
         "Jerusalem",
@@ -446,7 +448,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "א' ראש השנה",
         },
         None,
-        id="currently_first_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_first_day_of_three_day_type2_yomtov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
@@ -462,7 +465,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "ב' ראש השנה",
         },
         None,
-        id="currently_second_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_second_day_of_three_day_type2_yomtov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
@@ -478,7 +482,8 @@ SHABBAT_PARAMS = [
             "he_holiday": "",
         },
         None,
-        id="currently_third_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
+        # Type 2 = Thurs/Fri/Sat
+        id="currently_third_day_of_three_day_type2_yomtov_in_israel",
     ),
 ]
 
@@ -560,7 +565,7 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
 async def test_sensor_date_changes_with_time(
     hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
-    """Test that the Jewish calendar date sensor updates when time crosses date boundaries."""
+    """Test the date sensor updates when time crosses boundaries."""
     async for expected_state in test_sequence():
         current_state = hass.states.get("sensor.jewish_calendar_date").state
         assert current_state == expected_state

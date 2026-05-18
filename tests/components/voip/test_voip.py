@@ -1126,7 +1126,8 @@ async def test_start_conversation_user_doesnt_pick_up(
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
-    # Protocol has already been mocked, but "outgoing_call" and "cancel_call" are not async
+    # Protocol has already been mocked, but "outgoing_call" and
+    # "cancel_call" are not async
     mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
     mock_protocol.cancel_call = Mock()

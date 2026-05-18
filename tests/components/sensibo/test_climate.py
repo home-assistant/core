@@ -303,7 +303,8 @@ async def test_climate_horizontal_swing(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Climate horizontal swing mode not_in_ha is not supported by the integration",
+        match="Climate horizontal swing mode not_in_ha is not"
+        " supported by the integration",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -1252,7 +1253,7 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo climate fan_mode and swing_mode not supported is raising error."""
+    """Test unsupported fan_mode and swing_mode raises error."""
 
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"

@@ -71,7 +71,8 @@ def call_info() -> CallInfo:
             "max-forwards": "70",
             "user-agent": "Grandstream HT801 1.0.17.5",
             "supported": "replaces, path, timer, eventlist",
-            "allow": "INVITE, ACK, OPTIONS, CANCEL, BYE, SUBSCRIBE, NOTIFY, INFO, REFER, UPDATE",
+            "allow": "INVITE, ACK, OPTIONS, CANCEL, BYE,"
+            " SUBSCRIBE, NOTIFY, INFO, REFER, UPDATE",
             "content-type": "application/sdp",
             "accept": "application/sdp, application/dtmf-relay",
             "content-length": "480",
