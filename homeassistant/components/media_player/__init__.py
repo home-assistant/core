@@ -1487,12 +1487,13 @@ def _image_response_appears_complete(
     catches the common shapes without per-source logic.
     """
     # Skip the Content-Length comparison when the body has been transparently
-    # decompressed by aiohttp (Content-Encoding present); in that case the
-    # advertised length is the encoded size and len(body) is the decoded size
-    # so a mismatch is expected, not a truncation.
-    if (
-        cl := response.headers.get(CONTENT_LENGTH)
-    ) is not None and not response.headers.get(CONTENT_ENCODING):
+    # decompressed by aiohttp; in that case the advertised length is the
+    # encoded size and len(body) is the decoded size so a mismatch is
+    # expected, not a truncation. `identity` and the empty value both mean
+    # "no encoding applied" per RFC 9110 §8.4 and should still be validated.
+    cl = response.headers.get(CONTENT_LENGTH)
+    ce = (response.headers.get(CONTENT_ENCODING) or "").strip().lower()
+    if cl is not None and ce in ("", "identity"):
         try:
             expected = int(cl)
         except ValueError:
