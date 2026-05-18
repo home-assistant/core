@@ -57,7 +57,7 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==47.0.0",
+  "cryptography==48.0.0",
   "Pillow==12.2.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.12",
+  "uv==0.11.13",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",

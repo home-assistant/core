@@ -169,7 +169,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._time_until_reset = (next_reset - reset_time).total_seconds()
 
         # When any zone is actively heating, we use a shorter minimum
-        # To prevent overshooting in temperature, check if there's heating/cooling activity
+        # To prevent overshooting in temperature,
+        # check if there's heating/cooling activity
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
@@ -180,7 +181,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = SCAN_INTERVAL
             self._next_update = reset_time + timedelta(seconds=self._current_interval)
             _LOGGER.debug(
-                "Rate limit info unavailable; using default update interval: %s seconds",
+                "Rate limit info unavailable;"
+                " using default update interval: %s seconds",
                 self._current_interval,
             )
             return
@@ -361,7 +363,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set a zone overlay."""
 
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
+            "Set overlay for zone %s: overlay_mode=%s,"
+            " temp=%s, duration=%s, type=%s, mode=%s,"
+            " fan_speed=%s, swing=%s, fan_level=%s,"
+            " vertical_swing=%s, horizontal_swing=%s",
             zone_id,
             overlay_mode,
             temperature,
