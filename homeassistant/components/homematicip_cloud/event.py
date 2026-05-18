@@ -15,7 +15,6 @@ from homeassistant.components.event import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
@@ -115,7 +114,7 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
             self._attr_translation_placeholders = {"channel": str(channel.index)}
 
     @property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str:
         """Return the entity name.
 
         For multi-channel events, bypass HmIP's legacy name composition
@@ -127,7 +126,10 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
             platform_translations = (
                 self.platform_data.platform_translations if self.platform_data else {}
             )
-            return self._name_internal(self._device_class_name, platform_translations)
+            resolved = self._name_internal(
+                self._device_class_name, platform_translations
+            )
+            return resolved if isinstance(resolved, str) else ""
         return super().name
 
     async def async_added_to_hass(self) -> None:
