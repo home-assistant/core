@@ -79,7 +79,15 @@ def _uuid_from_ssdp_usn(usn: str) -> str | None:
     """Parse the device UUID from an SSDP USN (`uuid:<uuid>::...`)."""
     if not usn.startswith("uuid:"):
         return None
-    return _parse_device_uuid(usn.split("::", 1)[0].removeprefix("uuid:"))
+    return _uuid_from_upnp_udn(usn.split("::", 1)[0])
+
+
+def _hostname_from_url(url: str) -> str | None:
+    """Return the hostname from a URL, or None if parsing fails."""
+    try:
+        return urlparse(url).hostname
+    except ValueError:
+        return None
 
 
 def _uuid_from_discovery(discovery_info: SsdpServiceInfo) -> str | None:
@@ -102,7 +110,11 @@ def _is_link_local_host(host: str) -> bool:
 
 
 def _host_from_ssdp_usn(usn: str) -> str | None:
-    """Return fritz.box when the USN contains a URL with that exact hostname."""
+    """Return fritz.box when the USN embeds that host in a non-standard URL segment.
+
+    Standard SSDP USNs do not contain URLs. Some FRITZ! devices append a vendor
+    segment such as ``uuid:…::upnp:rootdevice://fritz.box`` when no LOCATION is sent.
+    """
     search_start = 0
     while (scheme_pos := usn.find("://", search_start)) != -1:
         fragment_start = scheme_pos + 1
@@ -115,7 +127,7 @@ def _host_from_ssdp_usn(usn: str) -> str | None:
                 break
             fragment_end += 1
         fragment = usn[fragment_start:fragment_end]
-        if hostname := urlparse(f"http:{fragment}").hostname:
+        if hostname := _hostname_from_url(f"http:{fragment}"):
             if hostname.lower() == _FRITZ_BOX_HOST:
                 return _FRITZ_BOX_HOST
         search_start = scheme_pos + 3
@@ -125,12 +137,12 @@ def _host_from_ssdp_usn(usn: str) -> str | None:
 def _host_from_ssdp(discovery_info: SsdpServiceInfo) -> str | None:
     """Host from SSDP location, headers, or USN."""
     if discovery_info.ssdp_location:
-        if hostname := urlparse(discovery_info.ssdp_location).hostname:
+        if hostname := _hostname_from_url(discovery_info.ssdp_location):
             return hostname
     if discovery_info.ssdp_headers:
         location_header = discovery_info.ssdp_headers.get("location")
         if isinstance(location_header, str):
-            if hostname := urlparse(location_header).hostname:
+            if hostname := _hostname_from_url(location_header):
                 return hostname
     if discovery_info.ssdp_usn:
         return _host_from_ssdp_usn(discovery_info.ssdp_usn)
@@ -280,12 +292,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             return self.async_abort(reason="already_configured")
 
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
+
         unique_id_for_flow = device_uuid or host
         await self.async_set_unique_id(unique_id_for_flow)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
-
-        if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
 
         self.context.update(
             {

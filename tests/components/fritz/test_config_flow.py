@@ -77,7 +77,7 @@ def _flow_context(hass: HomeAssistant, flow_id: str) -> dict[str, Any]:
     for progress in hass.config_entries.flow.async_progress():
         if progress["flow_id"] == flow_id:
             return progress["context"]
-    return {}
+    pytest.fail(f"Flow {flow_id} not in progress")
 
 
 def _flow_unique_id(hass: HomeAssistant, flow_id: str) -> str | None:
@@ -176,6 +176,25 @@ def test_host_from_ssdp_usn() -> None:
     assert _host_from_ssdp_usn("uuid:device-1::vendor:my-fritz.box-repeater") is None
     assert _host_from_ssdp_usn("uuid:device-1::upnp://fritz.box.local") is None
     assert _host_from_ssdp_usn("uuid:device-1::vendor://fritz.box.example/path") is None
+    assert (
+        _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box::suffix")
+        == "fritz.box"
+    )
+
+
+def test_host_from_ssdp_location_value_error_uses_usn() -> None:
+    """Test host falls back to USN when location URL parsing fails."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        ssdp_location="https://[invalid",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    with patch(
+        "homeassistant.components.fritz.config_flow.urlparse",
+        side_effect=ValueError(),
+    ):
+        assert _host_from_ssdp(discovery) == "fritz.box"
 
 
 def test_is_link_local_host() -> None:
@@ -285,14 +304,14 @@ async def test_ssdp_fritz_box_from_usn_without_uuid(
     assert _flow_unique_id(hass, result["flow_id"]) == "fritz.box"
 
 
-async def test_ssdp_already_configured_skips_host_unique_id_without_uuid(
-    hass: HomeAssistant, fc_class_mock
+async def test_ssdp_already_configured_skips_migration_without_uuid(
+    hass: HomeAssistant,
 ) -> None:
-    """Test SSDP without UUID still aborts when the host is already configured."""
+    """Test SSDP without UUID does not migrate a host placeholder unique_id."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={**MOCK_USER_DATA, CONF_HOST: "fritz.box"},
-        unique_id=MOCK_FRITZ_SSDP_DEVICE_UUID,
+        unique_id="fritz.box",
     )
     mock_config.add_to_hass(hass)
 
@@ -310,7 +329,7 @@ async def test_ssdp_already_configured_skips_host_unique_id_without_uuid(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
+    assert mock_config.unique_id == "fritz.box"
 
 
 @pytest.mark.parametrize(
