@@ -177,6 +177,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
     ),
+    # Needs override since DiscretePositionableGarageDoor reports
+    # core:OpenClosedUnknownState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.DISCRETE_POSITIONABLE_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+    ),
     # Needs override since PositionableGarageDoorWithPartialPosition reports
     # core:OpenClosedPartialState instead of core:OpenClosedState
     # uiClass is GarageDoor
