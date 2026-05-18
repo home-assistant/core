@@ -192,7 +192,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete and setup firmware checks and token refresh if needed."""
+        """Mark setup as complete, setup firmware checks and token refresh."""
         self._setup_complete = True
         self.async_cancel_firmware_refresh()
         self._cancel_firmware_refresh = async_track_time_interval(
@@ -302,7 +302,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 new_firmware := envoy.firmware
             ):
                 _LOGGER.warning(
-                    "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
+                    "Envoy firmware changed from: %s to: %s,"
+                    " reloading enphase envoy integration",
                     current_firmware,
                     new_firmware,
                 )
