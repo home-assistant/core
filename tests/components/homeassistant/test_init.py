@@ -143,7 +143,11 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
     ],
 )
 async def test_reload_core_with_wrong_conf(
-    mock_process, mock_error, hass: HomeAssistant, files_patch: dict, expcted_error: str
+    mock_process,
+    mock_error,
+    hass: HomeAssistant,
+    files_patch: dict,
+    expcted_error: str,
 ) -> None:
     """Test reload core conf service."""
     await async_setup_component(hass, ha.DOMAIN, {})
@@ -151,7 +155,10 @@ async def test_reload_core_with_wrong_conf(
         patch_yaml_files(files_patch, True),
         pytest.raises(
             HomeAssistantError,
-            match=f"Failed to reload Core configuration - {expcted_error}",
+            match=(
+                "Failed to reload the configuration for integration homeassistant - "
+                f"{expcted_error}"
+            ),
         ),
     ):
         await hass.services.async_call(

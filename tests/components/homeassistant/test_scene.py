@@ -69,7 +69,10 @@ async def test_reload_config_service_failed(
         patch_yaml_files(files_patch, True),
         pytest.raises(
             HomeAssistantError,
-            match=f"Failed to reload Core configuration - {expcted_error}",
+            match=(
+                "Failed to reload the configuration for integration scene - "
+                f"{expcted_error}"
+            ),
         ),
     ):
         await hass.services.async_call("scene", "reload", blocking=True)

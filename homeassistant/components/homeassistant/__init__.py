@@ -293,7 +293,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="config_reload_failed",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"domain": DOMAIN, "error": str(err)},
             ) from err
 
         # auth only processed during startup

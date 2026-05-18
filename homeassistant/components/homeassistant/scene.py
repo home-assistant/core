@@ -187,7 +187,7 @@ async def async_setup_platform(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="config_reload_failed",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"domain": SCENE_DOMAIN, "error": str(err)},
             ) from err
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
