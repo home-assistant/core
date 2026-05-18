@@ -396,7 +396,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
 
 def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> list[str]:
-    """Accepts a list of LLM API IDs and filters this against those currently available."""
+    """Filter a list of LLM API IDs against those available."""
 
     valid_llm_apis = [api.id for api in llm.async_get_apis(hass)]
 
@@ -419,7 +419,7 @@ def ollama_config_option_schema(
 
         schema: dict = {
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:

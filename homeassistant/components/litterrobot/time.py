@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot time entities."""
 
     value_fn: Callable[[_WhiskerEntityT], time | None]

@@ -1,5 +1,5 @@
 """Support for wired switches attached to a Konnected device."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any

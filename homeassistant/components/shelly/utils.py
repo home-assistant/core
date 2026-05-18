@@ -224,7 +224,7 @@ def get_coiot_port(hass: HomeAssistant) -> int:
     """Get CoIoT port from config."""
     if DOMAIN in hass.data:
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
     return DEFAULT_COAP_PORT
 

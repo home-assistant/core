@@ -234,9 +234,10 @@ async def test_coordinator_update_failing(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     mock_method: str,
 ) -> None:
-    """Test that although is not possible to get settings and status, the config entry is loaded.
+    """Test config entry loads even when settings/status fetch fails.
 
-    This is for cases where some appliances are reachable and some are not in the same configuration entry.
+    This is for cases where some appliances are reachable and some are not in the same
+    configuration entry.
     """
     setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
 
@@ -345,7 +346,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that the event listener is capable of receiving settings and status for the first time."""
+    """Test event listener receives settings and status initially."""
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
     client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
 
@@ -399,7 +400,7 @@ async def test_event_listener_error(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test that the configuration entry is reloaded when the event stream raises an API error."""
+    """Test config entry reloads on event stream API error."""
     client_with_exception.stream_all_events = MagicMock(
         side_effect=HomeConnectApiError("error.key", "error description")
     )
@@ -816,7 +817,7 @@ async def test_auth_error_while_updating_appliance(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test that the configuration entry is set to require reauth when an auth error happens."""
+    """Test config entry requires reauth on auth error."""
     entity_id = "switch.dishwasher_power"
 
     assert await integration_setup(client)
@@ -1012,7 +1013,7 @@ async def test_option_values_kept_after_changing_program(
     appliance: HomeAppliance,
     event_key: EventKey,
 ) -> None:
-    """Test that when a program is changed, the options are kept and defaults are not used."""
+    """Test program change keeps options instead of using defaults."""
     appliance_ha_id = appliance.ha_id
     entity_id = "switch.dishwasher_half_load"
     client.get_available_program = AsyncMock(

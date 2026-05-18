@@ -146,6 +146,7 @@ class MjpegCamera(Camera):
 
                 return await response.read()
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
 

@@ -104,7 +104,7 @@ async def test_coordinator_update_duco_error_marks_unavailable(
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that sensor entities become unavailable when async_get_nodes raises DucoError."""
+    """Test sensor entities become unavailable when async_get_nodes raises DucoError."""
     mock_duco_client.async_get_nodes = AsyncMock(side_effect=DucoError("api error"))
 
     freezer.tick(SCAN_INTERVAL)
@@ -122,7 +122,7 @@ async def test_lan_info_duco_error_marks_unavailable(
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that entities become unavailable when async_get_lan_info raises DucoError."""
+    """Test entities become unavailable when async_get_lan_info raises DucoError."""
     mock_duco_client.async_get_lan_info = AsyncMock(
         side_effect=DucoError("lan info error")
     )
@@ -143,7 +143,7 @@ async def test_new_node_added_dynamically(
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a new node appearing in coordinator data creates entities automatically."""
+    """Test a new node appearing in coordinator data creates entities automatically."""
     assert hass.states.get("sensor.new_rh_sensor_humidity") is None
 
     new_node = Node(
@@ -191,7 +191,7 @@ async def test_deregistered_node_removes_device(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a node disappearing from the API removes its device from the registry."""
+    """Test a node disappearing from the API removes its device from the registry."""
     device_registry = dr.async_get(hass)
 
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
@@ -265,7 +265,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a node with UNKNOWN type is retried and gets entities once the type resolves."""
+    """Test UNKNOWN type node is retried and gets entities once the type resolves."""
     node_id = 99
     ventilation = NodeVentilationInfo(
         state="AUTO", time_state_remain=0, time_state_end=0, mode="-", flow_lvl_tgt=None

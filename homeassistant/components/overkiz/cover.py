@@ -60,7 +60,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ##
     ## Overrides via UIWidget
     ##
-    # Needs override to support position (and remove support for tilt position which is not supported by this device)
+    # Needs override to support position (and remove support for
+    # tilt position which is not supported by this device)
     # uiClass is Pergola
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING,
@@ -117,7 +118,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(1, 0),
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
+    # Needs override to support very specific tilt commands
+    # (rts:ExteriorVenetianBlindRTSComponent)
     # uiClass is ExteriorVenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
@@ -131,10 +133,25 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to support very specific tilt commands (rts:VenetianBlindRTSComponent)
+    # Needs override to support very specific tilt commands
+    # (rts:VenetianBlindRTSComponent)
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_SHEER_SCREEN,
         device_class=CoverDeviceClass.BLIND,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
@@ -176,6 +193,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     # uiClass is Gate
     OverkizCoverDescription(
         key=UIWidget.DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since SlidingDiscreteGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.SLIDING_DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
         device_class=CoverDeviceClass.GATE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
@@ -571,13 +599,15 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             await self.executor.async_execute_command(command, position)
 
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
-        """Move cover and tilt to a specific position simultaneously.
+        """Move cover and tilt to a specific position.
 
-        Exposed as the `overkiz.set_cover_position_and_tilt` service action. Uses the
-        setClosureAndOrientation command to move slats and closure in a single instruction.
-        Calling set_cover_position and set_cover_tilt_position sequentially will cause
-        the motor to stop between commands on some devices (e.g. Somfy
-        DynamicExteriorVenetianBlind).
+        Exposed as the `overkiz.set_cover_position_and_tilt`
+        service action. Uses the setClosureAndOrientation
+        command to move slats and closure in a single
+        instruction. Calling set_cover_position and
+        set_cover_tilt_position sequentially will cause the
+        motor to stop between commands on some devices (e.g.
+        Somfy DynamicExteriorVenetianBlind).
         """
         if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
             raise ServiceValidationError(
@@ -674,7 +704,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
     @property
     def moving_offset(self) -> int | None:
-        """Return the offset between the targeted position and the current one if the cover is moving."""
+        """Return the offset between targeted and current position."""
         moving_state = self.device.states.get(OverkizState.CORE_MOVING)
         if moving_state is None or moving_state.value_as_bool is not True:
             return None
