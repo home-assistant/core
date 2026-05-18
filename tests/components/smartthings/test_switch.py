@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -34,7 +34,7 @@ from . import (
     trigger_update,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_all_entities(
@@ -637,3 +637,179 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
+
+
+_EHS_LIGHTING_UNIQUE_ID = (
+    "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.airConditionerLighting"
+)
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+async def test_execute_workaround_switch_enabled_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Snapshot the execute workaround switch as it appears once enabled by the user."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SWITCH)
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+async def test_execute_workaround_switch_disabled_by_default(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test execute workaround switch is registered but disabled — user opts in per device."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+@pytest.mark.parametrize(
+    ("action", "expected_argument", "expected_state"),
+    [
+        (
+            SERVICE_TURN_ON,
+            ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}],
+            STATE_ON,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
+            STATE_OFF,
+        ),
+    ],
+)
+async def test_execute_workaround_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    action: str,
+    expected_argument: list[str | dict[str, list[str]]],
+    expected_state: str,
+) -> None:
+    """Test execute workaround switch uses reversed API arguments and updates state optimistically."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["assumed_state"] is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4165c51e-bf6b-c5b6-fd53-127d6248754b",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        expected_argument,
+    )
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+@pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])
+async def test_execute_workaround_switch_restores_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    restored_state: str,
+) -> None:
+    """Test execute workaround switch restores last known state across HA restart."""
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        _EHS_LIGHTING_UNIQUE_ID,
+        suggested_object_id="klimatyzator_korytarz_display_lighting",
+        disabled_by=None,
+    )
+    mock_restore_cache(
+        hass,
+        [State("switch.klimatyzator_korytarz_display_lighting", restored_state)],
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, _EHS_LIGHTING_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == restored_state
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_01001"])
+async def test_execute_workaround_switch_not_created_when_capability_exists(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test display lighting uses native lighting capability when available, not execute workaround."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN,
+            DOMAIN,
+            "4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.airConditionerLighting",
+        )
+        is None
+    )
+    assert any(
+        entry.translation_key == "display_lighting"
+        and entry.unique_id.startswith("4ece486b-89db-f06a-d54d-748b676b4d8e_")
+        for entry in entity_registry.entities.values()
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
+async def test_execute_workaround_switch_not_created_without_required_capability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test display lighting not created for washer lacking AIR_CONDITIONER_MODE capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not any(
+        "display_lighting" in entity_id for entity_id in entity_registry.entities
+    )

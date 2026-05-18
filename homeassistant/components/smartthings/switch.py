@@ -10,11 +10,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
@@ -68,6 +69,21 @@ class SmartThingsDishwasherWashingOptionSwitchEntityDescription(
 
     on_key: str | bool = True
     off_key: str | bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsExecuteSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a SmartThings switch entity that uses the execute command.
+
+    For devices that don't expose a standard capability but can still be
+    controlled via the execute command with specific arguments.
+    """
+
+    required_capability: (
+        Capability  # Gate to prevent creating switches on incompatible devices
+    )
+    on_argument: list[Any]
+    off_argument: list[Any]
 
 
 SWITCH = SmartThingsSwitchEntityDescription(
@@ -305,6 +321,26 @@ DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
     ),
 }
 
+# Workaround switches for devices that lack the standard capability
+# but can still be controlled via execute commands
+EXECUTE_WORKAROUND_SWITCHES: dict[
+    Capability | str, SmartThingsExecuteSwitchEntityDescription
+] = {
+    # Note: API arguments are reversed - "Light_Off" option turns the light ON
+    # Disabled by default: not all matching devices have a panel LED, and we
+    # cannot detect this from capabilities alone — the user opts in per device
+    # by enabling the entity in the registry.
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsExecuteSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+        translation_key="display_lighting",
+        required_capability=Capability.AIR_CONDITIONER_MODE,
+        on_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}],
+        off_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -361,6 +397,18 @@ async def async_setup_entry(
             ].value,
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
+    )
+    entities.extend(
+        SmartThingsExecuteSwitch(
+            entry_data.client,
+            device,
+            description,
+        )
+        for device in entry_data.devices.values()
+        for missing_capability, description in EXECUTE_WORKAROUND_SWITCHES.items()
+        if Capability.EXECUTE in device.status[MAIN]
+        and description.required_capability in device.status[MAIN]
+        and missing_capability not in device.status[MAIN]
     )
     entity_registry = er.async_get(hass)
     for device in entry_data.devices.values():
@@ -575,3 +623,57 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
 
     def _current_state(self) -> Any:
         return super()._current_state()["value"]
+
+
+class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity, RestoreEntity):
+    """Define a SmartThings switch that uses the execute command.
+
+    The cloud does not propagate state for these legacy execute commands, so
+    state is tracked optimistically: we remember what we last commanded and
+    restore that across HA restarts via RestoreEntity. assumed_state=True
+    advertises this to the user — the UI shows two buttons and an "Assumed"
+    badge, and external changes (e.g. via the SmartThings mobile app) will
+    drift out of sync.
+    """
+
+    entity_description: SmartThingsExecuteSwitchEntityDescription
+    _attr_assumed_state = True
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        entity_description: SmartThingsExecuteSwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(client, device, {Capability.EXECUTE})
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}_{entity_description.key}"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last known state from prior HA session."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._attr_is_on = last_state.state == STATE_ON
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            self.entity_description.off_argument,
+        )
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            self.entity_description.on_argument,
+        )
+        self._attr_is_on = True
+        self.async_write_ha_state()
