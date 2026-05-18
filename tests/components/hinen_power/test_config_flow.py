@@ -274,6 +274,96 @@ async def test_country_list_api_error(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("expected_reason", "device_fixture_name"),
+    [
+        ("reauth_successful", "get_devices.json"),
+        ("wrong_account", "get_different_device.json"),
+    ],
+    ids=["same_account", "different_account"],
+)
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_reason: str,
+    device_fixture_name: str,
+) -> None:
+    """Test successful reauthentication and handling of wrong account mismatch."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
+            ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "state=" in result["url"]
+
+    with (
+        patch(
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=MockHinen(hass, devices_fixture=device_fixture_name),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "mock-code"}
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == expected_reason
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_options_flow_no_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow aborts when no devices are available."""
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=MockHinen(hass),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.hinen_power.config_flow.HinenOpen",
+        return_value=MockHinen(hass, devices_fixture="get_no_device.json"),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_device"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_device_selection_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

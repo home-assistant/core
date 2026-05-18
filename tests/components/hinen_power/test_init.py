@@ -1,8 +1,11 @@
 """Tests for the Hinen integration init module."""
 
+import json
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp.client_exceptions import ClientError, ClientResponseError
+from hinen_open_api.exceptions import HinenBackendError, UnauthorizedError
 import pytest
 from yarl import URL
 
@@ -12,12 +15,15 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.hinen_power.auth_config import HinenImplementation
 from homeassistant.components.hinen_power.const import DOMAIN
+from homeassistant.components.hinen_power.coordinator import HinenDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import MockHinen
 from .conftest import TOKEN_URL, ComponentSetup
@@ -152,3 +158,171 @@ async def test_token_request_error_mapping(
 
         with pytest.raises(expected_error_class):
             await impl._token_request({"some": "data"})
+
+
+@pytest.mark.usefixtures("aioclient_mock")
+async def test_token_request_error_invalid_json(hass: HomeAssistant) -> None:
+    """Test _token_request raises OAuth2TokenRequestReauthError when response is not valid JSON."""
+    impl = HinenImplementation(
+        hass,
+        domain="hinen_power",
+        client_credential=ClientCredential("id", "secret"),
+        authorization_server=AuthorizationServer(
+            authorize_url="https://auth.url",
+            token_url=TOKEN_URL,
+        ),
+    )
+
+    mock_response = AsyncMock()
+    mock_response.status = 400
+    mock_response.json.side_effect = json.JSONDecodeError("bad", "", 0)
+    mock_response.request_info = Mock(url=URL(TOKEN_URL))
+    mock_response.headers = {}
+    mock_response.history = ()
+
+    with patch(
+        "homeassistant.components.hinen_power.auth_config.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get.return_value.__aenter__ = AsyncMock(
+            return_value=mock_response
+        )
+
+        with pytest.raises(OAuth2TokenRequestReauthError):
+            await impl._token_request({"some": "data"})
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_state"),
+    [
+        (
+            ClientResponseError(
+                request_info=Mock(),
+                history=(),
+                status=401,
+                message="Unauthorized",
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            ClientResponseError(
+                request_info=Mock(),
+                history=(),
+                status=500,
+                message="Server Error",
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (ClientError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_async_setup_entry_check_and_refresh_token_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    exc: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test async_setup_entry handles token refresh errors correctly."""
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.hinen_power.AsyncConfigEntryAuth.check_and_refresh_token",
+        side_effect=exc,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+
+
+async def test_coordinator_unauthorized_raises_config_entry_auth_failed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test coordinator raises ConfigEntryAuthFailed on unauthorized access."""
+    config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    mock_resource = AsyncMock()
+
+    class UnauthorizedIterator:
+        async def __anext__(self):
+            raise UnauthorizedError("unauthorized")
+
+        def __aiter__(self):
+            return self
+
+    mock_iter = UnauthorizedIterator()
+    mock_resource.get_device_details = Mock(return_value=mock_iter)
+    mock_auth = AsyncMock()
+    mock_auth.get_resource = AsyncMock(return_value=mock_resource)
+
+    coordinator = HinenDataUpdateCoordinator(hass, config_entry, mock_auth)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_backend_error_raises_update_failed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test coordinator raises UpdateFailed on backend errors."""
+    config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    mock_resource = AsyncMock()
+
+    class BackendErrorIterator:
+        async def __anext__(self):
+            raise HinenBackendError("backend error")
+
+        def __aiter__(self):
+            return self
+
+    mock_iter = BackendErrorIterator()
+    mock_resource.get_device_details = Mock(return_value=mock_iter)
+    mock_auth = AsyncMock()
+    mock_auth.get_resource = AsyncMock(return_value=mock_resource)
+
+    coordinator = HinenDataUpdateCoordinator(hass, config_entry, mock_auth)
+
+    with pytest.raises(UpdateFailed, match="Couldn't connect to Hinen"):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_async_update_data(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test coordinator successfully updates data and returns correct structure."""
+    config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    mock_resource = AsyncMock()
+    mock_device = Mock()
+    mock_device.id = "device_1"
+    mock_device.serial_number = "SN1"
+    mock_device.device_name = "Test Device"
+    mock_device.status = 1
+    mock_device.alert_status = 0
+    mock_device.properties = []
+
+    class SuccessIterator:
+        def __init__(self) -> None:
+            self._done = False
+
+        async def __anext__(self):
+            if self._done:
+                raise StopAsyncIteration
+            self._done = True
+            return mock_device
+
+        def __aiter__(self):
+            return self
+
+    mock_iter = SuccessIterator()
+    mock_resource.get_device_details = Mock(return_value=mock_iter)
+    mock_auth = AsyncMock()
+    mock_auth.get_resource = AsyncMock(return_value=mock_resource)
+
+    coordinator = HinenDataUpdateCoordinator(hass, config_entry, mock_auth)
+    result = await coordinator.async_update_data()
+
+    assert "device_1" in result
+    assert result["device_1"]["device_name"] == "Test Device"

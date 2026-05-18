@@ -22,27 +22,10 @@ ATTR_DEVICE_NAME = "device_name"
 
 REGION_CODE = "regionCode"
 CLIENT_SECRET = "clientSecret"
-# Work mode constants
-WORK_MODE_NONE = 0
-WORK_MODE_SELF_CONSUMPTION = 10
-WORK_MODE_BATTERY_PRIORITY = 11
-WORK_MODE_GRID_PRIORITY = 12
-WORK_MODE_TIME_PERIOD = 13
-WORK_MODE_POWER_KEEPING = 14
-
-WORK_MODE_OPTIONS = {
-    WORK_MODE_NONE: "none",
-    WORK_MODE_SELF_CONSUMPTION: "self_consumption",
-    WORK_MODE_BATTERY_PRIORITY: "battery_priority",
-    WORK_MODE_GRID_PRIORITY: "grid_priority",
-    WORK_MODE_TIME_PERIOD: "time_period",
-    WORK_MODE_POWER_KEEPING: "power_keeping",
-}
-
-WORK_MODE_SETTING = "work_mode_setting"
 LOAD_FIRST_STOP_SOC = "load_first_stop_soc"
 CHARGE_STOP_SOC = "charge_stop_soc"
 GRID_FIRST_STOP_SOC = "grid_first_stop_soc"
+WORK_MODE_SETTING = "work_mode_setting"
 CHARGE_POWER_SET = "charge_power_set"
 DISCHARGE_POWER_SET = "discharge_power_set"
 CD_PERIOD_TIMES2 = "cd_period_times2"

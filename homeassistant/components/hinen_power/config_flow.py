@@ -1,5 +1,6 @@
 """Config flow for Hinen Power integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -111,6 +112,12 @@ class OAuth2FlowHandler(
                 }
             ),
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initialization of re-authentication with the Hinen service."""
+        return await self.async_step_user()
 
     async def get_resource(self, token: str, host: str) -> HinenOpen:
         """Get Hinen Open resource async."""

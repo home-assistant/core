@@ -39,10 +39,10 @@
           "region_code": "Region"
         },
         "data_description": {
-          "client_id": "",
-          "client_secret": "",
-          "page_language": "",
-          "region_code": ""
+          "client_id": "Obtained from the Hinen developer portal.",
+          "client_secret": "Obtained from the Hinen developer portal.",
+          "page_language": "Select the language for the certification page.",
+          "region_code": "Select the region where your Hinen devices are located."
         },
         "description": "",
         "title": "Add Hinen Power integration settings"
