@@ -261,8 +261,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
 
         if entry := await self.async_check_configured_entry():
-            if device_uuid and entry.unique_id != device_uuid and _is_placeholder_unique_id(
-                entry.unique_id, host, entry.data.get(CONF_HOST)
+            if (
+                device_uuid
+                and entry.unique_id != device_uuid
+                and _is_placeholder_unique_id(
+                    entry.unique_id, host, entry.data.get(CONF_HOST)
+                )
             ):
                 self.hass.config_entries.async_update_entry(
                     entry, unique_id=device_uuid

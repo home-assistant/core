@@ -151,13 +151,10 @@ def test_host_from_ssdp_fritz_box_from_usn() -> None:
 def test_host_from_ssdp_usn() -> None:
     """Test USN host extraction requires a URL segment for fritz.box."""
     assert (
-        _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box")
-        == "fritz.box"
+        _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box") == "fritz.box"
     )
     assert _host_from_ssdp_usn("uuid:device-1::upnp:rootdevice") is None
-    assert (
-        _host_from_ssdp_usn("uuid:device-1::vendor:my-fritz.box-repeater") is None
-    )
+    assert _host_from_ssdp_usn("uuid:device-1::vendor:my-fritz.box-repeater") is None
 
 
 def test_is_link_local_host() -> None:
