@@ -125,13 +125,7 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
 async def test_coordinator_refresh_fails_during_startup(
     hass: HomeAssistant,
 ) -> None:
-    """Test coordinator refresh failure during the async_at_started callback.
-
-    The startup delay path is already tested for the happy path. This test
-    confirms that if the first coordinator refresh fails at startup (e.g. a
-    network error before HA is fully up), the entry still loads and the sensor
-    is placed into STATE_UNAVAILABLE rather than crashing setup.
-    """
+    """Test coordinator refresh failure during the async_at_started callback."""
     hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(
@@ -144,11 +138,9 @@ async def test_coordinator_refresh_fails_during_startup(
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    # Entry is loaded but HA hasn't started yet — no sensor state
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.example_com_cert_expiry") is None
 
-    # HA starts, coordinator refresh fires but fails with a network error
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=socket.gaierror,
@@ -158,10 +150,8 @@ async def test_coordinator_refresh_fails_during_startup(
 
     assert hass.state is CoreState.running
 
-    # Entry remains loaded — a network error at startup shouldn't unload it
     assert entry.state is ConfigEntryState.LOADED
 
-    # Sensor exists but is unavailable due to the failed refresh
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -170,11 +160,7 @@ async def test_coordinator_refresh_fails_during_startup(
 async def test_coordinator_refresh_fails_then_recovers_after_startup(
     hass: HomeAssistant,
 ) -> None:
-    """Test coordinator recovers after failing on the initial startup refresh.
-
-    Extends the above — after a failed startup refresh puts the sensor into
-    STATE_UNAVAILABLE, the next scheduled poll should restore correct state.
-    """
+    """Test coordinator recovers after failing on the initial startup refresh."""
 
     hass.set_state(CoreState.not_running)
 
@@ -194,7 +180,6 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
         side_effect=socket.gaierror,
     ):
         await hass.async_start()
-        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == STATE_UNAVAILABLE
@@ -206,7 +191,6 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
         return_value=timestamp,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=13))
-        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
