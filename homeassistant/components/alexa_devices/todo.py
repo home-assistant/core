@@ -13,8 +13,10 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity import EntityDescription
 
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .entity import AmazonServiceEntity
 
 if TYPE_CHECKING:
     from aioamazondevices.structures import ListInfo, ListItem
@@ -49,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class AlexaToDoList(TodoListEntity):
+class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     """Representation of an Alexa To-do List."""
 
     _attr_has_entity_name = True
@@ -65,6 +67,7 @@ class AlexaToDoList(TodoListEntity):
         """Initialize an AlexaTodoList.
 
         Args:
+            coordinator: The coordinator for this entity.
             alexa_list: The Alexa list information.
 
         """
@@ -74,11 +77,12 @@ class AlexaToDoList(TodoListEntity):
         # To be always unique because multiple Amazon
         # accounts can have lists with same names
         self._attr_unique_id = alexa_list.id
+        self._attr_name = alexa_list.name
 
-        # Friendly entity id
-        # self.entity_id = f"todo.{DOMAIN}_{slugify(self._list.name)}"
-
-        self.name = alexa_list.name
+        super().__init__(
+            coordinator,
+            EntityDescription(key=alexa_list.id, name=alexa_list.name),
+        )
 
         _LOGGER.debug(
             "Created todo entity for list: %s (ID: %s)", self._list.name, self._list.id
@@ -136,7 +140,8 @@ class AlexaToDoList(TodoListEntity):
         )
 
         if not item.summary:
-            raise ServiceValidationError
+            raise ServiceValidationError("Item summary cannot be empty.")
+
         await self._coordinator.api.add_todo_list_item(self._list.id, item.summary)
 
         _LOGGER.debug(
@@ -190,7 +195,7 @@ class AlexaToDoList(TodoListEntity):
 
         """
         if not item.summary or not item.uid:
-            raise ServiceValidationError
+            raise ServiceValidationError("Item summary and UID are required.")
 
         existing_item = self._coordinator.api.todo_list_items_lookup[self._list.id][
             item.uid
