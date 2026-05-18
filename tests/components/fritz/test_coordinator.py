@@ -22,10 +22,12 @@ from homeassistant.components.fritz.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.fritz.coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
     ClassSetupMissing,
     FritzBoxTools,
     FritzConnectionCached,
+    FritzData,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -89,6 +91,11 @@ async def fixture_fritz_tools(
         password=mock_config_entry.data["password"],
         port=mock_config_entry.data["port"],
     )
+
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
+    hass.data[FRITZ_DATA_KEY].tracked[mock_config_entry.unique_id] = set()
+    hass.data[FRITZ_DATA_KEY].profile_switches[mock_config_entry.unique_id] = set()
+    hass.data[FRITZ_DATA_KEY].wol_buttons[mock_config_entry.unique_id] = set()
 
     await coordinator.async_setup()
     return coordinator
@@ -639,42 +646,42 @@ async def test_async_trigger_cleanup(
     assert entity_registry.async_get("switch.printer_internet_access")
 
 
-# async def test_async_trigger_cleanup_preserves_fritz_device(
-#     hass: HomeAssistant,
-#     device_registry: dr.DeviceRegistry,
-#     fc_class_mock,
-#     fh_class_mock,
-#     fs_class_mock,
-# ) -> None:
-#     """Test that cleanup does not remove the fritz box device itself."""
-#     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-#     entry.add_to_hass(hass)
-#     assert await hass.config_entries.async_setup(entry.entry_id)
-#     await hass.async_block_till_done(wait_background_tasks=True)
-#     assert entry.state is ConfigEntryState.LOADED
+async def test_async_trigger_cleanup_preserves_fritz_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test that cleanup does not remove the fritz box device itself."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
 
-#     wrapper: AvmWrapper = entry.runtime_data
+    wrapper: AvmWrapper = entry.runtime_data
 
-#     # Verify the fritz box device was registered
-#     fritz_device = device_registry.async_get_device(
-#         identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
-#     )
-#     assert fritz_device is not None
+    # Verify the fritz box device was registered
+    fritz_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert fritz_device is not None
 
-#     # Simulate a host scan that does NOT include the fritz box itself
-#     client_hosts = {
-#         "AA:BB:CC:DD:EE:01": MagicMock(connected=True),
-#     }
-#     with patch.object(
-#         wrapper,
-#         "_async_update_hosts_info",
-#         AsyncMock(return_value=client_hosts),
-#     ):
-#         await wrapper.async_trigger_cleanup()
+    # Simulate a host scan that does NOT include the fritz box itself
+    client_hosts = {
+        "AA:BB:CC:DD:EE:01": MagicMock(connected=True),
+    }
+    with patch.object(
+        wrapper,
+        "_async_update_hosts_info",
+        AsyncMock(return_value=client_hosts),
+    ):
+        await wrapper.async_trigger_cleanup()
 
-#     # The fritz box device must still be present in the registry
-#     fritz_device_after = device_registry.async_get_device(
-#         identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
-#     )
-#     assert fritz_device_after is not None
-#     assert fritz_device_after.id == fritz_device.id
+    # The fritz box device must still be present in the registry
+    fritz_device_after = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert fritz_device_after is not None
+    assert fritz_device_after.id == fritz_device.id
