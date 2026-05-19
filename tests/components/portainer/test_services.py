@@ -135,10 +135,6 @@ async def test_service_recreate_container(
     """Test recreate container service with the variants."""
 
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
-    )
-    assert device is not None
     container = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
     )
@@ -147,7 +143,6 @@ async def test_service_recreate_container(
         DOMAIN,
         SERVICE_RECREATE_CONTAINER,
         {
-            ATTR_DEVICE_ID: device.id,
             ATTR_CONTAINER_DEVICE_ID: container.id,
             **call_arguments,
         },
@@ -190,10 +185,6 @@ async def test_service_recreate_container_portainer_exceptions(
 ) -> None:
     """Test recreate container service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
-    )
-    assert device is not None
     container = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
     )
@@ -204,14 +195,10 @@ async def test_service_recreate_container_portainer_exceptions(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
-            {
-                ATTR_DEVICE_ID: device.id,
-                ATTR_CONTAINER_DEVICE_ID: container.id,
-            },
+            {ATTR_CONTAINER_DEVICE_ID: container.id},
             blocking=True,
         )
     mock_portainer_client.container_recreate.assert_called_once()
-    mock_portainer_client.container_recreate.reset_mock()
 
 
 async def test_service_validation_errors(
@@ -227,6 +214,10 @@ async def test_service_validation_errors(
         identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
     )
     assert device is not None
+    container = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_CONTAINER_DEVICE_IDENTIFIER)}
+    )
+    assert container is not None
 
     with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
@@ -254,6 +245,48 @@ async def test_service_validation_errors(
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()
+
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PRUNE_IMAGES,
+            {ATTR_DEVICE_ID: container.id},
+            blocking=True,
+        )
+    mock_portainer_client.images_prune.assert_not_called()
+
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RECREATE_CONTAINER,
+            {ATTR_CONTAINER_DEVICE_ID: "invalid_device_id"},
+            blocking=True,
+        )
+    mock_portainer_client.container_recreate.assert_not_called()
+
+    other_entry = MockConfigEntry(domain="well_no_portainer_for_sure")
+    other_entry.add_to_hass(hass)
+    non_portainer_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("well_no_portainer_for_sure", "some_identifier")},
+    )
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RECREATE_CONTAINER,
+            {ATTR_CONTAINER_DEVICE_ID: non_portainer_device.id},
+            blocking=True,
+        )
+    mock_portainer_client.container_recreate.assert_not_called()
+
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RECREATE_CONTAINER,
+            {ATTR_CONTAINER_DEVICE_ID: device.id},
+            blocking=True,
+        )
+    mock_portainer_client.container_recreate.assert_not_called()
 
 
 @pytest.mark.parametrize(

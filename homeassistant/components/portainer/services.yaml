@@ -19,12 +19,6 @@ prune_images:
 
 recreate_container:
   fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: portainer
-          model: Endpoint
     container_device_id:
       required: true
       selector:

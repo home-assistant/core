@@ -228,10 +228,6 @@
           "description": "The container to recreate.",
           "name": "Container"
         },
-        "device_id": {
-          "description": "The endpoint the container belongs to.",
-          "name": "Endpoint"
-        },
         "pull_image": {
           "description": "Whether to pull the image before recreating the container. This can be used to update the container to the latest version of the image.",
           "name": "Pull image"
