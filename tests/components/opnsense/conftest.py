@@ -5,16 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.opnsense.const import (
-    CONF_OPNSENSE_CLIENT,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-)
+from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, setup_mock_opnsense_client
 
 from tests.common import MockConfigEntry
+
+CONF_OPNSENSE_CLIENT = "opnsense_client"
 
 
 @pytest.fixture
