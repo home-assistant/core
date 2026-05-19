@@ -166,7 +166,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         ]
 
         return BrowseMedia(
-            title="Arcam FMJ Receiver",
+            title=self.coordinator.device_name,
             media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
