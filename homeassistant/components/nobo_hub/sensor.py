@@ -67,13 +67,15 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         )
         self._read_state()
 
+    @property
+    def available(self) -> bool:
+        """Available when the hub is connected and the component still exists."""
+        return super().available and self._id in self._nobo.components
+
     @callback
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.components:
-            # Component removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. This is a local call."""
+        if not self.available:
             return
-        self._attr_available = True
         value = self._nobo.get_current_component_temperature(self._id)
         self._attr_native_value = None if value is None else float(value)
