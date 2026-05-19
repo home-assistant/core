@@ -16,6 +16,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -64,17 +65,39 @@ async def test_set_value(
 
 
 @pytest.mark.parametrize(
-    ("raised", "expected"),
+    ("raised", "expected", "translation_key", "translation_placeholders"),
     [
-        (ValueError("out of range"), ServiceValidationError),
-        (AuthenticationError("bad creds"), ConfigEntryAuthFailed),
-        (TimeoutError("timed out"), HomeAssistantError),
-        (ServerTimeoutError("timed out"), HomeAssistantError),
-        (ParseJSONError("bad json"), HomeAssistantError),
-        (UnsupportedFeature("old firmware"), HomeAssistantError),
+        (
+            ValueError("out of range"),
+            ServiceValidationError,
+            "invalid_value",
+            {"value": "32.0"},
+        ),
+        (
+            AuthenticationError("bad creds"),
+            ConfigEntryAuthFailed,
+            "authentication_error",
+            None,
+        ),
+        (TimeoutError("timed out"), HomeAssistantError, "communication_error", None),
+        (
+            ServerTimeoutError("timed out"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+        ),
+        (ParseJSONError("bad json"), HomeAssistantError, "communication_error", None),
+        (
+            UnsupportedFeature("old firmware"),
+            HomeAssistantError,
+            "unsupported_feature",
+            None,
+        ),
         (
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
+            "communication_error",
+            None,
         ),
     ],
 )
@@ -84,6 +107,8 @@ async def test_set_value_raises(
     mock_charger: MagicMock,
     raised: Exception,
     expected: type[Exception],
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
 ) -> None:
     """Test that errors from the charger are translated to HA exceptions."""
     mock_config_entry.add_to_hass(hass)
@@ -92,7 +117,7 @@ async def test_set_value_raises(
 
     mock_charger.set_current.side_effect = raised
 
-    with pytest.raises(expected):
+    with pytest.raises(expected) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -102,3 +127,7 @@ async def test_set_value_raises(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_placeholders == translation_placeholders
