@@ -69,6 +69,15 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
 )
 
 
+def _remote_sensor_unique_id(
+    thermostat: dict, sensor: dict, description: EcobeeSensorEntityDescription
+) -> str:
+    """Build the unique_id used by EcobeeSensor for a remote sensor capability."""
+    if "code" in sensor:
+        return f"{sensor['code']}-{description.device_class}"
+    return f"{thermostat['identifier']}-{sensor['id']}-{description.device_class}"
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcobeeConfigEntry,
@@ -76,14 +85,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up ecobee sensors."""
     data = config_entry.runtime_data
-    entities = [
-        EcobeeSensor(data, sensor["name"], index, description)
-        for index in range(len(data.ecobee.thermostats))
-        for sensor in data.ecobee.get_remote_sensors(index)
-        for item in sensor["capability"]
-        for description in SENSOR_TYPES
-        if description.key == item["type"]
-    ]
+    entities: list[EcobeeSensor] = []
+    seen_unique_ids: set[str] = set()
+    for index in range(len(data.ecobee.thermostats)):
+        thermostat = data.ecobee.get_thermostat(index)
+        for sensor in data.ecobee.get_remote_sensors(index):
+            for item in sensor["capability"]:
+                for description in SENSOR_TYPES:
+                    if description.key != item["type"]:
+                        continue
+                    # Deduplicate at setup time: some thermostats return the
+                    # same sensor twice in remoteSensors, and SmartSensors
+                    # paired to multiple thermostats share a `code`. Without
+                    # this dedup the later registration is silently dropped
+                    # by entity_platform with an "already exists" ERROR log.
+                    unique_id = _remote_sensor_unique_id(
+                        thermostat, sensor, description
+                    )
+                    if unique_id in seen_unique_ids:
+                        continue
+                    seen_unique_ids.add(unique_id)
+                    entities.append(
+                        EcobeeSensor(data, sensor["name"], index, description)
+                    )
 
     async_add_entities(entities, True)
 
@@ -114,10 +138,10 @@ class EcobeeSensor(SensorEntity):
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
-                if "code" in sensor:
-                    return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
-                return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+                return _remote_sensor_unique_id(
+                    thermostat, sensor, self.entity_description
+                )
         return None
 
     @property
