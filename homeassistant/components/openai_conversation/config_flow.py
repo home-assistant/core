@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -48,7 +49,6 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,

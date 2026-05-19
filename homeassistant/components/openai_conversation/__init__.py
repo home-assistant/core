@@ -15,7 +15,7 @@ from openai.types.responses import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -42,7 +42,6 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_FILENAMES,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_STORE_RESPONSES,
