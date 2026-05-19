@@ -20,7 +20,7 @@ from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN, CONF_TOKEN_TYPE
 from .definitions import BlancoDeviceType
@@ -34,6 +34,8 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 
 class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator that polls the BLANCO device system and status endpoints."""
+
+    config_entry: BlancoConfigEntry
 
     def __init__(
         self,
@@ -75,11 +77,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_renew_token(self) -> bool:
-        """Re-authenticate using the stored dev_id and update the token in entry.data.
-
-        Returns True if the token was successfully renewed, False otherwise.
-        """
-        assert self.config_entry is not None
+        """Re-authenticate using the stored dev_id; returns True on success."""
         _LOGGER.debug("Attempting token renewal")
         try:
             auth = await self._api.renew_token(self.config_entry.data[CONF_DEV_ID])
@@ -121,8 +119,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch system, status, settings, and errors from the BLANCO API."""
-        assert self.config_entry is not None
         prev: dict[str, Any] = self.data or {}
+        fresh_count = 0
 
         # ── /system ───────────────────────────────────────────────────────────
         try:
@@ -131,6 +129,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             if status == HttpStatus.OK:
                 system_data: dict[str, Any] = dict(result)
+                fresh_count += 1
             else:
                 _LOGGER.warning(
                     "System endpoint returned HTTP %s, using previous data", status
@@ -147,6 +146,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             if status == HttpStatus.OK:
                 status_data: dict[str, Any] = dict(result)
+                fresh_count += 1
             else:
                 _LOGGER.warning(
                     "Status endpoint returned HTTP %s, using previous data", status
@@ -163,6 +163,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             if status == HttpStatus.OK:
                 settings_data: dict[str, Any] = dict(result)
+                fresh_count += 1
             else:
                 _LOGGER.warning(
                     "Settings endpoint returned HTTP %s, using previous data", status
@@ -179,6 +180,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             if status == HttpStatus.OK:
                 errors_data: dict[str, Any] = dict(result)
+                fresh_count += 1
             else:
                 _LOGGER.warning(
                     "Errors endpoint returned HTTP %s, using previous data", status
@@ -187,6 +189,9 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except BlancoConnectionError as err:
             _LOGGER.warning("GET /errors failed: %s, using previous data", err)
             errors_data = prev.get("errors", {"errors": [], "info": {}})
+
+        if fresh_count == 0:
+            raise UpdateFailed("All BLANCO API endpoints are unreachable")
 
         # ── dev_type discovery ────────────────────────────────────────────────
         if self.dev_type is None:

@@ -8,7 +8,8 @@ from blanco_smart_home_api_client import BlancoErrorType
 from homeassistant.components.blanco.definitions import BlancoDeviceType
 from homeassistant.components.blanco.sensor import (
     _DESC_CO2_REST,
-    _DESC_ERROR_COUNT,
+    _DESC_ERROR_COUNT_CRITICAL,
+    _DESC_ERROR_COUNT_WARNING,
     _DESC_ONLINE,
     SENSOR_DESCRIPTIONS_BY_TYPE,
     BlancoSensorEntity,
@@ -44,7 +45,12 @@ SAMPLE_DATA: dict = {
                 "err_code": 101,
                 "err_type": BlancoErrorType.CRITICAL,
                 "err_ts": 1700000000000,
-            }
+            },
+            {
+                "err_code": 202,
+                "err_type": BlancoErrorType.WARNING,
+                "err_ts": 1700000000001,
+            },
         ],
         "info": {},
     },
@@ -105,13 +111,54 @@ class TestNativeValue:
         entity = _make_entity(_DESC_ONLINE, data=data)
         assert entity.native_value is None
 
-    def test_error_count_with_one_critical_error(self) -> None:
-        """native_value for error_count returns 1 when there is one CRITICAL error."""
-        entity = _make_entity(_DESC_ERROR_COUNT)
+    def test_error_count_critical_with_one_critical_error(self) -> None:
+        """native_value for error_count_critical returns 1 for one CRITICAL error."""
+        entity = _make_entity(_DESC_ERROR_COUNT_CRITICAL)
         assert entity.native_value == 1
 
-    def test_error_count_with_only_info_errors_returns_zero(self) -> None:
-        """native_value for error_count returns 0 when errors are INFO-level only."""
+    def test_error_count_warning_with_one_warning(self) -> None:
+        """native_value for error_count_warning returns 1 for one WARNING error."""
+        entity = _make_entity(_DESC_ERROR_COUNT_WARNING)
+        assert entity.native_value == 1
+
+    def test_error_count_critical_ignores_warnings(self) -> None:
+        """error_count_critical returns 0 when only WARNING errors are present."""
+        data = {
+            **SAMPLE_DATA,
+            "errors": {
+                "errors": [
+                    {
+                        "err_code": 200,
+                        "err_type": BlancoErrorType.WARNING,
+                        "err_ts": 1700000000000,
+                    }
+                ],
+                "info": {},
+            },
+        }
+        entity = _make_entity(_DESC_ERROR_COUNT_CRITICAL, data=data)
+        assert entity.native_value == 0
+
+    def test_error_count_warning_ignores_critical(self) -> None:
+        """error_count_warning returns 0 when only CRITICAL errors are present."""
+        data = {
+            **SAMPLE_DATA,
+            "errors": {
+                "errors": [
+                    {
+                        "err_code": 101,
+                        "err_type": BlancoErrorType.CRITICAL,
+                        "err_ts": 1700000000000,
+                    }
+                ],
+                "info": {},
+            },
+        }
+        entity = _make_entity(_DESC_ERROR_COUNT_WARNING, data=data)
+        assert entity.native_value == 0
+
+    def test_error_count_critical_ignores_info(self) -> None:
+        """error_count_critical returns 0 when only INFO errors are present."""
         data = {
             **SAMPLE_DATA,
             "errors": {
@@ -125,7 +172,7 @@ class TestNativeValue:
                 "info": {},
             },
         }
-        entity = _make_entity(_DESC_ERROR_COUNT, data=data)
+        entity = _make_entity(_DESC_ERROR_COUNT_CRITICAL, data=data)
         assert entity.native_value == 0
 
     def test_co2_rest_returns_none_when_key_absent(self) -> None:
@@ -144,14 +191,23 @@ class TestNativeValue:
 class TestExtraStateAttributes:
     """Tests for BlancoSensorEntity.extra_state_attributes."""
 
-    def test_error_count_returns_errors_list(self) -> None:
-        """extra_state_attributes for error_count returns a dict with an errors list."""
-        entity = _make_entity(_DESC_ERROR_COUNT)
+    def test_error_count_critical_returns_only_critical_errors(self) -> None:
+        """extra_state_attributes for error_count_critical lists only CRITICAL errors."""
+        entity = _make_entity(_DESC_ERROR_COUNT_CRITICAL)
         attrs = entity.extra_state_attributes
         assert attrs is not None
         assert "errors" in attrs
         assert len(attrs["errors"]) == 1
         assert attrs["errors"][0]["err_type"] == "CRITICAL"
+
+    def test_error_count_warning_returns_only_warnings(self) -> None:
+        """extra_state_attributes for error_count_warning lists only WARNING errors."""
+        entity = _make_entity(_DESC_ERROR_COUNT_WARNING)
+        attrs = entity.extra_state_attributes
+        assert attrs is not None
+        assert "errors" in attrs
+        assert len(attrs["errors"]) == 1
+        assert attrs["errors"][0]["err_type"] == "WARNING"
 
     def test_co2_rest_returns_none(self) -> None:
         """extra_state_attributes for co2_rest (non-error sensor) returns None."""
@@ -184,11 +240,18 @@ class TestSensorDescriptionsByType:
         for dev_type in SENSOR_DESCRIPTIONS_BY_TYPE:
             assert "online" in self._keys(dev_type), f"Missing 'online' for {dev_type}"
 
-    def test_all_device_types_include_error_count(self) -> None:
-        """Every device type includes the error_count sensor."""
+    def test_all_device_types_include_error_count_critical(self) -> None:
+        """Every device type includes the error_count_critical sensor."""
         for dev_type in SENSOR_DESCRIPTIONS_BY_TYPE:
-            assert "error_count" in self._keys(dev_type), (
-                f"Missing 'error_count' for {dev_type}"
+            assert "error_count_critical" in self._keys(dev_type), (
+                f"Missing 'error_count_critical' for {dev_type}"
+            )
+
+    def test_all_device_types_include_error_count_warning(self) -> None:
+        """Every device type includes the error_count_warning sensor."""
+        for dev_type in SENSOR_DESCRIPTIONS_BY_TYPE:
+            assert "error_count_warning" in self._keys(dev_type), (
+                f"Missing 'error_count_warning' for {dev_type}"
             )
 
     def test_soda2_has_only_common_sensors(self) -> None:
@@ -213,6 +276,10 @@ class TestEntityCategory:
         """_DESC_ONLINE must be categorised as DIAGNOSTIC."""
         assert _DESC_ONLINE.entity_category == EntityCategory.DIAGNOSTIC
 
-    def test_error_count_is_diagnostic(self) -> None:
-        """_DESC_ERROR_COUNT must be categorised as DIAGNOSTIC."""
-        assert _DESC_ERROR_COUNT.entity_category == EntityCategory.DIAGNOSTIC
+    def test_error_count_critical_is_diagnostic(self) -> None:
+        """_DESC_ERROR_COUNT_CRITICAL must be categorised as DIAGNOSTIC."""
+        assert _DESC_ERROR_COUNT_CRITICAL.entity_category == EntityCategory.DIAGNOSTIC
+
+    def test_error_count_warning_is_diagnostic(self) -> None:
+        """_DESC_ERROR_COUNT_WARNING must be categorised as DIAGNOSTIC."""
+        assert _DESC_ERROR_COUNT_WARNING.entity_category == EntityCategory.DIAGNOSTIC

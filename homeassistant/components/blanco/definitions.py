@@ -36,7 +36,6 @@ class BlancoDeviceType(IntEnum):
 
 
 BLANCO_DEVICE_NAMES: dict[BlancoDeviceType, str] = {
-    BlancoDeviceType.UNDEF: "UNKNOWN",
     BlancoDeviceType.SODA: "EVOL-S PRO",
     BlancoDeviceType.AIO: "CHOICE.ALL",
     BlancoDeviceType.SODA2: "CHOICE.Soda",

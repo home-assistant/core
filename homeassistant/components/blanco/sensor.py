@@ -53,13 +53,26 @@ _DESC_ONLINE = BlancoSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
-_DESC_ERROR_COUNT = BlancoSensorEntityDescription(
-    key="error_count",
-    translation_key="error_count",
+_DESC_ERROR_COUNT_CRITICAL = BlancoSensorEntityDescription(
+    key="error_count_critical",
+    translation_key="error_count_critical",
     value_fn=lambda data: sum(
         1
         for e in data.get("errors", {}).get("errors", [])
-        if e.get("err_type") in (BlancoErrorType.CRITICAL, BlancoErrorType.WARNING)
+        if e.get("err_type") == BlancoErrorType.CRITICAL
+    ),
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
+_DESC_ERROR_COUNT_WARNING = BlancoSensorEntityDescription(
+    key="error_count_warning",
+    translation_key="error_count_warning",
+    value_fn=lambda data: sum(
+        1
+        for e in data.get("errors", {}).get("errors", [])
+        if e.get("err_type") == BlancoErrorType.WARNING
     ),
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=0,
@@ -68,7 +81,8 @@ _DESC_ERROR_COUNT = BlancoSensorEntityDescription(
 
 SENSOR_DESCRIPTIONS_COMMON: tuple[BlancoSensorEntityDescription, ...] = (
     _DESC_ONLINE,
-    _DESC_ERROR_COUNT,
+    _DESC_ERROR_COUNT_CRITICAL,
+    _DESC_ERROR_COUNT_WARNING,
 )
 """Sensor descriptions shared by every BLANCO device type."""
 
@@ -199,10 +213,15 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return error list as attributes (only for the error_count sensor)."""
-        if self.entity_description.key != "error_count":
+        """Return filtered error list for the critical/warning error-count sensors."""
+        key = self.entity_description.key
+        if key == "error_count_critical":
+            severity = BlancoErrorType.CRITICAL
+        elif key == "error_count_warning":
+            severity = BlancoErrorType.WARNING
+        else:
             return None
-        errors: list[dict[str, Any]] = self.coordinator.data.get("errors", {}).get(
+        all_errors: list[dict[str, Any]] = self.coordinator.data.get("errors", {}).get(
             "errors", []
         )
         return {
@@ -218,7 +237,8 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
                     if entry.get("err_ts") is not None
                     else None,
                 }
-                for entry in errors
+                for entry in all_errors
+                if entry.get("err_type") == severity
             ]
         }
 

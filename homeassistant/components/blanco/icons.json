@@ -2,7 +2,8 @@
   "entity": {
     "sensor": {
       "co2_rest": { "default": "mdi:molecule-co2" },
-      "error_count": { "default": "mdi:alert-outline" },
+      "error_count_critical": { "default": "mdi:alert-circle-outline" },
+      "error_count_warning": { "default": "mdi:alert-outline" },
       "filter_rest": { "default": "mdi:air-filter" },
       "online": { "default": "mdi:clock-outline" },
       "set_point_cooling": { "default": "mdi:thermometer" },

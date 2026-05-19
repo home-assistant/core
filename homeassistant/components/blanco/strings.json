@@ -16,8 +16,11 @@
       "filter_rest": {
         "name": "Filter: Remaining capacity"
       },
-      "error_count": {
-        "name": "Active errors"
+      "error_count_critical": {
+        "name": "Critical errors"
+      },
+      "error_count_warning": {
+        "name": "Warnings"
       }
     }
   },
