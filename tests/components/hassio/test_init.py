@@ -638,13 +638,13 @@ async def test_invalid_service_calls(hass: HomeAssistant, app_or_addon: str) -> 
 
     with pytest.raises(Invalid):
         await hass.services.async_call(
-            "hassio", f"{app_or_addon}_start", {app_or_addon: "does_not_exist"}
+            "hassio", f"{app_or_addon}_start", {app_or_addon: "inv@lid"}
         )
     with pytest.raises(Invalid):
         await hass.services.async_call(
             "hassio",
             f"{app_or_addon}_stdin",
-            {app_or_addon: "does_not_exist", "input": "test"},
+            {app_or_addon: "inv@lid", "input": "test"},
         )
 
 
@@ -791,7 +791,7 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
 async def test_partial_backup_legacy_homeassistant_folder(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
-    """Test that the legacy "homeassistant" folder is translated to homeassistant=True."""
+    """Test legacy "homeassistant" folder is translated to homeassistant=True."""
     assert await async_setup_component(hass, "hassio", {})
     supervisor_client.backups.partial_backup.return_value = NewBackup(
         job_id=uuid4(), slug="partial"
@@ -885,7 +885,7 @@ async def test_entry_load_and_unload(hass: HomeAssistant) -> None:
 
 
 async def test_migration_off_hassio(hass: HomeAssistant) -> None:
-    """Test that when a user moves instance off Hass.io, config entry gets cleaned up."""
+    """Test when a user moves instance off Hass.io, config entry gets cleaned up."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -930,7 +930,8 @@ async def test_device_registry_calls(
 
     addons_list.return_value.pop(0)
 
-    # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
+    # Test that when addon is removed, next update will remove the
+    # add-on and subsequent updates won't
     async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(device_registry.devices) == 5

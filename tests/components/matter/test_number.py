@@ -38,7 +38,7 @@ async def test_level_control_config_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test number entities are created for the LevelControl cluster (config) attributes."""
+    """Test number entities are created for LevelControl cluster attributes."""
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     assert state.state == "255"
@@ -208,7 +208,7 @@ async def test_matter_exception_on_write_attribute(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError by using a dimmable_light fixture."""
+    """Test MatterError converts to HomeAssistantError for dimmable_light."""
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     matter_client.write_attribute.side_effect = MatterError("Boom")
@@ -253,15 +253,12 @@ async def test_pump_level(
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 1
-    assert (
-        matter_client.send_device_command.call_args
-        == call(
-            node_id=matter_node.node_id,
-            endpoint_id=1,
-            command=clusters.LevelControl.Commands.MoveToLevel(
-                level=150
-            ),  # 75 * 2 = 150, as the value is multiplied by 2 in the HA to native value conversion
-        )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # 75 * 2 = 150, value is multiplied by 2 in HA to
+        # native value conversion
+        command=clusters.LevelControl.Commands.MoveToLevel(level=150),
     )
 
 
