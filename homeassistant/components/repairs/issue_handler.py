@@ -64,8 +64,8 @@ class RepairsFlow(
         setting issue_id in __init__().
         """
         report_usage(
-            "sets issue_id directly using self <issue_id> which is ignored by the repairs "
-            "platform and set by the RepairsFlowManager",
+            "sets issue_id directly in a RepairFlow using self.issue_id which is ignored by the repairs "
+            "platform and overridden by the RepairsFlowManager",
             core_behavior=ReportBehavior.LOG,
             integration_domain=self.handler,
         )
