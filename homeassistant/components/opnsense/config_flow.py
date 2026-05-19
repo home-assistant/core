@@ -164,7 +164,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             self._entry_data = user_input
             return await self.async_step_interfaces(user_input)
 
-        return await self._show_setup_form({}, errors)
+        return await self._show_setup_form(user_input, errors)
 
     async def async_step_interfaces(
         self, user_input: dict[str, Any]
