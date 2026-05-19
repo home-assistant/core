@@ -32,6 +32,7 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE = "device"
 
 NON_SECURE_PORT = 2101
