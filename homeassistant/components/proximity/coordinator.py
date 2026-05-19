@@ -54,24 +54,24 @@ _EARTH_RADIUS_M: float = 6_371_000.0
 
 # -- Movement window tuning -----------------------------------------------------
 
+# Number of position samples retained per entity (sliding window).
 POSITION_WINDOW_SIZE: int = 8
-"""Number of position samples retained per entity (sliding window)."""
 
+# cos(60°): minimum |cosine| of the angle between v_move and v_zone for the
+# direction to be resolved as 'towards' or 'away_from'.  When the angle exceeds
+# 60° (movement roughly perpendicular to the zone vector) the last valid
+# direction is preserved instead.
 DOT_THRESHOLD_COS: float = 0.5
-"""cos(60°): minimum |cosine| of the angle between v_move and v_zone for the
-   direction to be resolved as 'towards' or 'away_from'.  When the angle exceeds
-   60° (movement roughly perpendicular to the zone vector) the last valid
-   direction is preserved instead."""
 
+# Minimum seconds after which a stationary synthetic sample is injected.  This causes
+# speed to decay toward 0 and the entity to become 'stationary' when no real
+# GPS updates arrive (decay mechanism).
 STALE_THRESHOLD_S_MIN: float = 120.0
-"""Minimum seconds after which a stationary synthetic sample is injected.  This causes
-   speed to decay toward 0 and the entity to become 'stationary' when no real
-   GPS updates arrive (decay mechanism)."""
 
+# Maximum seconds after which a stationary synthetic sample is injected.  This causes
+# speed to decay toward 0 and the entity to become 'stationary' when no real
+# GPS updates arrive (decay mechanism).
 STALE_THRESHOLD_S_MAX: float = 900.0
-"""Maximum seconds after which a stationary synthetic sample is injected.  This causes
-   speed to decay toward 0 and the entity to become 'stationary' when no real
-   GPS updates arrive (decay mechanism)."""
 
 # -- Type alias -----------------------------------------------------------------
 type ProximityConfigEntry = ConfigEntry["ProximityDataUpdateCoordinator"]
@@ -145,7 +145,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     config_entry: ProximityConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
-        """Initialise the coordinator."""
+        """Initialize the coordinator."""
         self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
         self.speed_threshold: float = config_entry.data.get(
             CONF_SPEED_THRESHOLD, DEFAULT_SPEED_THRESHOLD
@@ -305,7 +305,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     ) -> None:
         """Append a real GPS sample for *entity_id*.
 
-        Lazily initialises the EntityMovementState if needed (e.g. when a state
+        Lazily initializes the EntityMovementState if needed (e.g. when a state
         change arrives before the first periodic refresh has run).
         """
         if entity_id not in self._movement:
@@ -540,7 +540,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     del self._movement[entity_id]
                 continue
 
-            # Lazily initialise movement state and seed with current position.
+            # Lazily initialize movement state and seed with current position.
             if entity_id not in self._movement:
                 self._movement[entity_id] = EntityMovementState()
                 lat = tracked_entity_state.attributes.get(ATTR_LATITUDE)
