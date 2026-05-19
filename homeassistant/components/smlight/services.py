@@ -1,7 +1,5 @@
 """SMLIGHT services."""
 
-from __future__ import annotations
-
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import BuzzerPayload
 import voluptuous as vol
