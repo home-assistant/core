@@ -99,10 +99,11 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
                 translation_key="open_access_point_failed",
                 translation_placeholders={"access_point_id": self._access_point_id},
             )
-        self._attr_is_locked = False
-        self.async_write_ha_state()
         if self._cancel_relock:
             self._cancel_relock()
+            self._cancel_relock = None
+        self._attr_is_locked = False
+        self.async_write_ha_state()
         self._cancel_relock = async_track_point_in_utc_time(
             self.hass,
             self._relock,
