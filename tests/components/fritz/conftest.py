@@ -4,7 +4,7 @@ from collections.abc import Generator
 from copy import deepcopy
 import logging
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -21,6 +21,33 @@ from .const import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+MOCK_VPN_CONNECTIONS: dict[str, dict[str, Any]] = {
+    "uid-office": {
+        "name": "Office",
+        "active": True,
+        "connected": False,
+        "uid": "wg-1",
+    },
+}
+MOCK_VPN_CONNECTION_HOME: dict[str, dict[str, Any]] = {
+    "uid-home": {
+        "name": "Home",
+        "active": False,
+        "connected": False,
+        "uid": "wg-2",
+    },
+}
+
+
+@pytest.fixture
+def mock_vpn_session() -> AsyncMock:
+    """Mock fritzboxvpn session."""
+    session = AsyncMock()
+    session.async_get_vpn_connections.return_value = MOCK_VPN_CONNECTIONS
+    session.async_toggle_vpn.return_value = True
+    session.async_close.return_value = None
+    return session
 
 
 class FritzServiceMock:

@@ -3,33 +3,27 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.vpn_coordinator import FritzVpnCoordinator
 from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import MOCK_VPN_CONNECTIONS
 from .const import MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
-VPN_CONNECTIONS = {
-    "uid-office": {
-        "name": "Office",
-        "active": True,
-        "connected": False,
-        "uid": "wg-1",
-    }
-}
-
 
 @pytest.fixture
-def mock_vpn_session() -> AsyncMock:
-    """Mock fritzboxvpn session."""
-    session = AsyncMock()
-    session.async_get_vpn_connections.return_value = VPN_CONNECTIONS
-    session.async_close.return_value = None
-    return session
+def vpn_coordinator(hass: HomeAssistant, mock_vpn_session: AsyncMock) -> FritzVpnCoordinator:
+    """FritzVpnCoordinator with mocked fritzboxvpn session."""
+    with patch(
+        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        return_value=mock_vpn_session,
+    ):
+        return FritzVpnCoordinator(hass, dict(MOCK_USER_DATA), entry_id="test-entry")
 
 
 async def test_vpn_coordinator_starts_with_fritz_entry(
@@ -52,10 +46,132 @@ async def test_vpn_coordinator_starts_with_fritz_entry(
 
     assert entry.state is ConfigEntryState.LOADED
     vpn_data = hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id]
-    assert vpn_data.coordinator.data == VPN_CONNECTIONS
+    assert vpn_data.coordinator.data == MOCK_VPN_CONNECTIONS
     assert vpn_data.coordinator.get_vpn_status("uid-office") == "enabled"
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     mock_vpn_session.async_close.assert_called_once()
     assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
+
+
+async def test_vpn_setup_failure_closes_session(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    mock_vpn_session: AsyncMock,
+) -> None:
+    """Failed VPN setup must close the session; FRITZ!Box Tools still loads."""
+    mock_vpn_session.async_get_vpn_connections.side_effect = ConnectionError(
+        "VPN unavailable"
+    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        return_value=mock_vpn_session,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
+    mock_vpn_session.async_close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("connection_uid", "data", "expected_status"),
+    [
+        ("missing", MOCK_VPN_CONNECTIONS, "unknown"),
+        (
+            "uid-office",
+            {
+                "uid-office": {
+                    "name": "Office",
+                    "active": False,
+                    "connected": False,
+                    "uid": "wg-1",
+                }
+            },
+            "disabled",
+        ),
+        (
+            "uid-office",
+            {
+                "uid-office": {
+                    "name": "Office",
+                    "active": True,
+                    "connected": True,
+                    "uid": "wg-1",
+                }
+            },
+            "connected",
+        ),
+        (
+            "uid-office",
+            {
+                "uid-office": {
+                    "name": "Office",
+                    "active": True,
+                    "connected": False,
+                    "uid": "wg-1",
+                }
+            },
+            "enabled",
+        ),
+    ],
+)
+async def test_vpn_coordinator_get_vpn_status(
+    vpn_coordinator: FritzVpnCoordinator,
+    connection_uid: str,
+    data: dict,
+    expected_status: str,
+) -> None:
+    """get_vpn_status returns the expected VPN status string."""
+    vpn_coordinator.async_set_updated_data(data)
+    assert vpn_coordinator.get_vpn_status(connection_uid) == expected_status
+
+
+async def test_vpn_coordinator_update_auth_error_schedules_reauth(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    mock_vpn_session: AsyncMock,
+) -> None:
+    """Authentication errors during refresh start config entry reauth."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        return_value=mock_vpn_session,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id].coordinator
+    mock_vpn_session.async_get_vpn_connections.side_effect = Exception("login failed")
+
+    with (
+        patch.object(entry, "async_start_reauth") as mock_reauth,
+        pytest.raises(UpdateFailed),
+    ):
+        await coordinator.async_refresh()
+
+    mock_reauth.assert_called_once_with(hass)
+
+
+async def test_vpn_coordinator_update_connection_error_retry_after(
+    vpn_coordinator: FritzVpnCoordinator,
+    mock_vpn_session: AsyncMock,
+) -> None:
+    """Transient connection errors use retry_after on UpdateFailed."""
+    mock_vpn_session.async_get_vpn_connections.side_effect = ConnectionError("timeout")
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await vpn_coordinator.async_refresh()
+
+    assert exc_info.value.retry_after == 300
