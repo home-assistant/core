@@ -250,27 +250,13 @@ def _override_temperature_unit(
         "service_temperature",
         "expected_set_value",
     ),
-    # "temp_set": 23 / "temp_current": 22,
+    # Note: status in the fixture "temp_set": 23 / "temp_current": 22,
     [
         pytest.param(
-            METRIC_SYSTEM,
-            "℉",
-            "℉",
-            -5.6,
-            -5,
-            25,
-            77,
-            id="metric-both-fahrenheit",
+            METRIC_SYSTEM, "℉", "℉", -5.6, -5, 25, 77, id="metric-both-fahrenheit"
         ),
         pytest.param(
-            METRIC_SYSTEM,
-            "℃",
-            "℃",
-            22.0,
-            23.0,
-            25,
-            25,
-            id="metric-both-celsius",
+            METRIC_SYSTEM, "℃", "℃", 22.0, 23.0, 25, 25, id="metric-both-celsius"
         ),
         pytest.param(
             METRIC_SYSTEM,
