@@ -166,19 +166,36 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 return
 
-            if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
+            if event_type == EVENT_TYPE_DISCONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning off and idleing streaming",
+                    "Camera %s has received %s event, turning off and marking as unavailable",
                     data["camera_id"],
                     event_type,
                 )
+                self._attr_is_on = False
+                self._attr_available = False
                 self._attr_is_streaming = False
                 self._monitoring = False
                 self._attr_motion_detection_enabled = False
-            elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
+            elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning on",
+                    "Camera %s has received %s event, turning monitoring off",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._monitoring = False
+                self._attr_motion_detection_enabled = False
+            elif event_type == EVENT_TYPE_CONNECTION:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning on and marking as available",
+                    data["camera_id"],
+                    event_type,
+                )
+                self._attr_is_on = True
+                self._attr_available = True
+            elif event_type == EVENT_TYPE_ON:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning monitoring on",
                     data["camera_id"],
                     event_type,
                 )
@@ -272,7 +289,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self.device.monitoring
                 and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
             )
-            self._attr_motion_detection_enabled = self.device.monitoring
+            self._attr_motion_detection_enabled = self._monitoring
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
