@@ -932,6 +932,7 @@ fressnapftracker==0.2.2
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
+fritzboxvpn==1.0.0
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fumis

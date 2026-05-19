@@ -7,9 +7,13 @@
   "documentation": "https://www.home-assistant.io/integrations/fritz",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["fritzconnection"],
+  "loggers": ["fritzboxvpn", "fritzconnection"],
   "quality_scale": "gold",
-  "requirements": ["fritzconnection[qr]==1.15.1", "xmltodict==1.0.4"],
+  "requirements": [
+    "fritzboxvpn==1.0.0",
+    "fritzconnection[qr]==1.15.1",
+    "xmltodict==1.0.4"
+  ],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:fritzbox:1"

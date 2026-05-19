@@ -178,6 +178,9 @@
       },
       "wi_fi_main_5ghz_high_6ghz": {
         "name": "Main 5 GHz High / 6 GHz"
+      },
+      "wireguard_vpn": {
+        "name": "WireGuard VPN"
       }
     }
   },
@@ -205,6 +208,9 @@
     },
     "update_failed": {
       "message": "Error while updating the data: {error}"
+    },
+    "vpn_toggle_failed": {
+      "message": "Failed to change WireGuard VPN connection {name}.{error}"
     }
   },
   "issues": {

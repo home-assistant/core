@@ -45,6 +45,24 @@ DEFAULT_CONF_OLD_DISCOVERY = False
 CONF_FEATURE_DEVICE_TRACKING = "feature_device_tracking"
 DEFAULT_CONF_FEATURE_DEVICE_TRACKING = True
 
+VPN_UNIQUE_ID_SUFFIX_SWITCH = "wireguard_vpn"
+VPN_MODEL_WIREGUARD = "WireGuard VPN"
+VPN_RETRY_AFTER_SECONDS = 300
+
+VPN_STATUS_CONNECTED = "connected"
+VPN_STATUS_ENABLED = "enabled"
+VPN_STATUS_DISABLED = "disabled"
+VPN_STATUS_UNKNOWN = "unknown"
+
+VPN_AUTH_INDICATORS = (
+    "login failed",
+    "invalid sid",
+    "authentication failed",
+    "invalid credentials",
+    "unauthorized",
+    "access denied",
+)
+
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"

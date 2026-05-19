@@ -25,6 +25,7 @@ from .const import (
     Platform,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
+from .vpn_switch import async_setup_vpn_switches
 from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
@@ -312,6 +313,8 @@ async def async_setup_entry(
             hass, avm_wrapper.signal_device_new, async_update_avm_device
         )
     )
+
+    await async_setup_vpn_switches(hass, entry, async_add_entities)
 
 
 class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity):
