@@ -21,21 +21,10 @@ tools:
 safe-outputs:
   add-comment:
     max: 1
-    target: "*"
+    target: ${{ inputs.pull_request_number }}
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.pull_request_number }}
   cancel-in-progress: true
-pre-agent-steps:
-  - name: Inject workflow_dispatch PR number into agent prompt
-    env:
-      PR_NUMBER: ${{ inputs.pull_request_number }}
-    run: |
-      {
-        echo
-        echo "<dispatch-context>"
-        echo "- **pull-request-number**: ${PR_NUMBER}"
-        echo "</dispatch-context>"
-      } >> /tmp/gh-aw/aw-prompts/prompt.txt
 post-steps:
   - name: Verify agent produced an add_comment safe-output
     if: always()
@@ -81,10 +70,9 @@ standards.
 ## Step 1 — Identify Changed Packages
 
 This workflow is triggered via `workflow_dispatch`. The PR number to check is
-provided in the `<dispatch-context>` block appended to this prompt as
-`pull-request-number`. Use that PR number for **every** GitHub API call in the
-steps below (fetching the diff, the PR body, posting the comment, etc.). Do
-**not** rely on `github.event.pull_request` — it is not populated for
+**#${{ inputs.pull_request_number }}**. Use that PR number for **every** GitHub
+API call in the steps below (fetching the diff, the PR body, etc.). Do **not**
+rely on `github.event.pull_request` — it is not populated for
 `workflow_dispatch` runs.
 
 Use the GitHub tool to fetch the PR diff for that PR number. Look for
@@ -168,9 +156,8 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the `pull-request-number` provided
-in the `<dispatch-context>` block.
-Extract all URLs present in the PR body.
+Read the PR body from the GitHub API for PR
+#${{ inputs.pull_request_number }}. Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required
 
@@ -324,12 +311,6 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 
 **Always** post a review comment using `add_comment`, regardless of whether
 packages pass or fail. Use the following structure:
-
-**Target PR**: This workflow runs via `workflow_dispatch`, so the safe-output
-handler cannot derive the target PR from the event. You **must** include the
-`item_number` field on every `add_comment` call and set it to the value of
-`pull-request-number` from the `<dispatch-context>` block — otherwise the
-comment will not be posted.
 
 **Note on deduplication**: The workflow automatically updates any previous
 requirements-check comment on the PR in place (preserving its position in the
