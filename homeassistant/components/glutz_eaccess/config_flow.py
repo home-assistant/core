@@ -58,7 +58,7 @@ def _invitation_confirm_schema(host: str, email: str) -> vol.Schema:
     )
 
 
-class GlutzConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GlutzConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Glutz eAccess."""
 
     VERSION = 1

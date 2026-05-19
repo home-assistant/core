@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-type GlutzConfigEntry = ConfigEntry["GlutzCoordinator"]
+type GlutzConfigEntry = ConfigEntry[GlutzCoordinator]
 
 
 class GlutzCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
