@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
+from async_upnp_client.exceptions import UpnpActionResponseError
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.models import (
@@ -46,6 +47,8 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+# WiiM reports this AVTransport fault as "Transition not allowed".
+UPNP_AV_TRANSPORT_TRANSITION_NOT_AVAILABLE = 701
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -68,6 +71,15 @@ SUPPORT_WIIM_BASE = (
 )
 
 
+def _upnp_action_response_error(err: BaseException) -> UpnpActionResponseError | None:
+    """Return the wrapped UPnP action response error, if present."""
+    cause = err.__cause__
+    if isinstance(cause, UpnpActionResponseError):
+        return cause
+
+    return None
+
+
 def media_player_exception_wrap[
     _WiimMediaPlayerEntityT: WiimMediaPlayerEntity,
     **_P,
@@ -83,7 +95,22 @@ def media_player_exception_wrap[
     ) -> _R:
         try:
             result = await func(self, *args, **kwargs)
-        except (WiimDeviceException, WiimRequestException, WiimException) as err:
+        except WiimDeviceException as err:
+            if _upnp_action_response_error(err) is not None:
+                # A UPnP action response means the device answered the request and
+                # rejected that command, so the failure should not make HA mark the
+                # player unavailable.
+                raise HomeAssistantError(
+                    f"{func.__name__} failed for {self.entity_id}"
+                ) from err
+
+            # Preserve the previous behavior for WiiM device errors we do not
+            # understand yet: assume they are critical communication failures.
+            await self._async_handle_critical_error(err)
+            raise HomeAssistantError(
+                f"{func.__name__} failed for {self.entity_id}"
+            ) from err
+        except (WiimRequestException, WiimException) as err:
             await self._async_handle_critical_error(err)
             raise HomeAssistantError(
                 f"{func.__name__} failed for {self.entity_id}"
@@ -544,7 +571,34 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         target_device = self._get_command_target_device("media_pause")
-        await target_device.async_pause()
+        try:
+            await target_device.async_pause()
+        except WiimDeviceException as err:
+            upnp_error = _upnp_action_response_error(err)
+            if upnp_error is None or (
+                upnp_error.error_code != UPNP_AV_TRANSPORT_TRANSITION_NOT_AVAILABLE
+            ):
+                raise
+
+            if not target_device.supports_http_api:
+                raise
+
+            LOGGER.debug(
+                "Device %s rejected pause for the current transport state; "
+                "refreshing status instead",
+                target_device.udn,
+            )
+            # The cached state can still be playing if an earlier pause already
+            # reached the device. Refresh before treating 701 as idempotent.
+            await target_device.async_update_http_status()
+            if target_device.playing_status in {
+                SDKPlayingStatus.PAUSED,
+                SDKPlayingStatus.STOPPED,
+            }:
+                return
+
+            raise
+
         await target_device.sync_device_duration_and_position()
 
     @media_player_exception_wrap

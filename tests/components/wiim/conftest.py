@@ -84,6 +84,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.av_transport_event_callback = None
         mock.rendering_control_event_callback = None
         mock.play_queue_event_callback = None
+        mock.set_available = MagicMock()
         mock.output_mode = "speaker"
         mock.supported_input_modes = (InputMode.LINE_IN.display_name,)  # type: ignore[attr-defined]
         mock.supported_output_modes = (
