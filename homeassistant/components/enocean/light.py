@@ -68,7 +68,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
 
-        bval = math.floor(self._attr_brightness)
+        bval = math.floor(self._attr_brightness / 256.0 * 100.0)
         if bval == 0:
             bval = 1
         command = [0xA5, 0x02, bval, 0x01, 0x09]
@@ -95,13 +95,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """
         if telegram.rorg == 0xA5 and telegram.telegram_data[0] == 0x02:
             val = telegram.telegram_data[1]
-            edimr = telegram.bitstring_raw_value(
-                29, 1
-            )  # extract the EDIMR bit to determine if the value is absolute or relative
-            if edimr == 0x00:  # absolute value between 0 and 255, no conversion needed
-                self._attr_brightness = val
-            elif edimr == 0x01:  # relative value, convert range 0-100 to 0-255
-                self._attr_brightness = math.floor(val / 100.0 * 256.0)
+            self._attr_brightness = math.floor(val / 100.0 * 256.0)
 
             self._attr_is_on = bool(val != 0)
             self.schedule_update_ha_state()
