@@ -141,6 +141,7 @@ jobs:
             await main(core, context);
       - name: Validate COPILOT_GITHUB_TOKEN secret
         id: validate-secret
+        if: ${{ secrets.COPILOT_GITHUB_TOKEN != '' }}
         run: bash "${RUNNER_TEMP}/gh-aw/actions/validate_multi_secret.sh" COPILOT_GITHUB_TOKEN 'GitHub Copilot CLI' https://github.github.com/gh-aw/reference/engines/#github-copilot-default
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -724,6 +725,7 @@ jobs:
         run: bash "${RUNNER_TEMP}/gh-aw/actions/audit_pre_agent_workspace.sh"
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
+        if: ${{ secrets.COPILOT_GITHUB_TOKEN != '' }}
         # Copilot CLI tool arguments (sorted):
         timeout-minutes: 20
         run: |
