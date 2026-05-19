@@ -1546,6 +1546,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/satel_integra/ @Tommatheussen
 /homeassistant/components/saunum/ @mettolen
 /tests/components/saunum/ @mettolen
+/homeassistant/components/scaleway_object_storage/ @BjoernPetersen
+/tests/components/scaleway_object_storage/ @BjoernPetersen
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schedule/ @home-assistant/core
