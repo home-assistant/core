@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from switchbot_api import (
     Device,
@@ -12,6 +13,8 @@ from switchbot_api import (
 )
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
+from homeassistant.components.switchbot_cloud.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
@@ -19,6 +22,7 @@ from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
@@ -225,3 +229,122 @@ async def test_posting_to_webhook(
     await hass.async_block_till_done()
 
     mock_setup_webhook.assert_called_once()
+
+
+async def test_polling_is_only_disabled_after_webhook_delivery(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test polling stays enabled until a webhook is received."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+    mock_get_webook_configuration.return_value = {"urls": ["https://example.com"]}
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="vacuum-1",
+            deviceName="vacuum-name-1",
+            deviceType="K10+",
+            hubDeviceId=None,
+        ),
+    ]
+    mock_get_status.return_value = {
+        "battery": 71,
+        "onlineStatus": "online",
+        "workingStatus": "Paused",
+    }
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Validate the state is fetched initially
+    entity_id = "vacuum.vacuum_name_1"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["battery_level"] == 71
+
+    # Change API return values and wait for update
+    mock_get_status.return_value = {
+        "battery": 60,
+        "onlineStatus": "online",
+        "workingStatus": "Paused",
+    }
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Validate that the state was updated again via fetch
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["battery_level"] == 60
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    client = await hass_client_no_auth()
+    await client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "eventType": "changeReport",
+            "eventVersion": "1",
+            "context": {
+                "battery": 74,
+                "deviceType": "WoSweeperMini",
+                "deviceMac": "vacuum-1",
+                "onlineStatus": "online",
+                "workingStatus": "Clearing",
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    mock_get_status.reset_mock()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # After receiving a webhook, no fetch should happen
+    mock_get_status.assert_not_called()
+
+
+async def test_setup_entry_skips_webhook_without_external_url(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook registration is skipped without an external URL."""
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="vacuum-1",
+            deviceName="vacuum-name-1",
+            deviceType="K10+",
+            hubDeviceId=None,
+        ),
+    ]
+    mock_get_status.return_value = {"power": PowerState.ON.value}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    mock_get_webook_configuration.assert_not_called()
+    mock_delete_webhook.assert_not_called()
+    mock_setup_webhook.assert_not_called()
+    assert entry.data[CONF_WEBHOOK_ID] not in hass.data.get(WEBHOOK_DOMAIN, {})
+    assert "no external URL is available" in caplog.text
