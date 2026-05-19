@@ -19,11 +19,11 @@
         "title": "Fritz!Box VPN Found"
       },
       "reauth_confirm": {
-        "description": "Authentication failed for {host}. Enter valid credentials.",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "username": "Username"
         },
+        "description": "Authentication failed for {host}. Enter valid credentials.",
         "title": "Reauthenticate Fritz!Box VPN"
       },
       "reconfigure": {
