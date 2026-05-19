@@ -224,7 +224,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==4.0.0
+aiodns==4.0.3
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -282,7 +282,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.14.0
+aioimmich==0.14.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -2386,7 +2386,7 @@ pyyardian==1.1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qbittorrent
-qbittorrent-api==2024.9.67
+qbittorrent-api==2026.5.1
 
 # homeassistant.components.qbus
 qbusmqttapi==1.4.3

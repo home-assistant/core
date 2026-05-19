@@ -470,9 +470,11 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return self._player["volume"] == 0
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self._player["item_id"]
+        if (item_id := self._player["item_id"]) == 0:
+            return None
+        return str(item_id)
 
     @property
     def media_content_type(self):

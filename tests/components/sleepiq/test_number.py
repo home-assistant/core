@@ -8,7 +8,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -178,6 +184,7 @@ async def test_foot_warmer_timer(
     )
     assert state.state == "120.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:timer"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_MIN) == 30
     assert state.attributes.get(ATTR_MAX) == 360
     assert state.attributes.get(ATTR_STEP) == 30
@@ -217,6 +224,7 @@ async def test_core_climate_timer(
     )
     assert state.state == "240.0"
     assert state.attributes.get(ATTR_ICON) == "mdi:timer"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_MIN) == 0
     assert state.attributes.get(ATTR_MAX) == 600
     assert state.attributes.get(ATTR_STEP) == 30

@@ -717,6 +717,52 @@ async def test_if_fires_using_at_sensor_with_offset(
     )
 
 
+async def test_if_fires_using_at_sensor_dict_without_offset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for firing at sensor time using dict format without offset."""
+    now = dt_util.now()
+
+    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+
+    freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": {
+                        "entity_id": "sensor.next_alarm",
+                    },
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"some": "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "sensor.next_alarm"
+
+
 @pytest.mark.parametrize(
     "conf",
     [

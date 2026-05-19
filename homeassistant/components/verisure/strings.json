@@ -51,6 +51,11 @@
       }
     }
   },
+  "exceptions": {
+    "arm_state_failed": {
+      "message": "Failed to change alarm state. Verify your code is correct and that your account is not temporarily locked."
+    }
+  },
   "options": {
     "step": {
       "init": {

@@ -372,6 +372,10 @@ async def test_sync_google_on_home_assistant_start(
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
+        assert len(mock_sync.mock_calls) == 0
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
 
