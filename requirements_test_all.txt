@@ -890,6 +890,9 @@ fints==3.1.0
 # homeassistant.components.fish_audio
 fish-audio-sdk==1.1.0
 
+# homeassistant.components.flowspeech
+flowspeech-sdk==0.1.0
+
 # homeassistant.components.fitbit
 fitbit-web-api==2.13.5
 

@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities in this integration do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: TTS platform has no state to mark unavailable.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This service integration has no discovery.
+  discovery:
+    status: exempt
+    comment: This service integration has no discovery.
+  docs-data-update:
+    status: exempt
+    comment: This service integration has no data polling endpoint.
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: This service integration does not support devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This service integration has no devices.
+  entity-category:
+    status: exempt
+    comment: The TTS entity has no entity category.
+  entity-device-class:
+    status: exempt
+    comment: There is no device class for TTS entities.
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: This service integration has no devices.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo

@@ -1,0 +1,11 @@
+{
+  "domain": "flowspeech",
+  "name": "FlowSpeech",
+  "codeowners": ["@hengyin1"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flowspeech",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["flowspeech-sdk==0.1.0"]
+}

@@ -228,6 +228,7 @@ FLOWS = {
         "firefly_iii",
         "fireservicerota",
         "fish_audio",
+        "flowspeech",
         "fitbit",
         "fivem",
         "fjaraskupan",
