@@ -88,7 +88,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_supported_features = CameraEntityFeature.ON_OFF
     _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
@@ -176,17 +176,15 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 self._attr_is_streaming = False
                 self._monitoring = False
+                self._attr_motion_detection_enabled = False
             elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event,"
-                    " turning on and enabling streaming"
-                    " if applicable",
+                    "Camera %s has received %s event, turning on",
                     data["camera_id"],
                     event_type,
                 )
-                if self.device_type != "NDB":
-                    self._attr_is_streaming = True
                 self._monitoring = True
+                self._attr_motion_detection_enabled = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -209,6 +207,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        if self._monitoring is False:
+            return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
         except (
@@ -269,8 +269,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         if self.device_type == "NDB":
             self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         elif self.device.monitoring is not None:
-            self._monitoring = self.device.monitoring
-            self._attr_is_streaming = self.device.monitoring
+            self._monitoring = (
+                self.device.monitoring
+                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            )
             self._attr_motion_detection_enabled = self.device.monitoring
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
