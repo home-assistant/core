@@ -205,7 +205,7 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
     def name(self) -> str:
         """Return the name of the service feature."""
         return service_feature_name(
-            self._char.service, cast("str", self.entity_description.name)
+            self._char.service, cast(str, self.entity_description.name)
         )
 
     @property
@@ -251,21 +251,8 @@ async def async_setup_entry(
             return False
         if not (description := CHARACTERISTIC_BINARY_SENSORS.get(char.type)):
             return False
-        if (
-            char.type == CharacteristicsTypes.STATUS_LO_BATT
-            and char.service.accessory.services.first(
-                service_type=ServicesTypes.BATTERY_SERVICE
-            )
-        ):
-            return False
-        if (
-            char.type == CharacteristicsTypes.STATUS_LO_BATT
-            and not _is_accessory_named_service(char)
-        ):
-            return False
-        if (
-            char.type == CharacteristicsTypes.STATUS_LO_BATT
-            and _has_earlier_service_with_same_name_and_characteristic(char)
+        if char.type == CharacteristicsTypes.STATUS_LO_BATT and (
+            _should_skip_low_battery_characteristic(char)
         ):
             return False
 
@@ -280,32 +267,35 @@ async def async_setup_entry(
     conn.add_char_factory(async_add_characteristic)
 
 
-def _is_accessory_named_service(char: Characteristic) -> bool:
-    """Check if the characteristic belongs to the accessory's named service."""
-    service_name = char.service.value(CharacteristicsTypes.NAME)
-    return service_name is not None and folded_name(service_name) == folded_name(
-        char.service.accessory.name
+def _should_skip_low_battery_characteristic(char: Characteristic) -> bool:
+    """Check if the low battery characteristic should not create an entity."""
+    if char.service.accessory.services.first(
+        service_type=ServicesTypes.BATTERY_SERVICE
+    ):
+        return True
+
+    if not _is_accessory_level_low_battery_service(char.service):
+        return True
+
+    return _has_earlier_accessory_level_low_battery_characteristic(char)
+
+
+def _is_accessory_level_low_battery_service(service: Service) -> bool:
+    """Check if the service low battery status represents the accessory."""
+    service_name = service.value(CharacteristicsTypes.NAME)
+    return service_name is None or folded_name(service_name) == folded_name(
+        service.accessory.name
     )
 
 
-def _has_earlier_service_with_same_name_and_characteristic(
+def _has_earlier_accessory_level_low_battery_characteristic(
     char: Characteristic,
 ) -> bool:
-    """Check if the accessory already exposed the same named service characteristic."""
-    service_name = char.service.value(CharacteristicsTypes.NAME)
-    if service_name is None:
-        return False
-    folded_service_name = folded_name(service_name)
-
+    """Check if the accessory already exposed an accessory low battery status."""
     for service in char.service.accessory.services:
         if service.iid >= char.service.iid:
             continue
-        other_service_name = service.value(CharacteristicsTypes.NAME)
-        if (
-            other_service_name is not None
-            and folded_name(other_service_name) == folded_service_name
-            and service.has(char.type)
-        ):
+        if _is_accessory_level_low_battery_service(service) and service.has(char.type):
             return True
 
     return False

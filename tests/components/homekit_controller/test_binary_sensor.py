@@ -232,6 +232,26 @@ def create_sensor_with_duplicate_low_battery_characteristics(
         low_battery.value = 0
 
 
+def create_sensor_with_unnamed_low_battery_characteristics(
+    accessory: Accessory,
+) -> None:
+    """Define unnamed sensor services that repeat the same low battery status."""
+    for service_type, characteristic_type in (
+        (ServicesTypes.TEMPERATURE_SENSOR, CharacteristicsTypes.TEMPERATURE_CURRENT),
+        (
+            ServicesTypes.HUMIDITY_SENSOR,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
+        ),
+    ):
+        service = accessory.add_service(service_type)
+
+        current = service.add_char(characteristic_type)
+        current.value = 0
+
+        low_battery = service.add_char(CharacteristicsTypes.STATUS_LO_BATT)
+        low_battery.value = 0
+
+
 def create_sensor_with_battery_service(accessory: Accessory) -> None:
     """Define a sensor with its own battery service."""
     service = accessory.add_service(
@@ -357,6 +377,23 @@ async def test_duplicate_low_battery_characteristics_create_single_binary_sensor
     low_battery = hass.states.get("binary_sensor.shared_sensor_low_battery")
     assert low_battery
     assert hass.states.get("binary_sensor.shared_sensor_low_battery_2") is None
+
+
+async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test unnamed low battery characteristics on one sensor create one entity."""
+    accessory = Accessory.create_with_info(
+        get_next_aid(), "Unnamed Sensor", "example.com", "Test", "0001", "0.1"
+    )
+    create_sensor_with_unnamed_low_battery_characteristics(accessory)
+
+    await setup_test_accessories(hass, [accessory])
+
+    low_battery = hass.states.get("binary_sensor.unnamed_sensor_low_battery")
+    assert low_battery
+    assert hass.states.get("binary_sensor.unnamed_sensor_low_battery_2") is None
 
 
 async def test_low_battery_characteristic_ignored_with_battery_service(

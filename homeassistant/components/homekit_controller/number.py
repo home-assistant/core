@@ -174,5 +174,5 @@ class HomeKitServiceNumber(HomeKitNumber):
     def name(self) -> str:
         """Return the name of the service feature."""
         return service_feature_name(
-            self._char.service, cast("str", self.entity_description.name)
+            self._char.service, cast(str, self.entity_description.name)
         )
