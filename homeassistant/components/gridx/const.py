@@ -16,5 +16,7 @@ SUPPORTED_OEMS: Final[dict[str, str]] = {
     "eon-home": "EON Home",
 }
 
+API_BASE_URL: Final = "https://api.gridx.de"
+
 LIVE_UPDATE_INTERVAL = timedelta(seconds=30)
 HIST_UPDATE_INTERVAL = timedelta(hours=1)
