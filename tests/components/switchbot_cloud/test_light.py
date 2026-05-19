@@ -548,3 +548,68 @@ async def test_candle_warmer_lamp(
         mock_send_command.assert_called()
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
+
+
+async def test_air_purifier(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test Air Purifier Light Entity."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="light-id-1",
+            deviceName="light-1",
+            deviceType="Air Purifier VOC",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "power": "off",
+        },
+        {
+            "power": "off",
+        },
+        {
+            "power": "off",
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "light.light_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "rgb_color": (122, 122, 122)},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()

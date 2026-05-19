@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import math
 from typing import Any
 
 from switchbot_api import (
@@ -16,6 +17,10 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import SwitchbotCloudConfigEntry
 from .const import AFTER_COMMAND_REFRESH, AirPurifierMode
@@ -130,15 +135,12 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     """Representation of a Switchbot air purifier."""
 
     _api: SwitchBotAPI
-    _attr_supported_features = (
-        FanEntityFeature.PRESET_MODE
-        | FanEntityFeature.TURN_OFF
-        | FanEntityFeature.TURN_ON
-    )
     _attr_preset_modes = AirPurifierMode.get_modes()
     _attr_translation_key = "air_purifier"
     _attr_name = None
     _attr_is_on: bool | None = None
+    _attr_speed_count = 3
+    _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
     @property
     def is_on(self) -> bool | None:
@@ -149,12 +151,34 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         self._attr_is_on = self.coordinator.data.get("power") == STATE_ON.upper()
         mode = self.coordinator.data.get("mode")
         self._attr_preset_mode = (
             AirPurifierMode(mode).name.lower() if mode is not None else None
         )
+        if self.preset_mode == AirPurifierMode.NORMAL.name.lower():
+            self._attr_supported_features = (
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON
+                | FanEntityFeature.SET_SPEED
+            )
+        else:
+            self._attr_supported_features = (
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON
+            )
+
+        gear = self.coordinator.data.get("fanGear")
+        if gear is not None:
+            self._attr_percentage = ranged_value_to_percentage(
+                low_high_range=(
+                    1,
+                    3,
+                ),
+                value=gear,
+            )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the air purifier."""
@@ -178,13 +202,6 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the air purifier."""
-
-        _LOGGER.debug(
-            "Switchbot air purifier to set turn on %s %s %s",
-            percentage,
-            preset_mode,
-            self._attr_unique_id,
-        )
         await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
@@ -192,7 +209,21 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
 
-        _LOGGER.debug("Switchbot air purifier to set turn off %s", self._attr_unique_id)
         await self.send_api_command(CommonCommands.OFF)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the air purifier."""
+        fan_gear = math.ceil(
+            percentage_to_ranged_value(low_high_range=(1, 3), percentage=percentage)
+        )
+        if fan_gear == 0:
+            await self.send_api_command(CommonCommands.OFF)
+        else:
+            await self.send_api_command(
+                AirPurifierCommands.SET_MODE,
+                parameters={"mode": 1, "fanGear": fan_gear},
+            )
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()

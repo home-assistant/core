@@ -111,6 +111,50 @@ async def test_switchmode_bot(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("service", "childLock", "state"),
+    [
+        (
+            SERVICE_TURN_OFF,
+            0,
+            STATE_OFF,
+        ),
+        (
+            SERVICE_TURN_ON,
+            1,
+            STATE_ON,
+        ),
+    ],
+)
+async def test_switchmode_air_purifier_child_lock(
+    hass: HomeAssistant, mock_list_devices, mock_get_status, service, childLock, state
+) -> None:
+    """Test air_purifier_child_lock."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="switch-id-1",
+            deviceName="switch-1",
+            deviceType="Air Purifier VOC",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [{"childLock": 0}, {"childLock": childLock}]
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "switch.switch_1"
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert hass.states.get(entity_id).state == state
+
+
 async def test_pressmode_bot_no_switch_entity(
     hass: HomeAssistant,
     mock_list_devices,

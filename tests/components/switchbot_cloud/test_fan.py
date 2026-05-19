@@ -289,6 +289,26 @@ async def test_air_purifier(
                 {"mode": 3},
             ),
         ),
+        (
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 33},
+            (
+                "air-purifier-id-1",
+                switchbot_api.AirPurifierCommands.SET_MODE,
+                "command",
+                {"mode": 1, "fanGear": 1},
+            ),
+        ),
+        (
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            (
+                "air-purifier-id-1",
+                switchbot_api.CommonCommands.OFF,
+                "command",
+                "default",
+            ),
+        ),
     ],
 )
 async def test_air_purifier_controller(
@@ -301,7 +321,7 @@ async def test_air_purifier_controller(
 ) -> None:
     """Test controlling the air purifier with mocked delay."""
     mock_list_devices.return_value = [AIR_PURIFIER_INFO]
-    mock_get_status.return_value = {"power": "OFF", "mode": 2}
+    mock_get_status.return_value = {"power": "OFF", "mode": 1, "fanGear": 1}
 
     await configure_integration(hass)
     fan_id = "fan.air_purifier_1"

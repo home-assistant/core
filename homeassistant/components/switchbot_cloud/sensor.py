@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -40,6 +41,7 @@ SENSOR_TYPE_CURRENT = "electricCurrent"
 SENSOR_TYPE_POWER_CONSUMPTION = "weight"
 SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
+SENSOR_TYPE_PM_25 = "pm"
 
 
 RELAY_SWITCH_2PM_SENSOR_TYPE_POWER = "Power"
@@ -121,6 +123,13 @@ CO2_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+)
+
+PM25_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
+    key=SENSOR_TYPE_PM_25,
+    device_class=SensorDeviceClass.PM25,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 )
 
 POWER_CONSUMPTION_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
@@ -276,6 +285,8 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
     "AI Art Frame": (BATTERY_DESCRIPTION,),
+    "Air Purifier PM2.5": (PM25_DESCRIPTION,),
+    "Air Purifier Table PM2.5": (PM25_DESCRIPTION,),
     "WeatherStation": (
         BATTERY_DESCRIPTION,
         TEMPERATURE_DESCRIPTION,

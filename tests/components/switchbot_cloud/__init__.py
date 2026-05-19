@@ -29,7 +29,7 @@ AIR_PURIFIER_INFO = Device(
     version="V1.0",
     deviceId="air-purifier-id-1",
     deviceName="air-purifier-1",
-    deviceType="Air Purifier Table PM2.5",
+    deviceType="Air Purifier",
     hubDeviceId="test-hub-id",
 )
 
