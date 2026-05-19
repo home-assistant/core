@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -93,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     @callback
-    def _start_watcher(_event: Event) -> None:
+    def _start_watcher(_hass: HomeAssistant) -> None:
         """Start the image watcher in the event loop."""
         watcher.start()
 
@@ -102,10 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         """Stop the image watcher in the event loop."""
         watcher.stop()
 
-    entry.async_on_unload(watcher.stop)
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start_watcher)
-    )
+    entry.async_on_unload(async_at_started(hass, _start_watcher))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
     )
