@@ -1,6 +1,5 @@
 """Support for Freebox cameras."""
 
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -19,9 +18,7 @@ from .const import ATTR_DETECTION, FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_ARGUMENTS = "-pred 1"
+_FFMPEG_ARGUMENTS = "-pred 1"
 
 
 async def async_setup_entry(
@@ -99,7 +96,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
             self.hass,
             self._input,
             output_format=IMAGE_JPEG,
-            extra_cmd=DEFAULT_ARGUMENTS,
+            extra_cmd=_FFMPEG_ARGUMENTS,
         )
 
     async def handle_async_mjpeg_stream(
@@ -107,7 +104,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
     ) -> web.StreamResponse:
         """Generate an HTTP MJPEG stream from the camera."""
         stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(self._input, extra_cmd=DEFAULT_ARGUMENTS)
+        await stream.open_camera(self._input, extra_cmd=_FFMPEG_ARGUMENTS)
 
         try:
             stream_reader = await stream.get_reader()
