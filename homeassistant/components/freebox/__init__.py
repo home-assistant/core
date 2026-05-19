@@ -60,33 +60,22 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     router = config_entry.runtime_data
-
-    # Never allow removal of the Freebox router itself. Accept both the raw
-    # API casing and the format_mac()-normalised form for the identifier in
-    # case a future HA release starts normalising identifiers too.
     router_mac = dr.format_mac(router.mac)
-    if (
-        (DOMAIN, router.mac) in device_entry.identifiers
-        or (DOMAIN, router_mac) in device_entry.identifiers
-        or (dr.CONNECTION_NETWORK_MAC, router_mac) in device_entry.connections
-    ):
+
+    # Never allow removal of the Freebox router itself. Persisted identifiers
+    # may pre-date MAC normalisation, so compare the format_mac()-normalised
+    # value of every (DOMAIN, …) identifier rather than the raw one.
+    for domain, identifier in device_entry.identifiers:
+        if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
+            return False
+    if (dr.CONNECTION_NETWORK_MAC, router_mac) in device_entry.connections:
         return False
 
-    # Block removal of Home devices (alarm, switch, sensor, ...) that the
-    # Freebox still reports. Identifiers stored on disk are strings, while
-    # in-memory keys from the Freebox API are integers, so compare as strings.
-    home_device_ids = {str(node_id) for node_id in router.home_devices}
-    for domain, identifier in device_entry.identifiers:
-        if domain == DOMAIN and str(identifier) in home_device_ids:
-            return False
-
     # Block removal of device-tracker entries whose MAC is still on the LAN.
-    # Device registry normalises MACs to lowercase, so do the same on our side.
-    known_macs = {dr.format_mac(mac) for mac in router.devices}
     for connection_type, connection_value in device_entry.connections:
         if (
             connection_type == dr.CONNECTION_NETWORK_MAC
-            and connection_value in known_macs
+            and connection_value in router.devices
         ):
             return False
 

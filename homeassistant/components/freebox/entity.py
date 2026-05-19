@@ -60,6 +60,7 @@ class FreeboxHomeEntity(Entity):
     async def async_update_signal(self) -> None:
         """Update signal."""
         self._node = self._router.home_devices[self._id]
+        # Update name
         if self._sub_node is None:
             self._attr_name = self._node["label"].strip()
         else:

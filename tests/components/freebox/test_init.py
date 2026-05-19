@@ -1,15 +1,11 @@
 """Tests for the Freebox init."""
 
-from unittest.mock import ANY, AsyncMock, Mock
+from unittest.mock import ANY, Mock
 
-from freezegun.api import FrozenDateTimeFactory
 from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox import (
-    SCAN_INTERVAL,
-    async_remove_config_entry_device,
-)
+from homeassistant.components.freebox import async_remove_config_entry_device
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,15 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    DATA_HOME_GET_NODES,
-    DATA_LAN_GET_HOSTS_LIST,
-    DATA_SYSTEM_GET_CONFIG,
-    MOCK_HOST,
-    MOCK_PORT,
-)
+from .const import DATA_LAN_GET_HOSTS_LIST, DATA_SYSTEM_GET_CONFIG, MOCK_HOST, MOCK_PORT
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_setup(hass: HomeAssistant, router: Mock) -> None:
@@ -139,12 +129,6 @@ async def test_remove_config_entry_device(
     assert router_device is not None
     assert await async_remove_config_entry_device(hass, entry, router_device) is False
 
-    # A Home device still reported by the Freebox cannot be removed
-    # (node id 7 is the alarm system in the test fixture).
-    home_device = device_registry.async_get_device(identifiers={(DOMAIN, 7)})
-    assert home_device is not None
-    assert await async_remove_config_entry_device(hass, entry, home_device) is False
-
     # A tracked LAN device whose MAC is still on the Freebox cannot be removed.
     tracked_device = device_registry.async_get_device(
         connections={
@@ -156,15 +140,6 @@ async def test_remove_config_entry_device(
     )
     assert tracked_device is not None
     assert await async_remove_config_entry_device(hass, entry, tracked_device) is False
-
-    # A Home device that the Freebox no longer reports can be removed.
-    stale_home_device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "999")},
-    )
-    assert (
-        await async_remove_config_entry_device(hass, entry, stale_home_device) is True
-    )
 
     # A LAN device whose MAC is gone from the Freebox can be removed.
     stale_tracked_device = device_registry.async_get_or_create(

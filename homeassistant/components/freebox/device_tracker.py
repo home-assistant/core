@@ -38,12 +38,12 @@ async def async_setup_entry(
         for registry_entry in er.async_entries_for_config_entry(
             entity_registry, entry.entry_id
         ):
-            if (
-                registry_entry.domain == DEVICE_TRACKER_DOMAIN
-                and dr.format_mac(registry_entry.unique_id) not in current_macs
-            ):
+            if registry_entry.domain != DEVICE_TRACKER_DOMAIN:
+                continue
+            stale_mac = dr.format_mac(registry_entry.unique_id)
+            if stale_mac not in current_macs:
                 entity_registry.async_remove(registry_entry.entity_id)
-                tracked.discard(registry_entry.unique_id)
+                tracked.discard(stale_mac)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
