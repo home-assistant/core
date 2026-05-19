@@ -20,11 +20,15 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
+)
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
@@ -50,7 +54,11 @@ def tracker_interfaces_schema(
             vol.Optional(
                 CONF_TRACKER_INTERFACES,
                 default=selected or [],
-            ): cv.multi_select(interfaces),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=interfaces, mode=SelectSelectorMode.DROPDOWN, multiple=True
+                )
+            ),
         }
     )
 
@@ -295,7 +303,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"import_failed_{reason}_{url}",
+            f"import_failed_{reason}",
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"import_failed_{reason}",
