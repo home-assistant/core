@@ -20,6 +20,7 @@ from homeassistant.components.lock import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -120,7 +121,7 @@ async def test_unlock_auto_relocks_after_duration(
     assert hass.states.get(ENTITY_AP1).state == LockState.UNLOCKED
 
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED
@@ -152,7 +153,7 @@ async def test_open_sets_state_unlocked_and_cancels_relock(
     )
 
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     # Relock task was cancelled; door stays unlocked
@@ -327,7 +328,7 @@ async def test_unlock_twice_cancels_first_relock(
 
     # After the relock duration the door should lock (new relock task is active)
     freezer.tick(timedelta(seconds=UNLOCK_DURATION + 1))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_AP1).state == LockState.LOCKED

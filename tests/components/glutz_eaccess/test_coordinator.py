@@ -9,6 +9,7 @@ from pyglutz_eaccess import GlutzAuthError, GlutzConnectionError
 from homeassistant.components.glutz_eaccess.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -40,7 +41,7 @@ async def test_coordinator_connection_error_on_update(
     mock_glutz_client.get_access_points.side_effect = GlutzConnectionError
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     coordinator = mock_config_entry.runtime_data
@@ -72,7 +73,7 @@ async def test_auth_error_during_scheduled_update_marks_update_failed(
     mock_glutz_client.get_access_points.side_effect = GlutzAuthError
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     # Entry stays LOADED; coordinator marks the update as failed
