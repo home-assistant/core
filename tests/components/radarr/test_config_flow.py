@@ -160,7 +160,6 @@ async def test_url_rewrite(hass: HomeAssistant) -> None:
     assert result["data"][CONF_URL] == "https://192.168.1.100:443/test"
 
 
-
 async def test_url_rewrite_hyphenated_hostname(hass: HomeAssistant) -> None:
     """Test auth flow url rewrite with hyphenated hostname."""
     with (
@@ -173,7 +172,10 @@ async def test_url_rewrite_hyphenated_hostname(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
-            data={CONF_URL: "https://radarr-anime.example.com:443/", CONF_VERIFY_SSL: False},
+            data={
+                CONF_URL: "https://radarr-anime.example.com/",
+                CONF_VERIFY_SSL: False,
+            },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
