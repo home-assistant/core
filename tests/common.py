@@ -2059,7 +2059,10 @@ async def assert_platform_setup_creates_issue(
         f"platform_integration_no_support_{platform_domain}_{integration_domain}",
     )
 
-    assert issue.domain == "homeassistant"
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is not None
+    assert issue.translation_key == "platform_config_not_supported"
     assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "platform_domain": platform_domain,
