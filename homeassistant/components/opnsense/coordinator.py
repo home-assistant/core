@@ -15,12 +15,11 @@ from aiopnsense import (
     OPNsenseUnknownFirmware,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
-from .types import DeviceDetails, DeviceDetailsByMAC
+from .types import DeviceDetails, DeviceDetailsByMAC, OPNsenseConfigEntry
 
 if TYPE_CHECKING:
     from .device_tracker import OPNsenseDeviceTrackerEntity
@@ -34,7 +33,7 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OPNsenseConfigEntry,
         client: OPNsenseClient,
         interfaces: list[str],
     ) -> None:

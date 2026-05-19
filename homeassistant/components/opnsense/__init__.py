@@ -1,6 +1,5 @@
 """Support for OPNsense Routers."""
 
-from dataclasses import dataclass
 import logging
 
 from aiopnsense import (
@@ -16,7 +15,7 @@ from aiopnsense import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -25,6 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,14 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-@dataclass(slots=True)
-class OPNsenseRuntimeData:
-    """Runtime data for OPNsense config entries."""
-
-    client: OPNsenseClient
-    tracker_interfaces: list[str]
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OPNsense component."""
     if DOMAIN not in config:
@@ -75,7 +67,9 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: OPNsenseConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: OPNsenseConfigEntry
+) -> bool:
     """Set up the OPNsense component from a config entry."""
     url = config_entry.data[CONF_URL]
     session = async_get_clientsession(
@@ -157,6 +151,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: OPNsenseConfigEnt
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: OPNsenseConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: OPNsenseConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
