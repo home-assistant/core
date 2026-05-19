@@ -41,7 +41,9 @@ HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL_LOWER = "md"
 HOMEKIT_MODEL_UPPER = "MD"
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_DOMAIN: Final = "domain"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
