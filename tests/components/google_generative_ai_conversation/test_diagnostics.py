@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the Google Generative AI Conversation integration."""
+"""Tests for the Google Generative AI Conversation diagnostics."""
 
 from syrupy.assertion import SnapshotAssertion
 

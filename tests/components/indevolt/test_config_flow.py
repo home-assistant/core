@@ -21,9 +21,8 @@ from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow_success(
-    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) -> None:
     """Test successful user-initiated config flow."""
 
     # Initiate user flow
@@ -61,10 +60,10 @@ async def test_user_flow_success(
         (Exception("Some unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -117,11 +116,9 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
 ) -> None:
     """Test successful reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -161,11 +158,11 @@ async def test_reconfigure_flow_success(
         (Exception("Some unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -202,11 +199,9 @@ async def test_reconfigure_flow_error(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_different_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_indevolt: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
 ) -> None:
     """Test reconfigure aborts when connecting to a different device."""
     mock_config_entry.add_to_hass(hass)
