@@ -27,7 +27,9 @@ ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
 ATTR_APP_VERSION = "app_version"
 ATTR_DEVICE_NAME = "device_name"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MANUFACTURER = "manufacturer"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODEL = "model"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
@@ -90,8 +92,9 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        # Set to True to indicate that this registration will connect via websocket channel
-        # to receive push notifications.
+        # Set to True to indicate that this registration
+        # will connect via websocket channel to receive
+        # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,

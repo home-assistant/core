@@ -38,6 +38,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_WEEKDAY = "weekday"
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
@@ -68,7 +69,8 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
     valid_at_template,
     msg=(
         "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
-        "'sensor', a combination of a timestamp sensor entity and an offset, or Limited Template"
+        "'sensor', a combination of a timestamp sensor entity"
+        " and an offset, or Limited Template"
     ),
 )
 
@@ -257,17 +259,19 @@ async def async_attach_trigger(  # noqa: C901
                 at_time = _TIME_AT_SCHEMA(render)
             except vol.Invalid as exc:
                 raise HomeAssistantError(
-                    f"Limited Template for 'at' rendered a unexpected value '{render}', expected HH:MM, "
-                    f"HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                    f"Limited Template for 'at' rendered a"
+                    f" unexpected value '{render}', expected"
+                    " HH:MM, HH:MM:SS or Entity ID with domain"
+                    " 'input_datetime' or 'sensor'"
                 ) from exc
 
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
             to_track.append(TrackEntity(at_time, update_entity_trigger_event))
-        elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
-            # entity with offset
-            entity_id: str = at_time.get(CONF_ENTITY_ID, "")
+        elif isinstance(at_time, dict):
+            # entity with optional offset
+            entity_id: str = at_time[CONF_ENTITY_ID]
             offset: timedelta = at_time.get(CONF_OFFSET, timedelta(0))
             update_entity_trigger(
                 entity_id, new_state=hass.states.get(entity_id), offset=offset

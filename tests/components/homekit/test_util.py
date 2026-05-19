@@ -133,15 +133,19 @@ def test_validate_entity_config() -> None:
         {
             "switch.test": {
                 CONF_TYPE: "sprinkler",
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number entity
-                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
+                # Must be input_number entity
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+                # Must be sensor (timestamp) entity
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
             }
         },
         {"fan.test": {CONF_TYPE: "invalid_type"}},
         {
             "valve.test": {
-                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number
+                # Must be sensor (timestamp) entity
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
+                # Must be input_number
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             }
         },
         {

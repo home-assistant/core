@@ -75,7 +75,9 @@ def aqi_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
         ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
         ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
         ATTR_TIME: parser.parse(
-            f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}:00 {data[ATTR_API_REPORT_TZ]}",
+            f"{data[ATTR_API_REPORT_DATE]} "
+            f"{data[ATTR_API_REPORT_HOUR]}:00 "
+            f"{data[ATTR_API_REPORT_TZ]}",
             tzinfos=US_TZ_OFFSETS,
         ).isoformat(),
     }
