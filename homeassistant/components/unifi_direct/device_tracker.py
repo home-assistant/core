@@ -1,75 +1,70 @@
-"""Support for Unifi AP direct access."""
+"""Support for UniFi AP direct access as device tracker using Coordinator."""
 
-import logging
-from typing import Any
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SSH_PORT = 22
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-    }
-)
+from .coordinator import UniFiDirectDataUpdateCoordinator
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
-    """Validate the configuration and return a Unifi direct scanner."""
-    scanner = UnifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
-    return scanner if scanner.update_clients() else None
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for UniFi AP direct."""
+    coordinator: UniFiDirectDataUpdateCoordinator = config_entry.runtime_data
+    tracked: set[str] = set()
+
+    @callback
+    def _async_update_devices() -> None:
+        """Add new devices from the coordinator."""
+        new_entities: list[UnifiScannerEntity] = []
+        for mac in coordinator.data:
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(UnifiScannerEntity(coordinator, mac))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    _async_update_devices()
 
 
-class UnifiDeviceScanner(DeviceScanner):
-    """Class which queries Unifi wireless access point."""
+class UnifiScannerEntity(
+    CoordinatorEntity[UniFiDirectDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a device connected to a UniFi AP."""
 
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize the scanner."""
-        self.clients: dict[str, dict[str, Any]] = {}
-        self.ap = UniFiAP(
-            target=config[CONF_HOST],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
-            port=config[CONF_PORT],
-        )
+    def __init__(self, coordinator: UniFiDirectDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        device = coordinator.data.get(mac, {})
+        self._attr_name = device.get("hostname") or mac
 
-    def scan_devices(self) -> list[str]:
-        """Scan for new devices and return a list with found device IDs."""
-        self.update_clients()
-        return list(self.clients)
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the AP."""
+        return self._mac in self.coordinator.data
 
-    def get_device_name(self, device: str) -> str | None:
-        """Return the name of the given device or None if we don't know."""
-        client_info = self.clients.get(device)
-        if client_info:
-            return client_info.get("hostname")
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("ip")
         return None
 
-    def update_clients(self) -> bool:
-        """Update the client info from AP."""
-        try:
-            self.clients = self.ap.get_clients()
-        except UniFiAPConnectionException as e:
-            _LOGGER.error("Failed to connect to accesspoint: %s", str(e))
-            return False
-        except UniFiAPDataException as e:
-            _LOGGER.error("Failed to get proper response from accesspoint: %s", str(e))
-            return False
-
-        return True
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("hostname")
+        return None

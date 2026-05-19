@@ -1871,6 +1871,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/unifi_access/ @imhotep @RaHehl
 /tests/components/unifi_access/ @imhotep @RaHehl
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
+/tests/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifi_discovery/ @RaHehl
 /tests/components/unifi_discovery/ @RaHehl
 /homeassistant/components/unifiled/ @florisvdk
