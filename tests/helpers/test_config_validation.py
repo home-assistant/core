@@ -2052,6 +2052,7 @@ _COMMENT_SCHEMA_PARAMS = [
     ),
 ]
 
+
 @pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
 @pytest.mark.usefixtures("hass")
 def test_base_schemas_accept_comment(
