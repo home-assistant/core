@@ -119,7 +119,10 @@ async def test_webhook_handle_render_template(
         "one": "Hello world",
         "two": {"error": "TypeError: object of type 'datetime.datetime' has no len()"},
         "three": {
-            "error": "TemplateSyntaxError: expected token 'end of print statement', got 'integer'"
+            "error": (
+                "TemplateSyntaxError: expected token"
+                " 'end of print statement', got 'integer'"
+            )
         },
     }
 
@@ -383,7 +386,7 @@ async def test_webhook_handle_get_config_with_cloudhook_local_only_user(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test get_config doesn't return cloudhook_url or remote_ui_url for local_only users."""
+    """Test get_config omits cloudhook/remote_ui_url for local users."""
     hass_admin_user.local_only = True
 
     webhook_id = create_registrations[1]["webhook_id"]
@@ -968,7 +971,7 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test fetching camera stream URLs for an HLS/stream-supporting camera but that streaming errors."""
+    """Test fetching camera stream URLs when streaming errors."""
     hass.states.async_set(
         "camera.stream_camera",
         "idle",
