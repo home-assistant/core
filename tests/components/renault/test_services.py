@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (
+    ATTR_PICTURE_SIZE,
     ATTR_SCHEDULES,
     ATTR_TEMPERATURE,
     ATTR_VEHICLE,
@@ -384,6 +385,98 @@ async def test_service_set_ac_schedule_multi(
     assert mock_call_data[2].wednesday is None
     # Thursday keeps original values
     assert mock_call_data[2].thursday.readyAtTime == "T23:30Z"
+
+
+async def test_service_get_vehicle_picture_default(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service returns the large picture URL by default."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {ATTR_VEHICLE: get_device_id(hass)}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "vehicle_get_picture",
+        service_data=data,
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        result["url"]
+        == "https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_LARGE"
+    )
+
+
+async def test_service_get_vehicle_picture_small(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service returns the small picture URL when requested."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {ATTR_VEHICLE: get_device_id(hass), ATTR_PICTURE_SIZE: "SMALL"}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "vehicle_get_picture",
+        service_data=data,
+        blocking=True,
+        return_response=True,
+    )
+    assert (
+        result["url"]
+        == "https://3dv2.renault.com/ImageFromBookmark?configuration=SKTPOU%2FPRLEX1%2FSTANDA%2FB10%2FEA2%2FDG%2FVT003%2FRET03%2FRALU16%2FDRAP08%2FHARM02%2FTERQG%2FRDAR02%2FALEVA%2FSOP02C%2FTRNOR%2FLVAVIP%2FLVAREL%2FNAV3G5%2FRAD37A%2FSDPCLV%2FTLFRAN%2FGENEV1%2FSAN913%2FBT4AR1%2FNBT017&databaseId=1d514feb-93a6-4b45-8785-e11d2a6f1864&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_SMALL_V2"
+    )
+
+
+async def test_service_get_vehicle_picture_invalid_size(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service raises when no picture is available."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {ATTR_VEHICLE: get_device_id(hass), ATTR_PICTURE_SIZE: "INVALID"}
+
+    with (
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "vehicle_get_picture",
+            service_data=data,
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "invalid_picture_size"
+
+
+async def test_service_get_vehicle_picture_no_picture(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service raises when no picture is available."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {ATTR_VEHICLE: get_device_id(hass)}
+
+    with (
+        patch(
+            "renault_api.kamereon.models.KamereonVehicleDetails.get_picture",
+            return_value=None,
+        ),
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "vehicle_get_picture",
+            service_data=data,
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "no_picture_available"
 
 
 async def test_service_invalid_device_id(

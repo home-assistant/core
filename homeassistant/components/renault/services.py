@@ -4,11 +4,13 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
+from renault_api.kamereon.enums import AssetPictureSize
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 from .renault_vehicle import RenaultVehicleProxy
@@ -18,6 +20,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+ATTR_PICTURE_SIZE = "size"
 ATTR_SCHEDULES = "schedules"
 # pylint: disable-next=home-assistant-duplicate-const
 ATTR_TEMPERATURE = "temperature"
@@ -95,6 +98,11 @@ SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
         ),
     }
 )
+SERVICE_VEHICLE_GET_PICTURE_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_PICTURE_SIZE, default=AssetPictureSize.LARGE.name): str,
+    }
+)
 
 
 async def ac_cancel(service_call: ServiceCall) -> None:
@@ -166,6 +174,29 @@ async def ac_set_schedules(service_call: ServiceCall) -> None:
     )
 
 
+async def vehicle_get_picture(service_call: ServiceCall) -> JsonObjectType:
+    """Get vehicle picture URL."""
+    size_str: str = service_call.data[ATTR_PICTURE_SIZE]
+    try:
+        image_size = AssetPictureSize[size_str]
+    except KeyError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_picture_size",
+            translation_placeholders={
+                "size": size_str,
+                "valid_sizes": ", ".join(e.name for e in AssetPictureSize),
+            },
+        ) from err
+    proxy = get_vehicle_proxy(service_call)
+    if not (url := proxy.details.get_picture(image_size)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_picture_available",
+        )
+    return {"url": url}
+
+
 def get_vehicle_proxy(service_call: ServiceCall) -> RenaultVehicleProxy:
     """Get vehicle from service_call data."""
     device_registry = dr.async_get(service_call.hass)
@@ -227,4 +258,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "ac_set_schedules",
         ac_set_schedules,
         schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "vehicle_get_picture",
+        vehicle_get_picture,
+        schema=SERVICE_VEHICLE_GET_PICTURE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
