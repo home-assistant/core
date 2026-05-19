@@ -19,5 +19,6 @@ CONF_TEAM_ID = "team_id"
 CONF_KEY_PEM = "key_pem"
 
 ATTR_CURRENT_WEATHER = "currentWeather"
+ATTR_FORECAST_NEXT_HOUR = "forecastNextHour"
 ATTR_FORECAST_HOURLY = "forecastHourly"
 ATTR_FORECAST_DAILY = "forecastDaily"

@@ -15,6 +15,7 @@ FORECAST_TYPE_TO_FLAG = {
     "daily": WeatherEntityFeature.FORECAST_DAILY,
     "hourly": WeatherEntityFeature.FORECAST_HOURLY,
     "twice_daily": WeatherEntityFeature.FORECAST_TWICE_DAILY,
+    "minutely": WeatherEntityFeature.FORECAST_MINUTELY,
 }
 
 
