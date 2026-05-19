@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type BlancoConfigEntry = ConfigEntry[BlancoDataUpdateCoordinator]
-"""Type alias for a config entry whose runtime_data is the coordinator."""
 
 
 async def _async_ensure_app_registered(
