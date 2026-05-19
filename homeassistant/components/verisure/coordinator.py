@@ -58,7 +58,7 @@ def _is_transient_verisure_failure(exc: BaseException) -> bool:
             return True
         if isinstance(chain, OSError):
             return True
-        chain = chain.__cause__
+        chain = chain.__cause__ or chain.__context__
     return False
 
 
@@ -179,7 +179,10 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     continue
 
         if not cookie_refreshed:
-            assert last_login_error is not None
+            if last_login_error is None:
+                raise UpdateFailed(
+                    "Could not refresh Verisure session cookie after retries"
+                )
             LOGGER.debug("Cookie expired, acquiring new cookies")
             try:
                 await self.hass.async_add_executor_job(self.verisure.login_cookie)
