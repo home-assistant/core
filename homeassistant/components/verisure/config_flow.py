@@ -250,7 +250,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-
                 await self.hass.async_add_executor_job(
                     self.verisure.validate_mfa, user_input[CONF_CODE]
                 )

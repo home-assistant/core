@@ -174,7 +174,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 LOGGER.warning(
                     "Verisure unreachable or server error during cookie refresh, %s", ex
                 )
-                raise UpdateFailed("Unable to update cookie — Verisure unreachable") from ex
+                raise UpdateFailed(
+                    "Unable to update cookie — Verisure unreachable"
+                ) from ex
             except VerisureLoginError as ex:
                 last_login_error = ex
                 if attempt + 1 < _COOKIE_REFRESH_ATTEMPTS:
