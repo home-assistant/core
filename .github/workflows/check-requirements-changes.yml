@@ -1,0 +1,31 @@
+name: Check requirements (changes detection)
+
+# Stage 1 of the agentic Check requirements workflow.
+# Just kicks off Stage 2 (`check-requirements-dispatcher.yml`) which starts the agentic workflow
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "requirements*.txt"
+      - "homeassistant/package_constraints.txt"
+      - "pyproject.toml"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Requirements files changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Record PR number
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |-
+          echo "Requirements files changed in PR #${PR_NUMBER}"
