@@ -301,7 +301,7 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
-    def query_notifications(self) -> dict[str, Any] | None:
+    def query_notifications(self) -> dict[str, Any] | None:  # noqa: B027
         """Return notifications payload."""
 
     def can_execute(self, command, params):
@@ -1637,7 +1637,9 @@ class ArmDisArmTrait(_Trait):
         AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
         AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
         AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        ),
         AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""

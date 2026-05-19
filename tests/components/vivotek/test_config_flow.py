@@ -53,9 +53,8 @@ IMPORT_DATA = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_vivotek_camera: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_vivotek_camera: AsyncMock) -> None:
     """Test full user initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -83,9 +82,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_vivotek_camera: AsyncMock,
     exception: Exception,
     error: str,
@@ -161,9 +160,8 @@ async def test_duplicate_entry_mac(
     assert result["reason"] == "already_configured"
 
 
-async def test_import_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_vivotek_camera: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow(hass: HomeAssistant, mock_vivotek_camera: AsyncMock) -> None:
     """Test import initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
@@ -183,9 +181,9 @@ async def test_import_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_vivotek_camera: AsyncMock,
     exception: Exception,
     reason: str,

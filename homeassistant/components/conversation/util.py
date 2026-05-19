@@ -31,7 +31,8 @@ def async_get_result_from_chat_log(
 
     if not isinstance((last_content := chat_log.content[-1]), AssistantContent):
         _LOGGER.error(
-            "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+            "Last content in chat log is not an AssistantContent: %s."
+            " This could be due to the model not returning a valid response",
             last_content,
         )
         raise HomeAssistantError("Unable to get response")

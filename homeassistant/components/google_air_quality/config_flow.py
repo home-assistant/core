@@ -70,7 +70,7 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
     return vol.Schema(
         {
             # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=hass-config-flow-name-field
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=hass.config.location_name): str,
             vol.Required(
                 CONF_LOCATION,
@@ -91,7 +91,8 @@ def _is_location_already_configured(
         for subentry in entry.subentries.values():
             # A more accurate way is to use the haversine formula, but for simplicity
             # we use a simple distance check. The epsilon value is small anyway.
-            # This is mostly to capture cases where the user has slightly moved the location pin.
+            # This is mostly to capture cases where the user
+            # has slightly moved the location pin.
             if (
                 abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
                 and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])

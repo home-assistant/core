@@ -694,7 +694,7 @@ def slugify(value: Any) -> str:
 
 
 def string(value: Any) -> str:
-    """Coerce value to string, except for None."""
+    """Coerce value to string, except for None, list or dict."""
     if value is None:
         raise vol.Invalid("string value is None")
 
@@ -1078,7 +1078,8 @@ def renamed(
         if old_key in value:
             if new_key in value:
                 raise vol.Invalid(
-                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                    f"Cannot specify both '{old_key}' and"
+                    f" '{new_key}'. Please use '{new_key}' only."
                 )
             value[new_key] = value.pop(old_key)
 
@@ -1411,7 +1412,7 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         ),
         _HAS_ENTITY_SERVICE_FIELD,
     )
-    setattr(validator, "_entity_service_schema", True)
+    setattr(validator, "_entity_service_schema", True)  # noqa: B010
     return validator
 
 
@@ -1840,7 +1841,8 @@ def _trigger_pre_validator(value: Any | None) -> Any:
     if CONF_TRIGGER in value:
         if CONF_PLATFORM in value:
             raise vol.Invalid(
-                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+                "Cannot specify both 'platform' and 'trigger'."
+                " Please use 'trigger' only."
             )
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
@@ -1865,7 +1867,7 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_
 
 
 def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
-    """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
+    """Flatten trigger arrays with 'triggers:' sublists into one list."""
     flatlist = []
     for t in triggers:
         if CONF_TRIGGERS in t and len(t) == 1:
@@ -1990,17 +1992,24 @@ _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_STOP_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(
-            CONF_RESPONSE_VARIABLE,
-            "error_or_response",
-            msg="not allowed to add a response to an error stop action",
-        ): str,
-    }
+
+def _stop_action_check_error_response(config: dict) -> dict:
+    """Validate that error stop actions don't have a response variable."""
+    if config.get(CONF_ERROR) and CONF_RESPONSE_VARIABLE in config:
+        raise vol.Invalid("not allowed to add a response to an error stop action")
+    return config
+
+
+_SCRIPT_STOP_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_STOP): vol.Any(None, string),
+            vol.Optional(CONF_ERROR): boolean,
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
+        }
+    ),
+    _stop_action_check_error_response,
 )
 
 _SCRIPT_SEQUENCE_SCHEMA = vol.Schema(

@@ -69,7 +69,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. This is a local call."""
+        """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.components:
             # Component removed via the Nobø app; mark unavailable.
             self._attr_available = False

@@ -246,6 +246,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(
             get_device_info, conn
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
@@ -367,7 +368,8 @@ class HuaweiLteOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
 
-        # Recipients are persisted as a list, but handled as comma separated string in UI
+        # Recipients are persisted as a list, but handled as comma
+        # separated string in UI
 
         if user_input is not None:
             # Preserve existing options, for example *_from_yaml markers
@@ -381,7 +383,7 @@ class HuaweiLteOptionsFlow(OptionsFlow):
         data_schema = vol.Schema(
             {
                 # Name field is no longer allowed in config flow schemas
-                # pylint: disable-next=hass-config-flow-name-field
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Optional(
                     CONF_NAME,
                     default=self.config_entry.options.get(

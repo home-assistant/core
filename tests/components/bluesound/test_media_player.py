@@ -182,7 +182,8 @@ async def test_stop_maps_to_idle(
         )
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     assert (
@@ -204,7 +205,8 @@ async def test_status_updated(
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
     player_mocks.player_data.status_long_polling_mock.set(status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     post_state = hass.states.get("media_player.player_name1111")
@@ -227,7 +229,8 @@ async def test_unavailable_when_offline(
     )
     player_mocks.player_data.status_long_polling_mock.trigger()
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     post_state = hass.states.get("media_player.player_name1111")
@@ -286,7 +289,8 @@ async def test_unjoin(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -318,7 +322,8 @@ async def test_attr_master(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_master = hass.states.get("media_player.player_name1111").attributes[
@@ -346,7 +351,8 @@ async def test_attr_bluesound_group(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_bluesound_group = hass.states.get(
@@ -374,7 +380,8 @@ async def test_attr_bluesound_group_for_follower(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     updated_sync_status = dataclasses.replace(
@@ -385,7 +392,8 @@ async def test_attr_bluesound_group_for_follower(
         updated_sync_status
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_bluesound_group = hass.states.get(
@@ -402,7 +410,9 @@ async def test_volume_up_from_6_to_7(
 ) -> None:
     """Test the media player volume up from 6 to 7.
 
-    This fails if if rounding is not done correctly. See https://github.com/home-assistant/core/issues/129956 for more details.
+    This fails if rounding is not done correctly. See
+    https://github.com/home-assistant/core/issues/129956
+    for more details.
     """
     player_mocks.player_data.status_long_polling_mock.set(
         dataclasses.replace(
@@ -410,7 +420,8 @@ async def test_volume_up_from_6_to_7(
         )
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -441,7 +452,8 @@ async def test_attr_group_members(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_group_members = hass.states.get("media_player.player_name1111").attributes.get(
@@ -505,7 +517,8 @@ async def test_unjoin_player(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(

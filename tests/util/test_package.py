@@ -363,7 +363,10 @@ async def test_async_get_user_site(mock_env_copy) -> None:
 
 async def test_async_get_installed_packages() -> None:
     """Test async get installed packages."""
-    mock_output = b'[{"name": "package1", "version": "1.0.0"}, {"name": "package2", "version": "2.0.0"}]'
+    mock_output = (
+        b'[{"name": "package1", "version": "1.0.0"},'
+        b' {"name": "package2", "version": "2.0.0"}]'
+    )
 
     async_popen = MagicMock()
     async_popen.returncode = 0
