@@ -351,19 +351,6 @@ async def test_template_syntax_error(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_panel")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("alarm_control_panel")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
-@pytest.mark.parametrize(
     ("count", "state_template", "attribute", "attribute_template"),
     [(1, "disarmed", "name", '{{ "Template Alarm Panel" }}')],
 )

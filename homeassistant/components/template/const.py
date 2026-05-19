@@ -19,6 +19,8 @@ CONF_TURN_ON = "turn_on"
 
 DOMAIN = "template"
 
+DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/template/"
+
 PLATFORM_STORAGE_KEY = "template_platforms"
 
 PLATFORMS = [

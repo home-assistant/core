@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
+    PLATFORMS,
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
@@ -13,6 +14,28 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+
+from tests.common import assert_platform_setup_creates_issue
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    PLATFORMS,
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 @pytest.mark.parametrize(

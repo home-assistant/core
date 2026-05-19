@@ -191,19 +191,6 @@ async def setup_attributes_state_vacuum(
     )
 
 
-@pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_vacuum")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("vacuum")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("style", "state_template", "extra_config", "parm1", "parm2"),

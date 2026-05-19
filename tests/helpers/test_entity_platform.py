@@ -1612,7 +1612,8 @@ async def test_platform_with_no_setup(
 
     assert (
         "The mock-platform platform for the mock-integration"
-        " integration does not support platform setup." in caplog.text
+        " integration does not support platform setup, please remove it from your config"
+        in caplog.text
     )
     issue = issue_registry.async_get_issue(
         domain="homeassistant",
@@ -1621,10 +1622,10 @@ async def test_platform_with_no_setup(
     assert issue
     assert issue.issue_domain == "mock-platform"
     assert issue.learn_more_url is None
-    assert issue.translation_key == "no_platform_setup"
+    assert issue.translation_key == "platform_setup_not_supported"
     assert issue.translation_placeholders == {
-        "domain": "mock-integration",
-        "platform": "mock-platform",
+        "platform_domain": "mock-integration",
+        "integration_domain": "mock-platform",
         "platform_key": "platform: mock-platform",
         "yaml_example": "```yaml\nmock-integration:\n  - platform: mock-platform\n```",
     }

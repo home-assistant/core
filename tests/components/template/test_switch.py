@@ -149,19 +149,6 @@ async def setup_single_attribute_optimistic_switch(
     )
 
 
-@pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_switch")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("switch")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])
 @pytest.mark.parametrize(
     "style",

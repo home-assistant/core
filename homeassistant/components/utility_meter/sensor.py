@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
@@ -46,6 +47,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -75,6 +77,7 @@ from .const import (
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    DOMAIN,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -212,9 +215,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'sensor:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 

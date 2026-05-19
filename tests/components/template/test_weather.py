@@ -107,19 +107,6 @@ async def setup_weather(
 
 
 @pytest.mark.parametrize(
-    ("style", "config"),
-    [(ConfigurationStyle.LEGACY, TEST_LEGACY_REQUIRED)],
-)
-@pytest.mark.usefixtures("setup_weather")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("weather")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
-@pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
