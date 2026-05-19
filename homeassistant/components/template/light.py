@@ -26,7 +26,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EFFECT, CONF_NAME, CONF_RGB, CONF_STATE
+from homeassistant.const import CONF_EFFECT, CONF_HS, CONF_NAME, CONF_RGB, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -57,8 +57,6 @@ _LOGGER = logging.getLogger(__name__)
 # Legacy
 ATTR_COLOR_TEMP = "color_temp"
 
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_HS = "hs"
 CONF_HS_ACTION = "set_hs"
 CONF_RGB_ACTION = "set_rgb"
 CONF_RGBW = "rgbw"
