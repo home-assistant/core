@@ -208,6 +208,12 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
 def _parse_media_id(media_id: str) -> tuple[str, str | None, str | None, int | None]:
     """Split a Yoto play_media id into its components."""
     parts = media_id.split("+")
+    if not parts[0] or len(parts) > 4:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_id",
+            translation_placeholders={"media_id": media_id},
+        )
     parts.extend([""] * (4 - len(parts)))
     card_id, chapter_key, track_key, seconds_raw = parts[:4]
     if seconds_raw:
