@@ -6,8 +6,6 @@ sync_time:
       selector:
         device:
           integration: bsblan
-          entity:
-            - domain: button
 
 set_hot_water_schedule:
   fields:

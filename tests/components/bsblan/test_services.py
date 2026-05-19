@@ -791,6 +791,33 @@ async def test_set_heating_schedule_rejects_zero_circuit_device(
 
 
 @pytest.mark.usefixtures("setup_integration")
+async def test_set_heating_schedule_time_validation_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test validation error when a heating schedule slot ends before it starts."""
+    circuit_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, heating_circuit_identifier(TEST_DEVICE_MAC, 1))}
+    )
+    assert circuit_device is not None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_heating_schedule",
+            {
+                "device_id": circuit_device.id,
+                "monday_slots": [
+                    {"start_time": time(13, 0), "end_time": time(11, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "end_time_before_start_time"
+
+
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_heating_schedule_api_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,

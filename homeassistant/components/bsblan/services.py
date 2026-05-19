@@ -164,7 +164,7 @@ def _resolve_config_entry(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_config_entry_for_device",
-            translation_placeholders={"device_id": device_entry.name or device_id},
+            translation_placeholders={"device_id": _device_name(device_entry)},
         )
 
     entry = matching_entries[0]
@@ -173,7 +173,7 @@ def _resolve_config_entry(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_loaded",
-            translation_placeholders={"device_name": device_entry.name or device_id},
+            translation_placeholders={"device_name": _device_name(device_entry)},
         )
 
     return entry, device_entry
@@ -265,9 +265,7 @@ async def async_sync_time(service_call: ServiceCall) -> None:
     """Synchronize BSB-LAN device time with Home Assistant."""
     entry, device_entry = _resolve_config_entry(service_call)
     client = entry.runtime_data.client
-    await async_sync_device_time(
-        client, device_entry.name or service_call.data[ATTR_DEVICE_ID]
-    )
+    await async_sync_device_time(client, _device_name(device_entry))
 
 
 @callback
