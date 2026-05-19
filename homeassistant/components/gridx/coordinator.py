@@ -54,7 +54,7 @@ async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
 async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
     """Fetch today's historical totals."""
     midnight = dt_util.start_of_local_day()
-    tomorrow = midnight + timedelta(days=1)
+    tomorrow = dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
 
     try:
         results = await connector.retrieve_historical_data(
