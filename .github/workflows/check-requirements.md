@@ -21,6 +21,9 @@ safe-outputs:
   add-comment:
     max: 1
     target: "*"
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number }}
+  cancel-in-progress: true
 pre-agent-steps:
   - name: Inject workflow_dispatch PR number into agent prompt
     env:
