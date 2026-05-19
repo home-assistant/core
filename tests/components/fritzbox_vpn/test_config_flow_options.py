@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
-from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 
 @pytest.mark.asyncio

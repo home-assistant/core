@@ -12,7 +12,7 @@ from homeassistant.components.fritzbox_vpn.coordinator import (
     _resolve_update_interval_seconds,
 )
 
-from tests.fixtures import LOGIN_XML_CHALLENGE, LOGIN_XML_SID, MOCK_DATA_LUA_JSON
+from .fixtures import LOGIN_XML_CHALLENGE, LOGIN_XML_SID, MOCK_DATA_LUA_JSON
 
 
 def test_parse_login_xml() -> None:

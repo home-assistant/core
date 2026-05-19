@@ -14,7 +14,7 @@ from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from tests.fixtures import MOCK_VPN_CONNECTIONS
+from .fixtures import MOCK_VPN_CONNECTIONS
 
 
 @pytest.mark.asyncio

@@ -20,7 +20,7 @@ from homeassistant.components.fritzbox_vpn.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.fixtures import MOCK_VPN_CONNECTIONS
+from .fixtures import MOCK_VPN_CONNECTIONS
 
 
 @pytest.mark.asyncio

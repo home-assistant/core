@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 MOCK_UDN = "uuid:2f402f80-da79-4e15-8e7b-4b6b6b6b6b6b"
 

@@ -20,7 +20,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME, MOCK_VPN_CONNECTIONS
+from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME, MOCK_VPN_CONNECTIONS
 
 
 def test_normalize_update_interval_clamps_and_defaults() -> None:

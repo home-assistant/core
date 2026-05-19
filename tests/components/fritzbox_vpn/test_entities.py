@@ -18,7 +18,7 @@ from homeassistant.components.fritzbox_vpn.switch import FritzBoxVPNSwitch
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.fixtures import MOCK_VPN_CONNECTIONS
+from .fixtures import MOCK_VPN_CONNECTIONS
 
 
 def _mock_coordinator() -> MagicMock:

@@ -29,7 +29,7 @@ from homeassistant.components.fritzbox_vpn.flow_forms import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 
 def test_validate_host_hostname_rules() -> None:

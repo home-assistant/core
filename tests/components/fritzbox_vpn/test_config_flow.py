@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 
 def test_validate_host_accepts_ip_and_hostname() -> None:

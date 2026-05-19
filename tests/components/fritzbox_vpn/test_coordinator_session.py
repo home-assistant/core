@@ -5,8 +5,7 @@ from unittest.mock import AsyncMock, patch
 from fritzboxvpn import FritzBoxVPNSession
 import pytest
 
-from tests.aiohttp_mock import MockAiohttpResponse, QueuedAiohttpSession, json_response
-from tests.fixtures import (
+from .fixtures import (
     LOGIN_XML_CHALLENGE,
     LOGIN_XML_SID,
     MOCK_DATA_LUA_JSON,
@@ -14,6 +13,8 @@ from tests.fixtures import (
     MOCK_PASSWORD,
     MOCK_USERNAME,
 )
+
+from tests.aiohttp_mock import MockAiohttpResponse, QueuedAiohttpSession, json_response
 
 LOGIN_XML_INVALID = (
     '<?xml version="1.0"?><SessionInfo><SID>0000000000000000</SID></SessionInfo>'

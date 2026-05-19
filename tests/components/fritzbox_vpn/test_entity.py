@@ -11,7 +11,7 @@ from homeassistant.components.fritzbox_vpn.entity import (
     vpn_unique_id,
 )
 
-from tests.fixtures import MOCK_VPN_CONNECTIONS
+from .fixtures import MOCK_VPN_CONNECTIONS
 
 
 def test_vpn_unique_id() -> None:
