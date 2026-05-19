@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         watcher.stop()
 
     entry.async_on_unload(async_at_started(hass, _start_watcher))
+    entry.async_on_unload(watcher.stop)
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
     )
