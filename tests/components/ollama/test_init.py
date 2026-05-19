@@ -761,7 +761,8 @@ async def test_migration_from_v2_1(
     assert len(conversation_subentries) == 2
     for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
-        # Since TEST_USER_DATA no longer has a model, subentry data should be TEST_OPTIONS
+        # Since TEST_USER_DATA no longer has a model, subentry
+        # data should be TEST_OPTIONS
         assert subentry.data == TEST_OPTIONS
         assert "Ollama" in subentry.title
 

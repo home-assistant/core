@@ -38,7 +38,7 @@ async def test_setup_start_failed(
     controller: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the setup that fails during velbus start task, should result in no entries."""
+    """Test setup fails during velbus start task, should result in no entries."""
     controller.return_value.start.side_effect = ConnectionError()
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED

@@ -95,6 +95,7 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
@@ -328,7 +329,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected a list of forecast dictionaries, got {forecast}, {weather_message}",
+                    "expected a list of forecast"
+                    f" dictionaries, got {forecast},"
+                    f" {weather_message}",
                 )
                 continue
 
@@ -339,7 +342,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected valid forecast keys, unallowed keys: ({diff_result}) for {forecast}, {weather_message}",
+                    "expected valid forecast keys,"
+                    f" unallowed keys: ({diff_result})"
+                    f" for {forecast}, {weather_message}",
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
@@ -347,7 +352,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`is_daytime` is missing in twice_daily forecast {forecast}, {weather_message}",
+                    "`is_daytime` is missing in"
+                    f" twice_daily forecast {forecast},"
+                    f" {weather_message}",
                 )
             if "datetime" not in forecast:
                 raised = True
@@ -355,7 +362,8 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`datetime` is missing in forecast, got {forecast}, {weather_message}",
+                    "`datetime` is missing in forecast,"
+                    f" got {forecast}, {weather_message}",
                 )
 
         if raised:
@@ -373,8 +381,11 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     _state_option = CONF_CONDITION
     _optimistic_entity = True
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any]
     ) -> None:

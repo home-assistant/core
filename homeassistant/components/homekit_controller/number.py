@@ -24,11 +24,13 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
-        name="Spray Quantity",
-        translation_key="spray_quantity",
-        entity_category=EntityCategory.CONFIG,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
+        NumberEntityDescription(
+            key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+            name="Spray Quantity",
+            translation_key="spray_quantity",
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,

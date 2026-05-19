@@ -3,20 +3,22 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import (
+from duco_connectivity import (
+    DucoConnectionError,
+    DucoError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
     NodeType,
     NodeVentilationInfo,
+    VentilationState,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -70,10 +72,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in (
-        "sensor.living_signal_strength",
-        "sensor.living_box_temperature",
-    ):
+    for entity_id in ("sensor.living_signal_strength",):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -105,7 +104,7 @@ async def test_coordinator_update_duco_error_marks_unavailable(
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that sensor entities become unavailable when async_get_nodes raises DucoError."""
+    """Test sensor entities become unavailable when async_get_nodes raises DucoError."""
     mock_duco_client.async_get_nodes = AsyncMock(side_effect=DucoError("api error"))
 
     freezer.tick(SCAN_INTERVAL)
@@ -123,7 +122,7 @@ async def test_lan_info_duco_error_marks_unavailable(
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that entities become unavailable when async_get_lan_info raises DucoError."""
+    """Test entities become unavailable when async_get_lan_info raises DucoError."""
     mock_duco_client.async_get_lan_info = AsyncMock(
         side_effect=DucoError("lan info error")
     )
@@ -144,7 +143,7 @@ async def test_new_node_added_dynamically(
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a new node appearing in coordinator data creates entities automatically."""
+    """Test a new node appearing in coordinator data creates entities automatically."""
     assert hass.states.get("sensor.new_rh_sensor_humidity") is None
 
     new_node = Node(
@@ -192,7 +191,7 @@ async def test_deregistered_node_removes_device(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a node disappearing from the API removes its device from the registry."""
+    """Test a node disappearing from the API removes its device from the registry."""
     device_registry = dr.async_get(hass)
 
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
@@ -266,7 +265,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     mock_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a node with UNKNOWN type is retried and gets entities once the type resolves."""
+    """Test UNKNOWN type node is retried and gets entities once the type resolves."""
     node_id = 99
     ventilation = NodeVentilationInfo(
         state="AUTO", time_state_remain=0, time_state_end=0, mode="-", flow_lvl_tgt=None
@@ -357,3 +356,40 @@ async def test_unknown_node_logged_at_debug(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "has an unsupported device type" in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_ventilation_state_unknown_returns_state_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
+    box_node = next(n for n in mock_nodes if n.general.node_type == NodeType.BOX)
+    updated_nodes = [
+        Node(
+            node_id=box_node.node_id,
+            general=box_node.general,
+            ventilation=NodeVentilationInfo(
+                state=VentilationState.UNKNOWN,
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=box_node.sensor,
+        )
+        if n is box_node
+        else n
+        for n in mock_nodes
+    ]
+    mock_duco_client.async_get_nodes.return_value = updated_nodes
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation_state")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

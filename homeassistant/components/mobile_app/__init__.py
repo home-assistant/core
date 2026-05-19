@@ -1,5 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 from functools import partial
@@ -250,7 +250,8 @@ async def _async_setup_cloudhook(
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
-        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        # If we have a cloudhook but no longer logged in
+        # to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))

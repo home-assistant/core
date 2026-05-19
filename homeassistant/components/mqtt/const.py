@@ -11,9 +11,11 @@ from homeassistant.exceptions import TemplateError
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
+ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
@@ -42,12 +44,14 @@ CONF_COMMAND_TOPIC = "command_topic"
 CONF_CONTENT_TYPE = "content_type"
 CONF_DEFAULT_ENTITY_ID = "default_entity_id"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
+CONF_DISCOVERY_QOS = "discovery_qos"
 CONF_ENCODING = "encoding"
 CONF_IMAGE_ENCODING = "image_encoding"
 CONF_IMAGE_TOPIC = "image_topic"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS

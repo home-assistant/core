@@ -215,7 +215,16 @@ False
             },
             {
                 CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-                CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
+                CONF_VALUE_TEMPLATE: (
+                    "{% set current_time = now().time() %}\n"
+                    '{% set start_time = strptime("07:00",'
+                    ' "%H:%M").time() %}\n'
+                    '{% set end_time = strptime("18:30",'
+                    ' "%H:%M").time() %}\n'
+                    "{% if start_time <= current_time"
+                    " <= end_time %}\nTrue\n"
+                    "{% else %}\nFalse\n{% endif %}"
+                ),
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
                 CONF_NAME: "Daylight hours",
@@ -307,7 +316,8 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
 async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
     """Test a Bayesian sensor with just one numeric_state observation added.
 
-    Combines the config flow and the options flow for a single numeric_state observation.
+    Combines the config flow and the options flow for a
+    single numeric_state observation.
     """
 
     with patch(
@@ -551,7 +561,14 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {
-                CONF_VALUE_TEMPLATE: "{{is_state('device_tracker.paulus','not_home') and ((as_timestamp(now()) - as_timestamp(states.device_tracker.paulus.last_changed)) > 300)}}",
+                CONF_VALUE_TEMPLATE: (
+                    "{{is_state('device_tracker.paulus',"
+                    "'not_home') and"
+                    " ((as_timestamp(now()) -"
+                    " as_timestamp(states"
+                    ".device_tracker.paulus"
+                    ".last_changed)) > 300)}}"
+                ),
                 CONF_P_GIVEN_T: 5,
                 CONF_P_GIVEN_F: 99,
                 CONF_NAME: "Not seen in last 5 minutes",
@@ -568,7 +585,14 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         assert len(config_entry.subentries) == 1
         assert list(config_entry.subentries.values())[0].data == {
             CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-            CONF_VALUE_TEMPLATE: "{{is_state('device_tracker.paulus','not_home') and ((as_timestamp(now()) - as_timestamp(states.device_tracker.paulus.last_changed)) > 300)}}",
+            CONF_VALUE_TEMPLATE: (
+                "{{is_state('device_tracker.paulus',"
+                "'not_home') and"
+                " ((as_timestamp(now()) -"
+                " as_timestamp(states"
+                ".device_tracker.paulus"
+                ".last_changed)) > 300)}}"
+            ),
             CONF_P_GIVEN_T: 0.05,
             CONF_P_GIVEN_F: 0.99,
             CONF_NAME: "Not seen in last 5 minutes",
@@ -710,7 +734,16 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
                 data=MappingProxyType(
                     {
                         CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-                        CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
+                        CONF_VALUE_TEMPLATE: (
+                            "{% set current_time = now().time() %}\n"
+                            '{% set start_time = strptime("07:00",'
+                            ' "%H:%M").time() %}\n'
+                            '{% set end_time = strptime("18:30",'
+                            ' "%H:%M").time() %}\n'
+                            "{% if start_time <= current_time"
+                            " <= end_time %}\nTrue\n"
+                            "{% else %}\nFalse\n{% endif %}"
+                        ),
                         CONF_P_GIVEN_T: 0.45,
                         CONF_P_GIVEN_F: 0.05,
                         CONF_NAME: "Daylight hours",
@@ -790,7 +823,16 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
         },
         {
             CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-            CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
+            CONF_VALUE_TEMPLATE: (
+                "{% set current_time = now().time() %}\n"
+                '{% set start_time = strptime("07:00",'
+                ' "%H:%M").time() %}\n'
+                '{% set end_time = strptime("18:30",'
+                ' "%H:%M").time() %}\n'
+                "{% if start_time <= current_time"
+                " <= end_time %}\nTrue\n"
+                "{% else %}\nFalse\n{% endif %}"
+            ),
             CONF_P_GIVEN_T: 0.45,
             CONF_P_GIVEN_F: 0.05,
             CONF_NAME: "Daylight hours",
@@ -873,7 +915,16 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
         },
         {
             CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-            CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
+            CONF_VALUE_TEMPLATE: (
+                "{% set current_time = now().time() %}\n"
+                '{% set start_time = strptime("07:00",'
+                ' "%H:%M").time() %}\n'
+                '{% set end_time = strptime("18:30",'
+                ' "%H:%M").time() %}\n'
+                "{% if start_time <= current_time"
+                " <= end_time %}\nTrue\n"
+                "{% else %}\nFalse\n{% endif %}"
+            ),
             CONF_P_GIVEN_T: 0.45,
             CONF_P_GIVEN_F: 0.05,
             CONF_NAME: "Daylight hours",
@@ -943,7 +994,16 @@ False
         },
         {
             CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
-            CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("17:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
+            CONF_VALUE_TEMPLATE: (
+                "{% set current_time = now().time() %}\n"
+                '{% set start_time = strptime("07:00",'
+                ' "%H:%M").time() %}\n'
+                '{% set end_time = strptime("17:30",'
+                ' "%H:%M").time() %}\n'
+                "{% if start_time <= current_time"
+                " <= end_time %}\nTrue\n"
+                "{% else %}\nFalse\n{% endif %}"
+            ),
             CONF_P_GIVEN_T: 0.55,
             CONF_P_GIVEN_F: 0.13,
             CONF_NAME: "Office hours",
@@ -1141,7 +1201,9 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {
-                CONF_VALUE_TEMPLATE: "{{ is_state('device_tracker.paulus', 'not_home') }}",
+                CONF_VALUE_TEMPLATE: (
+                    "{{ is_state('device_tracker.paulus', 'not_home') }}"
+                ),
                 CONF_P_GIVEN_T: 50,
                 CONF_P_GIVEN_F: 50,
                 CONF_NAME: "Paulus not home",

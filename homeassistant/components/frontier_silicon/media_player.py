@@ -196,7 +196,9 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                (mode.label or mode.id): mode.key for mode in await afsapi.get_modes()
+                (mode.label or mode.id): mode.key
+                for mode in await afsapi.get_modes()
+                if mode.selectable
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -443,7 +445,8 @@ class AFSAPIDevice(MediaPlayerEntity):
             if len(keys) != 1:
                 raise BrowseError("Presets can only have 1 level")
 
-            # Keys of presets are 0-based, while the list shown on the device starts from 1
+            # Keys of presets are 0-based, while the list shown
+            # on the device starts from 1
             preset = int(keys[0]) - 1
 
             await self.fs_device.select_preset(preset)

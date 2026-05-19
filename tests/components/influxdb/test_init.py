@@ -1162,7 +1162,7 @@ async def test_event_listener_filtered_allowlist(
 async def test_event_listener_filtered_denylist(
     hass: HomeAssistant, mock_client, config_base, get_write_api, get_mock_call
 ) -> None:
-    """Test the event listener against a domain/glob denylist with an entity id allowlist."""
+    """Test event listener with domain/glob denylist and entity allowlist."""
     await _setup(hass, mock_client, config_base, get_write_api)
     write_api = get_write_api(mock_client)
 

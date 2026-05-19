@@ -43,7 +43,9 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class RingSirenEntityDescription(
-    SirenEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SirenEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring siren entity."""
 

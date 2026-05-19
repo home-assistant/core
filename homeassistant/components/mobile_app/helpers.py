@@ -168,7 +168,7 @@ def safe_registration(registration: dict) -> dict:
 
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     domain_data = hass.data[DOMAIN]
     return {
         DATA_DELETED_IDS: domain_data[DATA_DELETED_IDS],
