@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from actron_neo_api import ActronAirAPIError, ActronAirZone
+from actron_neo_api import ActronAirAPIError, ActronAirPeripheral, ActronAirZone
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -91,3 +91,32 @@ class ActronAirZoneEntity(ActronAirEntity):
             suggested_area=zone.title,
             via_device=(DOMAIN, self._serial_number),
         )
+
+
+class ActronAirPeripheralEntity(ActronAirEntity):
+    """Base class for Actron Air peripheral entities."""
+
+    def __init__(
+        self,
+        coordinator: ActronAirSystemCoordinator,
+        peripheral: ActronAirPeripheral,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._peripheral_serial = peripheral.serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, peripheral.serial_number)},
+            name=f"Sensor {peripheral.serial_number}",
+            manufacturer="Actron Air",
+            model=peripheral.device_type,
+            serial_number=peripheral.serial_number,
+            via_device=(DOMAIN, self._serial_number),
+        )
+
+    @property
+    def _peripheral(self) -> ActronAirPeripheral | None:
+        """Get the current peripheral data from the coordinator."""
+        for peripheral in self.coordinator.data.peripherals:
+            if peripheral.serial_number == self._peripheral_serial:
+                return peripheral
+        return None
