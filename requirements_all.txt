@@ -1516,6 +1516,7 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
+matter-ble-proxy==0.7.1
 matter-python-client==0.6.0
 
 # homeassistant.components.maxcube
