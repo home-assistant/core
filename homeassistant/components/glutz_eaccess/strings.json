@@ -13,7 +13,7 @@
     "step": {
       "credentials": {
         "data": {
-          "host": "Server name or URL",
+          "host": "Host",
           "password": "Password",
           "username": "Username or email"
         },
@@ -37,7 +37,7 @@
       },
       "invitation_confirm": {
         "data": {
-          "host": "Server name or URL",
+          "host": "Host",
           "password": "Password",
           "username": "Username or email"
         },
