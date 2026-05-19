@@ -76,15 +76,30 @@ def async_create_platform_config_not_supported_issue(
     learn_more_url: str | None = None,
     logger: Logger = _LOGGER,
 ) -> None:
-    """Create an issue for platforms that do not support platform setup."""
-    logger.error(
-        (
+    """Create a repair issue for an unsupported YAML platform configuration.
+
+    Raised when an integration is configured via the legacy
+    <platform_domain>: - platform: <integration_domain> schema.
+    Set yaml_config_under_integration_supported=False if the integration has no
+    YAML platform setup and the config should be removed; set to True if it is
+    supports YAML  configurable under its own <integration_domain>: key and the
+    config should be moved there.
+    """
+    if yaml_config_under_integration_supported:
+        logger.error(
+            "Configuring the %s integration under the %s platform key is not"
+            " supported, it must be configured under its own %s key instead",
+            integration_domain,
+            platform_domain,
+            integration_domain,
+        )
+    else:
+        logger.error(
             "The %s platform for the %s integration does not support platform"
-            " setup, please remove it from your config"
-        ),
-        integration_domain,
-        platform_domain,
-    )
+            " setup, please remove it from your config",
+            integration_domain,
+            platform_domain,
+        )
     platform_key = f"platform: {integration_domain}"
     yaml_example = f"```yaml\n{platform_domain}:\n  - {platform_key}\n```"
     async_create_issue(

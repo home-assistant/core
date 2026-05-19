@@ -2050,7 +2050,8 @@ async def assert_platform_setup_creates_issue(
 
     assert len(hass.states.async_all(platform_domain)) == 0
     assert (
-        f"The {integration_domain} platform for the {platform_domain} integration does not support platform setup, please remove it from your config"
+        f"Configuring the {integration_domain} integration under the {platform_domain} platform key is not"
+        f" supported, it must be configured under its own {integration_domain} key instead"
         in caplog.text
     )
 
