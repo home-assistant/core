@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 import typing
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 import pytest
@@ -141,52 +141,44 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
 
 
 @pytest.mark.parametrize(
-    ("path", "cleaned_path"),
+    ("old_path", "new_path"),
     [
-        # No corrections
-        ("/dev/path1", "/dev/path1"),
-        ("/dev/path1[asd]", "/dev/path1[asd]"),
-        ("/dev/path1 ", "/dev/path1 "),
+        ("/dev/ttyUSB0", "/dev/ttyUSB0"),
         ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
-        # Brackets around URI
-        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
-        # Spaces
-        ("socket://dev/path1 ", "socket://dev/path1"),
-        # Both
-        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
+        ("socket://1.2.3.4", "socket://1.2.3.4:6638"),
+        ("tcp://hostname", "tcp://hostname:6638"),
+        ("tcp://hostname:1234", "tcp://hostname:1234"),
+        ("socket://[::1]", "socket://[::1]:6638"),
     ],
 )
-@patch(
-    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
-)
-async def test_setup_with_v3_cleaning_uri(
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_v5_explicit_socket_port(
+    old_path: str,
+    new_path: str,
     hass: HomeAssistant,
-    path: str,
-    cleaned_path: str,
-    mock_zigpy_connect: ControllerApplication,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration of config entry from v3, applying corrections to the port path."""
-    config_entry_v4 = MockConfigEntry(
-        domain=DOMAIN,
+    """Test that socket:// and tcp:// paths get an explicit default port."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
         data={
-            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
+            **config_entry.data,
             CONF_DEVICE: {
-                CONF_DEVICE_PATH: path,
-                CONF_BAUDRATE: 115200,
-                CONF_FLOW_CONTROL: None,
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: old_path,
             },
         },
         version=5,
+        minor_version=1,
     )
-    config_entry_v4.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry_v4.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry_v4.entry_id)
 
-    assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
-    assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 5
+    assert config_entry.version == 5
+    assert config_entry.minor_version == 2
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == new_path
 
 
 @pytest.mark.parametrize(
