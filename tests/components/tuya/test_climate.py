@@ -243,9 +243,9 @@ def _override_temperature_unit(
 @pytest.mark.parametrize(
     (
         "units",
-        "temp_set_native_unit",
         "temp_current_native_unit",
         "expected_current",
+        "temp_set_native_unit",
         "expected_target",
         "service_temperature",
         "expected_set_value",
@@ -253,16 +253,16 @@ def _override_temperature_unit(
     # Note: status in the fixture "temp_set": 23 / "temp_current": 22,
     [
         pytest.param(
-            METRIC_SYSTEM, "℉", "℉", -5.6, -5, 25, 77, id="metric-both-fahrenheit"
+            METRIC_SYSTEM, "℉", -5.6, "℉", -5, 25, 77, id="metric-both-fahrenheit"
         ),
         pytest.param(
-            METRIC_SYSTEM, "℃", "℃", 22.0, 23.0, 25, 25, id="metric-both-celsius"
+            METRIC_SYSTEM, "℃", 22.0, "℃", 23.0, 25, 25, id="metric-both-celsius"
         ),
         pytest.param(
             METRIC_SYSTEM,
-            "℉",
             "℃",
             22.0,
+            "℉",
             -5,
             25,
             77,
@@ -270,25 +270,25 @@ def _override_temperature_unit(
         ),
         pytest.param(
             METRIC_SYSTEM,
-            "℃",
             "℉",
             -5.6,
+            "℃",
             23.0,
             25,
             25,
             id="metric-set-celsius-current-fahrenheit",
         ),
         pytest.param(
-            US_CUSTOMARY_SYSTEM, "℉", "℉", 22, 23, 70, 70, id="us-both-fahrenheit"
+            US_CUSTOMARY_SYSTEM, "℉", 22, "℉", 23, 70, 70, id="us-both-fahrenheit"
         ),
         pytest.param(
-            US_CUSTOMARY_SYSTEM, "℃", "℃", 72, 73, 70, 21, id="us-both-celsius"
+            US_CUSTOMARY_SYSTEM, "℃", 72, "℃", 73, 70, 21, id="us-both-celsius"
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
-            "℉",
             "℃",
             72,
+            "℉",
             23,
             70,
             70,
@@ -296,9 +296,9 @@ def _override_temperature_unit(
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
-            "℃",
             "℉",
             22,
+            "℃",
             73,
             70,
             21,
@@ -312,9 +312,9 @@ async def test_temperature_unit_conversion(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     units: UnitSystem,
-    temp_set_native_unit: str,
     temp_current_native_unit: str,
     expected_current: float,
+    temp_set_native_unit: str,
     expected_target: float,
     service_temperature: float,
     expected_set_value: int,
