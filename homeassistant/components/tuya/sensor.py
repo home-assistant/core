@@ -54,6 +54,7 @@ from .const import (
 )
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_device_temp_unit_convert
 
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
@@ -1759,11 +1760,20 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ) is SensorDeviceClass.ENUM:
             self._attr_native_unit_of_measurement = None
             return
+        if device_class is None:
+            self._attr_native_unit_of_measurement = tuya_uom
+            return
+
+        # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
         if (
-            device_class is None
-            # we do not need to check mappings if the API UOM is allowed
-            or tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]
+            device_class == SensorDeviceClass.TEMPERATURE
+            and not tuya_uom
+            and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
         ):
+            tuya_uom = temp_unit
+
+        # We do not need to check mappings if the API UOM is allowed
+        if tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]:
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
@@ -1787,14 +1797,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 device_class,
                 self.unique_id,
             )
-            return
-
-        # If the device provides TEMP_UNIT_CONVERT, use it to determine the unit.
-        if (
-            self.device_class == SensorDeviceClass.TEMPERATURE
-            and (temp_unit := self._get_converted_temp_unit()) is not None
-        ):
-            self._attr_native_unit_of_measurement = temp_unit
             return
 
         self._attr_native_unit_of_measurement = tuya_uom

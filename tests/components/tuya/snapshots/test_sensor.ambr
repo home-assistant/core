@@ -16336,8 +16336,11 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -16346,15 +16349,16 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.rzt2knqamsxjp8f9ycjjhtemp_current',
-    'unit_of_measurement': 'Ôäâ',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.mt15_mt29_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'MT15/MT29 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Ôäâ',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mt15_mt29_temperature',

@@ -47,8 +47,8 @@ TUYA_RESPONSE_QR_CODE = "qrcode"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_SUCCESS = "success"
 
-CELSIUS_ALIASES = {"°c", "c", "celsius", "℃"}
-FAHRENHEIT_ALIASES = {"°f", "f", "fahrenheit", "℉"}
+CELSIUS_ALIASES = {"°c", "c", "celsius", "℃", "ôäâ"}  # ôäâ is mojibake for °C
+FAHRENHEIT_ALIASES = {"°f", "f", "fahrenheit", "℉", "ôäà"}  # ôäà is mojibake for °F
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,

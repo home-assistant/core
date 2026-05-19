@@ -17,6 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -171,10 +172,36 @@ async def test_invalid_uom(
 
 @pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
 @pytest.mark.parametrize(
-    ("temp_unit_convert", "expected_unit"),
+    ("temp_unit_convert", "ha_unit_system", "expected_unit", "expected_value"),
     [
-        ("c", UnitOfTemperature.CELSIUS),
-        ("f", UnitOfTemperature.FAHRENHEIT),
+        pytest.param(
+            "c",
+            "metric",
+            UnitOfTemperature.CELSIUS,
+            28.0,
+            id="device_c_ha_c",
+        ),
+        pytest.param(
+            "c",
+            "us_customary",
+            UnitOfTemperature.FAHRENHEIT,
+            82.4,
+            id="device_c_ha_f",
+        ),
+        pytest.param(
+            "f",
+            "metric",
+            UnitOfTemperature.CELSIUS,
+            -2.2,
+            id="device_f_ha_c",
+        ),
+        pytest.param(
+            "f",
+            "us_customary",
+            UnitOfTemperature.FAHRENHEIT,
+            28.0,
+            id="device_f_ha_f",
+        ),
     ],
 )
 async def test_temp_unit_convert_number(
@@ -183,13 +210,18 @@ async def test_temp_unit_convert_number(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     temp_unit_convert: str,
+    ha_unit_system: str,
     expected_unit: UnitOfTemperature,
+    expected_value: float,
 ) -> None:
-    """Test that temperature number entities use the unit from TEMP_UNIT_CONVERT."""
+    """Test temperature number entities respect TEMP_UNIT_CONVERT and HA unit system."""
+    hass.config.units = (
+        US_CUSTOMARY_SYSTEM if ha_unit_system == "us_customary" else METRIC_SYSTEM
+    )
     mock_device.status["temp_unit_convert"] = temp_unit_convert
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    entity_id = "number.inverter_pool_heat_pump_temperature"
-    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
-    assert entity is not None, f"{entity_id} does not exist"
-    assert entity.native_unit_of_measurement == expected_unit
+    state = hass.states.get("number.inverter_pool_heat_pump_temperature")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == expected_unit
+    assert float(state.state) == pytest.approx(expected_value, rel=1e-3)
