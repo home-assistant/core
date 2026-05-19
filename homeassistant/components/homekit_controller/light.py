@@ -204,7 +204,14 @@ class HomeKitLight(HomeKitEntity, LightEntity):
             characteristics[CharacteristicsTypes.HUE] = hs_color[0]
             characteristics[CharacteristicsTypes.SATURATION] = hs_color[1]
 
-        characteristics[CharacteristicsTypes.ON] = True
+        # Extract the manufacturer from the accessory associated with the service
+        manufacturer = getattr(self.service.accessory, "manufacturer", "") if self.service and self.service.accessory else ""
+
+        # VIMAR WORKAROUND: Vimar firmware turns the light on at 100% brightness for a
+        # fraction of a second if it receives ON and BRIGHTNESS in the same payload.
+        # We omit the ON command if we are already sending other parameters.
+        if not characteristics or manufacturer != "Vimar":
+            characteristics[CharacteristicsTypes.ON] = True
 
         await self.async_put_characteristics(characteristics)
 
