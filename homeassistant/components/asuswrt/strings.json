@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "pwd_and_ssh": "Please provide either password or SSH key file, not both",
       "pwd_or_ssh": "Please provide password or SSH key file",
       "pwd_required": "Password is required for selected protocol",
       "ssh_not_file": "SSH key file not found",
@@ -23,15 +24,22 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "Port (leave empty for protocol default)",
           "protocol": "Communication protocol to use",
-          "ssh_key": "Path to your SSH key file (instead of password)",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your ASUSWRT router."
         },
-        "description": "Set required parameter to connect to your router"
+        "description": "Set required parameter to connect to your router",
+        "sections": {
+          "more_options": {
+            "data": {
+              "port": "Port (leave empty for protocol default)",
+              "ssh_key": "Path to your SSH key file (instead of password)"
+            },
+            "name": "More options"
+          }
+        }
       }
     }
   },

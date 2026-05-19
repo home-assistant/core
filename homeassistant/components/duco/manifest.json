@@ -11,9 +11,9 @@
   "documentation": "https://www.home-assistant.io/integrations/duco",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["duco"],
+  "loggers": ["duco_connectivity"],
   "quality_scale": "platinum",
-  "requirements": ["python-duco-client==0.3.10"],
+  "requirements": ["python-duco-connectivity==0.5.0"],
   "zeroconf": [
     {
       "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",

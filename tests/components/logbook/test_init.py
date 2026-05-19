@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
@@ -752,7 +752,7 @@ async def test_logbook_entity_filter_with_automations(
 async def test_logbook_entity_no_longer_in_state_machine(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook view with an entity that hass been removed from the state machine."""
+    """Test logbook view with entity removed from state machine."""
     await async_setup_component(hass, "logbook", {})
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
@@ -1122,7 +1122,7 @@ async def test_logbook_entity_context_id(
 async def test_logbook_context_id_automation_script_started_manually(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook populates context_ids for scripts and automations started manually."""
+    """Test logbook context_ids for manually started scripts/automations."""
     await asyncio.gather(
         *[
             async_setup_component(hass, comp, {})
@@ -1408,22 +1408,20 @@ async def test_logbook_context_from_template(
 
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1493,22 +1491,20 @@ async def test_logbook_(
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1676,22 +1672,20 @@ async def test_logbook_multiple_entities(
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },

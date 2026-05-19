@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.command_line.binary_sensor import CommandBinarySensor
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.components.homeassistant import (
@@ -17,7 +18,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
@@ -54,7 +55,9 @@ async def test_setup_integration_yaml(
     assert entity_state.name == "Test"
 
 
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+async def test_setup_platform_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setting up the platform with platform yaml."""
     await setup.async_setup_component(
         hass,
@@ -71,6 +74,13 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "binary_sensor_platform_yaml_not_supported"
+    )
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"platform": BINARY_SENSOR_DOMAIN}
+
 
 @pytest.mark.parametrize(
     "get_config",
@@ -85,7 +95,9 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                         "icon": (
-                            '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
+                            '{% if this.attributes.icon=="mdi:icon2" %}'
+                            " mdi:icon1"
+                            " {% else %} mdi:icon2 {% endif %}"
                         ),
                     }
                 }
@@ -251,8 +263,8 @@ async def test_updating_to_often(
     wait_till_event.set()
     await asyncio.sleep(0)
     assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Binary Sensor Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -264,8 +276,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Binary Sensor Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 

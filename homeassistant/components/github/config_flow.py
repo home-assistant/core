@@ -143,7 +143,8 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         async def _wait_for_login() -> None:
             if TYPE_CHECKING:
-                # mypy is not aware that we can't get here without having these set already
+                # mypy is not aware that we can't get here
+                # without having these set already
                 assert self._device is not None
                 assert self._login_device is not None
 

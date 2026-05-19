@@ -177,7 +177,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_UPDATE_PROFILE,
         _async_update_profile,
         schema=SERVICE_UPDATE_PROFILE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 
@@ -382,7 +382,7 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
         ) from err
 
 
-async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
     """Update profile information."""
     params = dict(call.data.copy())
 
@@ -406,7 +406,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             if field[ATTR_NAME].strip()
         ]
     try:
-        return await call.hass.async_add_executor_job(
+        response: Account = await call.hass.async_add_executor_job(
             lambda: client.account_update_credentials(**params)
         )
     except MastodonUnauthorizedError as error:
@@ -421,6 +421,9 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="unable_to_update_profile",
         ) from err
+    if call.return_response:
+        return response
+    return None
 
 
 async def _resolve_media(

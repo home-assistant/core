@@ -156,7 +156,7 @@ async def test_temperature_trigger_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature trigger fires for sensor entities with device_class temperature."""
+    """Test trigger fires for sensor entities with device_class temperature."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_sensors,
@@ -195,7 +195,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -234,7 +234,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last sensor changes state."""
+    """Test crossed_threshold trigger fires on last sensor state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,
@@ -263,12 +263,14 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_last(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -308,6 +310,7 @@ async def test_temperature_trigger_climate_behavior_any(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -321,7 +324,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first climate state change."""
+    """Test crossed_threshold trigger fires on first climate state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -347,6 +350,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -360,7 +364,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last climate changes state."""
+    """Test crossed_threshold trigger fires on last climate state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_climates,
@@ -389,12 +393,14 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_last(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -434,6 +440,7 @@ async def test_temperature_trigger_water_heater_behavior_any(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -447,7 +454,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first water_heater state change."""
+    """Test crossed_threshold fires on first water_heater state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_water_heaters,
@@ -473,6 +480,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -486,7 +494,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last water_heater changes state."""
+    """Test crossed_threshold fires on last water_heater state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_water_heaters,
@@ -516,6 +524,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
@@ -523,6 +532,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_last(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
@@ -563,6 +573,7 @@ async def test_temperature_trigger_weather_behavior_any(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
@@ -576,7 +587,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires on the first weather state change."""
+    """Test crossed_threshold trigger fires on first weather state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_weathers,
@@ -603,6 +614,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
             ATTR_WEATHER_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
     ],
 )
@@ -616,7 +628,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test temperature crossed_threshold trigger fires when the last weather changes state."""
+    """Test crossed_threshold fires on last weather state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_weathers,
@@ -636,7 +648,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_last(
 async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
     hass: HomeAssistant,
 ) -> None:
-    """Test temperature trigger converts sensor value from °C to °F for threshold comparison."""
+    """Test trigger converts sensor value from C to F for comparison."""
     calls: list[str] = []
     entity_id = "sensor.test_temp"
 
@@ -694,7 +706,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
 async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
     hass: HomeAssistant,
 ) -> None:
-    """Test temperature trigger converts sensor value from °F to °C for threshold comparison."""
+    """Test trigger converts sensor value from F to C for comparison."""
     calls: list[str] = []
     entity_id = "sensor.test_temp"
 
@@ -756,7 +768,8 @@ async def test_temperature_trigger_unit_conversion_changed(
     calls: list[str] = []
     entity_id = "sensor.test_temp"
 
-    # Sensor reports in °C, trigger configured in °F: above 68°F (20°C), below 77°F (25°C)
+    # Sensor reports in C, trigger configured in F:
+    # above 68F (20C), below 77F (25C)
     hass.states.async_set(
         entity_id,
         "18",
@@ -827,7 +840,8 @@ async def test_temperature_trigger_unit_conversion_weather(
     calls: list[str] = []
     entity_id = "weather.test"
 
-    # Weather reports temperature in °F, trigger configured in °C with threshold above 25°C
+    # Weather reports in F, trigger configured in C with threshold
+    # above 25C
     hass.states.async_set(
         entity_id,
         "sunny",
