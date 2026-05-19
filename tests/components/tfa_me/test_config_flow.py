@@ -91,7 +91,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "invalid_response",
             False,
         ),
-        (  # 54) TFAmeException raised -> error stored under "base"
+        (  # 5) TFAmeException raised -> error stored under "base"
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeException("unknown")},
             {
@@ -102,7 +102,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "unknown",
             False,
         ),
-        (  # 7) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
+        (  # 6) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
             None,
             None,
             {
@@ -113,7 +113,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "invalid_ip_host",
             False,
         ),
-        (  # 8) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
+        (  # 7) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
             None,
             None,
             {
@@ -124,7 +124,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "invalid_name_with_station_id",
             True,  # check error via values()
         ),
-        (  # 9) Generic exception while connecting -> error on "base"
+        (  # 8) Generic exception while connecting -> error on "base"
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
             {
