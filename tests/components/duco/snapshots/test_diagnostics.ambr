@@ -181,6 +181,111 @@
           'time_state_remain': 0,
         }),
       }),
+      '60': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Bedroom valve',
+          'network_type': 'WI',
+          'node_type': 'VLVRH',
+          'parent': 1,
+          'raw_payload': dict({
+          }),
+          'sub_type': 0,
+        }),
+        'motor_state': None,
+        'node_id': 60,
+        'raw_payload': dict({
+        }),
+        'sensor': dict({
+          'co2': None,
+          'iaq_co2': None,
+          'iaq_rh': 88,
+          'raw_payload': dict({
+          }),
+          'rh': 48.0,
+          'temp': 21.3,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'raw_payload': dict({
+          }),
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
+      '61': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Hall valve',
+          'network_type': 'WI',
+          'node_type': 'VLVCO2',
+          'parent': 1,
+          'raw_payload': dict({
+          }),
+          'sub_type': 0,
+        }),
+        'motor_state': None,
+        'node_id': 61,
+        'raw_payload': dict({
+        }),
+        'sensor': dict({
+          'co2': 512,
+          'iaq_co2': 76,
+          'iaq_rh': None,
+          'raw_payload': dict({
+          }),
+          'rh': None,
+          'temp': 20.1,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'raw_payload': dict({
+          }),
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
+      '62': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Study valve',
+          'network_type': 'WI',
+          'node_type': 'VLVCO2RH',
+          'parent': 1,
+          'raw_payload': dict({
+          }),
+          'sub_type': 0,
+        }),
+        'motor_state': None,
+        'node_id': 62,
+        'raw_payload': dict({
+        }),
+        'sensor': dict({
+          'co2': 645,
+          'iaq_co2': 95,
+          'iaq_rh': 92,
+          'raw_payload': dict({
+          }),
+          'rh': 54.0,
+          'temp': 20.7,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'raw_payload': dict({
+          }),
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
     }),
     'write_requests_remaining': 100,
   })
