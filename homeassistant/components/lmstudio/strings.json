@@ -1,0 +1,146 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "Optional if your LM Studio server does not require authentication.",
+          "url": "Example: {default_url}"
+        },
+        "description": "Re-enter the connection details for your LM Studio server."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "Optional if your LM Studio server does not require authentication.",
+          "url": "Example: {default_url}"
+        },
+        "description": "Enter the base URL for your LM Studio server (default: {default_url})."
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "Failed to add AI task. Your configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "set_options": {
+          "data": {
+            "context_length": "Context length",
+            "max_output_tokens": "Max output tokens",
+            "min_p": "Min P",
+            "model": "Model",
+            "name": "[%key:common::config_flow::data::name%]",
+            "reasoning": "Reasoning effort",
+            "repeat_penalty": "Repeat penalty",
+            "temperature": "Temperature",
+            "top_k": "Top K",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "context_length": "Maximum context window size in tokens",
+            "max_output_tokens": "Maximum number of tokens in the response",
+            "min_p": "Minimum probability for token sampling",
+            "reasoning": "Reasoning level for supported models",
+            "repeat_penalty": "Penalty for repeating token sequences",
+            "temperature": "Lower values make responses more deterministic",
+            "top_k": "Limit token sampling to the top K tokens",
+            "top_p": "Limit token sampling to the top P probability mass"
+          }
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "Failed to add conversation agent. Your configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "set_options": {
+          "data": {
+            "context_length": "Context length",
+            "max_history": "Max history messages",
+            "max_output_tokens": "Max output tokens",
+            "min_p": "Min P",
+            "model": "Model",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "reasoning": "Reasoning effort",
+            "repeat_penalty": "Repeat penalty",
+            "temperature": "Temperature",
+            "top_k": "Top K",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "context_length": "Maximum context window size in tokens",
+            "max_history": "Number of previous user messages to include when a new LM Studio thread starts",
+            "max_output_tokens": "Maximum number of tokens in the response",
+            "min_p": "Minimum probability for token sampling",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "reasoning": "Reasoning level for supported models",
+            "repeat_penalty": "Penalty for repeating token sequences",
+            "temperature": "Lower values make responses more deterministic",
+            "top_k": "Limit token sampling to the top K tokens",
+            "top_p": "Limit token sampling to the top P probability mass"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "attachment_not_found": {
+      "message": "Attachment file not found: {file_path}"
+    },
+    "auth_failed": {
+      "message": "Authentication with the LM Studio server failed."
+    },
+    "connection_error": {
+      "message": "Failed to reach the LM Studio server."
+    },
+    "invalid_structured_response": {
+      "message": "The model returned an invalid structured response."
+    },
+    "no_assistant_response": {
+      "message": "The model did not return a response."
+    },
+    "no_user_content": {
+      "message": "No user input found in the conversation."
+    },
+    "stream_error": {
+      "message": "The model returned an error: {message}"
+    },
+    "unsupported_attachment_type": {
+      "message": "LM Studio only supports image attachments in user content, but received a non-image attachment."
+    }
+  }
+}
