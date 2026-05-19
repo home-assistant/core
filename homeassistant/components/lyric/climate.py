@@ -366,7 +366,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     translation_domain=DOMAIN,
                     translation_key="failed_to_set_temperature",
                 ) from err
-            await self.coordinator.async_refresh()
+            finally:
+                await self.coordinator.async_refresh()
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
@@ -384,7 +385,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     translation_domain=DOMAIN,
                     translation_key="failed_to_set_temperature",
                 ) from err
-            await self.coordinator.async_refresh()
+            finally:
+                await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -400,7 +402,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_hvac_mode",
             ) from err
-        await self.coordinator.async_refresh()
+        finally:
+            await self.coordinator.async_refresh()
 
     async def _async_set_hvac_mode_tcc(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode for TCC devices (e.g., Lyric round)."""
@@ -481,7 +484,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_preset_mode",
             ) from err
-        await self.coordinator.async_refresh()
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_set_hold_time(self, time_period: str) -> None:
         """Set the time to hold until."""
@@ -498,7 +502,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_hold_time",
             ) from err
-        await self.coordinator.async_refresh()
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
@@ -519,4 +524,5 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_fan_mode",
             ) from err
-        await self.coordinator.async_refresh()
+        finally:
+            await self.coordinator.async_refresh()
