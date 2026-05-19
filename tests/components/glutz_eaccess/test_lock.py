@@ -230,7 +230,7 @@ async def test_service_auth_error_raises(
     """Test that GlutzAuthError during service call raises HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
-    getattr(mock_glutz_client, api_method).side_effect = GlutzAuthError
+    getattr(mock_glutz_client, api_method).side_effect = GlutzAuthError()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -259,7 +259,7 @@ async def test_service_connection_error_raises(
     """Test that GlutzConnectionError during service call raises HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
-    getattr(mock_glutz_client, api_method).side_effect = GlutzConnectionError
+    getattr(mock_glutz_client, api_method).side_effect = GlutzConnectionError()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

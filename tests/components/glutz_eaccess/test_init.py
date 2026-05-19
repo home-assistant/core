@@ -57,7 +57,7 @@ async def test_setup_auth_error(
     mock_glutz_client: AsyncMock,
 ) -> None:
     """Test that an auth error during first refresh puts entry in SETUP_ERROR state."""
-    mock_glutz_client.get_access_points.side_effect = GlutzAuthError
+    mock_glutz_client.get_access_points.side_effect = GlutzAuthError()
 
     await setup_integration(hass, mock_config_entry)
 
@@ -70,7 +70,7 @@ async def test_setup_connection_error(
     mock_glutz_client: AsyncMock,
 ) -> None:
     """Test that a connection error during first refresh puts entry in SETUP_RETRY."""
-    mock_glutz_client.get_access_points.side_effect = GlutzConnectionError
+    mock_glutz_client.get_access_points.side_effect = GlutzConnectionError()
 
     await setup_integration(hass, mock_config_entry)
 

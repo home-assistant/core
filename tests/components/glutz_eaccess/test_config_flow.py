@@ -128,14 +128,14 @@ async def test_credentials_no_system_id_returns_error(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (GlutzAuthError, "invalid_auth"),
-        (GlutzConnectionError, "cannot_connect"),
+        (GlutzAuthError(), "invalid_auth"),
+        (GlutzConnectionError(), "cannot_connect"),
     ],
 )
 async def test_credentials_api_error_returns_form_error(
     hass: HomeAssistant,
     mock_glutz_client: AsyncMock,
-    side_effect: type[Exception],
+    side_effect: Exception,
     expected_error: str,
 ) -> None:
     """Test that API errors map to the expected form error key."""
@@ -198,7 +198,7 @@ async def test_invitation_resolve_connection_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.glutz_eaccess.config_flow.resolve_instance_host",
-            side_effect=GlutzConnectionError,
+            side_effect=GlutzConnectionError(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -309,13 +309,13 @@ async def test_invitation_confirm_without_invitation_aborts(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (GlutzAuthError, "invalid_auth"),
-        (GlutzConnectionError, "cannot_connect"),
+        (GlutzAuthError(), "invalid_auth"),
+        (GlutzConnectionError(), "cannot_connect"),
     ],
 )
 async def test_invitation_confirm_set_password_api_error(
     hass: HomeAssistant,
-    side_effect: type[Exception],
+    side_effect: Exception,
     expected_error: str,
 ) -> None:
     """Test that errors raised by set_new_password map to form errors."""
@@ -361,14 +361,14 @@ async def test_invitation_confirm_set_password_api_error(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (GlutzAuthError, "invalid_auth"),
-        (GlutzConnectionError, "cannot_connect"),
+        (GlutzAuthError(), "invalid_auth"),
+        (GlutzConnectionError(), "cannot_connect"),
     ],
 )
 async def test_invitation_confirm_verify_api_error_after_password_set(
     hass: HomeAssistant,
     mock_glutz_client: AsyncMock,
-    side_effect: type[Exception],
+    side_effect: Exception,
     expected_error: str,
 ) -> None:
     """Test that API errors after set_new_password map to form errors."""

@@ -38,7 +38,7 @@ async def test_coordinator_connection_error_on_update(
     """Test that a connection error marks last_update_success as False."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_glutz_client.get_access_points.side_effect = GlutzConnectionError
+    mock_glutz_client.get_access_points.side_effect = GlutzConnectionError()
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass, dt_util.utcnow())
@@ -54,7 +54,7 @@ async def test_coordinator_auth_error_on_first_refresh(
     mock_glutz_client: AsyncMock,
 ) -> None:
     """Test that auth error on first refresh puts entry in SETUP_ERROR."""
-    mock_glutz_client.get_access_points.side_effect = GlutzAuthError
+    mock_glutz_client.get_access_points.side_effect = GlutzAuthError()
 
     await setup_integration(hass, mock_config_entry)
 
@@ -70,7 +70,7 @@ async def test_auth_error_during_scheduled_update_marks_update_failed(
     """Test that auth error during a scheduled refresh marks last_update_success False."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_glutz_client.get_access_points.side_effect = GlutzAuthError
+    mock_glutz_client.get_access_points.side_effect = GlutzAuthError()
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass, dt_util.utcnow())
