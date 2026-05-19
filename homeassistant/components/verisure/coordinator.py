@@ -62,12 +62,22 @@ def _is_transient_verisure_failure(exc: BaseException) -> bool:
     return False
 
 
+def _is_cookie_file_read_error(exc: VerisureLoginError) -> bool:
+    """Detect unreadable/missing cookie pickle from vsure login paths."""
+    if str(exc) == "Failed to read cookie":
+        return True
+    return isinstance(
+        exc.__cause__,
+        (OSError, EOFError, ValueError, TypeError, AttributeError),
+    )
+
+
 def _verisure_response_http_status(exc: VerisureResponseError) -> int | None:
     """Return HTTP status from ResponseError when available."""
     code = getattr(exc, "status_code", None)
     if isinstance(code, int):
         return code
-    match = re.search(r"status code: (\d+)", str(exc))
+    match = re.search(r"status code: (\d+)", str(exc), re.IGNORECASE)
     if match:
         return int(match.group(1))
     return None
@@ -115,7 +125,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             )
             return False
         except VerisureLoginError as ex:
-            if str(ex) == "Failed to read cookie":
+            if _is_cookie_file_read_error(ex):
                 try:
                     await self.hass.async_add_executor_job(self.verisure.login)
                 except VerisureError as login_ex:
@@ -200,7 +210,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     "Could not refresh Verisure session (transient)"
                 ) from ex
             except VerisureLoginError as ex:
-                if str(ex) == "Failed to read cookie":
+                if _is_cookie_file_read_error(ex):
                     try:
                         await self.hass.async_add_executor_job(self.verisure.login)
                     except VerisureError as login_ex:
