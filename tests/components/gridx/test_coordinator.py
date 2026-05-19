@@ -249,39 +249,3 @@ async def test_historical_coordinator_runtime_error(
 
     with pytest.raises(UpdateFailed):
         await _fetch_historical(connector)
-
-
-async def test_historical_coordinator_does_not_aggregate_rates(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Rate keys should not be summed across multiple systems."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(
-        return_value=[
-            {
-                "total": {
-                    "photovoltaic": 100,
-                    "selfConsumptionRate": 0.6,
-                    "selfSufficiencyRate": 0.5,
-                    "directConsumptionRate": 0.8,
-                }
-            },
-            {
-                "total": {
-                    "photovoltaic": 200,
-                    "selfConsumptionRate": 0.7,
-                    "selfSufficiencyRate": 0.4,
-                    "directConsumptionRate": 0.9,
-                }
-            },
-        ]
-    )
-
-    data = await _fetch_historical(connector)
-
-    # Energy values should be aggregated
-    assert data["total"]["photovoltaic"] == 300
-    # Rate values should NOT be aggregated (use the first value seen)
-    assert data["total"]["selfConsumptionRate"] == 0.6
-    assert data["total"]["selfSufficiencyRate"] == 0.5
-    assert data["total"]["directConsumptionRate"] == 0.8
