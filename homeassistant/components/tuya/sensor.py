@@ -1760,17 +1760,19 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         ) is SensorDeviceClass.ENUM:
             self._attr_native_unit_of_measurement = None
             return
+
         if device_class is None:
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
         # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
         if (
-            device_class == SensorDeviceClass.TEMPERATURE
+            device_class is SensorDeviceClass.TEMPERATURE
             and not tuya_uom
             and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
         ):
-            tuya_uom = temp_unit
+            self._attr_native_unit_of_measurement = temp_unit
+            return
 
         # We do not need to check mappings if the API UOM is allowed
         if tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]:
