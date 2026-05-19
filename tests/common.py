@@ -2037,6 +2037,7 @@ async def assert_platform_setup_creates_issue(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Assert that setting up a platform creates an issue."""
+    caplog.clear()
     with assert_setup_component(1, platform_domain):
         assert await async_setup_component(
             hass,
@@ -2053,8 +2054,10 @@ async def assert_platform_setup_creates_issue(
         in caplog.text
     )
 
-    assert len(issue_registry.issues) == 1
-    issue = next(iter(issue_registry.issues.values()))
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
 
     assert issue.domain == "homeassistant"
     assert issue.severity == ir.IssueSeverity.ERROR

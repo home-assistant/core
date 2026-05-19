@@ -374,6 +374,7 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
                 learn_more_url=learn_more_url,
+                logger=self.logger,
             )
             return
 
