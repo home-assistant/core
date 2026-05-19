@@ -424,7 +424,7 @@ async def test_reauth_flow_with_mfa(
         CONF_PASSWORD: "correct horse battery staple!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 1
     assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -529,7 +529,7 @@ async def test_reauth_flow_errors(
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 4
+    assert len(mock_verisure_config_flow.login.mock_calls) == 3
     assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 2
     assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
