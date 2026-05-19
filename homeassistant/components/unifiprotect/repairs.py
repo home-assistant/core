@@ -105,16 +105,15 @@ class RTSPRepair(ProtectRepair):
 
         return self._bootstrap
 
-    async def _get_camera(self) -> Camera:
+    async def _get_camera(self) -> Camera | None:
         if self._camera is None:
             bootstrap = await self._get_boostrap()
             self._camera = bootstrap.cameras.get(self._camera_id)
-            assert self._camera is not None
         return self._camera
 
     async def _enable_rtsp(self) -> None:
-        camera = await self._get_camera()
-        await camera.create_rtsps_streams(qualities="high")
+        if (camera := await self._get_camera()) is not None:
+            await camera.create_rtsps_streams(qualities="high")
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -131,6 +130,8 @@ class RTSPRepair(ProtectRepair):
         if user_input is None:
             # make sure camera object is loaded for placeholders
             await self._get_camera()
+            if self._camera is None:
+                return self.async_abort(reason="camera_unavailable")
             placeholders = self._async_get_placeholders()
             return self.async_show_form(
                 step_id="start",
