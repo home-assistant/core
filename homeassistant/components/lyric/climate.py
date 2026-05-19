@@ -504,19 +504,19 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Set fan mode."""
         _LOGGER.debug("Set fan mode: %s", fan_mode)
         try:
-            _LOGGER.debug("Fan mode passed to lyric: %s", LYRIC_FAN_MODES[fan_mode])
-            await self._update_fan(
-                self.location, self.device, mode=LYRIC_FAN_MODES[fan_mode]
-            )
-        except LYRIC_EXCEPTIONS as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_set_fan_mode",
-            ) from err
+            mode = LYRIC_FAN_MODES[fan_mode]
         except KeyError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_mode",
                 translation_placeholders={"fan_mode": fan_mode},
+            ) from err
+        _LOGGER.debug("Fan mode passed to lyric: %s", mode)
+        try:
+            await self._update_fan(self.location, self.device, mode=mode)
+        except LYRIC_EXCEPTIONS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_fan_mode",
             ) from err
         await self.coordinator.async_refresh()
