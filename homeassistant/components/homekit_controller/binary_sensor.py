@@ -1,4 +1,4 @@
-"""Support for Homekit motion sensors."""
+"""Support for HomeKit binary sensors."""
 
 from dataclasses import dataclass
 from typing import cast
