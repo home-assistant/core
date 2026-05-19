@@ -105,7 +105,7 @@ async def test_yaml_import_cannot_connect(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
 
 
 async def test_yaml_import_invalid_station(
@@ -126,7 +126,7 @@ async def test_yaml_import_invalid_station(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_station"
     )
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
 
 
 @pytest.mark.usefixtures("mock_opensensemap_api")

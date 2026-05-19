@@ -11,7 +11,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -52,6 +51,8 @@ async def async_setup_platform(
         result["type"] is FlowResultType.ABORT
         and result["reason"] in KNOWN_IMPORT_ABORT_REASONS
     ):
+        # Per-reason issue conveys the deprecation notice itself, so don't also
+        # raise the generic deprecated_yaml issue on top of it.
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -66,10 +67,9 @@ async def async_setup_platform(
                 "integration_title": INTEGRATION_TITLE,
             },
         )
+        return
 
     # "deprecated_yaml" translation key lives under the "homeassistant" core domain.
-    # Always raised so users see the deprecation notice even when the import
-    # fails — they need to remove the YAML block once they recover.
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
@@ -99,20 +99,12 @@ class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQuality
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = "Data provided by openSenseMap"
-    _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(self, coordinator: OpenSenseMapCoordinator) -> None:
         """Initialize the air quality entity."""
         super().__init__(coordinator)
-        station_id = coordinator.config_entry.data[CONF_STATION_ID]
-        self._attr_unique_id = station_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, station_id)},
-            manufacturer=INTEGRATION_TITLE,
-            name=coordinator.config_entry.title,
-            configuration_url=f"https://opensensemap.org/explore/{station_id}",
-        )
+        self._attr_name = coordinator.config_entry.title
+        self._attr_unique_id = coordinator.config_entry.data[CONF_STATION_ID]
 
     @property
     def particulate_matter_2_5(self) -> float | None:
