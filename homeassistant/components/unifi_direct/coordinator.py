@@ -62,6 +62,7 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN} - {self.host}",
             update_interval=UPDATE_INTERVAL,
         )
