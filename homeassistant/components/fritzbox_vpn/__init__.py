@@ -36,7 +36,11 @@ from .models import FritzboxVpnConfigEntry, FritzboxVpnRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 SERVICE_REGISTRATION_FLAG = "_service_remove_unavailable_registered"
 
 SERVICE_SCHEMA_OPTIONAL_ENTRY_ID = vol.Schema({vol.Optional(CONF_CONFIG_ENTRY_ID): str})
@@ -69,7 +73,7 @@ async def _async_remove_unavailable_entities(
         to_remove, err = get_orphaned_entity_entries(hass, entry_id)
         if err:
             _LOGGER.warning(
-                "remove_unavailable_entities: skip entry %s (%s)", entry_id, err
+                "Remove unavailable entities: skip entry %s (%s)", entry_id, err
             )
             continue
         if not to_remove:
@@ -77,7 +81,7 @@ async def _async_remove_unavailable_entities(
         remove_orphaned_entities(hass, entry_id, to_remove)
         await hass.config_entries.async_reload(entry_id)
         _LOGGER.info(
-            "remove_unavailable_entities: removed %d entities and reloaded entry %s",
+            "Remove unavailable entities: removed %d entities and reloaded entry %s",
             len(to_remove),
             entry_id,
         )
@@ -92,7 +96,7 @@ async def _async_repair_entity_id_suffixes(
         if count:
             await hass.config_entries.async_reload(entry_id)
             _LOGGER.info(
-                "repair_entity_id_suffixes: repaired %d entities for entry %s",
+                "Repair entity ID suffixes: repaired %d entities for entry %s",
                 count,
                 entry_id,
             )

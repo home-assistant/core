@@ -93,8 +93,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (CannotConnect, InvalidAuth) as err:
             set_validation_error(errors, err, log_unknown_details=log_unknown_details)
             return None
-        await self.async_set_unique_id(unique_id or user_input.get(CONF_HOST))
-        self._abort_if_unique_id_configured()
+        if unique_id is not None:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_user(
@@ -112,9 +113,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if has_host and has_username and has_password:
                     try:
                         info = await validate_input(self.hass, self._existing_config)
-                        host = self._existing_config.get(CONF_HOST)
-                        await self.async_set_unique_id(host)
-                        self._abort_if_unique_id_configured()
                         return self.async_create_entry(
                             title=info["title"], data=self._existing_config
                         )
@@ -142,7 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input,
             errors,
             password_sources=(self._existing_config,),
-            unique_id=user_input.get(CONF_HOST),
+            unique_id=None,
             log_unknown_details=True,
         )
         if result is not None:

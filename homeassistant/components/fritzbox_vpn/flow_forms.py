@@ -120,7 +120,7 @@ def configure_schema(
         host_default = validate_host(host_default)
     except vol.Invalid:
         _LOGGER.warning(
-            "Invalid host in config entry for options form. Falling back to default host.",
+            "Invalid host in config entry for options form. Falling back to default host",
         )
         host_default = DEFAULT_HOST
     default_update_interval = normalize_update_interval(

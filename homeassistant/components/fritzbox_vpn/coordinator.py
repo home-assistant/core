@@ -46,7 +46,7 @@ def normalize_update_interval(value: Any) -> int:
         if UPDATE_INTERVAL_MIN <= n <= UPDATE_INTERVAL_MAX:
             return n
         _LOGGER.warning(
-            "update_interval %d out of range (%d–%d), using default %s",
+            "Update interval %d out of range (%d–%d), using default %s",
             n,
             UPDATE_INTERVAL_MIN,
             UPDATE_INTERVAL_MAX,

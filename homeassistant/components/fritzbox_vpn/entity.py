@@ -36,12 +36,14 @@ def vpn_unique_id(connection_uid: str, suffix: str) -> str:
 
 
 def vpn_device_info(
-    entry: FritzboxVpnConfigEntry, connection_uid: str, connection_data: dict[str, Any]
+    entry: FritzboxVpnConfigEntry,
+    connection_uid: str,
+    connection_payload: dict[str, Any],
 ) -> DeviceInfo:
     """Device registry entry for one WireGuard VPN connection."""
     return DeviceInfo(
         identifiers={vpn_connection_device_identifier(entry.entry_id, connection_uid)},
-        name=connection_data.get(API_KEY_NAME, DEFAULT_NAME_UNKNOWN),
+        name=connection_payload.get(API_KEY_NAME, DEFAULT_NAME_UNKNOWN),
         manufacturer=MANUFACTURER_AVM,
         model=MODEL_WIREGUARD_VPN,
         via_device=(DOMAIN, entry.entry_id),
@@ -104,7 +106,7 @@ class FritzBoxVPNEntity(CoordinatorEntity[FritzBoxVPNCoordinator]):
         coordinator: FritzBoxVPNCoordinator,
         entry: FritzboxVpnConfigEntry,
         connection_uid: str,
-        connection_data: dict[str, Any],
+        connection_payload: dict[str, Any],
         *,
         unique_id_suffix: str,
     ) -> None:
@@ -112,9 +114,11 @@ class FritzBoxVPNEntity(CoordinatorEntity[FritzBoxVPNCoordinator]):
         super().__init__(coordinator)
         self._entry = entry
         self._connection_uid = connection_uid
-        self._connection_data = connection_data
+        self._connection_data = connection_payload
         self._attr_unique_id = vpn_unique_id(connection_uid, unique_id_suffix)
-        self._attr_device_info = vpn_device_info(entry, connection_uid, connection_data)
+        self._attr_device_info = vpn_device_info(
+            entry, connection_uid, connection_payload
+        )
 
     @property
     def available(self) -> bool:
