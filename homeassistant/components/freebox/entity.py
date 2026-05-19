@@ -59,10 +59,14 @@ class FreeboxHomeEntity(Entity):
 
     async def async_update_signal(self) -> None:
         """Update signal."""
-        # The router prunes Home nodes the Freebox no longer reports; skip the
-        # refresh if our node has just disappeared and let the entity expire.
+        # When the router prunes our Home node (unpaired in the Freebox app),
+        # mark the entity unavailable so the user notices and can remove it
+        # via the device's Delete action.
         if (node := self._router.home_devices.get(self._id)) is None:
+            self._attr_available = False
+            self.async_write_ha_state()
             return
+        self._attr_available = True
         self._node = node
         if self._sub_node is None:
             self._attr_name = self._node["label"].strip()

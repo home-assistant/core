@@ -268,8 +268,9 @@ class FreeboxRouter:
             for home_node in home_nodes
             if home_node["category"] in HOME_COMPATIBLE_CATEGORIES
         }
-        for stale_id in set(self.home_devices) - current_ids:
-            del self.home_devices[stale_id]
+        if home_nodes:
+            for stale_id in set(self.home_devices) - current_ids:
+                del self.home_devices[stale_id]
 
         new_device = False
         for home_node in home_nodes:

@@ -196,3 +196,35 @@ async def test_stale_home_devices_are_pruned(
     await hass.async_block_till_done()
 
     assert await async_remove_config_entry_device(hass, entry, alarm_device) is True
+
+
+async def test_stale_home_devices_are_pruned(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    router: Mock,
+) -> None:
+    """Unpaired Home nodes are dropped, enabling removal."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Sanity: while reported, the alarm (node id 7) is protected.
+    alarm_device = device_registry.async_get_device(identifiers={(DOMAIN, 7)})
+    assert alarm_device is not None
+    assert await async_remove_config_entry_device(hass, entry, alarm_device) is False
+
+    # Simulate the user unpairing the alarm from the Freebox app.
+    remaining_nodes = [node for node in DATA_HOME_GET_NODES if node["id"] != 7]
+    router().home.get_home_nodes = AsyncMock(return_value=remaining_nodes)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert await async_remove_config_entry_device(hass, entry, alarm_device) is True
