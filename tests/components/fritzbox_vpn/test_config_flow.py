@@ -12,7 +12,7 @@ from homeassistant.components.fritzbox_vpn.flow_forms import (
     validate_host,
     validate_input,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -20,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
-
-from homeassistant.config_entries import SOURCE_RECONFIGURE
 
 
 @pytest.fixture(autouse=True)
