@@ -4,10 +4,10 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import dataclasses
 from enum import Enum
-from functools import cache, partial
+from functools import partial
+import importlib
 import inspect
 import logging
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 
 import voluptuous as vol
@@ -79,54 +79,6 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 ] = HassKey("all_service_descriptions_cache")
 
 
-@cache
-def _base_components() -> dict[str, ModuleType]:
-    """Return a cached lookup of base components."""
-    from homeassistant.components import (  # noqa: PLC0415
-        ai_task,
-        alarm_control_panel,
-        assist_satellite,
-        calendar,
-        camera,
-        climate,
-        cover,
-        fan,
-        humidifier,
-        light,
-        lock,
-        media_player,
-        notify,
-        remote,
-        siren,
-        todo,
-        update,
-        vacuum,
-        water_heater,
-    )
-
-    return {
-        "ai_task": ai_task,
-        "alarm_control_panel": alarm_control_panel,
-        "assist_satellite": assist_satellite,
-        "calendar": calendar,
-        "camera": camera,
-        "climate": climate,
-        "cover": cover,
-        "fan": fan,
-        "humidifier": humidifier,
-        "light": light,
-        "lock": lock,
-        "media_player": media_player,
-        "notify": notify,
-        "remote": remote,
-        "siren": siren,
-        "todo": todo,
-        "update": update,
-        "vacuum": vacuum,
-        "water_heater": water_heater,
-    }
-
-
 def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
     """Validate attribute option or supported feature."""
     try:
@@ -136,9 +88,13 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
             f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
-    base_components = _base_components()
-    if not (base_component := base_components.get(domain)):
-        raise vol.Invalid(f"Unknown base component '{domain}'")
+    base_component_module_name = f"homeassistant.components.{domain}"
+    try:
+        base_component = importlib.import_module(base_component_module_name)
+    except ModuleNotFoundError as exc:
+        if exc.name == base_component_module_name:
+            raise vol.Invalid(f"Unknown base component '{domain}'") from exc
+        raise
 
     try:
         attribute_enum = getattr(base_component, enum)
