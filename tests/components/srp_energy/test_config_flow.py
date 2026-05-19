@@ -134,7 +134,8 @@ async def test_flow_entry_already_configured(
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
-    # Attempt a second config using same account id. This is the unique id between configs.
+    # Attempt a second config using same account id.
+    # This is the unique id between configs.
     user_input_second = TEST_CONFIG_HOME
     user_input_second[CONF_ID] = init_integration.data[CONF_ID]
 
@@ -157,7 +158,8 @@ async def test_flow_multiple_configs(
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
-    # Attempt a second config using different account id. This is the unique id between configs.
+    # Attempt a second config using different account id.
+    # This is the unique id between configs.
     assert TEST_CONFIG_CABIN[CONF_ID] != ACCNT_ID
 
     result = await hass.config_entries.flow.async_init(
@@ -212,11 +214,11 @@ async def test_reconfigure(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,
-    mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfiguring an existing entry."""
 
@@ -258,11 +260,11 @@ async def test_reconfigure_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unknown_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,
-    mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfiguring an existing entry and handling unknown error."""
 

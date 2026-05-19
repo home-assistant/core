@@ -212,7 +212,7 @@ async def test_mount_refresh_after_issue(
     supervisor_client: AsyncMock,
     hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test hassio mount state is refreshed after an issue was send by the supervisor."""
+    """Test hassio mount state is refreshed after an issue was sent by supervisor."""
     # Add a mount.
     mock_mounts: list[CIFSMountResponse | NFSMountResponse] = [
         CIFSMountResponse(
