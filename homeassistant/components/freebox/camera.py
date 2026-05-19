@@ -9,9 +9,6 @@ from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager, async_get_image
-from homeassistant.components.ffmpeg.camera import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_ARGUMENTS,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -23,6 +20,8 @@ from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_ARGUMENTS = "-pred 1"
 
 
 async def async_setup_entry(
