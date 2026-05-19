@@ -1,0 +1,85 @@
+"""Constants for the inepro Metering integration."""
+
+from inepro_metering.const import (
+    DEFAULT_BLUETOOTH_PAIRING_TIMEOUT,
+    DEFAULT_BLUETOOTH_PROXY_HOST,
+    DEFAULT_BLUETOOTH_PROXY_PORT,
+    FAMILY_LABELS,
+    TRANSPORT_LABELS,
+    MeterFamily,
+    TransportType,
+)
+from inepro_metering.routes import ROUTE_PURPOSE_ACTIVE, ROUTE_PURPOSE_ONBOARDING
+
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TIMEOUT
+
+__all__ = [
+    "CONF_SCAN_INTERVAL",
+    "CONF_TIMEOUT",
+    "DEFAULT_BLUETOOTH_PAIRING_TIMEOUT",
+    "FAMILY_LABELS",
+    "ROUTE_PURPOSE_ACTIVE",
+    "ROUTE_PURPOSE_ONBOARDING",
+    "TRANSPORT_LABELS",
+    "MeterFamily",
+    "TransportType",
+]
+
+DOMAIN = "inepro_metering"
+NAME = "inepro Metering"
+MANUFACTURER = "inepro"
+
+CONF_FAMILY = "family"
+CONF_DEVICE_KIND = "device_kind"
+CONF_DISCOVERED_GATEWAY = "discovered_gateway"
+CONF_GATEWAY_DISCOVERY_TARGET = "gateway_discovery_target"
+CONF_GATEWAY_SETUP_METHOD = "gateway_setup_method"
+CONF_METERS = "meters"
+CONF_ROUTES = "routes"
+CONF_ACTIVE_ROUTE = "active_route"
+CONF_ROUTE_PURPOSE = "route_purpose"
+CONF_VARIANT = "variant"
+CONF_TRANSPORT = "transport"
+CONF_SETUP_METHOD = "setup_method"
+CONF_SLAVE_ID = "slave_id"
+CONF_BLUETOOTH_ADDRESS = "bluetooth_address"
+CONF_BLUETOOTH_NAME = "bluetooth_name"
+CONF_SERIAL_PORT = "serial_port"
+CONF_BAUDRATE = "baudrate"
+CONF_BYTESIZE = "bytesize"
+CONF_PARITY = "parity"
+CONF_STOPBITS = "stopbits"
+CONF_SERIAL_NUMBER = "serial_number"
+
+DEVICE_KIND_METER = "meter"
+DEVICE_KIND_GATEWAY = "gateway"
+
+DEVICE_KIND_LABELS = {
+    DEVICE_KIND_METER: "Energy meter",
+    DEVICE_KIND_GATEWAY: "Gateway",
+}
+
+GATEWAY_SETUP_METHOD_SCAN_NETWORK = "scan_network"
+GATEWAY_SETUP_METHOD_MANUAL_IP = "manual_ip"
+
+SETUP_METHOD_MANUAL = "manual"
+SETUP_METHOD_SCAN_BLUETOOTH = "scan_bluetooth"
+SETUP_METHOD_SCAN_SERIAL = "scan_serial"
+SETUP_METHOD_SCAN_TCP_GATEWAY = "scan_tcp_gateway"
+
+DEFAULT_SLAVE_ID = 1
+DEFAULT_SLAVE_ID_END = 32
+DEFAULT_GATEWAY_SCAN_SLAVE_ID_END = 8
+DEFAULT_SCAN_INTERVAL = 15
+DEFAULT_BLUETOOTH_SCAN_INTERVAL = 30
+DEFAULT_BLUETOOTH_TIMEOUT = 10
+DEFAULT_TIMEOUT = 3
+DEFAULT_PORT = 502
+DEFAULT_BLE_PROXY_HOST = DEFAULT_BLUETOOTH_PROXY_HOST
+DEFAULT_BLE_PROXY_PORT = DEFAULT_BLUETOOTH_PROXY_PORT
+SHOW_EXPERIMENTAL_TRANSPORTS = False
+
+DEFAULT_BAUDRATE = 9600
+DEFAULT_BYTESIZE = 8
+DEFAULT_PARITY = "E"
+DEFAULT_STOPBITS = 1

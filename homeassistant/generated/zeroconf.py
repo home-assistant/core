@@ -805,6 +805,11 @@ ZEROCONF = {
             "name": "yeelink-*",
         },
     ],
+    "_modbus._tcp.local.": [
+        {
+            "domain": "inepro_metering",
+        },
+    ],
     "_musc._tcp.local.": [
         {
             "domain": "bluesound",
