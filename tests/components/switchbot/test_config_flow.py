@@ -1740,7 +1740,7 @@ async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
 async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
     hass: HomeAssistant,
 ) -> None:
-    """Test the user initiated form for a relay switch 1pm when the switchbot api is down."""
+    """Test user form for relay switch 1pm when switchbot api is down."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

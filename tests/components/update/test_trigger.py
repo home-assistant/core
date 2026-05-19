@@ -89,7 +89,7 @@ async def test_update_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the update state trigger fires when any update state changes to a specific state."""
+    """Test update state trigger fires when any update changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_updates,
@@ -127,7 +127,7 @@ async def test_update_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the update state trigger fires when the first update changes to a specific state."""
+    """Test update state trigger fires when first update changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_updates,
@@ -165,7 +165,7 @@ async def test_update_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the update state trigger fires when the last update changes to a specific state."""
+    """Test update state trigger fires when last update changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_updates,
