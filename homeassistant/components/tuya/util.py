@@ -16,15 +16,16 @@ _TEMP_UNIT_CONVERT_MAPPING = {
 
 
 def get_temperature_unit(
-    device: CustomerDevice, tuya_uom: str | None
+    device: CustomerDevice, dpcode_uom: str | None
 ) -> UnitOfTemperature | None:
-    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
-    if not tuya_uom:
+    """Convert the DPCode unit of measurement to a temperature unit."""
+    if not dpcode_uom:
         return get_device_temp_unit_convert(device)
 
-    if tuya_uom in CELSIUS_ALIASES:
+    dpcode_uom = dpcode_uom.lower()
+    if dpcode_uom in CELSIUS_ALIASES:
         return UnitOfTemperature.CELSIUS
-    if tuya_uom in FAHRENHEIT_ALIASES:
+    if dpcode_uom in FAHRENHEIT_ALIASES:
         return UnitOfTemperature.FAHRENHEIT
     return None
 
