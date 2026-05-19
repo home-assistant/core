@@ -14,7 +14,7 @@
     "step": {
       "discovery_confirm": {
         "description": "Do you want to add {model} ({host}) to Home Assistant?",
-        "title": "Discovered Indevolt device"
+        "title": "Discovered Indevolt {model}"
       },
       "reconfigure": {
         "data": {

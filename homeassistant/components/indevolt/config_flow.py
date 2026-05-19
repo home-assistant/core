@@ -106,7 +106,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: host}, reload_on_update=True
         )
 
-        self.context["title_placeholders"] = {"name": device_data[CONF_MODEL]}
+        self.context["title_placeholders"] = {"model": device_data[CONF_MODEL]}
         self._discovered_host = host
         self._discovered_device_data = device_data
 
