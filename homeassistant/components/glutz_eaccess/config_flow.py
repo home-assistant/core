@@ -163,6 +163,10 @@ class GlutzConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_password"
 
             if not errors:
+                if system_id := self._invitation.get("system_id"):
+                    await self.async_set_unique_id(system_id)
+                    self._abort_if_unique_id_configured()
+
                 try:
                     await set_new_password(
                         async_get_clientsession(self.hass),
@@ -191,8 +195,9 @@ class GlutzConfigFlow(ConfigFlow, domain=DOMAIN):
                         if not system_id:
                             errors["base"] = "cannot_connect"
                         else:
-                            await self.async_set_unique_id(system_id)
-                            self._abort_if_unique_id_configured()
+                            if not self._invitation.get("system_id"):
+                                await self.async_set_unique_id(system_id)
+                                self._abort_if_unique_id_configured()
                             return self.async_create_entry(
                                 title=info.get("name") or DEFAULT_TITLE,
                                 data={
