@@ -61,12 +61,15 @@ async def async_remove_config_entry_device(
     """Remove a config entry from a device."""
     router = config_entry.runtime_data
 
-    # Never allow removal of the Freebox router itself.
+    # Never allow removal of the Freebox router itself. Accept both the raw
+    # API casing and the format_mac()-normalised form for the identifier in
+    # case a future HA release starts normalising identifiers too.
     router_mac = dr.format_mac(router.mac)
-    if (DOMAIN, router.mac) in device_entry.identifiers or (
-        dr.CONNECTION_NETWORK_MAC,
-        router_mac,
-    ) in device_entry.connections:
+    if (
+        (DOMAIN, router.mac) in device_entry.identifiers
+        or (DOMAIN, router_mac) in device_entry.identifiers
+        or (dr.CONNECTION_NETWORK_MAC, router_mac) in device_entry.connections
+    ):
         return False
 
     # Block removal of Home devices (alarm, switch, sensor, ...) that the
