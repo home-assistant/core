@@ -59,7 +59,7 @@ DEFAULT_CONFIG = {
         "20": 0,  # Update of Dimmer/Color/CT without turning power on
         "30": 0,  # Enforce Home Assistant auto-discovery as light
         "68": 0,  # Multi-channel PWM instead of a single light
-        "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
+        "73": 0,  # Enable Buttons decoupling and send multi-press
         "82": 0,  # Reduce the CT range from 153..500 to 200.380
         "114": 0,  # Enable sending switch MQTT messages
     },
@@ -94,7 +94,7 @@ DEFAULT_CONFIG_9_0_0_3 = {
         "20": 0,  # Update of Dimmer/Color/CT without turning power on
         "30": 0,  # Enforce Home Assistant auto-discovery as light
         "68": 0,  # Multi-channel PWM instead of a single light
-        "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
+        "73": 0,  # Enable Buttons decoupling and send multi-press
         "80": 0,  # Blinds and shutters support
         "82": 0,  # Reduce the CT range from 153..500 to 200.380
     },
@@ -474,7 +474,9 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        poll_topic, poll_payload, 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Disconnected from MQTT server
@@ -502,7 +504,9 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        poll_topic, poll_payload, 0, False, message_expiry_interval=None
+    )
 
 
 async def help_test_discovery_removal(
