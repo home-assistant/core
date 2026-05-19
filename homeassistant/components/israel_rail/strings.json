@@ -28,7 +28,7 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "departure_delay0": {
+      "departure_delay": {
         "name": "Departure delay"
       },
       "departure_delay1": {
@@ -37,7 +37,7 @@
       "departure_delay2": {
         "name": "Departure delay +2"
       },
-      "platform0": {
+      "platform": {
         "name": "Platform"
       },
       "platform1": {
@@ -46,7 +46,7 @@
       "platform2": {
         "name": "Platform +2"
       },
-      "train_number0": {
+      "train_number": {
         "name": "Train number"
       },
       "train_number1": {
@@ -55,7 +55,7 @@
       "train_number2": {
         "name": "Train number +2"
       },
-      "trains0": {
+      "trains": {
         "name": "Trains"
       },
       "trains1": {

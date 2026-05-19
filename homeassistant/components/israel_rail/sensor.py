@@ -55,7 +55,7 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
     *[
         IsraelRailSensorEntityDescription(
             key=f"platform{i or ''}",
-            translation_key=f"platform{i}",
+            translation_key=f"platform{i or ''}",
             value_fn=lambda data_connection: data_connection.platform,
             index=i,
         )
@@ -64,7 +64,7 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
     *[
         IsraelRailSensorEntityDescription(
             key=f"trains{i or ''}",
-            translation_key=f"trains{i}",
+            translation_key=f"trains{i or ''}",
             value_fn=lambda data_connection: data_connection.trains,
             index=i,
         )
@@ -73,7 +73,7 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
     *[
         IsraelRailSensorEntityDescription(
             key=f"train_number{i or ''}",
-            translation_key=f"train_number{i}",
+            translation_key=f"train_number{i or ''}",
             value_fn=lambda data_connection: data_connection.train_number,
             index=i,
         )
@@ -82,7 +82,7 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
     *[
         IsraelRailSensorEntityDescription(
             key=f"departure_delay{i or ''}",
-            translation_key=f"departure_delay{i}",
+            translation_key=f"departure_delay{i or ''}",
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             state_class=SensorStateClass.MEASUREMENT,

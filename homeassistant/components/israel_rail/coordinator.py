@@ -79,16 +79,15 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 "Unable to connect and retrieve data from israelrail api",
             ) from e
 
-        # The API can return a route whose departure time is already in the
-        # past. Skip it so the sensors only ever surface upcoming departures.
         offset = 0
-        if (
-            train_routes
-            and train_routes[0] is not None
-            and (first_departure := departure_time(train_routes[0])) is not None
-            and first_departure < dt_util.now()
-        ):
-            offset = 1
+        while offset < len(train_routes):
+            route = train_routes[offset]
+            if route is None:
+                break
+            route_departure = departure_time(route)
+            if route_departure is None or route_departure >= dt_util.now():
+                break
+            offset += 1
 
         return [
             DataConnection(

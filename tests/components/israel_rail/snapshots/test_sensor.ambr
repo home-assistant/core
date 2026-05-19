@@ -192,7 +192,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'departure_delay0',
+    'translation_key': 'departure_delay',
     'unique_id': 'באר יעקב אשקלון_departure_delay',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
@@ -364,7 +364,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'platform0',
+    'translation_key': 'platform',
     'unique_id': 'באר יעקב אשקלון_platform',
     'unit_of_measurement': None,
   })
@@ -517,7 +517,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'train_number0',
+    'translation_key': 'train_number',
     'unique_id': 'באר יעקב אשקלון_train_number',
     'unit_of_measurement': None,
   })
@@ -670,7 +670,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'trains0',
+    'translation_key': 'trains',
     'unique_id': 'באר יעקב אשקלון_trains',
     'unit_of_measurement': None,
   })

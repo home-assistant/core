@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.israel_rail.const import DEPARTURES_COUNT
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -18,6 +19,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 # A moment just before the first train in TRAINS departs (10:10 UTC), so the
 # coordinator considers the head of the list as an upcoming departure.
 BEFORE_FIRST_TRAIN = "2021-10-10T10:00:00+00:00"
+
+EXPECTED_ENTITY_COUNT = DEPARTURES_COUNT * 5
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +50,7 @@ async def test_update_train(
 ) -> None:
     """Ensure the train data is updated."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     expected_time = get_time(10, 10)
     assert departure_sensor.state == expected_time
@@ -57,7 +60,7 @@ async def test_update_train(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     expected_time = get_time(10, 20)
     assert departure_sensor.state == expected_time
@@ -71,10 +74,10 @@ async def test_fail_query(
 ) -> None:
     """Ensure the integration handles query failures."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
     mock_israelrail.query.side_effect = Exception("error")
     await goto_future(hass, freeze_before_first_train)
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     assert departure_sensor.state == STATE_UNAVAILABLE
 
@@ -87,7 +90,7 @@ async def test_no_departures(
 ) -> None:
     """Test handling when there are no departures available."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
 
     # Simulate no departures (e.g., after-hours)
     mock_israelrail.query.return_value = []
@@ -95,7 +98,7 @@ async def test_no_departures(
     await goto_future(hass, freeze_before_first_train)
 
     # All sensors should still exist
-    assert len(hass.states.async_entity_ids()) == 15
+    assert len(hass.states.async_entity_ids()) == EXPECTED_ENTITY_COUNT
 
     # Departure sensors should have unknown state (None)
     departure_sensor = hass.states.get("sensor.mock_title_departure")
@@ -210,5 +213,39 @@ async def test_skip_first_route_with_fewer_results(
 
     assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 20)
     # No second/third routes available after the shift.
+    assert hass.states.get("sensor.mock_title_departure_1").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.mock_title_departure_2").state == STATE_UNKNOWN
+
+
+async def test_skip_multiple_past_routes(
+    hass: HomeAssistant,
+    freeze_before_first_train: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """When several routes at the head have already departed, the window shifts past them all."""
+    # Freeze "now" past TRAINS[0] (10:10) and TRAINS[1] (10:20) but before TRAINS[2] (10:30).
+    freeze_before_first_train.move_to("2021-10-10T10:25:00+00:00")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == get_time(10, 30)
+    assert hass.states.get("sensor.mock_title_departure_1").state == get_time(10, 40)
+    assert hass.states.get("sensor.mock_title_departure_2").state == get_time(10, 50)
+    assert hass.states.get("sensor.mock_title_train_number").state == "1236"
+
+
+async def test_all_routes_in_past(
+    hass: HomeAssistant,
+    freeze_before_first_train: FrozenDateTimeFactory,
+    mock_israelrail: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """When every returned route has already departed, every departure sensor is unknown."""
+    freeze_before_first_train.move_to("2021-10-10T11:00:00+00:00")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.mock_title_departure").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mock_title_departure_1").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mock_title_departure_2").state == STATE_UNKNOWN
