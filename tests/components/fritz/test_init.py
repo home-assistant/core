@@ -2,6 +2,7 @@
 
 import re
 from unittest.mock import patch
+from xml.etree.ElementTree import ParseError
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -116,6 +117,25 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> None:
+    """Test setup failure due to parse error while fetching device data."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus.get_device_info"
+        ) as fs_mock,
+    ):
+        fs_mock.side_effect = ParseError("boom")
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "error_parse_device_info"
+
+
 async def test_upnp_missing(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -140,8 +160,8 @@ async def test_upnp_missing(
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.state.recoverable is True
     assert (
-        "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
-        in caplog.text
+        "Config entry 'Mock Title' for fritz integration"
+        " could not authenticate: Missing UPnP configuration" in caplog.text
     )
 
 

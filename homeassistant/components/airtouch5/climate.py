@@ -178,7 +178,8 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         if ability.supports_fan_speed_intelligent_auto:
             self._attr_fan_modes.append(FAN_INTELLIGENT_AUTO)
 
-        # We can have different setpoints for heat cool, we expose the lowest low and highest high
+        # We can have different setpoints for heat cool,
+        # we expose the lowest low and highest high
         self._attr_min_temp = min(
             ability.min_cool_set_point, ability.min_heat_set_point
         )
@@ -290,7 +291,8 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
-        # We can have different setpoints for heat and cool, we expose the lowest low and highest high
+        # We can have different setpoints for heat and cool,
+        # we expose the lowest low and highest high
         self._attr_min_temp = min(ac.min_cool_set_point, ac.min_heat_set_point)
         self._attr_max_temp = max(ac.max_cool_set_point, ac.max_heat_set_point)
 
