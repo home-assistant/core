@@ -862,70 +862,70 @@ async def test_camera_image_with_attribute_change(
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_get_image = AsyncMock(return_value=FAKE_IMG)
         mock_webhook.return_value = "https://example.com"
-        mock_get_live_snapshot.return_value = AsyncMock(return_value=FAKE_IMG)
+        mock_get_live_snapshot.return_value = FAKE_IMG
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    component = hass.data["camera"]
-    entity = component.get_entity(camera_entity)
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        component = hass.data["camera"]
+        entity = component.get_entity(camera_entity)
 
-    # Fake webhook activation
-    response = {
-        "push_type": "webhook_activation",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-    await hass.async_block_till_done()
+        # Fake webhook activation
+        response = {
+            "push_type": "webhook_activation",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
 
-    # Check initial state
-    assert hass.states.get(camera_entity).state == "idle"
-    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        # Check initial state
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
-    # Check that getting image succeeds while camera is idle without exception
-    result = await entity.async_camera_image()
-    assert result is not None
-    assert result == FAKE_IMG
+        # Check that getting image succeeds while camera is idle without exception
+        result = await entity.async_camera_image()
+        assert result is not None
+        assert result == FAKE_IMG
 
-    # Trigger some polling cycle to let API throttling work
-    for _ in range(polling_cycles):
-        freezer.tick(polling_delta)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        # Trigger some polling cycle to let API throttling work
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Change mocked status
-    camera_entity_id = camera_id
-    camera_monitoring = "on"
-    camera_alim_status = 1
-    camera_timestamp = int(dt_util.utcnow().timestamp())
+        # Change mocked status
+        camera_entity_id = camera_id
+        camera_monitoring = "on"
+        camera_alim_status = 1
+        camera_timestamp = int(dt_util.utcnow().timestamp())
 
-    # Trigger some polling cycle to let status change be picked up
-    for _ in range(polling_cycles):
-        freezer.tick(polling_delta)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        # Trigger some polling cycle to let status change be picked up
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Check that the camera become idle with monitoring off
-    # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
-    assert hass.states.get(camera_entity).state == "idle"
-    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        # Check that the camera become idle with monitoring off
+        # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
-    # Check that getting image does not raise the exception and return None
-    result = await entity.async_camera_image()
-    assert result is None
+        # Check that getting image does not raise the exception and return None
+        result = await entity.async_camera_image()
+        assert result is None
 
-    # Change mocked status
-    camera_entity_id = camera_id
-    camera_monitoring = "off"
-    camera_alim_status = 1
-    camera_timestamp = int(dt_util.utcnow().timestamp())
+        # Change mocked status
+        camera_entity_id = camera_id
+        camera_monitoring = "off"
+        camera_alim_status = 1
+        camera_timestamp = int(dt_util.utcnow().timestamp())
 
-    # Trigger some polling cycle to let status change be picked up
-    for _ in range(polling_cycles):
-        freezer.tick(polling_delta)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        # Trigger some polling cycle to let status change be picked up
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Check that the camera become idle with monitoring off
-    assert hass.states.get(camera_entity).state == "idle"
-    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        # Check that the camera become idle with monitoring off
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
