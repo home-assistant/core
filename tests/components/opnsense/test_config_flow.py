@@ -14,11 +14,7 @@ from aiopnsense import (
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.opnsense import (
-    OPNsenseSSLError,
-    OPNsenseUnknownFirmware,
-    config_flow,
-)
+from homeassistant.components.opnsense import OPNsenseSSLError, OPNsenseUnknownFirmware
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -33,7 +29,6 @@ from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 from tests.common import MockConfigEntry
 
 # Constants for test values
-TEST_UNIQUE_ID = "unique_id_123"
 TEST_URL = "http://router.lan/api"
 
 
@@ -239,30 +234,40 @@ async def test_user_exceptions(
         assert result["errors"] == {"base": expected}
 
 
-# Patch: handle KeyError for missing CONF_URL in _entry_data
 async def test_interfaces_step_user_input_missing(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
-    """Test async_step_interfaces when _step_user_input is not a dict or missing CONF_URL."""
-    flow = config_flow.OPNsenseConfigFlow()
-    flow.hass = hass
-    flow._entry_data = {}
-    with pytest.raises(KeyError):
-        await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
-    flow._entry_data = {}
-    with pytest.raises(KeyError):
-        await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
-    # with valid data
-    flow._entry_data = {"url": TEST_URL, "verify_ssl": True}
+    """Test interfaces step behavior via the flow manager."""
     with (
         patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
+            return_value=None,
+        ),
         patch(
             "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
             return_value={"LAN": {"name": "LAN"}},
         ),
     ):
-        result = await flow.async_step_interfaces(user_input={"tracker_interfaces": []})
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**CONFIG_DATA, "url": TEST_URL},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "interfaces"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+        # Submitting an empty dict omits tracker_interfaces and creates the entry,
+        # so no additional interfaces-step submission is needed.
 
 
 async def test_import_exceptions(hass: HomeAssistant) -> None:
@@ -291,9 +296,11 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
             ),
             patch(patch_interfaces),
         ):
-            flow = config_flow.OPNsenseConfigFlow()
-            flow.hass = hass
-            result = await flow.async_step_import(import_data)
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=import_data,
+            )
             assert result["type"] == data_entry_flow.FlowResultType.ABORT
             assert result["reason"] == reason
 
@@ -327,22 +334,32 @@ async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
             "homeassistant.components.opnsense.config_flow.async_create_issue"
         ) as mock_issue,
     ):
-        flow = config_flow.OPNsenseConfigFlow()
-        flow.hass = hass
-        result = await flow.async_step_import(import_data)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=import_data,
+        )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "import_failed_missing_interfaces"
         mock_issue.assert_called()
 
 
 async def test_abort_import_helper(hass: HomeAssistant) -> None:
-    """Test the _abort_import helper method directly."""
-    flow = config_flow.OPNsenseConfigFlow()
-    flow.hass = hass
-    with patch(
-        "homeassistant.components.opnsense.config_flow.async_create_issue"
-    ) as mock_issue:
-        result = flow._abort_import("invalid_url", "http://router.lan/api")
+    """Test import abort behavior creates an issue."""
+    with (
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
+            side_effect=OPNsenseInvalidURL,
+        ),
+        patch(
+            "homeassistant.components.opnsense.config_flow.async_create_issue"
+        ) as mock_issue,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA_IMPORT,
+        )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "invalid_url"
         mock_issue.assert_called()
