@@ -62,7 +62,8 @@ INITIALIZE_MESSAGE = {
 EVENT_PREFIX = "event: "
 DATA_PREFIX = "data: "
 EXPECTED_PROMPT_SUFFIX = """
-- names: Kitchen Light
+- entity_id: light.kitchen
+  names: Kitchen Light
   domain: light
   areas: Kitchen
 """
