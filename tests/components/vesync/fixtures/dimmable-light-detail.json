@@ -1,0 +1,13 @@
+{
+  "code": 0,
+  "msg": null,
+  "deviceStatus": "on",
+  "connectionStatus": "online",
+  "name": "ESL100",
+  "brightNess": 100,
+  "timer": null,
+  "away": null,
+  "schedule": null,
+  "ownerShip": "1",
+  "scheduleCount": 0
+}
