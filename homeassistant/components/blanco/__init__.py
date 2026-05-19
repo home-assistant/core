@@ -7,6 +7,7 @@ from blanco_smart_home_api_client import BlancoApiClient, BlancoConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_TOKEN,
     EVENT_CORE_CONFIG_UPDATE,
     Platform,
     __version__ as HA_VERSION,
@@ -21,7 +22,6 @@ from .const import (
     CONF_DEV_ID,
     CONF_DEV_TYPE,
     CONF_SERIAL,
-    CONF_TOKEN,
     CONF_TOKEN_TYPE,
     DOMAIN,
 )
