@@ -1420,10 +1420,12 @@ async def test_add_entity_with_invalid_id(
 
 async def test_device_info_called(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device info is forwarded correctly."""
+    area_registry.async_create("Heliport")
     config_entry = MockConfigEntry(
         entry_id="super-mock-id",
         subentries_data=(
