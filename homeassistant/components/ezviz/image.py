@@ -44,8 +44,6 @@ async def async_setup_entry(
 class EzvizLastMotion(EzvizEntity, ImageEntity):
     """Return Last Motion Image from Ezviz Camera."""
 
-    _unrecorded_attributes = frozenset({"last_alarm_pic"})
-
     def __init__(
         self, hass: HomeAssistant, coordinator: EzvizDataUpdateCoordinator, serial: str
     ) -> None:
@@ -69,13 +67,6 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     def available(self) -> bool:
         """Entity gets data from ezviz API so always available."""
         return True
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return extra state attributes."""
-        if isinstance(last_alarm_pic := self._attr_image_url, str):
-            return {"last_alarm_pic": last_alarm_pic}
-        return {}
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""

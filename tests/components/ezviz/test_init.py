@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
-from homeassistant.components.ezviz.image import EzvizLastMotion
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,12 +52,12 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-async def test_image_entity_has_last_alarm_pic_attribute(
+async def test_image_entity_does_not_expose_last_alarm_pic_attribute(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
 ) -> None:
-    """Test that image entity includes last_alarm_pic as an attribute."""
+    """Test that image entity does not include last_alarm_pic as an attribute."""
     # Mock coordinator data with last_alarm_pic
     mock_coordinator_data = {
         "C123456789": _mock_camera_data(
@@ -72,13 +71,10 @@ async def test_image_entity_has_last_alarm_pic_attribute(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Check that image entity was created with the attribute
+    # Check that image entity was created without exposing the image URL.
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
-    assert state.attributes.get("last_alarm_pic") == "https://example.com/image.jpg"
-
-    # Check that last_alarm_pic is in unrecorded attributes
-    assert "last_alarm_pic" in EzvizLastMotion._unrecorded_attributes
+    assert "last_alarm_pic" not in state.attributes
 
 
 async def test_last_alarm_pic_sensor_not_created(
@@ -196,10 +192,10 @@ async def test_image_entity_created_without_alarm_pic(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Check that image entity was created, but has no image URL yet
+    # Check that image entity was created without exposing the image URL.
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
-    assert state.attributes.get("last_alarm_pic") is None
+    assert "last_alarm_pic" not in state.attributes
 
 
 async def test_image_entity_updates_last_alarm_pic_on_refresh(
@@ -230,7 +226,7 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
 
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
-    assert state.attributes.get("last_alarm_pic") == "https://example.com/image-2.jpg"
+    assert "last_alarm_pic" not in state.attributes
 
 
 async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
@@ -260,4 +256,4 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
 
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
-    assert state.attributes.get("last_alarm_pic") == "https://example.com/image-1.jpg"
+    assert "last_alarm_pic" not in state.attributes
