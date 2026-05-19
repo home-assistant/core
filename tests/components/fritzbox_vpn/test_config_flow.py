@@ -25,12 +25,15 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_fritzbox_vpn_async_setup_entry() -> None:
     """Prevent real coordinator/network activity during config flow tests."""
-    with patch(
-        "homeassistant.components.fritzbox_vpn.async_setup_entry",
-        new=AsyncMock(return_value=True),
-    ), patch(
-        "async_upnp_client.ssdp_listener.SsdpListener.async_start",
-        new=AsyncMock(),
+    with (
+        patch(
+            "homeassistant.components.fritzbox_vpn.async_setup_entry",
+            new=AsyncMock(return_value=True),
+        ),
+        patch(
+            "async_upnp_client.ssdp_listener.SsdpListener.async_start",
+            new=AsyncMock(),
+        ),
     ):
         yield
 
