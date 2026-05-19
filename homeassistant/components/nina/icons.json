@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "affected_areas": {
+        "default": "mdi:map-marker-radius"
+      },
+      "headline": {
+        "default": "mdi:text-short"
+      },
+      "more_info_url": {
+        "default": "mdi:web"
+      },
+      "sender": {
+        "default": "mdi:account-tie-voice"
+      },
+      "severity": {
+        "default": "mdi:alert"
+      }
+    }
+  },
+  "services": {
+    "get_affected_areas": { "service": "mdi:download" },
+    "get_description": { "service": "mdi:download" },
+    "get_recommended_actions": { "service": "mdi:download" }
+  }
+}
