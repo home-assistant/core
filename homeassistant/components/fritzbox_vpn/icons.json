@@ -1,25 +1,33 @@
 {
   "entity": {
-    "switch": {
-      "vpn": {
-        "default": "mdi:vpn"
-      }
-    },
     "binary_sensor": {
       "connected": {
         "default": "mdi:connection"
       }
     },
     "sensor": {
-      "status": {
-        "default": "mdi:information"
-      },
       "connection_uid": {
         "default": "mdi:identifier"
+      },
+      "status": {
+        "default": "mdi:information"
       },
       "vpn_uid": {
         "default": "mdi:identifier"
       }
+    },
+    "switch": {
+      "vpn": {
+        "default": "mdi:vpn"
+      }
+    }
+  },
+  "services": {
+    "remove_unavailable_entities": {
+      "default": "mdi:delete-outline"
+    },
+    "repair_entity_id_suffixes": {
+      "default": "mdi:wrench"
     }
   }
 }
