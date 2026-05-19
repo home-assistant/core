@@ -1,7 +1,5 @@
 """Config flow for Ollama integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -55,7 +53,6 @@ from .const import (
     DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    MAX_NUM_CTX,
     MIN_NUM_CTX,
     MODEL_NAMES,
 )
@@ -399,7 +396,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
 
 def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> list[str]:
-    """Accepts a list of LLM API IDs and filters this against those currently available."""
+    """Filter a list of LLM API IDs against those available."""
 
     valid_llm_apis = [api.id for api in llm.async_get_apis(hass)]
 
@@ -421,6 +418,8 @@ def ollama_config_option_schema(
             default_name = DEFAULT_CONVERSATION_NAME
 
         schema: dict = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:
@@ -478,7 +477,6 @@ def ollama_config_option_schema(
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=MIN_NUM_CTX,
-                    max=MAX_NUM_CTX,
                     step=1,
                     mode=NumberSelectorMode.BOX,
                 )

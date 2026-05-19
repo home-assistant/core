@@ -1,7 +1,5 @@
 """Representation of Venstar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -12,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -23,8 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import VenstarDataUpdateCoordinator
+from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
 
 RUNTIME_HEAT1 = "heat1"
@@ -80,11 +76,11 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VenstarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Venstar device sensors based on a config entry."""
-    coordinator: VenstarDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities: list[Entity] = []
 
     if sensors := coordinator.client.get_sensor_list():
@@ -142,7 +138,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
     def __init__(
         self,
         coordinator: VenstarDataUpdateCoordinator,
-        config: ConfigEntry,
+        config: VenstarConfigEntry,
         entity_description: VenstarSensorEntityDescription,
         sensor_name: str,
     ) -> None:
@@ -157,7 +153,11 @@ class VenstarSensor(VenstarEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
+        return (
+            f"{self._config.entry_id}"
+            f"_{self.sensor_name.replace(' ', '_')}"
+            f"_{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> int:

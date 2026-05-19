@@ -9,13 +9,14 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
+    assert_condition_options_supported,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -40,6 +41,33 @@ async def test_assist_satellite_conditions_gated_by_labs_flag(
 ) -> None:
     """Test the assist satellite conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("assist_satellite.is_idle", {}, True, True),
+        ("assist_satellite.is_listening", {}, True, True),
+        ("assist_satellite.is_processing", {}, True, True),
+        ("assist_satellite.is_responding", {}, True, True),
+    ],
+)
+async def test_assist_satellite_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that assist_satellite conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -83,31 +111,16 @@ async def test_assist_satellite_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the assist satellite state condition with the 'any' behavior."""
-    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
-
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_assist_satellites,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        # Check if changing other assist satellites also passes the condition
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -151,29 +164,13 @@ async def test_assist_satellite_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the assist satellite state condition with the 'all' behavior."""
-    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
-
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_assist_satellites,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]

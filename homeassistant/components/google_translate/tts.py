@@ -1,7 +1,5 @@
 """Support for the Google speech service."""
 
-from __future__ import annotations
-
 from io import BytesIO
 import logging
 from typing import Any

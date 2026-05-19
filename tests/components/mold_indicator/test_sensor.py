@@ -316,7 +316,7 @@ async def test_sensor_changed(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("new_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
 async def test_unavailable_sensor_recovery(hass: HomeAssistant, new_state: str) -> None:
-    """Test recovery when sensor becomes unavailable/unknown and then available again."""
+    """Test recovery when sensor becomes unavailable then available."""
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,

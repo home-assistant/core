@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,11 +50,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
     """Set up microBees from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:

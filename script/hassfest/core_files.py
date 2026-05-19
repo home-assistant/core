@@ -4,7 +4,7 @@ import re
 
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 
 # Non-entity-platform components that belong in base_platforms
 EXTRA_BASE_PLATFORMS = {"diagnostics"}
@@ -29,7 +29,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     entity_platforms = {
         integration.domain
         for integration in integrations.values()
-        if integration.manifest.get("integration_type") == "entity"
+        if integration.integration_type == IntegrationType.ENTITY
         and integration.domain != "tag"
     }
 

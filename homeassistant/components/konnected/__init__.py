@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import copy
 import hmac

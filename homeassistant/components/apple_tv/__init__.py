@@ -1,7 +1,5 @@
 """The Apple TV integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from random import randrange
@@ -30,9 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CREDENTIALS,
@@ -42,8 +41,11 @@ from .const import (
     SIGNAL_CONNECTED,
     SIGNAL_DISCONNECTED,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 DEFAULT_NAME_TV = "Apple TV"
 DEFAULT_NAME_HP = "HomePod"
@@ -75,6 +77,12 @@ DEVICE_EXCEPTIONS = (
 
 
 type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Apple TV component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
@@ -292,8 +300,10 @@ class AppleTVManager(DeviceListener):
             config_entry.title,
             address,
         )
-        # We no longer multicast scan for the device since as soon as async_step_zeroconf runs,
-        # it will update the address and reload the config entry when the device is found.
+        # We no longer multicast scan for the device since as
+        # soon as async_step_zeroconf runs, it will update the
+        # address and reload the config entry when the device
+        # is found.
         return None
 
     async def _connect(self, conf: AppleTV, raise_missing_credentials: bool) -> None:

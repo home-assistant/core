@@ -1,7 +1,5 @@
 """Expose Radio Browser as a media source."""
 
-from __future__ import annotations
-
 import mimetypes
 
 from aiodns.error import DNSError
@@ -173,7 +171,8 @@ class RadioMediaSource(MediaSource):
 
         # We show country in the root additionally, when there is no item
         if not item.identifier or category == "country":
-            # Trigger the lazy loading of the country database to happen inside the executor
+            # Trigger the lazy loading of the country database
+            # to happen inside the executor
             await self.hass.async_add_executor_job(lambda: len(pycountry.countries))
             countries = await radios.countries(order=Order.NAME)
             return [

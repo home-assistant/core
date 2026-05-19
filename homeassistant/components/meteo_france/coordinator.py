@@ -1,5 +1,6 @@
 """Support for Meteo-France weather data."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -13,6 +14,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type MeteoFranceConfigEntry = ConfigEntry[MeteoFranceData]
+
+
+@dataclass
+class MeteoFranceData:
+    """Data for the Meteo-France integration."""
+
+    forecast_coordinator: MeteoFranceForecastUpdateCoordinator
+    rain_coordinator: MeteoFranceRainUpdateCoordinator | None
+    alert_coordinator: MeteoFranceAlertUpdateCoordinator | None
+
+
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -20,12 +33,12 @@ SCAN_INTERVAL = timedelta(minutes=15)
 class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
     """Coordinator for Meteo-France forecast data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -50,12 +63,12 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
 class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
     """Coordinator for Meteo-France rain data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -80,12 +93,12 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
 class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons]):
     """Coordinator for Meteo-France alert data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
         department: str,
     ) -> None:

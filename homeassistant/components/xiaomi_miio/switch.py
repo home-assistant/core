@@ -1,7 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from functools import partial
@@ -519,6 +517,7 @@ async def async_setup_other_entry(
 
         for plug_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

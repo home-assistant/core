@@ -278,7 +278,7 @@ async def test_snapshots(
     snapshot: SnapshotAssertion,
     example: str,
 ) -> None:
-    """Detect regressions in enumerating a homekit accessory database and building entities."""
+    """Detect regressions in enumerating accessory DB and building entities."""
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 

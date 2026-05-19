@@ -1,7 +1,5 @@
 """Support for Slide button."""
 
-from __future__ import annotations
-
 from goslideapi.goslideapi import (
     AuthenticationFailed,
     ClientConnectionError,

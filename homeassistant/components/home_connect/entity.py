@@ -131,7 +131,7 @@ class HomeConnectOptionEntity(HomeConnectEntity):
 def constraint_fetcher[_EntityT: HomeConnectEntity, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate the function to catch Home Connect too many requests error and retry later.
+    """Catch Home Connect too many requests error and retry later.
 
     If it needs to be called later, it will call async_write_ha_state function
     """

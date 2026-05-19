@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_closed": {
+      "condition": "mdi:gate"
+    },
+    "is_open": {
+      "condition": "mdi:gate-open"
+    }
+  },
   "triggers": {
     "closed": {
       "trigger": "mdi:gate"

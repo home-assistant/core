@@ -1,7 +1,5 @@
 """Component providing support for Reolink siren entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

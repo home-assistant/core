@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'volvo',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

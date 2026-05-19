@@ -560,7 +560,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_turn_on(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "StAtE_On", 0, False
+        "command-topic", "StAtE_On", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -569,7 +569,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_turn_off(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "StAtE_OfF", 0, False
+        "command-topic", "StAtE_OfF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -584,7 +584,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "100", 0, False
+        "humidity-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -593,7 +593,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "0", 0, False
+        "humidity-command-topic", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -606,7 +606,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_set_mode(hass, "humidifier.test", "auto")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "auto", 0, False
+        "mode-command-topic", "auto", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -615,7 +615,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "eco", 0, False
+        "mode-command-topic", "eco", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -660,7 +660,7 @@ async def test_sending_mqtt_command_templates_(
 
     await async_turn_on(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "state: ON", 0, False
+        "command-topic", "state: ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -669,7 +669,7 @@ async def test_sending_mqtt_command_templates_(
 
     await async_turn_off(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "state: OFF", 0, False
+        "command-topic", "state: OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -684,7 +684,11 @@ async def test_sending_mqtt_command_templates_(
 
     await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "humidity: 100", 0, False
+        "humidity-command-topic",
+        "humidity: 100",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -693,7 +697,7 @@ async def test_sending_mqtt_command_templates_(
 
     await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "humidity: 0", 0, False
+        "humidity-command-topic", "humidity: 0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -706,7 +710,7 @@ async def test_sending_mqtt_command_templates_(
 
     await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "mode: eco", 0, False
+        "mode-command-topic", "mode: eco", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -715,7 +719,7 @@ async def test_sending_mqtt_command_templates_(
 
     await async_set_mode(hass, "humidifier.test", "auto")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "mode: auto", 0, False
+        "mode-command-topic", "mode: auto", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -760,14 +764,18 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_turn_on(hass, "humidifier.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_turn_off(hass, "humidifier.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
@@ -775,7 +783,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 33)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "33", 0, False
+        "humidity-command-topic", "33", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -784,7 +792,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 50)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "50", 0, False
+        "humidity-command-topic", "50", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -793,7 +801,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "100", 0, False
+        "humidity-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -802,7 +810,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic", "0", 0, False
+        "humidity-command-topic", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -818,7 +826,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "eco", 0, False
+        "mode-command-topic", "eco", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -827,7 +835,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await async_set_mode(hass, "humidifier.test", "baby")
     mqtt_mock.async_publish.assert_called_once_with(
-        "mode-command-topic", "baby", 0, False
+        "mode-command-topic", "baby", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
@@ -1315,7 +1323,10 @@ async def test_discovery_removal_humidifier(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered humidifier."""
-    data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data = (
+        '{ "name": "test", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     await help_test_discovery_removal(hass, mqtt_mock_entry, humidifier.DOMAIN, data)
 
 
@@ -1342,7 +1353,10 @@ async def test_discovery_update_unchanged_humidifier(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data1 = (
+        '{ "name": "Beer", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     with patch(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
@@ -1357,7 +1371,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data2 = (
+        '{ "name": "Milk", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, humidifier.DOMAIN, data1, data2
     )
@@ -1614,6 +1631,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

@@ -1,7 +1,5 @@
 """Support for Hikvision event stream events represented as binary sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

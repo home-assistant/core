@@ -13,6 +13,62 @@
       "timeout_percent": 0
     }
   },
+  "chess_rapid": {
+    "last": {
+      "rating": 812,
+      "date": 1772800350,
+      "rd": 74
+    },
+    "record": {
+      "win": 5,
+      "loss": 3,
+      "draw": 1,
+      "time_per_move": 42,
+      "timeout_percent": 0
+    }
+  },
+  "chess_bullet": {
+    "last": {
+      "rating": 650,
+      "date": 1772800350,
+      "rd": 120
+    },
+    "record": {
+      "win": 2,
+      "loss": 6,
+      "draw": 0,
+      "time_per_move": 8,
+      "timeout_percent": 0
+    }
+  },
+  "chess_blitz": {
+    "last": {
+      "rating": 734,
+      "date": 1772800350,
+      "rd": 95
+    },
+    "record": {
+      "win": 10,
+      "loss": 8,
+      "draw": 2,
+      "time_per_move": 18,
+      "timeout_percent": 0
+    }
+  },
+  "chess960_daily": {
+    "last": {
+      "rating": 521,
+      "date": 1772800350,
+      "rd": 200
+    },
+    "record": {
+      "win": 1,
+      "loss": 2,
+      "draw": 0,
+      "time_per_move": 7200,
+      "timeout_percent": 0
+    }
+  },
   "fide": 0,
   "tactics": {
     "highest": {

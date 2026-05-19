@@ -1,7 +1,5 @@
 """Notifications for Android TV notification service."""
 
-from __future__ import annotations
-
 from io import BufferedReader
 import logging
 from typing import Any
@@ -105,6 +103,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     duration = int(
                         data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
                     )
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", data.get(ATTR_DURATION)

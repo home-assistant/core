@@ -1,7 +1,5 @@
 """Config flow to configure the AdGuard Home integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError

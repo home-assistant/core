@@ -32,7 +32,7 @@ async def test_api_create_ok(
     aiohttp_client_session: None,
     local_oauth_impl: ClientSession,
 ) -> None:
-    """Test API creation. We're checking that we can create an IottyProxy without raising."""
+    """Test we can create an IottyProxy without raising."""
 
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data["auth_implementation"] is not None

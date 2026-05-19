@@ -1,7 +1,5 @@
 """Support for the OpenWeatherMap (OWM) service."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
