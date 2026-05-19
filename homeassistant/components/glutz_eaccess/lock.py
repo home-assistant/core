@@ -60,10 +60,13 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         super().__init__(coordinator)
         self._access_point_id: str = access_point["accessPointId"]
         location: list[str] = access_point.get("location", [])
-        self._device_name = (
-            location[-1] if location else f"Door {self._access_point_id}"
-        )
+        device_name = location[-1] if location else f"Door {self._access_point_id}"
         self._attr_unique_id = f"glutz_{self._access_point_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._access_point_id)},
+            name=device_name,
+            manufacturer="Glutz",
+        )
         self._attr_is_locked = True
         self._cancel_relock: CALLBACK_TYPE | None = None
 
@@ -71,15 +74,6 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
     def available(self) -> bool:
         """Return whether the access point is still reported by the coordinator."""
         return super().available and self._access_point_id in self.coordinator.data
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for the access point."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._access_point_id)},
-            name=self._device_name,
-            manufacturer="Glutz",
-        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door and schedule an automatic re-lock."""
