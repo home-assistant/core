@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from amcrest import AmcrestError
-import pytest
 
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_patch_platforms")
 async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fails(
     hass: HomeAssistant,
 ) -> None:
@@ -66,7 +64,6 @@ async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fail
     }
 
 
-@pytest.mark.usefixtures("mock_patch_platforms")
 async def test_setup_entry_requires_unique_id(hass: HomeAssistant) -> None:
     """Test config-entry setup fails when entry.unique_id is missing."""
     entry = MockConfigEntry(
