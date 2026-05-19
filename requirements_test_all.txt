@@ -285,7 +285,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.14.0
+aioimmich==0.14.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -309,7 +309,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.2
+aiolyric==2.1.0
 
 # homeassistant.components.mealie
 aiomealie==1.2.4
@@ -765,7 +765,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.5.0
+dsmr-parser==1.7.0
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
@@ -1681,7 +1681,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.9.0
+py-opendisplay==7.0.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
@@ -1714,7 +1714,7 @@ pyHomee==1.4.0
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.37.5
+pyTibber==0.37.6
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1959,7 +1959,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.4
+pylamarzocco==2.2.5
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2223,6 +2223,9 @@ pyteleinfo==0.4.0
 
 # homeassistant.components.motionmount
 python-MotionMount==2.3.0
+
+# homeassistant.components.aidot
+python-aidot==0.3.53
 
 # homeassistant.components.awair
 python-awair==0.2.5
@@ -2539,7 +2542,7 @@ sentry-sdk==2.48.0
 # homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
-serialx==1.7.3
+serialx==1.8.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
