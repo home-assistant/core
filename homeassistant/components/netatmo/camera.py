@@ -193,6 +193,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
                 self._attr_is_on = True
                 self._attr_available = True
+                self._monitoring = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
