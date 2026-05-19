@@ -93,7 +93,8 @@ def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
         "condition": condition_code_to_hass[forecast["conditionCode"]],
         "native_temperature": forecast["temperatureMax"],
         "native_templow": forecast["temperatureMin"],
-        "native_precipitation": forecast["precipitationAmount"],
+        "native_precipitation": (forecast.get("snowfallAmount") or 0.0)
+        + (forecast.get("precipitationAmount") or 0.0),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "uv_index": forecast["maxUvIndex"],
     }
@@ -111,7 +112,8 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
         "native_wind_speed": forecast["windSpeed"],
         "wind_bearing": forecast.get("windDirection"),
         "humidity": forecast["humidity"] * 100,
-        "native_precipitation": forecast.get("precipitationAmount"),
+        "native_precipitation": (forecast.get("snowfallAmount") or 0.0)
+        + (forecast.get("precipitationAmount") or 0.0),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "cloud_coverage": forecast["cloudCover"] * 100,
         "uv_index": forecast["uvIndex"],

@@ -128,3 +128,121 @@ async def test_daily_forecast(
         return_response=True,
     )
     assert response == snapshot
+
+
+async def test_daily_forecast_sums_snowfall_and_precipitation(
+    hass: HomeAssistant,
+) -> None:
+    """Test that snowfallAmount is added to precipitationAmount in daily forecast."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day["snowfallAmount"] = 25.0
+            day["precipitationAmount"] = 5.0
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 30.0
+
+
+async def test_hourly_forecast_sums_snowfall_and_precipitation(
+    hass: HomeAssistant,
+) -> None:
+    """Test that snowfallAmount is added to precipitationAmount in hourly forecast."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour["snowfallAmount"] = 12.0
+            hour["precipitationAmount"] = 3.0
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 15.0
+
+
+async def test_daily_forecast_snowfall_only(hass: HomeAssistant) -> None:
+    """Test daily forecast when only snowfallAmount is present."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day["snowfallAmount"] = 10.0
+            day.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 10.0
+
+
+async def test_hourly_forecast_snowfall_only(hass: HomeAssistant) -> None:
+    """Test hourly forecast when only snowfallAmount is present."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour["snowfallAmount"] = 7.0
+            hour.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 7.0
+
+
+async def test_daily_forecast_no_precipitation_keys(hass: HomeAssistant) -> None:
+    """Test daily forecast returns 0 when both keys are absent."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day.pop("snowfallAmount", None)
+            day.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 0.0
+
+
+async def test_hourly_forecast_no_precipitation_keys(hass: HomeAssistant) -> None:
+    """Test hourly forecast returns 0 when both keys are absent."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour.pop("snowfallAmount", None)
+            hour.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 0.0

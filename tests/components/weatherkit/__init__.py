@@ -62,7 +62,7 @@ def mock_weather_response(
             return_value=available_data_sets,
         ),
     ):
-        yield
+        yield weather_response
 
 
 async def init_integration(
