@@ -207,6 +207,26 @@ async def test_delta_report_sensor(
                 "to override"
             ),
         ),
+        (
+            "hjjcy_9f8pjxsmaqnk2tzr",
+            "sensor.mt15_mt29_temperature",
+            "temp_current",
+            "invalid_uom",
+            (
+                "Device class temperature ignored for incompatible unit invalid_uom "
+                "in sensor entity tuya.rzt2knqamsxjp8f9ycjjhtemp_current"
+            ),
+        ),
+        (
+            "qxj_xbwbniyt6bgws9ia",
+            "sensor.sws_16600_wifi_sh_air_pressure",
+            "atmospheric_pressture",
+            "invalid_uom",
+            (
+                "Device class pressure ignored for incompatible unit invalid_uom "
+                "in sensor entity tuya.ai9swgb6tyinbwbxjxqatmospheric_pressture"
+            ),
+        ),
     ],
 )
 async def test_invalid_uom(
