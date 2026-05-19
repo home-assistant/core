@@ -252,7 +252,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
         # Per-activity token — the activity is already running on the device.
         webhook_id = entry.data[ATTR_WEBHOOK_ID]
-        live_activity_tokens = self.hass.data[DOMAIN].get(DATA_LIVE_ACTIVITY_TOKENS, {})
+        live_activity_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if stored := device_tokens.get(tag):
             if (

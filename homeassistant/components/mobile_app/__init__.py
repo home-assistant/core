@@ -148,7 +148,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
-        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
+        DATA_DELETED_IDS: app_config[DATA_DELETED_IDS],
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: live_activity_tokens,
         DATA_PUSH_CHANNEL: {},
