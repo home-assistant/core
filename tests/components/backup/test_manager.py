@@ -1,7 +1,5 @@
 """Tests for the Backup integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
@@ -378,7 +376,8 @@ async def test_create_backup_when_busy(
         ),
         (
             {"agent_ids": ["non_existing"]},
-            "At least one available backup agent must be selected, got ['non_existing']",
+            "At least one available backup agent must be"
+            " selected, got ['non_existing']",
         ),
         (
             {"include_addons": ["ssl"], "include_all_addons": True},

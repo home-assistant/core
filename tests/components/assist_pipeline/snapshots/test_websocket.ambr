@@ -18,6 +18,11 @@
 # ---
 # name: test_audio_pipeline.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -112,6 +117,11 @@
 # ---
 # name: test_audio_pipeline_debug.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -218,6 +228,11 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -334,6 +349,11 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.3
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -461,6 +481,11 @@
 # ---
 # name: test_device_capture.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -488,6 +513,11 @@
 # ---
 # name: test_device_capture_override.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -537,6 +567,11 @@
 # ---
 # name: test_device_capture_queue_full.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -761,6 +796,11 @@
 # ---
 # name: test_stt_stream_failed.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,

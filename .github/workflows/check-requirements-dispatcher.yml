@@ -1,0 +1,73 @@
+name: Check requirements (dispatcher)
+
+# Stage 2 of the agentic Check requirements workflow. Runs on completion of
+# stage 1 (`check-requirements-changes.yml`) and dispatches stage 3
+# (`check-requirements.lock.yml`)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+# yamllint disable-line rule:truthy
+on: # zizmor: ignore[dangerous-triggers]
+  # workflow_run is safe here: this workflow does not check out PR code or run
+  # any code from the triggering PR. It only resolves the PR number from the
+  # head SHA and dispatches `check-requirements.lock.yml` with that number as
+  # a sanitized string input. The PR code is analysed downstream in the
+  # agentic workflow (`check-requirements.lock.yml`)
+  workflow_run:
+    workflows: ["Check requirements (changes detection)"]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    name: Dispatch agentic requirements check
+    if: >
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write # For triggering the downstream workflow
+      pull-requests: read # For querying PRs by commit SHA
+    steps:
+      - name: Resolve PR number from head SHA and trigger agentic requirements check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
+            const headBranch = context.payload.workflow_run.head_branch;
+            const headRepository = context.payload.workflow_run.head_repository;
+            const headRepo = headRepository.full_name;
+            // Query the head repository (which may be a fork). When the PR comes
+            // from a fork, the upstream's listPullRequestsAssociatedWithCommit
+            // returns no results for the fork's commit SHA.
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: headRepository.owner.login,
+              repo: headRepository.name,
+              commit_sha: headSha,
+            });
+            const matches = pulls.filter(p =>
+              p.state === 'open'
+              && p.head.ref === headBranch
+              && p.head.repo?.full_name === headRepo
+            );
+            if (matches.length === 0) {
+              core.info(`No open PR found for head SHA ${headSha} on ${headRepo}:${headBranch}; nothing to dispatch.`);
+              return;
+            }
+            const defaultBranch = context.payload.workflow_run.repository.default_branch;
+            for (const pr of matches) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'check-requirements.lock.yml',
+                ref: defaultBranch,
+                inputs: {
+                  pull_request_number: String(pr.number),
+                },
+              });
+              core.info(`Dispatched check-requirements.lock.yml for PR #${pr.number}.`);
+            }

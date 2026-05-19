@@ -1,7 +1,5 @@
 """Tests for the Home Assistant Labs WebSocket API."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -200,7 +198,8 @@ async def test_websocket_update_unavailable_preview_feature(
 
     client = await hass_ws_client(hass)
 
-    # Preview feature is pre-loaded, so update succeeds even though integration isn't loaded
+    # Preview feature is pre-loaded, so update succeeds even
+    # though integration isn't loaded
     await client.send_json_auto_id(
         {
             "type": "labs/update",

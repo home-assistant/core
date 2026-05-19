@@ -1,7 +1,5 @@
 """The Roborock component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
@@ -307,7 +305,8 @@ def build_setup_functions(
             )
         else:
             _LOGGER.warning(
-                "Not adding device %s because its protocol version %s or category %s is not supported",
+                "Not adding device %s because its protocol version"
+                " %s or category %s is not supported",
                 device.duid,
                 device.device_info.pv,
                 device.product.category.name,

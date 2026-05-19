@@ -1,7 +1,5 @@
 """Media player platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.media_player import (

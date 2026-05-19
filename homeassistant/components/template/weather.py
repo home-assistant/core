@@ -1,7 +1,5 @@
 """Template platform that aggregates meteorological data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging
@@ -27,16 +25,14 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     DOMAIN as WEATHER_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as WEATHER_PLATFORM_SCHEMA,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
+    CONF_CONDITION,
     CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -45,6 +41,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -55,7 +52,8 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import DOMAIN, TriggerUpdateCoordinator, validators as template_validators
+from .const import DOCUMENTATION_URL
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -104,7 +102,6 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
@@ -232,18 +229,6 @@ WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
 )
 
-PLATFORM_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
-    .extend(WEATHER_PLATFORM_SCHEMA.schema)
-)
-
-
 WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
@@ -259,21 +244,28 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        # Legacy
-        config = rewrite_legacy_to_modern_config(hass, config, LEGACY_FIELDS)
-    else:
-        # Modern and Trigger
-        entity_configs: list[ConfigType] = discovery_info["entities"]
-        modified_entity_configs = []
-        for entity_config in entity_configs:
-            entity_config = rewrite_legacy_to_modern_config(
-                hass, entity_config, LEGACY_FIELDS
-            )
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            WEATHER_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url=DOCUMENTATION_URL,
+            logger=_LOGGER,
+        )
+        return
 
-            modified_entity_configs.append(entity_config)
+    # Modern and Trigger
+    entity_configs: list[ConfigType] = discovery_info["entities"]
+    modified_entity_configs = []
+    for entity_config in entity_configs:
+        entity_config = rewrite_legacy_to_modern_config(
+            hass, entity_config, LEGACY_FIELDS
+        )
 
-        if modified_entity_configs:
-            discovery_info["entities"] = modified_entity_configs
+        modified_entity_configs.append(entity_config)
+
+    if modified_entity_configs:
+        discovery_info["entities"] = modified_entity_configs
 
     await async_setup_template_platform(
         hass,
@@ -347,7 +339,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected a list of forecast dictionaries, got {forecast}, {weather_message}",
+                    "expected a list of forecast"
+                    f" dictionaries, got {forecast},"
+                    f" {weather_message}",
                 )
                 continue
 
@@ -358,7 +352,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected valid forecast keys, unallowed keys: ({diff_result}) for {forecast}, {weather_message}",
+                    "expected valid forecast keys,"
+                    f" unallowed keys: ({diff_result})"
+                    f" for {forecast}, {weather_message}",
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
@@ -366,7 +362,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`is_daytime` is missing in twice_daily forecast {forecast}, {weather_message}",
+                    "`is_daytime` is missing in"
+                    f" twice_daily forecast {forecast},"
+                    f" {weather_message}",
                 )
             if "datetime" not in forecast:
                 raised = True
@@ -374,7 +372,8 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`datetime` is missing in forecast, got {forecast}, {weather_message}",
+                    "`datetime` is missing in forecast,"
+                    f" got {forecast}, {weather_message}",
                 )
 
         if raised:
@@ -392,8 +391,11 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     _state_option = CONF_CONDITION
     _optimistic_entity = True
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any]
     ) -> None:

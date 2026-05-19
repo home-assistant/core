@@ -1,7 +1,5 @@
 """Helpers for creating schema based data entry flows."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Container, Coroutine, Mapping
 import copy
@@ -477,7 +475,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
             )
 
         if async_setup_preview:
-            setattr(self, "async_setup_preview", async_setup_preview)
+            setattr(self, "async_setup_preview", async_setup_preview)  # noqa: B010
 
     @property
     def options(self) -> dict[str, Any]:

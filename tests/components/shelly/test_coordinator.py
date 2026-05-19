@@ -558,7 +558,7 @@ async def test_rpc_ignore_virtual_click_event(
     events: list[Event],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    """Test RPC virtual click events triggered by integration."""
     await init_integration(hass, 2)
 
     # Generate a virtual button event
@@ -1099,8 +1099,14 @@ async def test_rpc_sleeping_device_late_setup(
     register_device(device_registry, entry)
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
@@ -1178,7 +1184,7 @@ async def test_sub_device_area_from_main_device(
 
     # verify sub-devices have the same area as main device
     for relay_index in range(2):
-        entity_id = f"switch.test_name_output_{relay_index}"
+        entity_id = f"switch.living_room_test_name_output_{relay_index}"
         assert hass.states.get(entity_id) is not None
         entry = entity_registry.async_get(entity_id)
         assert entry

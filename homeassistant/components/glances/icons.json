@@ -13,6 +13,9 @@
       "disk_free": {
         "default": "mdi:harddisk"
       },
+      "disk_size": {
+        "default": "mdi:harddisk"
+      },
       "disk_usage": {
         "default": "mdi:harddisk"
       },

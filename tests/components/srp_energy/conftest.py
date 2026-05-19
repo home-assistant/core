@@ -1,7 +1,5 @@
 """Fixtures for Srp Energy integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import datetime as dt
 from unittest.mock import MagicMock, patch

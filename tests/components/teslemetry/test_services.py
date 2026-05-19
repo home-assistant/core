@@ -389,7 +389,8 @@ async def test_service_validation_errors(
         )
     assert exc_info.value.translation_key == "set_scheduled_charging_time"
 
-    # Test set_scheduled_departure validation error (preconditioning_enabled=True but no departure_time)
+    # Test set_scheduled_departure validation error
+    # (preconditioning_enabled=True but no departure_time)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
@@ -402,7 +403,8 @@ async def test_service_validation_errors(
         )
     assert exc_info.value.translation_key == "set_scheduled_departure_preconditioning"
 
-    # Test set_scheduled_departure validation error (off_peak_charging_enabled=True but no end_off_peak_time)
+    # Test set_scheduled_departure validation error
+    # (off_peak_charging_enabled=True but no end_off_peak_time)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,

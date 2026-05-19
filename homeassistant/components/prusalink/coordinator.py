@@ -1,7 +1,5 @@
 """Coordinators for the PrusaLink integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from datetime import timedelta
@@ -16,6 +14,7 @@ from pyprusalink import (
     PrinterInfo,
     PrinterStatus,
     PrusaLink,
+    VersionInfo,
 )
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
@@ -32,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 # rapidly-changing metrics.
 _MINIMUM_REFRESH_INTERVAL = 1.0
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
+T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo, VersionInfo)
 
 
 type PrusaLinkConfigEntry = ConfigEntry[dict[str, PrusaLinkUpdateCoordinator]]
@@ -124,3 +123,11 @@ class InfoUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     async def _fetch_data(self) -> PrinterInfo:
         """Fetch the printer data."""
         return await self.api.get_info()
+
+
+class VersionUpdateCoordinator(PrusaLinkUpdateCoordinator[VersionInfo]):
+    """Version update coordinator."""
+
+    async def _fetch_data(self) -> VersionInfo:
+        """Fetch the version data."""
+        return await self.api.get_version()

@@ -1,7 +1,5 @@
 """Provides the switchbot DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging
@@ -72,6 +70,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         # and we actually have a way to connect to the device
         return (
             self.hass.state is CoreState.running
+            and self.connectable
             and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(

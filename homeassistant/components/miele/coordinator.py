@@ -1,8 +1,5 @@
 """Coordinator module for Miele integration."""
 
-from __future__ import annotations
-
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -79,35 +76,32 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
 
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""
-        async with asyncio.timeout(10):
-            # Get devices
-            devices_json = await self.api.get_devices()
-            devices = {
-                device_id: MieleDevice(device)
-                for device_id, device in devices_json.items()
-            }
-            self.devices = devices
-            actions = {}
+        devices_json = await self.api.get_devices()
+        devices = {
+            device_id: MieleDevice(device) for device_id, device in devices_json.items()
+        }
+        self.devices = devices
+        actions = {}
 
-            for device_id in devices:
-                try:
-                    actions_json = await self.api.get_actions(device_id)
-                except ClientResponseError as err:
-                    _LOGGER.debug(
-                        "Error fetching actions for device %s: Status: %s, Message: %s",
-                        device_id,
-                        str(err.status),
-                        err.message,
-                    )
-                    actions_json = {}
-                except TimeoutError:
-                    _LOGGER.debug(
-                        "Timeout fetching actions for device %s",
-                        device_id,
-                    )
-                    actions_json = {}
-                actions[device_id] = MieleAction(actions_json)
-            return MieleCoordinatorData(devices=devices, actions=actions)
+        for device_id in devices:
+            try:
+                actions_json = await self.api.get_actions(device_id)
+            except ClientResponseError as err:
+                _LOGGER.debug(
+                    "Error fetching actions for device %s: Status: %s, Message: %s",
+                    device_id,
+                    str(err.status),
+                    err.message,
+                )
+                actions_json = {}
+            except TimeoutError:
+                _LOGGER.debug(
+                    "Timeout fetching actions for device %s",
+                    device_id,
+                )
+                actions_json = {}
+            actions[device_id] = MieleAction(actions_json)
+        return MieleCoordinatorData(devices=devices, actions=actions)
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
