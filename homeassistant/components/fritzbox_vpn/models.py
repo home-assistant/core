@@ -20,7 +20,9 @@ class FritzboxVpnRuntimeData:
     known_uids_switch: set[str] = field(default_factory=set)
     lock_add_entities_switch: asyncio.Lock = field(default_factory=asyncio.Lock)
 
-    def platform_tracking(self, platform: RuntimePlatform) -> tuple[set[str], asyncio.Lock]:
+    def platform_tracking(
+        self, platform: RuntimePlatform
+    ) -> tuple[set[str], asyncio.Lock]:
         """Known UIDs set and add-entity lock for a platform."""
         return self.known_uids_switch, self.lock_add_entities_switch
 
