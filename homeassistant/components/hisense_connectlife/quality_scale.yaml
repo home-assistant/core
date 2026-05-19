@@ -1,0 +1,109 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: Not required for Bronze
+  appropriate-polling:
+    status: done
+    comment: Basic polling/update mechanism implemented
+  brands:
+    status: exempt
+    comment: Not required for Bronze
+  common-modules:
+    status: exempt
+    comment: Not required for Bronze
+  config-flow-test-coverage:
+    status: exempt
+    comment: Not required for Bronze
+  config-flow:
+    status: done
+    comment: Config flow implemented for UI setup
+  dependency-transparency:
+    status: done
+    comment: Dependencies clearly declared
+  docs-actions:
+    status: exempt
+    comment: Not required for Bronze
+  docs-high-level-description:
+    status: done
+    comment: Basic high-level description provided
+  docs-installation-instructions:
+    status: done
+    comment: Basic installation instructions included
+  docs-removal-instructions:
+    status: exempt
+    comment: Not required for Bronze
+  entity-event-setup:
+    status: exempt
+    comment: Not required for Bronze
+  entity-unique-id:
+    status: done
+    comment: Entities have unique ID
+  has-entity-name:
+    status: exempt
+    comment: Not required for Bronze
+  runtime-data:
+    status: exempt
+    comment: Not required for Bronze
+  test-before-configure:
+    status: done
+    comment: Basic connection test in config flow
+  test-before-setup:
+    status: exempt
+    comment: Not required for Bronze
+  unique-config-entry:
+    status: done
+    comment: Prevent duplicate config entries
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Reauth flow will be added in a follow-up PR
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      Diagnostics support will be added in a follow-up PR
+  discovery-update-info:
+    status: exempt
+    comment: Not applicable for this integration
+  discovery:
+    status: exempt
+    comment: This integration does not support device discovery
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: Not applicable for this integration
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: Not applicable for this integration
+  repair-issues:
+    status: exempt
+    comment: Not applicable for this integration
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
