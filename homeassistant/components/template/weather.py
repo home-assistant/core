@@ -31,6 +31,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CONDITION,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
@@ -45,6 +46,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -55,8 +57,13 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
-from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
+from . import DOMAIN, TriggerUpdateCoordinator, validators as template_validators
+from .const import (
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_PICTURE,
+    DOCUMENTATION_URL,
+)
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -104,7 +111,6 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
@@ -273,8 +279,13 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        _LOGGER.warning(
-            "Template weather entities can only be configured under template:"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            WEATHER_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url=DOCUMENTATION_URL,
+            logger=_LOGGER,
         )
         return
 
@@ -360,7 +371,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected a list of forecast dictionaries, got {forecast}, {weather_message}",
+                    "expected a list of forecast"
+                    f" dictionaries, got {forecast},"
+                    f" {weather_message}",
                 )
                 continue
 
@@ -371,7 +384,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"expected valid forecast keys, unallowed keys: ({diff_result}) for {forecast}, {weather_message}",
+                    "expected valid forecast keys,"
+                    f" unallowed keys: ({diff_result})"
+                    f" for {forecast}, {weather_message}",
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
@@ -379,7 +394,9 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`is_daytime` is missing in twice_daily forecast {forecast}, {weather_message}",
+                    "`is_daytime` is missing in"
+                    f" twice_daily forecast {forecast},"
+                    f" {weather_message}",
                 )
             if "datetime" not in forecast:
                 raised = True
@@ -387,7 +404,8 @@ def validate_forecast(
                     entity,
                     option,
                     result,
-                    f"`datetime` is missing in forecast, got {forecast}, {weather_message}",
+                    "`datetime` is missing in forecast,"
+                    f" got {forecast}, {weather_message}",
                 )
 
         if raised:
@@ -405,8 +423,11 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     _state_option = CONF_CONDITION
     _optimistic_entity = True
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any]
     ) -> None:

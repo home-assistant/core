@@ -67,10 +67,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_reload_template_entities",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         integration = await async_get_integration(hass, DOMAIN)
         conf = await conf_util.async_process_component_and_handle_errors(
@@ -222,7 +224,9 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                             "entities": [
                                 {
                                     **entity_conf,
-                                    "raw_blueprint_inputs": conf_section.raw_blueprint_inputs,
+                                    "raw_blueprint_inputs": (
+                                        conf_section.raw_blueprint_inputs
+                                    ),
                                     "raw_configs": conf_section.raw_config,
                                 }
                                 for entity_conf in conf_section[platform_domain]
