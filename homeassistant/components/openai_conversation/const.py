@@ -20,6 +20,7 @@ CONF_IMAGE_MODEL = "image_model"
 CONF_CODE_INTERPRETER = "code_interpreter"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_REASONING_SUMMARY = "reasoning_summary"

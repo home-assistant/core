@@ -3,6 +3,7 @@
 DOMAIN = "jewish_calendar"
 
 ATTR_AFTER_SUNSET = "after_sunset"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_DATE = "date"
 ATTR_NUSACH = "nusach"
 

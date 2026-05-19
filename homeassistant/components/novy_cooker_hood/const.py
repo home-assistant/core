@@ -7,6 +7,7 @@ from rf_protocols import ModulationType
 DOMAIN: Final = "novy_cooker_hood"
 
 CONF_TRANSMITTER: Final = "transmitter"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_CODE: Final = "code"
 
 CODE_MIN: Final = 1
