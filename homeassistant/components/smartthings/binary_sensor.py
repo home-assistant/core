@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import INVALID_SWITCH_CATEGORIES, MAIN
+from .const import APPLIANCE_POWER_BINARY_SENSOR_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
 
 
@@ -145,7 +145,7 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.SWITCH,
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
-            category=INVALID_SWITCH_CATEGORIES,
+            category=APPLIANCE_POWER_BINARY_SENSOR_CATEGORIES,
         )
     },
     Capability.TAMPER_ALERT: {

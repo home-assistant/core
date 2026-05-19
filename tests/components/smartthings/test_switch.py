@@ -79,6 +79,74 @@ async def test_switch_turn_on_off(
     )
 
 
+@pytest.mark.parametrize(
+    ("device_fixture", "device_id", "entity_id"),
+    [
+        (
+            "da_wm_wm_000001",
+            "f984b91d-f250-9d42-3436-33f09a422a47",
+            "switch.washer",
+        ),
+        (
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "switch.dryer",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_appliance_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_id: str,
+    entity_id: str,
+    action: str,
+    command: Command,
+) -> None:
+    """Test washer/dryer switch turn on/off uses the SmartThings switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        device_id, Capability.SWITCH, command, MAIN
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "binary_sensor_entity_id"),
+    [
+        ("da_wm_wm_000001", "switch.washer", "binary_sensor.washer_power"),
+        ("da_wm_wd_000001", "switch.dryer", "binary_sensor.dryer_power"),
+    ],
+)
+async def test_appliance_switch_coexists_with_power_binary_sensor(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    binary_sensor_entity_id: str,
+) -> None:
+    """Test the appliance switch coexists with the legacy power binary sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(binary_sensor_entity_id) is not None
+
+
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
 @pytest.mark.parametrize(
     ("action", "argument"),
@@ -267,18 +335,6 @@ async def test_state_update(
             "appliance",
         ),
         (
-            "da_wm_wd_000001",
-            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
-            "dryer",
-            "appliance",
-        ),
-        (
-            "da_wm_wm_000001",
-            "f984b91d-f250-9d42-3436-33f09a422a47",
-            "washer",
-            "appliance",
-        ),
-        (
             "hw_q80r_soundbar",
             "afcf3b91-0000-1111-2222-ddff2a0a6577",
             "soundbar",
@@ -413,20 +469,6 @@ async def test_create_issue_with_items(
             "da_wm_sc_000001",
             "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
             "airdresser",
-            "appliance",
-            "2025.10.0",
-        ),
-        (
-            "da_wm_wd_000001",
-            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
-            "dryer",
-            "appliance",
-            "2025.10.0",
-        ),
-        (
-            "da_wm_wm_000001",
-            "f984b91d-f250-9d42-3436-33f09a422a47",
-            "washer",
             "appliance",
             "2025.10.0",
         ),
