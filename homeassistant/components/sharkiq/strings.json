@@ -9,7 +9,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "requires_verification": "SharkNinja is blocking automated login (anti-bot protection). Wait 24-48 hours without retrying, then try again."
     },
     "flow_title": "Add Shark IQ account",
     "step": {
@@ -56,6 +57,16 @@
         }
       },
       "name": "Clean room"
+    },
+    "discover_device_data": {
+      "description": "Discovers all available property files (maps, room data, no-go zones, etc.) for a Skegox device.",
+      "fields": {
+        "entity_id": {
+          "description": "The vacuum entity to discover data for",
+          "name": "Entity"
+        }
+      },
+      "name": "Discover Device Data"
     }
   }
 }
