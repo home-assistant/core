@@ -194,6 +194,36 @@ async def test_schema_rejects_invalid_input(
     mock_kiosker_api.blackout_set.assert_not_called()
 
 
+async def test_no_duplicate_calls_for_shared_config_entry(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that two device IDs sharing one config entry produce a single API call."""
+    await _setup(hass, mock_kiosker_api, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    assert device is not None
+
+    second_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "second-device-id")},
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "navigate_url",
+        {
+            ATTR_DEVICE_ID: [device.id, second_device.id],
+            ATTR_URL: "https://example.com",
+        },
+        blocking=True,
+    )
+
+    mock_kiosker_api.navigate_url.assert_called_once()
+
+
 async def test_service_non_kiosker_device(
     hass: HomeAssistant,
     mock_kiosker_api: MagicMock,

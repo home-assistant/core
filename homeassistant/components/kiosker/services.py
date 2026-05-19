@@ -115,23 +115,20 @@ async def _collect_coordinators(
     if not device_ids:
         raise HomeAssistantError("No devices targeted")
 
-    config_entries: list[ConfigEntry] = []
+    config_entries: dict[str, ConfigEntry] = {}
     for device_id in device_ids:
         device = registry.async_get(device_id)
         if device:
-            device_entries: list[ConfigEntry] = []
             for entry_id in device.config_entries:
                 entry = call.hass.config_entries.async_get_entry(entry_id)
                 if entry and entry.domain == DOMAIN:
-                    device_entries.append(entry)
-            if device_entries:
-                config_entries.extend(device_entries)
+                    config_entries[entry.entry_id] = entry
 
     if not config_entries:
         raise HomeAssistantError(f"No {DOMAIN} devices found in targeted selection")
 
     coordinators: list[KioskerDataUpdateCoordinator] = []
-    for config_entry in config_entries:
+    for config_entry in config_entries.values():
         if config_entry.state != ConfigEntryState.LOADED:
             raise HomeAssistantError(f"{config_entry.title} is not loaded")
         coordinators.append(config_entry.runtime_data)
