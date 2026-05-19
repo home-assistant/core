@@ -2052,44 +2052,26 @@ _COMMENT_SCHEMA_PARAMS = [
     ),
 ]
 
-
 @pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
-@pytest.mark.parametrize(
-    ("comment", "expected"),
-    [
-        pytest.param("Single line", "Single line", id="plain"),
-        pytest.param(
-            "Multi-line\ncomment\nspans rows",
-            "Multi-line\ncomment\nspans rows",
-            id="multiline",
-        ),
-        pytest.param(
-            "  whitespace preserved  ", "  whitespace preserved  ", id="whitespace"
-        ),
-        pytest.param("", "", id="empty"),
-        pytest.param(42, "42", id="coerce_int"),
-        pytest.param(True, "True", id="coerce_bool"),
-    ],
-)
 @pytest.mark.usefixtures("hass")
 def test_base_schemas_accept_comment(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
-    comment: Any,
-    expected: str,
 ) -> None:
-    """Test that script, condition, trigger base schemas accept a comment field."""
-    validated = validator({**base_config, "comment": comment})
-    assert validated["comment"] == expected
+    """Test that the comment field is accepted and stripped from the output."""
+    validated = validator({**base_config, "comment": "Single line"})
+    assert "comment" not in validated
 
 
 @pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
 @pytest.mark.parametrize(
-    ("invalid_comment", "error"),
+    "invalid_comment",
     [
-        pytest.param(None, "string value is None", id="none"),
-        pytest.param([], "value should be a string", id="list"),
-        pytest.param({}, "value should be a string", id="dict"),
+        pytest.param(None, id="none"),
+        pytest.param(42, id="int"),
+        pytest.param(True, id="bool"),
+        pytest.param([], id="list"),
+        pytest.param({}, id="dict"),
     ],
 )
 @pytest.mark.usefixtures("hass")
@@ -2097,8 +2079,7 @@ def test_base_schemas_reject_invalid_comment(
     validator: Callable[[dict[str, Any]], dict[str, Any]],
     base_config: dict[str, Any],
     invalid_comment: Any,
-    error: str,
 ) -> None:
     """Test that script, condition, trigger base schemas reject non-string comments."""
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(vol.Invalid):
         validator({**base_config, "comment": invalid_comment})
