@@ -58,6 +58,8 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -71,6 +73,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
@@ -104,7 +107,7 @@ from homeassistant.helpers.floor_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import DistanceConverter, TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -557,7 +560,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
-        metric.replace("\u03bc", "\u00b5")
+        metric = metric.replace("\u03bc", "\u00b5")
         return "".join(
             [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
@@ -754,7 +757,7 @@ class PrometheusMetrics:
         metric.set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
-        self._numeric_metric(state, "binary_sensor", "binary boolean")
+        self._numeric_metric(state, "binary_sensor", "binary sensor")
 
     def _handle_input_boolean(self, state: State) -> None:
         self._numeric_metric(state, "input_boolean", "input boolean")
@@ -770,6 +773,33 @@ class PrometheusMetrics:
 
     def _handle_person(self, state: State) -> None:
         self._numeric_metric(state, "person", "person")
+
+    def _handle_geo_location(self, state: State) -> None:
+        labels = self._labels(state, {"source": state.attributes.get("source", "")})
+        if (value := self.state_as_number(state)) is not None:
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                value = DistanceConverter.convert(value, unit, UnitOfLength.METERS)
+            self._metric(
+                "geo_location_distance_meters",
+                prometheus_client.Gauge,
+                "Distance of the geo location event from home in meters",
+                labels,
+            ).set(value)
+        if (latitude := state.attributes.get(ATTR_LATITUDE)) is not None:
+            self._metric(
+                "geo_location_latitude_degrees",
+                prometheus_client.Gauge,
+                "Latitude of the geo location event in degrees",
+                labels,
+            ).set(latitude)
+        if (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None:
+            self._metric(
+                "geo_location_longitude_degrees",
+                prometheus_client.Gauge,
+                "Longitude of the geo location event in degrees",
+                labels,
+            ).set(longitude)
 
     def _handle_lock(self, state: State) -> None:
         self._numeric_metric(state, "lock", "lock")

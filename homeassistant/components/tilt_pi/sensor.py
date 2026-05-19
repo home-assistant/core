@@ -23,6 +23,7 @@ from .entity import TiltEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_TEMPERATURE = "temperature"
 ATTR_GRAVITY = "gravity"
 

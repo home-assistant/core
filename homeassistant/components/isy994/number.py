@@ -89,7 +89,6 @@ async def async_setup_entry(
             key=node.address,
             name=node.name,
             entity_registry_enabled_default=var_id in node.name,
-            native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,

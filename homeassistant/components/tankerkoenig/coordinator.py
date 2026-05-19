@@ -117,7 +117,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         station_ids = list(self.stations)
 
         prices = {}
-        # The API seems to only return at most 10 results, so split the list in chunks of 10
+        # The API seems to only return at most 10 results,
+        # so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
             stations = station_ids[index * 10 : (index + 1) * 10]

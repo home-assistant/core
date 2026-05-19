@@ -27,6 +27,7 @@ from .const import (
     HumidifierEntityFeature,
 )
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_MODE = "mode"
 
 IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(

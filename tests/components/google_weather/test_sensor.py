@@ -53,7 +53,7 @@ async def test_availability(
     mock_google_weather_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     entity_id = "sensor.home_temperature"
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -163,7 +163,8 @@ async def test_state_update(
     assert state
     assert state.state == "13.7"
 
-    mock_google_weather_api.async_get_current_conditions.return_value.temperature.degrees = 15.0
+    current = mock_google_weather_api.async_get_current_conditions
+    current.return_value.temperature.degrees = 15.0
 
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)

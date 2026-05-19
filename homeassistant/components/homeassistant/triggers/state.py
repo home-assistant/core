@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"

@@ -239,7 +239,10 @@ async def test_air_quality_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test air quality triggers fire for binary_sensor entities with gas, CO, and smoke device classes."""
+    """Test air quality triggers fire for binary_sensor entities.
+
+    Covers gas, CO, and smoke device classes.
+    """
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,
@@ -685,7 +688,10 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test air quality crossed_threshold trigger fires on the first sensor state change."""
+    """Test air quality crossed_threshold trigger.
+
+    Fires on the first sensor state change.
+    """
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -793,7 +799,10 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test air quality crossed_threshold trigger fires when the last sensor changes state."""
+    """Test air quality crossed_threshold trigger.
+
+    Fires when the last sensor changes state.
+    """
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,

@@ -718,9 +718,12 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 await self.hass.async_add_executor_job(
                     self._quick_play, app_name, app_data
                 )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except NotImplementedError:
-                _LOGGER.error("App %s not supported", app_name)
+            except NotImplementedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="app_not_supported",
+                    translation_placeholders={"app_name": app_name},
+                ) from err
             return
 
         # Try the cast platforms
@@ -769,6 +772,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     media_id,
                     err,
                 )
+            # Fallback: if playlist parsing fails, forward the raw URL to the device
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except PlaylistError as err:
                 _LOGGER.warning(
                     "[%s %s] Failed to parse playlist %s: %s",
