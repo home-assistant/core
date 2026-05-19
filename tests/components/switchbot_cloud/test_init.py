@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from switchbot_api import (
     Device,
@@ -21,6 +22,7 @@ from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
@@ -237,6 +239,7 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     mock_delete_webhook,
     mock_setup_webhook,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test polling stays enabled until a webhook is received."""
     await async_process_ha_core_config(
@@ -252,15 +255,38 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
             hubDeviceId=None,
         ),
     ]
-    mock_get_status.return_value = {"power": PowerState.ON.value}
+    mock_get_status.return_value = {
+        "battery": 71,
+        "onlineStatus": "online",
+        "workingStatus": "Paused",
+    }
     mock_delete_webhook.return_value = {}
     mock_setup_webhook.return_value = {}
 
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    coordinator = entry.runtime_data.devices.vacuums[0][1]
-    assert coordinator.update_interval == DEFAULT_SCAN_INTERVAL
+    # Validate the state is fetched initially
+    entity_id = "vacuum.vacuum_name_1"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["battery_level"] == 71
+
+    # Change API return values and wait for update
+    mock_get_status.return_value = {
+        "battery": 60,
+        "onlineStatus": "online",
+        "workingStatus": "Paused",
+    }
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Validate that the state was updated again via fetch
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["battery_level"] == 60
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -270,13 +296,25 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
         json={
             "eventType": "changeReport",
             "eventVersion": "1",
-            "context": {"deviceType": "...", "deviceMac": "vacuum-1"},
+            "context": {
+                "battery": 74,
+                "deviceType": "WoSweeperMini",
+                "deviceMac": "vacuum-1",
+                "onlineStatus": "online",
+                "workingStatus": "Clearing",
+            },
         },
     )
 
     await hass.async_block_till_done()
 
-    assert coordinator.update_interval is None
+    mock_get_status.reset_mock()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # After receiving a webhook, no fetch should happen
+    mock_get_status.assert_not_called()
 
 
 async def test_setup_entry_skips_webhook_without_external_url(

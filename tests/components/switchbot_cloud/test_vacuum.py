@@ -21,7 +21,6 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     VacuumActivity,
 )
-from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -260,8 +259,6 @@ async def test_k10_plus_webhook_updates_state_after_reload(
 
     entity_id = "vacuum.succ_k10"
     webhook_id = entry.data[CONF_WEBHOOK_ID]
-    old_coordinator = entry.runtime_data.devices.vacuums[0][1]
-    old_handler = hass.data[WEBHOOK_DOMAIN][webhook_id]["handler"]
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == VacuumActivity.PAUSED.value
@@ -270,9 +267,6 @@ async def test_k10_plus_webhook_updates_state_after_reload(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    new_coordinator = entry.runtime_data.devices.vacuums[0][1]
-    assert new_coordinator is not old_coordinator
-    assert hass.data[WEBHOOK_DOMAIN][webhook_id]["handler"] is not old_handler
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     client = await hass_client_no_auth()
@@ -293,9 +287,6 @@ async def test_k10_plus_webhook_updates_state_after_reload(
     )
 
     await hass.async_block_till_done()
-
-    assert new_coordinator.data is not None
-    assert new_coordinator.data["workingStatus"] == "Clearing"
 
     state = hass.states.get(entity_id)
     assert state is not None
