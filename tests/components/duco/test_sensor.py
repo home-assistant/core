@@ -26,12 +26,100 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.fixture
+def mock_sensor_nodes(mock_nodes: list[Node]) -> list[Node]:
+    """Return sensor test nodes including VLV examples."""
+    return [
+        *mock_nodes,
+        Node(
+            node_id=60,
+            general=NodeGeneralInfo(
+                node_type="VLVRH",
+                sub_type=0,
+                network_type="WI",
+                parent=1,
+                asso=1,
+                name="Bedroom valve",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=48.0,
+                iaq_rh=88,
+                temp=21.3,
+            ),
+        ),
+        Node(
+            node_id=61,
+            general=NodeGeneralInfo(
+                node_type="VLVCO2",
+                sub_type=0,
+                network_type="WI",
+                parent=1,
+                asso=1,
+                name="Hall valve",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=512,
+                iaq_co2=76,
+                rh=None,
+                iaq_rh=None,
+                temp=20.1,
+            ),
+        ),
+        Node(
+            node_id=62,
+            general=NodeGeneralInfo(
+                node_type="VLVCO2RH",
+                sub_type=0,
+                network_type="WI",
+                parent=1,
+                asso=1,
+                name="Study valve",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=645,
+                iaq_co2=95,
+                rh=54.0,
+                iaq_rh=92,
+                temp=20.7,
+            ),
+        ),
+    ]
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
 ) -> MockConfigEntry:
     """Set up only the sensor platform for testing."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.duco.PLATFORMS", [Platform.SENSOR]):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -177,7 +265,7 @@ async def test_lan_info_duco_error_marks_unavailable(
 async def test_new_node_added_dynamically(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
     node_type: str,
     name: str,
@@ -208,7 +296,7 @@ async def test_new_node_added_dynamically(
         ),
         sensor=sensor,
     )
-    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]
+    mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, new_node]
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -223,7 +311,7 @@ async def test_new_node_added_dynamically(
 async def test_deregistered_node_removes_device(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -238,7 +326,7 @@ async def test_deregistered_node_removes_device(
 
     # Simulate the firmware removing the deregistered node from the API response.
     mock_duco_client.async_get_nodes.return_value = [
-        node for node in mock_nodes if node.node_id != 2
+        node for node in mock_sensor_nodes if node.node_id != 2
     ]
 
     freezer.tick(SCAN_INTERVAL)
@@ -257,7 +345,7 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
@@ -278,7 +366,7 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
         sensor=None,
     )
 
-    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+    mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, unknown_node]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -298,7 +386,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test UNKNOWN type node is retried and gets entities once the type resolves."""
@@ -327,7 +415,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
 
     # First poll: UNKNOWN type — no entities created.
     mock_duco_client.async_get_nodes.return_value = [
-        *mock_nodes,
+        *mock_sensor_nodes,
         _make_node(NodeType.UNKNOWN),
     ]
     freezer.tick(SCAN_INTERVAL)
@@ -337,7 +425,10 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     assert hass.states.get("sensor.future_sensor_humidity") is None
 
     # Second poll: type now resolved — entities must be created.
-    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, _make_node("BSRH")]
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_sensor_nodes,
+        _make_node("BSRH"),
+    ]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -352,7 +443,7 @@ async def test_unknown_node_logged_at_debug(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -377,7 +468,7 @@ async def test_unknown_node_logged_at_debug(
         ),
         sensor=NodeSensorInfo(co2=None, iaq_co2=None, rh=None, iaq_rh=None, temp=None),
     )
-    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, unknown_node]
+    mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, unknown_node]
 
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.duco"):
         freezer.tick(SCAN_INTERVAL)
@@ -398,11 +489,11 @@ async def test_unknown_node_logged_at_debug(
 async def test_ventilation_state_unknown_returns_state_unknown(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_nodes: list[Node],
+    mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
-    box_node = next(n for n in mock_nodes if n.general.node_type == NodeType.BOX)
+    box_node = next(n for n in mock_sensor_nodes if n.general.node_type == NodeType.BOX)
     updated_nodes = [
         Node(
             node_id=box_node.node_id,
@@ -418,7 +509,7 @@ async def test_ventilation_state_unknown_returns_state_unknown(
         )
         if n is box_node
         else n
-        for n in mock_nodes
+        for n in mock_sensor_nodes
     ]
     mock_duco_client.async_get_nodes.return_value = updated_nodes
 
