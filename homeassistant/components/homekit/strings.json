@@ -25,12 +25,12 @@
         },
         "title": "Select the entity for the accessory"
       },
-      "advanced": {
+      "bridged_device_triggers": {
         "data": {
           "devices": "Devices (Triggers)"
         },
         "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
-        "title": "Advanced configuration"
+        "title": "Bridged device triggers"
       },
       "cameras": {
         "data": {
