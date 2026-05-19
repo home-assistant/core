@@ -55,7 +55,7 @@ async def test_load_unload_entry(
     mock_identifier_entry: MockConfigEntry,
     mock_dwdwfsapi: MagicMock,
 ) -> None:
-    """Test loading and unloading the integration with a region identifier based entry."""
+    """Test loading and unloading the integration with a region identifier entry."""
     entry = await init_integration(hass, mock_identifier_entry)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -126,7 +126,7 @@ async def test_load_missing_device_tracker(
 async def test_load_missing_required_attribute(
     hass: HomeAssistant, mock_tracker_entry: MockConfigEntry
 ) -> None:
-    """Test loading the integration with a device tracker missing a required attribute."""
+    """Test loading the integration with a device tracker missing a required attr."""
     mock_tracker_entry.add_to_hass(hass)
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],

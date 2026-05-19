@@ -64,6 +64,8 @@ DEVICE_PAIRING_STATUS = "pairing_status"
 
 DOMAIN = "zha"
 
+LEGACY_ZEROCONF_PORT = 6638
+
 GROUP_ID = "group_id"
 
 
