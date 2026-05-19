@@ -13,7 +13,7 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -82,6 +82,42 @@ class _MobileAppStore(Store[dict[str, Any]]):
         return old_data
 
 
+@callback
+def _schedule_token_cleanup(hass: HomeAssistant, next_expiry: float) -> None:
+    """Schedule a cleanup task to run when the next live activity token expires."""
+    delay = max(1.0, next_expiry - dt_util.utcnow().timestamp())
+    hass.loop.call_later(
+        delay,
+        lambda: hass.async_create_task(_async_cleanup_live_activity_tokens(hass)),
+    )
+
+
+async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
+    """Remove expired live activity tokens and reschedule for the next expiry."""
+    now = dt_util.utcnow().timestamp()
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    next_expiry: float | None = None
+    changed = False
+
+    for wh_id in list(live_activity_tokens):
+        device_tokens = live_activity_tokens[wh_id]
+        for tag in list(device_tokens):
+            expires_at = device_tokens[tag].get("stored_at", 0) + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+            if expires_at <= now:
+                del device_tokens[tag]
+                changed = True
+            elif next_expiry is None or expires_at < next_expiry:
+                next_expiry = expires_at
+        if not device_tokens:
+            del live_activity_tokens[wh_id]
+
+    if changed:
+        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+
+    if next_expiry is not None:
+        _schedule_token_cleanup(hass, next_expiry)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = _MobileAppStore(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -90,14 +126,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
-    cutoff = dt_util.utcnow().timestamp() - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+    now = dt_util.utcnow().timestamp()
+    cutoff = now - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
     live_activity_tokens: dict[str, Any] = {}
+    next_expiry: float | None = None
+    found_expired = False
+
     for wh_id, tags in app_config[DATA_LIVE_ACTIVITY_TOKENS].items():
-        valid = {
-            tag: entry
-            for tag, entry in tags.items()
-            if entry.get("stored_at", 0) > cutoff
-        }
+        valid = {}
+        for tag, entry in tags.items():
+            stored_at = entry.get("stored_at", 0)
+            if stored_at > cutoff:
+                valid[tag] = entry
+                expires_at = stored_at + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+                if next_expiry is None or expires_at < next_expiry:
+                    next_expiry = expires_at
+            else:
+                found_expired = True
         if valid:
             live_activity_tokens[wh_id] = valid
 
@@ -110,6 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
+
+    if found_expired:
+        await store.async_save(savable_state(hass))
+
+    if next_expiry is not None:
+        _schedule_token_cleanup(hass, next_expiry)
 
     hass.http.register_view(RegistrationsView())
 
