@@ -158,7 +158,6 @@ class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
@@ -184,9 +183,7 @@ class DemoSensor(SensorEntity):
         self._attr_options = options
         self._attr_translation_key = translation_key
         self._attr_entity_category = entity_category
-        if entity_name:
-            self._attr_has_entity_name = True
-            self._attr_name = entity_name
+        self._attr_name = entity_name
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
