@@ -22,6 +22,7 @@ from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Read-only, coordinator-driven entities; no per-entity I/O to bound.
 PARALLEL_UPDATES = 0
 
 

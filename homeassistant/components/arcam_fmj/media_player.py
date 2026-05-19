@@ -27,7 +27,9 @@ from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
+# arcam-fmj serializes commands on a single TCP writer at the library
+# layer; serialize at HA's layer to match the device's contract.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
