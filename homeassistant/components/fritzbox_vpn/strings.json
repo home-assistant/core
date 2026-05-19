@@ -20,6 +20,10 @@
       },
       "reauth_confirm": {
         "description": "Authentication failed for {host}. Enter valid credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
         "title": "Reauthenticate Fritz!Box VPN"
       },
       "reconfigure": {
@@ -29,6 +33,12 @@
           "update_interval": "Update interval (seconds, 5–3600, max. 1 h)",
           "username": "Username"
         },
+        "data_description": {
+          "host": "FritzBox IP address or hostname",
+          "password": "Password used to authenticate against the FritzBox",
+          "update_interval": "Update interval in seconds",
+          "username": "Username used to authenticate against the FritzBox"
+        },
         "description": "Update your FritzBox connection details. The password field is not displayed for security reasons. Leave it empty to keep the current password, or enter a new password to change it.",
         "title": "Reconfigure Fritz!Box VPN"
       },
@@ -37,6 +47,11 @@
           "host": "FritzBox IP Address",
           "password": "Password",
           "username": "Username"
+        },
+        "data_description": {
+          "host": "FritzBox IP address or hostname",
+          "password": "Password used to authenticate against the FritzBox",
+          "username": "Username used to authenticate against the FritzBox"
         },
         "description": "Please enter your FritzBox connection details. If a FritzBox integration is already configured, the data will be automatically used.",
         "title": "Fritz!Box VPN Configuration"
@@ -102,12 +117,21 @@
           "update_interval": "Update interval (seconds, 5–3600, max. 1 h)",
           "username": "Username"
         },
+        "data_description": {
+          "host": "FritzBox IP address or hostname",
+          "password": "Password used to authenticate against the FritzBox",
+          "update_interval": "Update interval in seconds",
+          "username": "Username used to authenticate against the FritzBox"
+        },
         "description": "Update your FritzBox connection details. The password field is not displayed for security reasons. Leave it empty to keep the current password, or enter a new password to change it.",
         "title": "Configure Fritz!Box VPN"
       },
       "init": {
         "data": {
           "action": "Action"
+        },
+        "data_description": {
+          "action": "Action to perform"
         },
         "description": "Choose an action.",
         "title": "Fritz!Box VPN Options"
