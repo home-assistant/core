@@ -108,6 +108,34 @@ async def test_options_init_shows_cleanup_action(
 
 
 @pytest.mark.asyncio
+async def test_options_cleanup_confirm_without_checkbox(
+    hass: HomeAssistant, coordinator_with_data
+) -> None:
+    """Submitting cleanup confirm without checkbox re-shows the form."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        f"{UNIQUE_ID_PREFIX}orphan_switch",
+        config_entry=entry,
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"action": OPTIONS_ACTION_CLEANUP},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"confirm": False},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "cleanup_confirm"
+
+
+@pytest.mark.asyncio
 async def test_options_cleanup_confirm_removes_entities(
     hass: HomeAssistant, coordinator_with_data
 ) -> None:

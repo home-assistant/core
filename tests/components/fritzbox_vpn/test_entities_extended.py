@@ -1,14 +1,9 @@
-"""Extended entity behavior tests."""
+"""Extended switch entity behavior tests."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.fritzbox_vpn.binary_sensor import (
-    FritzBoxVPNConnectedBinarySensor,
-)
-from homeassistant.components.fritzbox_vpn.const import STATUS_CONNECTED
-from homeassistant.components.fritzbox_vpn.sensor import FritzBoxVPNStatusSensor
 from homeassistant.components.fritzbox_vpn.switch import FritzBoxVPNSwitch
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,9 +17,7 @@ def _coordinator(**overrides):
     coordinator = MagicMock()
     coordinator.data = overrides.get("data", MOCK_VPN_CONNECTIONS)
     coordinator.last_update_success = overrides.get("last_update_success", True)
-    coordinator.get_vpn_status = MagicMock(
-        return_value=overrides.get("status", STATUS_CONNECTED)
-    )
+    coordinator.get_vpn_status = MagicMock(return_value="enabled")
     coordinator.toggle_vpn = AsyncMock(return_value=overrides.get("toggle_ok", True))
     coordinator.async_request_refresh = AsyncMock()
     return coordinator
@@ -50,42 +43,19 @@ async def test_switch_turn_off_and_toggle_error(
 def test_switch_extra_attributes(mock_config_entry: MockConfigEntry) -> None:
     """Switch exposes VPN attributes when data is present."""
     coordinator = _coordinator()
-    switch = FritzBoxVPNSwitch(
+    switch_entity = FritzBoxVPNSwitch(
         coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
     )
-    attrs = switch.extra_state_attributes
+    attrs = switch_entity.extra_state_attributes
     assert attrs["name"] == "Office VPN"
     assert attrs["uid"] == "conn-abc"
 
 
-def test_binary_sensor_connected_on(mock_config_entry: MockConfigEntry) -> None:
-    """Binary sensor reflects connected flag from coordinator data."""
-    data = {**MOCK_VPN_CONNECTIONS["conn-abc"], "connected": True}
-    coordinator = _coordinator(data={"conn-abc": data})
-    entity = FritzBoxVPNConnectedBinarySensor(
-        coordinator, mock_config_entry, "conn-abc", data
-    )
-    assert entity.is_on is True
-
-
-def test_entities_unavailable_without_data(mock_config_entry: MockConfigEntry) -> None:
-    """Entities are unavailable when coordinator data is missing."""
+def test_switch_unavailable_without_data(mock_config_entry: MockConfigEntry) -> None:
+    """Switch is unavailable when coordinator data is missing."""
     coordinator = _coordinator(data={}, last_update_success=False)
-    switch = FritzBoxVPNSwitch(
+    switch_entity = FritzBoxVPNSwitch(
         coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
     )
-    assert switch.available is False
-    assert switch.is_on is False
-
-    connected = FritzBoxVPNConnectedBinarySensor(
-        coordinator,
-        mock_config_entry,
-        "conn-abc",
-        {**MOCK_VPN_CONNECTIONS["conn-abc"], "connected": True},
-    )
-    assert connected.available is False
-
-    status = FritzBoxVPNStatusSensor(
-        coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
-    )
-    assert status.native_value == STATUS_CONNECTED
+    assert switch_entity.available is False
+    assert switch_entity.is_on is False

@@ -1,10 +1,10 @@
-"""Tests for entity platform async_setup_entry and dynamic entity creation."""
+"""Tests for switch platform async_setup_entry and dynamic entity creation."""
 
 from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.fritzbox_vpn import binary_sensor, sensor, switch
+from homeassistant.components.fritzbox_vpn import switch
 from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.config_entries import ConfigEntryState
@@ -23,38 +23,6 @@ async def test_switch_platform_setup(
     added: list = []
 
     await switch.async_setup_entry(
-        hass,
-        mock_config_entry,
-        lambda entities, **kwargs: added.extend(entities),
-    )
-
-    assert len(added) == len(MOCK_VPN_CONNECTIONS)
-
-
-@pytest.mark.asyncio
-async def test_sensor_platform_setup(
-    hass: HomeAssistant, coordinator_with_data, mock_config_entry: MockConfigEntry
-) -> None:
-    """Sensor platform creates status and UID sensors per VPN."""
-    added: list = []
-
-    await sensor.async_setup_entry(
-        hass,
-        mock_config_entry,
-        lambda entities, **kwargs: added.extend(entities),
-    )
-
-    assert len(added) == len(MOCK_VPN_CONNECTIONS) * 3
-
-
-@pytest.mark.asyncio
-async def test_binary_sensor_platform_setup(
-    hass: HomeAssistant, coordinator_with_data, mock_config_entry: MockConfigEntry
-) -> None:
-    """Binary sensor platform creates connected sensors."""
-    added: list = []
-
-    await binary_sensor.async_setup_entry(
         hass,
         mock_config_entry,
         lambda entities, **kwargs: added.extend(entities),

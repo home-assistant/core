@@ -1,18 +1,10 @@
-"""Tests for entity platforms (switch, sensor, binary_sensor)."""
+"""Tests for Fritz!Box VPN switch entities."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.fritzbox_vpn.binary_sensor import (
-    FritzBoxVPNConnectedBinarySensor,
-)
 from homeassistant.components.fritzbox_vpn.const import STATUS_ENABLED
-from homeassistant.components.fritzbox_vpn.sensor import (
-    FritzBoxVPNStatusSensor,
-    FritzBoxVPNUIDSensor,
-    FritzBoxVPNVPNUIDSensor,
-)
 from homeassistant.components.fritzbox_vpn.switch import FritzBoxVPNSwitch
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -67,38 +59,3 @@ def test_switch_available_and_state(mock_config_entry: MockConfigEntry) -> None:
     assert entity.available
     assert entity.is_on
     assert entity.translation_key == "vpn"
-
-
-def test_binary_sensor_connected(mock_config_entry: MockConfigEntry) -> None:
-    """Binary sensor is off when VPN is not connected."""
-    coordinator = _mock_coordinator()
-    entity = FritzBoxVPNConnectedBinarySensor(
-        coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
-    )
-    assert entity.available
-    assert entity.is_on is False
-    assert entity.translation_key == "connected"
-
-
-def test_status_sensor_enum(mock_config_entry: MockConfigEntry) -> None:
-    """Status sensor exposes enum options and value."""
-    coordinator = _mock_coordinator()
-    entity = FritzBoxVPNStatusSensor(
-        coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
-    )
-    assert entity.native_value == STATUS_ENABLED
-    assert entity.options is not None
-    assert entity.translation_key == "status"
-
-
-def test_uid_sensors(mock_config_entry: MockConfigEntry) -> None:
-    """UID sensors expose connection identifiers."""
-    coordinator = _mock_coordinator()
-    uid_sensor = FritzBoxVPNUIDSensor(
-        coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
-    )
-    vpn_uid_sensor = FritzBoxVPNVPNUIDSensor(
-        coordinator, mock_config_entry, "conn-abc", MOCK_VPN_CONNECTIONS["conn-abc"]
-    )
-    assert uid_sensor.native_value == "conn-abc"
-    assert vpn_uid_sensor.native_value == "wg-1"

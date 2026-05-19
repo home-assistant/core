@@ -33,6 +33,7 @@ def vpn_connection_device_identifier(
     return (DOMAIN, f"{entry_id}_{connection_uid}")
 
 
+
 UNIQUE_ID_SUFFIX_SWITCH = "switch"
 UNIQUE_ID_SUFFIX_STATUS = "status"
 UNIQUE_ID_SUFFIX_UID = "uid"

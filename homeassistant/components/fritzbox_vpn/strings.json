@@ -64,28 +64,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "connected": {
-        "name": "Connected"
-      }
-    },
-    "sensor": {
-      "connection_uid": {
-        "name": "Connection UID"
-      },
-      "status": {
-        "name": "Status",
-        "state": {
-          "connected": "Connected",
-          "disabled": "Disabled",
-          "enabled": "Enabled",
-          "unknown": "Unknown"
-        }
-      },
-      "vpn_uid": {
-        "name": "VPN UID"
-      }
-    },
     "switch": {
       "vpn": {
         "name": "VPN"

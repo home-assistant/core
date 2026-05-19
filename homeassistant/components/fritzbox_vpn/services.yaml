@@ -1,9 +1,6 @@
 # Fritz!Box VPN services
 
 remove_unavailable_entities:
-  target:
-    entity:
-      integration: fritzbox_vpn
   fields:
     config_entry_id:
       required: false
@@ -11,9 +8,6 @@ remove_unavailable_entities:
         text:
 
 repair_entity_id_suffixes:
-  target:
-    entity:
-      integration: fritzbox_vpn
   fields:
     config_entry_id:
       required: false

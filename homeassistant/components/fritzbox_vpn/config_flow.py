@@ -175,7 +175,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         self._discovered_unique_id = unique_id
         self.context["title_placeholders"] = {"host": host}
-        self._existing_config = existing_config
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -422,7 +421,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 data=dict(config_entry.options) if config_entry.options else {},
             )
 
-        if user_input is not None or not pending:
+        if not pending:
             return self.async_create_entry(
                 title="",
                 data=dict(config_entry.options) if config_entry.options else {},
