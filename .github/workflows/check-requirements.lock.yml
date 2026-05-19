@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"70aa938926d4aac250b6d7aca7251f663476fc2da39a29d1ffd569dc725c133a","compiler_version":"v0.74.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"62eb6e3d38092bd041a0c1ddfdaef94cf4b9c694b2d2bcac6cbbecd6810230ca","compiler_version":"v0.74.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"d3abfe96a194bce3a523ed2093ddedd5704cdf62","version":"v0.74.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.46"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.46"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.46"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -34,7 +34,6 @@
 #   - actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 #   - actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-#   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
 #   - actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
 #   - github/gh-aw-actions/setup@d3abfe96a194bce3a523ed2093ddedd5704cdf62 # v0.74.4
@@ -47,20 +46,8 @@
 #   - ghcr.io/github/github-mcp-server:v1.0.4
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "Requirements License and Availability Check"
+name: "Check requirements"
 on:
-  pull_request:
-    # forks: # Fork filtering applied via job conditions
-    # - "*" # Fork filtering applied via job conditions
-    paths:
-    - requirements*.txt
-    - homeassistant/package_constraints.txt
-    - pyproject.toml
-    types:
-    - opened
-    - synchronize
-    - reopened
-  # roles: all # Roles processed as role check in pre-activation job
   workflow_dispatch:
     inputs:
       aw_context:
@@ -76,10 +63,10 @@ on:
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}"
   cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number }}
 
-run-name: "Requirements License and Availability Check"
+run-name: "Check requirements"
 
 jobs:
   activation:
@@ -88,7 +75,6 @@ jobs:
       actions: read
       contents: read
     outputs:
-      body: ${{ steps.sanitized.outputs.body }}
       comment_id: ""
       comment_repo: ""
       engine_id: ${{ steps.generate_aw_info.outputs.engine_id }}
@@ -99,8 +85,6 @@ jobs:
       setup-span-id: ${{ steps.setup.outputs.span-id }}
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
       stale_lock_file_failed: ${{ steps.check-lock-file.outputs.stale_lock_file_failed == 'true' }}
-      text: ${{ steps.sanitized.outputs.text }}
-      title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -109,7 +93,7 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_SETUP_WORKFLOW_NAME: "Check requirements"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/check-requirements.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -122,7 +106,7 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_AGENT_VERSION: "1.0.48"
           GH_AW_INFO_CLI_VERSION: "v0.74.4"
-          GH_AW_INFO_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_INFO_WORKFLOW_NAME: "Check requirements"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -187,17 +171,6 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_version_updates.cjs');
             await main();
-      - name: Compute current body text
-        id: sanitized
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          GH_AW_ALLOWED_DOMAINS: "*.pythonhosted.org,anaconda.org,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,binstar.org,bootstrap.pypa.io,conda.anaconda.org,conda.binstar.org,files.pythonhosted.org,github.com,host.docker.internal,pip.pypa.io,pypi.org,pypi.python.org,raw.githubusercontent.com,registry.npmjs.org,repo.anaconda.com,repo.continuum.io,telemetry.enterprise.githubcopilot.com"
-        with:
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/compute_text.cjs');
-            await main();
       - name: Create prompt with built-in context
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
@@ -210,24 +183,25 @@ jobs:
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
+          GH_AW_INPUTS_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_f9148b37e60758ba_EOF'
+          cat << 'GH_AW_PROMPT_2df1318dbe2d4011_EOF'
           <system>
-          GH_AW_PROMPT_f9148b37e60758ba_EOF
+          GH_AW_PROMPT_2df1318dbe2d4011_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_f9148b37e60758ba_EOF'
+          cat << 'GH_AW_PROMPT_2df1318dbe2d4011_EOF'
           <safe-output-tools>
           Tools: add_comment, missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_f9148b37e60758ba_EOF
+          GH_AW_PROMPT_2df1318dbe2d4011_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_f9148b37e60758ba_EOF'
+          cat << 'GH_AW_PROMPT_2df1318dbe2d4011_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -256,18 +230,19 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_f9148b37e60758ba_EOF
+          GH_AW_PROMPT_2df1318dbe2d4011_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_f9148b37e60758ba_EOF'
+          cat << 'GH_AW_PROMPT_2df1318dbe2d4011_EOF'
           </system>
           {{#runtime-import .github/workflows/check-requirements.md}}
-          GH_AW_PROMPT_f9148b37e60758ba_EOF
+          GH_AW_PROMPT_2df1318dbe2d4011_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
+          GH_AW_INPUTS_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -286,6 +261,7 @@ jobs:
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
+          GH_AW_INPUTS_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
           GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
         with:
           script: |
@@ -306,6 +282,7 @@ jobs:
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
+                GH_AW_INPUTS_PULL_REQUEST_NUMBER: process.env.GH_AW_INPUTS_PULL_REQUEST_NUMBER,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST
               }
             });
@@ -375,7 +352,7 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_SETUP_WORKFLOW_NAME: "Check requirements"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/check-requirements.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -430,16 +407,13 @@ jobs:
           GH_HOST: github.com
       - name: Install AWF binary
         run: bash "${RUNNER_TEMP}/gh-aw/actions/install_awf_binary.sh" v0.25.46
-      - name: Determine automatic lockdown mode for GitHub MCP Server
-        id: determine-automatic-lockdown
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
+      - name: Parse integrity filter lists
+        id: parse-guard-vars
         env:
-          GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
-          GH_AW_GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN }}
-        with:
-          script: |
-            const determineAutomaticLockdown = require('${{ runner.temp }}/gh-aw/actions/determine_automatic_lockdown.cjs');
-            await determineAutomaticLockdown(github, context, core);
+          GH_AW_BLOCKED_USERS_VAR: ${{ vars.GH_AW_GITHUB_BLOCKED_USERS || '' }}
+          GH_AW_TRUSTED_USERS_VAR: ${{ vars.GH_AW_GITHUB_TRUSTED_USERS || '' }}
+          GH_AW_APPROVAL_LABELS_VAR: ${{ vars.GH_AW_GITHUB_APPROVAL_LABELS || '' }}
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/parse_guard_list.sh"
       - name: Download activation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -459,19 +433,21 @@ jobs:
       - name: Download container images
         run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.46 ghcr.io/github/gh-aw-firewall/api-proxy:0.25.46 ghcr.io/github/gh-aw-firewall/squid:0.25.46 ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388 ghcr.io/github/github-mcp-server:v1.0.4 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
       - name: Generate Safe Outputs Config
+        env:
+          GH_AW_INPUT_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
         run: |
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_e3fcd372e2542806_EOF'
-          {"add_comment":{"max":1},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_e3fcd372e2542806_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << GH_AW_SAFE_OUTPUTS_CONFIG_c7878b8b9775118a_EOF
+          {"add_comment":{"max":1,"target":"${GH_AW_INPUT_PULL_REQUEST_NUMBER}"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
+          GH_AW_SAFE_OUTPUTS_CONFIG_c7878b8b9775118a_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
             {
               "description_suffixes": {
-                "add_comment": " CONSTRAINTS: Maximum 1 comment(s) can be added. Supports reply_to_id for discussion threading."
+                "add_comment": " CONSTRAINTS: Maximum 1 comment(s) can be added. Target: ${{ inputs.pull_request_number }}. Supports reply_to_id for discussion threading."
               },
               "repo_params": {},
               "dynamic_tools": []
@@ -627,8 +603,6 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_API_KEY: ${{ steps.safe-outputs-start.outputs.api_key }}
           GH_AW_SAFE_OUTPUTS_PORT: ${{ steps.safe-outputs-start.outputs.port }}
-          GITHUB_MCP_GUARD_MIN_INTEGRITY: ${{ steps.determine-automatic-lockdown.outputs.min_integrity }}
-          GITHUB_MCP_GUARD_REPOS: ${{ steps.determine-automatic-lockdown.outputs.repos }}
           GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -eo pipefail
@@ -659,7 +633,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_710f47825b96ccb9_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_103328ae7b98b0c7_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -673,8 +647,11 @@ jobs:
                 },
                 "guard-policies": {
                   "allow-only": {
-                    "min-integrity": "$GITHUB_MCP_GUARD_MIN_INTEGRITY",
-                    "repos": "$GITHUB_MCP_GUARD_REPOS"
+                    "approval-labels": ${{ steps.parse-guard-vars.outputs.approval_labels }},
+                    "blocked-users": ${{ steps.parse-guard-vars.outputs.blocked_users }},
+                    "min-integrity": "unapproved",
+                    "repos": "all",
+                    "trusted-users": ${{ steps.parse-guard-vars.outputs.trusted_users }}
                   }
                 }
               },
@@ -700,7 +677,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_710f47825b96ccb9_EOF
+          GH_AW_MCP_CONFIG_103328ae7b98b0c7_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -899,6 +876,21 @@ jobs:
           if [ ! -f /tmp/gh-aw/agent_output.json ]; then
             echo '{"items":[]}' > /tmp/gh-aw/agent_output.json
           fi
+      - if: always()
+        name: Verify agent produced an add_comment safe-output
+        run: |-
+          OUTPUT=/tmp/gh-aw/agent_output.json
+          if [ ! -f "${OUTPUT}" ]; then
+            echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
+            exit 1
+          fi
+          if ! grep -q '"add_comment"' "${OUTPUT}"; then
+            echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+            echo "Agent output:"
+            cat "${OUTPUT}"
+            exit 1
+          fi
+
       - name: Upload agent artifacts
         if: always()
         continue-on-error: true
@@ -910,6 +902,8 @@ jobs:
             /tmp/gh-aw/sandbox/agent/logs/
             /tmp/gh-aw/redacted-urls.log
             /tmp/gh-aw/mcp-logs/
+            /tmp/gh-aw/proxy-logs/
+            !/tmp/gh-aw/proxy-logs/proxy-tls/
             /tmp/gh-aw/agent_usage.json
             /tmp/gh-aw/agent-stdio.log
             /tmp/gh-aw/pre-agent-audit.txt
@@ -959,7 +953,7 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_SETUP_WORKFLOW_NAME: "Check requirements"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/check-requirements.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -983,7 +977,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_WORKFLOW_NAME: "Check requirements"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "true"
@@ -999,7 +993,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_WORKFLOW_NAME: "Check requirements"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -1016,7 +1010,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_WORKFLOW_NAME: "Check requirements"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1030,7 +1024,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_WORKFLOW_NAME: "Check requirements"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1044,7 +1038,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_WORKFLOW_NAME: "Check requirements"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "check-requirements"
@@ -1098,7 +1092,7 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_SETUP_WORKFLOW_NAME: "Check requirements"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/check-requirements.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -1166,7 +1160,7 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          WORKFLOW_NAME: "Requirements License and Availability Check"
+          WORKFLOW_NAME: "Check requirements"
           WORKFLOW_DESCRIPTION: "Checks changed Python package requirements on PRs targeting the core repo (including PRs opened from forks) and verifies licenses match PyPI metadata, source repositories are publicly accessible, PyPI releases were uploaded via automated CI (Trusted Publisher attestation), the package's release pipeline uses OIDC or equivalent automated credentials (not static tokens), and the PR description contains the required links."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
@@ -1296,7 +1290,7 @@ jobs:
       GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
       GH_AW_ENGINE_VERSION: "1.0.48"
       GH_AW_WORKFLOW_ID: "check-requirements"
-      GH_AW_WORKFLOW_NAME: "Requirements License and Availability Check"
+      GH_AW_WORKFLOW_NAME: "Check requirements"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
@@ -1316,7 +1310,7 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Requirements License and Availability Check"
+          GH_AW_SETUP_WORKFLOW_NAME: "Check requirements"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/check-requirements.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.48"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -1351,7 +1345,7 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "*.pythonhosted.org,anaconda.org,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,binstar.org,bootstrap.pypa.io,conda.anaconda.org,conda.binstar.org,files.pythonhosted.org,github.com,host.docker.internal,pip.pypa.io,pypi.org,pypi.python.org,raw.githubusercontent.com,registry.npmjs.org,repo.anaconda.com,repo.continuum.io,telemetry.enterprise.githubcopilot.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":1},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"report_incomplete\":{}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":1,\"target\":\"${{ inputs.pull_request_number }}\"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"report_incomplete\":{}}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
