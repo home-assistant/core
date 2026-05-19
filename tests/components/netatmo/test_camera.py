@@ -799,6 +799,8 @@ async def test_camera_image_with_attribute_change(
     camera_monitoring = "on"
     camera_alim_status = 2
     camera_timestamp = None
+    polling_cycles = 11
+    polling_delta = timedelta(seconds=30)
 
     def attribute_modifier(payload):
         """This function will be called by common.py during ANY homestatus call."""
@@ -880,14 +882,14 @@ async def test_camera_image_with_attribute_change(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
-    # Check that getting image succeeds while camera is streaming without exception
+    # Check that getting image succeeds while camera is idle without exception
     result = await entity.async_camera_image()
     assert result is not None
     assert result == FAKE_IMG
 
     # Trigger some polling cycle to let API throttling work
-    for _ in range(11):
-        freezer.tick(timedelta(seconds=30))
+    for _ in range(polling_cycles):
+        freezer.tick(polling_delta)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -898,8 +900,8 @@ async def test_camera_image_with_attribute_change(
     camera_timestamp = int(dt_util.utcnow().timestamp())
 
     # Trigger some polling cycle to let status change be picked up
-    for _ in range(11):
-        freezer.tick(timedelta(seconds=30))
+    for _ in range(polling_cycles):
+        freezer.tick(polling_delta)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -919,8 +921,8 @@ async def test_camera_image_with_attribute_change(
     camera_timestamp = int(dt_util.utcnow().timestamp())
 
     # Trigger some polling cycle to let status change be picked up
-    for _ in range(11):
-        freezer.tick(timedelta(seconds=30))
+    for _ in range(polling_cycles):
+        freezer.tick(polling_delta)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
