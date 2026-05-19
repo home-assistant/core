@@ -20,10 +20,12 @@ def parse_device_uuid(value: str) -> str | None:
 
 
 def uuid_from_upnp_udn(raw_udn: str) -> str | None:
+    """Parse device UUID from UPnP UDN."""
     return parse_device_uuid(raw_udn.removeprefix("uuid:"))
 
 
 def uuid_from_ssdp_usn(usn: str) -> str | None:
+    """Parse device UUID from SSDP USN."""
     if not usn.startswith("uuid:"):
         return None
     return parse_device_uuid(usn.split("::", 1)[0].removeprefix("uuid:"))

@@ -1,10 +1,8 @@
 """Runtime data and helpers for Fritz!Box VPN config entries."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -45,7 +43,7 @@ class FritzboxVpnRuntimeData:
         self.known_uids_binary_sensor -= uids
 
 
-FritzboxVpnConfigEntry: TypeAlias = ConfigEntry[FritzboxVpnRuntimeData]
+type FritzboxVpnConfigEntry = ConfigEntry[FritzboxVpnRuntimeData]
 
 
 def runtime_from_entry(entry: ConfigEntry) -> FritzboxVpnRuntimeData | None:

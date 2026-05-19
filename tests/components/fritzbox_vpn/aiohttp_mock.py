@@ -1,10 +1,8 @@
 """Queued aiohttp ClientSession mock for coordinator session tests."""
 
-from __future__ import annotations
-
-import json
 from collections.abc import Iterator
-from typing import Any
+import json
+from typing import Any, Self
 
 
 class MockAiohttpResponse:
@@ -17,24 +15,28 @@ class MockAiohttpResponse:
         text: str = "",
         headers: dict[str, str] | None = None,
     ) -> None:
+        """Initialize mock aiohttp response."""
         self.status = status
         self._text = text
         self.headers = headers or {}
 
     async def text(self) -> str:
+        """Return response body text."""
         return self._text
 
-    async def __aenter__(self) -> MockAiohttpResponse:
+    async def __aenter__(self) -> Self:
+        """Enter async context."""
         return self
 
     async def __aexit__(self, *args: object) -> None:
-        return None
+        """Exit async context."""
 
 
 class QueuedAiohttpSession:
     """ClientSession that returns queued responses in order for get/post/put."""
 
     def __init__(self, responses: list[MockAiohttpResponse]) -> None:
+        """Initialize session with queued responses."""
         self._responses: Iterator[MockAiohttpResponse] = iter(responses)
         self.requests: list[tuple[str, str, dict[str, Any]]] = []
 
@@ -48,12 +50,15 @@ class QueuedAiohttpSession:
             ) from err
 
     def get(self, url: str, **kwargs: Any) -> MockAiohttpResponse:
+        """Return next queued GET response."""
         return self._dequeue("GET", url, **kwargs)
 
     def post(self, url: str, **kwargs: Any) -> MockAiohttpResponse:
+        """Return next queued POST response."""
         return self._dequeue("POST", url, **kwargs)
 
     def put(self, url: str, **kwargs: Any) -> MockAiohttpResponse:
+        """Return next queued PUT response."""
         return self._dequeue("PUT", url, **kwargs)
 
 

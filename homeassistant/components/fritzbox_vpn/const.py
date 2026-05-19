@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from fritzboxvpn import const as fritzboxvpn_const
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 DEFAULT_NAME_UNKNOWN = fritzboxvpn_const.DEFAULT_NAME_UNKNOWN

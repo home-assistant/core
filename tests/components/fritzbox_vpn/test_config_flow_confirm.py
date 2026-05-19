@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from custom_components.fritzbox_vpn.config_flow import ConfigFlow
 from custom_components.fritzbox_vpn.const import DOMAIN
-from custom_components.fritzbox_vpn.flow_forms import InvalidAuth
+from custom_components.fritzbox_vpn.flow_forms import InvalidAuth, confirm_schema
+import pytest
+
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -106,8 +107,6 @@ async def test_confirm_step_validation_error(hass: HomeAssistant) -> None:
 
 def test_build_confirm_schema_from_existing() -> None:
     """Confirm schema prefills from existing Fritz integration config."""
-    from custom_components.fritzbox_vpn.flow_forms import confirm_schema
-
     schema = confirm_schema(
         {CONF_HOST: MOCK_HOST, CONF_USERNAME: "u", CONF_PASSWORD: "p"},
         MOCK_HOST,

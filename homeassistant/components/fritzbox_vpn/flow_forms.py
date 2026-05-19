@@ -1,14 +1,13 @@
 """Config/options flow form schemas and Fritz!Box connection validation."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import ipaddress
 import logging
-from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
 from fritzboxvpn import FritzBoxVPNSession
+import voluptuous as vol
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -49,9 +48,10 @@ def validate_host(host: str) -> str:
 
     try:
         ipaddress.ip_address(host)
-        return host
     except ValueError:
         pass
+    else:
+        return host
 
     if len(host) > 253:
         raise vol.Invalid("Hostname too long (max 253 characters)")
@@ -59,7 +59,7 @@ def validate_host(host: str) -> str:
     if not all(c.isalnum() or c in (".", "-") for c in host):
         raise vol.Invalid("Invalid hostname format")
 
-    if host.startswith(".") or host.endswith(".") or host.startswith("-") or host.endswith("-"):
+    if host.startswith((".", "-")) or host.endswith((".", "-")):
         raise vol.Invalid("Hostname cannot start or end with dot or hyphen")
 
     return host
@@ -223,5 +223,5 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
                 error_msg,
             )
             raise InvalidAuth from err
-        _LOGGER.exception("Error validating input: %s", err)
+        _LOGGER.exception("Error validating input")
         raise CannotConnect from err

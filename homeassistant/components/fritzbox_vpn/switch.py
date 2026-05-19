@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from fritzboxvpn import API_KEY_ACTIVE, API_KEY_NAME
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -59,6 +60,7 @@ class FritzBoxVPNSwitch(FritzBoxVPNEntity, SwitchEntity):
         connection_uid: str,
         connection_data: dict[str, Any],
     ) -> None:
+        """Initialize VPN switch."""
         super().__init__(
             coordinator,
             entry,
@@ -89,6 +91,7 @@ class FritzBoxVPNSwitch(FritzBoxVPNEntity, SwitchEntity):
         try:
             success = await self.coordinator.toggle_vpn(self._connection_uid, enable)
         except Exception as err:
+            _LOGGER.exception("Failed to toggle VPN connection: %s", vpn_name)
             raise_toggle_failed(vpn_name, str(err))
         await self.coordinator.async_request_refresh()
         if success:

@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from custom_components.fritzbox_vpn.binary_sensor import (
     FritzBoxVPNConnectedBinarySensor,
 )
@@ -13,9 +12,11 @@ from custom_components.fritzbox_vpn.sensor import (
     FritzBoxVPNVPNUIDSensor,
 )
 from custom_components.fritzbox_vpn.switch import FritzBoxVPNSwitch
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.fixtures import MOCK_VPN_CONNECTIONS
 

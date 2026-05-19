@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-import voluptuous as vol
 from custom_components.fritzbox_vpn.const import DOMAIN
 from custom_components.fritzbox_vpn.flow_forms import (
     CannotConnect,
@@ -11,11 +9,14 @@ from custom_components.fritzbox_vpn.flow_forms import (
     validate_host,
     validate_input,
 )
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+import voluptuous as vol
+
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
@@ -157,16 +158,15 @@ async def test_validate_input_maps_auth_error(hass: HomeAssistant) -> None:
     with patch(
         "custom_components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
         return_value=session_mock,
-    ):
-        with pytest.raises(InvalidAuth):
-            await validate_input(
-                hass,
-                {
-                    CONF_HOST: MOCK_HOST,
-                    CONF_USERNAME: MOCK_USERNAME,
-                    CONF_PASSWORD: MOCK_PASSWORD,
-                },
-            )
+    ), pytest.raises(InvalidAuth):
+        await validate_input(
+            hass,
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+            },
+        )
 
 
 @pytest.mark.asyncio
@@ -283,13 +283,12 @@ async def test_validate_input_maps_connect_error(hass: HomeAssistant) -> None:
     with patch(
         "custom_components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
         return_value=session_mock,
-    ):
-        with pytest.raises(CannotConnect):
-            await validate_input(
-                hass,
-                {
-                    CONF_HOST: MOCK_HOST,
-                    CONF_USERNAME: MOCK_USERNAME,
-                    CONF_PASSWORD: MOCK_PASSWORD,
-                },
-            )
+    ), pytest.raises(CannotConnect):
+        await validate_input(
+            hass,
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+            },
+        )

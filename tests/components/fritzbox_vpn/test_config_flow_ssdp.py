@@ -2,9 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from custom_components.fritzbox_vpn.config_flow import ConfigFlow
 from custom_components.fritzbox_vpn.const import DOMAIN
+import pytest
+
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

@@ -7,11 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    FRITZ_INTEGRATION_DOMAINS,
-    REPEATER_INDICATORS,
-    password_from_sources,
-)
+from .const import FRITZ_INTEGRATION_DOMAINS, REPEATER_INDICATORS, password_from_sources
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +89,6 @@ async def get_existing_fritz_config(hass: HomeAssistant) -> dict[str, Any] | Non
                 domain,
                 entry.entry_id,
             )
-        except Exception as err:
-            _LOGGER.warning("Error reading config from domain '%s': %s", domain, err)
+        except Exception:
+            _LOGGER.exception("Error reading config from domain '%s'", domain)
     return None

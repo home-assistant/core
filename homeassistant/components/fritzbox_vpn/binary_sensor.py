@@ -3,6 +3,7 @@
 from typing import Any
 
 from fritzboxvpn import API_KEY_CONNECTED
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -52,6 +53,7 @@ class FritzBoxVPNConnectedBinarySensor(FritzBoxVPNEntity, BinarySensorEntity):
         connection_uid: str,
         connection_data: dict[str, Any],
     ) -> None:
+        """Initialize VPN connected binary sensor."""
         super().__init__(
             coordinator,
             entry,

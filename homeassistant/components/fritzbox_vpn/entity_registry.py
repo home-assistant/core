@@ -1,13 +1,10 @@
 """Entity and device registry helpers for VPN connection lifecycle."""
 
-from __future__ import annotations
-
 import logging
 import re
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, UNIQUE_ID_PREFIX, UNIQUE_ID_SUFFIXES
 from .models import runtime_from_hass
@@ -150,12 +147,11 @@ def repair_entity_id_suffixes(
                 suffixed_entry.entity_id,
                 base_entity_id,
             )
-        except Exception as err:
-            _LOGGER.warning(
-                "Failed to repair %s → %s: %s",
+        except Exception:
+            _LOGGER.exception(
+                "Failed to repair %s → %s",
                 suffixed_entry.entity_id,
                 base_entity_id,
-                err,
             )
     return (len(messages), messages)
 

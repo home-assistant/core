@@ -3,13 +3,16 @@
 import logging
 
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -213,8 +216,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxVpnConfigEntry) 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         _LOGGER.info("Successfully set up all platforms")
-    except Exception as err:
-        _LOGGER.error("Failed to set up platforms: %s", err, exc_info=True)
+    except Exception:
+        _LOGGER.exception("Failed to set up platforms")
         return False
 
     removed_empty_devices = _cleanup_empty_connection_devices(hass, entry.entry_id)

@@ -1,8 +1,8 @@
 """DataUpdateCoordinator for FritzBox VPN integration."""
 
-import logging
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 
 from fritzboxvpn import (
@@ -11,6 +11,7 @@ from fritzboxvpn import (
     API_KEY_NAME,
     FritzBoxVPNSession,
 )
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -89,6 +90,7 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
         entry_id: str | None = None,
         on_orphaned_removed: Callable[[str, set[str]], None] | None = None,
     ):
+        """Initialize FritzBox VPN coordinator."""
         update_interval_seconds = _resolve_update_interval_seconds(config, options)
 
         super().__init__(
@@ -158,7 +160,6 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
                     if self._on_orphaned_removed and self.entry_id:
                         self._on_orphaned_removed(self.entry_id, current_uids)
             self._reauth_scheduled = False
-            return connections
         except (ConnectionError, ValueError) as err:
             if self._is_auth_error(err):
                 self._schedule_reauth()
@@ -181,6 +182,8 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
                 f"Unexpected error fetching VPN data: {err}",
                 retry_after=RETRY_AFTER_SECONDS,
             ) from err
+        else:
+            return connections
 
     async def toggle_vpn(self, connection_uid: str, enable: bool) -> bool:
         """Toggle VPN on/off; schedule reauth on authentication errors."""

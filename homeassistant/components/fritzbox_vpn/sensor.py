@@ -3,6 +3,7 @@
 from typing import Any
 
 from fritzboxvpn import API_KEY_UID
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -59,6 +60,7 @@ class FritzBoxVPNStatusSensor(FritzBoxVPNEntity, SensorEntity):
         connection_uid: str,
         connection_data: dict[str, Any],
     ) -> None:
+        """Initialize VPN status sensor."""
         super().__init__(
             coordinator,
             entry,
@@ -88,6 +90,7 @@ class FritzBoxVPNUIDSensor(FritzBoxVPNEntity, SensorEntity):
         connection_uid: str,
         connection_data: dict[str, Any],
     ) -> None:
+        """Initialize VPN connection UID sensor."""
         super().__init__(
             coordinator,
             entry,
@@ -116,6 +119,7 @@ class FritzBoxVPNVPNUIDSensor(FritzBoxVPNEntity, SensorEntity):
         connection_uid: str,
         connection_data: dict[str, Any],
     ) -> None:
+        """Initialize VPN internal UID sensor."""
         super().__init__(
             coordinator,
             entry,

@@ -1,12 +1,11 @@
 """Shared VPN connection entity helpers and dynamic platform setup."""
 
-from __future__ import annotations
-
-import logging
 from collections.abc import Callable
+import logging
 from typing import Any
 
 from fritzboxvpn import API_KEY_ACTIVE, API_KEY_CONNECTED, API_KEY_NAME, API_KEY_UID
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -107,6 +106,7 @@ class FritzBoxVPNEntity(CoordinatorEntity):
         *,
         unique_id_suffix: str,
     ) -> None:
+        """Initialize entity for one VPN connection."""
         super().__init__(coordinator)
         self._entry = entry
         self._connection_uid = connection_uid

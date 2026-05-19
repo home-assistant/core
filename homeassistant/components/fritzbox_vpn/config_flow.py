@@ -1,16 +1,15 @@
 """Config flow for FritzBox VPN integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import ipaddress
 import logging
-from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -65,43 +64,43 @@ OPTIONS_LABEL_CLEANUP = "Remove unavailable entities"
 OPTIONS_LABEL_REPAIR_ENTITY_IDS = "Repair entity IDs"
 
 
-async def _try_create_entry_from_credentials(
-    flow: config_entries.ConfigFlow,
-    hass: HomeAssistant,
-    user_input: dict[str, Any],
-    errors: dict[str, str],
-    *,
-    password_sources: tuple[Mapping[str, Any] | None, ...],
-    unique_id: str | None,
-    log_unknown_details: bool,
-) -> FlowResult | None:
-    """Validate credentials and create entry; None if the form should be shown again."""
-    fill_password_if_missing(user_input, *password_sources)
-    if not validate_host_on_submit(user_input, errors):
-        return None
-    try:
-        info = await validate_input(hass, user_input)
-    except Exception as err:
-        set_validation_error(errors, err, log_unknown_details=log_unknown_details)
-        return None
-    await flow.async_set_unique_id(unique_id or user_input.get(CONF_HOST))
-    flow._abort_if_unique_id_configured()
-    return flow.async_create_entry(title=info["title"], data=user_input)
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for FritzBox VPN."""
 
     VERSION = 1
 
     def __init__(self) -> None:
+        """Initialize FritzBox VPN config flow."""
         self._discovered_host: str | None = None
         self._discovered_unique_id: str | None = None
         self._existing_config: dict[str, Any] | None = None
 
+    async def _try_create_entry_from_credentials(
+        self,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        *,
+        password_sources: tuple[Mapping[str, Any] | None, ...],
+        unique_id: str | None,
+        log_unknown_details: bool,
+    ) -> FlowResult | None:
+        """Validate credentials and create entry; None if the form should be shown again."""
+        fill_password_if_missing(user_input, *password_sources)
+        if not validate_host_on_submit(user_input, errors):
+            return None
+        try:
+            info = await validate_input(self.hass, user_input)
+        except (CannotConnect, InvalidAuth) as err:
+            set_validation_error(errors, err, log_unknown_details=log_unknown_details)
+            return None
+        await self.async_set_unique_id(unique_id or user_input.get(CONF_HOST))
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=info["title"], data=user_input)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Handle the initial step."""
         errors: dict[str, str] = {}
 
         if user_input is None:
@@ -131,17 +130,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             ERROR_KEY_INVALID_AUTH,
                         )
                         errors["base"] = ERROR_KEY_INVALID_AUTH
-                    except Exception as err:
-                        _LOGGER.warning(
-                            "Autoconfiguration connection test failed: %s", err
-                        )
+                    except Exception:
+                        _LOGGER.exception("Autoconfiguration connection test failed")
                         errors["base"] = ERROR_KEY_UNKNOWN
             schema = credentials_schema(*credentials_defaults(self._existing_config))
             return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-        result = await _try_create_entry_from_credentials(
-            self,
-            self.hass,
+        result = await self._try_create_entry_from_credentials(
             user_input,
             errors,
             password_sources=(self._existing_config,),
@@ -184,6 +179,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Confirm discovered Fritz!Box and collect credentials."""
         errors: dict[str, str] = {}
 
         if user_input is None:
@@ -193,9 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"host": self._discovered_host or DEFAULT_HOST},
             )
 
-        result = await _try_create_entry_from_credentials(
-            self,
-            self.hass,
+        result = await self._try_create_entry_from_credentials(
             user_input,
             errors,
             password_sources=(self._existing_config,),
@@ -244,7 +238,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         try:
             await validate_input(self.hass, credentials)
-        except Exception as err:
+        except (CannotConnect, InvalidAuth) as err:
             set_validation_error(errors, err, log_unknown_details=True)
         else:
             return self.async_update_reload_and_abort(
@@ -271,6 +265,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
+        """Return the options flow handler."""
         return OptionsFlowHandler(config_entry)
 
 
@@ -278,6 +273,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for FritzBox VPN."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize FritzBox VPN options flow."""
         super().__init__()
         self._config_entry = config_entry
 
@@ -297,11 +293,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             has_cleanup_action = error_key is None and bool(to_remove)
             has_repair_action = bool(repairs)
             return (has_cleanup_action, has_repair_action, len(repairs))
-        except Exception as err:
+        except Exception:
             _LOGGER.exception(
-                "Failed to evaluate available options actions for entry %s: %s",
+                "Failed to evaluate available options actions for entry %s",
                 self._config_entry.entry_id,
-                err,
             )
             return (False, False, 0)
 
@@ -419,6 +414,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_configure(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Configure host, credentials, and update interval."""
         errors: dict[str, str] = {}
         config_entry = self._get_current_entry()
         if not config_entry:
@@ -438,7 +434,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
             try:
                 await validate_input(self.hass, user_input)
-            except Exception as err:
+            except (CannotConnect, InvalidAuth) as err:
                 set_validation_error(errors, err, log_unknown_details=True)
             else:
                 config_data = {

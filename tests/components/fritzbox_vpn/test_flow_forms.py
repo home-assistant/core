@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-import voluptuous as vol
 from custom_components.fritzbox_vpn.const import (
     ERROR_KEY_CANNOT_CONNECT,
     ERROR_KEY_INVALID_AUTH,
@@ -25,6 +23,9 @@ from custom_components.fritzbox_vpn.flow_forms import (
     validate_input,
     validation_error_key,
 )
+import pytest
+import voluptuous as vol
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

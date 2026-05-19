@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from custom_components.fritzbox_vpn import (
     SERVICE_REGISTRATION_FLAG,
     _async_remove_unavailable_entities,
@@ -15,9 +14,11 @@ from custom_components.fritzbox_vpn.const import (
     SERVICE_REMOVE_UNAVAILABLE_ENTITIES,
     UNIQUE_ID_PREFIX,
 )
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.fixtures import MOCK_VPN_CONNECTIONS
 

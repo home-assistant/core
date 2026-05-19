@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from custom_components.fritzbox_vpn.config_flow import OptionsFlowHandler
 from custom_components.fritzbox_vpn.const import (
     CONF_UPDATE_INTERVAL,
@@ -12,12 +11,14 @@ from custom_components.fritzbox_vpn.const import (
     UNIQUE_ID_PREFIX,
 )
 from custom_components.fritzbox_vpn.flow_forms import CannotConnect
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 

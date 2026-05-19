@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from custom_components.fritzbox_vpn.const import (
     CONF_UPDATE_INTERVAL,
     STATUS_CONNECTED,
@@ -14,10 +13,12 @@ from custom_components.fritzbox_vpn.coordinator import (
     normalize_update_interval,
 )
 from fritzboxvpn.parsing import normalize_box_connections
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME, MOCK_VPN_CONNECTIONS
 
@@ -31,7 +32,7 @@ def test_normalize_update_interval_clamps_and_defaults() -> None:
 
 
 def test_normalize_box_connections_list_and_dict() -> None:
-    """boxConnections list/dict payloads normalize to uid-keyed dict."""
+    """BoxConnections list/dict payloads normalize to uid-keyed dict."""
     listed = normalize_box_connections(
         [{"uid": "a", "active": 1, "name": "A"}]
     )

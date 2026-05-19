@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fritzboxvpn import FritzBoxVPNSession
+import pytest
 
 from tests.aiohttp_mock import MockAiohttpResponse, QueuedAiohttpSession, json_response
 from tests.fixtures import (

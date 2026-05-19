@@ -1,6 +1,5 @@
 """Unit tests for entity registry helpers (registry repair, orphans)."""
 
-import pytest
 from custom_components.fritzbox_vpn.const import DOMAIN, UNIQUE_ID_PREFIX
 from custom_components.fritzbox_vpn.entity_registry import (
     connection_uid_from_entity_unique_id,
@@ -14,10 +13,12 @@ from custom_components.fritzbox_vpn.entity_registry import (
     uids_from_entity_entries,
 )
 from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 def test_connection_uid_unknown_suffix() -> None:
@@ -112,8 +113,6 @@ async def test_repair_entity_id_suffixes(hass: HomeAssistant) -> None:
 @pytest.mark.asyncio
 async def test_remove_orphaned_entities_removes_device(hass: HomeAssistant) -> None:
     """Removing orphaned entities also removes their device when requested."""
-    from homeassistant.helpers import device_registry as dr
-
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"})
     entry.add_to_hass(hass)
     entity_registry = er.async_get(hass)

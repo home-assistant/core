@@ -2,11 +2,12 @@
 
 from pathlib import Path
 
-import pytest
 from custom_components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
-from homeassistant.config_entries import ConfigEntryState
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.fixtures import MOCK_VPN_CONNECTIONS
 
