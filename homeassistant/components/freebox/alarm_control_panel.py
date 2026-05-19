@@ -48,6 +48,7 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
     """Representation of a Freebox alarm."""
 
     _attr_code_arm_required = False
+    _attr_name = None
 
     def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
         """Initialize an alarm."""
