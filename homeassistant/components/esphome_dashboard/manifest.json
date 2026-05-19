@@ -1,0 +1,13 @@
+{
+  "domain": "esphome_dashboard",
+  "name": "ESPHome Dashboard",
+  "after_dependencies": ["hassio", "zeroconf", "tag", "esphome"],
+  "codeowners": ["@pstrawder"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/esphome_dashboard",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["esphome-dashboard-api"],
+  "quality_scale": "bronze",
+  "requirements": ["esphome-dashboard-api==1.3.0"]
+}

@@ -213,6 +213,7 @@ FLOWS = {
         "eq3btsmart",
         "escea",
         "esphome",
+        "esphome_dashboard",
         "essent",
         "eufylife_ble",
         "eurotronic_cometblue",
