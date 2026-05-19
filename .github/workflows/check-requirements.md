@@ -134,7 +134,7 @@ manually.
      repository.
    - If at least one distribution file has a valid Trusted Publisher attestation,
      mark ✅ CI-uploaded.
-   - If no attestation is found for any file (404 for all), mark ❌ — "Release
+   - If no attestation is found for any file (404 for all), mark ⚠️ — "Release
      has no provenance attestation; it may have been uploaded manually".
    - If an attestation exists but the `publisher` does not identify a recognized
      CI system or Trusted Publisher, mark ⚠️ — "Attestation present but
@@ -177,39 +177,29 @@ must point directly to the source repository (e.g. a GitHub or GitLab URL).
   "PR description must link to the source repository at `<repo_url>` (found
   via PyPI). A PyPI page link is not sufficient."
 
-### 4b — Version bumps: changelog or diff link required
+### 4b — Version bumps: changelog or diff link matching the bump
 
 For **version bumps**: the PR description must contain a link to a changelog,
-release notes page, or a diff/comparison URL that references the **correct
-versions** being bumped (old → new).
+release notes page, or a diff/comparison URL that references the **exact
+versions** being bumped (old → new) as recorded in the diff from Step 1.
 
 Checks to perform for each bumped package (old version = X, new version = Y):
 1. Extract all URLs from the PR body that contain the repository's domain or
    path (as identified in Step 3).
-2. Verify that at least one such URL includes both the old version string and
-   new version string in some form — e.g. a GitHub compare URL like
+2. Verify that at least one such URL includes both the old version (X) and the
+   new version (Y) in some form — e.g. a GitHub compare URL like
    `compare/vX...vY`, a releases URL mentioning version Y, or a
    `CHANGELOG.md` anchor referencing Y.
-3. If no URL matches, check if the PR body contains any changelog/diff link at
-   all for this package.
+3. Confirm the link's version range matches the actual bump in the diff. If
+   the link references versions different from X → Y (for example, the PR
+   bumps `1.2.3 → 1.3.0` but the link points to `compare/v1.2.0...v1.2.4`),
+   the link does not match the bump.
 
 Outcome:
-- ✅ — a URL pointing to the correct repo with version references covering the
-  exact bump (X → Y).
-- ⚠️ — a changelog/diff link exists but does not clearly reference the correct
-  versions or the correct repository; explain what was found and what is
-  expected.
-- ❌ — no changelog or diff link found at all in the PR description for this
-  package.
-
-### 4c — Diff consistency check
-
-For each **version bump**, verify that the version change recorded in the diff
-(Step 1) is internally consistent:
-- The `-` line must contain the old version and the `+` line must contain the
-  new version for the same package name.
-- Flag ❌ if the diff shows a downgrade (new version < old version) without an
-  explanation, or if the version strings cannot be parsed.
+- ✅ — a URL pointing to the correct repo with version references that match
+  the exact bump (X → Y).
+- ❌ — no changelog/diff link is found, or the link does not match the actual
+  bump (X → Y). Explain what was found and what is expected.
 
 ## Step 5 — Verify Source Repository is Publicly Accessible
 
@@ -254,9 +244,12 @@ workflow is sane. The checks differ by hosting provider.
       - `pypa/gh-action-pypi-publish` action
       - `actions/attest-build-provenance` action
       - Any step that sets `TWINE_PASSWORD` from `secrets.PYPI_TOKEN` directly
-        (flag ❌ if a long-lived API token is used instead of OIDC).
-      Mark ✅ if OIDC is used, ⚠️ if the publish method cannot be determined,
-      ❌ if a static secret token is the only credential.
+        (treat this as a static long-lived API token rather than OIDC).
+      Mark ✅ if OIDC is used, ⚠️ if the publish method cannot be determined.
+      If a static secret token is the only credential, mark ⚠️ for version
+      bumps (the package was already accepted at a previous version; suggest
+      the upstream maintainer switch to OIDC / Trusted Publisher for better
+      security) and ❌ for new packages.
    c. **No manual upload bypass**: Verify there is no step that calls
       `twine upload` or `pip upload` outside of a properly gated job (e.g., one
       that requires an environment approval). Flag ⚠️ if such steps exist.
@@ -285,7 +278,10 @@ workflow is sane. The checks differ by hosting provider.
       reference `secrets.PYPI_TOKEN` / `$PYPI_TOKEN` injected from GitLab CI/CD
       protected variables (flag ❌ if the token is hard-coded or unprotected).
       Mark ✅ if OIDC or protected CI variables are used, ⚠️ if the method
-      cannot be determined, ❌ if credentials appear to be insecure.
+      cannot be determined. If credentials appear to be insecure (a hard-coded
+      or unprotected static token is the only credential), mark ⚠️ for version
+      bumps (suggest the upstream maintainer switch to OIDC / Trusted Publisher
+      for better security) and ❌ for new packages.
    c. **No manual upload bypass**: Flag ⚠️ if any job calls `twine upload`
       without being behind a protected-variable or environment guard.
 5. If no publish job is found, mark ⚠️ — "No publish job found in .gitlab-ci.yml;
@@ -343,11 +339,11 @@ when the repository is not publicly accessible).
 <!-- requirements-check -->
 ## Check requirements
 
-| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
-|---------|------|---------|---------|-------------|-----------|------------------|---------|-----------------|
-| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PackageB | new  | —→4.5.6 | ❌ | ✅ | ❌ | ⚠️ | ❌ | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | ⚠️ | ✅ |
+| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link |
+|---------|------|---------|---------|-------------|-----------|------------------|---------|
+| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PackageB | new  | —→4.5.6 | ❌ | ✅ | ⚠️ | ⚠️ | ❌ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | ❌ |
 ```
 
 ### 7c — Per-package detail sections
@@ -361,8 +357,8 @@ After the table, add one collapsible `<details>` block per package.
 
 Each block must include the full detail for every check: the license found, the
 repository URL, whether a provenance attestation was found, the release
-pipeline findings, the PR link found (or missing), and whether the diff is
-consistent. For failed or warned checks, explain exactly what the contributor
+pipeline findings, and the PR link found (or missing, or mismatched with the
+actual bump). For failed or warned checks, explain exactly what the contributor
 must fix, including the expected source repository URL, expected version range,
 etc.
 
@@ -374,10 +370,9 @@ Template (repeat for each package):
 
 - **License**: ❌ License is `UNKNOWN` — not in the approved list. Check PyPI metadata and `script/licenses.py`.
 - **Repository Public**: ✅ https://github.com/example/packageb is publicly accessible.
-- **CI Upload**: ❌ No provenance attestation found for any distribution file. The release may have been uploaded manually.
+- **CI Upload**: ⚠️ No provenance attestation found for any distribution file. The release may have been uploaded manually.
 - **Release Pipeline**: ⚠️ No publish workflow found in the repository; it is unclear how this package is released to PyPI.
 - **PR Link**: ❌ PR description must link to the source repository at https://github.com/example/packageb (a PyPI page link is not sufficient).
-- **Diff Consistent**: ✅
 
 </details>
 ```
@@ -393,7 +388,6 @@ Collapsed example (all checks passed):
 - **CI Upload**: ✅ Trusted Publisher attestation found (GitHub Actions).
 - **Release Pipeline**: ✅ OIDC via `pypa/gh-action-pypi-publish`; triggered on `release: published`; `environment: release` gate.
 - **PR Link**: ✅ https://github.com/example/packagea/compare/v1.2.3...v1.3.0
-- **Diff Consistent**: ✅
 
 </details>
 ```
