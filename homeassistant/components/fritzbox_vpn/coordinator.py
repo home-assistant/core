@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import inspect
 import logging
 from typing import Any
 
@@ -140,8 +141,17 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
         _LOGGER.warning(
             "Authentication failed; starting reauth flow for entry %s", self.entry_id
         )
+
         # Schedule instead of awaiting, to avoid blocking the coordinator update cycle.
-        self.hass.async_create_task(entry.async_start_reauth(self.hass))
+        # `ConfigEntry.async_start_reauth` returns `None` in Home Assistant, but our
+        # tests use `AsyncMock`, so we handle both sync and awaitable returns.
+        self.hass.async_create_task(self._async_start_reauth(entry))
+
+    async def _async_start_reauth(self, entry: Any) -> None:
+        """Start re-authentication flow for an entry."""
+        result = entry.async_start_reauth(self.hass)
+        if inspect.isawaitable(result):
+            await result
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest VPN data from Fritz!Box."""

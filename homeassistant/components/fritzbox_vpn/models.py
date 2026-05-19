@@ -43,7 +43,7 @@ class FritzboxVpnRuntimeData:
         self.known_uids_binary_sensor -= uids
 
 
-type FritzboxVpnConfigEntry = ConfigEntry[FritzboxVpnRuntimeData]
+type FritzboxVpnConfigEntry = ConfigEntry[FritzboxVpnRuntimeData | None]
 
 
 def runtime_from_entry(entry: ConfigEntry) -> FritzboxVpnRuntimeData | None:
