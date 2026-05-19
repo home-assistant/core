@@ -4,6 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import ATTR_LOCATION, ATTR_STATE
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -131,12 +132,8 @@ ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
