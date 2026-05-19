@@ -1,10 +1,10 @@
-"""Support for Peblar selects."""
+"""Support for Peblar switches."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from peblar import PeblarEVInterface
+from peblar import Peblar, PeblarEVInterface, PeblarUserConfiguration
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -16,6 +16,7 @@ from .coordinator import (
     PeblarData,
     PeblarDataUpdateCoordinator,
     PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
 )
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
@@ -25,11 +26,20 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class PeblarSwitchEntityDescription(SwitchEntityDescription):
-    """Class describing Peblar switch entities."""
+    """Class describing Peblar switch entities (data coordinator)."""
 
     has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
     is_on_fn: Callable[[PeblarData], bool]
     set_fn: Callable[[PeblarDataUpdateCoordinator, bool], Awaitable[Any]]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PeblarUserConfigSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Peblar switch entities (user config coordinator)."""
+
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
+    is_on_fn: Callable[[PeblarUserConfiguration], bool]
+    set_fn: Callable[[Peblar, bool], Awaitable[Any]]
 
 
 def _async_peblar_charge(
@@ -44,7 +54,7 @@ def _async_peblar_charge(
     return coordinator.api.ev_interface(charge_current_limit=charge_current_limit)
 
 
-DESCRIPTIONS = [
+DATA_DESCRIPTIONS = [
     PeblarSwitchEntityDescription(
         key="force_single_phase",
         translation_key="force_single_phase",
@@ -65,6 +75,17 @@ DESCRIPTIONS = [
     ),
 ]
 
+USER_CONFIG_DESCRIPTIONS = [
+    PeblarUserConfigSwitchEntityDescription(
+        key="socket_lock",
+        translation_key="socket_lock",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_socket,
+        is_on_fn=lambda x: x.user_keep_socket_locked,
+        set_fn=lambda peblar, on: peblar.socket_lock(locked=on),
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,13 +94,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up Peblar switch based on a config entry."""
     async_add_entities(
-        PeblarSwitchEntity(
-            entry=entry,
-            coordinator=entry.runtime_data.data_coordinator,
-            description=description,
-        )
-        for description in DESCRIPTIONS
-        if description.has_fn(entry.runtime_data)
+        [
+            *[
+                PeblarSwitchEntity(
+                    entry=entry,
+                    coordinator=entry.runtime_data.data_coordinator,
+                    description=description,
+                )
+                for description in DATA_DESCRIPTIONS
+                if description.has_fn(entry.runtime_data)
+            ],
+            *[
+                PeblarUserConfigSwitchEntity(
+                    entry=entry,
+                    coordinator=entry.runtime_data.user_configuration_coordinator,
+                    description=description,
+                )
+                for description in USER_CONFIG_DESCRIPTIONS
+                if description.has_fn(entry.runtime_data)
+            ],
+        ]
     )
 
 
@@ -106,4 +140,30 @@ class PeblarSwitchEntity(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator, False)
+        await self.coordinator.async_request_refresh()
+
+
+class PeblarUserConfigSwitchEntity(
+    PeblarEntity[PeblarUserConfigurationDataUpdateCoordinator],
+    SwitchEntity,
+):
+    """Defines a Peblar user configuration switch entity."""
+
+    entity_description: PeblarUserConfigSwitchEntityDescription
+
+    @property
+    def is_on(self) -> bool:
+        """Return state of the switch."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
+
+    @peblar_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.entity_description.set_fn(self.coordinator.peblar, True)
+        await self.coordinator.async_request_refresh()
+
+    @peblar_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.entity_description.set_fn(self.coordinator.peblar, False)
         await self.coordinator.async_request_refresh()
