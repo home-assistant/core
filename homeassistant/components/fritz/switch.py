@@ -242,9 +242,6 @@ async def _async_profile_entities_list(
     if "X_AVM-DE_HostFilter1" not in avm_wrapper.connection.services:
         return new_profiles
 
-    if avm_wrapper.unique_id not in data_fritz.profile_switches:
-        data_fritz.profile_switches[avm_wrapper.unique_id] = set()
-
     for mac, device in avm_wrapper.devices.items():
         if device_filter_out_from_trackers(
             mac, device, data_fritz.profile_switches.values()
