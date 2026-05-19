@@ -49,15 +49,16 @@ def get_orphaned_entity_entries(
     current_uids: set[str] | None = None,
 ) -> tuple[list[er.RegistryEntry] | None, str | None]:
     """Entity entries whose VPN connection no longer exists on the Fritz!Box."""
-    if current_uids is None:
-        current_uids, error_key = resolve_current_uids(hass, entry_id)
+    resolved_uids = current_uids
+    if resolved_uids is None:
+        resolved_uids, error_key = resolve_current_uids(hass, entry_id)
         if error_key is not None:
             return (None, error_key)
     registry = er.async_get(hass)
     to_remove = []
     for entry in er.async_entries_for_config_entry(registry, entry_id):
         uid = connection_uid_from_entity_unique_id(entry.unique_id or "")
-        if uid is not None and uid not in current_uids:
+        if uid is not None and uid not in resolved_uids:
             to_remove.append(entry)
     return (to_remove, None)
 

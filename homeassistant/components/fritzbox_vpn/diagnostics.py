@@ -19,10 +19,11 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: FritzboxVpnConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry (no credentials)."""
-    host = host_from_config(entry.data)
-    options: dict[str, Any] = entry.options or {}
+    data: dict[str, Any] = dict(entry.data)
+    host = host_from_config(data)
+    options: dict[str, Any] = dict(entry.options) if entry.options else {}
     update_interval = normalize_update_interval(
-        options.get(CONF_UPDATE_INTERVAL) or entry.data.get(CONF_UPDATE_INTERVAL)
+        options.get(CONF_UPDATE_INTERVAL) or data.get(CONF_UPDATE_INTERVAL)
     )
 
     last_update_success: bool | None = None

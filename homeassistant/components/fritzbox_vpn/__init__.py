@@ -178,8 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxVpnConfigEntry) 
 
     coordinator = FritzBoxVPNCoordinator(
         hass,
-        entry.data,
-        entry.options,
+        dict(entry.data),
+        dict(entry.options) if entry.options else None,
         entry.entry_id,
         on_orphaned_removed=lambda eid, cu: _apply_auto_cleanup(hass, eid, cu),
     )
@@ -237,9 +237,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzboxVpnConfigEntry)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        if entry.runtime_data is not None:
-            await entry.runtime_data.coordinator.fritz_session.async_close()
-        entry.runtime_data = None
+        runtime = entry.runtime_data
+        if runtime is not None:
+            await runtime.coordinator.fritz_session.async_close()
 
         other_loaded = [
             e for e in hass.config_entries.async_loaded_entries(DOMAIN)

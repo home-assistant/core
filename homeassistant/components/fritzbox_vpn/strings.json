@@ -1,0 +1,135 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fritz!Box VPN Configuration",
+        "description": "Please enter your FritzBox connection details. If a FritzBox integration is already configured, the data will be automatically used.",
+        "data": {
+          "host": "FritzBox IP Address",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "confirm": {
+        "title": "Fritz!Box VPN Found",
+        "description": "A FritzBox was automatically discovered: {host}. Please confirm the configuration."
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Fritz!Box VPN",
+        "description": "Authentication failed for {host}. Enter valid credentials."
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to FritzBox. Please check the IP address and network connection.",
+      "invalid_auth": "Authentication failed. Please check username and password. If credentials are correct, enable TR-064 (Permit access for apps) in the FritzBox under Home Network > Network > Network settings > Access Settings in the Home Network. Note: UPnP is only needed for automatic discovery, not for API access.",
+      "invalid_host": "Invalid host. Please enter a valid IP address or hostname.",
+      "unknown": "An unexpected error occurred. Please check the Home Assistant logs for details. Make sure TR-064 (Permit access for apps) is enabled in the FritzBox.",
+      "config_entry_not_found": "Config entry not found. Please add the integration again."
+    },
+    "abort": {
+      "already_configured": "This FritzBox is already configured.",
+      "not_fritzbox": "The discovered device is not a FritzBox.",
+      "no_host": "Could not determine the IP address."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fritz!Box VPN Options",
+        "description": "Choose an action.",
+        "data": {
+          "action": "Action"
+        }
+      },
+      "configure": {
+        "title": "Configure Fritz!Box VPN",
+        "description": "Update your FritzBox connection details. The password field is not displayed for security reasons. Leave it empty to keep the current password, or enter a new password to change it.",
+        "data": {
+          "host": "FritzBox IP Address",
+          "username": "Username",
+          "password": "Password (leave empty to keep current password)",
+          "update_interval": "Update interval (seconds, 5–3600, max. 1 h)"
+        }
+      },
+      "cleanup_confirm": {
+        "title": "Remove unavailable entities",
+        "description": "Entities that refer to VPN connections no longer present on the Fritz!Box will be removed from the entity registry. Check the box below and submit to remove them and reload the integration.",
+        "data": {
+          "confirm": "Remove entities and reload integration"
+        }
+      },
+      "repair_entity_ids_confirm": {
+        "title": "Repair entity ID suffixes",
+        "description": "Entity IDs that got a _2, _3, _4 suffix (e.g. after faulty deactivation) will be renamed back to the base ID. The stale base entry will be removed. Reload will run after repair.",
+        "data": {
+          "confirm": "Repair entity IDs and reload integration"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to FritzBox. Please check the IP address and network connection.",
+      "invalid_auth": "Authentication failed. Please check username and password.",
+      "invalid_host": "Invalid host. Please enter a valid IP address or hostname.",
+      "unknown": "An unexpected error occurred. Please check the Home Assistant logs.",
+      "config_entry_not_found": "Config entry not found. Please add the integration again.",
+      "integration_not_loaded": "Integration is not loaded. Please start the integration first.",
+      "coordinator_not_ready": "Data is still loading. Please wait a moment and try again."
+    }
+  },
+  "entity": {
+    "switch": {
+      "vpn": {
+        "name": "VPN"
+      }
+    },
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "connected": "Connected",
+          "enabled": "Enabled",
+          "disabled": "Disabled",
+          "unknown": "Unknown"
+        }
+      },
+      "connection_uid": {
+        "name": "Connection UID"
+      },
+      "vpn_uid": {
+        "name": "VPN UID"
+      }
+    }
+  },
+  "exceptions": {
+    "toggle_failed": {
+      "message": "Failed to change VPN connection {name}.{error}"
+    }
+  },
+  "services": {
+    "remove_unavailable_entities": {
+      "name": "Remove unavailable entities",
+      "description": "Remove entities whose VPN connection no longer exists on the Fritz!Box, then reload the integration. Optional: config_entry_id to limit to one integration.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional. Limit cleanup to this integration entry (e.g. from the integration options URL). If omitted, all Fritz!Box VPN entries are processed."
+        }
+      }
+    },
+    "repair_entity_id_suffixes": {
+      "name": "Repair entity ID suffixes",
+      "description": "Fix entity IDs that got a _2, _3, _4 suffix (e.g. after faulty deactivation). Removes the stale base entry and renames to the base ID. Optional: config_entry_id to limit to one integration.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "Optional. Limit repair to this integration entry. If omitted, all Fritz!Box VPN entries are processed."
+        }
+      }
+    }
+  }
+}
