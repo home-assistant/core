@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Yale integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -46,6 +44,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.config_entry.data[CONF_USERNAME],
                 self.config_entry.data[CONF_PASSWORD],
             )
+            # pylint: disable-next=home-assistant-sequential-executor-jobs
             self.locks = await self.hass.async_add_executor_job(self.yale.get_locks)
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error

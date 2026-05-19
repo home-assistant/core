@@ -1,7 +1,5 @@
 """Improved coordinator design with better type safety."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -185,8 +183,10 @@ class WeatherFlowWindCoordinator(BaseWebsocketCoordinator[EventDataRapidWind]):
         """Create rapid wind listen message."""
         return RapidWindListenStartMessage(device_id=str(device_id))
 
-    async def _handle_websocket_message(self, data: RapidWindWS) -> None:
+    async def _handle_websocket_message(self, data: RapidWindWS | None) -> None:
         """Handle rapid wind websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 
@@ -204,8 +204,12 @@ class WeatherFlowObservationCoordinator(BaseWebsocketCoordinator[WebsocketObserv
         """Create observation listen message."""
         return ListenStartMessage(device_id=str(device_id))
 
-    async def _handle_websocket_message(self, data: ObservationTempestWS) -> None:
+    async def _handle_websocket_message(
+        self, data: ObservationTempestWS | None
+    ) -> None:
         """Handle observation websocket data."""
+        if data is None:
+            return
         device_id = data.device_id
         station_id = self.device_to_station_map[device_id]
 

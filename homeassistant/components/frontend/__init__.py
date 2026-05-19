@@ -1,7 +1,5 @@
 """Handle the frontend for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
 from functools import lru_cache, partial
 import logging
@@ -407,6 +405,12 @@ def async_remove_panel(
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
+@callback
+def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
+    """Return if a panel is registered for the given frontend URL path."""
+    return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
     """Register extra js or module url to load.
 
@@ -505,7 +509,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                "Failed to download PR #%s: %s, falling back"
+                " to the integrated frontend",
                 dev_pr_number,
                 err,
             )

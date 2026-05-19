@@ -1,7 +1,5 @@
 """Constants for PlayStation 4."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey

@@ -1,7 +1,5 @@
 """Entity representing a Sonos number control."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 

@@ -1,7 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection, Generator, Sequence
 import logging
@@ -605,11 +603,13 @@ class ZWaveServices:
                 nodes_or_endpoints_list, _results
             ):
                 if value_size is None:
-                    # async_set_config_parameter still returns (Value, SetConfigParameterResult)
+                    # async_set_config_parameter still returns
+                    # (Value, SetConfigParameterResult)
                     zwave_value = result[0]
                     cmd_status = result[1]
                 else:
-                    # async_set_raw_config_parameter_value now returns just SetConfigParameterResult
+                    # async_set_raw_config_parameter_value now
+                    # returns just SetConfigParameterResult
                     cmd_status = result
                     zwave_value = f"parameter {property_or_property_name}"
 
@@ -617,7 +617,8 @@ class ZWaveServices:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:
                     msg = (
-                        "Added command to queue to set configuration parameter %s on %s "
+                        "Added command to queue to set"
+                        " configuration parameter %s on %s "
                         "with value %s. Parameter will be set when the device wakes up"
                     )
                 _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)

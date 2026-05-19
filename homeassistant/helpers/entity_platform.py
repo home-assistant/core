@@ -1,7 +1,5 @@
 """Class to manage the entities for a single platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
@@ -330,7 +328,8 @@ class EntityPlatform:
                 if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
                     self.logger.warning(
                         (
-                            "The %s platform module for the %s custom integration does not implement"
+                            "The %s platform module for the %s custom"
+                            " integration does not implement"
                             " async_setup_platform or setup_platform."
                         ),
                         self.platform_name,
@@ -583,7 +582,8 @@ class EntityPlatform:
                 update_before_add=update_before_add,
                 config_subentry_id=config_subentry_id,
             ),
-            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            "EntityPlatform async_add_entities_for_entry"
+            f" {self.domain}.{self.platform_name}",
             eager_start=True,
         )
 
@@ -714,8 +714,9 @@ class EntityPlatform:
             or config_subentry_id not in self.config_entry.subentries
         ):
             raise HomeAssistantError(
-                f"Can't add entities to unknown subentry {config_subentry_id} of config "
-                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+                f"Can't add entities to unknown subentry"
+                f" {config_subentry_id} of config entry"
+                f" {self.config_entry.entry_id if self.config_entry else None}"
             )
 
         entities: list[Entity] = (
@@ -845,8 +846,9 @@ class EntityPlatform:
                     )
                     if domain != self.domain:
                         report_usage(
-                            f"sets an entity ID with wrong domain: '{entity.entity_id}'. "
-                            f"Expected domain is '{self.domain}'",
+                            "sets an entity ID with wrong domain:"
+                            f" '{entity.entity_id}'."
+                            f" Expected domain is '{self.domain}'",
                             integration_domain=self.platform_name,
                             breaks_in_ha_version="2027.5.0",
                         )

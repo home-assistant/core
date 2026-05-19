@@ -1,7 +1,5 @@
 """Support for Velbus Buttons."""
 
-from __future__ import annotations
-
 from velbusaio.channels import (
     Button as VelbusaioButton,
     ButtonCounter as VelbusaioButtonCounter,

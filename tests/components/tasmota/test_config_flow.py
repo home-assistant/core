@@ -1,5 +1,7 @@
 """Test config flow."""
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -30,8 +32,10 @@ async def test_mqtt_abort_invalid_topic(
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/bla",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'
@@ -67,8 +71,10 @@ async def test_mqtt_abort_invalid_topic(
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'
@@ -92,8 +98,10 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
-            '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
-            'null,null,null],"hn":"tasmota_0848A2","mac":"DC4F220848A2","md":"Sonoff Basic",'
+            '{"ip":"192.168.0.136","dn":"Tasmota",'
+            '"fn":["Tasmota",null,null,null,null,'
+            'null,null,null],"hn":"tasmota_0848A2",'
+            '"mac":"DC4F220848A2","md":"Sonoff Basic",'
             '"ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON",'
             '"TOGGLE","HOLD"],"sw":"9.4.0.4","t":"tasmota_0848A2","ft":"%topic%/%prefix%/",'
             '"tp":["cmnd","stat","tele"],"rl":[1,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1],'
@@ -117,59 +125,41 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["result"].data == {"discovery_prefix": "tasmota/discovery"}
 
 
-async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+@pytest.mark.parametrize(
+    ("user_input", "expected_prefix"),
+    [
+        pytest.param({}, "tasmota/discovery", id="default"),
+        pytest.param(
+            {"discovery_prefix": "test_tasmota/discovery"},
+            "test_tasmota/discovery",
+            id="custom_prefix",
+        ),
+        pytest.param(
+            {"discovery_prefix": "test_tasmota/discovery/#"},
+            "test_tasmota/discovery",
+            id="strip_wildcard",
+        ),
+    ],
+)
+async def test_user_setup(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    user_input: dict[str, str],
+    expected_prefix: str,
+) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].data == {
-        "discovery_prefix": "tasmota/discovery",
-    }
-
-
-async def test_user_setup_advanced(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Test we can finish a config flow."""
-    result = await hass.config_entries.flow.async_init(
-        "tasmota",
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
-    )
-    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "config"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery_prefix": "test_tasmota/discovery"}
+        result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].data == {
-        "discovery_prefix": "test_tasmota/discovery",
-    }
-
-
-async def test_user_setup_advanced_strip_wildcard(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Test we can finish a config flow."""
-    result = await hass.config_entries.flow.async_init(
-        "tasmota",
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery_prefix": "test_tasmota/discovery/#"}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].data == {
-        "discovery_prefix": "test_tasmota/discovery",
-    }
+    assert result["result"].data == {"discovery_prefix": expected_prefix}
 
 
 async def test_user_setup_invalid_topic_prefix(
@@ -177,10 +167,10 @@ async def test_user_setup_invalid_topic_prefix(
 ) -> None:
     """Test abort on invalid discovery topic."""
     result = await hass.config_entries.flow.async_init(
-        "tasmota",
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        "tasmota", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "config"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"discovery_prefix": "tasmota/config/##"}

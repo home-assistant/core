@@ -105,6 +105,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aidot": {
+      "name": "AiDot",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airgradient": {
       "name": "AirGradient",
       "integration_type": "device",
@@ -991,6 +997,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "centriconnect": {
+      "name": "CentriConnect/MyPropane",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cert_expiry": {
       "integration_type": "service",
       "config_flow": true,
@@ -1011,6 +1023,12 @@
     "chess_com": {
       "name": "Chess.com",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "cielo_home": {
+      "name": "Cielo Home",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1249,6 +1267,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "data_grand_lyon": {
+      "name": "Data Grand Lyon",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "datadog": {
       "name": "Datadog",
       "integration_type": "service",
@@ -1327,7 +1351,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "Denon RS232"
+          "name": "Denon RS-232"
         },
         "heos": {
           "integration_type": "hub",
@@ -1694,8 +1718,8 @@
       "name": "Elgato",
       "integrations": {
         "avea": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Elgato Avea"
         },
@@ -2713,6 +2737,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "guntamatic": {
+      "name": "Guntamatic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
@@ -2975,6 +3005,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Honeywell Total Connect Comfort (US)"
+        },
+        "honeywell_string_lights": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Honeywell String Lights"
         }
       }
     },
@@ -2998,7 +3034,7 @@
     },
     "html5": {
       "name": "HTML5 Push Notifications",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -3086,7 +3122,7 @@
       "iot_class": "local_polling"
     },
     "iaqualink": {
-      "name": "Jandy iAqualink",
+      "name": "Jandy iAquaLink",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -4002,8 +4038,20 @@
     },
     "marantz": {
       "name": "Marantz",
-      "integration_type": "virtual",
-      "supported_by": "denonavr"
+      "integrations": {
+        "marantz": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "denonavr",
+          "name": "Marantz"
+        },
+        "marantz_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Marantz Infrared"
+        }
+      }
     },
     "martec": {
       "name": "Martec",
@@ -4082,12 +4130,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "melcloud": {
-      "name": "MELCloud",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "melissa": {
       "name": "Melissa",
@@ -4296,6 +4338,23 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "mitsubishi": {
+      "name": "Mitsubishi",
+      "integrations": {
+        "melcloud": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud"
+        },
+        "mitsubishi_comfort": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Mitsubishi Comfort"
+        }
+      }
     },
     "mjpeg": {
       "name": "MJPEG IP Camera",
@@ -4759,6 +4818,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "novy_cooker_hood": {
+      "name": "Novy Cooker Hood",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "nrgkick": {
       "name": "NRGkick",
       "integration_type": "device",
@@ -4897,6 +4962,13 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "omie": {
+      "name": "OMIE - Spain and Portugal electricity prices",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "omnilogic": {
       "name": "Hayward Omnilogic",
@@ -5108,9 +5180,9 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "otp": {
-      "name": "One-Time Password (OTP)",
-      "integration_type": "hub",
+    "ouman_eh_800": {
+      "name": "Ouman EH-800",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5150,6 +5222,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "paj_gps": {
+      "name": "PAJ GPS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "palazzetti": {
       "name": "Palazzetti",
@@ -5487,6 +5565,12 @@
       "name": "Public Service Company of Oklahoma (PSO)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "ptdevices": {
+      "name": "PTDevices",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "pterodactyl": {
       "name": "Pterodactyl",
@@ -6032,6 +6116,12 @@
           "iot_class": "local_polling",
           "name": "Samsung Family Hub"
         },
+        "samsung_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Samsung Infrared"
+        },
         "samsungtv": {
           "integration_type": "device",
           "config_flow": true,
@@ -6120,6 +6210,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sensereo": {
+      "name": "Sensereo",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "sensibo": {
       "name": "Sensibo",
@@ -8009,6 +8105,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "xthings_cloud": {
+      "name": "Xthings Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "yale": {
       "name": "Yale (non-US/Canada)",
       "integrations": {
@@ -8217,6 +8319,12 @@
         "zwave"
       ]
     },
+    "zunzunbee": {
+      "name": "Zunzunbee",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "zwave_js": {
       "name": "Z-Wave",
       "integration_type": "hub",
@@ -8309,6 +8417,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "otp": {
+      "name": "One-Time Password (OTP)",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "random": {
       "integration_type": "helper",

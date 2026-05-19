@@ -18,7 +18,7 @@ async def async_setup_entry(
     entry: DevoloHomeControlConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Get all binary sensor and multi level sensor devices and setup them via config entry."""
+    """Get all binary sensor and multi level sensor devices."""
 
     async_add_entities(
         DevoloSirenDeviceEntity(

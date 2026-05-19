@@ -53,6 +53,12 @@
       "iaq_rh": {
         "name": "Humidity air quality index"
       },
+      "target_flow_level": {
+        "name": "Target flow level"
+      },
+      "time_state_end": {
+        "name": "Mode end time"
+      },
       "ventilation_state": {
         "name": "Ventilation state",
         "state": {
@@ -84,11 +90,19 @@
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Duco instance: {error}"
     },
+    "connection_error": {
+      "message": "Could not connect to the Duco device."
+    },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state: {error}"
     },
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."
+    }
+  },
+  "system_health": {
+    "info": {
+      "write_requests_remaining": "Remaining write requests today"
     }
   }
 }

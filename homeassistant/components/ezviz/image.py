@@ -1,7 +1,5 @@
 """Support EZVIZ last motion image."""
 
-from __future__ import annotations
-
 import logging
 
 from propcache.api import cached_property
@@ -79,7 +77,9 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
                     )
                 except PyEzvizError:
                     _LOGGER.warning(
-                        "%s: Can't decrypt last alarm picture, looks like it was encrypted with other password",
+                        "%s: Can't decrypt last alarm picture,"
+                        " looks like it was encrypted"
+                        " with other password",
                         self.entity_id,
                     )
                     image_data = response.content
