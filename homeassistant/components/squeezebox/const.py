@@ -51,6 +51,7 @@ ATTR_DAYS_OF_WEEK = "dow"
 ATTR_ENABLED = "enabled"
 ATTR_REPEAT = "repeat"
 ATTR_SCHEDULED_TODAY = "scheduled_today"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_TIME = "time"
 ATTR_VOLUME = "volume"
 ATTR_URL = "url"

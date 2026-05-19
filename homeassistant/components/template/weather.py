@@ -95,6 +95,7 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
