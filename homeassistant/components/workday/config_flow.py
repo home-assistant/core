@@ -14,16 +14,20 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
+    DateSelector,
     LanguageSelector,
     LanguageSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    ObjectSelector,
+    ObjectSelectorConfig,
+    ObjectSelectorField,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -36,10 +40,13 @@ from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
     CONF_CATEGORY,
+    CONF_END_DATE,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
+    CONF_REMOVE_HOLIDAYS_NAMED,
+    CONF_START_DATE,
     CONF_WORKDAYS,
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
@@ -48,6 +55,8 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+CONF_ADD_REMOVE_HOLIDAYS = "add_remove_holidays"
 
 
 def add_province_and_language_to_schema(
@@ -189,21 +198,57 @@ DATA_SCHEMA_OPT = vol.Schema(
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
-            SelectSelectorConfig(
-                options=[],
-                multiple=True,
-                custom_value=True,
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
-            SelectSelectorConfig(
-                options=[],
-                multiple=True,
-                custom_value=True,
-                mode=SelectSelectorMode.DROPDOWN,
-            )
+        vol.Required(CONF_ADD_REMOVE_HOLIDAYS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_ADD_HOLIDAYS): ObjectSelector(
+                        ObjectSelectorConfig(
+                            label_field=CONF_START_DATE,
+                            description_field=CONF_END_DATE,
+                            multiple=True,
+                            translation_key=CONF_ADD_HOLIDAYS,
+                            fields={
+                                CONF_START_DATE: ObjectSelectorField(
+                                    required=True,
+                                    selector=DateSelector(),
+                                ),
+                                CONF_END_DATE: ObjectSelectorField(
+                                    required=False,
+                                    selector=DateSelector(),
+                                ),
+                            },
+                        )
+                    ),
+                    vol.Optional(CONF_REMOVE_HOLIDAYS): ObjectSelector(
+                        ObjectSelectorConfig(
+                            label_field=CONF_START_DATE,
+                            description_field=CONF_END_DATE,
+                            multiple=True,
+                            translation_key=CONF_REMOVE_HOLIDAYS,
+                            fields={
+                                CONF_START_DATE: ObjectSelectorField(
+                                    required=True,
+                                    selector=DateSelector(),
+                                ),
+                                CONF_END_DATE: ObjectSelectorField(
+                                    required=False,
+                                    selector=DateSelector(),
+                                ),
+                            },
+                        )
+                    ),
+                    vol.Optional(CONF_REMOVE_HOLIDAYS_NAMED): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[],
+                            multiple=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            custom_value=True,
+                            translation_key=CONF_REMOVE_HOLIDAYS_NAMED,
+                        )
+                    ),
+                },
+            ),
+            SectionConfig(collapsed=True),
         ),
     }
 )

@@ -17,7 +17,10 @@ CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
 CONF_REMOVE_HOLIDAYS = "remove_holidays"
+CONF_REMOVE_HOLIDAYS_NAMED = "remove_holidays_named"
 CONF_CATEGORY = "category"
+CONF_START_DATE = "start_date"
+CONF_END_DATE = "end_date"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
