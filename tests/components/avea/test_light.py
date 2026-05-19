@@ -144,6 +144,11 @@ async def test_turn_on_restores_last_brightness(
     )
     bulb.set_brightness.assert_called_with(0)
 
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_BRIGHTNESS] is None
+
     bulb.set_brightness.reset_mock()
     await hass.services.async_call(
         "light",

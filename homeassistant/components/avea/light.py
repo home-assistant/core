@@ -206,6 +206,8 @@ class AveaLight(LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.set_brightness(0)
+        self._attr_is_on = False
+        self._attr_brightness = 0
 
     def update(self) -> None:
         """Fetch new state data for this light."""
