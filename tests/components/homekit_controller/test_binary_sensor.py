@@ -265,6 +265,23 @@ def create_sensor_with_named_low_battery_characteristic(accessory: Accessory) ->
     low_battery.value = 0
 
 
+def create_labeled_valves_with_low_battery_characteristics(
+    accessory: Accessory,
+) -> None:
+    """Define labeled valve services with low battery status."""
+    for label_index in (1.0, 2.0):
+        service = accessory.add_service(ServicesTypes.VALVE)
+
+        service_label_index = service.add_char(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+        service_label_index.value = label_index
+
+        active = service.add_char(CharacteristicsTypes.ACTIVE)
+        active.value = False
+
+        low_battery = service.add_char(CharacteristicsTypes.STATUS_LO_BATT)
+        low_battery.value = 0
+
+
 def create_sensor_with_battery_service(accessory: Accessory) -> None:
     """Define a sensor with its own battery service."""
     service = accessory.add_service(
@@ -425,6 +442,22 @@ async def test_named_low_battery_characteristic_creates_binary_sensor(
         "binary_sensor.outdoor_sensor_temperature_low_battery"
     )
     assert low_battery
+
+
+async def test_labeled_low_battery_characteristics_create_scoped_binary_sensors(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test low battery characteristics on labeled services create entities."""
+    await setup_test_component(
+        hass, get_next_aid(), create_labeled_valves_with_low_battery_characteristics
+    )
+
+    valve_1 = hass.states.get("binary_sensor.testdevice_valve_1_low_battery")
+    assert valve_1
+
+    valve_2 = hass.states.get("binary_sensor.testdevice_valve_2_low_battery")
+    assert valve_2
 
 
 async def test_low_battery_characteristic_ignored_with_battery_service(

@@ -58,6 +58,16 @@ SERVICE_TYPE_NAMES: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
+def normalized_service_label_index(service: Service) -> str | int | float | None:
+    """Return a normalized HomeKit service label index."""
+    service_label_index = service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+    if service_label_index is None:
+        return None
+    if isinstance(service_label_index, float) and service_label_index.is_integer():
+        return int(service_label_index)
+    return cast(str | int | float, service_label_index)
+
+
 def service_feature_name(service: Service, feature_name: str) -> str:
     """Return a feature name scoped by the HomeKit service when needed."""
     service_name = service.value(CharacteristicsTypes.NAME)
@@ -66,11 +76,7 @@ def service_feature_name(service: Service, feature_name: str) -> str:
     ):
         return f"{service_name} {feature_name}"
 
-    if (
-        service_label_index := service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
-    ) is not None:
-        if isinstance(service_label_index, float) and service_label_index.is_integer():
-            service_label_index = int(service_label_index)
+    if (service_label_index := normalized_service_label_index(service)) is not None:
         if service_type_name := SERVICE_TYPE_NAMES.get(service.type):
             return f"{service_type_name} {service_label_index} {feature_name}"
         return f"{service_label_index} {feature_name}"

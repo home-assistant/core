@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
-from .utils import folded_name, service_feature_name
+from .utils import folded_name, normalized_service_label_index, service_feature_name
 
 
 @dataclass(frozen=True)
@@ -185,7 +185,6 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
     """Representation of a HomeKit binary sensor backed by a single characteristic."""
 
     entity_description: HomeKitBinarySensorEntityDescription
-    _service_feature_name: str
 
     def __init__(
         self,
@@ -196,15 +195,10 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
     ) -> None:
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
-        self._service_feature_name = service_feature_name(
+        super().__init__(conn, info, char)
+        self._attr_name = service_feature_name(
             char.service, cast(str, description.name)
         )
-        super().__init__(conn, info, char)
-
-    @property
-    def name(self) -> str:
-        """Return the service-scoped name."""
-        return self._service_feature_name
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
@@ -290,8 +284,10 @@ def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
 def _low_battery_source_key(service: Service) -> str | None:
     """Return the low battery source key for the service."""
     service_name = service.value(CharacteristicsTypes.NAME)
-    if service_name is None or folded_name(service_name) == folded_name(
+    if service_name and folded_name(service_name) != folded_name(
         service.accessory.name
     ):
-        return None
-    return folded_name(service_name)
+        return f"name:{folded_name(service_name)}"
+    if (service_label_index := normalized_service_label_index(service)) is not None:
+        return f"label:{service.type}:{service_label_index}"
+    return None

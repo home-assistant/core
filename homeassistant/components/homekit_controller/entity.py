@@ -208,6 +208,9 @@ class HomeKitEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
+        if attr_name := getattr(self, "_attr_name", None):
+            return attr_name
+
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass

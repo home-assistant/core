@@ -130,6 +130,9 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
+        if attr_name := getattr(self, "_attr_name", None):
+            return attr_name
+
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
@@ -170,8 +173,6 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
 class HomeKitServiceNumber(HomeKitNumber):
     """Representation of a HomeKit number named from its service."""
 
-    _service_feature_name: str
-
     def __init__(
         self,
         conn: HKDevice,
@@ -180,12 +181,7 @@ class HomeKitServiceNumber(HomeKitNumber):
         description: NumberEntityDescription,
     ) -> None:
         """Initialise a HomeKit number control named from its service."""
-        self._service_feature_name = service_feature_name(
+        super().__init__(conn, info, char, description)
+        self._attr_name = service_feature_name(
             char.service, cast(str, description.name)
         )
-        super().__init__(conn, info, char, description)
-
-    @property
-    def name(self) -> str:
-        """Return the service-scoped name."""
-        return self._service_feature_name
