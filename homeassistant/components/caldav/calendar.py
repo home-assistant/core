@@ -38,6 +38,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
+from .const import NiquestsConnectionError
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,7 +232,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             await self.hass.async_add_executor_job(
                 partial(self.coordinator.calendar.add_event, **item_data),
             )
-        except (requests.ConnectionError, DAVError) as err:
+        except (DAVError, requests.ConnectionError, NiquestsConnectionError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @callback

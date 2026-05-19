@@ -17,6 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import TIMEOUT, NiquestsConnectionError
+
 type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
-        timeout=30,
+        timeout=TIMEOUT,
     )
     try:
         await hass.async_add_executor_job(client.principal)
@@ -43,10 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         # on some other unexpected server response.
         _LOGGER.warning("Unexpected CalDAV server response: %s", err)
         return False
-    except requests.ConnectionError as err:
+    except (requests.ConnectionError, NiquestsConnectionError) as err:
         raise ConfigEntryNotReady("Connection error from CalDAV server") from err
     except DAVError as err:
         raise ConfigEntryNotReady("CalDAV client error") from err
+    except Exception as err:
+        _LOGGER.exception("Unexpected error during CalDAV setup")
+        raise ConfigEntryNotReady(
+            f"Unexpected CalDAV error: {type(err).__name__}"
+        ) from err
 
     entry.runtime_data = client
 

@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
+from caldav.lib.error import DAVError
 from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1326,6 +1328,29 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+async def test_add_vevent_failure(
+    hass: HomeAssistant,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+) -> None:
+    """Test failure when adding a VEVENT to the calendar."""
+    await setup_platform_cb()
+
+    calendars[0].add_event = MagicMock(side_effect=DAVError())
+    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+        await hass.services.async_call(
+            "calendar",
+            "create_event",
+            {
+                "summary": "Test Event",
+                "start_date_time": "2025-08-06T10:00:00+00:00",
+                "end_date_time": "2025-08-06T11:00:00+00:00",
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )
 
 
 async def test_missing_supported_components(

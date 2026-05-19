@@ -6,6 +6,7 @@ from caldav.lib.error import AuthorizationError, DAVError
 import pytest
 import requests
 
+from homeassistant.components.caldav.const import NiquestsConnectionError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -37,15 +38,42 @@ async def test_load_unload(
 @pytest.mark.parametrize(
     ("side_effect", "expected_state", "expected_flows"),
     [
-        (Exception(), ConfigEntryState.SETUP_ERROR, []),
-        (requests.ConnectionError(), ConfigEntryState.SETUP_RETRY, []),
-        (DAVError(), ConfigEntryState.SETUP_RETRY, []),
-        (
+        pytest.param(
+            Exception(),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="generic_exception",
+        ),
+        pytest.param(
+            requests.ConnectionError(),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="requests_connection_error",
+        ),
+        pytest.param(
+            NiquestsConnectionError(),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="niquests_connection_error",
+        ),
+        pytest.param(
+            DAVError(),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="dav_error",
+        ),
+        pytest.param(
             AuthorizationError(reason="Unauthorized"),
             ConfigEntryState.SETUP_ERROR,
             ["reauth_confirm"],
+            id="auth_error_unauthorized",
         ),
-        (AuthorizationError(reason="Other"), ConfigEntryState.SETUP_ERROR, []),
+        pytest.param(
+            AuthorizationError(reason="Other"),
+            ConfigEntryState.SETUP_ERROR,
+            [],
+            id="auth_error_other",
+        ),
     ],
 )
 async def test_client_failure(

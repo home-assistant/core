@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from homeassistant import config_entries
-from homeassistant.components.caldav.const import DOMAIN
+from homeassistant.components.caldav.const import DOMAIN, NiquestsConnectionError
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -63,11 +63,24 @@ async def test_form(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (Exception(), "unknown"),
-        (requests.ConnectionError(), "cannot_connect"),
-        (DAVError(), "cannot_connect"),
-        (AuthorizationError(reason="Unauthorized"), "invalid_auth"),
-        (AuthorizationError(reason="Other"), "cannot_connect"),
+        pytest.param(Exception(), "unknown", id="generic_exception"),
+        pytest.param(
+            requests.ConnectionError(), "cannot_connect", id="requests_connection_error"
+        ),
+        pytest.param(
+            NiquestsConnectionError(), "cannot_connect", id="niquests_connection_error"
+        ),
+        pytest.param(DAVError(), "cannot_connect", id="dav_error"),
+        pytest.param(
+            AuthorizationError(reason="Unauthorized"),
+            "invalid_auth",
+            id="auth_error_unauthorized",
+        ),
+        pytest.param(
+            AuthorizationError(reason="Other"),
+            "cannot_connect",
+            id="auth_error_other",
+        ),
     ],
 )
 async def test_caldav_client_error(
