@@ -30,7 +30,12 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_TEMPERATURE_UNIT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -95,8 +100,6 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
