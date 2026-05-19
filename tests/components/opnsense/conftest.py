@@ -36,15 +36,17 @@ def mock_config_entry(
 @pytest.fixture
 def mock_opnsense_client() -> Generator[AsyncMock]:
     """Override OPNsenseClient in both config_flow and component."""
-    with patch(
-        "homeassistant.components.opnsense.config_flow.OPNsenseClient",
-        autospec=True,
-    ) as mock_client:
-        with patch(
+    with (
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
             "homeassistant.components.opnsense.OPNsenseClient",
             new=mock_client,
-        ):
-            # Use the same mock for both import locations so test mutations
-            # affect the client instance used by config flow and the component.
-            setup_mock_opnsense_client(mock_client)
-            yield mock_client
+        ),
+    ):
+        # Use the same mock for both import locations so test mutations
+        # affect the client instance used by config flow and the component.
+        setup_mock_opnsense_client(mock_client)
+        yield mock_client
