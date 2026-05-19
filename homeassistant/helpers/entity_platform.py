@@ -80,10 +80,11 @@ def async_create_platform_config_not_supported_issue(
 
     Raised when an integration is configured via the legacy
     <platform_domain>: - platform: <integration_domain> schema.
-    Set yaml_config_under_integration_supported=False if the integration has no
-    YAML platform setup and the config should be removed; set to True if it is
-    supports YAML  configurable under its own <integration_domain>: key and the
-    config should be moved there.
+    Set yaml_config_under_integration_supported=False if the integration does
+    not support YAML configuration for this platform and the config should be
+    removed. Set it to True if the integration supports YAML configuration
+    under its own <integration_domain>: key and the config should be moved
+    there.
     """
     if yaml_config_under_integration_supported:
         logger.error(
