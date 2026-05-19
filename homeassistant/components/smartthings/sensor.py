@@ -1,7 +1,5 @@
 """Support for sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -1286,6 +1284,8 @@ CAPABILITY_TO_SENSORS: dict[
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "Celsius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
@@ -1319,7 +1319,9 @@ async def async_setup_entry(
                                             capability in device.status[MAIN]
                                             for capability in capability_list
                                         )
-                                        for capability_list in description.capability_ignore_list
+                                        for capability_list in (
+                                            description.capability_ignore_list
+                                        )
                                     )
                                 )
                                 and (
@@ -1401,7 +1403,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe, component=component)
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{capability}_{attribute}"
+            f"_{entity_description.key}"
+        )
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description

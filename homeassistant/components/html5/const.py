@@ -15,6 +15,7 @@ ATTR_ACTIONS = "actions"
 ATTR_BADGE = "badge"
 ATTR_DATA = "data"
 ATTR_DIR = "dir"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ICON = "icon"
 ATTR_IMAGE = "image"
 ATTR_LANG = "lang"

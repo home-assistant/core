@@ -1,7 +1,5 @@
 """Support for testing internet speed via Fast.com."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntryState
@@ -31,7 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
         else:
             await coordinator.async_config_entry_first_refresh()
 
-    # Don't start a speedtest during startup, this will slow down the overall startup dramatically
+    # Don't start a speedtest during startup, this will slow
+    # down the overall startup dramatically
     async_at_started(hass, _async_finish_startup)
     return True
 

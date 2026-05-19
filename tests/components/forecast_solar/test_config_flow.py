@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,7 +38,6 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "Name",
             CONF_LATITUDE: 52.42,
             CONF_LONGITUDE: 4.42,
             CONF_AZIMUTH: 142,
@@ -50,7 +49,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     config_entry = result["result"]
-    assert config_entry.title == "Name"
+    assert config_entry.title == ""
     assert config_entry.unique_id is None
     assert config_entry.data == {
         CONF_LATITUDE: 52.42,

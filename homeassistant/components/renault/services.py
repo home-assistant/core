@@ -1,7 +1,5 @@
 """Support for Renault services."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
@@ -21,6 +19,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 ATTR_SCHEDULES = "schedules"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_TEMPERATURE = "temperature"
 ATTR_VEHICLE = "vehicle"
 ATTR_WHEN = "when"

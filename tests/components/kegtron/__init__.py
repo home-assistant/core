@@ -15,7 +15,9 @@ NOT_KEGTRON_SERVICE_INFO = BluetoothServiceInfo(
 KEGTRON_KT100_SERVICE_INFO = BluetoothServiceInfo(
     name="D0:CF:5E:5C:9B:75",
     manufacturer_data={
-        65535: b"I\xef\x13\x88\x02\xe2\x01Single Port\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        65535: (
+            b"I\xef\x13\x88\x02\xe2\x01Single Port\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
     },
     address="D0:CF:5E:5C:9B:75",
     rssi=-82,
@@ -27,7 +29,10 @@ KEGTRON_KT100_SERVICE_INFO = BluetoothServiceInfo(
 KEGTRON_KT200_PORT_1_SERVICE_INFO = BluetoothServiceInfo(
     name="D0:CF:5E:5C:9B:75",
     manufacturer_data={
-        65535: b"#P\xc3P2\xc8APort 1\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        65535: (
+            b"#P\xc3P2\xc8APort 1"
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
     },
     address="D0:CF:5E:5C:9B:75",
     rssi=-82,
@@ -39,7 +44,10 @@ KEGTRON_KT200_PORT_1_SERVICE_INFO = BluetoothServiceInfo(
 KEGTRON_KT200_PORT_2_SERVICE_INFO = BluetoothServiceInfo(
     name="D0:CF:5E:5C:9B:75",
     manufacturer_data={
-        65535: b"\xe62:\x98\x02\xe2Q2nd Port\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        65535: (
+            b"\xe62:\x98\x02\xe2Q2nd Port"
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )
     },
     address="D0:CF:5E:5C:9B:75",
     rssi=-82,

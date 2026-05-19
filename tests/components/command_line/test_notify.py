@@ -1,7 +1,5 @@
 """The tests for the command line notification platform."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 import subprocess
@@ -14,9 +12,13 @@ from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+async def test_setup_platform_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setting up the platform with platform yaml."""
     await setup.async_setup_component(
         hass,
@@ -32,6 +34,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    issue = issue_registry.async_get_issue(DOMAIN, "notify_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {"platform": NOTIFY_DOMAIN}
 
 
 @pytest.mark.parametrize(
@@ -242,9 +248,12 @@ async def test_timeout(
     caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
     """Test blocking is not forever."""
-    await hass.services.async_call(
-        NOTIFY_DOMAIN, "test5", {"message": "error"}, blocking=True
-    )
+    with pytest.raises(
+        HomeAssistantError, match="Timeout trying to execute command: sleep 10000"
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test5", {"message": "error"}, blocking=True
+        )
     assert "Timeout" in caplog.text
 
 
@@ -277,15 +286,20 @@ async def test_subprocess_exceptions(
             None,
             subprocess.SubprocessError(),
         ]
-
-        await hass.services.async_call(
-            NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
-        )
+        with pytest.raises(
+            HomeAssistantError, match="Timeout trying to execute command: exit 0"
+        ):
+            await hass.services.async_call(
+                NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
+            )
         assert check_output.call_count == 2
         assert "Timeout for command" in caplog.text
 
-        await hass.services.async_call(
-            NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
-        )
+        with pytest.raises(
+            HomeAssistantError, match="Error trying to execute command: exit 0. Error: "
+        ):
+            await hass.services.async_call(
+                NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
+            )
         assert check_output.call_count == 4
         assert "Error trying to exec command" in caplog.text

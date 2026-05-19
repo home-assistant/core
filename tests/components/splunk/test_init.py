@@ -95,8 +95,9 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_import_without_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML configuration without filter triggers import."""
     assert await async_setup_component(
@@ -119,8 +120,9 @@ async def test_yaml_import_without_filter(
     assert entries[0].source == SOURCE_IMPORT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_with_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML configuration with filter triggers import."""
     assert await async_setup_component(
@@ -322,8 +324,9 @@ async def test_yaml_filter_only_no_deprecation_issue(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_with_connection_creates_deprecation_issue(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test YAML with connection settings creates deprecation issue."""
     assert await async_setup_component(
@@ -383,17 +386,16 @@ async def test_yaml_import_error_creates_specific_issue(
     ) in issue_registry.issues
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_yaml_import_already_configured_creates_deprecation_issue(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test YAML import when already configured still creates deprecation issue."""
     # Add existing config entry before YAML import
     mock_config_entry.add_to_hass(hass)
 
-    # Set up component with YAML - should see existing entry and abort with single_instance_allowed
+    # Set up component with YAML - should see existing entry and
+    # abort with single_instance_allowed
     assert await async_setup_component(
         hass,
         DOMAIN,

@@ -1,7 +1,5 @@
 """Support for LED numbers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -54,7 +52,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=255,
-        value_fn=lambda segment: segment.speed,
+        value_fn=lambda segment: int(segment.speed),
     ),
     WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
@@ -129,16 +127,10 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        segment.segment_id
-        for segment in coordinator.data.state.segments.values()
-        if segment.segment_id is not None
-    }
-
     new_entities: list[WLEDNumber] = []
 
     # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
+    for segment_id in coordinator.segment_ids - current_ids:
         current_ids.add(segment_id)
         new_entities.extend(
             WLEDNumber(coordinator, segment_id, desc) for desc in NUMBERS

@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud weather devices."""
 
-from __future__ import annotations
-
 from homematicip.base.enums import WeatherCondition
 from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 
@@ -37,7 +35,9 @@ HOME_WEATHER_CONDITION = {
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW: ATTR_CONDITION_SNOWY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW_RAIN: ATTR_CONDITION_SNOWY_RAINY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_THUNDER: ATTR_CONDITION_LIGHTNING,
-    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: ATTR_CONDITION_LIGHTNING_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: (
+        ATTR_CONDITION_LIGHTNING_RAINY
+    ),
     WeatherCondition.FOGGY: ATTR_CONDITION_FOG,
     WeatherCondition.STRONG_WIND: ATTR_CONDITION_WINDY,
     WeatherCondition.UNKNOWN: "",
@@ -72,7 +72,7 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="weather")
 
     @property
     def name(self) -> str:
@@ -125,7 +125,7 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
         hap.home.modelType = "HmIP-Home-Weather"
-        super().__init__(hap, hap.home)
+        super().__init__(hap, hap.home, feature_id="home_weather")
 
     @property
     def available(self) -> bool:

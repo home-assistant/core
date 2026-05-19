@@ -3,9 +3,11 @@
 from .areas import AreaExtension
 from .base64 import Base64Extension
 from .collection import CollectionExtension
+from .config_entries import ConfigEntryExtension
 from .crypto import CryptoExtension
 from .datetime import DateTimeExtension
 from .devices import DeviceExtension
+from .entities import EntityExtension
 from .floors import FloorExtension
 from .functional import FunctionalExtension
 from .issues import IssuesExtension
@@ -13,6 +15,7 @@ from .labels import LabelExtension
 from .math import MathExtension
 from .regex import RegexExtension
 from .serialization import SerializationExtension
+from .state import StateExtension
 from .string import StringExtension
 from .type_cast import TypeCastExtension
 from .version import VersionExtension
@@ -21,9 +24,11 @@ __all__ = [
     "AreaExtension",
     "Base64Extension",
     "CollectionExtension",
+    "ConfigEntryExtension",
     "CryptoExtension",
     "DateTimeExtension",
     "DeviceExtension",
+    "EntityExtension",
     "FloorExtension",
     "FunctionalExtension",
     "IssuesExtension",
@@ -31,6 +36,7 @@ __all__ = [
     "MathExtension",
     "RegexExtension",
     "SerializationExtension",
+    "StateExtension",
     "StringExtension",
     "TypeCastExtension",
     "VersionExtension",

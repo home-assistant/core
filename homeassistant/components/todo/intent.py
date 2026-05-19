@@ -1,7 +1,5 @@
 """Intents for the todo integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -88,10 +86,12 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
 
     async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
         """Execute action specific to this intent handler."""
+        # Format item summary with first letter capitalized and rest as-is
+        summary = item[:1].upper() + item[1:] if item else item
 
         # Add to list
         await target_list.async_create_todo_item(
-            TodoItem(summary=item.capitalize(), status=TodoItemStatus.NEEDS_ACTION)
+            TodoItem(summary=summary, status=TodoItemStatus.NEEDS_ACTION)
         )
 
 

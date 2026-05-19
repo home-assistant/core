@@ -1,7 +1,5 @@
 """Support for binary sensor using RPi GPIO."""
 
-from __future__ import annotations
-
 from gpiozero import DigitalInputDevice
 import requests
 import voluptuous as vol

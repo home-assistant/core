@@ -1,7 +1,5 @@
 """The Media Source implementation for the Jellyfin integration."""
 
-from __future__ import annotations
-
 import logging
 import mimetypes
 import os
@@ -88,7 +86,8 @@ class JellyfinSource(MediaSource):
         stream_url = self._get_stream_url(media_item)
         mime_type = _media_mime_type(media_item)
 
-        # Media Sources without a mime type have been filtered out during library creation
+        # Media Sources without a mime type have been filtered
+        # out during library creation
         assert mime_type is not None
 
         return PlayMedia(stream_url, mime_type)

@@ -1,7 +1,5 @@
 """Provide a base implementation for registries."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections import UserDict, defaultdict
 from collections.abc import Mapping, Sequence, ValuesView

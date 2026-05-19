@@ -1,7 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
-from __future__ import annotations
-
 from elkm1_lib.elk import Elk, Panel
 import voluptuous as vol
 

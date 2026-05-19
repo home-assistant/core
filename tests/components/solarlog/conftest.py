@@ -32,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_solarlog_connector():
-    """Build a fixture for the SolarLog API that connects successfully and returns one device."""
+    """Build a fixture for the SolarLog API that connects successfully."""
 
     mock_solarlog_api = AsyncMock()
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
