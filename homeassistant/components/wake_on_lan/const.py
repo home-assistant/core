@@ -6,6 +6,7 @@ DOMAIN = "wake_on_lan"
 PLATFORMS = [Platform.BUTTON]
 
 CONF_OFF_ACTION = "turn_off"
+CONF_BROADCAST_INTERFACE = "broadcast_interface"
 
 DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1

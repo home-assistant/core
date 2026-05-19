@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_BROADCAST_INTERFACE, DEFAULT_NAME, DOMAIN
 
 
 async def validate(
@@ -52,6 +52,7 @@ OPTIONS_SCHEMA = {
     vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
     ),
+    vol.Optional(CONF_BROADCAST_INTERFACE): TextSelector(),
 }
 
 
