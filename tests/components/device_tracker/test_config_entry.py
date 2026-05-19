@@ -248,7 +248,7 @@ class MockBaseScannerEntity(BaseScannerEntity):
 
     def __init__(
         self,
-        connected: bool = False,
+        connected: bool | None = False,
         unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
@@ -266,7 +266,7 @@ class MockBaseScannerEntity(BaseScannerEntity):
         return SourceType.BLUETOOTH_LE
 
     @property
-    def is_connected(self) -> bool:
+    def is_connected(self) -> bool | None:
         """Return true if the device is connected to the network."""
         return self._connected
 
@@ -276,7 +276,7 @@ class MockBaseScannerEntity(BaseScannerEntity):
         return self._unique_id
 
     @callback
-    def set_connected(self, connected: bool) -> None:
+    def set_connected(self, connected: bool | None) -> None:
         """Set connected state."""
         self._connected = connected
         self.async_write_ha_state()
@@ -309,7 +309,7 @@ class MockScannerEntity(ScannerEntity):
         ip_address: str | None = None,
         mac_address: str | None = None,
         hostname: str | None = None,
-        connected: bool = False,
+        connected: bool | None = False,
         unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
@@ -345,7 +345,7 @@ class MockScannerEntity(ScannerEntity):
         return self._hostname
 
     @property
-    def is_connected(self) -> bool:
+    def is_connected(self) -> bool | None:
         """Return true if the device is connected to the network."""
         return self._connected
 
@@ -355,7 +355,7 @@ class MockScannerEntity(ScannerEntity):
         return self._unique_id or self._mac_address
 
     @callback
-    def set_connected(self, connected: bool) -> None:
+    def set_connected(self, connected: bool | None) -> None:
         """Set connected state."""
         self._connected = connected
         self.async_write_ha_state()
@@ -609,6 +609,13 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.state == STATE_HOME
 
+    base_scanner_entity.set_connected(None)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize(
     ("ip_address", "mac_address", "hostname"),
@@ -655,6 +662,13 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.state == STATE_HOME
 
+    scanner_entity.set_connected(None)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+
 
 def test_tracker_entity() -> None:
     """Test coverage for base TrackerEntity class."""
@@ -694,11 +708,11 @@ def test_base_scanner_entity() -> None:
     """Test coverage for base BaseScannerEntity entity class."""
     entity = BaseScannerEntity()
     with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+        entity.source_type  # noqa: B018
     with pytest.raises(NotImplementedError):
-        assert entity.is_connected is None
+        entity.is_connected  # noqa: B018
     with pytest.raises(NotImplementedError):
-        assert entity.state == STATE_NOT_HOME
+        entity.state  # noqa: B018
     assert entity.battery_level is None
 
 

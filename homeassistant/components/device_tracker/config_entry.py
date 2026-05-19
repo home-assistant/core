@@ -316,14 +316,16 @@ class BaseScannerEntity(BaseTrackerEntity):
     """
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the device."""
+        if self.is_connected is None:
+            return None
         if self.is_connected:
             return STATE_HOME
         return STATE_NOT_HOME
 
     @property
-    def is_connected(self) -> bool:
+    def is_connected(self) -> bool | None:
         """Return true if the device is connected."""
         raise NotImplementedError
 
