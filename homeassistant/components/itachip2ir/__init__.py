@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -109,15 +109,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ItachConfigEntry) -> boo
             _issue_id(ISSUE_INVALID_CONFIG, entry),
             translation_key=ISSUE_INVALID_CONFIG,
             placeholders={
-                "host": str(entry.data.get("host", "unknown")),
+                "host": str(entry.data.get(CONF_HOST, "unknown")),
                 "entry_title": entry.title,
                 "error": "Config entry is missing a unique_id",
             },
         )
         raise ValueError("Config entry is missing a unique_id")
 
-    host = str(entry.options.get("host", entry.data["host"]))
-    port = int(entry.options.get("port", entry.data["port"]))
+    host = str(entry.options.get(CONF_HOST, entry.data[CONF_HOST]))
+    port = int(entry.options.get(CONF_PORT, entry.data[CONF_PORT]))
 
     client = ItachClient(host, port)
 

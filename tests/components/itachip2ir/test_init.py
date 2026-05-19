@@ -25,22 +25,23 @@ PORT = 4998
 UNIQUE_ID = "GlobalCache_000C1E123456"
 
 
-class _FakeDiscovery:
+class FakeDiscovery:
     """Fake discovery listener."""
 
-    instances: list[_FakeDiscovery] = []
+    instances: list[FakeDiscovery] = []
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize fake discovery listener."""
         self.hass = hass
         self.async_start = AsyncMock()
         self.async_stop = AsyncMock()
-        _FakeDiscovery.instances.append(self)
+        FakeDiscovery.instances.append(self)
 
 
-class _FakeClient:
+class FakeClient:
     """Fake iTach client."""
 
-    instances: list[_FakeClient] = []
+    instances: list[FakeClient] = []
 
     def __init__(
         self,
@@ -53,6 +54,7 @@ class _FakeClient:
         module_error: Exception | None = None,
         modes_error: Exception | None = None,
     ) -> None:
+        """Initialize fake iTach client."""
         self.host = host
         self.port = port
         self.ir_module = ir_module
@@ -65,9 +67,10 @@ class _FakeClient:
         self.module_error = module_error
         self.modes_error = modes_error
         self.close = AsyncMock()
-        _FakeClient.instances.append(self)
+        FakeClient.instances.append(self)
 
     async def async_get_ir_module(self) -> tuple[int, int]:
+        """Return fake IR module information."""
         if self.module_error is not None:
             raise self.module_error
         return self.ir_module, self.ir_ports
@@ -77,6 +80,7 @@ class _FakeClient:
         module: int,
         ports: int,
     ) -> dict[int, str]:
+        """Return fake IR connector modes."""
         if self.modes_error is not None:
             raise self.modes_error
         return self.connector_modes
@@ -101,8 +105,8 @@ def _make_entry(
 @pytest.fixture(autouse=True)
 def reset_fakes() -> None:
     """Reset fake instance tracking."""
-    _FakeDiscovery.instances.clear()
-    _FakeClient.instances.clear()
+    FakeDiscovery.instances.clear()
+    FakeClient.instances.clear()
 
 
 async def test_async_setup_starts_discovery_once(
@@ -114,15 +118,15 @@ async def test_async_setup_starts_discovery_once(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
 
     assert await async_setup(hass, {})
     assert await async_setup(hass, {})
 
-    assert len(_FakeDiscovery.instances) == 1
-    _FakeDiscovery.instances[0].async_start.assert_awaited_once()
-    assert hass.data[DOMAIN][DISCOVERY] is _FakeDiscovery.instances[0]
+    assert len(FakeDiscovery.instances) == 1
+    FakeDiscovery.instances[0].async_start.assert_awaited_once()
+    assert hass.data[DOMAIN][DISCOVERY] is FakeDiscovery.instances[0]
 
 
 async def test_async_setup_does_not_start_discovery_when_disabled(
@@ -134,12 +138,12 @@ async def test_async_setup_does_not_start_discovery_when_disabled(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
 
     assert await async_setup(hass, {})
 
-    assert _FakeDiscovery.instances == []
+    assert FakeDiscovery.instances == []
     assert DISCOVERY not in hass.data[DOMAIN]
 
 
@@ -152,12 +156,12 @@ async def test_discovery_stops_on_home_assistant_stop(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
 
     assert await async_setup(hass, {})
 
-    discovery = _FakeDiscovery.instances[0]
+    discovery = FakeDiscovery.instances[0]
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -176,11 +180,11 @@ async def test_async_setup_entry_success_creates_runtime_data(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
-        _FakeClient,
+        FakeClient,
     )
 
     forward_setups = AsyncMock(return_value=True)
@@ -204,7 +208,7 @@ async def test_async_setup_entry_success_creates_runtime_data(
         "2": "SENSOR",
         "3": "IR_BLASTER",
     }
-    assert cast(object, entry.runtime_data.client) is _FakeClient.instances[0]
+    assert cast(object, entry.runtime_data.client) is FakeClient.instances[0]
 
     forward_setups.assert_awaited_once_with(entry, ["infrared", "remote"])
 
@@ -222,11 +226,11 @@ async def test_async_setup_entry_uses_options_host_and_port(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
-        _FakeClient,
+        FakeClient,
     )
     monkeypatch.setattr(
         hass.config_entries,
@@ -238,8 +242,8 @@ async def test_async_setup_entry_uses_options_host_and_port(
 
     assert entry.runtime_data.host == HOST
     assert entry.runtime_data.port == 5998
-    assert _FakeClient.instances[0].host == HOST
-    assert _FakeClient.instances[0].port == 5998
+    assert FakeClient.instances[0].host == HOST
+    assert FakeClient.instances[0].port == 5998
 
 
 async def test_async_setup_entry_connection_error_raises_not_ready_and_closes(
@@ -250,7 +254,7 @@ async def test_async_setup_entry_connection_error_raises_not_ready_and_closes(
     entry = _make_entry()
     entry.add_to_hass(hass)
 
-    class ConnectionErrorClient(_FakeClient):
+    class ConnectionErrorClient(FakeClient):
         def __init__(self, host: str, port: int) -> None:
             super().__init__(
                 host,
@@ -260,7 +264,7 @@ async def test_async_setup_entry_connection_error_raises_not_ready_and_closes(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
@@ -270,7 +274,7 @@ async def test_async_setup_entry_connection_error_raises_not_ready_and_closes(
     with pytest.raises(ConfigEntryNotReady, match="Could not connect to iTach"):
         await async_setup_entry(hass, entry)
 
-    _FakeClient.instances[0].close.assert_awaited_once()
+    FakeClient.instances[0].close.assert_awaited_once()
 
 
 async def test_async_setup_entry_ir_validation_error_raises_not_ready_and_closes(
@@ -281,7 +285,7 @@ async def test_async_setup_entry_ir_validation_error_raises_not_ready_and_closes
     entry = _make_entry()
     entry.add_to_hass(hass)
 
-    class ValidationErrorClient(_FakeClient):
+    class ValidationErrorClient(FakeClient):
         def __init__(self, host: str, port: int) -> None:
             super().__init__(
                 host,
@@ -291,7 +295,7 @@ async def test_async_setup_entry_ir_validation_error_raises_not_ready_and_closes
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
@@ -304,7 +308,7 @@ async def test_async_setup_entry_ir_validation_error_raises_not_ready_and_closes
     ):
         await async_setup_entry(hass, entry)
 
-    _FakeClient.instances[0].close.assert_awaited_once()
+    FakeClient.instances[0].close.assert_awaited_once()
 
 
 async def test_async_setup_entry_get_ir_fallback_exposes_all_ports(
@@ -315,7 +319,7 @@ async def test_async_setup_entry_get_ir_fallback_exposes_all_ports(
     entry = _make_entry()
     entry.add_to_hass(hass)
 
-    class FallbackClient(_FakeClient):
+    class FallbackClient(FakeClient):
         def __init__(self, host: str, port: int) -> None:
             super().__init__(
                 host,
@@ -327,7 +331,7 @@ async def test_async_setup_entry_get_ir_fallback_exposes_all_ports(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
@@ -357,7 +361,7 @@ async def test_async_setup_entry_no_output_ports_raises_not_ready_and_closes(
     entry = _make_entry()
     entry.add_to_hass(hass)
 
-    class NoOutputPortsClient(_FakeClient):
+    class NoOutputPortsClient(FakeClient):
         def __init__(self, host: str, port: int) -> None:
             super().__init__(
                 host,
@@ -369,7 +373,7 @@ async def test_async_setup_entry_no_output_ports_raises_not_ready_and_closes(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
@@ -382,7 +386,7 @@ async def test_async_setup_entry_no_output_ports_raises_not_ready_and_closes(
     ):
         await async_setup_entry(hass, entry)
 
-    _FakeClient.instances[0].close.assert_awaited_once()
+    FakeClient.instances[0].close.assert_awaited_once()
 
 
 async def test_async_setup_entry_missing_unique_id_raises(
@@ -395,7 +399,7 @@ async def test_async_setup_entry_missing_unique_id_raises(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
 
     with pytest.raises(ValueError, match="missing a unique_id"):
@@ -411,7 +415,7 @@ async def test_async_unload_entry_closes_client_and_keeps_discovery(
     entry.runtime_data = MagicMock()
     entry.runtime_data.client.close = AsyncMock()
 
-    discovery = _FakeDiscovery(hass)
+    discovery = FakeDiscovery(hass)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DISCOVERY] = discovery
 
@@ -479,11 +483,11 @@ async def test_async_setup_entry_starts_discovery_when_enabled(
 
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachDiscovery",
-        _FakeDiscovery,
+        FakeDiscovery,
     )
     monkeypatch.setattr(
         "homeassistant.components.itachip2ir.ItachClient",
-        _FakeClient,
+        FakeClient,
     )
 
     forward_setups = AsyncMock(return_value=True)
@@ -495,7 +499,7 @@ async def test_async_setup_entry_starts_discovery_when_enabled(
 
     assert await async_setup_entry(hass, entry)
 
-    assert len(_FakeDiscovery.instances) == 1
-    _FakeDiscovery.instances[0].async_start.assert_awaited_once()
-    assert hass.data[DOMAIN][DISCOVERY] is _FakeDiscovery.instances[0]
+    assert len(FakeDiscovery.instances) == 1
+    FakeDiscovery.instances[0].async_start.assert_awaited_once()
+    assert hass.data[DOMAIN][DISCOVERY] is FakeDiscovery.instances[0]
     forward_setups.assert_awaited_once_with(entry, ["infrared", "remote"])
