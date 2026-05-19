@@ -43,32 +43,6 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 _UNSUPPORTED_BOARD_INFOS = [
     pytest.param(
         BoardInfo(
-            box_name="ENERGY",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.5",
-        ),
-        id="energy-not-supported",
-    ),
-    pytest.param(
-        BoardInfo(
-            box_name="FOCUS",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.5",
-        ),
-        id="focus-not-supported",
-    ),
-    pytest.param(
-        BoardInfo(
             box_name="SILENT_CONNECT",
             box_sub_type_name="Eu",
             serial_board_box="ABC123",
@@ -105,6 +79,48 @@ _UNSUPPORTED_BOARD_INFOS = [
             public_api_version="2.1.0-beta",
         ),
         id="malformed-version",
+    ),
+]
+
+_SUPPORTED_BOARD_INFOS = [
+    pytest.param(
+        BoardInfo(
+            box_name="ENERGY",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="energy-supported",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="FOCUS",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="focus-supported",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SOMETHING_NEW",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.5",
+        ),
+        id="unknown-box-name-supported",
     ),
 ]
 
@@ -579,12 +595,33 @@ async def test_user_flow_unsupported_board_from_board_info(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("supported_board_info", _SUPPORTED_BOARD_INFOS)
+async def test_user_flow_allows_api_compatible_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    supported_board_info: BoardInfo,
+) -> None:
+    """Test user flow allows boards that expose a compatible API version."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_duco_client.async_get_board_info.return_value = supported_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == str(supported_board_info.box_name)
+    assert result["result"].unique_id == TEST_MAC
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
 async def test_reconfigure_flow_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_board_info: BoardInfo,
     unsupported_board_info: BoardInfo,
 ) -> None:
     """Test reconfigure flow still succeeds for existing unsupported boards."""
@@ -599,6 +636,28 @@ async def test_reconfigure_flow_unsupported_board_from_board_info(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize("supported_board_info", _SUPPORTED_BOARD_INFOS)
+async def test_zeroconf_discovery_allows_api_compatible_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    supported_board_info: BoardInfo,
+) -> None:
+    """Test zeroconf discovery allows boards that expose a compatible API version."""
+    mock_duco_client.async_get_board_info.return_value = supported_board_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {
+        "name": str(supported_board_info.box_name)
+    }
 
 
 @pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
@@ -618,6 +677,28 @@ async def test_zeroconf_discovery_unsupported_board_from_board_info(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_board"
+
+
+@pytest.mark.parametrize("supported_board_info", _SUPPORTED_BOARD_INFOS)
+async def test_dhcp_discovery_allows_api_compatible_board_info(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    supported_board_info: BoardInfo,
+) -> None:
+    """Test DHCP discovery allows boards that expose a compatible API version."""
+    mock_duco_client.async_get_board_info.return_value = supported_board_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {
+        "name": str(supported_board_info.box_name)
+    }
 
 
 @pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)

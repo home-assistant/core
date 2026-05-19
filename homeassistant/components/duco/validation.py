@@ -4,15 +4,11 @@ from typing import cast
 
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import DucoResponseError
-from duco_connectivity.models import BoardInfo, DucoVersion, KnownBoardName
+from duco_connectivity.models import BoardInfo, DucoVersion
 
-# Newer Connectivity boards expose /info with BoxName and
-# PublicApiVersion. We use that endpoint to distinguish supported Connectivity
-# hardware from older Communication board V1 hardware before applying the
-# narrower product whitelist below.
-_SUPPORTED_BOX_NAMES: frozenset[KnownBoardName] = frozenset(
-    {KnownBoardName.SILENT_CONNECT}
-)
+# Newer Connectivity boards expose /info with PublicApiVersion. We use that
+# endpoint to distinguish supported Connectivity hardware from older
+# Communication board V1 hardware.
 _MIN_PUBLIC_API_VERSION = DucoVersion("2.1")
 _MIN_PUBLIC_API_VERSION_COMPONENTS: tuple[int, ...] = cast(
     tuple[int, ...], _MIN_PUBLIC_API_VERSION.components
@@ -25,8 +21,6 @@ class UnsupportedBoardError(Exception):
 
 def validate_board_support(board_info: BoardInfo) -> None:
     """Raise UnsupportedBoardError if the board does not meet support requirements."""
-    if board_info.box_name.known_value not in _SUPPORTED_BOX_NAMES:
-        raise UnsupportedBoardError
     version = board_info.public_api_version
     if version is None or version.components is None:
         raise UnsupportedBoardError
