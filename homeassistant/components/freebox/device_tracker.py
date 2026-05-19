@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
         ):
             if (
                 registry_entry.domain == DEVICE_TRACKER_DOMAIN
-                and registry_entry.unique_id not in current_macs
+                and dr.format_mac(registry_entry.unique_id) not in current_macs
             ):
                 entity_registry.async_remove(registry_entry.entity_id)
                 tracked.discard(registry_entry.unique_id)
@@ -86,7 +86,7 @@ class FreeboxDevice(ScannerEntity):
         """Initialize a Freebox device."""
         self._router = router
         self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
-        self._mac = device["l2ident"]["id"]
+        self._mac = dr.format_mac(device["l2ident"]["id"])
         self._manufacturer = device["vendor_name"]
         self._attr_icon = icon_for_freebox_device(device)
         self._active = False

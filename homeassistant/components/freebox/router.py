@@ -19,7 +19,11 @@ from freebox_api.exceptions import HttpRequestError, NotOpenError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
@@ -114,7 +118,7 @@ class FreeboxRouter:
         self._api: Freepybox = api
         self.name: str = freebox_config["model_info"]["pretty_name"]
         self.model_id: str = freebox_config["model_info"]["name"]
-        self.mac: str = freebox_config["mac"]
+        self.mac: str = format_mac(freebox_config["mac"])
         self._sw_v: str = freebox_config["firmware_version"]
         self._hw_v: str | None = freebox_config.get("board_name")
         self._attrs: dict[str, Any] = {}
@@ -165,12 +169,15 @@ class FreeboxRouter:
         # Drop devices the Freebox no longer reports (e.g. the user forgot
         # them in the LAN browser). The Freebox keeps offline devices in its
         # host list with active=False, so a disappearance is always intentional.
-        fbx_macs = {fbx_device["l2ident"]["id"] for fbx_device in fbx_devices}
-        for stale_mac in set(self.devices) - fbx_macs:
-            del self.devices[stale_mac]
+        fbx_macs = {
+            format_mac(fbx_device["l2ident"]["id"]) for fbx_device in fbx_devices
+        }
+        if not self.supports_hosts or len(fbx_macs) > 1:
+            for stale_mac in set(self.devices) - fbx_macs:
+                del self.devices[stale_mac]
 
         for fbx_device in fbx_devices:
-            device_mac = fbx_device["l2ident"]["id"]
+            device_mac = format_mac(fbx_device["l2ident"]["id"])
 
             if self.devices.get(device_mac) is None:
                 new_device = True
@@ -268,8 +275,9 @@ class FreeboxRouter:
             for home_node in home_nodes
             if home_node["category"] in HOME_COMPATIBLE_CATEGORIES
         }
-        for stale_id in set(self.home_devices) - current_ids:
-            del self.home_devices[stale_id]
+        if home_nodes:
+            for stale_id in set(self.home_devices) - current_ids:
+                del self.home_devices[stale_id]
 
         new_device = False
         for home_node in home_nodes:
