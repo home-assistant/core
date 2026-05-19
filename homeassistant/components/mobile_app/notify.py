@@ -54,12 +54,11 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
-    DATA_STORE,
     DOMAIN,
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SIGNAL_RECORD_NOTIFICATION,
 )
-from .helpers import device_info, savable_state
+from .helpers import device_info
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -260,13 +259,6 @@ class MobileAppNotificationService(BaseNotificationService):
                 < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
             ):
                 return stored["token"]
-            # Token expired — remove it lazily.
-            device_tokens.pop(tag, None)
-            if not device_tokens:
-                live_activity_tokens.pop(webhook_id, None)
-            await self.hass.data[DOMAIN][DATA_STORE].async_save(
-                savable_state(self.hass)
-            )
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]
