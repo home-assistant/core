@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
@@ -56,7 +57,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import (
     CONF_AWAY_FIXED,
     CONF_AWAY_HUMIDITY,
-    CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_INITIAL_STATE,
