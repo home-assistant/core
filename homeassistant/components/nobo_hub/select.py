@@ -51,7 +51,6 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     """Global override selector for Nobø Ecohub."""
 
     _attr_translation_key = "global_override"
-    _attr_device_class = "nobo_hub__override"
     _modes = {
         nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",

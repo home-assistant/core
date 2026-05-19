@@ -58,11 +58,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class:
-    status: todo
-    comment: >
-      Custom device class on global override select being dropped in
-      PR #170135.
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: done
