@@ -1,6 +1,7 @@
 """Helper functions for the homekit_controller component."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from types import MappingProxyType
 from typing import Final, cast
@@ -51,11 +52,20 @@ def folded_name(name: str) -> str:
     return name.casefold().replace(" ", "")
 
 
-SERVICE_TYPE_NAMES: Final[Mapping[str, str]] = MappingProxyType(
+SERVICE_LABEL_TRANSLATION_SUFFIXES: Final[Mapping[str, str]] = MappingProxyType(
     {
-        ServicesTypes.VALVE: "Valve",
+        ServicesTypes.VALVE: "with_valve_label",
     }
 )
+
+
+@dataclass(frozen=True)
+class ServiceFeatureScope:
+    """Scope metadata for a feature associated with a HomeKit service."""
+
+    key: str
+    translation_suffix: str
+    translation_placeholders: Mapping[str, str]
 
 
 def normalized_service_label_index(service: Service) -> str | int | float | None:
@@ -68,20 +78,44 @@ def normalized_service_label_index(service: Service) -> str | int | float | None
     return cast(str | int | float, service_label_index)
 
 
-def service_feature_name(service: Service, feature_name: str) -> str:
-    """Return a feature name scoped by the HomeKit service when needed."""
+def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
+    """Return scope metadata for a feature associated with a HomeKit service."""
     service_name = service.value(CharacteristicsTypes.NAME)
     if service_name and folded_name(service_name) != folded_name(
         service.accessory.name
     ):
-        return f"{service_name} {feature_name}"
+        service_name = str(service_name)
+        return ServiceFeatureScope(
+            key=f"name:{folded_name(service_name)}",
+            translation_suffix="with_service_name",
+            translation_placeholders={"service_name": service_name},
+        )
 
     if (service_label_index := normalized_service_label_index(service)) is not None:
-        if service_type_name := SERVICE_TYPE_NAMES.get(service.type):
-            return f"{service_type_name} {service_label_index} {feature_name}"
-        return f"{service_label_index} {feature_name}"
+        service_label_index = str(service_label_index)
+        suffix = SERVICE_LABEL_TRANSLATION_SUFFIXES.get(
+            service.type, "with_service_label"
+        )
+        return ServiceFeatureScope(
+            key=f"label:{service.type}:{service_label_index}",
+            translation_suffix=suffix,
+            translation_placeholders={"service_label_index": service_label_index},
+        )
 
-    return feature_name
+    return None
+
+
+def service_feature_translation(
+    service: Service, feature_translation_key: str
+) -> tuple[str, Mapping[str, str] | None]:
+    """Return translation data for a feature scoped by the HomeKit service."""
+    if scope := service_feature_scope(service):
+        return (
+            f"{feature_translation_key}_{scope.translation_suffix}",
+            scope.translation_placeholders,
+        )
+
+    return feature_translation_key, None
 
 
 async def async_get_controller(hass: HomeAssistant) -> Controller:

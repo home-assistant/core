@@ -4,8 +4,6 @@ These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
 
-from typing import cast
-
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import (
@@ -20,12 +18,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
-from .utils import service_feature_name
+from .utils import service_feature_translation
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
@@ -128,10 +126,10 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the device if any."""
-        if attr_name := getattr(self, "_attr_name", None):
-            return attr_name
+        if (translated_name := self._get_translated_name()) is not UNDEFINED:
+            return translated_name
 
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
@@ -182,6 +180,10 @@ class HomeKitServiceNumber(HomeKitNumber):
     ) -> None:
         """Initialise a HomeKit number control named from its service."""
         super().__init__(conn, info, char, description)
-        self._attr_name = service_feature_name(
-            char.service, cast(str, description.name)
+        if description.translation_key is None:
+            return
+        self._attr_translation_key, translation_placeholders = (
+            service_feature_translation(char.service, description.translation_key)
         )
+        if translation_placeholders is not None:
+            self._attr_translation_placeholders = translation_placeholders

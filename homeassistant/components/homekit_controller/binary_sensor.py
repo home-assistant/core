@@ -1,7 +1,6 @@
 """Support for HomeKit binary sensors."""
 
 from dataclasses import dataclass
-from typing import cast
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -20,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
-from .utils import folded_name, normalized_service_label_index, service_feature_name
+from .utils import service_feature_scope, service_feature_translation
 
 
 @dataclass(frozen=True)
@@ -167,6 +166,7 @@ CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] =
     CharacteristicsTypes.STATUS_LO_BATT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_LO_BATT,
         name="Low Battery",
+        translation_key="low_battery",
         has_entity_name=True,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -174,6 +174,7 @@ CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] =
     CharacteristicsTypes.STATUS_FAULT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_FAULT,
         name="Fault",
+        translation_key="fault",
         has_entity_name=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -196,9 +197,13 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
         super().__init__(conn, info, char)
-        self._attr_name = service_feature_name(
-            char.service, cast(str, description.name)
+        if description.translation_key is None:
+            return
+        self._attr_translation_key, translation_placeholders = (
+            service_feature_translation(char.service, description.translation_key)
         )
+        if translation_placeholders is not None:
+            self._attr_translation_placeholders = translation_placeholders
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
@@ -283,11 +288,6 @@ def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
 
 def _low_battery_source_key(service: Service) -> str | None:
     """Return the low battery source key for the service."""
-    service_name = service.value(CharacteristicsTypes.NAME)
-    if service_name and folded_name(service_name) != folded_name(
-        service.accessory.name
-    ):
-        return f"name:{folded_name(service_name)}"
-    if (service_label_index := normalized_service_label_index(service)) is not None:
-        return f"label:{service.type}:{service_label_index}"
+    if scope := service_feature_scope(service):
+        return scope.key
     return None

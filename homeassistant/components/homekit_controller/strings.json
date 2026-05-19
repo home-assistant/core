@@ -71,6 +71,32 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault": {
+        "name": "Fault"
+      },
+      "fault_with_service_label": {
+        "name": "{service_label_index} Fault"
+      },
+      "fault_with_service_name": {
+        "name": "{service_name} Fault"
+      },
+      "fault_with_valve_label": {
+        "name": "Valve {service_label_index} Fault"
+      },
+      "low_battery": {
+        "name": "Low Battery"
+      },
+      "low_battery_with_service_label": {
+        "name": "{service_label_index} Low Battery"
+      },
+      "low_battery_with_service_name": {
+        "name": "{service_name} Low Battery"
+      },
+      "low_battery_with_valve_label": {
+        "name": "Valve {service_label_index} Low Battery"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
@@ -93,6 +119,20 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Duration"
+      },
+      "duration_with_service_label": {
+        "name": "{service_label_index} Duration"
+      },
+      "duration_with_service_name": {
+        "name": "{service_name} Duration"
+      },
+      "duration_with_valve_label": {
+        "name": "Valve {service_label_index} Duration"
       }
     },
     "select": {

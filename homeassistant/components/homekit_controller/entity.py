@@ -13,7 +13,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .connection import HKDevice, valid_serial_number
 from .utils import folded_name
@@ -208,8 +208,8 @@ class HomeKitEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
-        if attr_name := getattr(self, "_attr_name", None):
-            return attr_name
+        if (translated_name := self._get_translated_name()) is not UNDEFINED:
+            return translated_name
 
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
@@ -227,6 +227,19 @@ class HomeKitEntity(Entity):
             ):
                 return f"{accessory_name} {device_name}"
         return accessory_name
+
+    def _get_translated_name(self) -> str | UndefinedType:
+        """Return the translated entity name."""
+        if (
+            not self.has_entity_name
+            or self.translation_key is None
+            or not self.platform_data
+        ):
+            return UNDEFINED
+        translated_name = self._name_internal(
+            self._device_class_name, self.platform_data.platform_translations
+        )
+        return UNDEFINED if translated_name is None else translated_name
 
     @property
     def available(self) -> bool:
