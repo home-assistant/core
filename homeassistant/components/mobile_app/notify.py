@@ -37,6 +37,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_LOCAL_ONLY,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -190,7 +191,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data = {ATTR_MESSAGE: message}
+        data: dict[str, Any] = {ATTR_MESSAGE: message}
 
         # Remove default title from notifications.
         if (
@@ -200,8 +201,14 @@ class MobileAppNotificationService(BaseNotificationService):
         if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
+        force_local_notification = False
         if (data_arg := kwargs.get(ATTR_DATA)) is not None:
-            data[ATTR_DATA] = data_arg
+            data_arg = data[ATTR_DATA] = data_arg.copy()
+            force_local_notification = data_arg.pop(ATTR_LOCAL_ONLY, False)
+            if not isinstance(force_local_notification, bool):
+                raise HomeAssistantError(
+                    "Invalid value for data[local_only]: must be a boolean"
+                )
 
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
             DATA_PUSH_CHANNEL
@@ -214,13 +221,18 @@ class MobileAppNotificationService(BaseNotificationService):
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
                     data,
-                    partial(self._async_send_remote_message_target, entry),
+                    partial(self._async_send_remote_message_target, entry)
+                    if not force_local_notification
+                    else None,
                 )
                 async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue
 
             # Test if local push only.
-            if ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]:
+            if (
+                ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]
+                or force_local_notification
+            ):
                 failed_targets.append(target)
                 continue
 

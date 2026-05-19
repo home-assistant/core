@@ -859,3 +859,167 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
     assert err.value.translation_placeholders == {
         "device_name": "websocket push test entry"
     }
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test `local_only` option sends only via local push."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_test",
+        {"message": "Hello world", "data": {"local_only": True}},
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"] == {"message": "Hello world", "data": {}}
+    assert msg_result["id"] == sub_id
+
+    # Unsubscribe, now it should fail when forcing local notifications
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    # Verify that without forcing local notifications, it still works
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_test",
+        {
+            "message": "Hello world",
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Device.*not connected to local push notifications",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_test",
+            {"message": "Hello world", "data": {"local_only": True}},
+            blocking=True,
+        )
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only_not_confirming(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that cloud fallback is skipped when confirmation fails and local_only is True."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    with patch(
+        "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_test",
+            {"message": "Hello world", "data": {"local_only": True}},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        # We need a second one because otherwise, if local_only
+        # is removed, the test still passes and should not, as
+        # the fallback should be executed.
+        await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only_multiple_targets(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test local_only option sends only via local push for multiple targets.
+
+    Both targets, mock-webhook_id and webhook_id_2, will fail because no websocket
+    subscription is setup for them and because we force local notifications, they will
+    not be sent through HTTP requests although they could.
+    """
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Device\(s\).*mock-webhook_id.*webhook_id_2.*not connected to local push notifications",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "notify",
+            {
+                "target": ["mock-webhook_id", "webhook_id_2"],
+                "message": "Hello world",
+                "data": {"local_only": True},
+            },
+            blocking=True,
+        )
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_local_only_validation_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test `local_only` option sends only via local push."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Invalid value for data\[local_only\]: must be a boolean",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_test",
+            {"message": "Hello world", "data": {"local_only": "true"}},
+            blocking=True,
+        )
