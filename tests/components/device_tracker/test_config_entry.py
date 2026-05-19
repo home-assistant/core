@@ -575,9 +575,9 @@ def test_scanner_entity() -> None:
     entity = ScannerEntity()
     assert entity.source_type is SourceType.ROUTER
     with pytest.raises(NotImplementedError):
-        assert entity.is_connected is None
+        entity.is_connected  # noqa: B018
     with pytest.raises(NotImplementedError):
-        assert entity.state == STATE_NOT_HOME
+        entity.state  # noqa: B018
     assert entity.battery_level is None
     assert entity.ip_address is None
     assert entity.mac_address is None
@@ -608,10 +608,10 @@ def test_base_tracker_entity() -> None:
     """Test coverage for base BaseTrackerEntity entity class."""
     entity = BaseTrackerEntity()
     with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+        entity.source_type  # noqa: B018
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
-        assert entity.state_attributes is None
+        entity.state_attributes  # noqa: B018
 
 
 @pytest.mark.parametrize(
