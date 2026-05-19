@@ -30,8 +30,8 @@
       }
     },
     "sensor": {
-      "advisories": {
-        "name": "Advisories"
+      "alerts": {
+        "name": "Alerts"
       },
       "aqhi": {
         "name": "AQHI"
@@ -41,9 +41,6 @@
       },
       "dewpoint": {
         "name": "Dew point"
-      },
-      "endings": {
-        "name": "Endings"
       },
       "high_temp": {
         "name": "High temperature"
@@ -69,9 +66,6 @@
       "pressure": {
         "name": "Barometric pressure"
       },
-      "statements": {
-        "name": "Statements"
-      },
       "tendency": {
         "name": "Tendency"
       },
@@ -86,12 +80,6 @@
       },
       "visibility": {
         "name": "Visibility"
-      },
-      "warnings": {
-        "name": "Warnings"
-      },
-      "watches": {
-        "name": "Watches"
       },
       "wind_bearing": {
         "name": "Wind bearing"

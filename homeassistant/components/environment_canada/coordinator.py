@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 type ECConfigEntry = ConfigEntry[ECRuntimeData]
 type ECDataType = ECAirQuality | ECRadar | ECWeather
+type ECSensorDataType = ECAirQuality | ECWeather
 
 
 @dataclass
