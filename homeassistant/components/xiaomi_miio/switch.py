@@ -107,6 +107,7 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
     MODEL_FAN_ZA5,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -156,6 +157,7 @@ ATTR_POWER_PRICE = "power_price"
 ATTR_PRICE = "price"
 ATTR_PTC = "ptc"
 ATTR_WIFI_LED = "wifi_led"
+ATTR_DO_NOT_DISTURB = "do_not_disturb"
 
 FEATURE_SET_POWER_MODE = 1
 FEATURE_SET_WIFI_LED = 2
@@ -341,6 +343,27 @@ SWITCH_TYPES = (
     ),
 )
 
+PET_FOUNTAIN_SWITCH_TYPES = (
+    XiaomiMiioSwitchDescription(
+        key=ATTR_CHILD_LOCK,
+        feature=0,
+        translation_key=ATTR_CHILD_LOCK,
+        icon="mdi:lock",
+        method_on="async_set_child_lock_on",
+        method_off="async_set_child_lock_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_DO_NOT_DISTURB,
+        feature=0,
+        translation_key=ATTR_DO_NOT_DISTURB,
+        icon="mdi:moon-waning-crescent",
+        method_on="async_set_do_not_disturb_on",
+        method_off="async_set_do_not_disturb_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -349,7 +372,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch from a config entry."""
     model = config_entry.data[CONF_MODEL]
-    if model in (*MODELS_HUMIDIFIER, *MODELS_FAN):
+    if model in (*MODELS_HUMIDIFIER, *MODELS_FAN, MODEL_PET_FOUNTAIN_70M2):
         await async_setup_coordinated_entry(hass, config_entry, async_add_entities)
     else:
         await async_setup_other_entry(hass, config_entry, async_add_entities)
@@ -373,6 +396,8 @@ async def async_setup_coordinated_entry(
 
     if model in MODEL_TO_FEATURES_MAP:
         device_features = MODEL_TO_FEATURES_MAP[model]
+    elif model == MODEL_PET_FOUNTAIN_70M2:
+        device_features = 0
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
@@ -382,7 +407,7 @@ async def async_setup_coordinated_entry(
     elif model in MODELS_PURIFIER_MIOT:
         device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
 
-    async_add_entities(
+    entities = [
         XiaomiGenericCoordinatedSwitch(
             device,
             config_entry,
@@ -392,7 +417,21 @@ async def async_setup_coordinated_entry(
         )
         for description in SWITCH_TYPES
         if description.feature & device_features
-    )
+    ]
+
+    if model == MODEL_PET_FOUNTAIN_70M2:
+        entities.extend(
+            XiaomiGenericCoordinatedSwitch(
+                device,
+                config_entry,
+                f"{description.key}_{unique_id}",
+                coordinator,
+                description,
+            )
+            for description in PET_FOUNTAIN_SWITCH_TYPES
+        )
+
+    async_add_entities(entities)
 
 
 async def async_setup_other_entry(
@@ -613,6 +652,22 @@ class XiaomiGenericCoordinatedSwitch(
         return await self._try_command(
             "Turning the child lock of the miio device off failed.",
             self._device.set_child_lock,  # type: ignore[attr-defined]
+            False,
+        )
+
+    async def async_set_do_not_disturb_on(self) -> bool:
+        """Turn do not disturb on."""
+        return await self._try_command(
+            "Turning on do not disturb for the miio device failed.",
+            self._device.set_do_not_disturb,  # type: ignore[attr-defined]
+            True,
+        )
+
+    async def async_set_do_not_disturb_off(self) -> bool:
+        """Turn do not disturb off."""
+        return await self._try_command(
+            "Turning off do not disturb for the miio device failed.",
+            self._device.set_do_not_disturb,  # type: ignore[attr-defined]
             False,
         )
 

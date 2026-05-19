@@ -55,6 +55,7 @@ from .const import (
     MODEL_FAN_P11,
     MODEL_FAN_P18,
     MODEL_FAN_ZA5,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_FAN_MIIO,
@@ -63,6 +64,7 @@ from .const import (
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
     MODELS_LIGHT,
+    MODELS_PET_FOUNTAIN,
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
@@ -73,6 +75,7 @@ from .const import (
 )
 from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
+from .pet_fountain_miot import XiaomiPetFountain
 from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
@@ -113,6 +116,15 @@ VACUUM_PLATFORMS = [
     Platform.VACUUM,
 ]
 AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
+PET_FOUNTAIN_PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SELECT,
+    Platform.NUMBER,
+    Platform.SWITCH,
+    Platform.TIME,
+    Platform.BUTTON,
+]
 
 MODEL_TO_CLASS_MAP = {
     MODEL_FAN_1C: Fan1C,
@@ -154,6 +166,8 @@ def get_platforms(config_entry):
     if flow_type == CONF_DEVICE:
         if model in MODELS_SWITCH:
             return SWITCH_PLATFORMS
+        if model in MODELS_PET_FOUNTAIN:
+            return PET_FOUNTAIN_PLATFORMS
         if model in MODELS_HUMIDIFIER:
             return HUMIDIFIER_PLATFORMS
         if model in MODELS_FAN:
@@ -318,6 +332,7 @@ async def async_create_miio_device_and_coordinator(
 
     if (
         model not in MODELS_HUMIDIFIER
+        and model not in MODELS_PET_FOUNTAIN
         and model not in MODELS_FAN
         and model not in MODELS_VACUUM
         and not model.startswith(ROBOROCK_GENERIC)
@@ -332,6 +347,8 @@ async def async_create_miio_device_and_coordinator(
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
         migrate = True
+    elif model == MODEL_PET_FOUNTAIN_70M2:
+        device = XiaomiPetFountain(host, token, lazy_discover=lazy_discover)
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device = AirHumidifierMjjsq(
             host, token, lazy_discover=lazy_discover, model=model

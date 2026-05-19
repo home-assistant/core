@@ -23,6 +23,7 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_FAN_ZA5,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -42,6 +43,10 @@ ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_MOP_ATTACHED = "is_water_box_carriage_attached"
 ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
 ATTR_WATER_SHORTAGE = "is_water_shortage"
+ATTR_LOW_BATTERY = "low_battery"
+ATTR_USB_POWER = "usb_power"
+ATTR_PUMP_BLOCKED = "pump_blocked"
+ATTR_FAULT = "has_fault"
 
 
 @dataclass(frozen=True)
@@ -126,6 +131,39 @@ VACUUM_SENSORS_SEPARATE_MOP = {
 HUMIDIFIER_MIIO_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MIOT_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
+PET_FOUNTAIN_BINARY_SENSORS = (
+    XiaomiMiioBinarySensorDescription(
+        key="water_shortage",
+        translation_key="water_shortage",
+        icon="mdi:water-alert",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_PUMP_BLOCKED,
+        translation_key=ATTR_PUMP_BLOCKED,
+        icon="mdi:pump-off",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_LOW_BATTERY,
+        translation_key=ATTR_LOW_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_USB_POWER,
+        translation_key=ATTR_USB_POWER,
+        device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_FAULT,
+        translation_key=ATTR_FAULT,
+        icon="mdi:alert-circle",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 def _setup_vacuum_sensors(
@@ -175,7 +213,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
-    entities = []
+    entities: list[BinarySensorEntity] = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
@@ -190,6 +228,19 @@ async def async_setup_entry(
             sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
+        elif model == MODEL_PET_FOUNTAIN_70M2:
+            entities.extend(
+                XiaomiGenericBinarySensor(
+                    config_entry.runtime_data.device,
+                    config_entry,
+                    f"{description.key}_{config_entry.unique_id}",
+                    config_entry.runtime_data.device_coordinator,
+                    description,
+                )
+                for description in PET_FOUNTAIN_BINARY_SENSORS
+            )
+            async_add_entities(entities)
+            return
         elif model in MODELS_VACUUM:
             _setup_vacuum_sensors(hass, config_entry, async_add_entities)
             return

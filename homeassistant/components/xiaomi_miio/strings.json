@@ -53,6 +53,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "has_fault": {
+        "name": "Fault"
+      },
       "is_water_box_attached": {
         "name": "Mop attached"
       },
@@ -61,6 +64,9 @@
       },
       "is_water_shortage": {
         "name": "Water shortage"
+      },
+      "low_battery": {
+        "name": "Low battery"
       },
       "no_water": {
         "name": "Water tank empty"
@@ -71,6 +77,15 @@
       "ptc_status": {
         "name": "Auxiliary heat status"
       },
+      "pump_blocked": {
+        "name": "Pump blocked"
+      },
+      "usb_power": {
+        "name": "USB power"
+      },
+      "water_shortage": {
+        "name": "Water shortage"
+      },
       "water_tank_detached": {
         "name": "Water tank"
       }
@@ -78,6 +93,9 @@
     "button": {
       "reset_dust_filter": {
         "name": "Reset dust filter"
+      },
+      "reset_filter_life": {
+        "name": "Reset filter"
       },
       "reset_upper_filter": {
         "name": "Reset upper filter"
@@ -134,6 +152,9 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "water_interval": {
+        "name": "Water interval"
       }
     },
     "select": {
@@ -156,6 +177,14 @@
           "bright": "Bright",
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "pet_fountain_mode": {
+        "name": "Water mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "continuous": "Continuous",
+          "interval": "Interval"
         }
       },
       "ptc_level": {
@@ -209,6 +238,9 @@
       "dust_filter_life_remaining_days": {
         "name": "Dust filter lifetime remaining days"
       },
+      "fault_code": {
+        "name": "Fault code"
+      },
       "favorite_speed": {
         "name": "Favorite speed"
       },
@@ -244,6 +276,30 @@
       },
       "motor_speed": {
         "name": "[%key:component::xiaomi_miio::entity::number::motor_speed::name%]"
+      },
+      "pet_fountain_battery": {
+        "name": "Battery level"
+      },
+      "pet_fountain_charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charged": "Charged",
+          "charging": "Charging",
+          "not_charging": "Not charging"
+        }
+      },
+      "pet_fountain_filter_left_time": {
+        "name": "Filter time remaining"
+      },
+      "pet_fountain_filter_life_remaining": {
+        "name": "Filter life remaining"
+      },
+      "pet_fountain_status": {
+        "name": "Status",
+        "state": {
+          "no_water": "No water",
+          "watering": "Watering"
+        }
       },
       "purify_volume": {
         "name": "Purify volume"
@@ -295,6 +351,9 @@
       "display": {
         "name": "Display"
       },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
       "dry": {
         "name": "Dry mode"
       },
@@ -309,6 +368,14 @@
       },
       "ptc": {
         "name": "Auxiliary heat"
+      }
+    },
+    "time": {
+      "dnd_end": {
+        "name": "Do not disturb end"
+      },
+      "dnd_start": {
+        "name": "Do not disturb start"
       }
     }
   },
