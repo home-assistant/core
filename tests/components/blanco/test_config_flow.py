@@ -14,10 +14,10 @@ from homeassistant.components.blanco.const import (
     CONF_DEV_TYPE,
     CONF_SERIAL,
     CONF_SERVICE_CODE,
-    CONF_TOKEN,
     CONF_TOKEN_TYPE,
     DOMAIN,
 )
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

@@ -14,7 +14,7 @@ from blanco_smart_home_api_client import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,7 +25,6 @@ from .const import (
     CONF_DEV_TYPE,
     CONF_SERIAL,
     CONF_SERVICE_CODE,
-    CONF_TOKEN,
     CONF_TOKEN_TYPE,
     DOMAIN,
 )

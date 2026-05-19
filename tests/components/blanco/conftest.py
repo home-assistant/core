@@ -11,11 +11,11 @@ from homeassistant.components.blanco.const import (
     CONF_DEV_ID,
     CONF_DEV_TYPE,
     CONF_SERIAL,
-    CONF_TOKEN,
     CONF_TOKEN_TYPE,
 )
 from homeassistant.components.blanco.coordinator import BlancoDataUpdateCoordinator
 from homeassistant.components.blanco.definitions import BlancoDeviceType
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 # ── Shared test constants ──────────────────────────────────────────────────────

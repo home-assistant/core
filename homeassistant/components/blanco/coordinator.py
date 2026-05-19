@@ -16,13 +16,13 @@ from blanco_smart_home_api_client import (
     HttpStatus,
 )
 
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN, CONF_TOKEN_TYPE
+from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN_TYPE
 from .definitions import BlancoDeviceType
 
 _LOGGER = logging.getLogger(__name__)
