@@ -16,6 +16,8 @@ from .entity import AnthropicBaseLLMEntity
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
