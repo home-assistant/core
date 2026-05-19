@@ -1,7 +1,5 @@
 """Sensor platform for CoolMasterNet integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

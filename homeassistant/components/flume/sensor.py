@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -34,7 +34,8 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         key="current_interval",
         translation_key="current_interval",
         suggested_display_precision=2,
-        native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/m",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -65,14 +66,16 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         key="last_60_min",
         translation_key="last_60_min",
         suggested_display_precision=2,
-        native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_24_hrs",
         translation_key="last_24_hrs",
         suggested_display_precision=2,
-        native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/d",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

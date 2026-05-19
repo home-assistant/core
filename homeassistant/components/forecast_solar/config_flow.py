@@ -1,7 +1,5 @@
 """Config flow for Forecast.Solar integration."""
 
-from __future__ import annotations
-
 import re
 from typing import Any
 
@@ -15,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -94,7 +92,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title="",
                 data={
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],
@@ -107,7 +105,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                             CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                         },
-                        "title": f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                        "title": (
+                            f"{user_input[CONF_DECLINATION]}°"
+                            f" / {user_input[CONF_AZIMUTH]}°"
+                            f" / {user_input[CONF_MODULES_POWER]}W"
+                        ),
                         "unique_id": None,
                     },
                 ],
@@ -118,13 +120,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_NAME): str,
                         vol.Required(CONF_LATITUDE): cv.latitude,
                         vol.Required(CONF_LONGITUDE): cv.longitude,
                     }
                 ).extend(PLANE_SCHEMA.schema),
                 {
-                    CONF_NAME: self.hass.config.location_name,
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
                     CONF_DECLINATION: DEFAULT_DECLINATION,
@@ -244,7 +244,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
                 data={
                     CONF_DECLINATION: user_input[CONF_DECLINATION],
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
@@ -280,7 +284,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                     CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                 },
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
             ):
                 if not entry.update_listeners:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)

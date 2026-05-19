@@ -1,7 +1,5 @@
 """Support for getting the disk temperature of a host."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import socket
@@ -30,6 +28,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODEL = "model"
 
 DEFAULT_HOST = "localhost"

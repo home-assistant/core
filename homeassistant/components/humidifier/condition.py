@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.const import ATTR_MODE, CONF_OPTIONS, PERCENTAGE, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
@@ -13,8 +13,8 @@ from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
     ConditionConfig,
+    EntityNumericalConditionBase,
     EntityStateConditionBase,
-    make_entity_numerical_condition,
     make_entity_state_condition,
 )
 from homeassistant.helpers.entity import get_supported_features
@@ -27,6 +27,7 @@ from .const import (
     HumidifierEntityFeature,
 )
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_MODE = "mode"
 
 IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
@@ -44,6 +45,20 @@ def _supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> boo
         return bool(get_supported_features(hass, entity_id) & features)
     except HomeAssistantError:
         return False
+
+
+class IsTargetHumidityCondition(EntityNumericalConditionBase):
+    """Condition for humidifier target humidity."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
+    _valid_unit = PERCENTAGE
+
+    def _should_include(self, state: State) -> bool:
+        """Skip humidifier entities that do not expose a target humidity."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_HUMIDITY) is not None
+        )
 
 
 class IsModeCondition(EntityStateConditionBase):
@@ -79,10 +94,7 @@ CONDITIONS: dict[str, type[Condition]] = {
         {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.HUMIDIFYING
     ),
     "is_mode": IsModeCondition,
-    "is_target_humidity": make_entity_numerical_condition(
-        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
-        valid_unit=PERCENTAGE,
-    ),
+    "is_target_humidity": IsTargetHumidityCondition,
 }
 
 

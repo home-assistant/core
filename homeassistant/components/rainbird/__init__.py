@@ -1,7 +1,5 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -154,7 +152,8 @@ async def _async_fix_unique_id(
     for existing_entry in entries:
         if existing_entry.unique_id == new_unique_id:
             _LOGGER.warning(
-                "Unable to fix missing unique id (already exists); Removing duplicate entry"
+                "Unable to fix missing unique id (already exists);"
+                " Removing duplicate entry"
             )
             hass.async_create_background_task(
                 hass.config_entries.async_remove(entry.entry_id),
@@ -205,7 +204,8 @@ def _async_device_entry_to_keep(
     user previously renamed devices.
     """
     # Prefer the new device if the user already gave it a name or area. Otherwise,
-    # do the same for the old entry. If no entries have been modified then keep the new one.
+    # do the same for the old entry. If no entries have been
+    # modified then keep the new one.
     if new_entry.disabled_by is None and (
         new_entry.area_id is not None or new_entry.name_by_user is not None
     ):
@@ -225,7 +225,8 @@ def _async_fix_device_id(
 ) -> None:
     """Migrate existing device identifiers to the new format.
 
-    This will rename any device ids that are prefixed with the serial number to be prefixed
+    This will rename any device ids that are prefixed with the
+    serial number to be prefixed
     with the mac address. This also cleans up from a bug that allowed devices to exist
     in both the old and new format.
     """
@@ -244,7 +245,8 @@ def _async_fix_device_id(
     for unique_id, new_unique_id in migrations.items():
         old_entry = device_entry_map[unique_id]
         if (new_entry := device_entry_map.get(new_unique_id)) is not None:
-            # Device entries exist for both the old and new format and one must be removed
+            # Device entries exist for both the old and new
+            # format and one must be removed
             entry_to_keep = _async_device_entry_to_keep(old_entry, new_entry)
             if entry_to_keep == new_entry:
                 _LOGGER.debug("Removing device entry %s", unique_id)

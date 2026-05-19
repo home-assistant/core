@@ -1,7 +1,5 @@
 """Config Flow for Advantage Air integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from advantage_air import ApiError, advantage_air

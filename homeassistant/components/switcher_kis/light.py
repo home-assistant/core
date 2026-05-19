@@ -1,7 +1,5 @@
 """Switcher integration Light platform."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight

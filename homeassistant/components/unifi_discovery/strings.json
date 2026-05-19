@@ -1,0 +1,13 @@
+{
+  "config": {
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "discovery_started": "Discovery started"
+    },
+    "step": {
+      "user": {
+        "description": "UniFi Discovery is set up automatically."
+      }
+    }
+  }
+}

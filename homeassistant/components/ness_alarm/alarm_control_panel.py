@@ -1,7 +1,5 @@
 """Support for Ness D8X/D16X alarm panel."""
 
-from __future__ import annotations
-
 import logging
 
 from nessclient import ArmingMode, ArmingState, Client
@@ -25,10 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 ARMING_MODE_TO_STATE = {
     ArmingMode.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     ArmingMode.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
-    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    # no applicable state, fallback to away
+    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,
     ArmingMode.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
     ArmingMode.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    # no applicable state, fallback to away
+    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,
 }
 
 

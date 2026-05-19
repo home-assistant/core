@@ -486,7 +486,9 @@ async def test_abort_discovered_multiple(
             HTTPStatus.BAD_REQUEST,
             {
                 "error": "invalid_request",
-                "error_description": "Request was missing the 'redirect_uri' parameter.",
+                "error_description": (
+                    "Request was missing the 'redirect_uri' parameter."
+                ),
                 "error_uri": "Sensible URI: https://authorization-server.com/docs/access_token",
             },
             "oauth_unauthorized",
@@ -1199,11 +1201,11 @@ def test_compute_code_challenge_invalid_code_verifier(code_verifier: str) -> Non
         )
 
 
-async def test_async_get_config_entry_implementation_with_failing_provider_and_succeeding_provider(
+async def test_async_get_config_entry_impl_with_failing_and_succeeding_provider(
     hass: HomeAssistant,
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
 ) -> None:
-    """Test async_get_config_entry_implementation when one provider fails but another succeeds."""
+    """Test async_get_config_entry_implementation with mixed providers."""
 
     async def failing_cloud_provider(
         _hass: HomeAssistant, _domain: str
@@ -1244,7 +1246,7 @@ async def test_async_get_config_entry_implementation_with_failing_provider_and_s
 async def test_async_get_config_entry_implementation_with_failing_provider(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_get_config_entry_implementation when one provider fails and the other is empty."""
+    """Test async_get_config_entry_implementation with all failing providers."""
 
     async def failing_cloud_provider(
         _hass: HomeAssistant, _domain: str

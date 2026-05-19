@@ -1,7 +1,5 @@
 """Test the UniFi Protect binary_sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
@@ -729,10 +727,11 @@ async def test_aiport_no_binary_sensor_entities(
     ufp: MockUFPFixture,
     aiport: AiPort,
 ) -> None:
-    """Test that AI Port devices do not create camera-specific binary sensor entities."""
+    """Test AI Port devices do not create camera-specific binary sensors."""
     await init_entry(hass, ufp, [aiport])
 
-    # AI Port should not create any camera-specific binary sensors (motion, smart detection, etc.)
+    # AI Port should not create any camera-specific binary sensors
+    # (motion, smart detection, etc.)
     # NVR HDD sensors will still be created, but no AI Port-specific entities
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)

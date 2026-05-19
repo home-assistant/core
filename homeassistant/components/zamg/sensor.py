@@ -1,7 +1,5 @@
 """Sensor for the zamg integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -11,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -36,7 +33,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER_URL,
 )
-from .coordinator import ZamgDataUpdateCoordinator
+from .coordinator import ZamgConfigEntry, ZamgDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,11 +171,11 @@ API_FIELDS: list[str] = [desc.para_name for desc in SENSOR_TYPES]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ZamgConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZAMG sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ZamgSensor(coordinator, entry.title, entry.data[CONF_STATION_ID], description)

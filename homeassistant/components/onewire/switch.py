@@ -1,7 +1,5 @@
 """Support for 1-Wire environment switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import os
 from typing import Any

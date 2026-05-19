@@ -9,8 +9,6 @@ Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from typing import Any
 
