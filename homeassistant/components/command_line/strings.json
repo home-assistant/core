@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "command_error": {
+      "message": "Error trying to execute command: {command}. Error: {error}"
+    },
+    "timeout_error": {
+      "message": "Timeout trying to execute command: {command}"
+    }
+  },
   "issues": {
     "platform_yaml_not_supported": {
       "description": "Platform YAML setup is not supported.\nChange from configuring it using the `{platform}:` key to using the `command_line:` key directly in configuration.yaml and restart Home Assistant to resolve the issue.\nTo see the detailed documentation, select Learn more.",

@@ -57,6 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 # Legacy
 ATTR_COLOR_TEMP = "color_temp"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_HS = "hs"
 CONF_HS_ACTION = "set_hs"
 CONF_RGB_ACTION = "set_rgb"

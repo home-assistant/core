@@ -285,7 +285,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.14.0
+aioimmich==0.14.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -309,7 +309,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.1.0
+aiolyric==2.1.1
 
 # homeassistant.components.mealie
 aiomealie==1.2.4
@@ -1681,7 +1681,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.9.0
+py-opendisplay==7.0.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
