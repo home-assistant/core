@@ -224,7 +224,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        if not self.available or self._monitoring is not True:
+        if not self.available or not self._monitoring:
             return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
