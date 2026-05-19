@@ -34,6 +34,7 @@ DATA_UPDATED = f"{DOMAIN}_data_updated"
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DURATION = "duration"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_PARALLEL = "parallel"
 CONF_MANUAL = "manual"
 

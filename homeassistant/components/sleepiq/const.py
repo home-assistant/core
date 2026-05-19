@@ -11,6 +11,7 @@ FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
+# pylint: disable-next=home-assistant-duplicate-const
 PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"

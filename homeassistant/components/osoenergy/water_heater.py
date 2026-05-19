@@ -45,7 +45,9 @@ SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
 SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_TURN_OFF = "turn_off"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_TURN_ON = "turn_on"
 
 

@@ -2,6 +2,7 @@
 
 from homeassistant.const import Platform
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODE = "mode"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 DOMAIN = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_EVENT = "event"
 
 

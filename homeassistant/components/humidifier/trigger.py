@@ -18,6 +18,7 @@ from homeassistant.helpers.trigger import (
 
 from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_MODE = "mode"
 
 MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(

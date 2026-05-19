@@ -27,6 +27,7 @@ ATTR_IMAGE_PATH = "path"
 ATTR_IMAGE_USERNAME = "username"
 ATTR_IMAGE_PASSWORD = "password"
 ATTR_IMAGE_AUTH = "auth"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ICON = "icon"
 # Attributes contained in icon
 ATTR_ICON_URL = "url"

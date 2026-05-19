@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 
 SERVICE_SET_OPTIONS = "set_options"

@@ -19,6 +19,7 @@ from .hub import AdsHub
 
 DEFAULT_NAME = "ADS select"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(

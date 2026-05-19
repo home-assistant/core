@@ -36,9 +36,11 @@ FAN_SPEED = "fan_speed"
 SEGMENTS = "segments"
 STATE = "state"
 
+# pylint: disable-next=home-assistant-duplicate-const
 STATE_IDLE = "idle"
 STATE_DOCKED = "docked"
 STATE_ERROR = "error"
+# pylint: disable-next=home-assistant-duplicate-const
 STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"

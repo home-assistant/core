@@ -43,6 +43,7 @@ PLATFORMS = [
 ]
 
 ATTR_DARK = "dark"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"

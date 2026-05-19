@@ -15,6 +15,7 @@ from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MAC = "mac"
 

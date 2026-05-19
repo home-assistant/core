@@ -21,6 +21,7 @@ from .utils import _short_mac, name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE = "device"
 
 

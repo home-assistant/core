@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_DEVICE_ID = "device_id"
 ATTR_MONDAY_SLOTS = "monday_slots"
 ATTR_TUESDAY_SLOTS = "tuesday_slots"

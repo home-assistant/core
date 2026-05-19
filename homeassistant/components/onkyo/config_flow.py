@@ -47,6 +47,7 @@ from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE = "device"
 
 INPUT_SOURCES_DEFAULT: list[InputSource] = []

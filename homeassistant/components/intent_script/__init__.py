@@ -29,6 +29,7 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"

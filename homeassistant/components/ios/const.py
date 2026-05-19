@@ -32,6 +32,7 @@ CONF_ACTION_LABEL_TEXT = "text"
 CONF_ACTION_ICON = "icon"
 CONF_ACTION_ICON_COLOR = "color"
 CONF_ACTION_ICON_ICON = "icon"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ACTIONS = "actions"
 CONF_ACTION_SHOW_IN_CARPLAY = "show_in_carplay"
 CONF_ACTION_SHOW_IN_WATCH = "show_in_watch"

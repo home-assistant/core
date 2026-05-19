@@ -60,6 +60,7 @@ from .util import valid_publish_topic, valid_subscribe_topic
 PARALLEL_UPDATES = 0
 
 CONF_AVAILABLE_MODES_LIST = "modes"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"

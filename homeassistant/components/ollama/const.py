@@ -4,7 +4,9 @@ DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_MODEL = "model"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_PROMPT = "prompt"
 CONF_THINK = "think"
 

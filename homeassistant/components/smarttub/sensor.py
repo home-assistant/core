@@ -19,6 +19,7 @@ from .entity import SmartTubOnboardSensorBase
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
 ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODE = "mode"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"

@@ -28,6 +28,7 @@ DOMAIN = "numato"
 
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_DISCOVER = "discover"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICES = "devices"
 CONF_DEVICE_ID = "id"
 CONF_PORTS = "ports"

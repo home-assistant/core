@@ -10,6 +10,7 @@ DEFAULT_CONVERSATION_NAME = "Claude conversation"
 DEFAULT_AI_TASK_NAME = "Claude AI Task"
 
 CONF_RECOMMENDED = "recommended"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_PROMPT = "prompt"
 CONF_CHAT_MODEL = "chat_model"
 CONF_CODE_EXECUTION = "code_execution"

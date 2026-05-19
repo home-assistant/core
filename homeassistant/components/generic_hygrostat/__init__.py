@@ -28,6 +28,7 @@ CONF_SENSOR = "target_sensor"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MAX_HUMIDITY = "max_humidity"
 CONF_TARGET_HUMIDITY = "target_humidity"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE_CLASS = "device_class"
 CONF_MIN_DUR = "min_cycle_duration"
 CONF_DRY_TOLERANCE = "dry_tolerance"

@@ -40,6 +40,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 

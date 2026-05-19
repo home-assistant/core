@@ -70,6 +70,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ENABLED = "enabled"
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"

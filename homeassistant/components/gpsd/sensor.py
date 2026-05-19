@@ -34,6 +34,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLIMB = "climb"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ELEVATION = "elevation"
 ATTR_SPEED = "speed"
 ATTR_TOTAL_SATELLITES = "total_satellites"

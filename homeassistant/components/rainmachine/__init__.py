@@ -67,6 +67,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
 CONF_ET = "et"

@@ -23,6 +23,7 @@ CONF_BOARD: Final = "board"
 CONF_CHANNEL: Final = "channel"
 CONF_IMAGE: Final = "image"
 CONF_VERSION_SOURCE: Final = "version_source"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_SOURCE: Final = "source"
 
 ATTR_CHANNEL: Final = CONF_CHANNEL

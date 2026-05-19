@@ -39,6 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_COMMAND = "command"
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"

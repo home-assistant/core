@@ -26,6 +26,7 @@ ATTR_CALL = "call"
 ATTR_CLICK = "click"
 ATTR_DELAY = "delay"
 ATTR_EMAIL = "email"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"

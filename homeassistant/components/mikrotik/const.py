@@ -10,6 +10,7 @@ DEFAULT_DETECTION_TIME: Final = 300
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
 ATTR_FIRMWARE: Final = "current-firmware"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODEL: Final = "model"
 
 CONF_ARP_PING: Final = "arp_ping"
