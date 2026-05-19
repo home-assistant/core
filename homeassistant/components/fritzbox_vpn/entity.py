@@ -85,10 +85,11 @@ def vpn_switch_attributes(
 
 def raise_toggle_failed(vpn_name: str, error: str = "") -> None:
     """Raise translated HomeAssistantError for failed VPN toggle."""
+    error_placeholder = f". {error}" if error else ""
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="toggle_failed",
-        translation_placeholders={"name": vpn_name, "error": error},
+        translation_placeholders={"name": vpn_name, "error": error_placeholder},
     )
 
 
@@ -153,7 +154,7 @@ async def setup_vpn_platform(
         )
     else:
         entities = []
-        _LOGGER.warning("No VPN connections found in coordinator data")
+        _LOGGER.debug("No VPN connections found in coordinator data")
 
     async_add_entities(entities, update_before_add=True)
 

@@ -190,10 +190,16 @@ def set_validation_error(
         return
 
     error_msg = str(err)
-    _LOGGER.exception(
-        "Unexpected exception during validation (%s)",
-        type(err).__name__,
-    )
+    if log_unknown_details:
+        _LOGGER.exception(
+            "Unexpected exception during validation (%s)",
+            type(err).__name__,
+        )
+    else:
+        _LOGGER.warning(
+            "Unexpected exception during validation (%s)",
+            type(err).__name__,
+        )
     errors["base"] = validation_error_key(error_msg)
     if log_unknown_details and errors["base"] == ERROR_KEY_UNKNOWN:
         _LOGGER.error(
@@ -213,7 +219,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await session.async_get_session()
-        await session.async_close()
         return {"title": f"{INTEGRATION_TITLE} ({data[CONF_HOST]})"}
     except Exception as err:
         error_msg = str(err)
@@ -225,3 +230,5 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             raise InvalidAuth from err
         _LOGGER.exception("Error validating input")
         raise CannotConnect from err
+    finally:
+        await session.async_close()

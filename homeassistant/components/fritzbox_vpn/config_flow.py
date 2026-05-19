@@ -175,7 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         self._discovered_unique_id = unique_id
         self.context["title_placeholders"] = {"host": host}
-        self._existing_config = await get_existing_fritz_config(self.hass)
+        self._existing_config = existing_config
         return await self.async_step_confirm()
 
     async def async_step_confirm(
