@@ -65,7 +65,7 @@ async def test_device_name_from_location(
     await setup_integration(hass, mock_config_entry)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "ap-1")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "SYS1_ap-1")})
     assert device is not None
     assert device.name == "Main Door"
 
@@ -79,7 +79,7 @@ async def test_device_name_fallback_no_location(
     await setup_integration(hass, mock_config_entry)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "ap-2")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "SYS1_ap-2")})
     assert device is not None
     assert device.name == "Door ap-2"
 

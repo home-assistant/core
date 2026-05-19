@@ -59,11 +59,12 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         """Initialize the lock entity for a single access point."""
         super().__init__(coordinator)
         self._access_point_id: str = access_point["accessPointId"]
+        system_id = coordinator.config_entry.unique_id
         location: list[str] = access_point.get("location", [])
         device_name = location[-1] if location else f"Door {self._access_point_id}"
-        self._attr_unique_id = f"glutz_{self._access_point_id}"
+        self._attr_unique_id = f"glutz_{system_id}_{self._access_point_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._access_point_id)},
+            identifiers={(DOMAIN, f"{system_id}_{self._access_point_id}")},
             name=device_name,
             manufacturer="Glutz",
         )
