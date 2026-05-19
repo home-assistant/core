@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.fritzbox_vpn import binary_sensor, sensor, switch
-from custom_components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
-from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.components.fritzbox_vpn import binary_sensor, sensor, switch
+from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
+from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

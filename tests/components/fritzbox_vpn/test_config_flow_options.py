@@ -2,18 +2,18 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn.config_flow import OptionsFlowHandler
-from custom_components.fritzbox_vpn.const import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn.config_flow import OptionsFlowHandler
+from homeassistant.components.fritzbox_vpn.const import (
     CONF_UPDATE_INTERVAL,
     DOMAIN,
     OPTIONS_ACTION_CLEANUP,
     OPTIONS_ACTION_REPAIR_ENTITY_IDS,
     UNIQUE_ID_PREFIX,
 )
-from custom_components.fritzbox_vpn.flow_forms import CannotConnect
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
+from homeassistant.components.fritzbox_vpn.flow_forms import CannotConnect
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,7 @@ async def test_options_configure_updates_entry(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(return_value={"title": mock_config_entry.title}),
     ), patch.object(
         hass.config_entries, "async_reload", new=AsyncMock()
@@ -120,7 +120,7 @@ async def test_options_cleanup_confirm_removes_entities(
 async def test_user_autoconfig_from_fritz(hass: HomeAssistant) -> None:
     """User flow auto-creates entry when Fritz integration credentials work."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(
             return_value={
                 CONF_HOST: MOCK_HOST,
@@ -129,7 +129,7 @@ async def test_user_autoconfig_from_fritz(hass: HomeAssistant) -> None:
             }
         ),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(return_value={"title": "Fritz!Box VPN"}),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -200,7 +200,7 @@ async def test_options_cleanup_confirm_error_key(
     """Cleanup confirm shows base error when orphans cannot be resolved."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_orphaned_entity_entries",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_orphaned_entity_entries",
         return_value=(None, "integration_not_loaded"),
     ):
         handler = OptionsFlowHandler(mock_config_entry)
@@ -217,7 +217,7 @@ async def test_options_configure_validation_error(
     """Configure step shows base error when validation fails."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=CannotConnect),
     ):
         handler = OptionsFlowHandler(mock_config_entry)
@@ -259,7 +259,7 @@ async def test_options_get_available_actions_error(
     handler = OptionsFlowHandler(mock_config_entry)
     handler.hass = hass
     with patch(
-        "custom_components.fritzbox_vpn.entity_registry.get_orphaned_entity_entries",
+        "homeassistant.components.fritzbox_vpn.entity_registry.get_orphaned_entity_entries",
         side_effect=RuntimeError("boom"),
     ):
         has_cleanup, has_repair, count = handler._get_available_actions()

@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry (no credentials)."""
     host = host_from_config(entry.data)
-    options = entry.options or {}
+    options: dict[str, Any] = entry.options or {}
     update_interval = normalize_update_interval(
         options.get(CONF_UPDATE_INTERVAL) or entry.data.get(CONF_UPDATE_INTERVAL)
     )

@@ -1,14 +1,14 @@
 """Tests for Fritz config import from other integrations."""
 
 
-from custom_components.fritzbox_vpn.fritz_config_source import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn.fritz_config_source import (
     _entry_has_credentials,
     _host_username_password_from_entry,
     get_existing_fritz_config,
 )
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

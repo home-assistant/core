@@ -7,7 +7,7 @@ from typing import Any
 from fritzboxvpn import API_KEY_ACTIVE, API_KEY_CONNECTED, API_KEY_NAME, API_KEY_UID
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,6 +20,7 @@ from .const import (
     MANUFACTURER_AVM,
     MODEL_WIREGUARD_VPN,
     UNIQUE_ID_PREFIX,
+    vpn_connection_device_identifier,
 )
 from .coordinator import FritzBoxVPNCoordinator
 from .models import FritzboxVpnConfigEntry, RuntimePlatform, runtime_from_entry
@@ -39,7 +40,7 @@ def vpn_device_info(
 ) -> DeviceInfo:
     """Device registry entry for one WireGuard VPN connection."""
     return DeviceInfo(
-        identifiers={(DOMAIN, entry.entry_id, connection_uid)},
+        identifiers={vpn_connection_device_identifier(entry.entry_id, connection_uid)},
         name=connection_data.get(API_KEY_NAME, DEFAULT_NAME_UNKNOWN),
         manufacturer=MANUFACTURER_AVM,
         model=MODEL_WIREGUARD_VPN,
@@ -91,7 +92,7 @@ def raise_toggle_failed(vpn_name: str, error: str = "") -> None:
     )
 
 
-class FritzBoxVPNEntity(CoordinatorEntity):
+class FritzBoxVPNEntity(CoordinatorEntity[FritzBoxVPNCoordinator]):
     """Base entity bound to one VPN connection on the coordinator."""
 
     _attr_name = None

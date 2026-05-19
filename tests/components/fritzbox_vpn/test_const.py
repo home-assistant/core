@@ -1,6 +1,6 @@
 """Tests for const helpers."""
 
-from custom_components.fritzbox_vpn.const import (
+from homeassistant.components.fritzbox_vpn.const import (
     auth_error_notification_id,
     host_from_config,
     mask_config_for_log,

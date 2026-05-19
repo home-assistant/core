@@ -2,11 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn.config_flow import ConfigFlow
-from custom_components.fritzbox_vpn.const import DOMAIN
-from custom_components.fritzbox_vpn.flow_forms import InvalidAuth, confirm_schema
 import pytest
 
+from homeassistant.components.fritzbox_vpn.config_flow import ConfigFlow
+from homeassistant.components.fritzbox_vpn.const import DOMAIN
+from homeassistant.components.fritzbox_vpn.flow_forms import InvalidAuth, confirm_schema
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ async def test_confirm_step_success(hass: HomeAssistant) -> None:
     hass.config_entries.flow._progress[flow.flow_id] = flow
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(return_value={"title": "Fritz!Box VPN"}),
     ):
         result = await flow.async_step_confirm(
@@ -90,7 +90,7 @@ async def test_confirm_step_validation_error(hass: HomeAssistant) -> None:
     flow._discovered_unique_id = MOCK_HOST
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=InvalidAuth),
     ):
         result = await flow.async_step_confirm(

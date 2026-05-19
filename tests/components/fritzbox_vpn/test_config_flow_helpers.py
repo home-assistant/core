@@ -1,7 +1,14 @@
 """Unit tests for entity registry helpers (registry repair, orphans)."""
 
-from custom_components.fritzbox_vpn.const import DOMAIN, UNIQUE_ID_PREFIX
-from custom_components.fritzbox_vpn.entity_registry import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn.const import (
+    DOMAIN,
+    UNIQUE_ID_PREFIX,
+    vpn_connection_device_identifier,
+)
+from homeassistant.components.fritzbox_vpn.entity_registry import (
     connection_uid_from_entity_unique_id,
     entity_id_base,
     entity_id_suffix_number,
@@ -12,10 +19,7 @@ from custom_components.fritzbox_vpn.entity_registry import (
     resolve_current_uids,
     uids_from_entity_entries,
 )
-from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
+from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -125,7 +129,7 @@ async def test_remove_orphaned_entities_removes_device(hass: HomeAssistant) -> N
     )
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id, "gone")},
+        identifiers={vpn_connection_device_identifier(entry.entry_id, "gone")},
         name="Gone VPN",
     )
     remove_orphaned_entities(

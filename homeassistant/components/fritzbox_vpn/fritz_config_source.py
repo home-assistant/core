@@ -14,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def _entry_has_credentials(entry: config_entries.ConfigEntry) -> bool:
     """True if entry has username or password in data or options."""
-    data = entry.data or {}
-    options = entry.options or {}
+    data: dict[str, Any] = entry.data or {}
+    options: dict[str, Any] = entry.options or {}
     if data.get(CONF_USERNAME) or data.get("username") or data.get("user"):
         return True
     if options.get(CONF_USERNAME) or options.get("username") or options.get("user"):
@@ -25,8 +25,8 @@ def _entry_has_credentials(entry: config_entries.ConfigEntry) -> bool:
 
 def _host_username_password_from_entry(entry: config_entries.ConfigEntry) -> dict[str, Any] | None:
     """Host, username, password from entry; None if no host."""
-    config_data = entry.data or {}
-    options_data = entry.options or {}
+    config_data: dict[str, Any] = entry.data or {}
+    options_data: dict[str, Any] = entry.options or {}
     host = (
         config_data.get(CONF_HOST)
         or config_data.get("host")

@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from custom_components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from fritzboxvpn.parsing import (
     connection_active_from_api,
     extract_box_connections_from_data,
@@ -11,6 +10,7 @@ from fritzboxvpn.parsing import (
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from homeassistant.core import HomeAssistant
 
 from tests.fixtures import MOCK_HOST, MOCK_VPN_CONNECTIONS

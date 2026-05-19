@@ -135,7 +135,9 @@ def _cleanup_empty_connection_devices(hass: HomeAssistant, entry_id: str) -> int
 
     for device in dr.async_entries_for_config_entry(device_registry, entry_id):
         is_connection_device = any(
-            identifier[0] == DOMAIN and identifier[1] == entry_id and len(identifier) == 3
+            identifier[0] == DOMAIN
+            and len(identifier) == 2
+            and identifier != (DOMAIN, entry_id)
             for identifier in device.identifiers
         )
         if not is_connection_device:

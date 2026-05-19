@@ -6,7 +6,11 @@ import re
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, UNIQUE_ID_PREFIX, UNIQUE_ID_SUFFIXES
+from .const import (
+    UNIQUE_ID_PREFIX,
+    UNIQUE_ID_SUFFIXES,
+    vpn_connection_device_identifier,
+)
 from .models import runtime_from_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -185,7 +189,7 @@ def remove_orphaned_entities(
         device_registry = dr.async_get(hass)
         for uid in uids_removed:
             device = device_registry.async_get_device(
-                identifiers={(DOMAIN, entry_id, uid)}
+                identifiers={vpn_connection_device_identifier(entry_id, uid)}
             )
             if device:
                 device_registry.async_remove_device(device.id)

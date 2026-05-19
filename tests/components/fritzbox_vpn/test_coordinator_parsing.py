@@ -1,12 +1,15 @@
 """Tests for FritzBox VPN coordinator parsing and login helpers."""
 
-from custom_components.fritzbox_vpn.coordinator import _resolve_update_interval_seconds
 from fritzboxvpn import FritzBoxVPNSession
 from fritzboxvpn.parsing import (
     extract_box_connections_from_data,
     parse_blocktime_from_login_xml,
     parse_challenge_from_login_xml,
     parse_sid_from_login_response,
+)
+
+from homeassistant.components.fritzbox_vpn.coordinator import (
+    _resolve_update_interval_seconds,
 )
 
 from tests.fixtures import LOGIN_XML_CHALLENGE, LOGIN_XML_SID, MOCK_DATA_LUA_JSON

@@ -24,6 +24,13 @@ ATTR_UID = "uid"
 ATTR_VPN_UID = "vpn_uid"
 ATTR_STATUS = "status"
 UNIQUE_ID_PREFIX = f"{DOMAIN}_"
+
+
+def vpn_connection_device_identifier(
+    entry_id: str, connection_uid: str
+) -> tuple[str, str]:
+    """Device registry identifier for one VPN connection."""
+    return (DOMAIN, f"{entry_id}_{connection_uid}")
 UNIQUE_ID_SUFFIX_SWITCH = "switch"
 UNIQUE_ID_SUFFIX_STATUS = "status"
 UNIQUE_ID_SUFFIX_UID = "uid"

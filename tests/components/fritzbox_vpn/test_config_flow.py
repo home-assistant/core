@@ -2,17 +2,17 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn.const import DOMAIN
-from custom_components.fritzbox_vpn.flow_forms import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+import voluptuous as vol
+
+from homeassistant.components.fritzbox_vpn.const import DOMAIN
+from homeassistant.components.fritzbox_vpn.flow_forms import (
     CannotConnect,
     InvalidAuth,
     validate_host,
     validate_input,
 )
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-import voluptuous as vol
-
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -39,10 +39,10 @@ def test_validate_host_rejects_invalid() -> None:
 async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
     """User flow creates config entry after successful validation."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(return_value={"title": f"Fritz!Box VPN ({MOCK_HOST})"}),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -68,10 +68,10 @@ async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
 async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
     """User flow shows invalid_auth when validation fails."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=InvalidAuth),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -94,7 +94,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
 async def test_user_flow_invalid_host(hass: HomeAssistant) -> None:
     """User flow shows invalid_host for malformed host."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -119,7 +119,7 @@ async def test_reauth_updates_credentials(hass: HomeAssistant, mock_config_entry
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(return_value={"title": mock_config_entry.title}),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -156,7 +156,7 @@ async def test_validate_input_maps_auth_error(hass: HomeAssistant) -> None:
     session_mock.async_close = AsyncMock()
 
     with patch(
-        "custom_components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
+        "homeassistant.components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
         return_value=session_mock,
     ), pytest.raises(InvalidAuth):
         await validate_input(
@@ -173,7 +173,7 @@ async def test_validate_input_maps_auth_error(hass: HomeAssistant) -> None:
 async def test_user_autoconfig_invalid_auth(hass: HomeAssistant) -> None:
     """User flow shows form with invalid_auth when Fritz autoconfig fails."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(
             return_value={
                 CONF_HOST: MOCK_HOST,
@@ -182,7 +182,7 @@ async def test_user_autoconfig_invalid_auth(hass: HomeAssistant) -> None:
             }
         ),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=InvalidAuth),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -197,7 +197,7 @@ async def test_user_autoconfig_invalid_auth(hass: HomeAssistant) -> None:
 async def test_user_autoconfig_cannot_connect(hass: HomeAssistant) -> None:
     """User flow shows form with cannot_connect when Fritz autoconfig fails."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(
             return_value={
                 CONF_HOST: MOCK_HOST,
@@ -206,7 +206,7 @@ async def test_user_autoconfig_cannot_connect(hass: HomeAssistant) -> None:
             }
         ),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=CannotConnect),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -221,7 +221,7 @@ async def test_user_autoconfig_cannot_connect(hass: HomeAssistant) -> None:
 async def test_user_autoconfig_unknown_error(hass: HomeAssistant) -> None:
     """User flow shows unknown error when autoconfig raises unexpectedly."""
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(
             return_value={
                 CONF_HOST: MOCK_HOST,
@@ -230,7 +230,7 @@ async def test_user_autoconfig_unknown_error(hass: HomeAssistant) -> None:
             }
         ),
     ), patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=RuntimeError("unexpected")),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -249,7 +249,7 @@ async def test_reauth_shows_error_on_validation_failure(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.validate_input",
+        "homeassistant.components.fritzbox_vpn.config_flow.validate_input",
         new=AsyncMock(side_effect=CannotConnect),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -281,7 +281,7 @@ async def test_validate_input_maps_connect_error(hass: HomeAssistant) -> None:
     session_mock.async_close = AsyncMock()
 
     with patch(
-        "custom_components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
+        "homeassistant.components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
         return_value=session_mock,
     ), pytest.raises(CannotConnect):
         await validate_input(

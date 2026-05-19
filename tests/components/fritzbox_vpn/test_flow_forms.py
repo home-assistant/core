@@ -2,13 +2,16 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn.const import (
+import pytest
+import voluptuous as vol
+
+from homeassistant.components.fritzbox_vpn.const import (
     ERROR_KEY_CANNOT_CONNECT,
     ERROR_KEY_INVALID_AUTH,
     ERROR_KEY_INVALID_HOST,
     ERROR_KEY_UNKNOWN,
 )
-from custom_components.fritzbox_vpn.flow_forms import (
+from homeassistant.components.fritzbox_vpn.flow_forms import (
     CannotConnect,
     InvalidAuth,
     configure_schema,
@@ -23,9 +26,6 @@ from custom_components.fritzbox_vpn.flow_forms import (
     validate_input,
     validation_error_key,
 )
-import pytest
-import voluptuous as vol
-
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -117,7 +117,7 @@ async def test_validate_input_success(hass: HomeAssistant) -> None:
     session_mock.async_close = AsyncMock()
 
     with patch(
-        "custom_components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
+        "homeassistant.components.fritzbox_vpn.flow_forms.FritzBoxVPNSession",
         return_value=session_mock,
     ):
         info = await validate_input(

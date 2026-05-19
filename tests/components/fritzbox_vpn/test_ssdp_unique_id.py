@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from custom_components.fritzbox_vpn.ssdp_unique_id import (
+from homeassistant.components.fritzbox_vpn.ssdp_unique_id import (
     host_from_ssdp,
     is_fritzbox_router_discovery,
     parse_device_uuid,
@@ -11,7 +11,6 @@ from custom_components.fritzbox_vpn.ssdp_unique_id import (
     uuid_from_ssdp_usn,
     uuid_from_upnp_udn,
 )
-
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -161,7 +160,7 @@ def test_host_from_ssdp_header_value_error() -> None:
         upnp={ATTR_UPNP_FRIENDLY_NAME: "name"},
     )
     with patch(
-        "custom_components.fritzbox_vpn.ssdp_unique_id.urlparse",
+        "homeassistant.components.fritzbox_vpn.ssdp_unique_id.urlparse",
         side_effect=ValueError(),
     ):
         assert host_from_ssdp(discovery) is None

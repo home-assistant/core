@@ -2,21 +2,21 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn import (
     SERVICE_REGISTRATION_FLAG,
     _async_remove_unavailable_entities,
     _async_repair_entity_id_suffixes,
     async_setup,
     async_setup_entry,
 )
-from custom_components.fritzbox_vpn.const import (
+from homeassistant.components.fritzbox_vpn.const import (
     DOMAIN,
     SERVICE_REMOVE_UNAVAILABLE_ENTITIES,
     UNIQUE_ID_PREFIX,
 )
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,7 +54,7 @@ async def test_repair_entity_id_suffixes_service(
     """Service repairs suffixed entity IDs when configured."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.fritzbox_vpn.entity_registry.repair_entity_id_suffixes",
+        "homeassistant.components.fritzbox_vpn.entity_registry.repair_entity_id_suffixes",
         return_value=(0, []),
     ), patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
         await _async_repair_entity_id_suffixes(
@@ -78,7 +78,7 @@ async def test_services_registered_once(
 
     with (
         patch(
-            "custom_components.fritzbox_vpn.FritzBoxVPNCoordinator",
+            "homeassistant.components.fritzbox_vpn.FritzBoxVPNCoordinator",
             return_value=mock_coordinator,
         ),
         patch.object(

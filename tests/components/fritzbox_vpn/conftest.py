@@ -1,30 +1,15 @@
 """Pytest fixtures for FritzBox VPN tests."""
 
-from pathlib import Path
-
-from custom_components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
-from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
+from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 
 from tests.fixtures import MOCK_VPN_CONNECTIONS
 
 pytest_plugins = "pytest_homeassistant_custom_component"
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-
-
-@pytest.fixture
-def hass_config_dir() -> str:
-    """Use repository root so custom_components/ is discoverable."""
-    return str(REPO_ROOT)
-
-
-@pytest.fixture(autouse=True)
-def enable_custom_integrations_fixture(enable_custom_integrations) -> None:
-    """Rescan custom_components from hass_config_dir."""
 
 
 @pytest.fixture

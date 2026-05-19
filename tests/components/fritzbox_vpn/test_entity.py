@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.fritzbox_vpn.const import UNIQUE_ID_SUFFIX_SWITCH
-from custom_components.fritzbox_vpn.entity import (
+from homeassistant.components.fritzbox_vpn.const import UNIQUE_ID_SUFFIX_SWITCH
+from homeassistant.components.fritzbox_vpn.entity import (
     connection_available,
     connection_data,
     vpn_device_info,

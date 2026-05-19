@@ -1,9 +1,9 @@
 """Binary sensor platform dynamic entity tests."""
 
-from custom_components.fritzbox_vpn import binary_sensor
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.components.fritzbox_vpn import binary_sensor
 from homeassistant.core import HomeAssistant
 
 from tests.fixtures import MOCK_VPN_CONNECTIONS

@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn.config_flow import ConfigFlow
-from custom_components.fritzbox_vpn.const import DOMAIN
 import pytest
 
+from homeassistant.components.fritzbox_vpn.config_flow import ConfigFlow
+from homeassistant.components.fritzbox_vpn.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -52,7 +52,7 @@ async def test_ssdp_starts_confirm(hass: HomeAssistant) -> None:
     mock_confirm = AsyncMock(return_value={"type": "form"})
     with (
         patch(
-            "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+            "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
             new=AsyncMock(return_value=None),
         ),
         patch.object(flow, "async_step_confirm", mock_confirm),
@@ -76,7 +76,7 @@ async def test_ssdp_aborts_when_already_configured(hass: HomeAssistant) -> None:
     hass.config_entries.flow._progress[flow.flow_id] = flow
 
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(
             return_value={"host": MOCK_HOST, "username": "u", "password": "p"},
         ),
@@ -105,7 +105,7 @@ async def test_ssdp_aborts_not_fritzbox(hass: HomeAssistant) -> None:
         upnp={ATTR_UPNP_FRIENDLY_NAME: "Other"},
     )
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ):
         result = await flow.async_step_ssdp(discovery)
@@ -131,7 +131,7 @@ async def test_ssdp_aborts_no_host(hass: HomeAssistant) -> None:
         upnp={ATTR_UPNP_FRIENDLY_NAME: "FRITZ!Box"},
     )
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ):
         result = await flow.async_step_ssdp(discovery)
@@ -154,7 +154,7 @@ async def test_ssdp_aborts_link_local(hass: HomeAssistant) -> None:
         ssdp_location="https://[fe80::1ff:fe23:4567:890a]:49000/",
     )
     with patch(
-        "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+        "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
         new=AsyncMock(return_value=None),
     ):
         result = await flow.async_step_ssdp(discovery)
@@ -182,7 +182,7 @@ async def test_ssdp_accepts_fritz_box_hostname(hass: HomeAssistant) -> None:
     mock_confirm = AsyncMock(return_value={"type": "form"})
     with (
         patch(
-            "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+            "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
             new=AsyncMock(return_value=None),
         ),
         patch.object(flow, "async_step_confirm", mock_confirm),
@@ -210,7 +210,7 @@ async def test_ssdp_host_unique_id_when_uuid_missing(hass: HomeAssistant) -> Non
     )
     with (
         patch(
-            "custom_components.fritzbox_vpn.config_flow.get_existing_fritz_config",
+            "homeassistant.components.fritzbox_vpn.config_flow.get_existing_fritz_config",
             new=AsyncMock(return_value=None),
         ),
         patch.object(

@@ -2,15 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
-from custom_components.fritzbox_vpn import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn import (
     PLATFORMS,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.fritzbox_vpn.models import FritzboxVpnRuntimeData
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
+from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -33,7 +33,7 @@ async def test_setup_entry_success(
     forward_mock = AsyncMock(return_value=True)
     with (
         patch(
-            "custom_components.fritzbox_vpn.FritzBoxVPNCoordinator",
+            "homeassistant.components.fritzbox_vpn.FritzBoxVPNCoordinator",
             return_value=mock_coordinator,
         ),
         patch.object(
@@ -62,7 +62,7 @@ async def test_setup_entry_auth_failed(
     )
 
     with patch(
-        "custom_components.fritzbox_vpn.FritzBoxVPNCoordinator",
+        "homeassistant.components.fritzbox_vpn.FritzBoxVPNCoordinator",
         return_value=mock_coordinator,
     ), pytest.raises(ConfigEntryAuthFailed):
         await async_setup_entry(hass, mock_config_entry)

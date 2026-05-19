@@ -2,20 +2,20 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from custom_components.fritzbox_vpn.const import (
+from fritzboxvpn.parsing import normalize_box_connections
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.components.fritzbox_vpn.const import (
     CONF_UPDATE_INTERVAL,
     STATUS_CONNECTED,
     STATUS_DISABLED,
     STATUS_ENABLED,
 )
-from custom_components.fritzbox_vpn.coordinator import (
+from homeassistant.components.fritzbox_vpn.coordinator import (
     FritzBoxVPNCoordinator,
     normalize_update_interval,
 )
-from fritzboxvpn.parsing import normalize_box_connections
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
