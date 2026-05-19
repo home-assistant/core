@@ -160,6 +160,26 @@ async def test_url_rewrite(hass: HomeAssistant) -> None:
     assert result["data"][CONF_URL] == "https://192.168.1.100:443/test"
 
 
+
+async def test_url_rewrite_hyphenated_hostname(hass: HomeAssistant) -> None:
+    """Test auth flow url rewrite with hyphenated hostname."""
+    with (
+        patch(
+            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+            return_value=("v3", API_KEY, "/"),
+        ),
+        patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data={CONF_URL: "https://radarr-anime.example.com:443/", CONF_VERIFY_SSL: False},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_URL] == "https://radarr-anime.example.com:443/"
+
+
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_full_reauth_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

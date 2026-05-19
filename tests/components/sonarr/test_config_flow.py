@@ -79,6 +79,27 @@ async def test_url_rewrite(
     assert result["data"][CONF_URL] == "https://192.168.1.189:443/"
 
 
+
+async def test_url_rewrite_hyphenated_hostname(
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
+) -> None:
+    """Test url rewrite with hyphenated hostname."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    user_input = MOCK_USER_INPUT.copy()
+    user_input[CONF_URL] = "https://sonarr-anime.example.com:443/"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_URL] == "https://sonarr-anime.example.com:443/"
+
+
 async def test_invalid_auth(
     hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
