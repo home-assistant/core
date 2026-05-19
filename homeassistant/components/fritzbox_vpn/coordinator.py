@@ -140,7 +140,8 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
         _LOGGER.warning(
             "Authentication failed; starting reauth flow for entry %s", self.entry_id
         )
-        entry.async_start_reauth(self.hass)
+        # Schedule instead of awaiting, to avoid blocking the coordinator update cycle.
+        self.hass.async_create_task(entry.async_start_reauth(self.hass))
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest VPN data from Fritz!Box."""

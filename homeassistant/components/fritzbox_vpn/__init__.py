@@ -267,6 +267,7 @@ async def async_unload_entry(
         runtime = entry.runtime_data
         if runtime is not None:
             await runtime.coordinator.fritz_session.async_close()
+        entry.runtime_data = None
 
         other_loaded = [
             e
