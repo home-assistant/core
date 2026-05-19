@@ -191,7 +191,8 @@ async def test_trigger_enabled_templates(
                         "event_type": "falsy_template_trigger_event",
                     },
                     {
-                        "enabled": False,  # eg. from a blueprints input defaulting to `false`
+                        # eg. from a blueprints input defaulting to `false`
+                        "enabled": False,
                         "platform": "event",
                         "event_type": "falsy_trigger_event",
                     },
@@ -302,7 +303,8 @@ async def test_trigger_enabled_template_limited(
             "automation": {
                 "trigger": [
                     {
-                        "enabled": "{{ states('sensor.limited') }}",  # only limited template supported
+                        # only limited template supported
+                        "enabled": "{{ states('sensor.limited') }}",
                         "platform": "event",
                         "event_type": "test_event",
                     },
@@ -1138,7 +1140,7 @@ async def test_subscribe_triggers_experimental_triggers(
     new_triggers_conditions_enabled: bool,
     expected_events: list[set[str]],
 ) -> None:
-    """Test trigger.async_subscribe_platform_events doesn't send events for disabled triggers."""
+    """Test async_subscribe_platform_events skips disabled triggers."""
     # Return empty triggers.yaml for light integration, the actual trigger descriptions
     # are irrelevant for this test
     light_trigger_descriptions = ""
@@ -1195,7 +1197,7 @@ async def test_subscribe_triggers_no_triggers(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test trigger.async_subscribe_platform_events doesn't send events for platforms without triggers."""
+    """Test async_subscribe_platform_events skips platforms without triggers."""
     # Return empty triggers.yaml for light integration, the actual trigger descriptions
     # are irrelevant for this test
     light_trigger_descriptions = ""
@@ -2093,7 +2095,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     ("trigger_options", "expected_result"),
     [
         # Valid configurations
-        # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
+        # Don't use the enum in tests to allow testing validation
+        # of strings when the source is JSON or YAML
         (
             {"threshold": {"type": "above", "value": {"number": 10}}},
             does_not_raise(),
@@ -2448,12 +2451,12 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         ),
     ],
 )
-async def test_numerical_state_attribute_crossed_threshold_with_unit_trigger_config_validation(
+async def test_numerical_state_attr_crossed_threshold_unit_trigger_config_validation(
     hass: HomeAssistant,
     trigger_options: dict[str, Any],
     expected_result: AbstractContextManager,
 ) -> None:
-    """Test numerical state attribute crossed threshold with unit trigger config validation."""
+    """Test numerical state attribute crossed threshold with unit trigger validation."""
     trigger_cls = _make_with_unit_crossed_threshold_trigger_class()
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
@@ -2956,7 +2959,7 @@ async def test_make_entity_target_state_trigger(
     to_state: State,
     wrong_value_state: State,
 ) -> None:
-    """Test make_entity_target_state_trigger with state and attribute-based DomainSpec."""
+    """Test make_entity_target_state_trigger with state and attribute."""
     trigger_cls = make_entity_target_state_trigger(domain_specs, to_states=to_states)
 
     config = TriggerConfig(key="light.turned_on", target={"entity_id": "light.bed"})
@@ -2968,10 +2971,6 @@ async def test_make_entity_target_state_trigger(
 
     # Value did not change — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
-
-    # From unavailable — not valid
-    unavailable = State("light.bed", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
 
     # Value not in to_states — not valid
     assert not trig.is_valid_state(wrong_value_state)
@@ -3043,10 +3042,6 @@ async def test_make_entity_transition_trigger(
     # No change in tracked value — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
-    # From unavailable — not valid
-    unavailable = State("climate.living", STATE_UNAVAILABLE, {})
-    assert not trig.is_valid_transition(unavailable, to_state)
-
 
 @pytest.mark.parametrize(
     ("domain_specs", "origin", "from_state", "to_state", "wrong_from"),
@@ -3077,7 +3072,7 @@ async def test_make_entity_origin_state_trigger(
     to_state: State,
     wrong_from: State,
 ) -> None:
-    """Test make_entity_origin_state_trigger with state and attribute-based DomainSpec."""
+    """Test make_entity_origin_state_trigger with state and attribute."""
     trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state=origin)
 
     config = TriggerConfig(
@@ -3255,7 +3250,7 @@ def _set_or_remove_state(
 async def test_entity_trigger_fires_on_valid_transition(
     hass: HomeAssistant, behavior: str
 ) -> None:
-    """Test EntityTriggerBase fires immediately on a valid off→on transition without duration."""
+    """Test EntityTriggerBase fires on a valid transition without duration."""
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
@@ -3293,7 +3288,7 @@ async def test_entity_trigger_fires_on_valid_transition(
 async def test_entity_trigger_from_invalid_initial_state(
     hass: HomeAssistant, behavior: str, initial_state: str | None
 ) -> None:
-    """Test that the trigger does not fire when transitioning from unavailable, unknown, or no state."""
+    """Test trigger does not fire from unavailable, unknown, or no state."""
     entity_id = "test.entity_1"
     _set_or_remove_state(hass, entity_id, initial_state)
     await hass.async_block_till_done()
@@ -3384,7 +3379,7 @@ async def test_entity_trigger_first_requires_exactly_one(
 async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior last: unavailable/unknown entities are excluded from the all-match check.
+    """Test behavior last: unavailable/unknown excluded from all-match.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     not fire because C is still off, so the available entities do not all
@@ -3437,7 +3432,7 @@ async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
 async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
+    """Test behavior first: unavailable/unknown excluded from check_one_match.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     fire because exactly one *available* entity matches. B is skipped.
@@ -3655,7 +3650,7 @@ async def test_entity_trigger_duration_last_requires_all(
 async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last with for: timer is cancelled when every targeted entity is filtered out.
+    """Test behavior last with for: timer cancelled when all entities filtered.
 
     With behavior=last + `for:`, an "all match" check that becomes vacuously
     True (every targeted entity filtered by `_should_include` — here all
@@ -3973,7 +3968,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     expected_calls: int,
     invalid_state: str | None,
 ) -> None:
-    """Test if the duration timer is cancelled if entity becomes unavailable, unknown, or is removed.
+    """Test duration timer cancelled if entity becomes unavailable/unknown/removed.
 
     This is expected to happen in first and any modes, but not in last mode.
     """

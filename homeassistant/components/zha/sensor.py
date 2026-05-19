@@ -94,7 +94,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Sensor(ZHAEntity, SensorEntity):
     """ZHA sensor."""
 
