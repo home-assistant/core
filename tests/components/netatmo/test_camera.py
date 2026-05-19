@@ -905,8 +905,8 @@ async def test_camera_image_with_attribute_change(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Check that the camera become idle with monitoring on
-    # (as alim_status 1 means that the camera is on but with low power, so it can't stream)
+    # Check that the camera become idle with monitoring off
+    # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
