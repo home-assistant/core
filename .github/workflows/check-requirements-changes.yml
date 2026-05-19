@@ -1,8 +1,7 @@
 name: Check requirements (changes detection)
 
-# Stage 1 of the agentic Check requirements workflow. The `changes` job is
-# skipped when the latest push delta does not touch a tracked requirements
-# file; stage 2 (`check-requirements-dispatcher.yml`) keys off that.
+# Stage 1 of the agentic Check requirements workflow.
+# Just kicks off Stage 2 (`check-requirements-dispatcher.yml`) which starts the agentic workflow
 
 # yamllint disable-line rule:truthy
 on:
@@ -20,95 +19,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  detect-delta:
-    name: Determine if latest push delta touched requirements files
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      actions: read # For listing prior workflow runs on the same branch
-      contents: read # For comparing commits to detect touched files
-    outputs:
-      dispatch: ${{ steps.delta.outputs.dispatch }}
-    steps:
-      - name: Determine delta
-        id: delta
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const headSha = context.payload.pull_request.head.sha;
-            const headBranch = context.payload.pull_request.head.ref;
-            const headRepoId = context.payload.pull_request.head.repo.id;
-            const thisRunId = context.runId;
-
-            // Most recent prior stage-1 run on the same branch+head-repo whose
-            // head_sha differs from this run's (the latter excludes re-runs of
-            // the same push, which we always want to dispatch). Runs are
-            // returned newest-first, so we paginate lazily and break as soon
-            // as we find a match.
-            const runsIterator = github.paginate.iterator(
-              github.rest.actions.listWorkflowRuns,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'check-requirements-changes.yml',
-                branch: headBranch,
-                event: 'pull_request',
-                per_page: 100,
-              },
-            );
-            let priorRun;
-            for await (const { data: runs } of runsIterator) {
-              priorRun = runs.find(r =>
-                r.id < thisRunId
-                && r.head_repository?.id === headRepoId
-                && r.head_sha !== headSha
-              );
-              if (priorRun) break;
-            }
-
-            if (!priorRun) {
-              core.info(`No prior stage-1 run for branch ${headBranch}; dispatching unconditionally.`);
-              core.setOutput('dispatch', 'true');
-              return;
-            }
-
-            const prevSha = priorRun.head_sha;
-            core.info(`Comparing ${prevSha}...${headSha} for requirements file changes.`);
-
-            // Mirror the workflow's `paths:` filter.
-            const pattern = /^(requirements[^/]*\.txt|homeassistant\/package_constraints\.txt|pyproject\.toml)$/;
-            // Paginate lazily through all changed files and break as soon as
-            // one matches — the compare endpoint can span many pages for
-            // large deltas.
-            const filesIterator = github.paginate.iterator(
-              github.rest.repos.compareCommitsWithBasehead,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                basehead: `${prevSha}...${headSha}`,
-                per_page: 100,
-              },
-            );
-            let touched = false;
-            for await (const { data } of filesIterator) {
-              if ((data.files ?? []).some(f => pattern.test(f.filename))) {
-                touched = true;
-                break;
-              }
-            }
-
-            if (touched) {
-              core.info('Latest push delta touches requirements files; dispatching.');
-              core.setOutput('dispatch', 'true');
-            } else {
-              core.info('Latest push delta does not touch any requirements file; skipping dispatch.');
-              core.setOutput('dispatch', 'false');
-            }
-
   changes:
     name: Requirements files changed
-    needs: detect-delta
-    if: needs.detect-delta.outputs.dispatch == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
