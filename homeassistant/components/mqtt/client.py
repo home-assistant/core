@@ -855,10 +855,24 @@ class MQTT:
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
-            self._mqtt_data.subscription_id_generator.restore(
-                subscription.subscription_id, subscription.topic
+            subscription_id = (
+                1
+                if subscription.is_simple_match
+                else self._mqtt_data.subscription_id_generator.get_subscription_id(
+                    subscription.topic
+                )
             )
-            self._async_track_subscription(subscription)
+            self._async_track_subscription(
+                Subscription(
+                    subscription.topic,
+                    subscription.is_simple_match,
+                    subscription.complex_matcher,
+                    subscription.job,
+                    subscription.qos,
+                    subscription.encoding,
+                    subscription_id,
+                )
+            )
         self._matching_subscriptions.cache_clear()
 
     @callback

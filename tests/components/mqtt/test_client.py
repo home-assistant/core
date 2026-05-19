@@ -2602,6 +2602,8 @@ async def test_subscriptions_id_generation(hass: HomeAssistant) -> None:
     # Mock we are past the last subscriptions
     generator._next_id = mqtt.models.MAX_28BIT - 2
     new_id_1 = generator.get_or_generate("test1/#")
+    assert generator.get_or_generate("test1/#") == new_id_1
+    assert generator.get_subscription_id("test1/#") == new_id_1
     assert new_id_1 == mqtt.models.MAX_28BIT - 2
     new_id_2 = generator.get_or_generate("test2/#")
     assert new_id_2 == mqtt.models.MAX_28BIT - 1
