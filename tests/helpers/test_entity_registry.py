@@ -2617,7 +2617,7 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that we don't remove entities with no config entry when device is modified."""
+    """Test we don't remove entities w/o config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
@@ -2821,7 +2821,7 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     subentries_in_device: list[str | None],
     subentry_in_entity: str | None,
 ) -> None:
-    """Test that we don't remove entities with no config entry when device is modified."""
+    """Test we don't remove entities w/o config entry when device is modified."""
     config_entry_1 = MockConfigEntry(
         domain="hue",
         subentries_data=[
@@ -3732,7 +3732,11 @@ def test_migrate_entity_to_new_platform_error_handling(
     # Test migrate entity without new config entry ID
     with pytest.raises(
         ValueError,
-        match="new_config_entry_id required because light.light is already linked to a config entry",
+        match=(
+            "new_config_entry_id required because"
+            " light.light is already linked"
+            " to a config entry"
+        ),
     ):
         entity_registry.async_update_entity_platform(
             "light.light",
@@ -3955,7 +3959,8 @@ async def test_restore_entity(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Re-add two entities, expect to get a new id after the purge for entity w/o config entry
+    # Re-add two entities, expect to get a new id after the purge
+    # for entity w/o config entry
     entry1_restored = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
@@ -4987,7 +4992,11 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
+        match=(
+            "Detected code that calls"
+            " entity_registry.async_get_or_create"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             entity_registry.async_get_or_create, "light", "hue", "1234"
@@ -5001,7 +5010,11 @@ async def test_async_update_entity_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls entity_registry.async_update_entity from a thread.",
+        match=(
+            "Detected code that calls"
+            " entity_registry.async_update_entity"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             partial(

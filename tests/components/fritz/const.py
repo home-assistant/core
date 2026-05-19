@@ -78,7 +78,16 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     "LANConfigSecurity1": {
         "X_AVM-DE_GetCurrentUser": {
             "NewX_AVM-DE_CurrentUsername": "fake_user",
-            "NewX_AVM-DE_CurrentUserRights": "<rights><path>BoxAdmin</path><access>readwrite</access><path>Phone</path><access>readwrite</access><path>Dial</path><access>readwrite</access><path>NAS</path><access>none</access><path>HomeAuto</path><access>readwrite</access><path>App</path><access>readwrite</access></rights>",
+            "NewX_AVM-DE_CurrentUserRights": (
+                "<rights>"
+                "<path>BoxAdmin</path><access>readwrite</access>"
+                "<path>Phone</path><access>readwrite</access>"
+                "<path>Dial</path><access>readwrite</access>"
+                "<path>NAS</path><access>none</access>"
+                "<path>HomeAuto</path><access>readwrite</access>"
+                "<path>App</path><access>readwrite</access>"
+                "</rights>"
+            ),
         }
     },
     "Layer3Forwarding1": {
@@ -898,88 +907,106 @@ MOCK_NEW_DEVICE_NODE = {
     ],
 }
 
+MOCK_HOST_PRINTER = {
+    "Index": 1,
+    "IPAddress": MOCK_IPS["printer"],
+    "MACAddress": "AA:BB:CC:00:11:22",
+    "Active": True,
+    "HostName": "printer",
+    "InterfaceType": "Ethernet",
+    "X_AVM-DE_Port": 1,
+    "X_AVM-DE_Speed": 1000,
+    "X_AVM-DE_UpdateAvailable": False,
+    "X_AVM-DE_UpdateSuccessful": "unknown",
+    "X_AVM-DE_InfoURL": None,
+    "X_AVM-DE_MACAddressList": None,
+    "X_AVM-DE_Model": None,
+    "X_AVM-DE_URL": f"http://{MOCK_IPS['printer']}",
+    "X_AVM-DE_Guest": False,
+    "X_AVM-DE_RequestClient": "0",
+    "X_AVM-DE_VPN": False,
+    "X_AVM-DE_WANAccess": "granted",
+    "X_AVM-DE_Disallow": False,
+    "X_AVM-DE_IsMeshable": "0",
+    "X_AVM-DE_Priority": "0",
+    "X_AVM-DE_FriendlyName": "printer",
+    "X_AVM-DE_FriendlyNameIsWriteable": "1",
+}
+
+MOCK_HOST_FRITZBOX = {
+    "Index": 2,
+    "IPAddress": MOCK_IPS["fritz.box"],
+    "MACAddress": MOCK_MESH_MASTER_MAC,
+    "Active": True,
+    "HostName": "fritz.box",
+    "InterfaceType": None,
+    "X_AVM-DE_Port": 0,
+    "X_AVM-DE_Speed": 0,
+    "X_AVM-DE_UpdateAvailable": False,
+    "X_AVM-DE_UpdateSuccessful": "unknown",
+    "X_AVM-DE_InfoURL": None,
+    "X_AVM-DE_MACAddressList": f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}",
+    "X_AVM-DE_Model": None,
+    "X_AVM-DE_URL": f"http://{MOCK_IPS['fritz.box']}",
+    "X_AVM-DE_Guest": False,
+    "X_AVM-DE_RequestClient": "0",
+    "X_AVM-DE_VPN": False,
+    "X_AVM-DE_WANAccess": "granted",
+    "X_AVM-DE_Disallow": False,
+    "X_AVM-DE_IsMeshable": "1",
+    "X_AVM-DE_Priority": "0",
+    "X_AVM-DE_FriendlyName": "fritz.box",
+    "X_AVM-DE_FriendlyNameIsWriteable": "0",
+}
+
+MOCK_HOST_SERVER = {
+    "Index": 3,
+    "IPAddress": MOCK_IPS["server"],
+    "MACAddress": "AA:BB:CC:33:44:55",
+    "Active": True,
+    "HostName": "server",
+    "InterfaceType": "Ethernet",
+    "X_AVM-DE_Port": 1,
+    "X_AVM-DE_Speed": 1000,
+    "X_AVM-DE_UpdateAvailable": False,
+    "X_AVM-DE_UpdateSuccessful": "unknown",
+    "X_AVM-DE_InfoURL": None,
+    "X_AVM-DE_MACAddressList": None,
+    "X_AVM-DE_Model": None,
+    "X_AVM-DE_URL": f"http://{MOCK_IPS['server']}",
+    "X_AVM-DE_Guest": False,
+    "X_AVM-DE_RequestClient": "0",
+    "X_AVM-DE_VPN": False,
+    "X_AVM-DE_WANAccess": "granted",
+    "X_AVM-DE_Disallow": False,
+    "X_AVM-DE_IsMeshable": "0",
+    "X_AVM-DE_Priority": "0",
+    "X_AVM-DE_FriendlyName": "server",
+    "X_AVM-DE_FriendlyNameIsWriteable": "1",
+}
+
 MOCK_HOST_ATTRIBUTES_DATA = [
-    {
-        "Index": 1,
-        "IPAddress": MOCK_IPS["printer"],
-        "MACAddress": "AA:BB:CC:00:11:22",
-        "Active": True,
-        "HostName": "printer",
-        "InterfaceType": "Ethernet",
-        "X_AVM-DE_Port": 1,
-        "X_AVM-DE_Speed": 1000,
-        "X_AVM-DE_UpdateAvailable": False,
-        "X_AVM-DE_UpdateSuccessful": "unknown",
-        "X_AVM-DE_InfoURL": None,
-        "X_AVM-DE_MACAddressList": None,
-        "X_AVM-DE_Model": None,
-        "X_AVM-DE_URL": f"http://{MOCK_IPS['printer']}",
-        "X_AVM-DE_Guest": False,
-        "X_AVM-DE_RequestClient": "0",
-        "X_AVM-DE_VPN": False,
-        "X_AVM-DE_WANAccess": "granted",
-        "X_AVM-DE_Disallow": False,
-        "X_AVM-DE_IsMeshable": "0",
-        "X_AVM-DE_Priority": "0",
-        "X_AVM-DE_FriendlyName": "printer",
-        "X_AVM-DE_FriendlyNameIsWriteable": "1",
-    },
-    {
-        "Index": 2,
-        "IPAddress": MOCK_IPS["fritz.box"],
-        "MACAddress": MOCK_MESH_MASTER_MAC,
-        "Active": True,
-        "HostName": "fritz.box",
-        "InterfaceType": None,
-        "X_AVM-DE_Port": 0,
-        "X_AVM-DE_Speed": 0,
-        "X_AVM-DE_UpdateAvailable": False,
-        "X_AVM-DE_UpdateSuccessful": "unknown",
-        "X_AVM-DE_InfoURL": None,
-        "X_AVM-DE_MACAddressList": f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}",
-        "X_AVM-DE_Model": None,
-        "X_AVM-DE_URL": f"http://{MOCK_IPS['fritz.box']}",
-        "X_AVM-DE_Guest": False,
-        "X_AVM-DE_RequestClient": "0",
-        "X_AVM-DE_VPN": False,
-        "X_AVM-DE_WANAccess": "granted",
-        "X_AVM-DE_Disallow": False,
-        "X_AVM-DE_IsMeshable": "1",
-        "X_AVM-DE_Priority": "0",
-        "X_AVM-DE_FriendlyName": "fritz.box",
-        "X_AVM-DE_FriendlyNameIsWriteable": "0",
-    },
-    {
-        "Index": 3,
-        "IPAddress": MOCK_IPS["server"],
-        "MACAddress": "AA:BB:CC:33:44:55",
-        "Active": True,
-        "HostName": "server",
-        "InterfaceType": "Ethernet",
-        "X_AVM-DE_Port": 1,
-        "X_AVM-DE_Speed": 1000,
-        "X_AVM-DE_UpdateAvailable": False,
-        "X_AVM-DE_UpdateSuccessful": "unknown",
-        "X_AVM-DE_InfoURL": None,
-        "X_AVM-DE_MACAddressList": None,
-        "X_AVM-DE_Model": None,
-        "X_AVM-DE_URL": f"http://{MOCK_IPS['server']}",
-        "X_AVM-DE_Guest": False,
-        "X_AVM-DE_RequestClient": "0",
-        "X_AVM-DE_VPN": False,
-        "X_AVM-DE_WANAccess": "granted",
-        "X_AVM-DE_Disallow": False,
-        "X_AVM-DE_IsMeshable": "0",
-        "X_AVM-DE_Priority": "0",
-        "X_AVM-DE_FriendlyName": "server",
-        "X_AVM-DE_FriendlyNameIsWriteable": "1",
-    },
+    MOCK_HOST_PRINTER,
+    MOCK_HOST_FRITZBOX,
+    MOCK_HOST_SERVER,
 ]
 
 MOCK_CALL_DEFLECTION_DATA = {
     "X_AVM-DE_OnTel1": {
         "GetDeflections": {
-            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>1</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+            "NewDeflectionList": (
+                "<List><Item>"
+                "<DeflectionId>0</DeflectionId>"
+                "<Enable>1</Enable>"
+                "<Type>fromAll</Type>"
+                "<Number></Number>"
+                "<DeflectionToNumber>+1234657890"
+                "</DeflectionToNumber>"
+                "<Mode>eImmediately</Mode>"
+                "<Outgoing></Outgoing>"
+                "<PhonebookID></PhonebookID>"
+                "</Item></List>"
+            )
         }
     }
 }
@@ -1022,4 +1049,22 @@ MOCK_SSDP_DATA = SsdpServiceInfo(
     },
 )
 
-MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>HomeAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'
+MOCK_REQUEST = (
+    b'<?xml version="1.0" encoding="utf-8"?>'
+    b"<SessionInfo>"
+    b"<SID>xxxxxxxxxxxxxxxx</SID>"
+    b"<Challenge>xxxxxxxx</Challenge>"
+    b"<BlockTime>0</BlockTime>"
+    b"<Rights>"
+    b"<Name>Dial</Name><Access>2</Access>"
+    b"<Name>App</Name><Access>2</Access>"
+    b"<Name>HomeAuto</Name><Access>2</Access>"
+    b"<Name>BoxAdmin</Name><Access>2</Access>"
+    b"<Name>Phone</Name><Access>2</Access>"
+    b"<Name>NAS</Name><Access>2</Access>"
+    b"</Rights>"
+    b"<Users>"
+    b'<User last="1">FakeFritzUser</User>'
+    b"</Users>"
+    b"</SessionInfo>\n"
+)

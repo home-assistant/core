@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
     compile_statistics,
 )
 from homeassistant.const import (
@@ -1615,6 +1615,7 @@ async def test_power_sensor_grid_combined(
     assert state is not None
     # 500 - 200 = 300 (net import)
     assert float(state.state) == 300.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
 
 
 async def test_power_sensor_device_assignment(
@@ -1988,6 +1989,7 @@ async def test_power_sensor_combined_unit_conversion(
     assert state is not None
     # 1500 W - 500 W = 1000 W (units are converted to W internally)
     assert float(state.state) == 1000.0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
 
 
 async def test_power_sensor_inverted_negative_values(
@@ -2735,7 +2737,8 @@ async def test_missing_price_entity(
     )
     await hass.async_block_till_done()
 
-    # Cost should be initialized (0.0 because it's the first update after price became available)
+    # Cost should be initialized (0.0 because it's the first
+    # update after price became available)
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "0.0"
 

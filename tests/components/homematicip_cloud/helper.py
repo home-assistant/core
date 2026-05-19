@@ -77,7 +77,9 @@ async def async_manipulate_test_data(
                 None,
             )
             assert functional_channel is not None, (
-                f"No functional channel with index {channel_real_index} found in hmip_device.functionalChannels"
+                f"No functional channel with index"
+                f" {channel_real_index} found in"
+                " hmip_device.functionalChannels"
             )
         else:
             functional_channel = channels[channel]

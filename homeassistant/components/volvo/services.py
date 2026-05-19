@@ -88,7 +88,8 @@ async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
 
         candidates.append((image_type, url))
 
-    # Interior images exist if their URL is populated; exterior images require an HTTP check
+    # Interior images exist if their URL is populated;
+    # exterior images require an HTTP check
     async def _check_exists(image_type: str, url: str) -> bool:
         if image_type == "interior":
             return bool(url)

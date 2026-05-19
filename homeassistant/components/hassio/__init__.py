@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import replace
+from functools import partial
 import logging
 import os
 import struct
@@ -19,7 +20,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
-from homeassistant.components.homeassistant.const import DATA_STOP_HANDLER
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
@@ -348,17 +348,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await supervisor_client.homeassistant.stop()
 
     # Install a custom handler for the homeassistant.restart / stop services,
-    # and restore the previous one when this entry unloads.
-    prev_stop_handler = hass.data.get(DATA_STOP_HANDLER)
+    # and restore the default one when this entry unloads.
     async_set_stop_handler(hass, _async_stop)
+    entry.async_on_unload(partial(async_set_stop_handler, hass))
 
-    def _restore_stop_handler() -> None:
-        if prev_stop_handler is not None:
-            async_set_stop_handler(hass, prev_stop_handler)
-        else:
-            hass.data.pop(DATA_STOP_HANDLER, None)
-
-    entry.async_on_unload(_restore_stop_handler)
     last_timezone = None
     last_country = None
 
@@ -413,7 +406,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Setup hardware integration for the detected board type
-    # This is done after the initial data refresh to ensure that the board info is available.
+    # This is done after the initial data refresh to ensure that
+    # the board info is available.
     os_info = get_os_info(hass)
     if (board := os_info.get("board")) is not None and (
         hw_integration := HARDWARE_INTEGRATIONS.get(board)
@@ -423,7 +417,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Check for deprecated setup and create issues if needed.
-    # This is done after the initial data refresh to ensure that the info needed is available.
+    # This is done after the initial data refresh to ensure that
+    # the info needed is available.
     _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

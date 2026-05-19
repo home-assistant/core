@@ -77,7 +77,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
                     # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=hass-config-flow-name-field
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
@@ -166,13 +166,16 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {"base": "cannot_connect"}
             else:
                 _LOGGER.debug(
-                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    "Success connecting to, but necessarily"
+                    " authenticating with, pihole,"
+                    " API version is: %s",
                     5,
                 )
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(
-                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    "API version %s returned %s, '[]' is expected"
+                    " for unauthenticated requests",
                     5,
                     pi_hole.data,
                 )
