@@ -17,6 +17,7 @@ tools:
   web-fetch: {}
   github:
     toolsets: [default]
+    min-integrity: unapproved
 safe-outputs:
   add-comment:
     max: 1
