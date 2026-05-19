@@ -88,7 +88,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_supported_features = CameraEntityFeature.ON_OFF
     _attr_configuration_url = CONF_URL_SECURITY
     device: NaModules.Camera
     _quality = DEFAULT_QUALITY
