@@ -112,11 +112,10 @@ async def test_repair_entity_id_suffixes(hass: HomeAssistant) -> None:
     assert repairs
 
     count, messages = repair_entity_id_suffixes(hass, entry.entry_id)
-    assert count >= 0
-    if count:
-        assert messages
-        updated = registry.async_get(suffixed.entity_id)
-        assert updated is None or "_2" not in (updated.entity_id or "")
+    assert count > 0
+    assert messages
+    updated = registry.async_get(suffixed.entity_id)
+    assert updated is None or "_2" not in (updated.entity_id or "")
 
 
 @pytest.mark.asyncio
