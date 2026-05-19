@@ -1,7 +1,5 @@
 """Config flow for BTHome Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import dataclasses
 from typing import Any

@@ -1,7 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 
-from __future__ import annotations
-
 import logging
 import threading
 from uuid import UUID
@@ -32,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODEL = "model"
 
 BLE_TEMP_HANDLE = 0x24

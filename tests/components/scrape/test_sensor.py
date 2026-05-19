@@ -1,7 +1,5 @@
 """The tests for the Scrape sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -18,7 +16,6 @@ from homeassistant.components.scrape.const import (
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -419,7 +416,9 @@ async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
                         "select": ".release-date",
                         "name": "HA Date",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                     }
                 ],
             ),
@@ -604,7 +603,7 @@ async def test_setup_config_entry(
 
     entity = entity_registry.async_get("sensor.current_version")
 
-    assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
+    assert entity.unique_id == "01JZN07D8D23994A49YKS649S7"
 
 
 async def test_templates_with_yaml(hass: HomeAssistant) -> None:
@@ -623,8 +622,16 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                         CONF_SELECT: ".current-version h1",
                         CONF_INDEX: 0,
                         CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                        CONF_ICON: '{% if states("sensor.input1")=="on" %} mdi:on {% else %} mdi:off {% endif %}',
-                        CONF_PICTURE: '{% if states("sensor.input1")=="on" %} /local/picture1.jpg {% else %} /local/picture2.jpg {% endif %}',
+                        CONF_ICON: (
+                            '{% if states("sensor.input1")=="on" %}'
+                            " mdi:on {% else %} mdi:off {% endif %}"
+                        ),
+                        CONF_PICTURE: (
+                            '{% if states("sensor.input1")=="on" %}'
+                            " /local/picture1.jpg"
+                            " {% else %} /local/picture2.jpg"
+                            " {% endif %}"
+                        ),
                         CONF_AVAILABILITY: '{{ states("sensor.input2")=="on" }}',
                     }
                 ]
@@ -688,27 +695,46 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "get_config",
+    ("get_resource_config", "get_sensor_config"),
     [
-        {
-            CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: "GET",
-            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_TIMEOUT: 10,
-            CONF_ENCODING: DEFAULT_ENCODING,
-            SENSOR_DOMAIN: [
+        (
+            {
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                "auth": {},
+                "advanced": {
+                    CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+                    CONF_TIMEOUT: 10,
+                    CONF_ENCODING: DEFAULT_ENCODING,
+                },
+            },
+            (
                 {
-                    CONF_SELECT: ".current-version h1",
-                    CONF_NAME: "Current version",
-                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
-                    CONF_INDEX: 0,
-                    CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
-                    CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
-                    CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
-                    CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
-                }
-            ],
-        }
+                    "data": {
+                        CONF_SELECT: ".current-version h1",
+                        CONF_INDEX: 0,
+                        "advanced": {
+                            CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                            CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                            CONF_ICON: (
+                                'mdi:o{{ "n" if'
+                                ' states("sensor.input1")=="on"'
+                                ' else "ff" }}'
+                            ),
+                            CONF_PICTURE: (
+                                'o{{ "n" if'
+                                ' states("sensor.input1")=="on"'
+                                ' else "ff" }}.jpg'
+                            ),
+                        },
+                    },
+                    # "subentry_id": "01JZN07D8D23994A49YKS649S7",
+                    "subentry_type": "entity",
+                    "title": "Current version",
+                    "unique_id": None,
+                },
+            ),
+        )
     ],
 )
 async def test_availability(
@@ -773,8 +799,9 @@ async def test_template_render_with_availability_syntax_error(
     assert state.state == "2021.12.10"
 
     assert (
-        "Error rendering availability template for sensor.current_version: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for"
+        " sensor.current_version: UndefinedError:"
+        " 'what_the_heck' is undefined" in caplog.text
     )
 
 

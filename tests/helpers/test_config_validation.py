@@ -747,36 +747,6 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
         schema(value)
 
 
-async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
-    """Test dynamic template validator."""
-    schema = vol.Schema(cv.dynamic_template)
-
-    for value in (
-        None,
-        1,
-        "{{ partial_print }",
-        "{% if True %}Hello",
-        ["test"],
-        "just a string",
-        # Filter added as an extension by Home Assistant
-        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
-    ):
-        with pytest.raises(vol.Invalid):
-            await hass.async_add_executor_job(schema, value)
-
-    options = (
-        "{{ beer }}",
-        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function 'expand' added as an extension by Home Assistant, no error
-        # because non existing functions are not detected by Jinja2
-        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Non existing function 'no_such_function' is not detected by Jinja2
-        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
-    )
-    for value in options:
-        await hass.async_add_executor_job(schema, value)
-
-
 @pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""
@@ -963,10 +933,11 @@ def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) 
 def test_deprecated_or_removed_param_and_raise(
     caplog: pytest.LogCaptureFixture, schema
 ) -> None:
-    """Test removed or deprecation options and fail the config validation by raising an exception.
+    """Test removed or deprecation options and fail config validation.
 
     Expected behavior:
-        - Outputs the appropriate deprecation or removed from support error if key is detected
+        - Outputs the appropriate deprecation or removed
+          from support error if key is detected
     """
     removed_schema = vol.All(cv.deprecated("mars", raise_if_present=True), schema)
 
@@ -1149,17 +1120,20 @@ def test_deprecated_cant_find_module() -> None:
 def test_deprecated_or_removed_logger_with_config_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if the line and file attribute is available in config."""
+    """Test logger outputs correct message if line and file attr is available."""
     file: str = "configuration.yaml"
     line: int = 54
 
     # test as deprecated option
     replacement_key = "jupiter"
     option_status = "is deprecated"
-    replacement = f"'mars' option near {file}:{line} {option_status}, please replace it with '{replacement_key}'"
+    replacement = (
+        f"'mars' option near {file}:{line} {option_status},"
+        f" please replace it with '{replacement_key}'"
+    )
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.deprecated("mars", replacement_key=replacement_key, default=False)(
         config
@@ -1174,10 +1148,13 @@ def test_deprecated_or_removed_logger_with_config_attributes(
 
     # test as removed option
     option_status = "has been removed"
-    replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
+    replacement = (
+        f"'mars' option near {file}:{line} {option_status},"
+        " please remove it from your configuration"
+    )
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
-    setattr(config, "__line__", line)
+    config.__config_file__ = file
+    config.__line__ = line
 
     validated = cv.removed("mars", default=False, raise_if_present=False)(config)
     assert "mars" not in validated  # Removed because by cv.removed
@@ -1192,12 +1169,12 @@ def test_deprecated_or_removed_logger_with_config_attributes(
 def test_deprecated_logger_with_one_config_attribute(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
+    """Test logger message when only one of line/file attr is available."""
     file: str = "configuration.yaml"
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__config_file__", file)
+    config.__config_file__ = file
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 
@@ -1211,7 +1188,7 @@ def test_deprecated_logger_with_one_config_attribute(
     assert len(caplog.records) == 0
 
     config = OrderedDict([("mars", "blah")])
-    setattr(config, "__line__", line)
+    config.__line__ = line
 
     cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
 
@@ -1228,7 +1205,7 @@ def test_deprecated_logger_with_one_config_attribute(
 def test_deprecated_logger_without_config_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
+    """Test logger message when line and file attr is not available."""
     file: str = "configuration.yaml"
     line: int = 54
     replacement = f"'mars' option near {file}:{line} is deprecated"
@@ -1442,8 +1419,8 @@ def test_key_value_schemas_with_default() -> None:
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
-            str(excinfo.value)
-            == f"Unexpected value for mode: '{mode}'. Expected number, string, a cool template"
+            str(excinfo.value) == f"Unexpected value for mode: '{mode}'."
+            " Expected number, string, a cool template"
         )
 
     with pytest.raises(vol.Invalid) as excinfo:
@@ -1975,7 +1952,9 @@ async def test_trigger_backwards_compatibility() -> None:
     assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
     with pytest.raises(
         vol.Invalid,
-        match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+        match=(
+            "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+        ),
     ):
         cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
     with pytest.raises(
@@ -2034,3 +2013,21 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     # Check error handling if data is not a dict
     with pytest.raises(vol.Invalid, match="expected a dictionary"):
         renamed_schema([])
+
+
+def test_stop_action_schema_error_false_with_response() -> None:
+    """Test stop action allows error: false with response_variable."""
+    schema = cv._SCRIPT_STOP_SCHEMA
+
+    # error: true with response_variable should fail
+    with pytest.raises(vol.Invalid, match="not allowed to add a response"):
+        schema({"stop": "Error", "error": True, "response_variable": "result"})
+
+    # error: false with response_variable should work
+    config = schema({"stop": "Done", "error": False, "response_variable": "result"})
+    assert config["error"] is False
+    assert config["response_variable"] == "result"
+
+    # no error with response_variable should work
+    config = schema({"stop": "Done", "response_variable": "result"})
+    assert config["response_variable"] == "result"

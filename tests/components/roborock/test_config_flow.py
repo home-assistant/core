@@ -20,6 +20,8 @@ from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
     CONF_REGION,
+    CONF_SHOW_ROOMS,
+    CONF_SHOW_WALLS,
     DOMAIN,
     DRAWABLES,
 )
@@ -229,12 +231,18 @@ async def test_options_flow_drawables(
         ) as mock_setup:
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
-                user_input={Drawable.PREDICTED_PATH: True},
+                user_input={
+                    Drawable.PREDICTED_PATH: True,
+                    CONF_SHOW_ROOMS: True,
+                    CONF_SHOW_WALLS: True,
+                },
             )
             await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert mock_roborock_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
+        assert mock_roborock_entry.options[CONF_SHOW_ROOMS] is True
+        assert mock_roborock_entry.options[CONF_SHOW_WALLS] is True
         assert len(mock_setup.mock_calls) == 1
 
 

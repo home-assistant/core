@@ -36,6 +36,10 @@ from homeassistant.setup import async_setup_component
 from . import MockTodoListEntity, create_mock_platform
 
 from tests.common import async_mock_service, mock_device_registry
+from tests.components.common import (
+    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
+)
 
 TODO_ENTITY_ID1 = "todo.list_one"
 TODO_ENTITY_ID2 = "todo.list_two"
@@ -120,6 +124,47 @@ def target_todo_lists(
 def service_calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "item_added")
+
+
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "todo.item_added",
+        "todo.item_completed",
+        "todo.item_removed",
+    ],
+)
+async def test_todo_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the todo triggers are gated by the labs flag."""
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("todo.item_added", None, False, False),
+        ("todo.item_completed", None, False, False),
+        ("todo.item_removed", None, False, False),
+    ],
+)
+async def test_todo_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that todo triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 def _assert_service_calls(
@@ -477,7 +522,7 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test removing and re-adding an entity to a target does not fire stale triggers."""
+    """Test removing and re-adding entity to target does not fire stale triggers."""
     label_both = label_registry.async_get_label_by_name("label_both_lists")
     assert label_both is not None
     label_both_id = label_both.label_id

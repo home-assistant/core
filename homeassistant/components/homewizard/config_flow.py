@@ -1,7 +1,5 @@
 """Config flow for HomeWizard."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -88,8 +86,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step where we attempt to get a token."""
         assert self.ip_address
 
-        # Tell device we want a token, user must now press the button within 30 seconds
-        # The first attempt will always fail, but this opens the window to press the button
+        # Tell device we want a token, user must now press the
+        # button within 30 seconds. The first attempt will always
+        # fail, but this opens the window to press the button.
         token = await async_request_token(self.hass, self.ip_address)
         errors: dict[str, str] | None = None
 
@@ -219,7 +218,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle re-auth if API was disabled."""
         self.ip_address = entry_data[CONF_IP_ADDRESS]
 
-        # If token exists, we assume we use the v2 API and that the token has been invalidated
+        # If token exists, we assume we use the v2 API and that
+        # the token has been invalidated
         if entry_data.get(CONF_TOKEN):
             return await self.async_step_reauth_confirm_update_token()
 
@@ -229,7 +229,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_enable_api(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm reauth dialog, where user is asked to re-enable the HomeWizard API."""
+        """Confirm reauth dialog to re-enable the HomeWizard API."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()

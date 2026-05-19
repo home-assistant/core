@@ -52,7 +52,8 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
+have type FlowResultType.CREATE_ENTRY and "result" key will contain
+an authorization code.
 The authorization code associated with an authorized user by default, it will
 associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
@@ -66,8 +67,6 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
-
-from __future__ import annotations
 
 from collections.abc import Callable
 from http import HTTPStatus
@@ -228,7 +227,8 @@ class AuthProvidersView(HomeAssistantView):
                         remote_address
                     )
                 except InvalidAuthError:
-                    # Not a trusted network, so we don't expose that trusted_network authenticator is setup
+                    # Not a trusted network, so we don't expose that
+                    # trusted_network authenticator is setup
                     continue
 
             providers.append(

@@ -1,8 +1,7 @@
 """DataUpdateCoordinator for the renson integration."""
 
-from __future__ import annotations
-
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -15,18 +14,29 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+type RensonConfigEntry = ConfigEntry[RensonData]
+
+
+@dataclass
+class RensonData:
+    """Renson data class."""
+
+    api: RensonVentilation
+    coordinator: RensonCoordinator
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class RensonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Renson."""
 
-    config_entry: ConfigEntry
+    config_entry: RensonConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RensonConfigEntry,
         api: RensonVentilation,
     ) -> None:
         """Initialize my coordinator."""

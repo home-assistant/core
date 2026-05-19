@@ -183,6 +183,39 @@ async def test_custom_commands(
     )
 
 
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, "on"),
+        (SERVICE_TURN_OFF, "off"),
+    ],
+)
+async def test_ac_purify_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test Samsung OCF AC purify switch."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.ac_office_granit_purify"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.CUSTOM_SPI_MODE,
+        Command.SET_SPI_MODE,
+        MAIN,
+        argument,
+    )
+
+
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 async def test_state_update(
     hass: HomeAssistant,
@@ -275,7 +308,7 @@ async def test_create_issue_with_items(
     suggested_object_id: str,
     issue_string: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
@@ -335,7 +368,9 @@ async def test_create_issue_with_items(
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
-        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+        "items": (
+            "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)"
+        ),
     }
 
     entity_registry.async_update_entity(
@@ -436,7 +471,7 @@ async def test_create_issue(
     issue_string: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 

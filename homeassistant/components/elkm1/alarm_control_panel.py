@@ -1,7 +1,5 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.areas import Area
@@ -45,6 +43,7 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
 }
 
 SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
 SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
 SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"

@@ -1,7 +1,5 @@
 """Integration for Crownstone."""
 
-from __future__ import annotations
-
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 

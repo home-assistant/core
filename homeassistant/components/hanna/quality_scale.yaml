@@ -4,8 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't add actions.
-  appropriate-polling:
-    status: done
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done

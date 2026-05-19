@@ -8,6 +8,7 @@ from google_nest_sdm.event import EventMessage, EventType
 from google_nest_sdm.traits import TraitType
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -42,7 +43,7 @@ ENTITY_DESCRIPTIONS = [
         key=EVENT_DOORBELL_CHIME,
         translation_key="chime",
         device_class=EventDeviceClass.DOORBELL,
-        event_types=[EVENT_DOORBELL_CHIME],
+        event_types=[DoorbellEventType.RING],
         trait_types=[TraitType.DOORBELL_CHIME],
         api_event_types=[EventType.DOORBELL_CHIME],
     ),
@@ -80,7 +81,7 @@ async def async_setup_entry(
 
 
 class NestTraitEventEntity(EventEntity):
-    """Nest doorbell event entity."""
+    """Nest event entity for event entity descriptions."""
 
     entity_description: NestEventEntityDescription
     _attr_has_entity_name = True
@@ -112,6 +113,9 @@ class NestTraitEventEntity(EventEntity):
             if last_nest_event_id is not None and last_nest_event_id == nest_event_id:
                 # This event is a duplicate message in the same thread
                 return
+
+            if event_type == EVENT_DOORBELL_CHIME:
+                event_type = DoorbellEventType.RING
 
             self._trigger_event(
                 event_type,

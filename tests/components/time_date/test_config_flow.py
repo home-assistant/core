@@ -1,7 +1,5 @@
 """Test the Time & Date config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -37,9 +35,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_does_not_allow_beat(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
     result = await hass.config_entries.flow.async_init(

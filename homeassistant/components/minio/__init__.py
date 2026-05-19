@@ -1,7 +1,5 @@
 """Minio component."""
 
-from __future__ import annotations
-
 import logging
 import os
 from queue import Queue
@@ -19,7 +17,9 @@ from .minio_helper import MinioEventThread, create_minio_client
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "minio"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_HOST = "host"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_PORT = "port"
 CONF_ACCESS_KEY = "access_key"
 CONF_SECRET_KEY = "secret_key"

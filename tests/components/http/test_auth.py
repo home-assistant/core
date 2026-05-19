@@ -592,6 +592,91 @@ async def test_local_only_user_rejected(
         assert req.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_auth_access_signed_path_with_local_only_user(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test access with signed url for a local-only user."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    set_mock_ip = mock_real_ip(app)
+    client = await aiohttp_client(app)
+
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token.user.local_only = True
+
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
+
+    # Local IP is allowed for local-only user
+    set_mock_ip("192.168.1.123")
+
+    req = await client.head(signed_path)
+    assert req.status == HTTPStatus.OK
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+
+    # Remote IP is rejected for local-only user
+    for remote_addr in EXTERNAL_ADDRESSES:
+        set_mock_ip(remote_addr)
+        signed_path = async_sign_path(
+            hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+        )
+
+        req = await client.head(signed_path)
+        assert req.status == HTTPStatus.UNAUTHORIZED
+
+        req = await client.get(signed_path)
+        assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_auth_access_signed_path_with_inactive_user(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test access with signed url for an inactive user."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
+
+    # Active user is allowed
+    req = await client.head(signed_path)
+    assert req.status == HTTPStatus.OK
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
+
+    # Inactive user is rejected
+    refresh_token.user.is_active = False
+
+    req = await client.head(signed_path)
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_async_user_not_allowed_do_auth(
     hass: HomeAssistant, app: web.Application
 ) -> None:
