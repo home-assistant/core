@@ -1461,11 +1461,7 @@
         "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
       "switch_output_state": {
-        "name": "[%key:component::victron_gx::common::state%]",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
-        }
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "system_ac_active_input_source": {
         "name": "AC active input source",
