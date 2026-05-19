@@ -122,7 +122,7 @@ def havdalah_offset() -> int | None:
 @pytest.fixture
 def language() -> str:
     """Return default language value, unless language is parametrized."""
-    return "he"
+    return "en"
 
 
 @pytest.fixture
