@@ -50,8 +50,8 @@ def calendar_only() -> Generator[None]:
 
 @pytest.fixture
 def language() -> str:
-    """Use Hebrew for calendar snapshots."""
-    return "he"
+    """Use English for calendar snapshots."""
+    return "en"
 
 
 # ─── Entity Registration ─────────────────────────────────────────────
