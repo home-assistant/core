@@ -248,6 +248,7 @@ FLOWS = {
         "fritz",
         "fritzbox",
         "fritzbox_callmonitor",
+        "fritzbox_vpn",
         "fronius",
         "frontier_silicon",
         "fujitsu_fglair",

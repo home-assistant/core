@@ -2318,6 +2318,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "FRITZ!Box Call Monitor"
+        },
+        "fritzbox_vpn": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Fritz!Box VPN"
         }
       }
     },
