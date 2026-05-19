@@ -91,7 +91,6 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
-from .websocket_api import async_register_websocket_commands
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -174,6 +173,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Late import to ensure isal is updated before
     # we import aiohttp_fast_zlib
     (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
+
+    # Local import to avoid a circular import with websocket_api,
+    # which imports from homeassistant.components.http at module load.
+    from .websocket_api import async_register_websocket_commands  # noqa: PLC0415
 
     conf = await async_load_config(hass, config)
 
