@@ -22,6 +22,19 @@ from .fixtures import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_fritzbox_vpn_async_setup_entry() -> None:
+    """Prevent real coordinator/network activity during config flow tests."""
+    with patch(
+        "homeassistant.components.fritzbox_vpn.async_setup_entry",
+        new=AsyncMock(return_value=True),
+    ), patch(
+        "async_upnp_client.ssdp_listener.SsdpListener.async_start",
+        new=AsyncMock(),
+    ):
+        yield
+
+
 def test_validate_host_accepts_ip_and_hostname() -> None:
     """Host validation accepts IPv4 and simple hostnames."""
     assert validate_host("192.168.178.1") == "192.168.178.1"
