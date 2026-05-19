@@ -6,6 +6,9 @@ DOMAIN = "adguard"
 
 LOGGER = logging.getLogger(__package__)
 
+DEFAULT_PORT = 3000
+DEFAULT_BASE_PATH = "/control"
+
 CONF_FORCE = "force"
 
 SERVICE_ADD_URL = "add_url"
