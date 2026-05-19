@@ -86,6 +86,10 @@
     "deprecated_interface_parameter": {
       "description": "The 'interface' parameter in the Velbus actions is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
       "title": "Deprecated 'interface' parameter"
+    },
+    "stale_device": {
+      "description": "The Velbus module **{name}** (address {address}) was not found during the last bus scan. It may have been disconnected or removed.\n\nIf this module has been permanently removed, you can delete it from Home Assistant via the device page. If it is temporarily disconnected, this warning will disappear automatically once it is found again on the next scan.",
+      "title": "Velbus module not found on bus: {name}"
     }
   },
   "services": {

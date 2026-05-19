@@ -17,6 +17,7 @@ from homeassistant.components.velbus.const import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import init_integration
 
@@ -176,3 +177,42 @@ async def test_clear_cache(
             },
             blocking=True,
         )
+
+
+async def test_scan_service_updates_stale_device_issues(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that the scan service creates stale-device repair issues."""
+    await init_integration(hass, config_entry)
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module (VMBX)",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"stale_device_{config_entry.entry_id}_999"
+        )
+        is None
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SCAN,
+        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        blocking=True,
+    )
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"stale_device_{config_entry.entry_id}_999"
+        )
+        is not None
+    )
