@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from yoto_api import AuthenticationError, YotoAPIError, YotoError
 
 from homeassistant.components.yoto.const import (
@@ -138,17 +137,15 @@ async def test_periodic_poll_refreshes_players(
     setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """The coordinator refreshes player list + status on every tick."""
+    """The coordinator refreshes the player list on every tick."""
     await setup_integration(hass, mock_config_entry)
     mock_yoto_client.refresh.reset_mock()
-    mock_yoto_client.update_player_status.reset_mock()
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     mock_yoto_client.refresh.assert_called_once()
-    mock_yoto_client.update_player_status.assert_called_once_with("player-test")
 
 
 async def test_periodic_poll_triggers_reauth_on_auth_failure(
@@ -269,19 +266,3 @@ async def test_periodic_poll_fails_on_api_error(
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is False
-
-
-async def test_offline_player_does_not_break_status_refresh(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A per-device status fetch failure logs a warning and doesn't break setup."""
-    mock_yoto_client.update_player_status.side_effect = YotoError("offline")
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert "Could not refresh Yoto player" in caplog.text
