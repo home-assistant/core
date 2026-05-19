@@ -3,13 +3,12 @@
 from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import OPNsenseDeviceTrackerCoordinator
-from .types import DeviceDetails
+from .types import DeviceDetails, OPNsenseConfigEntry
 
 
 async def async_setup_entry(
