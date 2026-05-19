@@ -42,7 +42,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import (
@@ -52,6 +51,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import SystemBridgeConfigFlow
 from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
@@ -104,6 +104,213 @@ POWER_COMMAND_MAP = {
     "shutdown": "power_shutdown",
     "sleep": "power_sleep",
 }
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up System Bridge services."""
+
+    def valid_device(device: str) -> str:
+        """Check device is valid."""
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(device)
+        if device_entry is not None:
+            try:
+                return next(
+                    entry.entry_id
+                    for entry in hass.config_entries.async_entries(DOMAIN)
+                    if entry.entry_id in device_entry.config_entries
+                )
+            except StopIteration as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_found",
+                    translation_placeholders={"device": device},
+                ) from err
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device": device},
+        )
+
+    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the get process by id service call."""
+        _LOGGER.debug("Get process by id: %s", service_call.data)
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        processes: list[Process] = coordinator.data.processes
+
+        try:
+            return asdict(
+                next(
+                    process
+                    for process in processes
+                    if process.id == service_call.data[CONF_ID]
+                )
+            )
+        except StopIteration as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="process_not_found",
+                translation_placeholders={"id": service_call.data[CONF_ID]},
+            ) from err
+
+    async def handle_get_processes_by_name(
+        service_call: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle the get process by name service call."""
+        _LOGGER.debug("Get process by name: %s", service_call.data)
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+
+        items: list[dict[str, Any]] = [
+            asdict(process)
+            for process in coordinator.data.processes
+            if process.name is not None
+            and service_call.data[CONF_NAME].lower() in process.name.lower()
+        ]
+
+        return {
+            "count": len(items),
+            "processes": list(items),
+        }
+
+    async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the open path service call."""
+        _LOGGER.debug("Open path: %s", service_call.data)
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        response = await coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
+        )
+        return asdict(response)
+
+    async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the power command service call."""
+        _LOGGER.debug("Power command: %s", service_call.data)
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        response = await getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
+        )()
+        return asdict(response)
+
+    async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the open url service call."""
+        _LOGGER.debug("Open URL: %s", service_call.data)
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        response = await coordinator.websocket_client.open_url(
+            OpenUrl(url=service_call.data[CONF_URL])
+        )
+        return asdict(response)
+
+    async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the send_keypress service call."""
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        response = await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
+        )
+        return asdict(response)
+
+    async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the send_text service call."""
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
+        response = await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
+        )
+        return asdict(response)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESS_BY_ID,
+        handle_get_process_by_id,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_ID): cv.positive_int,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PROCESSES_BY_NAME,
+        handle_get_processes_by_name,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_OPEN_PATH,
+        handle_open_path,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_PATH): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_POWER_COMMAND,
+        handle_power_command,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_OPEN_URL,
+        handle_open_url,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_URL): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_KEYPRESS,
+        handle_send_keypress,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_KEY): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+        description_placeholders={
+            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+        },
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_TEXT,
+        handle_send_text,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_TEXT): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    return True
 
 
 async def async_setup_entry(
@@ -232,219 +439,6 @@ async def async_setup_entry(
             },
             {},
         )
-    )
-
-    if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
-        return True
-
-    def valid_device(device: str) -> str:
-        """Check device is valid."""
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(device)
-        if device_entry is not None:
-            try:
-                return next(
-                    entry.entry_id
-                    for entry in hass.config_entries.async_entries(DOMAIN)
-                    if entry.entry_id in device_entry.config_entries
-                )
-            except StopIteration as exception:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="device_not_found",
-                    translation_placeholders={"device": device},
-                ) from exception
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device": device},
-        )
-
-    async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the get process by id service call."""
-        _LOGGER.debug("Get process by id: %s", service_call.data)
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        processes: list[Process] = coordinator.data.processes
-
-        # Find process.id from list, raise ServiceValidationError if not found
-        try:
-            return asdict(
-                next(
-                    process
-                    for process in processes
-                    if process.id == service_call.data[CONF_ID]
-                )
-            )
-        except StopIteration as exception:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="process_not_found",
-                translation_placeholders={"id": service_call.data[CONF_ID]},
-            ) from exception
-
-    async def handle_get_processes_by_name(
-        service_call: ServiceCall,
-    ) -> ServiceResponse:
-        """Handle the get process by name service call."""
-        _LOGGER.debug("Get process by name: %s", service_call.data)
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-
-        # Find processes from list
-        items: list[dict[str, Any]] = [
-            asdict(process)
-            for process in coordinator.data.processes
-            if process.name is not None
-            and service_call.data[CONF_NAME].lower() in process.name.lower()
-        ]
-
-        return {
-            "count": len(items),
-            "processes": list(items),
-        }
-
-    async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the open path service call."""
-        _LOGGER.debug("Open path: %s", service_call.data)
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        response = await coordinator.websocket_client.open_path(
-            OpenPath(path=service_call.data[CONF_PATH])
-        )
-        return asdict(response)
-
-    async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the power command service call."""
-        _LOGGER.debug("Power command: %s", service_call.data)
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        response = await getattr(
-            coordinator.websocket_client,
-            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
-        )()
-        return asdict(response)
-
-    async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the open url service call."""
-        _LOGGER.debug("Open URL: %s", service_call.data)
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        response = await coordinator.websocket_client.open_url(
-            OpenUrl(url=service_call.data[CONF_URL])
-        )
-        return asdict(response)
-
-    async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the send_keypress service call."""
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        response = await coordinator.websocket_client.keyboard_keypress(
-            KeyboardKey(key=service_call.data[CONF_KEY])
-        )
-        return asdict(response)
-
-    async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
-        """Handle the send_keypress service call."""
-        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
-        response = await coordinator.websocket_client.keyboard_text(
-            KeyboardText(text=service_call.data[CONF_TEXT])
-        )
-        return asdict(response)
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_PROCESS_BY_ID,
-        handle_get_process_by_id,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_ID): cv.positive_int,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_PROCESSES_BY_NAME,
-        handle_get_processes_by_name,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_NAME): cv.string,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPEN_PATH,
-        handle_open_path,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_PATH): cv.string,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_POWER_COMMAND,
-        handle_power_command,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPEN_URL,
-        handle_open_url,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_URL): cv.string,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_KEYPRESS,
-        handle_send_keypress,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_KEY): cv.string,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
-        description_placeholders={
-            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
-        },
-    )
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_TEXT,
-        handle_send_text,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_TEXT): cv.string,
-            },
-        ),
-        supports_response=SupportsResponse.ONLY,
     )
 
     # Reload entry when its updated.
