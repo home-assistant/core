@@ -185,6 +185,11 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                     )
                     await asyncio.sleep(_RETRY_DELAY_SEC)
                     continue
+            except VerisureError as ex:
+                LOGGER.warning(
+                    "Unexpected Verisure error during cookie refresh, %s", ex
+                )
+                raise UpdateFailed("Unable to update cookie") from ex
 
         if not cookie_refreshed:
             if last_login_error is None:
