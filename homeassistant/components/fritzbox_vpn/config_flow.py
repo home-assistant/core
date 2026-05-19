@@ -8,9 +8,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         password_sources: tuple[Mapping[str, Any] | None, ...],
         unique_id: str | None,
         log_unknown_details: bool,
-    ) -> FlowResult | None:
+    ) -> ConfigFlowResult | None:
         """Validate credentials and create entry; None if the form should be shown again."""
         fill_password_if_missing(user_input, *password_sources)
         if not validate_host_on_submit(user_input, errors):
@@ -99,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -148,7 +148,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = credentials_schema(*credentials_defaults(user_input))
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle SSDP discovery (fallback if no existing integration found)."""
         existing_config = await get_existing_fritz_config(self.hass)
         if existing_config:
@@ -178,7 +180,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovered Fritz!Box and collect credentials."""
         errors: dict[str, str] = {}
 
@@ -210,13 +212,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthentication after invalid credentials."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Update credentials after authentication failure."""
         reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
@@ -302,7 +304,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Options menu: configure, cleanup, or repair entity ID suffixes."""
         has_cleanup_action, has_repair_action, _ = self._get_available_actions()
         has_extra_actions = has_cleanup_action or has_repair_action
@@ -341,7 +343,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None,
         pending: list[Any],
         on_confirm,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Shared confirm step for cleanup and entity-ID repair."""
         config_entry = self._get_current_entry()
         if not config_entry:
@@ -349,10 +351,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None and user_input.get("confirm") and pending:
             await on_confirm(entry_id)
-            return self.async_create_entry(title="", data=config_entry.options or {})
+            return self.async_create_entry(
+                title="",
+                data=dict(config_entry.options)
+                if config_entry.options
+                else {},
+            )
 
         if user_input is not None or not pending:
-            return self.async_create_entry(title="", data=config_entry.options or {})
+            return self.async_create_entry(
+                title="",
+                data=dict(config_entry.options)
+                if config_entry.options
+                else {},
+            )
 
         return self.async_show_form(
             step_id=step_id,
@@ -361,7 +373,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cleanup_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm removal of entities for VPN connections no longer on the Fritz!Box."""
         config_entry = self._get_current_entry()
         if not config_entry:
@@ -389,7 +401,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_repair_entity_ids_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm repair of entity IDs (_2, _3, … → base ID)."""
         config_entry = self._get_current_entry()
         if not config_entry:
@@ -413,7 +425,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_configure(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure host, credentials, and update interval."""
         errors: dict[str, str] = {}
         config_entry = self._get_current_entry()
@@ -423,12 +435,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             user_input = dict(user_input)
             user_input.pop("action", None)
-            fill_password_if_missing(user_input, config_entry.data or {})
+            fill_password_if_missing(
+                user_input,
+                dict(config_entry.data) if config_entry.data else {},
+            )
             if not validate_host_on_submit(user_input, errors):
                 return self.async_show_form(
                     step_id="configure",
                     data_schema=configure_schema(
-                        user_input, config_entry.options or {}
+                        user_input,
+                        dict(config_entry.options) if config_entry.options else {},
                     ),
                     errors=errors,
                 )
@@ -458,7 +474,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="configure",
             data_schema=configure_schema(
-                config_entry.data or {}, config_entry.options or {}
+                dict(config_entry.data) if config_entry.data else {},
+                dict(config_entry.options) if config_entry.options else {},
             ),
             errors=errors,
         )

@@ -54,6 +54,8 @@ def get_orphaned_entity_entries(
         resolved_uids, error_key = resolve_current_uids(hass, entry_id)
         if error_key is not None:
             return (None, error_key)
+    # mypy: after resolve_current_uids() returned successfully, resolved_uids is guaranteed non-None.
+    assert resolved_uids is not None
     registry = er.async_get(hass)
     to_remove = []
     for entry in er.async_entries_for_config_entry(registry, entry_id):
