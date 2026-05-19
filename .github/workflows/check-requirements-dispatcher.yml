@@ -18,9 +18,6 @@ on: # zizmor: ignore[dangerous-triggers]
 
 permissions: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
-  cancel-in-progress: true
 
 jobs:
   dispatch:

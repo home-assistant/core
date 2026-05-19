@@ -29,7 +29,7 @@ pre-agent-steps:
       {
         echo
         echo "<dispatch-context>"
-        echo "- **pull-request-number**: #${PR_NUMBER}"
+        echo "- **pull-request-number**: ${PR_NUMBER}"
         echo "</dispatch-context>"
       } >> /tmp/gh-aw/aw-prompts/prompt.txt
 post-steps:
