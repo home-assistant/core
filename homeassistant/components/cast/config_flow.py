@@ -107,11 +107,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(OptionsFlow):
     """Handle Google Cast options."""
 
-    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
-        """Manage the Google Cast options."""
-        return await self.async_step_basic_options()
-
-    async def async_step_basic_options(
+    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
@@ -137,7 +133,6 @@ class CastOptionsFlowHandler(OptionsFlow):
                 return self.async_create_entry(title="", data={})
             suggested: dict[str, Any] = user_input
         else:
-            # No user input, prime suggested with current values
             suggested = {CONF_MORE_OPTIONS: {}}
             if CONF_KNOWN_HOSTS in self.config_entry.data:
                 suggested[CONF_KNOWN_HOSTS] = self.config_entry.data[CONF_KNOWN_HOSTS]
@@ -149,7 +144,7 @@ class CastOptionsFlowHandler(OptionsFlow):
                 )
 
         return self.async_show_form(
-            step_id="basic_options",
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
             errors=errors,
             last_step=True,

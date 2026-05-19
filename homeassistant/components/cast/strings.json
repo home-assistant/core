@@ -23,7 +23,7 @@
       "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
     },
     "step": {
-      "basic_options": {
+      "init": {
         "data": {
           "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
         },

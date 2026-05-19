@@ -193,7 +193,7 @@ async def test_option_flow(
     # Check the data schema
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "basic_options"
+    assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"known_hosts", "more_options"}
     more_options_schema = data_schema["more_options"].schema.schema
