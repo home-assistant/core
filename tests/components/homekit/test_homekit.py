@@ -2363,6 +2363,11 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         devices=[],
     )
 
+    # Ensure we fully unload the config entry during the test to avoid
+    # leaving a pending async_unload task behind in teardown.
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_start_in_accessory_mode(
