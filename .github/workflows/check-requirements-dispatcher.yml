@@ -1,0 +1,86 @@
+name: Check requirements (dispatcher)
+
+# Stage 2 of the agentic Check requirements workflow. Runs on completion of
+# stage 1 (`check-requirements-changes.yml`) and dispatches stage 3
+# (`check-requirements.lock.yml`) when stage 1's `changes` job was not
+# skipped.
+
+# yamllint disable-line rule:truthy
+on: # zizmor: ignore[dangerous-triggers]
+  # workflow_run is safe here: this workflow does not check out PR code or run
+  # any code from the triggering PR. It only resolves the PR number from the
+  # head SHA and dispatches `check-requirements.lock.yml` with that number as
+  # a sanitized string input. The PR code is analysed downstream in the
+  # agentic workflow (`check-requirements.lock.yml`)
+  workflow_run:
+    workflows: ["Check requirements (changes detection)"]
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    name: Dispatch agentic requirements check
+    if: >
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write # For triggering the downstream workflow and reading run jobs
+      pull-requests: read # For querying PRs by commit SHA
+    steps:
+      - name: Verify the stage-1 changes job was not skipped
+        id: check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId,
+                per_page: 100,
+              },
+            );
+            const job = jobs.find(j => j.name === 'Requirements files changed');
+            const status = job?.conclusion ?? 'missing';
+            if (status !== 'success') {
+              core.info(`Stage-1 changes job conclusion is '${status}'; nothing to dispatch.`);
+              core.setOutput('dispatch', 'false');
+              return;
+            }
+            core.setOutput('dispatch', 'true');
+      - name: Resolve PR number from head SHA and trigger agentic requirements check
+        if: steps.check.outputs.dispatch == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: headSha,
+            });
+            const open = pulls.find(p => p.state === 'open');
+            if (!open) {
+              core.info(`No open PR found for head SHA ${headSha}; nothing to dispatch.`);
+              return;
+            }
+            const defaultBranch = context.payload.workflow_run.repository.default_branch;
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'check-requirements.lock.yml',
+              ref: defaultBranch,
+              inputs: {
+                pull_request_number: String(open.number),
+              },
+            });
+            core.info(`Dispatched check-requirements.lock.yml for PR #${open.number}.`);

@@ -1,19 +1,11 @@
 ---
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "requirements*.txt"
-      - "homeassistant/package_constraints.txt"
-      - "pyproject.toml"
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pull_request_number:
         description: "Pull request number to (re-)check"
         required: true
         type: number
-  roles: all
 permissions:
   contents: read
   pull-requests: read
@@ -28,6 +20,33 @@ tools:
 safe-outputs:
   add-comment:
     max: 1
+    target: "*"
+pre-agent-steps:
+  - name: Inject workflow_dispatch PR number into agent prompt
+    env:
+      PR_NUMBER: ${{ inputs.pull_request_number }}
+    run: |
+      {
+        echo
+        echo "<dispatch-context>"
+        echo "- **pull-request-number**: #${PR_NUMBER}"
+        echo "</dispatch-context>"
+      } >> /tmp/gh-aw/aw-prompts/prompt.txt
+post-steps:
+  - name: Verify agent produced an add_comment safe-output
+    if: always()
+    run: |
+      OUTPUT=/tmp/gh-aw/agent_output.json
+      if [ ! -f "${OUTPUT}" ]; then
+        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
+        exit 1
+      fi
+      if ! grep -q '"add_comment"' "${OUTPUT}"; then
+        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+        echo "Agent output:"
+        cat "${OUTPUT}"
+        exit 1
+      fi
 description: >
   Checks changed Python package requirements on PRs targeting the core repo
   (including PRs opened from forks) and verifies licenses match PyPI metadata, source
@@ -37,7 +56,7 @@ description: >
   description contains the required links.
 ---
 
-# Requirements License and Availability Check
+# Check requirements
 
 You are a code review assistant for the Home Assistant project. Your job is to
 review changes to Python package requirements and verify they meet the project's
@@ -57,8 +76,15 @@ standards.
 
 ## Step 1 — Identify Changed Packages
 
-Use the GitHub tool to fetch the PR diff. Look for lines that were added (`+`)
-or removed (`-`) in **any** of these files:
+This workflow is triggered via `workflow_dispatch`. The PR number to check is
+provided in the `<dispatch-context>` block appended to this prompt as
+`pull-request-number`. Use that PR number for **every** GitHub API call in the
+steps below (fetching the diff, the PR body, posting the comment, etc.). Do
+**not** rely on `github.event.pull_request` — it is not populated for
+`workflow_dispatch` runs.
+
+Use the GitHub tool to fetch the PR diff for that PR number. Look for
+lines that were added (`+`) or removed (`-`) in **any** of these files:
 - `requirements.txt`
 - `requirements_all.txt`
 - `requirements_test.txt`
@@ -138,9 +164,8 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the PR number from the workflow
-context (`pull-request-number`). If that value is absent, use the
-`workflow_dispatch` input `pull_request_number`.
+Read the PR body from the GitHub API using the `pull-request-number` provided
+in the `<dispatch-context>` block.
 Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required
@@ -296,6 +321,12 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 **Always** post a review comment using `add_comment`, regardless of whether
 packages pass or fail. Use the following structure:
 
+**Target PR**: This workflow runs via `workflow_dispatch`, so the safe-output
+handler cannot derive the target PR from the event. You **must** include the
+`item_number` field on every `add_comment` call and set it to the value of
+`pull-request-number` from the `<dispatch-context>` block — otherwise the
+comment will not be posted.
+
 **Note on deduplication**: The workflow automatically updates any previous
 requirements-check comment on the PR in place (preserving its position in the
 thread). If no previous comment exists, the newly created comment is kept as-is.
@@ -325,7 +356,7 @@ when the repository is not publicly accessible).
 
 ```
 <!-- requirements-check -->
-## Requirements Check
+## Check requirements
 
 | Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
 |---------|------|---------|---------|-------------|-----------|------------------|---------|-----------------|
@@ -396,10 +427,12 @@ Collapsed example (all checks passed):
   description checks as for production dependencies.
 - A package that appears in both a production file and a test file should only
   be reported once; use the production file entry as the canonical one.
-- This workflow is only triggered when a commit actually changes one of the
-  tracked requirements files (for `synchronize` events GitHub compares the
-  before/after SHAs of the push, not the entire PR diff). Members can manually
-  retrigger the workflow via `workflow_dispatch` with the PR number to re-run
-  the check after updating the PR description or fixing issues without changing
-  any requirements files. On a retrigger the existing comment is updated in
-  place so there is always exactly one requirements-check comment in the PR.
+- This workflow is invoked exclusively via `workflow_dispatch`. The stage-1
+  workflow `Check requirements (changes detection)` runs on `pull_request` with
+  a paths filter on the tracked requirements files, and its completion triggers
+  the dispatcher (`Check requirements (dispatcher)`) which calls this workflow
+  with the PR number. Members can also dispatch this workflow manually with the
+  PR number to re-run the check after updating the PR description or fixing
+  issues without changing any requirements files. On a retrigger the existing
+  comment is updated in place so there is always exactly one requirements-check
+  comment in the PR.
