@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from hdate.translator import set_language
+from hdate.translator import get_language, set_language
 import pytest
 
 from homeassistant.components.calendar import (
@@ -94,6 +94,8 @@ def results(
     if not hasattr(request, "param"):
         return None
 
+    previous_language = get_language()
+
     # If results are generated, by using the HDate library, we need to set the language
     set_language(language)
 
@@ -110,6 +112,10 @@ def results(
                 for key, value in result["attr"].items()
             }
         return result
+
+    # Reset language
+    set_language(previous_language)
+
     return request.param
 
 
