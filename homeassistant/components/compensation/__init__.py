@@ -91,6 +91,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
 
+    if DOMAIN not in config:
+        return True
+
     for compensation, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
 

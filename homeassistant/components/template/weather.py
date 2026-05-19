@@ -36,7 +36,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
-    create_platform_not_supported_issue,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -48,6 +48,7 @@ from homeassistant.util.unit_conversion import (
 )
 
 from . import DOMAIN, TriggerUpdateCoordinator, validators as template_validators
+from .const import DOCUMENTATION_URL
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -240,7 +241,14 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        create_platform_not_supported_issue(hass, DOMAIN, WEATHER_DOMAIN)
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            WEATHER_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url=DOCUMENTATION_URL,
+            logger=_LOGGER,
+        )
         return
 
     # Modern and Trigger

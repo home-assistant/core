@@ -34,7 +34,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
-    create_platform_not_supported_issue,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -63,11 +63,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Compensation sensor."""
     if discovery_info is None:
-        create_platform_not_supported_issue(
+        async_create_platform_config_not_supported_issue(
             hass,
             DOMAIN,
             SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
             learn_more_url="https://www.home-assistant.io/integrations/compensation/",
+            logger=_LOGGER,
         )
         return
 

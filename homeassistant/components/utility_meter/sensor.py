@@ -47,7 +47,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
-    create_platform_not_supported_issue,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -215,11 +215,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        create_platform_not_supported_issue(
+        async_create_platform_config_not_supported_issue(
             hass,
             DOMAIN,
             SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
             learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 

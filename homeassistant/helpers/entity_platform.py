@@ -66,35 +66,39 @@ PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 _LOGGER = getLogger(__name__)
 
 
-def create_platform_not_supported_issue(
+@callback
+def async_create_platform_config_not_supported_issue(
     hass: HomeAssistant,
-    platform_name: str,
-    domain: str,
+    integration_domain: str,
+    platform_domain: str,
+    *,
+    yaml_config_under_integration_supported: bool = False,
     learn_more_url: str | None = None,
+    logger: Logger = _LOGGER,
 ) -> None:
     """Create an issue for platforms that do not support platform setup."""
-    _LOGGER.error(
+    logger.error(
         (
             "The %s platform for the %s integration does not support platform"
-            " setup. Please remove it from your config"
+            " setup, please remove it from your config"
         ),
-        platform_name,
-        domain,
+        integration_domain,
+        platform_domain,
     )
-    platform_key = f"platform: {platform_name}"
-    yaml_example = f"```yaml\n{domain}:\n  - {platform_key}\n```"
+    platform_key = f"platform: {integration_domain}"
+    yaml_example = f"```yaml\n{platform_domain}:\n  - {platform_key}\n```"
     async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        f"platform_integration_no_support_{domain}_{platform_name}",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
         is_fixable=False,
-        issue_domain=platform_name,
+        issue_domain=integration_domain,
         learn_more_url=learn_more_url,
         severity=IssueSeverity.ERROR,
-        translation_key="no_platform_setup",
+        translation_key=f"platform_{'config' if yaml_config_under_integration_supported else 'setup'}_not_supported",
         translation_placeholders={
-            "domain": domain,
-            "platform": platform_name,
+            "platform_domain": platform_domain,
+            "integration_domain": integration_domain,
             "platform_key": platform_key,
             "yaml_example": yaml_example,
         },
@@ -365,8 +369,11 @@ class EntityPlatform:
                 else:
                     learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
 
-            create_platform_not_supported_issue(
-                self.hass, self.platform_name, self.domain, learn_more_url
+            async_create_platform_config_not_supported_issue(
+                self.hass,
+                self.platform_name,
+                self.domain,
+                learn_more_url=learn_more_url,
             )
             return
 
