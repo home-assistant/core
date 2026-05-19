@@ -15,6 +15,7 @@ from homeassistant.components.todo import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
 
+from .const import DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
 
@@ -74,10 +75,12 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         self._coordinator: AmazonDevicesCoordinator = coordinator
         self._list: ListInfo = alexa_list
 
-        # To be always unique because multiple Amazon
-        # accounts can have lists with same names
         self._attr_unique_id = alexa_list.id
         self._attr_name = alexa_list.name
+
+        self._attr_translation_key = (
+            "shop" if alexa_list.list_type == ListType.SHOP else "todo"
+        )
 
         super().__init__(
             coordinator,
@@ -89,35 +92,20 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
     @property
-    def icon(self) -> str | None:
-        """Return the icon to use for this entity.
-
-        Returns:
-            The icon to use for this entity.
-
-        """
-        if self._list.list_type == ListType.SHOP:
-            return "mdi:cart"
-        return "mdi:clipboard-list"
-
-    @property
     def todo_items(self) -> list[TodoItem] | None:
         """All Todo items in the list.
 
         Returns:
             List of TodoItems in the list.
         """
-        todo_items: list[ListItem] | None = self._coordinator.api.todo_list_items.get(
-            self._list.id
+        todo_items: list[ListItem] = self._coordinator.api.todo_list_items.get(
+            self._list.id, []
         )
-
-        if not todo_items:
-            return None
 
         return [
             TodoItem(
                 uid=item.id,
-                summary=item.name.capitalize(),
+                summary=(item.name[0].upper() + item.name[1:]) if item.name else "",
                 status=TodoItemStatus.COMPLETED
                 if is_item_complete(item)
                 else TodoItemStatus.NEEDS_ACTION,
@@ -140,7 +128,10 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
         if not item.summary:
-            raise ServiceValidationError("Item summary cannot be empty.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="exceptions.todo_item_summary_empty",
+            )
 
         await self._coordinator.api.add_todo_list_item(self._list.id, item.summary)
 
@@ -163,10 +154,29 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         """
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
 
+        list_items_lookup = self._coordinator.api.todo_list_items_lookup.get(
+            self._list.id
+        )
+
+        if list_items_lookup is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="exceptions.todo_items_lookup_not_found",
+                translation_placeholders={"list_name": self._list.name},
+            )
+
         for uid in uids:
-            existing_item = self._coordinator.api.todo_list_items_lookup[self._list.id][
-                uid
-            ]
+            existing_item = list_items_lookup.get(uid)
+
+            if existing_item is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="exceptions.todo_item_not_found",
+                    translation_placeholders={
+                        "uid": uid,
+                        "list_name": self._list.name,
+                    },
+                )
             _LOGGER.debug(
                 "Deleting item %s (ID: %s) with version %s",
                 existing_item.name,
@@ -196,7 +206,10 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
         """
         if not item.summary or not item.uid:
-            raise ServiceValidationError("Item summary and UID are required.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="exceptions.todo_item_summary_uid_required",
+            )
 
         existing_item = self._coordinator.api.todo_list_items_lookup[self._list.id][
             item.uid
@@ -221,7 +234,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 item.uid,
                 item.status,
             )
-        elif existing_item.name != item.summary:
+        if existing_item.name != item.summary:
             # Name has changed, update it
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
             await self._coordinator.api.rename_todo_list_item(

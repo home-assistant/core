@@ -110,6 +110,18 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "todo_item_not_found": {
+      "message": "Unable to delete to-do item {uid} from list {list_name}: the item was not found. It may have already been deleted."
+    },
+    "todo_item_summary_empty": {
+      "message": "Item summary cannot be empty."
+    },
+    "todo_item_summary_uid_required": {
+      "message": "Item summary and UID are required."
+    },
+    "todo_items_lookup_not_found": {
+      "message": "Unable to delete to-do item(s) from list {list_name}: the cached list items could not be found. Refresh and try again."
     }
   },
   "selector": {
