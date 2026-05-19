@@ -139,6 +139,11 @@ RTS_GATE_4T = FixtureDevice(
     "rts://1234-1234-6233/16730717",
     "cover.rts_gate",
 )
+RTS_GARAGE_DOOR_4T = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "rts://1234-1234-6233/16721270",
+    "cover.rts_garage_door_4t",
+)
 CYCLIC_GARAGE_DOOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/6416929",
@@ -229,6 +234,7 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (RTS_GATE_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
+        (RTS_GARAGE_DOOR_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
         (CYCLIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_SWINGING_GATE, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
@@ -274,6 +280,7 @@ async def test_cover_entities_snapshot(
         # Cycle command is used for both open and close; device reports OPENING
         # since the RTS protocol has no directional feedback.
         (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
+        (RTS_GARAGE_DOOR_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
         (CYCLIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_SWINGING_GATE, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
@@ -416,6 +423,7 @@ async def test_cover_entities_snapshot(
         "open-dynamic-garage-door-ogp",
         "open-dynamic-gate",
         "open-rts-gate-4t",
+        "open-rts-garage-door-4t",
         "open-cyclic-garage-door",
         "open-cyclic-swinging-gate",
         "open-sliding-discrete-gate",
@@ -435,6 +443,7 @@ async def test_cover_entities_snapshot(
         "close-dynamic-garage-door-ogp",
         "close-dynamic-gate",
         "close-rts-gate-4t",
+        "close-rts-garage-door-4t",
         "close-cyclic-garage-door",
         "close-cyclic-swinging-gate",
         "close-sliding-discrete-gate",

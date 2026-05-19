@@ -237,6 +237,31 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.CYCLE,
         close_command=OverkizCommand.CYCLE,
     ),
+    # Needs override since UpDownGarageDoor4T only supports the cycle command
+    # (rts:GarageDoor4TRTSComponent)
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_GARAGE_DOOR_4T,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since OpenCloseSlidingGarageDoor4T only supports the cycle command
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GARAGE_DOOR_4T,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since OpenCloseSlidingGate4T only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GATE_4T,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
     # Needs override since CyclicGarageDoor only supports the cycle command
     # (io:CyclicGarageOpenerIOComponent)
     # uiClass is GarageDoor
