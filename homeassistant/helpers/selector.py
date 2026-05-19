@@ -1648,6 +1648,7 @@ class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     label_field: str
     description_field: str
     translation_key: str
+    overview_labels: bool
 
 
 @SELECTORS.register("object")
@@ -1669,6 +1670,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             vol.Optional("label_field"): str,
             vol.Optional("description_field"): str,
             vol.Optional("translation_key"): str,
+            vol.Optional("overview_labels", default=False): bool,
         }
     )
 
