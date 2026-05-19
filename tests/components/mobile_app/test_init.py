@@ -16,7 +16,9 @@ from homeassistant.components.mobile_app.const import (
     DATA_DELETED_IDS,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
+    STORAGE_KEY,
 )
+from homeassistant.setup import async_setup_component
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -670,3 +672,30 @@ async def test_remove_entry_cleans_live_activity_tokens(
     await hass.config_entries.async_remove(config_entry.entry_id)
 
     assert webhook_id not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+
+async def test_storage_migration_v1_to_v2(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that v1 storage without live_activity_tokens is migrated to v2."""
+    hass_storage[STORAGE_KEY] = {
+        "key": STORAGE_KEY,
+        "version": 1,
+        "minor_version": 1,
+        "data": {DATA_DELETED_IDS: []},
+    }
+
+    entry = MockConfigEntry(
+        data={**REGISTER_CLEARTEXT, CONF_USER_ID: hass_admin_user.id},
+        domain=DOMAIN,
+        source="registration",
+        title="Test",
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert DATA_LIVE_ACTIVITY_TOKENS in hass.data[DOMAIN]
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}

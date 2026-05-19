@@ -69,18 +69,26 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class _MobileAppStore(Store[dict[str, Any]]):
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate mobile_app storage to the current version."""
+        if old_major_version == 1:
+            old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
+        return old_data
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    store = _MobileAppStore(hass, STORAGE_VERSION, STORAGE_KEY)
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
-        app_config = {
-            DATA_DELETED_IDS: [],
-            DATA_LIVE_ACTIVITY_TOKENS: {},
-        }
-    elif DATA_LIVE_ACTIVITY_TOKENS not in app_config:
-        app_config[DATA_LIVE_ACTIVITY_TOKENS] = {}
+        app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
     cutoff = dt_util.utcnow().timestamp() - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
     live_activity_tokens: dict[str, Any] = {

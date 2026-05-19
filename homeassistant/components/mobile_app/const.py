@@ -7,7 +7,7 @@ from homeassistant.helpers import config_validation as cv
 DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
+STORAGE_VERSION = 2
 
 LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
 
