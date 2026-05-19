@@ -40,9 +40,11 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         self._current_subentry_id = None
         self._model_list_cache = None
 
-    async def async_step_init(self, user_input: dict[str, str]) -> RepairsFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, str] | None
+    ) -> RepairsFlowResult:
         """Handle the steps of a fix flow."""
-        if user_input.get(CONF_CHAT_MODEL):
+        if user_input and user_input.get(CONF_CHAT_MODEL):
             self._async_update_current_subentry(user_input)
 
         target = await self._async_next_target()
