@@ -7474,6 +7474,43 @@
       "uiClass": "Gate"
     },
     {
+      "creationTime": 1676547436000,
+      "lastUpdateTime": 1676547436000,
+      "label": "RTS Garage Door 4T",
+      "deviceURL": "rts://1234-1234-6233/16721270",
+      "shortcut": false,
+      "controllableName": "rts:GarageDoor4TRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "cycle",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownGarageDoor4T",
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "rts:GarageDoor4TRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "UpDownGarageDoor4T",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567892",
+      "uiClass": "GarageDoor"
+    },
+    {
       "creationTime": 1654894302000,
       "lastUpdateTime": 1654894302000,
       "label": "Sliding Gate",
