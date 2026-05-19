@@ -13,7 +13,11 @@
     "step": {
       "init": {
         "data": {
+          "max_consecutive_failures": "Failure tolerance",
           "show_on_map": "Show on map"
+        },
+        "data_description": {
+          "max_consecutive_failures": "How many consecutive API failures to tolerate before marking the sensor unavailable"
         }
       }
     }
