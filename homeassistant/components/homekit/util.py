@@ -19,6 +19,8 @@ from homeassistant.components import (
     media_player,
     persistent_notification,
     sensor,
+    switch,
+    valve,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -70,6 +72,7 @@ from .const import (
     CONF_LINKED_TEMPERATURE_SENSOR,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
+    CONF_LINKED_VALVE_ENTITIES,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -106,6 +109,7 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_IRRIGATION_SYSTEM,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -287,6 +291,23 @@ VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+VALVE_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_domain([switch.DOMAIN, valve.DOMAIN]),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+    }
+)
+
+IRRIGATION_SYSTEM_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE, default=TYPE_IRRIGATION_SYSTEM): TYPE_IRRIGATION_SYSTEM,
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_ENTITIES, default=[]): [VALVE_ZONE_SCHEMA],
+    }
+)
+
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
     10: " ",  # nl
@@ -355,7 +376,21 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
             config = LOCK_SCHEMA(config)
 
         elif domain == "switch":
-            config = SWITCH_TYPE_SCHEMA(config)
+            if config.get(CONF_TYPE) == TYPE_IRRIGATION_SYSTEM:
+                config = IRRIGATION_SYSTEM_SCHEMA(config)
+                zone_entity_ids = [
+                    z["entity_id"] for z in config[CONF_LINKED_VALVE_ENTITIES]
+                ]
+                if entity in zone_entity_ids:
+                    raise vol.Invalid(
+                        f"linked_valve_entities must not include the primary entity {entity}"
+                    )
+                if len(zone_entity_ids) != len(set(zone_entity_ids)):
+                    raise vol.Invalid(
+                        "linked_valve_entities must not contain duplicate entity_id values"
+                    )
+            else:
+                config = SWITCH_TYPE_SCHEMA(config)
 
         elif domain == "humidifier":
             config = HUMIDIFIER_SCHEMA(config)
