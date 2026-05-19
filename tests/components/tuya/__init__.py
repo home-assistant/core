@@ -43,7 +43,7 @@ class TuyaNotificationHelper:
         updated_status_properties: list[str] | None,
         dp_timestamps: dict[str, int] | None,
     ) -> None:
-        """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
+        """Trigger dispatcher_send for device update and wait for tasks."""
         for listener in self.manager.device_listeners:
             listener.update_device(device, updated_status_properties, dp_timestamps)
         await self.hass.async_block_till_done()

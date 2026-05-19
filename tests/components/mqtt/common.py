@@ -235,7 +235,9 @@ MOCK_SUBENTRY_CLIMATE_COMPONENT = {
         "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
         "swing_horizontal_mode_command_template": "{{ value }}",
         "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
-        "swing_horizontal_mode_state_template": "{{ value_json.swing_horizontal_mode }}",
+        "swing_horizontal_mode_state_template": (
+            "{{ value_json.swing_horizontal_mode }}"
+        ),
         "swing_horizontal_modes": ["off", "on"],
     },
 }
@@ -747,7 +749,7 @@ MOCK_SUBENTRY_DEVICE_DATA = {
 }
 
 MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
@@ -1695,7 +1697,8 @@ async def help_test_encoding_subscribable_topics(
         state = hass.states.get(entity_id)
 
         if init_payload_value:
-            # Sometimes a device needs to have an initialization pay load, e.g. to switch the device on.
+            # Sometimes a device needs to have an initialization
+            # pay load, e.g. to switch the device on.
             async_fire_mqtt_message(hass, init_payload_topic, init_payload_value)
             await hass.async_block_till_done()
 
@@ -2586,7 +2589,9 @@ async def help_test_publishing_with_custom_encoding(
             test_config_setup["encoding"] = test_data["encoding"]
         if template and test_data["cmd_tpl"]:
             test_config_setup[template] = (
-                f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
+                f"{{{{ (('%.1f'|format({tpl_par}))[0]"
+                f" if is_number({tpl_par})"
+                f" else {tpl_par}[0]) | ord | pack('b') }}}}"
             )
         setup_config.append(test_config_setup)
 
@@ -2613,7 +2618,9 @@ async def help_test_publishing_with_custom_encoding(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "cmd/test1", str(payload), 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # 2) test with utf-16 encoding
@@ -2624,7 +2631,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test2", str(payload).encode("utf-16"), 0, False
+        "cmd/test2",
+        str(payload).encode("utf-16"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2636,8 +2647,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't pass-through payload for publishing {payload} on cmd/test3 with no encoding set, need 'bytes'"
-        in caplog.text
+        f"Can't pass-through payload for publishing {payload} on"
+        " cmd/test3 with no encoding set, need 'bytes'" in caplog.text
     )
 
     # 4) test with invalid encoding set should fail
@@ -2648,8 +2659,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't encode payload for publishing {payload} on cmd/test4 with encoding invalid"
-        in caplog.text
+        f"Can't encode payload for publishing {payload} on"
+        " cmd/test4 with encoding invalid" in caplog.text
     )
 
     # 5) test with command template and raw encoding if specified
@@ -2663,7 +2674,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
+        "cmd/test5",
+        tpl_output or str(payload)[0].encode("utf-8"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 

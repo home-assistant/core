@@ -139,5 +139,19 @@
         "name": "Incoming video vertical resolution"
       }
     }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Connection failed to the device."
+    },
+    "unsupported_media": {
+      "message": "Unsupported media: {media}."
+    },
+    "unsupported_sound_mode": {
+      "message": "Unsupported sound mode: {sound_mode}."
+    },
+    "unsupported_source": {
+      "message": "Unsupported source: {source}."
+    }
   }
 }

@@ -219,7 +219,10 @@ class BasicTriggerStateDescription(TypedDict):
 
 
 class TriggerStateDescription(BasicTriggerStateDescription):
-    """Test state and expected service call count for both included and excluded entities."""
+    """Test state and expected service call count.
+
+    Covers both included and excluded entities.
+    """
 
     excluded_state: StateDescription  # State for entities not meant to be targeted
     # State for the *other* targeted entities (the ones not under direct test).
@@ -237,7 +240,9 @@ class ConditionStateDescription(TypedDict):
     excluded_state: StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
-    condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
+    # If the condition is expected to evaluate to true
+    # for the first targeted entity
+    condition_true_first_entity: bool
 
 
 def _parametrize_condition_states(
@@ -836,7 +841,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
     attribute_value_scale: float = 1.0,
     attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical-changed triggers.
+    """Parametrize states for numerical-changed triggers.
 
     Generates state sequences for a trigger that fires whenever an attribute
     crosses or matches a "changed" threshold (modes "any" / "above" / "below").
@@ -982,7 +987,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     attribute_value_scale: float = 1.0,
     attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical crossed-threshold triggers.
+    """Parametrize states for numerical crossed-threshold triggers.
 
     Generates state sequences for a trigger that fires when an attribute
     crosses a threshold boundary. The trigger is exercised across four
@@ -1150,11 +1155,11 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical state-value changed triggers.
+    """Parametrize states for numerical state-value changed triggers.
 
-    Unlike parametrize_numerical_attribute_changed_trigger_states, this is for
-    entities where the tracked numerical value is in state.state (e.g. sensor
-    entities), not in an attribute.
+    Unlike parametrize_numerical_attribute_changed_trigger_states,
+    this is for entities where the tracked numerical value is in
+    state.state (e.g. sensor entities), not in an attribute.
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
@@ -1231,7 +1236,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical state-value crossed threshold triggers.
+    """Parametrize states for numerical state-value crossed threshold triggers.
 
     Unlike parametrize_numerical_attribute_crossed_threshold_trigger_states,
     this is for entities where the tracked numerical value is in state.state
@@ -1332,7 +1337,7 @@ async def arm_trigger(
     trigger_target: dict,
     calls: list[str],
 ) -> None:
-    """Arm the specified trigger and record fired entity_ids in calls when it triggers."""
+    """Arm the trigger and record fired entity_ids in calls."""
     options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
     trigger_config = {
@@ -1481,7 +1486,7 @@ async def _validate_condition_options(
     *,
     valid: bool,
 ) -> None:
-    """Assert that a condition accepts or rejects the given options during validation."""
+    """Assert that a condition accepts or rejects the given options."""
     config: dict[str, Any] = {
         CONF_CONDITION: condition,
         CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
@@ -1911,10 +1916,11 @@ def parametrize_numerical_condition_above_below_any(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=any.
+    """Parametrize threshold cases for state-value numerical conditions.
 
-    Generates state sequences for a condition that reads its tracked value
-    directly from `state.state` (e.g. a sensor with a temperature device
+    Uses behavior=any. Generates state sequences for a condition
+    that reads its tracked value directly from `state.state`
+    (e.g. a sensor with a temperature device
     class). The condition is exercised across three threshold types in turn
     — "above", "below", "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2033,7 +2039,9 @@ def parametrize_numerical_condition_above_below_all(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=all.
+    """Parametrize threshold cases for state-value numerical conditions.
+
+    Uses behavior=all.
 
     See `parametrize_numerical_condition_above_below_any` for the structure
     of the generated test cases; the only difference is that this helper
@@ -2151,11 +2159,13 @@ def parametrize_numerical_attribute_condition_above_below_any(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
+    attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=any.
+    """Parametrize threshold cases for attribute-based numerical conditions.
 
-    Generates state sequences for a condition that reads its tracked value
-    from a state attribute (e.g. `climate.target_humidity`). The condition
+    Uses behavior=any. Generates state sequences for a condition
+    that reads its tracked value from a state attribute
+    (e.g. `climate.target_humidity`). The condition
     is exercised across three threshold types in turn — "above", "below",
     "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2196,9 +2206,18 @@ def parametrize_numerical_attribute_condition_above_below_any(
             than treated as just-missing. Set this for conditions whose
             `_should_include` skips entities lacking the tracked
             attribute.
+        attribute_value_scale: Multiplier applied to the helper's fixed
+            attribute values before they are written to the state. Use
+            this when the condition stores its tracked value on a
+            different scale than the threshold — e.g. `media_player`
+            volume is stored as 0.0–1.0 but the threshold is in percent,
+            so pass `attribute_value_scale=0.01`; light brightness is
+            stored as 0–255 but the threshold is in percent, so pass
+            `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    s = attribute_value_scale
     extra_excluded_states = (
         [(state, {attribute: None} | unit_attributes)] if attribute_required else None
     )
@@ -2214,14 +2233,14 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 10} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2236,14 +2255,14 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 90} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2262,15 +2281,15 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2288,8 +2307,11 @@ def parametrize_numerical_attribute_condition_above_below_all(
     threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
+    attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=all.
+    """Parametrize threshold cases for attribute-based numerical conditions.
+
+    Uses behavior=all.
 
     See `parametrize_numerical_attribute_condition_above_below_any` for the
     structure of the generated test cases; the only difference is that this
@@ -2331,9 +2353,18 @@ def parametrize_numerical_attribute_condition_above_below_all(
             than treated as just-missing. Set this for conditions whose
             `_should_include` skips entities lacking the tracked
             attribute.
+        attribute_value_scale: Multiplier applied to the helper's fixed
+            attribute values before they are written to the state. Use
+            this when the condition stores its tracked value on a
+            different scale than the threshold — e.g. `media_player`
+            volume is stored as 0.0–1.0 but the threshold is in percent,
+            so pass `attribute_value_scale=0.01`; light brightness is
+            stored as 0–255 but the threshold is in percent, so pass
+            `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
     unit_attributes = unit_attributes or {}
+    s = attribute_value_scale
     extra_excluded_states = (
         [(state, {attribute: None} | unit_attributes)] if attribute_required else None
     )
@@ -2349,14 +2380,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 10} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2371,14 +2402,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 90} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -2397,15 +2428,15 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21} | unit_attributes),
-                (state, {attribute: 50} | unit_attributes),
-                (state, {attribute: 79} | unit_attributes),
+                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 50 * s} | unit_attributes),
+                (state, {attribute: 79 * s} | unit_attributes),
             ],
             other_states=[
-                (state, {attribute: 0} | unit_attributes),
-                (state, {attribute: 20} | unit_attributes),
-                (state, {attribute: 80} | unit_attributes),
-                (state, {attribute: 100} | unit_attributes),
+                (state, {attribute: 0 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,

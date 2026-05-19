@@ -137,8 +137,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """Add new Plugwise devices, remove non-existing devices."""
         set_of_data = set(data)
         # Check for new or removed devices,
-        # 'new_devices' contains all devices present in 'data' at init ('self._current_devices' is empty)
-        # this is required for the proper initialization of all the present platform entities.
+        # 'new_devices' contains all devices present in 'data'
+        # at init ('self._current_devices' is empty) this is
+        # required for the proper initialization of all the
+        # present platform entities.
         self.new_devices = set_of_data - self._current_devices
         for device_id in self.new_devices:
             self._firmware_list.setdefault(device_id, data[device_id].get("firmware"))

@@ -127,7 +127,9 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
     ) -> stt.SpeechResult:
         """Process an audio stream to STT service."""
         _LOGGER.debug(
-            "Processing audio stream for STT: model=%s, language=%s, format=%s, codec=%s, sample_rate=%s, channels=%s, bit_rate=%s",
+            "Processing audio stream for STT: model=%s,"
+            " language=%s, format=%s, codec=%s,"
+            " sample_rate=%s, channels=%s, bit_rate=%s",
             self._stt_model,
             metadata.language,
             metadata.format,

@@ -82,4 +82,5 @@ async def test_reload_stops_entity_action_scripts(
         await hass.async_block_till_done()
 
     assert not turn_on_script.is_running
+    assert turn_on_script._unloaded
     assert hass.data["light"].get_entity("light.test_light") is None
