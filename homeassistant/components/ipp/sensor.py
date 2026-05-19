@@ -29,7 +29,7 @@ from .const import (
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
 )
-from .coordinator import IPPConfigEntry
+from .coordinator import IPPConfigEntry, IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
@@ -39,6 +39,13 @@ class IPPSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
+
+
+@dataclass(frozen=True, kw_only=True)
+class IPPPageCountSensorEntityDescription(SensorEntityDescription):
+    """Describes IPP page count sensor entity."""
+
+    ipp_attribute: str
 
 
 def _get_marker_attributes_fn(
@@ -81,6 +88,44 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     ),
 )
 
+PAGE_COUNT_SENSORS: tuple[IPPPageCountSensorEntityDescription, ...] = (
+    IPPPageCountSensorEntityDescription(
+        key="pages_completed",
+        translation_key="pages_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ipp_attribute="printer-pages-completed",
+    ),
+    IPPPageCountSensorEntityDescription(
+        key="impressions_completed",
+        translation_key="impressions_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ipp_attribute="printer-impressions-completed",
+    ),
+    IPPPageCountSensorEntityDescription(
+        key="media_sheets_completed",
+        translation_key="media_sheets_completed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ipp_attribute="printer-media-sheets-completed",
+    ),
+    IPPPageCountSensorEntityDescription(
+        key="impressions_completed_monochrome",
+        translation_key="impressions_completed_monochrome",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ipp_attribute="printer-impressions-completed-col/monochrome",
+    ),
+    IPPPageCountSensorEntityDescription(
+        key="impressions_completed_full_color",
+        translation_key="impressions_completed_full_color",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ipp_attribute="printer-impressions-completed-col/full-color",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -97,7 +142,7 @@ async def async_setup_entry(
         for description in PRINTER_SENSORS
     ]
 
-    for index, marker in enumerate(coordinator.data.markers):
+    for index, marker in enumerate(coordinator.data.printer.markers):
         sensors.append(
             IPPSensor(
                 coordinator,
@@ -123,6 +168,12 @@ async def async_setup_entry(
             )
         )
 
+    sensors.extend(
+        IPPPageCountSensor(coordinator, description)
+        for description in PAGE_COUNT_SENSORS
+        if description.ipp_attribute in coordinator.data.page_counts
+    )
+
     async_add_entities(sensors, True)
 
 
@@ -134,9 +185,30 @@ class IPPSensor(IPPEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(self.coordinator.data)
+        return self.entity_description.attributes_fn(self.coordinator.data.printer)
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.printer)
+
+
+class IPPPageCountSensor(IPPEntity, SensorEntity):
+    """Defines an IPP page count sensor."""
+
+    entity_description: IPPPageCountSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: IPPDataUpdateCoordinator,
+        description: IPPPageCountSensorEntityDescription,
+    ) -> None:
+        """Initialize the page count sensor."""
+        super().__init__(coordinator, description)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.coordinator.data.page_counts.get(
+            self.entity_description.ipp_attribute
+        )
