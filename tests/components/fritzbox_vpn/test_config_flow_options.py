@@ -36,6 +36,10 @@ def mock_fritzbox_vpn_async_setup_entry() -> None:
             "async_upnp_client.ssdp_listener.SsdpListener.async_start",
             new=AsyncMock(),
         ),
+        patch(
+            "async_upnp_client.ssdp_listener.SsdpListener.async_search",
+            new=AsyncMock(return_value=None),
+        ),
     ):
         yield
 
