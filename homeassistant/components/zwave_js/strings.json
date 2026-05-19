@@ -331,6 +331,9 @@
     "delete_all_credentials_failed": {
       "message": "Failed to delete all credentials for user {user_id}: {error}"
     },
+    "delete_all_credentials_partial_failure": {
+      "message": "Failed to delete {failed_count} credentials for user {user_id}. See logs for details."
+    },
     "delete_all_users_failed": {
       "message": "Failed to delete all users: {error}"
     },

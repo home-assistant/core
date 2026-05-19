@@ -1307,3 +1307,92 @@ async def test_delete_all_credentials_failure_wrapped(
         "error": "zwave_error: Z-Wave error 1 - boom",
         "user_id": "7",
     }
+
+
+async def test_delete_all_credentials_partial_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Multiple delete_credential failures aggregate into a single error."""
+    api = _mock_access_control(lock_schlage_be469)
+
+    cred1 = MagicMock()
+    cred1.type = UserCredentialType.PIN_CODE
+    cred1.slot = 1
+    cred2 = MagicMock()
+    cred2.type = UserCredentialType.PIN_CODE
+    cred2.slot = 3
+    cred3 = MagicMock()
+    cred3.type = UserCredentialType.PIN_CODE
+    cred3.slot = 5
+    api.get_credentials_cached.return_value = [cred1, cred2, cred3]
+    api.delete_credential.side_effect = [
+        SetCredentialResult.OK,
+        SetCredentialResult.ERROR_UNKNOWN,
+        SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL,
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "delete_all_credentials",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 7,
+            },
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "delete_all_credentials_partial_failure"
+    assert exc.value.translation_placeholders == {
+        "user_id": "7",
+        "failed_count": "2",
+    }
+    assert "Failed to delete credential at slot 3 for user 7" in caplog.text
+    assert "Failed to delete credential at slot 5 for user 7" in caplog.text
+
+
+async def test_delete_all_credentials_single_failure_unwrapped(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """A single rejection surfaces its specific translation key, not the aggregate one."""
+    api = _mock_access_control(lock_schlage_be469)
+
+    cred1 = MagicMock()
+    cred1.type = UserCredentialType.PIN_CODE
+    cred1.slot = 1
+    cred2 = MagicMock()
+    cred2.type = UserCredentialType.PIN_CODE
+    cred2.slot = 2
+    api.get_credentials_cached.return_value = [cred1, cred2]
+    api.delete_credential.side_effect = [
+        SetCredentialResult.OK,
+        SetCredentialResult.ERROR_UNKNOWN,
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            "delete_all_credentials",
+            {
+                ATTR_ENTITY_ID: _lock_entity_id(
+                    entity_registry, device_registry, client, lock_schlage_be469
+                ),
+                "user_id": 7,
+            },
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "credential_rejected_unknown"

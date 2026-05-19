@@ -6,6 +6,7 @@ auto-find logic, and validation.
 
 import asyncio
 from collections import defaultdict
+import logging
 from typing import TypedDict
 
 from zwave_js_server.const.command_class.access_control import (
@@ -45,6 +46,8 @@ from .const import (
     USER_TYPE_PROGRAMMING,
     USER_TYPE_REMOTE_ONLY,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 # --- Enum <-> string mappings ---
 
@@ -488,16 +491,32 @@ async def async_delete_all_credentials(node: Node, user_id: int) -> None:
         ),
         return_exceptions=True,
     )
-    first_error: BaseException | None = None
-    for result in results:
+    failures: list[tuple[int, BaseException]] = []
+    for cred, result in zip(credentials, results, strict=True):
         if isinstance(result, BaseException):
-            if first_error is None:
-                first_error = result
+            failures.append((cred.slot, result))
             continue
         try:
             _raise_on_set_credential_error(result)
         except HomeAssistantError as err:
-            if first_error is None:
-                first_error = err
-    if first_error is not None:
-        raise first_error
+            failures.append((cred.slot, err))
+
+    if not failures:
+        return
+    for slot, failure in failures:
+        _LOGGER.warning(
+            "Failed to delete credential at slot %s for user %s: %s",
+            slot,
+            user_id,
+            failure,
+        )
+    if len(failures) == 1:
+        raise failures[0][1]
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="delete_all_credentials_partial_failure",
+        translation_placeholders={
+            "user_id": str(user_id),
+            "failed_count": str(len(failures)),
+        },
+    )
