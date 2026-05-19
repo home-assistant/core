@@ -17,7 +17,6 @@ from homeassistant.components.html5.const import (
     ATTR_ACTIONS,
     ATTR_BADGE,
     ATTR_DIR,
-    ATTR_ICON,
     ATTR_IMAGE,
     ATTR_LANG,
     ATTR_RENOTIFY,
@@ -43,6 +42,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
