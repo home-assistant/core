@@ -252,6 +252,19 @@ def create_sensor_with_unnamed_low_battery_characteristics(
         low_battery.value = 0
 
 
+def create_sensor_with_named_low_battery_characteristic(accessory: Accessory) -> None:
+    """Define a named sensor service with low battery status."""
+    service = accessory.add_service(
+        ServicesTypes.TEMPERATURE_SENSOR, name="Temperature"
+    )
+
+    current = service.add_char(CharacteristicsTypes.TEMPERATURE_CURRENT)
+    current.value = 0
+
+    low_battery = service.add_char(CharacteristicsTypes.STATUS_LO_BATT)
+    low_battery.value = 0
+
+
 def create_sensor_with_battery_service(accessory: Accessory) -> None:
     """Define a sensor with its own battery service."""
     service = accessory.add_service(
@@ -396,6 +409,24 @@ async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
     assert hass.states.get("binary_sensor.unnamed_sensor_low_battery_2") is None
 
 
+async def test_named_low_battery_characteristic_creates_binary_sensor(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test low battery characteristics on named services create an entity."""
+    accessory = Accessory.create_with_info(
+        get_next_aid(), "Outdoor Sensor", "example.com", "Test", "0001", "0.1"
+    )
+    create_sensor_with_named_low_battery_characteristic(accessory)
+
+    await setup_test_accessories(hass, [accessory])
+
+    low_battery = hass.states.get(
+        "binary_sensor.outdoor_sensor_temperature_low_battery"
+    )
+    assert low_battery
+
+
 async def test_low_battery_characteristic_ignored_with_battery_service(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
@@ -409,6 +440,9 @@ async def test_low_battery_characteristic_ignored_with_battery_service(
 
     assert hass.states.get("sensor.outdoor_sensor_battery")
     assert hass.states.get("binary_sensor.outdoor_sensor_low_battery") is None
+    assert (
+        hass.states.get("binary_sensor.outdoor_sensor_temperature_low_battery") is None
+    )
 
 
 async def test_migrate_unique_id(

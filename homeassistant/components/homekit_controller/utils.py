@@ -1,7 +1,7 @@
 """Helper functions for the homekit_controller component."""
 
 from functools import lru_cache
-from typing import cast
+from typing import Final, cast
 
 from aiohomekit import Controller
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -49,7 +49,7 @@ def folded_name(name: str) -> str:
     return name.casefold().replace(" ", "")
 
 
-SERVICE_TYPE_NAMES = {
+SERVICE_TYPE_NAMES: Final[dict[str, str]] = {
     ServicesTypes.VALVE: "Valve",
 }
 

@@ -25,7 +25,7 @@ from .utils import folded_name, service_feature_name
 
 @dataclass(frozen=True)
 class HomeKitBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes a Homekit binary sensor."""
+    """Describes a HomeKit binary sensor."""
 
     on_value: int | bool = 1
 
@@ -182,7 +182,7 @@ CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] =
 
 
 class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
-    """Representation of a Homekit binary sensor backed by a single characteristic."""
+    """Representation of a HomeKit binary sensor backed by a single characteristic."""
 
     entity_description: HomeKitBinarySensorEntityDescription
 
@@ -219,7 +219,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Homekit binary sensors."""
+    """Set up HomeKit binary sensors."""
     hkid: str = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
@@ -274,10 +274,10 @@ def _should_skip_low_battery_characteristic(char: Characteristic) -> bool:
     ):
         return True
 
-    if not _is_accessory_level_low_battery_service(char.service):
-        return True
+    if _is_accessory_level_low_battery_service(char.service):
+        return _has_earlier_accessory_level_low_battery_characteristic(char)
 
-    return _has_earlier_accessory_level_low_battery_characteristic(char)
+    return _has_earlier_named_low_battery_characteristic(char)
 
 
 def _is_accessory_level_low_battery_service(service: Service) -> bool:
@@ -296,6 +296,27 @@ def _has_earlier_accessory_level_low_battery_characteristic(
         if service.iid >= char.service.iid:
             continue
         if _is_accessory_level_low_battery_service(service) and service.has(char.type):
+            return True
+
+    return False
+
+
+def _has_earlier_named_low_battery_characteristic(char: Characteristic) -> bool:
+    """Check if a named service already exposed the same low battery status."""
+    service_name = char.service.value(CharacteristicsTypes.NAME)
+    if service_name is None:
+        return False
+    folded_service_name = folded_name(service_name)
+
+    for service in char.service.accessory.services:
+        if service.iid >= char.service.iid:
+            continue
+        other_service_name = service.value(CharacteristicsTypes.NAME)
+        if (
+            other_service_name is not None
+            and folded_name(other_service_name) == folded_service_name
+            and service.has(char.type)
+        ):
             return True
 
     return False
