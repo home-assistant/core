@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_LOCKED,
     STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -91,7 +93,7 @@ async def test_updating_state(
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == STATE_LOCKED
+    assert state.state == "locked"
 
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
@@ -104,4 +106,4 @@ async def test_updating_state(
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == STATE_UNLOCKED
+    assert state.state == "unlocked"
