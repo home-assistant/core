@@ -10,12 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -69,21 +64,25 @@ async def test_press(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_microwave_0101x"])
+@pytest.mark.parametrize(
+    "health_status", [HealthStatus.OFFLINE, HealthStatus.UNHEALTHY]
+)
 async def test_availability(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    health_status: HealthStatus,
 ) -> None:
-    """Test availability."""
+    """Test that appliances retain their last state when powered off."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("button.microwave_stop").state == STATE_UNKNOWN
 
     await trigger_health_update(
-        hass, devices, "2bad3237-4886-e699-1b90-4a51a3d55c8a", HealthStatus.OFFLINE
+        hass, devices, "2bad3237-4886-e699-1b90-4a51a3d55c8a", health_status
     )
 
-    assert hass.states.get("button.microwave_stop").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.microwave_stop").state == STATE_UNKNOWN
 
     await trigger_health_update(
         hass, devices, "2bad3237-4886-e699-1b90-4a51a3d55c8a", HealthStatus.ONLINE
@@ -98,9 +97,9 @@ async def test_availability_at_start(
     unavailable_device: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unavailable at boot."""
+    """Test that appliances start with their last known state even when offline at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("button.microwave_stop").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.microwave_stop").state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])

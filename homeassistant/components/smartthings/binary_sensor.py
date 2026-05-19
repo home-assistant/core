@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
+from .util import get_main_component_category
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -245,14 +246,6 @@ CAPABILITY_TO_SENSORS: dict[
         )
     },
 }
-
-
-def get_main_component_category(
-    device: FullDevice,
-) -> Category | str:
-    """Get the main component of a device."""
-    main = device.device.components[MAIN]
-    return main.user_category or main.manufacturer_category
 
 
 async def async_setup_entry(
