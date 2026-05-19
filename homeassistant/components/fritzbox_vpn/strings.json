@@ -4,6 +4,7 @@
       "already_configured": "This FritzBox is already configured.",
       "no_host": "Could not determine the IP address.",
       "not_fritzbox": "The discovered device is not a FritzBox.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {

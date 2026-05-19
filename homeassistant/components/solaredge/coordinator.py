@@ -304,6 +304,12 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
             )
             return
 
+        pv_to_grid = any(
+            connection.get("from", "").lower() == "pv"
+            and connection.get("to", "").lower() == "grid"
+            for connection in power_flow["connections"]
+        )
+
         for connection in power_flow["connections"]:
             power_from.append(connection["from"].lower())
             power_to.append(connection["to"].lower())
@@ -322,6 +328,8 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 if self.data[key]:
                     self.data[key] *= -1 if export else 1
                 self.data["grid_flow_direction"] = "export" if export else "import"
+                if pv_to_grid:
+                    self.attributes[key]["flow"] = self.data["grid_flow_direction"]
 
             if key == "STORAGE":
                 charge = key.lower() in power_to
@@ -331,6 +339,9 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                     "charge" if charge else "discharge"
                 )
                 self.data["storage_level"] = value["chargeLevel"]
+                if pv_to_grid:
+                    self.attributes[key]["flow"] = self.data["storage_flow_direction"]
+                    self.attributes[key]["soc"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)
 
