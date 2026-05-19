@@ -137,6 +137,6 @@ vehicle_get_picture:
         select:
           options:
             - label: Large
-              value: "1"
+              value: LARGE
             - label: Small
-              value: "0"
+              value: SMALL

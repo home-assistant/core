@@ -99,9 +99,7 @@ SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
 )
 SERVICE_VEHICLE_GET_PICTURE_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_PICTURE_SIZE, default=AssetPictureSize.LARGE.value): vol.All(
-            vol.Coerce(int), vol.Coerce(AssetPictureSize)
-        ),
+        vol.Optional(ATTR_PICTURE_SIZE, default=AssetPictureSize.LARGE.name): str,
     }
 )
 
@@ -177,9 +175,24 @@ async def ac_set_schedules(service_call: ServiceCall) -> None:
 
 async def vehicle_get_picture(service_call: ServiceCall) -> JsonObjectType:
     """Get vehicle picture URL."""
-    image_size: AssetPictureSize = service_call.data[ATTR_PICTURE_SIZE]
+    size_str: str = service_call.data[ATTR_PICTURE_SIZE]
+    try:
+        image_size = AssetPictureSize[size_str]
+    except KeyError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_picture_size",
+            translation_placeholders={
+                "size": size_str,
+                "valid_sizes": ", ".join(e.name for e in AssetPictureSize),
+            },
+        ) from err
     proxy = get_vehicle_proxy(service_call)
-    url = proxy.details.get_picture(image_size)
+    if not (url := proxy.details.get_picture(image_size)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_picture_available",
+        )
     return {"url": url}
 
 

@@ -213,8 +213,14 @@
     "invalid_device_id": {
       "message": "No device with ID {device_id} was found"
     },
+    "invalid_picture_size": {
+      "message": "Invalid picture size: {size}. Valid values are: {valid_sizes}"
+    },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "no_picture_available": {
+      "message": "No picture is available for this vehicle"
     },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Renault servers: {error}"
