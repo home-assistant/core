@@ -146,13 +146,23 @@ async def test_seek(
     mock_yoto_client.seek.assert_called_once_with("player-test", 30)
 
 
-async def test_play_media_invalid_seconds(
+@pytest.mark.parametrize(
+    "media_id",
+    [
+        "",
+        "+02+02-INT+30",
+        "card-test+02+02-INT+abc",
+        "card-test+02+02-INT+30+extra",
+    ],
+)
+async def test_play_media_invalid(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     setup_credentials: None,
+    media_id: str,
 ) -> None:
-    """A malformed seconds segment raises ServiceValidationError."""
+    """An empty card id, missing card id, malformed seconds, or extra segment is rejected."""
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(ServiceValidationError):
@@ -162,7 +172,7 @@ async def test_play_media_invalid_seconds(
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
                 "media_content_type": "music",
-                "media_content_id": "card-test+02+02-INT+abc",
+                "media_content_id": media_id,
             },
             blocking=True,
         )
