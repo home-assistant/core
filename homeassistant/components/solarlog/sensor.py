@@ -261,8 +261,9 @@ SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, .
     ),
 )
 
-"""SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that may require longer timeout and
-therefore are retrieved with different DataUpdateCoordinator."""
+"""SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that
+may require longer timeout and therefore are retrieved with
+different DataUpdateCoordinator."""
 SOLARLOG_LONGTIME_SENSOR_TYPES: tuple[SolarLogLongtimeSensorEntityDescription, ...] = (
     SolarLogLongtimeSensorEntityDescription(
         key="self_consumption_year",
@@ -351,7 +352,8 @@ async def async_setup_entry(
             for sensor in SOLARLOG_LONGTIME_SENSOR_TYPES
         )
 
-        # add battery sensors only if respective data is available (otherwise no battery attached to solarlog)
+        # add battery sensors only if respective data is
+        # available (otherwise no battery attached to solarlog)
         if solarLogIntegrationData.basic_data_coordinator.data.battery_data is not None:
             entities.extend(
                 SolarLogBatterySensor(
@@ -426,10 +428,10 @@ class SolarLogBatterySensor(SolarLogBasicCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-        if (
-            battery_data
-            := self.coordinator.config_entry.runtime_data.basic_data_coordinator.data.battery_data
-        ) is None:
+        basic_data = (
+            self.coordinator.config_entry.runtime_data.basic_data_coordinator.data
+        )
+        if (battery_data := basic_data.battery_data) is None:
             return None
         return self.entity_description.value_fn(battery_data)
 

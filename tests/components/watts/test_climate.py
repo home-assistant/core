@@ -80,7 +80,7 @@ async def test_fast_polling(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that setting temperature triggers fast polling and it stops after duration."""
+    """Test setting temperature triggers fast polling that stops."""
     await setup_integration(hass, mock_config_entry)
 
     # Trigger fast polling

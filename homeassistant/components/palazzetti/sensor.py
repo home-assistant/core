@@ -20,7 +20,10 @@ from .entity import PalazzettiEntity
 
 @dataclass(frozen=True, kw_only=True)
 class PropertySensorEntityDescription(SensorEntityDescription):
-    """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
+    """Describes a Palazzetti sensor entity.
+
+    Read from a `PalazzettiClient` property.
+    """
 
     client_property: str
     property_map: dict[StateType, str] | None = None

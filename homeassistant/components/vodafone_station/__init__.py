@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import _LOGGER, CONF_DEVICE_DETAILS, DEVICE_TYPE, DEVICE_URL
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
-from .utils import async_client_session
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -21,13 +20,12 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Set up Vodafone Station platform."""
-    session = await async_client_session(hass)
+
     coordinator = VodafoneStationRouter(
         hass,
         entry,
-        session,
     )
-
+    await coordinator.initialize_api()
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -39,6 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s", entry.version, entry.minor_version
