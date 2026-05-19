@@ -56,7 +56,7 @@ async def async_setup_entry(
     try:
         await gateway.start()
     except ConnectionError as err:
-        gateway.stop()
+        await gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
@@ -72,5 +72,5 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry: stop the gateway."""
 
-    config_entry.runtime_data.stop()
+    await config_entry.runtime_data.stop()
     return True

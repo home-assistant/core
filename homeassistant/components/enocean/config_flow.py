@@ -173,7 +173,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
         finally:
-            gateway.stop()
+            await gateway.stop()
 
         return True
 
