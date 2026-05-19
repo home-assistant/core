@@ -4,14 +4,24 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
+from peblar import (
+    LedBrightness,
+    Peblar,
+    PeblarUserConfiguration,
+    SmartChargingMode,
+    SoundVolume,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
+)
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
 
@@ -22,6 +32,7 @@ PARALLEL_UPDATES = 1
 class PeblarSelectEntityDescription(SelectEntityDescription):
     """Class describing Peblar select entities."""
 
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
     current_fn: Callable[[PeblarUserConfiguration], str | None]
     select_fn: Callable[[Peblar, str], Awaitable[Any]]
 
@@ -41,6 +52,32 @@ DESCRIPTIONS = [
         current_fn=lambda x: x.smart_charging.value if x.smart_charging else None,
         select_fn=lambda x, mode: x.smart_charging(SmartChargingMode(mode)),
     ),
+    PeblarSelectEntityDescription(
+        key="buzzer_volume",
+        translation_key="buzzer_volume",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_buzzer,
+        options=[v.name.lower() for v in SoundVolume],
+        current_fn=lambda x: (
+            x.buzzer_volume.name.lower() if x.buzzer_volume is not None else None
+        ),
+        select_fn=lambda x, option: x.set_buzzer_volume(
+            volume=SoundVolume[option.upper()]
+        ),
+    ),
+    PeblarSelectEntityDescription(
+        key="led_brightness",
+        translation_key="led_brightness",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_led,
+        options=[v.name.lower() for v in LedBrightness],
+        current_fn=lambda x: (
+            x.led_brightness.name.lower() if x.led_brightness is not None else None
+        ),
+        select_fn=lambda x, option: x.set_led_brightness(
+            brightness=LedBrightness[option.upper()]
+        ),
+    ),
 ]
 
 
@@ -57,6 +94,7 @@ async def async_setup_entry(
             description=description,
         )
         for description in DESCRIPTIONS
+        if description.has_fn(entry.runtime_data)
     )
 
 
