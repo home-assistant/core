@@ -319,6 +319,33 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
     },
 }
+MOCK_SUBENTRY_DATE_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47411": {
+        "platform": "date",
+        "name": "Delivery day",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47411",
+    },
+}
+MOCK_SUBENTRY_DATETIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47412": {
+        "platform": "datetime",
+        "name": "Maintenance service",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "timezone": "GMT",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
 MOCK_SUBENTRY_FAN_COMPONENT = {
     "717f924ae9ca4fe9864d845d75d23c9f": {
         "platform": "fan",
@@ -653,6 +680,19 @@ MOCK_SUBENTRY_TEXT_COMPONENT = {
         "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
     },
 }
+MOCK_SUBENTRY_TIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "time",
+        "name": "Happy hour",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
 MOCK_SUBENTRY_VALVE_COMPONENT_STATE = {
     "09261f6feed443e7b7d5f32345a47413": {
         "platform": "valve",
@@ -789,6 +829,14 @@ MOCK_COVER_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
 }
+MOCK_DATE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATE_COMPONENT,
+}
+MOCK_DATETIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATETIME_COMPONENT,
+}
 MOCK_FAN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
@@ -864,6 +912,10 @@ MOCK_SWITCH_SUBENTRY_DATA = {
 MOCK_TEXT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_TEXT_COMPONENT,
+}
+MOCK_TIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TIME_COMPONENT,
 }
 MOCK_VALVE_SUBENTRY_DATA_STATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
