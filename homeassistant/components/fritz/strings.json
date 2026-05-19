@@ -210,7 +210,7 @@
       "message": "Error while updating the data: {error}"
     },
     "vpn_toggle_failed": {
-      "message": "Failed to change WireGuard VPN connection {name}.{error}"
+      "message": "Failed to change WireGuard VPN connection {name}{error}"
     }
   },
   "issues": {

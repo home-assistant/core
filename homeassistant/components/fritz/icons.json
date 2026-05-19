@@ -63,6 +63,9 @@
     "switch": {
       "internet_access": {
         "default": "mdi:router-wireless-settings"
+      },
+      "wireguard_vpn": {
+        "default": "mdi:vpn"
       }
     }
   },

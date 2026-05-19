@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
 
@@ -45,9 +46,10 @@ async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
     except Exception as err:
         _LOGGER.warning(
             "WireGuard VPN setup failed for %s (integration continues): %s",
-            entry.data.get("host", entry.title),
+            entry.data.get(CONF_HOST, entry.title),
             err,
         )
+        await vpn_coordinator.async_close()
         return
 
     hass.data.setdefault(FRITZ_VPN_DATA_KEY, {})[entry.entry_id] = FritzVpnEntryData(

@@ -14,7 +14,7 @@ from fritzboxvpn import (
     FritzBoxVPNSession,
 )
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -91,7 +91,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.hass.async_create_task(self._async_start_reauth(entry))
 
-    async def _async_start_reauth(self, entry: Any) -> None:
+    async def _async_start_reauth(self, entry: ConfigEntry) -> None:
         """Start re-authentication for the config entry."""
         result = entry.async_start_reauth(self.hass)
         if inspect.isawaitable(result):

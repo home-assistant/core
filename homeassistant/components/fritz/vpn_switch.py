@@ -5,7 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fritzboxvpn import API_KEY_ACTIVE, API_KEY_NAME, API_KEY_UID
+from fritzboxvpn import (
+    API_KEY_ACTIVE,
+    API_KEY_CONNECTED,
+    API_KEY_NAME,
+    API_KEY_UID,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -117,7 +122,10 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="vpn_toggle_failed",
-                translation_placeholders={"name": vpn_name, "error": str(err)},
+                translation_placeholders={
+                    "name": vpn_name,
+                    "error": f": {err}",
+                },
             ) from err
         await self.coordinator.async_request_refresh()
         if not success:
