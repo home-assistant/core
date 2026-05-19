@@ -755,3 +755,37 @@ def test_configured_command_payload_prefers_exact_match() -> None:
     entity = _entity({"HDMI_1": "100,200", "hdmi_1": "300,400"})
 
     assert entity._configured_command_payload("hdmi_1") == "300,400"
+
+
+async def test_remote_send_command_rejects_non_string_first_command_item() -> None:
+    """Test send_command rejects a non-string command item before sending."""
+    entity = _entity()
+
+    with (
+        patch.object(entity, "_async_send_named_command", AsyncMock()) as send,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await entity.async_send_command([object()])  # type: ignore[list-item]
+
+    send.assert_not_awaited()
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "remote_invalid_service_parameter"
+    assert exc_info.value.translation_placeholders == {
+        "error": "command must be a string"
+    }
+
+
+async def test_remote_send_command_reraises_raw_parse_error_for_non_named_command() -> (
+    None
+):
+    """Test invalid raw payloads that do not look like names keep parse errors."""
+    entity = _entity()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await entity.async_send_command("bad command")
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "remote_invalid_command"
+    assert exc_info.value.translation_placeholders == {
+        "error": "timings must contain only integers"
+    }

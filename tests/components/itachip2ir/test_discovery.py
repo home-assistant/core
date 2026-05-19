@@ -14,6 +14,7 @@ from homeassistant.components.itachip2ir.discovery import (
     async_wait_for_device_id,
 )
 from homeassistant.components.itachip2ir.pyitach import ItachDiscoveryBeacon
+import homeassistant.components.itachip2ir.pyitach._discovery as pyitach_discovery
 from homeassistant.components.itachip2ir.pyitach._discovery import (
     _DISCOVERY_PORT as DISCOVERY_PORT,
     ItachDiscoveryListener,
@@ -1035,3 +1036,86 @@ def test_parse_beacon_config_url_malformed_ipv6_falls_back_to_packet_host() -> N
         uuid=UNIQUE_ID,
         model="iTachIP2IR",
     )
+
+
+def test_host_from_config_url_handles_none_blank_and_host_without_scheme() -> None:
+    """Test private Config-URL host normalization edge cases."""
+    assert pyitach_discovery._host_from_config_url(None) is None
+    assert pyitach_discovery._host_from_config_url("   ") is None
+    assert (
+        pyitach_discovery._host_from_config_url("ITACH-ABCDEF.local.")
+        == "itach-abcdef.local"
+    )
+
+
+@pytest.mark.asyncio
+async def test_pyitach_listener_start_returns_true_when_already_started() -> None:
+    """Test discovery listener start is idempotent when already running."""
+    listener = ItachDiscoveryListener(AsyncMock())
+    task = asyncio.create_task(asyncio.sleep(0))
+    listener._task = task
+
+    assert await listener.async_start() is True
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+
+@pytest.mark.asyncio
+async def test_pyitach_listener_start_returns_false_on_socket_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test discovery listener start handles socket creation failure."""
+    listener = ItachDiscoveryListener(AsyncMock())
+
+    def raise_oserror() -> None:
+        raise OSError("socket failed")
+
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.pyitach._discovery._create_multicast_socket",
+        raise_oserror,
+    )
+
+    assert await listener.async_start() is False
+    assert listener._sock is None
+    assert listener._task is None
+
+
+@pytest.mark.asyncio
+async def test_pyitach_listener_logs_beacon_callback_errors(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test discovery listener keeps running when beacon callback fails."""
+    message = (
+        "AMXB<-SDKClass=Utility>"
+        "<-Make=GlobalCache>"
+        "<-Model=iTachIP2IR>"
+        f"<-UUID={UNIQUE_ID}>"
+        f"<-Config-URL=http://{HOST}/config>"
+    ).encode()
+
+    on_beacon = AsyncMock(side_effect=RuntimeError("callback failed"))
+    listener = ItachDiscoveryListener(on_beacon)
+    listener._sock = MagicMock()
+
+    loop = asyncio.get_running_loop()
+    monkeypatch.setattr(
+        loop,
+        "sock_recvfrom",
+        AsyncMock(
+            side_effect=[
+                (message, (OTHER_HOST, DISCOVERY_PORT)),
+                asyncio.CancelledError,
+            ],
+        ),
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await listener._listen_loop()
+
+    on_beacon.assert_awaited_once_with(
+        ItachDiscoveryBeacon(host=HOST, uuid=UNIQUE_ID, model="iTachIP2IR")
+    )
+    assert "Error handling iTach discovery beacon" in caplog.text

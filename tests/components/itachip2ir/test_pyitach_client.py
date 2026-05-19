@@ -20,6 +20,7 @@ from homeassistant.components.itachip2ir.pyitach import (
     parse_ir_response,
     parse_net_response,
 )
+import homeassistant.components.itachip2ir.pyitach._client as pyitach_client
 
 HOST = "192.168.1.211"
 
@@ -1054,3 +1055,107 @@ def test_normalize_device_id_returns_none_for_blank_values() -> None:
     """Test blank device identifiers are ignored."""
     assert normalize_device_id(None) is None
     assert normalize_device_id("   ") is None
+
+
+@pytest.mark.asyncio
+async def test_client_async_context_manager_connects_and_closes() -> None:
+    """Test async context manager opens and closes the client."""
+    client = ItachClient(HOST, DEFAULT_PORT)
+
+    with (
+        patch.object(client, "async_connect", AsyncMock()) as connect,
+        patch.object(client, "close", AsyncMock()) as close,
+    ):
+        async with client as context_client:
+            assert context_client is client
+
+    connect.assert_awaited_once()
+    close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_async_connect_closes_partial_stale_connection_before_reconnect() -> None:
+    """Test async_connect closes partial cached streams before reconnecting."""
+    old_writer = FakeWriter()
+    new_reader = FakeReader([])
+    new_writer = FakeWriter()
+
+    client = ItachClient(HOST, DEFAULT_PORT)
+    client._reader = cast(asyncio.StreamReader, FakeReader([]))
+    client._writer = cast(asyncio.StreamWriter, old_writer)
+    old_writer.closed = True
+
+    with patch(
+        "homeassistant.components.itachip2ir.pyitach._client.asyncio.open_connection",
+        AsyncMock(return_value=(new_reader, new_writer)),
+    ):
+        await client.async_connect()
+
+    assert client._reader is cast(asyncio.StreamReader, new_reader)
+    assert client._writer is cast(asyncio.StreamWriter, new_writer)
+    assert client._last_used_monotonic is None
+
+
+def test_is_connected_returns_true_for_writer_without_is_closing() -> None:
+    """Test connection check supports stream-like writers without is_closing."""
+
+    class WriterWithoutIsClosing:
+        """Minimal writer without is_closing."""
+
+    client = ItachClient(HOST, DEFAULT_PORT)
+    client._reader = cast(asyncio.StreamReader, FakeReader([]))
+    client._writer = cast(asyncio.StreamWriter, WriterWithoutIsClosing())
+
+    assert client._is_connected() is True
+
+
+@pytest.mark.asyncio
+async def test_read_response_line_limit_overrun_closes_connection() -> None:
+    """Test overlong response lines close the connection."""
+    writer = FakeWriter()
+    client = ItachClient(HOST, DEFAULT_PORT)
+    client._reader = cast(
+        asyncio.StreamReader,
+        FakeReader([asyncio.LimitOverrunError("line too long", consumed=123)]),
+    )
+    client._writer = cast(asyncio.StreamWriter, writer)
+
+    with pytest.raises(ItachConnectionError, match="exceeded buffer limit"):
+        await client._read_response_line()
+
+    assert writer.closed
+    assert client._reader is None
+    assert client._writer is None
+
+
+def test_validate_sendir_args_rejects_connector_above_max_connector() -> None:
+    """Test max connector validation rejects out-of-range connector."""
+    client = ItachClient(HOST, DEFAULT_PORT)
+    client.max_connector = 1
+
+    with pytest.raises(ValueError, match="Connector must be between 1 and 1"):
+        client._validate_sendir_args(
+            module=1,
+            connector=2,
+            carrier_frequency=38_000,
+            timings=[342, 171],
+            repeat=1,
+            offset=1,
+            command_id=1,
+        )
+
+
+def test_parse_completeir_response_rejects_malformed_address_and_numbers() -> None:
+    """Test completeir parser rejects malformed address and numeric fields."""
+    assert pyitach_client._parse_completeir_response("completeir,1,1") is None
+    assert pyitach_client._parse_completeir_response("completeir,x:1,1") is None
+    assert pyitach_client._parse_completeir_response("completeir,1:x,1") is None
+    assert pyitach_client._parse_completeir_response("completeir,1:1,x") is None
+
+
+def test_completeir_matches_rejects_invalid_expected_response() -> None:
+    """Test completeir matcher rejects malformed expected responses."""
+    assert (
+        pyitach_client._completeir_matches("completeir,1:1,1", "not-completeir")
+        is False
+    )

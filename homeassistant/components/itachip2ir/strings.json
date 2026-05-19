@@ -24,10 +24,6 @@
         "description": "Do you want to set up the discovered iTach IP2IR at {host}?",
         "title": "Set up discovered iTach IP2IR"
       },
-      "discovery_confirm": {
-        "description": "Do you want to set up the discovered iTach IP2IR at {host}?",
-        "title": "Set up discovered iTach IP2IR"
-      },
       "reconfigure": {
         "data": {
           "host": "Host",
