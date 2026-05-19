@@ -24,9 +24,6 @@
     }
   },
   "options": {
-    "error": {
-      "invalid_known_hosts": "[%key:component::cast::config::error::invalid_known_hosts%]"
-    },
     "step": {
       "init": {
         "data": {

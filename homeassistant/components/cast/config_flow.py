@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -41,7 +40,6 @@ OPTIONS_SCHEMA = KNOWN_HOSTS_SCHEMA.extend(
         )
     }
 )
-WANTED_UUID_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -110,7 +108,6 @@ class CastOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             ignore_cec = _string_to_list(
                 user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, "")
@@ -142,7 +139,6 @@ class CastOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
-            errors=errors,
             last_step=True,
         )
 
