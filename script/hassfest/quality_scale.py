@@ -868,7 +868,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sony_projector",
     "soundtouch",
     "spc",
-    "speedtestdotnet",
     "spider",
     "spotify",
     "sql",
