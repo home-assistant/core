@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from . import CastConfigEntry
 
 CONF_MORE_OPTIONS = "more_options"
-IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(
     {
         vol.Optional(
@@ -42,7 +40,6 @@ OPTIONS_SCHEMA = KNOWN_HOSTS_SCHEMA.extend(
         )
     }
 )
-WANTED_UUID_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -111,62 +108,50 @@ class CastOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            bad_cec, ignore_cec = _string_to_list(
-                user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, ""),
-                IGNORE_CEC_SCHEMA,
+            ignore_cec = _string_to_list(
+                user_input[CONF_MORE_OPTIONS].get(CONF_IGNORE_CEC, "")
             )
-            bad_uuid, wanted_uuid = _string_to_list(
-                user_input[CONF_MORE_OPTIONS].get(CONF_UUID, ""), WANTED_UUID_SCHEMA
+            known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
+            wanted_uuid = _string_to_list(
+                user_input[CONF_MORE_OPTIONS].get(CONF_UUID, "")
             )
-            if not bad_cec and not bad_uuid:
-                known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
-                updated_config = dict(self.config_entry.data)
-                updated_config[CONF_IGNORE_CEC] = ignore_cec
-                updated_config[CONF_KNOWN_HOSTS] = known_hosts
-                updated_config[CONF_UUID] = wanted_uuid
+            updated_config = dict(self.config_entry.data)
+            updated_config[CONF_IGNORE_CEC] = ignore_cec
+            updated_config[CONF_KNOWN_HOSTS] = known_hosts
+            updated_config[CONF_UUID] = wanted_uuid
 
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
-                )
-                return self.async_create_entry(title="", data={})
-            suggested: dict[str, Any] = user_input
-        else:
-            suggested = {CONF_MORE_OPTIONS: {}}
-            if CONF_KNOWN_HOSTS in self.config_entry.data:
-                suggested[CONF_KNOWN_HOSTS] = self.config_entry.data[CONF_KNOWN_HOSTS]
-            for key in (CONF_UUID, CONF_IGNORE_CEC):
-                if key not in self.config_entry.data:
-                    continue
-                suggested[CONF_MORE_OPTIONS][key] = _list_to_string(
-                    self.config_entry.data[key]
-                )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=updated_config
+            )
+            return self.async_create_entry(title="", data={})
+
+        suggested: dict[str, Any] = {CONF_MORE_OPTIONS: {}}
+        if CONF_KNOWN_HOSTS in self.config_entry.data:
+            suggested[CONF_KNOWN_HOSTS] = self.config_entry.data[CONF_KNOWN_HOSTS]
+        for key in (CONF_UUID, CONF_IGNORE_CEC):
+            if key not in self.config_entry.data:
+                continue
+            suggested[CONF_MORE_OPTIONS][key] = _list_to_string(
+                self.config_entry.data[key]
+            )
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, suggested),
-            errors=errors,
             last_step=True,
         )
 
 
-def _list_to_string(items):
+def _list_to_string(items: list[str]) -> str:
     comma_separated_string = ""
     if items:
         comma_separated_string = ",".join(items)
     return comma_separated_string
 
 
-def _string_to_list(string, schema):
-    invalid = False
-    items = [x.strip() for x in string.split(",") if x.strip()]
-    try:
-        items = schema(items)
-    except vol.Invalid:
-        invalid = True
-
-    return invalid, items
+def _string_to_list(string: str) -> list[str]:
+    return [x.strip() for x in string.split(",") if x.strip()]
 
 
 def _trim_items(items: list[str]) -> list[str]:
