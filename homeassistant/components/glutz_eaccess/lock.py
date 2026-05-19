@@ -1,5 +1,6 @@
 """Lock platform for the Glutz eAccess integration."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -74,12 +75,15 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         """Return whether the access point is still reported by the coordinator."""
         return super().available and self._access_point_id in self.coordinator.data
 
-    async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the door and schedule an automatic re-lock."""
+    async def _async_api_call(
+        self,
+        api_method: Callable[[str], Coroutine[Any, Any, bool]],
+        connection_error_key: str,
+        failed_key: str,
+    ) -> None:
+        """Call an API method and raise HomeAssistantError on failure."""
         try:
-            success = await self.coordinator.api.open_access_point(
-                self._access_point_id
-            )
+            success = await api_method(self._access_point_id)
         except GlutzAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -89,16 +93,23 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         except GlutzConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="open_access_point_error",
+                translation_key=connection_error_key,
                 translation_placeholders={"access_point_id": self._access_point_id},
             ) from err
-
         if not success:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="open_access_point_failed",
+                translation_key=failed_key,
                 translation_placeholders={"access_point_id": self._access_point_id},
             )
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock the door and schedule an automatic re-lock."""
+        await self._async_api_call(
+            self.coordinator.api.open_access_point,
+            "open_access_point_error",
+            "open_access_point_failed",
+        )
         if self._cancel_relock:
             self._cancel_relock()
             self._cancel_relock = None
@@ -112,29 +123,11 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Hold the door open indefinitely and cancel any pending auto-relock."""
-        try:
-            success = await self.coordinator.api.hold_open_access_point(
-                self._access_point_id
-            )
-        except GlutzAuthError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            ) from err
-        except GlutzConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="hold_open_access_point_error",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            ) from err
-
-        if not success:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="hold_open_access_point_failed",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            )
+        await self._async_api_call(
+            self.coordinator.api.hold_open_access_point,
+            "hold_open_access_point_error",
+            "hold_open_access_point_failed",
+        )
         if self._cancel_relock:
             self._cancel_relock()
             self._cancel_relock = None
@@ -143,29 +136,11 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Force-lock the door and cancel any pending auto-relock."""
-        try:
-            success = await self.coordinator.api.close_access_point(
-                self._access_point_id
-            )
-        except GlutzAuthError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            ) from err
-        except GlutzConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="close_access_point_error",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            ) from err
-
-        if not success:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="close_access_point_failed",
-                translation_placeholders={"access_point_id": self._access_point_id},
-            )
+        await self._async_api_call(
+            self.coordinator.api.close_access_point,
+            "close_access_point_error",
+            "close_access_point_failed",
+        )
         if self._cancel_relock:
             self._cancel_relock()
             self._cancel_relock = None
