@@ -325,8 +325,9 @@ async def test_dhcp_ip_reuse_by_different_device(
     hass: HomeAssistant,
     alt_mock_config_entry: MockConfigEntry,
     mock_indevolt: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test DHCP discovery aborts when the discovered IP is already used by another config entry."""
+    """Test DHCP discovery proceeds when the discovered IP is used by a different device."""
     alt_mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -339,8 +340,8 @@ async def test_dhcp_ip_reuse_by_different_device(
         ),
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
 
 
 @pytest.mark.parametrize(

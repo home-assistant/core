@@ -105,7 +105,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: host}, reload_on_update=True
         )
-        self._async_abort_entries_match({CONF_HOST: host})
 
         self.context["title_placeholders"] = {"name": device_data[CONF_MODEL]}
         self._discovered_host = host
@@ -151,7 +150,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             device_data = await self._async_get_device_data(user_input[CONF_HOST])
         except TimeoutError:
             errors["base"] = "timeout"
-        except ConnectionError, ClientError, KeyError:
+        except ConnectionError, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unknown error occurred while verifying device")
