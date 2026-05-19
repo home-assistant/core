@@ -756,7 +756,7 @@
     "rtsp_disabled_writable": {
       "fix_flow": {
         "abort": {
-          "camera_unavailable": "The camera is no longer available."
+          "camera_unavailable": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::abort::camera_unavailable%]"
         },
         "step": {
           "confirm": {
