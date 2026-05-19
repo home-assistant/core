@@ -509,7 +509,7 @@
       "iot_class": "local_push"
     },
     "aquarite": {
-      "name": "Aquarite",
+      "name": "AquaRite",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
