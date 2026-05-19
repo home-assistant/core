@@ -91,15 +91,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
     cutoff = dt_util.utcnow().timestamp() - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-    live_activity_tokens: dict[str, Any] = {
-        wh_id: {
+    live_activity_tokens: dict[str, Any] = {}
+    for wh_id, tags in app_config[DATA_LIVE_ACTIVITY_TOKENS].items():
+        valid = {
             tag: entry
             for tag, entry in tags.items()
             if entry.get("stored_at", 0) > cutoff
         }
-        for wh_id, tags in app_config[DATA_LIVE_ACTIVITY_TOKENS].items()
-        if any(entry.get("stored_at", 0) > cutoff for entry in tags.values())
-    }
+        if valid:
+            live_activity_tokens[wh_id] = valid
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
