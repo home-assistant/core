@@ -688,7 +688,7 @@ def test_get_available_entity_id_considers_existing_entities(
         ),
     ],
 )
-def test_regenerate_entity_id(
+def test_generate_entity_id(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
