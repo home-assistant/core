@@ -1,19 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -31,10 +25,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -56,7 +47,7 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: todo
   docs-supported-devices: done
   docs-supported-functions: done
