@@ -30,3 +30,10 @@ call_query:
       advanced: true
       selector:
         object:
+    timeout:
+      required: false
+      example: 5
+      selector:
+        number:
+          min: 0
+          unit_of_measurement: seconds
