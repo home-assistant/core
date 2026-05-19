@@ -170,9 +170,15 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
 class HomeKitServiceNumber(HomeKitNumber):
     """Representation of a HomeKit number named from its service."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the service feature."""
-        return service_feature_name(
-            self._char.service, cast(str, self.entity_description.name)
+    def __init__(
+        self,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
+        description: NumberEntityDescription,
+    ) -> None:
+        """Initialise a HomeKit number control named from its service."""
+        super().__init__(conn, info, char, description)
+        self._attr_name = service_feature_name(
+            char.service, cast(str, description.name)
         )

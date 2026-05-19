@@ -1,6 +1,8 @@
 """Helper functions for the homekit_controller component."""
 
+from collections.abc import Mapping
 from functools import lru_cache
+from types import MappingProxyType
 from typing import Final, cast
 
 from aiohomekit import Controller
@@ -49,9 +51,11 @@ def folded_name(name: str) -> str:
     return name.casefold().replace(" ", "")
 
 
-SERVICE_TYPE_NAMES: Final[dict[str, str]] = {
-    ServicesTypes.VALVE: "Valve",
-}
+SERVICE_TYPE_NAMES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        ServicesTypes.VALVE: "Valve",
+    }
+)
 
 
 def service_feature_name(service: Service, feature_name: str) -> str:
@@ -65,6 +69,8 @@ def service_feature_name(service: Service, feature_name: str) -> str:
     if (
         service_label_index := service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
     ) is not None:
+        if isinstance(service_label_index, float) and service_label_index.is_integer():
+            service_label_index = int(service_label_index)
         if service_type_name := SERVICE_TYPE_NAMES.get(service.type):
             return f"{service_type_name} {service_label_index} {feature_name}"
         return f"{service_label_index} {feature_name}"

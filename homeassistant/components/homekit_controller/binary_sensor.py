@@ -195,18 +195,14 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
     ) -> None:
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
+        self._attr_name = service_feature_name(
+            char.service, cast(str, description.name)
+        )
         super().__init__(conn, info, char)
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the service feature."""
-        return service_feature_name(
-            self._char.service, cast(str, self.entity_description.name)
-        )
 
     @property
     def is_on(self) -> bool:
