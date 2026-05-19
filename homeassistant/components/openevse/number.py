@@ -133,7 +133,10 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
                 translation_placeholders={"value": str(value)},
             ) from err
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from err
         except UnsupportedFeature as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
