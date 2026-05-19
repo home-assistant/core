@@ -52,7 +52,7 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
