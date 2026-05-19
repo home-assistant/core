@@ -48,12 +48,6 @@ def calendar_only() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-def language() -> str:
-    """Use English for calendar snapshots."""
-    return "en"
-
-
 # ─── Entity Registration ─────────────────────────────────────────────
 # Verify the three calendar entities are created and registered properly,
 # including that the learning schedule calendar is disabled by default.
