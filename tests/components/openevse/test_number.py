@@ -18,7 +18,11 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -63,7 +67,7 @@ async def test_set_value(
     ("raised", "expected"),
     [
         (ValueError("out of range"), ServiceValidationError),
-        (AuthenticationError("bad creds"), HomeAssistantError),
+        (AuthenticationError("bad creds"), ConfigEntryAuthFailed),
         (TimeoutError("timed out"), HomeAssistantError),
         (ServerTimeoutError("timed out"), HomeAssistantError),
         (ParseJSONError("bad json"), HomeAssistantError),

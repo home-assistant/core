@@ -24,7 +24,11 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -129,10 +133,7 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
                 translation_placeholders={"value": str(value)},
             ) from err
         except AuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="authentication_error",
-            ) from err
+            raise ConfigEntryAuthFailed("Authentication failed") from err
         except UnsupportedFeature as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
