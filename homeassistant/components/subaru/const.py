@@ -38,9 +38,11 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_LOCK = "lock"
 SERVICE_REMOTE_START = "remote_start"
 SERVICE_REMOTE_STOP = "remote_stop"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_UNLOCK = "unlock"
 SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
 
