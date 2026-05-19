@@ -2,8 +2,10 @@
 
 from typing import TYPE_CHECKING, Final
 
+from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -37,3 +39,10 @@ NO_WAKE_WORD: Final[str] = "no_wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
+
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit | None, UnitOfTemperature] = {
+    None: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}
