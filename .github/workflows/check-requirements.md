@@ -276,12 +276,11 @@ workflow is sane. The checks differ by hosting provider.
    b. **Automated credentials**: The job should use GitLab's OIDC ID token
       (`id_tokens:` block) and `pypa/gh-action-pypi-publish` equivalent, or
       reference `secrets.PYPI_TOKEN` / `$PYPI_TOKEN` injected from GitLab CI/CD
-      protected variables (flag ❌ if the token is hard-coded or unprotected).
-      Mark ✅ if OIDC or protected CI variables are used, ⚠️ if the method
-      cannot be determined. If credentials appear to be insecure (a hard-coded
-      or unprotected static token is the only credential), mark ⚠️ for version
-      bumps (suggest the upstream maintainer switch to OIDC / Trusted Publisher
-      for better security) and ❌ for new packages.
+      protected variables. Flag ❌ if the token is hard-coded or unprotected.
+      Mark ✅ if OIDC is used, ⚠️ if the method cannot be determined. If a
+      protected static token is the only credential, mark ⚠️ for version bumps
+      (suggest the upstream maintainer switch to OIDC / Trusted Publisher for
+      better security) and ❌ for new packages.
    c. **No manual upload bypass**: Flag ⚠️ if any job calls `twine upload`
       without being behind a protected-variable or environment guard.
 5. If no publish job is found, mark ⚠️ — "No publish job found in .gitlab-ci.yml;
