@@ -26,92 +26,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.fixture
-def mock_sensor_nodes(mock_nodes: list[Node]) -> list[Node]:
-    """Return sensor test nodes including VLV examples."""
-    return [
-        *mock_nodes,
-        Node(
-            node_id=60,
-            general=NodeGeneralInfo(
-                node_type="VLVRH",
-                sub_type=0,
-                network_type="WI",
-                parent=1,
-                asso=1,
-                name="Bedroom valve",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=48.0,
-                iaq_rh=88,
-                temp=21.3,
-            ),
-        ),
-        Node(
-            node_id=61,
-            general=NodeGeneralInfo(
-                node_type="VLVCO2",
-                sub_type=0,
-                network_type="WI",
-                parent=1,
-                asso=1,
-                name="Hall valve",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=512,
-                iaq_co2=76,
-                rh=None,
-                iaq_rh=None,
-                temp=20.1,
-            ),
-        ),
-        Node(
-            node_id=62,
-            general=NodeGeneralInfo(
-                node_type="VLVCO2RH",
-                sub_type=0,
-                network_type="WI",
-                parent=1,
-                asso=1,
-                name="Study valve",
-                identify=0,
-            ),
-            ventilation=NodeVentilationInfo(
-                state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
-                mode="-",
-                flow_lvl_tgt=None,
-            ),
-            sensor=NodeSensorInfo(
-                co2=645,
-                iaq_co2=95,
-                rh=54.0,
-                iaq_rh=92,
-                temp=20.7,
-            ),
-        ),
-    ]
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -229,32 +143,16 @@ async def test_lan_info_duco_error_marks_unavailable(
 
 
 @pytest.mark.parametrize(
-    ("node_type", "name", "sensor", "expected_entity_id", "expected_state"),
+    ("node_id", "expected_entity_id", "expected_state"),
     [
         pytest.param(
-            "BSRH",
-            "New RH sensor",
-            NodeSensorInfo(
-                co2=None,
-                iaq_co2=None,
-                rh=55.0,
-                iaq_rh=70,
-                temp=21.0,
-            ),
+            200,
             "sensor.new_rh_sensor_humidity",
             "55.0",
             id="humidity-node",
         ),
         pytest.param(
-            "VLVCO2",
-            "New valve",
-            NodeSensorInfo(
-                co2=575,
-                iaq_co2=82,
-                rh=None,
-                iaq_rh=None,
-                temp=20.5,
-            ),
+            201,
             "sensor.new_valve_carbon_dioxide",
             "575",
             id="vlv-co2-node",
@@ -266,36 +164,16 @@ async def test_new_node_added_dynamically(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
+    dynamic_sensor_nodes: dict[int, Node],
     freezer: FrozenDateTimeFactory,
-    node_type: str,
-    name: str,
-    sensor: NodeSensorInfo,
+    node_id: int,
     expected_entity_id: str,
     expected_state: str,
 ) -> None:
     """Test a new node appearing in coordinator data creates entities automatically."""
     assert hass.states.get(expected_entity_id) is None
 
-    new_node = Node(
-        node_id=200,
-        general=NodeGeneralInfo(
-            node_type=node_type,
-            sub_type=0,
-            network_type="RF",
-            parent=1,
-            asso=1,
-            name=name,
-            identify=0,
-        ),
-        ventilation=NodeVentilationInfo(
-            state="AUTO",
-            time_state_remain=0,
-            time_state_end=0,
-            mode="-",
-            flow_lvl_tgt=None,
-        ),
-        sensor=sensor,
-    )
+    new_node = dynamic_sensor_nodes[node_id]
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, new_node]
 
     freezer.tick(SCAN_INTERVAL)
