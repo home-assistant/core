@@ -87,12 +87,6 @@ def mock_solaredge_api_fixture() -> Generator[Mock]:
         yield api
 
 
-@pytest.fixture(name="mock_solaredge_api")
-def mock_solaredge_api_alias(solaredge_api: Mock) -> Mock:
-    """Backwards compatible alias for older tests."""
-    return solaredge_api
-
-
 @pytest.fixture(name="solaredge_web_api")
 def mock_solaredge_web_api_fixture() -> Generator[AsyncMock]:
     """Mock a successful SolarEdge Web API."""
