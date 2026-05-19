@@ -4,14 +4,8 @@ from typing import Any
 
 import voluptuous as vol
 from zha.exceptions import ZHAException
-from zha.zigbee.cluster_handlers.const import (
-    CLUSTER_HANDLER_IAS_WD,
-    CLUSTER_HANDLER_INOVELLI,
-)
-from zha.zigbee.cluster_handlers.manufacturerspecific import (
-    AllLEDEffectType,
-    SingleLEDEffectType,
-)
+from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
+from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -26,13 +20,15 @@ from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE
 
 # mypy: disallow-any-generics
 
+INOVELLI_CLUSTER_ID = 0xFC31
+
 ACTION_SQUAWK = "squawk"
 ACTION_WARN = "warn"
 ATTR_DATA = "data"
 ATTR_IEEE = "ieee"
 CONF_ZHA_ACTION_TYPE = "zha_action_type"
 ZHA_ACTION_TYPE_SERVICE_CALL = "service_call"
-ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND = "cluster_handler_command"
+ZHA_ACTION_TYPE_CLUSTER_COMMAND = "cluster_command"
 INOVELLI_ALL_LED_EFFECT = "issue_all_led_effect"
 INOVELLI_INDIVIDUAL_LED_EFFECT = "issue_individual_led_effect"
 
@@ -73,12 +69,13 @@ ACTION_SCHEMA = vol.Any(
     DEFAULT_ACTION_SCHEMA,
 )
 
-DEVICE_ACTIONS = {
-    CLUSTER_HANDLER_IAS_WD: [
+# Maps a (cluster_id) the device must expose to the available actions.
+DEVICE_ACTIONS_BY_CLUSTER_ID: dict[int, list[dict[str, str]]] = {
+    IasWd.cluster_id: [
         {CONF_TYPE: ACTION_SQUAWK, CONF_DOMAIN: DOMAIN},
         {CONF_TYPE: ACTION_WARN, CONF_DOMAIN: DOMAIN},
     ],
-    CLUSTER_HANDLER_INOVELLI: [
+    INOVELLI_CLUSTER_ID: [
         {CONF_TYPE: INOVELLI_ALL_LED_EFFECT, CONF_DOMAIN: DOMAIN},
         {CONF_TYPE: INOVELLI_INDIVIDUAL_LED_EFFECT, CONF_DOMAIN: DOMAIN},
     ],
@@ -87,8 +84,8 @@ DEVICE_ACTIONS = {
 DEVICE_ACTION_TYPES = {
     ACTION_SQUAWK: ZHA_ACTION_TYPE_SERVICE_CALL,
     ACTION_WARN: ZHA_ACTION_TYPE_SERVICE_CALL,
-    INOVELLI_ALL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND,
+    INOVELLI_ALL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_COMMAND,
+    INOVELLI_INDIVIDUAL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_COMMAND,
 }
 
 DEVICE_ACTION_SCHEMAS = {
@@ -116,9 +113,20 @@ SERVICE_NAMES = {
     ACTION_WARN: SERVICE_WARNING_DEVICE_WARN,
 }
 
-CLUSTER_HANDLER_MAPPINGS = {
-    INOVELLI_ALL_LED_EFFECT: CLUSTER_HANDLER_INOVELLI,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: CLUSTER_HANDLER_INOVELLI,
+# Maps a cluster-command action type to the (cluster_id, command_name) that
+# implements it.
+CLUSTER_COMMAND_MAPPINGS: dict[str, tuple[int, str]] = {
+    INOVELLI_ALL_LED_EFFECT: (INOVELLI_CLUSTER_ID, "led_effect"),
+    INOVELLI_INDIVIDUAL_LED_EFFECT: (INOVELLI_CLUSTER_ID, "individual_led_effect"),
+}
+
+# Maps schema field name → ZCL command kwarg name.
+INOVELLI_FIELD_TO_ZCL_KWARG = {
+    "effect_type": "led_effect",
+    "color": "led_color",
+    "level": "led_level",
+    "duration": "led_duration",
+    "led_number": "led_number",
 }
 
 
@@ -150,17 +158,16 @@ async def async_get_actions(
         zha_device = async_get_zha_device_proxy(hass, device_id).device
     except KeyError, AttributeError:
         return []
-    cluster_handlers = [
-        ch.name
-        for endpoint in zha_device.endpoints.values()
-        for ch in endpoint.claimed_cluster_handlers.values()
-    ]
-    actions = [
-        action
-        for cluster_handler, cluster_handler_actions in DEVICE_ACTIONS.items()
-        for action in cluster_handler_actions
-        if cluster_handler in cluster_handlers
-    ]
+    cluster_ids = {
+        cluster_id
+        for ep_id, endpoint in zha_device.device.endpoints.items()
+        if ep_id != 0
+        for cluster_id in endpoint.in_clusters
+    }
+    actions: list[dict[str, str]] = []
+    for required_cluster_id, cluster_actions in DEVICE_ACTIONS_BY_CLUSTER_ID.items():
+        if required_cluster_id in cluster_ids:
+            actions.extend(cluster_actions)
     for action in actions:
         action[CONF_DEVICE_ID] = device_id
     return actions
@@ -195,49 +202,50 @@ async def _execute_service_based_action(
     )
 
 
-async def _execute_cluster_handler_command_based_action(
+def _find_cluster(zha_device, cluster_id: int):
+    """Return the first server cluster matching `cluster_id` on the device."""
+    for ep_id, endpoint in zha_device.device.endpoints.items():
+        if ep_id == 0:
+            continue
+        cluster = endpoint.in_clusters.get(cluster_id)
+        if cluster is not None:
+            return cluster
+    return None
+
+
+async def _execute_cluster_command_based_action(
     hass: HomeAssistant,
     config: dict[str, Any],
     variables: TemplateVarsType,
     context: Context | None,
 ) -> None:
     action_type = config[CONF_TYPE]
-    cluster_handler_name = CLUSTER_HANDLER_MAPPINGS[action_type]
+    cluster_id, command_name = CLUSTER_COMMAND_MAPPINGS[action_type]
     try:
         zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
     except KeyError, AttributeError:
         return
 
-    action_cluster_handler = None
-    for endpoint in zha_device.endpoints.values():
-        for cluster_handler in endpoint.all_cluster_handlers.values():
-            if cluster_handler.name == cluster_handler_name:
-                action_cluster_handler = cluster_handler
-                break
-
-    if action_cluster_handler is None:
+    cluster = _find_cluster(zha_device, cluster_id)
+    if cluster is None or not hasattr(cluster, command_name):
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute cluster handler action -"
-            f" cluster handler: {cluster_handler_name} action:"
-            f" {action_type}"
+            f"Unable to execute cluster command action: cluster 0x{cluster_id:04x}"
+            f" command {command_name!r} not available"
         )
 
-    if not hasattr(action_cluster_handler, action_type):
-        raise InvalidDeviceAutomationConfig(
-            f"Unable to execute cluster handler -"
-            f" cluster handler: {cluster_handler_name} action:"
-            f" {action_type}"
-        )
+    kwargs = {
+        zcl_kwarg: config[field]
+        for field, zcl_kwarg in INOVELLI_FIELD_TO_ZCL_KWARG.items()
+        if field in config
+    }
 
     try:
-        await getattr(action_cluster_handler, action_type)(**config)
+        await getattr(cluster, command_name)(**kwargs)
     except ZHAException as err:
         raise HomeAssistantError(err) from err
 
 
 ZHA_ACTION_TYPES = {
     ZHA_ACTION_TYPE_SERVICE_CALL: _execute_service_based_action,
-    ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND: (
-        _execute_cluster_handler_command_based_action
-    ),
+    ZHA_ACTION_TYPE_CLUSTER_COMMAND: _execute_cluster_command_based_action,
 }

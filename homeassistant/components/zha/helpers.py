@@ -19,7 +19,6 @@ from zoneinfo import ZoneInfo
 import voluptuous as vol
 from zha.application import Platform as ZhaPlatform
 from zha.application.const import (
-    ATTR_CLUSTER_ID,
     ATTR_DEVICE_IEEE,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
@@ -29,11 +28,6 @@ from zha.application.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
-    ZHA_CLUSTER_HANDLER_CFG_DONE,
-    ZHA_CLUSTER_HANDLER_MSG,
-    ZHA_CLUSTER_HANDLER_MSG_BIND,
-    ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
-    ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_EVENT,
     ZHA_GW_MSG,
     ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -72,10 +66,11 @@ from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
 from zha.zigbee.device import (
-    ClusterHandlerConfigurationComplete,
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
     Device,
+    DeviceConfiguredEvent,
     DeviceEntityAddedEvent,
     DeviceEntityRemovedEvent,
     DeviceFirmwareInfoUpdatedEvent,
@@ -169,6 +164,52 @@ from .const import (
     DEFAULT_DATABASE_NAME,
     DEVICE_PAIRING_STATUS,
     DOMAIN,
+    ZHA_ALARM_OPTIONS,
+    ZHA_OPTIONS,
+)
+from .const import (
+    ATTR_ACTIVE_COORDINATOR,
+    ATTR_AVAILABLE,
+    ATTR_DEVICE_TYPE,
+    ATTR_ENDPOINT_NAMES,
+    ATTR_EXPOSES_FEATURES,
+    ATTR_IEEE,
+    ATTR_LAST_SEEN,
+    ATTR_LQI,
+    ATTR_MANUFACTURER,
+    ATTR_MANUFACTURER_CODE,
+    ATTR_NEIGHBORS,
+    ATTR_NWK,
+    ATTR_POWER_SOURCE,
+    ATTR_QUIRK_APPLIED,
+    ATTR_QUIRK_CLASS,
+    ATTR_ROUTES,
+    ATTR_RSSI,
+    ATTR_SIGNATURE,
+    CONF_ALARM_ARM_REQUIRES_CODE,
+    CONF_ALARM_FAILED_TRIES,
+    CONF_ALARM_MASTER_CODE,
+    CONF_BAUDRATE,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_CUSTOM_QUIRKS_PATH,
+    CONF_DEFAULT_LIGHT_TRANSITION,
+    CONF_DEVICE_CONFIG,
+    CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
+    CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_ENABLE_MAINS_STARTUP_POLLING,
+    CONF_ENABLE_QUIRKS,
+    CONF_FLOW_CONTROL,
+    CONF_GROUP_MEMBERS_ASSUME_STATE,
+    CONF_RADIO_TYPE,
+    CONF_ZIGPY,
+    CUSTOM_CONFIGURATION,
+    DATA_ZHA,
+    DEFAULT_DATABASE_NAME,
+    DEVICE_PAIRING_STATUS,
+    DOMAIN,
+    SIGNAL_DEVICE_RECONFIGURE_EVENT,
     ZHA_ALARM_OPTIONS,
     ZHA_OPTIONS,
 )
@@ -451,50 +492,44 @@ class ZHADeviceProxy(EventBase):
         )
 
     @callback
-    def handle_zha_channel_configure_reporting(
+    def handle_zha_cluster_bind(self, event: ClusterBindEvent) -> None:
+        """Forward a cluster bind result to the reconfigure websocket."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
+            {
+                "event_type": event.event_type,
+                "endpoint_id": event.endpoint_id,
+                "cluster_id": event.cluster_id,
+                "cluster_name": event.cluster_name,
+                "success": event.success,
+            },
+        )
+
+    @callback
+    def handle_zha_cluster_configure_reporting(
         self, event: ClusterConfigureReportingEvent
     ) -> None:
-        """Handle a ZHA cluster configure reporting event."""
+        """Forward a cluster reporting-configured result to the reconfigure websocket."""
         async_dispatcher_send(
             self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
             {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
-                ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                    ATTR_CLUSTER_NAME: event.cluster_name,
-                    ATTR_CLUSTER_ID: event.cluster_id,
-                    ATTR_ATTRIBUTES: event.attributes,
-                },
+                "event_type": event.event_type,
+                "endpoint_id": event.endpoint_id,
+                "cluster_id": event.cluster_id,
+                "cluster_name": event.cluster_name,
+                "attributes": event.attributes,
             },
         )
 
     @callback
-    def handle_zha_channel_cfg_done(
-        self, event: ClusterHandlerConfigurationComplete
-    ) -> None:
-        """Handle a ZHA cluster configure reporting event."""
+    def handle_zha_device_configured(self, event: DeviceConfiguredEvent) -> None:
+        """Forward the device configuration-complete signal to the reconfigure websocket."""
         async_dispatcher_send(
             self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
-            {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_CFG_DONE,
-            },
-        )
-
-    @callback
-    def handle_zha_channel_bind(self, event: ClusterBindEvent) -> None:
-        """Handle a ZHA cluster bind event."""
-        async_dispatcher_send(
-            self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
-            {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                    ATTR_CLUSTER_NAME: event.cluster_name,
-                    ATTR_CLUSTER_ID: event.cluster_id,
-                    ATTR_SUCCESS: event.success,
-                },
-            },
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
+            {"event_type": event.event_type},
         )
 
     @callback
