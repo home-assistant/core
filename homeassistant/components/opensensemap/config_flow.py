@@ -84,6 +84,6 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ERROR_INVALID_STATION)
 
         return self.async_create_entry(
-            title=import_data.get(CONF_NAME, name),
+            title=import_data.get(CONF_NAME) or name,
             data={CONF_STATION_ID: station_id},
         )

@@ -1,6 +1,5 @@
 """Constants for the openSenseMap integration."""
 
-from datetime import timedelta
 import logging
 
 DOMAIN = "opensensemap"
@@ -10,9 +9,7 @@ LOGGER = logging.getLogger(__name__)
 CONF_STATION_ID = "station_id"
 
 INTEGRATION_TITLE = "openSenseMap"
-DEPRECATED_YAML_BREAKS_IN_VERSION = "2026.11.0"
-
-SCAN_INTERVAL = timedelta(minutes=10)
+DEPRECATED_YAML_BREAKS_IN_VERSION = "2026.12.0"
 
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_INVALID_STATION = "invalid_station"

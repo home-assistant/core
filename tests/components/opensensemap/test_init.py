@@ -1,7 +1,9 @@
 """Tests for the openSenseMap integration setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from opensensemap_api.exceptions import OpenSenseMapError
 import pytest
 
@@ -13,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_STATION_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_opensensemap_api")
@@ -30,6 +32,35 @@ async def test_setup_entry(
 
     state = hass.states.get("air_quality.test_station")
     assert state is not None
+    assert state.attributes["particulate_matter_2_5"] == 5.42
+    assert state.attributes["particulate_matter_10"] == 9.17
+
+
+async def test_async_update_failure_marks_unavailable(
+    hass: HomeAssistant,
+    mock_opensensemap_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an API error after setup marks the entity as unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("air_quality.test_station").state != "unavailable"
+
+    mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("air_quality.test_station").state == "unavailable"
+
+    mock_opensensemap_api.get_data.side_effect = None
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("air_quality.test_station").state != "unavailable"
 
 
 async def test_setup_entry_cannot_connect(
@@ -78,7 +109,9 @@ async def test_yaml_import(
     assert len(entries) == 1
     assert entries[0].unique_id == TEST_STATION_ID
 
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
@@ -105,7 +138,9 @@ async def test_yaml_import_cannot_connect(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
-    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
 async def test_yaml_import_invalid_station(
@@ -126,7 +161,9 @@ async def test_yaml_import_invalid_station(
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_station"
     )
-    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
 @pytest.mark.usefixtures("mock_opensensemap_api")
@@ -147,7 +184,9 @@ async def test_yaml_import_already_configured(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].entry_id == mock_config_entry.entry_id
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )

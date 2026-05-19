@@ -1,5 +1,9 @@
 """Support for openSenseMap Air Quality data."""
 
+from datetime import timedelta
+
+from opensensemap_api import OpenSenseMap
+from opensensemap_api.exceptions import OpenSenseMapError
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
@@ -16,16 +20,18 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import OpenSenseMapConfigEntry
 from .const import (
     CONF_STATION_ID,
     DEPRECATED_YAML_BREAKS_IN_VERSION,
     DOMAIN,
     INTEGRATION_TITLE,
     KNOWN_IMPORT_ABORT_REASONS,
+    LOGGER,
 )
-from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
@@ -44,7 +50,7 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={k: config[k] for k in (CONF_STATION_ID, CONF_NAME) if k in config},
+        data=config,
     )
 
     if (
@@ -73,7 +79,7 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         breaks_in_ha_version=DEPRECATED_YAML_BREAKS_IN_VERSION,
         is_fixable=False,
         issue_domain=DOMAIN,
@@ -92,26 +98,42 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the openSenseMap air quality entity from a config entry."""
-    async_add_entities([OpenSenseMapQuality(entry.runtime_data)])
+    async_add_entities(
+        [
+            OpenSenseMapQuality(
+                entry.runtime_data, entry.data[CONF_STATION_ID], entry.title
+            )
+        ]
+    )
 
 
-class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQualityEntity):
+class OpenSenseMapQuality(AirQualityEntity):
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = "Data provided by openSenseMap"
 
-    def __init__(self, coordinator: OpenSenseMapCoordinator) -> None:
+    def __init__(self, api: OpenSenseMap, station_id: str, name: str) -> None:
         """Initialize the air quality entity."""
-        super().__init__(coordinator)
-        self._attr_name = coordinator.config_entry.title
-        self._attr_unique_id = coordinator.config_entry.data[CONF_STATION_ID]
+        self._api = api
+        self._attr_name = name
+        self._attr_unique_id = station_id
 
     @property
     def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self.coordinator.data.pm2_5
+        return self._api.pm2_5
 
     @property
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self.coordinator.data.pm10
+        return self._api.pm10
+
+    async def async_update(self) -> None:
+        """Fetch latest data from the openSenseMap API."""
+        try:
+            await self._api.get_data()
+        except OpenSenseMapError as err:
+            LOGGER.warning("Unable to fetch data from openSenseMap: %s", err)
+            self._attr_available = False
+        else:
+            self._attr_available = True
