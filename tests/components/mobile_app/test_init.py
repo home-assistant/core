@@ -22,12 +22,12 @@ from homeassistant.components.mobile_app.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import CALL_SERVICE, REGISTER_CLEARTEXT
 
