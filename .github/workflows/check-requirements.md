@@ -1,19 +1,11 @@
 ---
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "requirements*.txt"
-      - "homeassistant/package_constraints.txt"
-      - "pyproject.toml"
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pull_request_number:
         description: "Pull request number to (re-)check"
         required: true
         type: number
-  roles: all
 permissions:
   contents: read
   pull-requests: read
@@ -25,9 +17,29 @@ tools:
   web-fetch: {}
   github:
     toolsets: [default]
+    min-integrity: unapproved
 safe-outputs:
   add-comment:
     max: 1
+    target: ${{ inputs.pull_request_number }}
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number }}
+  cancel-in-progress: true
+post-steps:
+  - name: Verify agent produced an add_comment safe-output
+    if: always()
+    run: |
+      OUTPUT=/tmp/gh-aw/agent_output.json
+      if [ ! -f "${OUTPUT}" ]; then
+        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
+        exit 1
+      fi
+      if ! grep -q '"add_comment"' "${OUTPUT}"; then
+        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+        echo "Agent output:"
+        cat "${OUTPUT}"
+        exit 1
+      fi
 description: >
   Checks changed Python package requirements on PRs targeting the core repo
   (including PRs opened from forks) and verifies licenses match PyPI metadata, source
@@ -40,7 +52,7 @@ description: >
   and the PR description contains the required links.
 ---
 
-# Requirements License and Availability Check
+# Check requirements
 
 You are a code review assistant for the Home Assistant project. Your job is to
 review changes to Python package requirements and verify they meet the project's
@@ -60,8 +72,14 @@ standards.
 
 ## Step 1 — Identify Changed Packages
 
-Use the GitHub tool to fetch the PR diff. Look for lines that were added (`+`)
-or removed (`-`) in **any** of these files:
+This workflow is triggered via `workflow_dispatch`. The PR number to check is
+**#${{ inputs.pull_request_number }}**. Use that PR number for **every** GitHub
+API call in the steps below (fetching the diff, the PR body, etc.). Do **not**
+rely on `github.event.pull_request` — it is not populated for
+`workflow_dispatch` runs.
+
+Use the GitHub tool to fetch the PR diff for that PR number. Look for
+lines that were added (`+`) or removed (`-`) in **any** of these files:
 - `requirements.txt`
 - `requirements_all.txt`
 - `requirements_test.txt`
@@ -141,10 +159,8 @@ For each new or bumped package:
 
 ## Step 4 — Check PR Description
 
-Read the PR body from the GitHub API using the PR number from the workflow
-context (`pull-request-number`). If that value is absent, use the
-`workflow_dispatch` input `pull_request_number`.
-Extract all URLs present in the PR body.
+Read the PR body from the GitHub API for PR
+#${{ inputs.pull_request_number }}. Extract all URLs present in the PR body.
 
 ### 4a — New packages: repository link required
 
@@ -484,7 +500,7 @@ Icon set:
 
 ```
 <!-- requirements-check -->
-## Requirements Check
+## Check requirements
 
 > ☑️ in the **Security** column means a baseline scan found nothing
 > obvious — it is **not** an endorsement. See Step 7 for what the scan
@@ -570,10 +586,12 @@ Collapsed example (all checks passed):
   automatic rejection.
 - A package that appears in both a production file and a test file should only
   be reported once; use the production file entry as the canonical one.
-- This workflow is only triggered when a commit actually changes one of the
-  tracked requirements files (for `synchronize` events GitHub compares the
-  before/after SHAs of the push, not the entire PR diff). Members can manually
-  retrigger the workflow via `workflow_dispatch` with the PR number to re-run
-  the check after updating the PR description or fixing issues without changing
-  any requirements files. On a retrigger the existing comment is updated in
-  place so there is always exactly one requirements-check comment in the PR.
+- This workflow is invoked exclusively via `workflow_dispatch`. The stage-1
+  workflow `Check requirements (changes detection)` runs on `pull_request` with
+  a paths filter on the tracked requirements files, and its completion triggers
+  the dispatcher (`Check requirements (dispatcher)`) which calls this workflow
+  with the PR number. Members can also dispatch this workflow manually with the
+  PR number to re-run the check after updating the PR description or fixing
+  issues without changing any requirements files. On a retrigger the existing
+  comment is updated in place so there is always exactly one requirements-check
+  comment in the PR.

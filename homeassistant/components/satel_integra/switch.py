@@ -29,12 +29,9 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    switchable_output_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in switchable_output_subentries:
+    for subentry in config_entry.get_subentries_of_type(
+        SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+    ):
         switchable_output_num: int = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
 
         async_add_entities(
