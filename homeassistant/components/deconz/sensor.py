@@ -97,7 +97,7 @@ T = TypeVar(
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzSensorDescription(SensorEntityDescription, Generic[T]):
+class DeconzSensorDescription(SensorEntityDescription, Generic[T]):  # noqa: UP046
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None

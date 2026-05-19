@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==4.0.0",
+  "aiodns==4.0.3",
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
@@ -57,16 +57,16 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==47.0.0",
+  "cryptography==48.0.0",
   "Pillow==12.2.0",
-  "propcache==0.4.1",
+  "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
-  "orjson==3.11.8",
+  "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
   "PyYAML==6.0.3",
-  "requests==2.33.1",
+  "requests==2.34.2",
   "securetar==2026.4.1",
   "SQLAlchemy==2.0.49",
   "standard-aifc==3.13.0",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.10",
+  "uv==0.11.14",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
@@ -118,20 +118,7 @@ init-hook = """\
 load-plugins = [
   "pylint.extensions.code_style",
   "pylint.extensions.typing",
-  "hass_async_load_fixtures",
-  "hass_decorator",
-  "hass_enforce_class_module",
-  "hass_enforce_config_entry_unique_id_no_ip",
-  "hass_enforce_config_flow_no_name",
-  "hass_enforce_config_flow_no_polling",
-  "hass_enforce_greek_micro_char",
-  "hass_enforce_runtime_data",
-  "hass_enforce_sorted_platforms",
-  "hass_enforce_super_call",
-  "hass_enforce_type_hints",
-  "hass_inheritance",
-  "hass_imports",
-  "hass_logger",
+  "pylint_home_assistant",
   "pylint_per_file_ignores",
 ]
 persistent = false
@@ -188,6 +175,9 @@ disable = [
   "consider-using-namedtuple-or-dataclass",
   "consider-using-assignment-expr",
   "possibly-used-before-assignment",
+
+  # Disabled while existing violations are being cleaned up
+  "home-assistant-unused-test-fixture-argument",
 
   # Handled by ruff
   # Ref: <https://github.com/astral-sh/ruff/issues/970>
@@ -448,6 +438,7 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
+pythonpath = ["pylint/plugins"]
 testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
@@ -657,34 +648,55 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.12"
+required-version = ">=0.15.13"
 
 [tool.ruff.lint]
 select = [
   "A001",   # Variable {name} is shadowing a Python builtin
   "ASYNC",  # flake8-async
   "B002",   # Python does not support the unary prefix increment
+  "B003",   # Assigning to os.environ doesn't clear the environment
+  "B004",   # Using hasattr(x, "__call__") instead of callable(x)
   "B005",   # Using .strip() with multi-character strings is misleading
+  "B006",   # Do not use mutable data structures for argument defaults
   "B007",   # Loop control variable {name} not used within loop body
   "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
+  "B010",   # Do not call setattr with a constant attribute value. It is not any safer than normal property access.
+  "B011",   # Do not call assert False since python -O removes these calls
+  "B012",   # Use of break/continue/return inside a finally block
+  "B013",   # A length-one tuple literal is redundant in exception handlers
   "B014",   # Exception handler with duplicate exception
   "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+  "B016",   # Cannot raise a literal. Did you intend to return it or raise an exception?
   "B017",   # pytest.raises(BaseException) should be considered evil
   "B018",   # Found useless attribute access. Either assign it to a variable or remove it.
+  "B020",   # Loop control variable overrides iterable it iterates
+  "B021",   # f-string used as docstring
+  "B022",   # No arguments passed to contextlib.suppress
   "B023",   # Function definition does not bind loop variable {name}
   "B024",   # `{name}` is an abstract base class, but it has no abstract methods or properties
   "B025",   # try-except* block with duplicate exception {name}
   "B026",   # Star-arg unpacking after a keyword argument is strongly discouraged
+  "B027",   # Empty method in abstract base class without abstract decorator
+  "B028",   # No explicit stacklevel keyword argument found in warnings.warn
+  "B029",   # Using except (): with an empty tuple is a no-op
+  "B030",   # Except handlers should only be exception classes
+  "B031",   # Using the result of the groupby() generator
   "B032",   # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
+  "B033",   # Set should not contain duplicate items
+  "B034",   # re.sub/subn/split should pass count/maxsplit as keyword arguments
   "B035",   # Dictionary comprehension uses static key
+  "B039",   # ContextVar with mutable literal or function call as default
   "B904",   # Use raise from to specify exception cause
   "B905",   # zip() without an explicit strict= parameter
+  "B911",   # itertools.batched() without explicit strict= parameter
   "BLE",
   "C",      # complexity
   "COM818", # Trailing comma on bare tuple prohibited
   "D",      # docstrings
   "DTZ003", # Use datetime.now(tz=) instead of datetime.utcnow()
   "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
+  "DTZ011", # Use datetime.now(tz=).date() instead of date.today()
   "E",      # pycodestyle
   "F",      # pyflakes/autoflake
   "F541",   # f-string without any placeholders
@@ -728,13 +740,19 @@ select = [
   "RUF032", # Decimal() called with float literal argument
   "RUF033", # __post_init__ method with argument defaults
   "RUF034", # Useless if-else condition
+  "RUF037", # Unnecessary empty iterable within deque call
+  "RUF046", # Unnecessary cast to int
+  "RUF051", # Use dict.pop(key, None) instead of if-key-in-dict-del
+  "RUF057", # Unnecessary round call
   "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
   "RUF200", # Failed to parse pyproject.toml: {message}
+  "S107",   # Possible hardcoded password assigned to function default
   "S102",   # Use of exec detected
   "S103",   # bad-file-permissions
   "S108",   # hardcoded-temp-file
+  "S301",   # suspicious-pickle-usage
   "S306",   # suspicious-mktemp-usage
   "S307",   # suspicious-eval-usage
   "S313",   # suspicious-xmlc-element-tree-usage
@@ -805,7 +823,6 @@ ignore = [
   "TRY003", # Avoid specifying long messages outside the exception class
   "TRY400", # Use `logging.exception` instead of `logging.error`
 
-  "UP046", # Non PEP 695 generic class
   "UP047", # Non PEP 696 generic function
   "UP049", # Avoid private type parameter names
 

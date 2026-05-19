@@ -328,7 +328,7 @@ class ConditionChecker(abc.ABC):
         await self._async_setup()
         self._set_up = True
 
-    async def _async_setup(self) -> None:
+    async def _async_setup(self) -> None:  # noqa: B027
         """Set up the condition checker.
 
         Intended to be overridden in derived classes that need to do setup.
@@ -344,7 +344,7 @@ class ConditionChecker(abc.ABC):
         self._async_unload()
         self._unloaded = True
 
-    def _async_unload(self) -> None:
+    def _async_unload(self) -> None:  # noqa: B027
         """Clean up any resources held by the checker.
 
         Intended to be overridden in derived classes that need to do unloading.
@@ -776,7 +776,10 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return None
 
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the tracked value from a state, with unit validation for state-based values."""
+        """Get the tracked value from a state.
+
+        Includes unit validation for state-based values.
+        """
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
@@ -1745,9 +1748,14 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType | str
 ) -> ConfigType:
     """Validate config."""
+    if isinstance(config, str):
+        config = {
+            CONF_CONDITION: "template",
+            CONF_VALUE_TEMPLATE: cv.dynamic_template(config),
+        }
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
