@@ -29,8 +29,12 @@ from homeassistant.components.samsungtv.const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
+    LEGACY_ENCRYPTED_PORT,
     LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
@@ -73,7 +77,7 @@ from tests.common import MockConfigEntry, async_load_json_object_fixture
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
 
-MOCK_USER_DATA = {CONF_HOST: "fake_host"}
+MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_METHOD: METHOD_WEBSOCKET}
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
@@ -231,10 +235,34 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
-async def test_user_encrypted_websocket(
+async def test_user_encrypted_websocket_standard_port(
     hass: HomeAssistant,
 ) -> None:
-    """Test starting a flow from ssdp for a supported device populates the mac."""
+    """Test encrypted TVs that pair on the standard encrypted websocket port."""
+    # show form
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "TV-UE48JU6470 (UE48JU6400)"
+    assert result2["data"][CONF_HOST] == "10.20.43.21"
+    assert result2["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result2["data"][CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
+    assert result2["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
+
+
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
+async def test_user_encrypted_websocket_legacy_port(
+    hass: HomeAssistant,
+) -> None:
+    """Test encrypted TVs that pair on the legacy encrypted websocket port."""
     # show form
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -252,12 +280,18 @@ async def test_user_encrypted_websocket(
         ]
         authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
 
-        # entry was added
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_DATA
+            result["flow_id"],
+            user_input={
+                CONF_HOST: MOCK_USER_DATA[CONF_HOST],
+                CONF_METHOD: METHOD_ENCRYPTED_WEBSOCKET,
+            },
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "encrypted_pairing"
+
+        flow = hass.config_entries.flow._progress[result2["flow_id"]]
+        flow._port = LEGACY_ENCRYPTED_PORT
 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input={CONF_PIN: "invalid"}
@@ -270,16 +304,16 @@ async def test_user_encrypted_websocket(
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
+    assert result4["title"] == "10.20.43.21"
     assert result4["data"][CONF_HOST] == "10.20.43.21"
-    assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
-    assert result4["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result4["data"][CONF_MODEL] == "UE48JU6400"
-    assert result4["data"][CONF_PORT] == 8000
+    assert result4["data"][CONF_MAC] is None
+    assert result4["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
+    assert result4["data"][CONF_MODEL] is None
+    assert result4["data"][CONF_PORT] == LEGACY_ENCRYPTED_PORT
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
-    assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
+    assert result4["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("rest_api_failing")
@@ -691,7 +725,7 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
-    assert result4["data"][CONF_PORT] == 8000
+    assert result4["data"][CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
     assert (
         result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
@@ -1269,6 +1303,10 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
             "homeassistant.components.samsungtv.bridge.Remote",
             side_effect=OSError("Boom"),
         ) as remote,
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=OSError("Boom"),
+        ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
             side_effect=ResponseError,
