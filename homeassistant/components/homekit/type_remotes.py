@@ -229,6 +229,11 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             async with lock:
                 self._async_write_hidden_sources(entry)
         else:
+            _LOGGER.warning(
+                "%s: persisting visibility without a lock — runtime_data is not "
+                "HomeKitEntryData; concurrent sibling accessories may race",
+                self.entity_id,
+            )
             self._async_write_hidden_sources(entry)
 
     @callback
@@ -254,7 +259,10 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         """Flush any pending visibility persist before tearing down."""
         if (debouncer := getattr(self, "_visibility_debouncer", None)) is not None:
             debouncer.async_cancel()
-            self.hass.async_create_task(self._async_persist_hidden_sources())
+            self.hass.async_create_background_task(
+                self._async_persist_hidden_sources(),
+                name=f"homekit_flush_visibility_{self.entity_id}",
+            )
         super().async_stop()
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
