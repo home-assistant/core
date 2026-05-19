@@ -6,13 +6,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
-from homeassistant.components.novy_cooker_hood.const import (
-    CONF_CODE,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as RF_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError

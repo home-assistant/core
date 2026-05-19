@@ -6,11 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from rf_protocols.loader import CodeCollection
 
-from homeassistant.components.novy_cooker_hood.const import (
-    CONF_CODE,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
