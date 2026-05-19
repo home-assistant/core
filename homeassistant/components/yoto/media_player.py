@@ -151,7 +151,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         await self._async_run(
             self.coordinator.client.set_volume,
             self._player_id,
-            int(round(volume * 100)),
+            round(volume * 100),
         )
 
     async def async_media_seek(self, position: float) -> None:

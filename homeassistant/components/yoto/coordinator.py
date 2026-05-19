@@ -1,6 +1,5 @@
 """Coordinator for the Yoto integration."""
 
-import asyncio
 from datetime import datetime
 
 import aiohttp
@@ -70,7 +69,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        await self._async_refresh_status_per_device()
         await self._async_load_library()
 
         try:
@@ -123,7 +121,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        await self._async_refresh_status_per_device()
         return self.client.players
 
     async def _async_load_library(self) -> None:
@@ -132,19 +129,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             await self.client.update_library()
         except YotoError as err:
             _LOGGER.warning("Could not load Yoto card library: %s", err)
-
-    async def _async_refresh_status_per_device(self) -> None:
-        """Refresh the REST status for every known player in parallel."""
-
-        async def _refresh_one(device_id: str) -> None:
-            try:
-                await self.client.update_player_status(device_id)
-            except YotoError as err:
-                _LOGGER.warning(
-                    "Could not refresh Yoto player %s status: %s", device_id, err
-                )
-
-        await asyncio.gather(*(_refresh_one(did) for did in self.client.players))
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
