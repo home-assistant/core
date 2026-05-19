@@ -301,13 +301,22 @@ async def test_power_flow_grid_export_storage_discharge(
     grid = hass.states.get("sensor.solaredge_grid_power")
     assert grid is not None
     assert grid.state == "-100.0"
-    assert grid.attributes["flow"] == "export"
 
     storage = hass.states.get("sensor.solaredge_storage_power")
     assert storage is not None
     assert storage.state == "400.0"
-    assert storage.attributes["flow"] == "discharge"
-    assert storage.attributes["soc"] == 60
+
+    grid_direction = hass.states.get("sensor.solaredge_grid_flow_direction")
+    assert grid_direction is not None
+    assert grid_direction.state == "export"
+
+    storage_direction = hass.states.get("sensor.solaredge_storage_flow_direction")
+    assert storage_direction is not None
+    assert storage_direction.state == "discharge"
+
+    storage_level = hass.states.get("sensor.solaredge_storage_level")
+    assert storage_level is not None
+    assert storage_level.state == "60"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -739,12 +748,13 @@ def _power_flow_payload(
         (False, True, "import", "charge"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_power_flow_direction_sensors(
     mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    mock_solaredge_api: AsyncMock,
+    solaredge_api: Mock,
     mock_config_entry: MockConfigEntry,
     grid_export: bool,
     storage_charging: bool,
@@ -752,12 +762,12 @@ async def test_power_flow_direction_sensors(
     expected_storage: str,
 ) -> None:
     """Test that grid and storage flow direction ENUM sensors are populated."""
-    mock_solaredge_api.get_current_power_flow = AsyncMock(
+    solaredge_api.get_current_power_flow = AsyncMock(
         return_value=_power_flow_payload(
             grid_export=grid_export, storage_charging=storage_charging
         )
     )
-    mock_solaredge.return_value = mock_solaredge_api
+    mock_solaredge.return_value = solaredge_api
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -786,21 +796,22 @@ async def test_power_flow_direction_sensors(
     assert "soc" not in storage_power.attributes
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_level_from_power_flow(
     mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    mock_solaredge_api: AsyncMock,
+    solaredge_api: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the storage level sensor reads chargeLevel from power-flow data."""
-    mock_solaredge_api.get_current_power_flow = AsyncMock(
+    solaredge_api.get_current_power_flow = AsyncMock(
         return_value=_power_flow_payload(
             grid_export=False, storage_charging=True, charge_level=42
         )
     )
-    mock_solaredge.return_value = mock_solaredge_api
+    mock_solaredge.return_value = solaredge_api
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -811,16 +822,20 @@ async def test_storage_level_from_power_flow(
     assert state.state == "42"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_power_flow_direction_sensors_missing_connections(
     mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    mock_solaredge_api: AsyncMock,
+    solaredge_api: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test direction sensors stay unknown when power flow has no connections."""
-    mock_solaredge.return_value = mock_solaredge_api
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value={"siteCurrentPowerFlow": {"unit": "W"}}
+    )
+    mock_solaredge.return_value = solaredge_api
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
