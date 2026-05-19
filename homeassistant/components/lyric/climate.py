@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
@@ -509,7 +509,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Set fan mode."""
         _LOGGER.debug("Set fan mode: %s", fan_mode)
         if fan_mode not in LYRIC_FAN_MODES:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_mode",
                 translation_placeholders={"fan_mode": fan_mode},
