@@ -1317,7 +1317,7 @@ class SonosSpeaker:
         if len(self.sonos_group) > 1:
             self.group_volume = int(self.soco.group.volume)
         else:
-            self.group_volume = self.volume
+            self.group_volume = int(self.soco.volume)
 
     @soco_error()
     def set_group_volume(self, level: int) -> None:

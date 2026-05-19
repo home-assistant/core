@@ -125,7 +125,7 @@ async def test_group_volume_sets_backend_and_updates_state(
     soco_factory: SoCoMockFactory,
 ) -> None:
     """Setting 33 writes group.volume=33; HA state updates after write completes."""
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
     soco_lr = soco_factory.mock_list["10.10.10.1"]
 
     await hass.services.async_call(
@@ -150,7 +150,7 @@ async def test_group_volume_rounds_in_range(
     soco_factory: SoCoMockFactory,
 ) -> None:
     """In-range 49.5 rounds to 50."""
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
     soco_lr = soco_factory.mock_list["10.10.10.1"]
 
     await hass.services.async_call(
@@ -208,7 +208,7 @@ async def test_group_volume_exception(
         type(soco_lr.group), "volume", new_callable=PropertyMock
     ) as mock_volume:
         mock_volume.side_effect = SoCoException("Boom!")
-        await _setup_numbers_only(async_setup_two_sonos_speakers)
+        await async_setup_two_sonos_speakers()
         await hass.async_block_till_done(wait_background_tasks=True)
         await hass.async_block_till_done()
 
@@ -227,7 +227,7 @@ async def test_group_volume_transitions_to_unknown_after_good_read(
     soco_br = soco_factory.mock_list["10.10.10.2"]
     soco_lr.group.volume = 20
 
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
 
     # Establish a known good state first.
     state = hass.states.get("number.living_room_group_volume")
@@ -260,7 +260,7 @@ async def test_group_volume_refreshes_on_topology_change(
     soco_br = soco_factory.mock_list["10.10.10.2"]
     soco_lr.group.volume = 15
 
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
 
     state = hass.states.get("number.living_room_group_volume")
     assert state is not None
@@ -283,7 +283,7 @@ async def test_group_volume_set_value_soco_exception_on_group_write(
     soco_factory: SoCoMockFactory,
 ) -> None:
     """SoCoException during grouped write raises HomeAssistantError; player volume unchanged."""
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
     soco_lr = soco_factory.mock_list["10.10.10.1"]
     initial_volume = soco_lr.volume
 
@@ -314,7 +314,7 @@ async def test_group_volume_shows_player_volume_after_ungroup(
     soco_br = soco_factory.mock_list["10.10.10.2"]
     soco_lr.group.volume = 25
 
-    await _setup_numbers_only(async_setup_two_sonos_speakers)
+    await async_setup_two_sonos_speakers()
 
     # Confirm initial grouped state is visible.
     state = hass.states.get("number.living_room_group_volume")
