@@ -47,14 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
     basic_coordinator = SolarLogBasicDataCoordinator(hass, entry, solarlog)
 
-    solarLogData = SolarlogIntegrationData(
+    solar_log_data = SolarlogIntegrationData(
         api=solarlog,
         basic_data_coordinator=basic_coordinator,
     )
 
     await basic_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = solarLogData
+    entry.runtime_data = solar_log_data
 
     if basic_coordinator.solarlog.extended_data:
         timeout = entry.data.get(CONF_TIMEOUT, 0)
