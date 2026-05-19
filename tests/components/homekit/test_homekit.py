@@ -1871,7 +1871,7 @@ async def test_homekit_ignored_missing_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test HomeKit handles a device in the entity registry but missing from the device registry.
+    """Test HomeKit handles entity with missing device registry entry.
 
     If the entity registry is updated to remove entities linked to non-existent devices,
     or set the link to None, this test can be removed.
@@ -2283,7 +2283,8 @@ async def test_homekit_finds_linked_air_purifier_sensors(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_reload(hass: HomeAssistant) -> None:
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> None:
     """Test we can reload from yaml."""
 
     entry = MockConfigEntry(
@@ -2330,7 +2331,6 @@ async def test_reload(hass: HomeAssistant) -> None:
         patch(
             f"{PATH_HOMEKIT}.get_accessory",
         ),
-        patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
         patch(
             "pyhap.accessory_driver.AccessoryDriver.async_start",
         ),

@@ -66,15 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
             new[CONF_TIMEOUT] = timeout
             hass.config_entries.async_update_entry(entry, data=new)
 
-            entry.runtime_data.longtime_data_coordinator = (
-                SolarLogLongtimeDataCoordinator(hass, entry, solarlog, timeout)
+            longtime_coordinator = SolarLogLongtimeDataCoordinator(
+                hass, entry, solarlog, timeout
             )
-            await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+            entry.runtime_data.longtime_data_coordinator = longtime_coordinator
+            await longtime_coordinator.async_config_entry_first_refresh()
 
-        entry.runtime_data.device_data_coordinator = SolarLogDeviceDataCoordinator(
-            hass, entry, solarlog
-        )
-        await entry.runtime_data.device_data_coordinator.async_config_entry_first_refresh()
+        device_coordinator = SolarLogDeviceDataCoordinator(hass, entry, solarlog)
+        entry.runtime_data.device_data_coordinator = device_coordinator
+        await device_coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

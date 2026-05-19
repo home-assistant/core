@@ -9,7 +9,7 @@ import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
 from homeassistant.components.homeassistant_hardware.util import ApplicationType
-from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=home-assistant-component-root-import
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -32,8 +32,14 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
-SKYCONNECT_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-CONNECT_ZBT1_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+SKYCONNECT_DEVICE = (
+    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0"
+    "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+)
+CONNECT_ZBT1_DEVICE = (
+    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+    "_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+)
 
 
 async def test_detect_radio_hardware(hass: HomeAssistant) -> None:

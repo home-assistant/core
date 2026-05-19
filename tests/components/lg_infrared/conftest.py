@@ -9,6 +9,7 @@ from homeassistant.components.lg_infrared import PLATFORMS
 from homeassistant.components.lg_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LGDeviceType,
 )
@@ -16,8 +17,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
+from tests.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
+)
+from tests.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 
 @pytest.fixture
@@ -29,9 +36,10 @@ def mock_config_entry() -> MockConfigEntry:
         title="LG TV via Test IR emitter",
         data={
             CONF_DEVICE_TYPE: LGDeviceType.TV,
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
         },
-        unique_id=f"lg_ir_tv_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"lg_ir_tv_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
@@ -49,7 +57,7 @@ def mock_lg_tv_code_to_command() -> Generator[None]:
     rather than the raw NEC timings.
     """
     with patch(
-        "homeassistant.components.lg_infrared.entity.LGTVCode.to_command",
+        "infrared_protocols.codes.lg.tv.LGTVCode.to_command",
         autospec=True,
         side_effect=lambda self, **kwargs: self,
     ):
@@ -61,6 +69,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     mock_lg_tv_code_to_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:

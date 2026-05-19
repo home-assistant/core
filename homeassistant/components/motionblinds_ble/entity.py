@@ -44,6 +44,6 @@ class MotionblindsBLEEntity(Entity):
         )
 
     async def async_update(self) -> None:
-        """Update state, called by HA if there is a poll interval and by the service homeassistant.update_entity."""
+        """Update state, called by HA on poll or homeassistant.update_entity."""
         _LOGGER.debug("(%s) Updating entity", self.entry.data[CONF_MAC_CODE])
         await self.device.status_query()

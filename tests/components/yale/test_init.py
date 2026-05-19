@@ -197,7 +197,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 async def test_load_triggers_ble_discovery(
     hass: HomeAssistant, mock_discovery: Mock
 ) -> None:
-    """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
+    """Test loading a lock with offline BLE passes keys to yalexe_ble."""
 
     yale_lock_with_key = await _mock_lock_with_offline_key(hass)
     yale_lock_without_key = await _mock_operative_yale_lock_detail(hass)
