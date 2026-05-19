@@ -251,6 +251,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             try:
                 await device.async_request(device.api.send_data, code)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (BroadlinkException, OSError) as err:
                 _LOGGER.error("Error during %s: %s", service, err)
                 break
@@ -301,6 +302,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     if toggle:
                         code = [code, await learn_command(command)]
 
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break

@@ -376,8 +376,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             if (port == DEFAULT_HTTP_PORT and not ssl) or (
                 port == DEFAULT_HTTPS_PORT and ssl
             ):
-                # don't show default ports in reconfigure flow, as they are determined by ssl value
-                # this allows the user to toggle ssl without having to change the port
+                # don't show default ports in reconfigure flow,
+                # as they are determined by ssl value
+                # this allows the user to toggle ssl
+                # without having to change the port
                 port = vol.UNDEFINED
 
             return self._show_setup_form_reconfigure(

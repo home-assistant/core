@@ -180,9 +180,12 @@ async def test_state_reporting_any(hass: HomeAssistant) -> None:
 async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
-    The group state is unavailable if all group members are unavailable.
-    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
-    Otherwise, the group state is off if at least one group member is off.
+    The group state is unavailable if all group members are
+    unavailable.
+    Otherwise, the group state is unknown if at least one group member
+    is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is
+    off.
     Otherwise, the group state is on.
     """
     await async_setup_component(
@@ -1738,7 +1741,8 @@ async def test_assumed_state(hass: HomeAssistant) -> None:
     state = hass.states.get("light.light_group")
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    # All members without assumed_state -> group doesn't have
+    # assumed_state in attributes
     hass.states.async_set("light.living_room", STATE_OFF, {})
     await hass.async_block_till_done()
 

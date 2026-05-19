@@ -120,7 +120,9 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "target_humidity_changed": ClimateTargetHumidityChangedTrigger,
     "target_humidity_crossed_threshold": ClimateTargetHumidityCrossedThresholdTrigger,
     "target_temperature_changed": ClimateTargetTemperatureChangedTrigger,
-    "target_temperature_crossed_threshold": ClimateTargetTemperatureCrossedThresholdTrigger,
+    "target_temperature_crossed_threshold": (
+        ClimateTargetTemperatureCrossedThresholdTrigger
+    ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_entity_transition_trigger(
         DOMAIN,

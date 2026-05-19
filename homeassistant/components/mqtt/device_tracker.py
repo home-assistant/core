@@ -53,7 +53,9 @@ def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
         raise vol.Invalid(
-            f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
+            f"Invalid device tracker config, missing"
+            f" {CONF_STATE_TOPIC} or"
+            f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
     return config
 

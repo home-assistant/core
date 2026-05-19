@@ -163,7 +163,8 @@ def _async_setup_rpc_entry(
                 ShellyRpcScriptEvent(coordinator, script, SCRIPT_EVENT, event_types)
             )
 
-    # If a script is removed, from the device configuration, we need to remove orphaned entities
+    # If a script is removed, from the device configuration,
+    # we need to remove orphaned entities
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,

@@ -44,7 +44,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=COMPANY,
-            model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
+            model=(
+                f"{coordinator.api.device.model_name}"
+                f" ({self.coordinator.api.device.device_type})"
+            ),
             name=coordinator.device_name,
         )
         self._attr_unique_id = (
