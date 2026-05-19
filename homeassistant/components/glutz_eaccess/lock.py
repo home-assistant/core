@@ -79,7 +79,7 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
     async def _async_api_call(
         self,
         api_method: Callable[[str], Coroutine[Any, Any, bool]],
-        connection_error_key: str,
+        error_key: str,
         failed_key: str,
     ) -> None:
         """Call an API method and raise HomeAssistantError on failure."""
@@ -94,7 +94,7 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         except GlutzConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=connection_error_key,
+                translation_key=error_key,
                 translation_placeholders={"access_point_id": self._access_point_id},
             ) from err
         if not success:
