@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
+from homeassistant.components.opnsense import OPNsenseRuntimeData
+from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, setup_mock_opnsense_client
@@ -25,10 +26,10 @@ def mock_config_entry(
         data=CONFIG_DATA,
     )
     # Use the mocked client instance instead of creating a real one
-    mock_config_entry.runtime_data = {
-        CONF_OPNSENSE_CLIENT: mock_opnsense_client.return_value,
-        CONF_TRACKER_INTERFACES: [],
-    }
+    mock_config_entry.runtime_data = OPNsenseRuntimeData(
+        client=mock_opnsense_client.return_value, tracker_interfaces=[]
+    )
+
     mock_config_entry.add_to_hass(hass)
     return mock_config_entry
 
