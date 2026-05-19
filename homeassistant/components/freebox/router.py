@@ -188,9 +188,7 @@ class FreeboxRouter:
         for sensor in syst_datas["sensors"]:
             sensor_id = sensor["id"]
             self.sensors_temperature[sensor_id] = sensor.get("value")
-            # Names are static per-device; only populate once.
-            if sensor_id not in self.sensors_temperature_names:
-                self.sensors_temperature_names[sensor_id] = sensor["name"]
+            self.sensors_temperature_names[sensor_id] = sensor["name"]
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
