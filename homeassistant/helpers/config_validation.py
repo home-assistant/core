@@ -1459,7 +1459,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
 SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Remove(CONF_COMMENT): str,
+    vol.Remove(CONF_COMMENT): str, # Is only used in frontend
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
@@ -1527,7 +1527,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 
 CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Remove(CONF_COMMENT): str,
+    vol.Remove(CONF_COMMENT): str, # Is only used in frontend
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
@@ -1862,7 +1862,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
-        vol.Remove(CONF_COMMENT): str,
+        vol.Remove(CONF_COMMENT): str, # Is only used in frontend
     }
 )
 
