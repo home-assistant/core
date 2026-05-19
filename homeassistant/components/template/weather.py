@@ -30,12 +30,18 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TEMPERATURE_UNIT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_TEMPERATURE_UNIT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -46,7 +52,8 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import DOMAIN, TriggerUpdateCoordinator, validators as template_validators
+from .const import DOCUMENTATION_URL
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -95,8 +102,6 @@ CONF_ATTRIBUTION = "attribution"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
 CONF_CLOUD_COVERAGE = "cloud_coverage"
 CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_CONDITION = "condition"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_DEW_POINT = "dew_point"
 CONF_DEW_POINT_TEMPLATE = "dew_point_template"
@@ -239,8 +244,13 @@ async def async_setup_platform(
 
     # Rewrite the configuration options to modern keys.
     if discovery_info is None:
-        _LOGGER.warning(
-            "Template weather entities can only be configured under template:"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            WEATHER_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url=DOCUMENTATION_URL,
+            logger=_LOGGER,
         )
         return
 
