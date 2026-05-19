@@ -162,7 +162,9 @@ ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
-    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: (
+        "power_adjust_active"
+    ),
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
 }
 
