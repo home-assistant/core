@@ -176,6 +176,7 @@ class GlutzLock(CoordinatorEntity[GlutzCoordinator], LockEntity):
         if self._cancel_relock:
             self._cancel_relock()
             self._cancel_relock = None
+        await super().async_will_remove_from_hass()
 
     @callback
     def _relock(self, _now: datetime) -> None:
