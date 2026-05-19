@@ -4,13 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
-from openevsehttp.exceptions import (
-    AuthenticationError,
-    ParseJSONError,
-    UnsupportedFeature,
-)
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -24,17 +18,13 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .helpers import openevse_exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -124,31 +114,5 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        try:
+        with openevse_exception_handler(value):
             await self.entity_description.set_value_fn(self.coordinator.charger, value)
-        except ValueError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_value",
-                translation_placeholders={"value": str(value)},
-            ) from err
-        except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_error",
-            ) from err
-        except UnsupportedFeature as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_feature",
-            ) from err
-        except (
-            TimeoutError,
-            ServerTimeoutError,
-            ContentTypeError,
-            ParseJSONError,
-        ) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-            ) from err
