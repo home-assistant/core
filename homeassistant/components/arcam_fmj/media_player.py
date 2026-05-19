@@ -25,6 +25,10 @@ from .entity import ArcamFmjEntity, convert_exception
 
 _LOGGER = logging.getLogger(__name__)
 
+# arcam-fmj serializes commands on a single TCP writer at the library
+# layer; serialize at HA's layer to match the device's contract.
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
