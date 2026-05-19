@@ -24,6 +24,7 @@
           "username": "Username"
         },
         "data_description": {
+          "password": "Password used to authenticate against the FritzBox",
           "username": "Username used to authenticate against the FritzBox"
         },
         "description": "Authentication failed for {host}. Enter valid credentials.",
