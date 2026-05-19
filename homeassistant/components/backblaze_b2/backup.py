@@ -20,12 +20,12 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import BackblazeConfigEntry
 from .const import (
-    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     METADATA_FILE_SUFFIX,
@@ -175,11 +175,13 @@ class BackblazeBackupAgent(BackupAgent):
             "Attempting to delete partially uploaded backup file %s",
             filename,
         )
+
+        def _delete_uploaded_file() -> None:
+            """Look up and delete the partially uploaded backup file."""
+            self._bucket.get_file_info_by_name(filename).delete()
+
         try:
-            uploaded_main_file_info = await self._hass.async_add_executor_job(
-                self._bucket.get_file_info_by_name, filename
-            )
-            await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
+            await self._hass.async_add_executor_job(_delete_uploaded_file)
         except B2Error:
             _LOGGER.warning(
                 "Failed to clean up partially uploaded backup file %s;"
@@ -385,8 +387,12 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_file.file_name,
         )
 
-        await self._hass.async_add_executor_job(file.delete)
-        await self._hass.async_add_executor_job(metadata_file.delete)
+        def _delete_backup_files() -> None:
+            """Delete the backup file and its metadata file."""
+            file.delete()
+            metadata_file.delete()
+
+        await self._hass.async_add_executor_job(_delete_backup_files)
 
         self._invalidate_caches(
             backup_id,

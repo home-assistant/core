@@ -121,7 +121,8 @@ def validate_query(
     Args:
         hass: The Home Assistant instance.
         query_template: The SQL query string to be validated.
-        uses_recorder_db: A boolean indicating if the query is against the recorder database.
+        uses_recorder_db: A boolean indicating if the query is
+            against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
 
     Raises:

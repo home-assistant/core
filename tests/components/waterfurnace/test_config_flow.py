@@ -1,6 +1,6 @@
 """Test the WaterFurnace config flow."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 from waterfurnace.waterfurnace import WFCredentialError, WFException
@@ -14,8 +14,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -50,10 +51,10 @@ async def test_user_flow_success(
         (Exception("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_exceptions(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -84,8 +85,9 @@ async def test_user_flow_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_devices(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test user flow with no devices."""
     mock_waterfurnace_client.devices = []
@@ -119,8 +121,9 @@ async def test_user_flow_no_devices(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_account_id_none(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test user flow when account_id is None."""
     mock_waterfurnace_client.account_id = None
@@ -163,8 +166,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test successful import flow from YAML."""
     result = await hass.config_entries.flow.async_init(
@@ -259,11 +263,11 @@ async def test_import_flow_no_devices(
     assert result["reason"] == "no_devices"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful reauth flow."""
     mock_config_entry.add_to_hass(hass)
@@ -292,11 +296,11 @@ async def test_reauth_flow_success(
         (Exception("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -326,11 +330,11 @@ async def test_reauth_flow_exceptions(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow aborts when a different account is used."""
     mock_config_entry.add_to_hass(hass)
@@ -348,11 +352,11 @@ async def test_reauth_flow_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_no_account_id(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow when no account ID is returned."""
     mock_config_entry.add_to_hass(hass)

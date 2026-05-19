@@ -319,8 +319,9 @@ async def test_websocket_non_admin_user(
         json={"result": "ok", "data": {}},
     )
 
-    # Should return the fields frontend needs (name, version, state, slug and ingress_url)
-    # but not options, as user is not admin and options can contain sensitive information
+    # Should return the fields frontend needs
+    # (name, version, state, slug and ingress_url) but not options,
+    # as user is not admin and options can contain sensitive information
     await websocket_client.send_json(
         {
             WS_ID: 1,

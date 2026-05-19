@@ -25,7 +25,7 @@ from . import MOCK_DEVICE, MOCK_MODEL
 
 from tests.common import MockConfigEntry
 
-ZoneName = Literal["main", "zone_2", "zone_3"]
+type ZoneName = Literal["main", "zone_2", "zone_3"]
 
 
 class MockState(ReceiverState):

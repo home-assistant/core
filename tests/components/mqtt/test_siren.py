@@ -223,7 +223,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the controlling state via topic and JSON message without a value template."""
+    """Test controlling state via topic and JSON without template."""
     await mqtt_mock_entry()
 
     state = hass.states.get("siren.test")
@@ -264,8 +264,10 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     )
     state = hass.states.get("siren.test")
     assert (
-        "Unable to update siren state attributes from payload '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}': value must be at most 1 for dictionary value @ data['volume_level']"
-        in caplog.text
+        "Unable to update siren state attributes from payload"
+        " '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}':"
+        " value must be at most 1 for dictionary value"
+        " @ data['volume_level']" in caplog.text
     )
     # Only the on/of state was updated, not the attributes
     assert state.state == STATE_ON
@@ -1134,6 +1136,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
