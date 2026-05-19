@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyatv import conf
 from pyatv.const import PairingRequirement, Protocol
+from pyatv.interface import DeviceInfo
 from pyatv.support import http
 import pytest
 
@@ -91,6 +92,9 @@ def full_device(mock_scan: AsyncMock, dmap_pin: MagicMock) -> AsyncMock:
                 pairing_requirement=PairingRequirement.Mandatory,
             ),
             airplay_service(),
+            device_info=DeviceInfo(
+                {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-1"}
+            ),
         )
     )
     return mock_scan
@@ -105,11 +109,17 @@ def mrp_device(mock_scan: AsyncMock) -> AsyncMock:
                 "127.0.0.1",
                 "MRP Device",
                 mrp_service(),
+                device_info=DeviceInfo(
+                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-1"}
+                ),
             ),
             create_conf(
                 "127.0.0.2",
                 "MRP Device 2",
                 mrp_service(unique_id="unrelated"),
+                device_info=DeviceInfo(
+                    {DeviceInfo.OUTPUT_DEVICE_ID: "test-output-device-id-2"}
+                ),
             ),
         ]
     )
