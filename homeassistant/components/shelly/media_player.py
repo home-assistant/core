@@ -38,6 +38,15 @@ from .utils import get_device_entry_gen
 CONTENT_TYPE_AUDIO = "audio"
 CONTENT_TYPE_RADIO = "radio"
 
+ALLOWED_IMAGE_MIME_TYPES: Final = frozenset(
+    {
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    }
+)
+
 PARALLEL_UPDATES = 0
 
 
@@ -241,6 +250,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             image = base64.b64decode(image_data, validate=True)
             mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
         except binascii.Error, ValueError:
+            return await super().async_get_media_image()
+
+        if mime not in ALLOWED_IMAGE_MIME_TYPES:
             return await super().async_get_media_image()
 
         return image, mime
