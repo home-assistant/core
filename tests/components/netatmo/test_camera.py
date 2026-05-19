@@ -502,7 +502,7 @@ async def test_camera_reconnect_webhook(
 
         calls = fake_post_hits
 
-        # Fake camera reconnect
+        # Fake camera reconnect (incomplete event should not change anything)
         response = {
             "push_type": f"{camera_type}-connection",
         }
@@ -516,9 +516,24 @@ async def test_camera_reconnect_webhook(
         await hass.async_block_till_done()
         assert fake_post_hits >= calls
 
-        # Real camera disconnect
+        # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+        # Camera off event (meaning: monitoring off, but still connected)
+        response = {
+            "event_type": "off",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": f"{camera_type}-off",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Real camera disconnect
         response = {
             "event_type": "disconnection",
             "device_id": camera_id,
@@ -528,15 +543,29 @@ async def test_camera_reconnect_webhook(
         }
         await simulate_webhook(hass, webhook_id, response)
 
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
 
+        # Camera reconnect (making it available physically, but with monitoring off as it's not on yet)
         response = {
             "event_type": "connection",
             "device_id": camera_id,
             "camera_id": camera_id,
             "event_id": "646227f1dc0dfa000ec5f350",
             "push_type": f"{camera_type}-connection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Camera on event (meaning: monitoring is also resuming to on)
+        response = {
+            "event_type": "on",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "646227f1dc0dfa000ec5f350",
+            "push_type": f"{camera_type}-on",
         }
         await simulate_webhook(hass, webhook_id, response)
 
@@ -615,6 +644,10 @@ async def test_camera_webhook_consistency(
 
         calls = fake_post_hits
 
+        # Check initial state
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
         # Fake camera reconnect
         if camera_type is None:
             response = {
@@ -649,6 +682,7 @@ async def test_camera_webhook_consistency(
         assert fake_post_hits >= calls
 
         assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
 
 async def test_webhook_person_event(
