@@ -269,54 +269,27 @@ async def async_setup_entry(
 
 def _should_skip_low_battery_characteristic(char: Characteristic) -> bool:
     """Check if the low battery characteristic should not create an entity."""
-    if char.service.accessory.services.first(
+    return char.service.accessory.services.first(
         service_type=ServicesTypes.BATTERY_SERVICE
-    ):
-        return True
-
-    if _is_accessory_level_low_battery_service(char.service):
-        return _has_earlier_accessory_level_low_battery_characteristic(char)
-
-    return _has_earlier_named_low_battery_characteristic(char)
+    ) is not None or _has_earlier_low_battery_characteristic(char)
 
 
-def _is_accessory_level_low_battery_service(service: Service) -> bool:
-    """Check if the service low battery status represents the accessory."""
-    service_name = service.value(CharacteristicsTypes.NAME)
-    return service_name is None or folded_name(service_name) == folded_name(
-        service.accessory.name
+def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
+    """Check if the accessory already exposed the same low battery source."""
+    source_key = _low_battery_source_key(char.service)
+    return any(
+        service.iid < char.service.iid
+        and service.has(char.type)
+        and _low_battery_source_key(service) == source_key
+        for service in char.service.accessory.services
     )
 
 
-def _has_earlier_accessory_level_low_battery_characteristic(
-    char: Characteristic,
-) -> bool:
-    """Check if the accessory already exposed an accessory low battery status."""
-    for service in char.service.accessory.services:
-        if service.iid >= char.service.iid:
-            continue
-        if _is_accessory_level_low_battery_service(service) and service.has(char.type):
-            return True
-
-    return False
-
-
-def _has_earlier_named_low_battery_characteristic(char: Characteristic) -> bool:
-    """Check if a named service already exposed the same low battery status."""
-    service_name = char.service.value(CharacteristicsTypes.NAME)
-    if service_name is None:
-        return False
-    folded_service_name = folded_name(service_name)
-
-    for service in char.service.accessory.services:
-        if service.iid >= char.service.iid:
-            continue
-        other_service_name = service.value(CharacteristicsTypes.NAME)
-        if (
-            other_service_name is not None
-            and folded_name(other_service_name) == folded_service_name
-            and service.has(char.type)
-        ):
-            return True
-
-    return False
+def _low_battery_source_key(service: Service) -> str | None:
+    """Return the low battery source key for the service."""
+    service_name = service.value(CharacteristicsTypes.NAME)
+    if service_name is None or folded_name(service_name) == folded_name(
+        service.accessory.name
+    ):
+        return None
+    return folded_name(service_name)
