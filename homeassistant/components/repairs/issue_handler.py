@@ -211,8 +211,7 @@ class RepairsFlowManager(
                 integration_domain=handler,
                 core_behavior=ReportBehavior.LOG,
             )
-        # Remove empty dict when anthropic errors are addressed
-        return await super().async_init(handler, context=context, data={})
+        return await super().async_init(handler, context=context)
 
     async def async_create_flow(
         self,
