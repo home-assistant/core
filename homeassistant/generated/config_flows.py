@@ -122,6 +122,7 @@ FLOWS = {
         "canary",
         "casper_glow",
         "cast",
+        "ccl",
         "ccm15",
         "centriconnect",
         "cert_expiry",

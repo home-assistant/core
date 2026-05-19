@@ -289,6 +289,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/casper_glow/ @mikeodr
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
+/homeassistant/components/ccl/ @fkiscd
+/tests/components/ccl/ @fkiscd
 /homeassistant/components/ccm15/ @ocalvo
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/centriconnect/ @gresrun
