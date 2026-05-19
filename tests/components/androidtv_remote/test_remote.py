@@ -174,6 +174,151 @@ async def test_remote_send_command_with_hold_secs(
     ]
 
 
+@pytest.mark.parametrize(
+    ("command", "expected_call"),
+    [
+        ("start_long:DPAD_DOWN", call("DPAD_DOWN", "START_LONG")),
+        ("end_long:DPAD_DOWN", call("DPAD_DOWN", "END_LONG")),
+        ("short:DPAD_DOWN", call("DPAD_DOWN", "SHORT")),
+        ("START_LONG:DPAD_DOWN", call("DPAD_DOWN", "START_LONG")),
+    ],
+    ids=["start", "end", "short", "uppercase_prefix"],
+)
+async def test_remote_send_command_with_direction_prefix(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    command: str,
+    expected_call: object,
+) -> None:
+    """Test remote.send_command emits a single directional event for prefixed commands."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": command,
+            "delay_secs": 0.01,
+        },
+        blocking=True,
+    )
+    assert mock_api.send_key_command.mock_calls == [expected_call]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "text:hello world",
+        "voice:something",
+        "DPAD_DOWN:WITH_COLON",
+        ":leading_colon",
+    ],
+    ids=["text_prefix", "unknown_prefix", "embedded_colon", "leading_colon"],
+)
+async def test_remote_send_command_unknown_prefix_passes_through(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    command: str,
+) -> None:
+    """Test that commands with non-direction colon prefixes are forwarded verbatim.
+
+    The integration only strips prefixes that match the allowlist;
+    other colon-using conventions (notably the lib's own ``text:`` prefix for
+    keyboard text) must reach the underlying library unchanged so it can apply
+    its own routing.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": command,
+            "delay_secs": 0.01,
+        },
+        blocking=True,
+    )
+    assert mock_api.send_key_command.mock_calls == [call(command, "SHORT")]
+
+
+async def test_remote_send_command_direction_prefix_pair(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test that a press-down/release-up pair produces exactly two events.
+
+    This is the live-press scenario: a UI sends START_LONG on pointerdown and
+    END_LONG on pointerup as separate service calls. Together they must produce
+    no extra SHORT or sleep-driven events.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": "start_long:DPAD_CENTER",
+            "delay_secs": 0.01,
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": "end_long:DPAD_CENTER",
+            "delay_secs": 0.01,
+        },
+        blocking=True,
+    )
+    assert mock_api.send_key_command.mock_calls == [
+        call("DPAD_CENTER", "START_LONG"),
+        call("DPAD_CENTER", "END_LONG"),
+    ]
+
+
+async def test_remote_send_command_hold_secs_overrides_direction_prefix(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test that hold_secs takes precedence over an explicit direction prefix.
+
+    Mixing both is non-sensical; hold_secs is treated as the dominant signal
+    and runs the legacy START_LONG / sleep / END_LONG sandwich. The prefix is
+    still stripped from the key code so the underlying lib receives a clean
+    keycode rather than the raw service input.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": "start_long:DPAD_RIGHT",
+            "delay_secs": 0.01,
+            "hold_secs": 0.01,
+        },
+        blocking=True,
+    )
+    assert mock_api.send_key_command.mock_calls == [
+        call("DPAD_RIGHT", "START_LONG"),
+        call("DPAD_RIGHT", "END_LONG"),
+    ]
+
+
 async def test_remote_connection_closed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
