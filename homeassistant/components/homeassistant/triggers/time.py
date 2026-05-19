@@ -38,6 +38,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_WEEKDAY = "weekday"
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))

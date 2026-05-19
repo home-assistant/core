@@ -590,7 +590,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzcswitch_1',
+    'unique_id': 'tuya.ycttanlnpa0aivbfzcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2753,7 +2753,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
-    'unique_id': 'tuya.ycttanlnpa0aivbfzcswitch',
+    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzcswitch',
     'unit_of_measurement': None,
   })
 # ---

@@ -173,26 +173,6 @@ async def setup_single_attribute_state_fan(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "style", "extra_config"),
-    [
-        (
-            1,
-            "{{ states('sensor.test_state') }}",
-            ConfigurationStyle.LEGACY,
-            OPTIMISTIC_ON_OFF_ACTIONS,
-        )
-    ],
-)
-@pytest.mark.usefixtures("setup_state_fan")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("fan")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
-@pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
     [(1, "{{ 'on' }}", OPTIMISTIC_ON_OFF_ACTIONS)],
 )
