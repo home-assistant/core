@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Verisure integration."""
 
-from __future__ import annotations
-
 import asyncio
 import re
 from datetime import timedelta
@@ -27,7 +25,7 @@ from homeassistant.util import Throttle
 
 from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
-type VerisureConfigEntry = ConfigEntry["VerisureDataUpdateCoordinator"]
+type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
 
 _COOKIE_REFRESH_ATTEMPTS = 3
 _RETRY_DELAY_SEC = 1.0
