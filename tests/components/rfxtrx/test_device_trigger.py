@@ -43,6 +43,10 @@ EVENT_FIREALARM_1 = EventTestData(
     "08200300a109000670", DEVICE_FIREALARM_1, "status", "Panic"
 )
 
+DEVICE_X10SECURITY_1 = {("rfxtrx", "20", "0", "d3dc54:32")}
+# Status byte 0x84 = Motion (0x04) with the tamper bit (0x80) set.
+EVENT_X10SECURITY_MOTION_TAMPER = "0820004dd3dc548489"
+
 
 async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
@@ -165,6 +169,51 @@ async def test_firing_event(
     await hass.async_block_till_done()
 
     await rfxtrx.signal(event.code)
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "device"
+
+
+async def test_firing_legacy_tamper_trigger(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx
+) -> None:
+    """Test that legacy ``*_Tamper`` status subtypes still fire.
+
+    pyRFXtrx 0.33.0 dropped the combined ``*_Tamper`` status strings in favour
+    of a separate ``Tamper`` boolean. Automations saved before the upgrade must
+    keep firing without manual migration.
+    """
+    await setup_entry(hass, {EVENT_X10SECURITY_MOTION_TAMPER: {"fire_event": True}})
+
+    device_entry = device_registry.async_get_device(identifiers=DEVICE_X10SECURITY_1)
+    assert device_entry
+
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "status",
+                        "subtype": "Motion Tamper",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{trigger.platform}}"},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await rfxtrx.signal(EVENT_X10SECURITY_MOTION_TAMPER)
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "device"
