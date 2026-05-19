@@ -21,6 +21,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_update_in_progress,
 )
 from homeassistant.components.usb import USBDevice
+from homeassistant.components.zha.config_flow import ZhaConfigFlowHandler
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -179,6 +180,47 @@ async def test_migration_v5_explicit_socket_port(
     assert config_entry.version == 5
     assert config_entry.minor_version == 2
     assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == new_path
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_minor_version_downgrade_allowed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A minor-version downgrade is backwards-compatible and must not block setup."""
+    future_minor_version = ZhaConfigFlowHandler.MINOR_VERSION + 1
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        version=ZhaConfigFlowHandler.VERSION,
+        minor_version=future_minor_version,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == ZhaConfigFlowHandler.VERSION
+    assert config_entry.minor_version == future_minor_version
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_major_version_downgrade_blocked(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A major-version downgrade is not backwards-compatible and must fail setup."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        version=ZhaConfigFlowHandler.VERSION + 1,
+        minor_version=1,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 @pytest.mark.parametrize(
