@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from cieloconnectapi.exceptions import AuthenticationError
 
@@ -21,9 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CIELO_ERRORS, LOGGER, TIMEOUT
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
 from .entity import CieloDeviceEntity
-
-_T = TypeVar("_T", bound="CieloDeviceEntity")
-_P = ParamSpec("_P")
 
 PARALLEL_UPDATES = 0
 
@@ -50,19 +47,18 @@ async def async_setup_entry(
     async_add_entities([CieloClimate(coordinator, dev_id) for dev_id in devices])
 
 
-def async_handle_api_call(
+def async_handle_api_call[_T: CieloDeviceEntity, **_P](
     function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls to handle exceptions and update state."""
 
-    async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
+    async def wrap_api_call(entity: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap services for api calls."""
-        entity: _T = args[0]
         res: Any = None
 
         try:
             async with asyncio.timeout(TIMEOUT):
-                res = await function(*args, **kwargs)
+                res = await function(entity, *args, **kwargs)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed from err
 
@@ -111,7 +107,8 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of temperature in Home Assistant format.
 
-        It can change over time based on the device settings, so we fetch it dynamically from the client.
+        It can change over time based on the device settings,
+        so we fetch it dynamically from the client.
         """
         unit = self.client.temperature_unit()
 

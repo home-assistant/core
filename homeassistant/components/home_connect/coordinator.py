@@ -538,7 +538,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             )
                             and program_options
                         ):
-                            # The API doesn't allow to fetch the options from the favorite program.
+                            # The API doesn't allow to fetch the
+                            # options from the favorite program.
                             # We can attempt to get the base program and get the options
                             for option in program_options:
                                 if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
@@ -677,7 +678,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 _LOGGER.warning(
                     'Too many connected/paired events for appliance "%s" '
                     "(%s times in less than %s minutes), updates have been disabled "
-                    "and they will be enabled again whenever the connection stabilizes. "
+                    "and they will be enabled again whenever "
+                    "the connection stabilizes. "
                     "Consider trying to unplug the appliance "
                     "for a while to perform a soft reset",
                     self.data.info.name,

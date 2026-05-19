@@ -367,7 +367,8 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             self._backfill_task.add_done_callback(self._backfill_done_callback)
             return
 
-        # Normal poll: fetch recent data (up to BACKFILL_GAP_THRESHOLD) and insert any missing hours
+        # Normal poll: fetch recent data (up to
+        # BACKFILL_GAP_THRESHOLD) and insert missing hours
         _LOGGER.debug("Last stat: ts=%s, sum=%s", last_dt.isoformat(), last_sum)
         local_tz = dt_util.DEFAULT_TIME_ZONE
         start_date = last_dt.astimezone(local_tz).strftime("%Y-%m-%d")

@@ -11,9 +11,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 # Entities that should be marked as diagnostic
-ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat"]
+ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat", "platform_device_reboot"]
 # Entities that should be disabled by default
-ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat"]
+ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat", "platform_device_reboot"]
 
 
 class VictronBaseEntity(Entity):
@@ -35,12 +35,14 @@ class VictronBaseEntity(Entity):
         self._attr_device_info = device_info
         self._attr_unique_id = f"{installation_id}_{metric.unique_id}"
         self._attr_suggested_display_precision = metric.precision
-        # Always set translation_key so HA can resolve state/option translations (e.g. select options).
+        # Always set translation_key so HA can resolve
+        # state/option translations (e.g. select options).
         self._attr_translation_key = metric.generic_short_id.replace("{", "").replace(
             "}", ""
         )
         self._attr_translation_placeholders = metric.key_values
-        # When main_topic is set, override name to None so HA uses the device name (via _attr_has_entity_name).
+        # When main_topic is set, override name to None so
+        # HA uses the device name (via _attr_has_entity_name).
         if metric.main_topic:
             self._attr_name = None
 
