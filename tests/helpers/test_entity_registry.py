@@ -583,6 +583,7 @@ def test_get_available_entity_id_considers_existing_entities(
         "object_id_base",
         "suggested_object_id",
         "user_name",
+        "expected_initial_entity_id",
         "expected_entity_id",
     ),
     [
@@ -594,6 +595,7 @@ def test_get_available_entity_id_considers_existing_entities(
             None,
             None,
             "sensor.my_sensor",
+            "sensor.my_sensor",
             id="no_device_no_area",
         ),
         pytest.param(
@@ -603,6 +605,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "Temperature",
             None,
             None,
+            "sensor.lamp_temperature",
             "sensor.lamp_temperature",
             id="device_no_area",
         ),
@@ -614,6 +617,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "custom_id",
             None,
             "sensor.custom_id",
+            "sensor.custom_id",
             id="suggested_object_id",
         ),
         pytest.param(
@@ -623,6 +627,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "Temperature",
             "custom_id",
             "Humidity",
+            "sensor.custom_id",
             "sensor.lamp_humidity",
             id="user_name",
         ),
@@ -633,6 +638,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "Temperature",
             None,
             "Lamp Sensor",
+            "sensor.lamp_temperature",
             "sensor.lamp_sensor",
             id="user_name_unprefixed",
         ),
@@ -644,6 +650,7 @@ def test_get_available_entity_id_considers_existing_entities(
             None,
             None,
             "sensor.kitchen_lamp_temperature",
+            "sensor.kitchen_lamp_temperature",
             id="device_area",
         ),
         pytest.param(
@@ -653,6 +660,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "Temperature",
             None,
             None,
+            "sensor.kitchen_lamp_temperature",
             "sensor.garage_lamp_temperature",
             id="entity_area",
         ),
@@ -663,6 +671,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "My Sensor",
             None,
             None,
+            "sensor.my_sensor",
             "sensor.kitchen_my_sensor",
             id="entity_area_no_device",
         ),
@@ -673,6 +682,7 @@ def test_get_available_entity_id_considers_existing_entities(
             "Temperature",
             "custom_id",
             None,
+            "sensor.custom_id",
             "sensor.custom_id",
             id="suggested_object_id_area",
         ),
@@ -689,9 +699,10 @@ def test_regenerate_entity_id(
     object_id_base: str | None,
     suggested_object_id: str | None,
     user_name: str | None,
+    expected_initial_entity_id: str,
     expected_entity_id: str,
 ) -> None:
-    """Test regenerating entity IDs."""
+    """Test generating and regenerating entity IDs."""
     config_entry = MockConfigEntry(domain="sensor")
     config_entry.add_to_hass(hass)
 
@@ -718,6 +729,7 @@ def test_regenerate_entity_id(
         original_name=object_id_base,
         suggested_object_id=suggested_object_id,
     )
+    assert entry.entity_id == expected_initial_entity_id
 
     if entity_area_name is not None:
         entity_area = area_registry.async_create(entity_area_name)
